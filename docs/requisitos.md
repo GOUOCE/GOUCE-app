@@ -631,7 +631,13 @@ _A definir._
 **História de Usuário:** Como aluno com cadastro previamente aprovado, quero realizar o upload do meu comprovante de matrícula atualizado no início de um novo semestre letivo, para revalidar meu vínculo institucional e voltar a ter o direito de agendar o transporte.
 
 **Critérios de Aceite:**
-_A definir._
+1. Aluno com vínculo vencido (início de novo semestre letivo) faz login e visualiza um aviso destacado de necessidade de renovação, com a opção de iniciar o processo de revalidação.
+2. Sistema exige a seleção de um arquivo (comprovante de matrícula) antes de habilitar ou permitir a ação de envio; tentativa de enviar sem anexo bloqueia a tela e exibe alerta de obrigatoriedade.
+3. Sistema valida formato e tamanho do arquivo anexado (ex: permite apenas PDF, JPG, PNG e tamanho máximo de 5MB); arquivos fora da regra bloqueiam o envio e exibem mensagem indicando "Formato inválido" ou "Arquivo excede o limite de tamanho".
+4. Falha de conexão ou erro de comunicação com a API durante o upload (FA-001) interrompe o processo, exibe mensagem de erro ("Falha no envio. Verifique sua conexão e tente novamente") e mantém a tela de renovação ativa para nova tentativa.
+5. Envio concluído com sucesso exibe mensagem de confirmação ("Comprovante enviado com sucesso") e altera o status do aluno para "Em Análise", encaminhando o documento para a fila do administrador.
+6. Enquanto o status do aluno for "Em Análise" (aguardando a aprovação do administrador), o sistema mantém o acesso ao menu de agendamentos bloqueado, exibindo apenas um informativo de que a liberação depende da validação do documento.
+
 
 **Fluxo Principal:**
 
@@ -667,7 +673,11 @@ _A definir._
 **História de Usuário:** Como aluno com status aprovado, quero acessar minha carteirinha digital diretamente no aplicativo, exibindo minha foto, dados e um QR Code, para comprovar minha identidade e meu direito de utilizar o ônibus no momento do embarque.
 
 **Critérios de Aceite:**
-_A definir._
+1. Aluno com status "Aprovado" acessa a opção "Carteirinha Digital" e visualiza a interface do documento contendo obrigatoriamente: foto de perfil do aluno, dados de identificação (ex: nome completo, curso, instituição) e o QR Code gerado.
+2. Tentativa de acesso à carteirinha por um aluno que não possua o status "Aprovado" (ex: status "Em Análise" da HU-028, ou "Inativo") oculta o documento e exibe uma mensagem informativa (ex: "Carteirinha indisponível. Seu cadastro está inativo ou em análise.").
+3. (FA-001) Se o aluno acessar a funcionalidade sem conexão com a internet (offline), o sistema não deve exibir erro de conexão; em vez disso, deve carregar instantaneamente a versão em cache da carteirinha (salva na última conexão válida), exibindo normalmente a foto, dados e o QR Code.
+4. O QR Code exibido na tela deve possuir nitidez, tamanho e contraste adequados para garantir a leitura/escaneamento pelos validadores físicos (câmeras/celulares) no momento do embarque, mesmo no modo offline.
+5. O tempo de carregamento e renderização da carteirinha na tela (quando online) deve ser rápido, não travando a navegação do usuário no momento em que ele estiver na fila de embarque.
 
 **Fluxo Principal:**
 
