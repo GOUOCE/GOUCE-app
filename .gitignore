@@ -1,0 +1,39 @@
+# Environment variables (keep the sanitized example)
+.env
+.env.*
+!.env.example
+
+# Credentials and signing keys
+secrets/
+credentials.json
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.mobileprovision
+
+# Local databases and backups
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite-*
+*.sqlite3-*
+*.dump
+*.bak
+
+# Dependencies and Expo output
+node_modules/
+.expo/
+dist/
+web-build/
+coverage/
+*.tsbuildinfo
+
+# Logs and local tooling
+*.log
+.idea/
+.DS_Store
+Thumbs.db
