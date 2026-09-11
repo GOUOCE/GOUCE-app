@@ -28,34 +28,38 @@ src/
 ## Como Executar o Projeto
 
 ### 1. Pré-requisitos
-- **Node.js**: Versão LTS recomendada.
-- **Gerenciador de Pacotes**: npm ou yarn.
-- **Expo Go**: Instalado no seu smartphone (Android/iOS) para testar fisicamente.
+- **Docker Desktop** com o engine Linux ativo.
+- **Expo Go** instalado no seu smartphone (Android/iOS), caso queira testar em um dispositivo físico.
 
-### 2. Configuração Inicial
-Clone o repositório e instale as dependências:
+### 2. Configuração do backend
+O backend usa as variáveis definidas em `backend/.env`. Se o arquivo ainda não existir, copie o exemplo:
+```bash
+cp backend/.env.example backend/.env
+```
+
+### 3. Executar frontend e backend com Docker
+Na raiz do projeto, execute:
+```bash
+docker compose up --build
+```
+
+Os serviços ficarão disponíveis em:
+- **Frontend/Expo:** `http://localhost:8081`
+- **Backend/API:** `http://localhost:8000`
+- **Health check:** `http://localhost:8000/health`
+
+Para parar os containers:
+```bash
+docker compose down
+```
+
+### 4. Executar somente o frontend localmente
+Com o Node.js instalado, execute:
 ```bash
 npm install
-```
-
-Crie o arquivo de variáveis de ambiente a partir do exemplo:
-```bash
-cp .env.example .env
-```
-> Certifique-se de definir a `EXPO_PUBLIC_API_URL` com o IP da sua máquina ou a URL do backend.
-
-### 3. Execução Local
-Inicie o servidor de desenvolvimento:
-```bash
 npm start
 ```
-Após o comando, um QR Code aparecerá no terminal. Escaneie-o com o aplicativo **Expo Go** no seu celular.
 
-### 4. Execução via Docker (Opcional)
-Caso prefira rodar o ambiente isolado:
-```bash
-docker-compose up --build
-```
-O container servirá o Metro Bundler na porta `8081`.
+Para acessar o backend local nessa opção, defina `EXPO_PUBLIC_API_URL=http://localhost:8000` no ambiente do Expo.
 ---
 Este projeto faz parte da disciplina de Projeto Integrado III - UFC Quixadá.
