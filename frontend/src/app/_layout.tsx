@@ -5,7 +5,7 @@ import { useFonts, Poppins_400Regular, Poppins_700Bold } from '@expo-google-font
 import { Inter_400Regular, Inter_500Medium } from '@expo-google-fonts/inter';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { AuthProvider } from '@contexts/AuthContext';
 
 const queryClient = new QueryClient();
 
