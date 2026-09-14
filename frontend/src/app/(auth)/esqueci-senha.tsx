@@ -1,26 +1,24 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, TouchableOpacity, Modal } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import {
   TextInput,
   Button,
   Text,
   useTheme,
+  Snackbar,
   Portal
 } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, Mail, Eye, EyeOff } from 'lucide-react-native';
+import { ChevronLeft, Mail, X } from 'lucide-react-native';
 
-import { loginSchema, LoginFormData } from '@/schemas/loginSchema';
-import { useAuth } from '@contexts/AuthContext';
+import { forgotPasswordSchema, ForgotPasswordFormData } from '@/schemas/loginSchema';
 
-export default function LoginScreen() {
+export default function EsqueciSenhaScreen() {
   const router = useRouter();
   const theme = useTheme();
-  const { perfil } = useLocalSearchParams();
-  const { signIn, isLoading } = useAuth();
-  const [verSenha, setVerSenha] = useState(false);
+  const [visivel, setVisivel] = useState(false);
   const [modalSairVisivel, setModalSairVisivel] = useState(false);
 
   const handleBack = () => {
@@ -36,28 +34,25 @@ export default function LoginScreen() {
     }
   };
 
-  const { control, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema)
+  const { control, handleSubmit, formState: { errors } } = useForm<ForgotPasswordFormData>({
+    resolver: zodResolver(forgotPasswordSchema)
   });
 
-  const onSubmit = async (dados: LoginFormData) => {
-    router.push({
-      pathname: '/(auth)/selecao-perfil',
-      params: { email: dados.email, senha: dados.senha }
-    });
+  const onSubmit = (dados: ForgotPasswordFormData) => {
+    console.log('Recuperar:', dados);
+    setVisivel(true);
   };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
-        <Text variant="headlineSmall" style={styles.headerTitle}>Entrar</Text>
+        <Text variant="headlineSmall" style={styles.headerTitle}>Esqueci minha senha</Text>
       </View>
 
-      {/* Modal de Confirmação de Saída do App */}
+      {/* Modal de Confirmação de Saída */}
       <Portal>
         <Modal
           visible={modalSairVisivel}
@@ -67,9 +62,9 @@ export default function LoginScreen() {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <Text variant="headlineSmall" style={styles.modalTitle}>Sair do aplicativo?</Text>
+              <Text variant="headlineSmall" style={styles.modalTitle}>Sair desta tela?</Text>
               <Text variant="bodyLarge" style={styles.modalText}>
-                Você precisará fazer login novamente para agendar transportes.
+                As informações inseridas serão perdidas.
               </Text>
               <View style={styles.modalButtons}>
                 <Button
@@ -77,7 +72,7 @@ export default function LoginScreen() {
                   onPress={() => setModalSairVisivel(false)}
                   style={styles.modalBtn}
                 >
-                  Continuar no app
+                  Continuar aqui
                 </Button>
                 <Button
                   mode="contained"
@@ -92,8 +87,11 @@ export default function LoginScreen() {
         </Modal>
       </Portal>
 
-      <View style={styles.formContainer}>
-        {/* E-mail */}
+      <View style={styles.content}>
+        <Text variant="bodyMedium" style={styles.description}>
+          Informe o e-mail cadastrado para receber o link de redefinição.
+        </Text>
+
         <View style={styles.inputBox}>
           <Text variant="labelMedium" style={styles.label}>E-mail *</Text>
           <Controller
@@ -115,47 +113,13 @@ export default function LoginScreen() {
           {errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
         </View>
 
-        {/* Senha */}
-        <View style={styles.inputBox}>
-          <Text variant="labelMedium" style={styles.label}>Senha *</Text>
-          <Controller
-            control={control}
-            name="senha"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                mode="outlined"
-                value={value}
-                onChangeText={onChange}
-                error={!!errors.senha}
-                secureTextEntry={!verSenha}
-                right={
-                  <TextInput.Icon
-                    icon={() => verSenha ? <EyeOff size={20} /> : <Eye size={20} />}
-                    onPress={() => setVerSenha(!verSenha)}
-                  />
-                }
-                style={styles.input}
-              />
-            )}
-          />
-          {errors.senha && <Text style={styles.errorText}>{errors.senha.message}</Text>}
-        </View>
-
-        <TouchableOpacity
-          onPress={() => router.push('/(auth)/esqueci-senha')}
-          style={styles.forgotLink}
-        >
-          <Text variant="bodyMedium" style={{ color: theme.colors.primary }}>Esqueci minha senha</Text>
-        </TouchableOpacity>
-
         <Button
           mode="contained"
           onPress={handleSubmit(onSubmit)}
-          loading={isLoading}
-          style={styles.btnEntrar}
+          style={styles.button}
           contentStyle={styles.btnContent}
         >
-          Entrar
+          Enviar instruções
         </Button>
 
         <View style={styles.dividerBox}>
@@ -174,6 +138,19 @@ export default function LoginScreen() {
           Criar conta de aluno
         </Button>
       </View>
+
+      <Snackbar
+        visible={visivel}
+        onDismiss={() => setVisivel(false)}
+        action={{
+          label: '',
+          icon: () => <X size={20} color="#fff" />,
+          onPress: () => setVisivel(false),
+        }}
+        style={styles.snackbar}
+      >
+        E-mail enviado. Verifique sua caixa de entrada para continuar.
+      </Snackbar>
     </View>
   );
 }
@@ -194,11 +171,16 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontWeight: 'bold',
   },
-  formContainer: {
+  content: {
     paddingHorizontal: 24,
   },
+  description: {
+    color: '#666',
+    lineHeight: 22,
+    marginBottom: 32,
+  },
   inputBox: {
-    marginBottom: 16,
+    marginBottom: 32,
   },
   label: {
     marginBottom: 4,
@@ -212,11 +194,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
-  forgotLink: {
-    alignSelf: 'flex-end',
-    marginBottom: 40,
-  },
-  btnEntrar: {
+  button: {
     borderRadius: 8,
     marginBottom: 24,
   },
@@ -241,6 +219,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderColor: '#3e5f90',
     borderWidth: 1.5,
+  },
+  snackbar: {
+    backgroundColor: '#333',
+    borderRadius: 8,
+    marginBottom: 20,
   },
   modalOverlay: {
     flex: 1,

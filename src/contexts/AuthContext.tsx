@@ -33,13 +33,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isLoading) return;
 
-    const inAuthGroup = segments[0] === '(auth)';
+    const firstSegment = segments[0];
+    const inProtectedGroup = firstSegment === '(driver)' || firstSegment === '(student)';
+    const inAuthGroup = firstSegment === '(auth)';
 
-    if (!user && !inAuthGroup) {
-      // Se não está logado e não está em rotas de auth, vai para login
+    console.log('[DEBUG] AuthContext:', {
+      segments,
+      firstSegment,
+      inProtectedGroup,
+      inAuthGroup,
+      hasUser: !!user
+    });
+
+    if (!user && inProtectedGroup) {
       router.replace('/(auth)/login');
     } else if (user && inAuthGroup) {
-      // Se já está logado e tenta acessar rotas de auth, vai para a home correta
       const root = user.role === 'MOTORISTA' ? '/(driver)/home' : '/(student)/home';
       router.replace(root);
     }
