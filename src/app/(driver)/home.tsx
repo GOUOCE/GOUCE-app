@@ -7,7 +7,7 @@ export default function DriverHomeScreen() {
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Sua Rota de Hoje</Text>
         <Text style={styles.cardContent}>Veículo: Ônibus 01</Text>
-        <Text style={styles.cardContent}>Rota: Ocara -> Quixadá</Text>
+        <Text style={styles.cardContent}>Rota: Ocara → Quixadá</Text>
         <Text style={styles.cardContent}>Alunos Agendados: 42</Text>
       </View>
     </View>
