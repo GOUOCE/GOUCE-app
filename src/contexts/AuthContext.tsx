@@ -34,40 +34,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (isLoading) return;
 
     const firstSegment = segments[0];
-    const inProtectedGroup = firstSegment === '(driver)' || firstSegment === '(student)';
-    const inAuthGroup = firstSegment === '(auth)';
+    const inAuthGroup = firstSegment === '(autenticacao)';
 
-    console.log('[DEBUG] AuthContext:', {
-      segments,
-      firstSegment,
-      inProtectedGroup,
-      inAuthGroup,
-      hasUser: !!user
-    });
+    // Identifica se está em uma rota protegida
+    const isProtected = ['(aluno)', '(representante)', '(administrador)'].includes(firstSegment);
 
-    if (!user && inProtectedGroup) {
-      router.replace('/(auth)/login');
-    } else if (user && inAuthGroup) {
-      const root = user.role === 'MOTORISTA' ? '/(driver)/home' : '/(student)/home';
-      router.replace(root);
+    if (!user && isProtected) {
+      // Se não está logado e tenta acessar rota protegida, vai para login
+      router.replace('/(autenticacao)/login');
+      return;
+    }
+
+    if (user) {
+      if (inAuthGroup) {
+        // Se logado e em rota de auth, manda para sua home
+        const root = user.role === 'ADMINISTRADOR' ? '/(administrador)/home' :
+                     user.role === 'MOTORISTA' ? '/(representante)/home' : '/(aluno)/home';
+        router.replace(root);
+        return;
+      }
+
+      // Validação de Perfil vs Rota
+      const roleMatches = (user.role === 'ADMINISTRADOR' && firstSegment === '(administrador)') ||
+                          (user.role === 'MOTORISTA' && firstSegment === '(representante)') ||
+                          (user.role === 'ALUNO' && firstSegment === '(aluno)');
+
+      if (isProtected && !roleMatches) {
+        // Se logado mas em rota errada, manda para acesso negado
+        router.replace('/acesso-negado');
+      }
     }
   }, [user, segments, isLoading]);
 
   async function signIn(email: string, role: UserRole) {
     setIsLoading(true);
     try {
-      // Simulação de chamada de API (HU-002)
-      // Futuramente aqui será usado o Axios para chamar /auth/login
-      const mockUser: User = {
-        id: '1',
-        name: 'Usuário de Teste',
-        email,
-        role,
-      };
+      // Logins Mockados para Teste
+      let mockUser: User | null = null;
+
+      if (email === 'admin@gouoce.com') {
+        mockUser = { id: '1', name: 'Admin Master', email, role: 'ADMINISTRADOR' };
+      } else if (email === 'aluno@gouoce.com') {
+        mockUser = { id: '2', name: 'João Aluno', email, role: 'ALUNO' };
+      } else {
+        // Fallback para qualquer outro email usando o role selecionado na UI
+        mockUser = {
+          id: Math.random().toString(),
+          name: 'Usuário de Teste',
+          email,
+          role,
+        };
+      }
 
       setUser(mockUser);
       setToken('fake-jwt-token');
-      // Salvar token no storage futuramente
     } finally {
       setIsLoading(false);
     }
@@ -76,8 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function signOut() {
     setUser(null);
     setToken(null);
-    // Limpar storage futuramente
-    router.replace('/(auth)/login');
+    router.replace('/(autenticacao)/login');
   }
 
   useEffect(() => {

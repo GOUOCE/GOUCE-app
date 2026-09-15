@@ -21,7 +21,7 @@ export default function WelcomeScreen() {
       <View style={styles.buttonContainer}>
         <Button
           mode="contained"
-          onPress={() => router.push('/(auth)/login')}
+          onPress={() => router.push('/(autenticacao)/login')}
           style={styles.button}
           contentStyle={styles.buttonContent}
         >
@@ -30,7 +30,7 @@ export default function WelcomeScreen() {
 
         <Button
           mode="outlined"
-          onPress={() => router.push('/(auth)/register')}
+          onPress={() => router.push('/(autenticacao)/register')}
           style={[styles.button, styles.outlineButton]}
           contentStyle={styles.buttonContent}
           labelStyle={{ color: theme.colors.primary }}

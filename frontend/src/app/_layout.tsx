@@ -45,9 +45,11 @@ export default function RootLayout() {
         <PaperProvider theme={theme}>
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="(student)" options={{ headerShown: false }} />
-            <Stack.Screen name="(driver)" options={{ headerShown: false }} />
+            <Stack.Screen name="(autenticacao)" options={{ headerShown: false }} />
+            <Stack.Screen name="(aluno)" options={{ headerShown: false }} />
+            <Stack.Screen name="(representante)" options={{ headerShown: false }} />
+            <Stack.Screen name="(administrador)" options={{ headerShown: false }} />
+            <Stack.Screen name="acesso-negado" options={{ presentation: 'modal' }} />
           </Stack>
         </PaperProvider>
       </AuthProvider>
