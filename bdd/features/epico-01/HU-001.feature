@@ -45,14 +45,14 @@
       | Quantidade de semestres  | 5                       |
     E o usuário anexa o "Comprovante de Matrícula (ou Histórico)" válido
     E o usuário anexa o "Comprovante de Residência" válido
-    E o usuário toca no botão "Avançar"
+    E o usuário clica no botão "Avançar"
     Então o sistema exibe a tela com os Termos de Uso e Política de Privacidade
     Quando o usuário marca a opção "Li e aceito os Termos de Uso e a Política de Privacidade"
-    E o usuário toca no botão "Enviar Cadastro"
+    E o usuário clica no botão "Enviar Cadastro"
     Então o sistema valida os dados informados sem apontar erros
     E o sistema salva a solicitação de cadastro com status "Pendente de Aprovação"
     E o sistema exibe a mensagem de sucesso "Cadastro enviado para análise da coordenação"
-    # PREMISSA A VALIDAR: redirecionamento pós-cadastro não está explícito no AC-07 do requisitos.md - confirmar com dev/PO
+    # COMPORTAMENTO VALIDADO PELO PO: cadastro não gera sessão automática; usuário retorna à tela de login
     E o usuário é direcionado para a tela de login
 
 
@@ -73,7 +73,7 @@
     Quando o usuário preenche o campo "E-mail" com "joao.pereira@aluno.ufc.br"
     E preenche os demais campos obrigatórios corretamente
     E anexa os comprovantes obrigatórios válidos
-    E toca no botão "Avançar"
+    E clica no botão "Avançar"
     Então o sistema bloqueia a conclusão do cadastro
     E o sistema exibe a mensagem "Este e-mail já está em uso. Faça login ou recupere sua senha."
     E o sistema não avança para a tela de Termos de Uso
@@ -85,30 +85,30 @@
     Dado que o usuário preencheu todos os campos obrigatórios corretamente
     E anexou os comprovantes obrigatórios válidos
     Quando o usuário limpa o campo "<campo_obrigatorio>"
-    E toca no botão "Avançar"
+    E clica no botão "Avançar"
     Então o sistema bloqueia o envio do formulário
     E o sistema sinaliza o campo "<campo_obrigatorio>" como pendente
     E o sistema não avança para a tela de Termos de Uso
 
     Exemplos:
-      | campo_obrigatorio                            |
-      | E-mail                                       |
-      | Nome completo                                |
-      | Senha                                        |
-      | Confirmação de senha                         |
-      | Data de nascimento                           |
-      | Raça                                         |
-      | Identificação de gênero                      |
-      | Identificação sexual                         |
-      | Tem filhos                                   |
-      | Bairro/Localidade                            |
-      | WhatsApp                                     |
-      | Instituição                                  |
-      | Curso                                        |
-      | Campus                                       |
-      | Período de ingresso                          |
-      | Turno do curso                               |
-      | Quantidade de semestres                      |
+      | <campo_obrigatorio>                            |
+      | E-mail                                         |
+      | Nome completo                                  |
+      | Senha                                          |
+      | Confirmação de senha                           |
+      | Data de nascimento                             |
+      | Raça                                           |
+      | Identificação de gênero                        |
+      | Identificação sexual                           |
+      | Tem filhos                                     |
+      | Bairro/Localidade                              |
+      | WhatsApp                                       |
+      | Instituição                                    |
+      | Curso                                          |
+      | Campus                                         |
+      | Período de ingresso                            |  
+      | Turno do curso                                 | 
+      | Quantidade de semestres                        |
 
 
   # FA-002 - Comprovantes obrigatórios não anexados (AC-02)
@@ -116,7 +116,7 @@
   Esquema do Cenário: Sistema bloqueia o envio quando um comprovante obrigatório não é anexado
     Dado que o usuário preencheu todos os campos obrigatórios corretamente
     Quando o usuário não anexa o "<comprovante_obrigatorio>"
-    E toca no botão "Avançar"
+    E clica no botão "Avançar"
     Então o sistema bloqueia o envio do formulário
     E o sistema sinaliza o "<comprovante_obrigatorio>" como pendente
     E o sistema não avança para a tela de Termos de Uso
@@ -133,7 +133,7 @@
     Dado que o usuário preencheu todos os campos obrigatórios corretamente
     Quando o usuário informa "<senha>" no campo "Senha"
     E informa "<confirmacao_senha>" no campo "Confirmação de senha"
-    E toca no botão "Avançar"
+    E clica no botão "Avançar"
     Então o sistema bloqueia o envio do formulário
     E o sistema exibe a mensagem de erro "<mensagem_esperada>"
 
@@ -151,9 +151,9 @@
   Cenário: Sistema impede a conclusão do cadastro sem o aceite dos Termos de Uso
     Dado que o usuário preencheu todos os campos obrigatórios corretamente
     E anexou os comprovantes obrigatórios válidos
-    E tocou no botão "Avançar"
+    E clicou no botão "Avançar"
     E o sistema exibe a tela com os Termos de Uso e Política de Privacidade
-    Quando o usuário toca no botão "Enviar Cadastro" sem marcar o aceite dos termos
+    Quando o usuário clica no botão "Enviar Cadastro" sem marcar o aceite dos termos
     Então o sistema impede a conclusão do cadastro
     E o sistema mantém o usuário na tela de Termos de Uso
     E nenhuma solicitação de cadastro é salva no sistema
@@ -166,7 +166,7 @@
     E anexou os comprovantes obrigatórios válidos
     E aceitou os Termos de Uso e Política de Privacidade
     Mas a comunicação com a API está indisponível
-    Quando o usuário toca no botão "Enviar Cadastro"
+    Quando o usuário clica no botão "Enviar Cadastro"
     Então o sistema exibe a mensagem de erro "Não foi possível concluir o cadastro. Verifique sua conexão e tente novamente."
     E o sistema mantém todos os dados já preenchidos na tela
     E nenhuma solicitação de cadastro é salva no sistema

@@ -21,7 +21,7 @@ Funcionalidade: Controle de Acesso por Perfil
   @fluxo_feliz @smoke @prioridade_alta
   Esquema do Cenário: Sistema exibe apenas os menus permitidos para cada perfil de usuário autenticado
     Dado que o usuário realizou login com sucesso com o perfil "<perfil>"
-    Quando o sistema renderiza a interface principal
+    Quando o sistema carrega a interface principal
     Então o usuário visualiza os menus "<menus_visiveis>"
     E o usuário não visualiza os menus "<menus_ocultos>"
 
@@ -36,7 +36,7 @@ Funcionalidade: Controle de Acesso por Perfil
   @regra_negocio @RN015 @prioridade_alta
   Cenário: Representante acessa exclusivamente a lista de embarque e o registro de frequência da sua universidade
     Dado que o usuário realizou login com sucesso com o perfil "Representante"
-    Quando o sistema renderiza a interface principal
+    Quando o sistema carrega a interface principal
     Então o usuário visualiza apenas a lista de embarque e o controle de frequência dos alunos vinculados à universidade sob sua responsabilidade
     E o usuário não visualiza nenhuma funcionalidade administrativa exclusiva do Administrador
 
@@ -49,10 +49,19 @@ Funcionalidade: Controle de Acesso por Perfil
     Então o sistema "<resultado>"
 
     Exemplos:
-      | perfil        | acao_restrita               | resultado                                |
-      | Administrador | cadastrar um novo ônibus    | permite a execução da ação               |
-      | Aluno         | cadastrar um novo ônibus    | bloqueia a ação e exibe "Acesso Negado"  |
-      | Representante | publicar um aviso no mural  | bloqueia a ação e exibe "Acesso Negado"  |
+      | perfil        | acao_restrita                       | resultado                                |
+      | Administrador | cadastrar um novo ônibus            | permite a execução da ação               |
+      | Administrador | editar um ônibus existente          | permite a execução da ação               |
+      | Administrador | inativar um ônibus existente        | permite a execução da ação               |
+      | Administrador | publicar um aviso no mural          | permite a execução da ação               |
+      | Aluno         | cadastrar um novo ônibus            | bloqueia a ação e exibe "Acesso Negado"  |
+      | Aluno         | editar um ônibus existente          | bloqueia a ação e exibe "Acesso Negado"  |
+      | Aluno         | inativar um ônibus existente        | bloqueia a ação e exibe "Acesso Negado"  |
+      | Aluno         | publicar um aviso no mural          | bloqueia a ação e exibe "Acesso Negado"  |
+      | Representante | cadastrar um novo ônibus            | bloqueia a ação e exibe "Acesso Negado"  |
+      | Representante | editar um ônibus existente          | bloqueia a ação e exibe "Acesso Negado"  |
+      | Representante | inativar um ônibus existente        | bloqueia a ação e exibe "Acesso Negado"  |
+      | Representante | publicar um aviso no mural          | bloqueia a ação e exibe "Acesso Negado"  |
 
 
   # FA-001 - Tentativa de acesso a rota/tela não autorizada (AC-05, AC-06)

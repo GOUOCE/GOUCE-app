@@ -25,7 +25,7 @@ Funcionalidade: Renovação de Vínculo Institucional
     Então o sistema exibe um aviso destacado de necessidade de renovação
     Quando o aluno seleciona a opção de renovar vínculo
     E anexa o comprovante de matrícula atualizado no formato "PDF" com 2MB
-    E toca no botão "Enviar"
+    E clica no botão "Enviar"
     Então o sistema exibe a mensagem "Comprovante enviado com sucesso"
     E o sistema altera o status do aluno para "Em Análise"
     E o documento é encaminhado para a fila do administrador
@@ -45,7 +45,7 @@ Funcionalidade: Renovação de Vínculo Institucional
   Esquema do Cenário: Sistema bloqueia o envio de arquivos em formato ou tamanho inválido
     Quando o aluno seleciona a opção de renovar vínculo
     E anexa um arquivo no formato "<formato>" com "<tamanho>"
-    E toca no botão "Enviar"
+    E clica no botão "Enviar"
     Então o sistema bloqueia o envio
     E o sistema exibe a mensagem "<mensagem_esperada>"
 
@@ -60,7 +60,7 @@ Funcionalidade: Renovação de Vínculo Institucional
   Cenário: Sistema orienta nova tentativa quando há falha de conexão durante o upload do comprovante
     Dado que o aluno anexou o comprovante de matrícula atualizado válido
     Mas a comunicação com a API está indisponível
-    Quando o aluno toca no botão "Enviar"
+    Quando o aluno clica no botão "Enviar"
     Então o sistema exibe a mensagem "Falha no envio. Verifique sua conexão e tente novamente."
     E o sistema mantém a tela de renovação ativa para uma nova tentativa
 

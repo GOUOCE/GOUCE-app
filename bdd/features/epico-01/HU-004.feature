@@ -22,7 +22,7 @@ Funcionalidade: Recuperação de Senha
   @fluxo_feliz @smoke @prioridade_alta
   Cenário: Aluno recupera a senha com sucesso e acessa o sistema com a nova credencial
     Dado que existe um aluno cadastrado com o e-mail "maria.souza@aluno.ufc.br"
-    Quando o usuário toca na opção "Esqueci minha senha"
+    Quando o usuário clica na opção "Esqueci minha senha"
     E informa o e-mail "maria.souza@aluno.ufc.br"
     E confirma a solicitação de recuperação
     Então o sistema gera um link de recuperação com tempo de expiração
@@ -30,7 +30,7 @@ Funcionalidade: Recuperação de Senha
     Quando o usuário acessa o link de recuperação válido
     E preenche o campo "Nova Senha" com "NovaSenha@1"
     E preenche o campo "Confirmar Nova Senha" com "NovaSenha@1"
-    E toca no botão "Redefinir Senha"
+    E clica no botão "Redefinir Senha"
     Então o sistema exibe a mensagem de confirmação "Senha redefinida com sucesso"
     E o usuário é redirecionado para a tela de login
     Quando o usuário realiza login com o e-mail "maria.souza@aluno.ufc.br" e a senha "NovaSenha@1"
@@ -50,7 +50,7 @@ Funcionalidade: Recuperação de Senha
   @fluxo_infeliz @FA001 @seguranca @prioridade_alta
   Cenário: Sistema não revela se o e-mail informado está cadastrado ao solicitar recuperação
     Dado que não existe cadastro associado ao e-mail "desconhecido@aluno.ufc.br"
-    Quando o usuário toca na opção "Esqueci minha senha"
+    Quando o usuário clica na opção "Esqueci minha senha"
     E informa o e-mail "desconhecido@aluno.ufc.br"
     E confirma a solicitação de recuperação
     Então o sistema exibe a mensagem "Se o e-mail estiver cadastrado, enviaremos as instruções de recuperação"
@@ -77,7 +77,7 @@ Funcionalidade: Recuperação de Senha
     Dado que o usuário acessou um link de recuperação válido
     Quando o usuário informa "<nova_senha>" no campo "Nova Senha"
     E informa "<nova_senha>" no campo "Confirmar Nova Senha"
-    E toca no botão "Redefinir Senha"
+    E clica no botão "Redefinir Senha"
     Então o sistema bloqueia a redefinição
     E o sistema sinaliza que a senha não atende aos critérios mínimos de complexidade
 

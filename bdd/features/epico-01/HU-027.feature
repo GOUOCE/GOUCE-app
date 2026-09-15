@@ -41,7 +41,7 @@ Funcionalidade: Avaliação de Solicitação de Cadastro
   Cenário: Administrador aprova uma solicitação de cadastro
     Dado que existe uma solicitação de cadastro pendente do aluno "Maria Souza"
     Quando o administrador seleciona o cadastro de "Maria Souza"
-    E toca no botão "Aprovar"
+    E clica no botão "Aprovar"
     Então o sistema atualiza o status do aluno para "Aprovado"
     E o sistema remove o registro da fila de pendentes
     E o sistema dispara uma notificação informando "Maria Souza" sobre a liberação do acesso
@@ -53,7 +53,7 @@ Funcionalidade: Avaliação de Solicitação de Cadastro
   Cenário: Administrador reprova uma solicitação de cadastro informando o motivo
     Dado que existe uma solicitação de cadastro pendente do aluno "João Pereira"
     Quando o administrador seleciona o cadastro de "João Pereira"
-    E toca no botão "Reprovar"
+    E clica no botão "Reprovar"
     E informa o motivo "Comprovante de matrícula desatualizado"
     E confirma a reprovação
     Então o sistema atualiza o status do aluno para "Reprovado"
@@ -67,10 +67,10 @@ Funcionalidade: Avaliação de Solicitação de Cadastro
   Cenário: Sistema bloqueia a confirmação da reprovação quando o motivo não é preenchido
     Dado que existe uma solicitação de cadastro pendente do aluno "João Pereira"
     Quando o administrador seleciona o cadastro de "João Pereira"
-    E toca no botão "Reprovar"
+    E clica no botão "Reprovar"
     E tenta confirmar a reprovação sem preencher o campo de motivo
     Então o sistema bloqueia a confirmação
-    E o sistema destaca o campo de motivo como obrigatório
+    E o sistema destaca e exige o campo de motivo como obrigatório
 
 
   # AC-01 - Acesso restrito ao Administrador (RN-006)

@@ -25,20 +25,33 @@ Funcionalidade: Login de Usuários
     Quando o usuário seleciona o perfil de acesso "Aluno"
     E preenche o campo "E-mail" com "maria.souza@aluno.ufc.br"
     E preenche o campo "Senha" com "Senha@123"
-    E toca no botão "Entrar"
+    E clica no botão "Entrar"
     Então o sistema autentica o usuário com sucesso em até 3 segundos
     E o sistema gera um token de sessão
     E o usuário é redirecionado para a interface correspondente ao perfil "Aluno"
 
 
-  # AC-08 - Seleção obrigatória do perfil de acesso antes das credenciais
+  # FLUXO PRINCIPAL (CAMINHO FELIZ) - AC-01, AC-05, AC-07, AC-08 - RF-001, RF-003
+  @fluxo_feliz @prioridade_alta
+  Cenário: Login bem-sucedido de representante com credenciais válidas
+    Dado que existe um representante cadastrado e ativo com e-mail "pedro.lima@atu.ce.gov.br" e senha "Senha@123"
+    Quando o usuário seleciona o perfil de acesso "Representante"
+    E preenche o campo "E-mail" com "pedro.lima@atu.ce.gov.br"
+    E preenche o campo "Senha" com "Senha@123"
+    E clica no botão "Entrar"
+    Então o sistema autentica o usuário com sucesso em até 3 segundos
+    E o sistema gera um token de sessão
+    E o usuário é redirecionado para a interface correspondente ao perfil "Representante"
+
+
+  # AC-08 - Seleção obrigatória do perfil de acesso antes das credenciais (Aluno, Representante ou Administrador)
   @fluxo_infeliz @AC08 @prioridade_media
   Cenário: Sistema exige a seleção do perfil de acesso antes de permitir o login
     Quando o usuário preenche o campo "E-mail" com "maria.souza@aluno.ufc.br"
     E preenche o campo "Senha" com "Senha@123"
-    E toca no botão "Entrar" sem selecionar um perfil de acesso
+    E clica no botão "Entrar" sem selecionar um perfil de acesso
     Então o sistema bloqueia a tentativa de login
-    E o sistema sinaliza que é necessário escolher o perfil de acesso (Aluno ou Administrador)
+    E o sistema sinaliza que é necessário escolher o perfil de acesso (Aluno, Representante ou Administrador)
 
 
   # FA-002 - Campos obrigatórios não preenchidos (AC-02)
@@ -46,7 +59,7 @@ Funcionalidade: Login de Usuários
   Esquema do Cenário: Sistema bloqueia o login quando um campo obrigatório não é preenchido
     Dado que o usuário selecionou o perfil de acesso "Aluno"
     Quando o usuário tenta entrar com o campo "<campo_obrigatorio>" vazio
-    E toca no botão "Entrar"
+    E clica no botão "Entrar"
     Então o sistema bloqueia a ação
     E o sistema destaca o campo "<campo_obrigatorio>" como pendente
 
@@ -63,7 +76,7 @@ Funcionalidade: Login de Usuários
     Quando o usuário seleciona o perfil de acesso "Aluno"
     E preenche o campo "E-mail" com "inexistente@aluno.ufc.br"
     E preenche o campo "Senha" com "QualquerSenha@1"
-    E toca no botão "Entrar"
+    E clica no botão "Entrar"
     Então o sistema bloqueia o acesso
     E o sistema exibe a mensagem "E-mail ou senha incorretos. Tente novamente."
 
@@ -75,7 +88,7 @@ Funcionalidade: Login de Usuários
     Quando o usuário seleciona o perfil de acesso "Aluno"
     E preenche o campo "E-mail" com "maria.souza@aluno.ufc.br"
     E preenche o campo "Senha" com "SenhaErrada@1"
-    E toca no botão "Entrar"
+    E clica no botão "Entrar"
     Então o sistema bloqueia o acesso
     E o sistema exibe a mensagem "E-mail ou senha incorretos. Tente novamente."
     E o sistema não informa qual dos dois campos está incorreto
@@ -88,7 +101,7 @@ Funcionalidade: Login de Usuários
     Quando o usuário seleciona o perfil de acesso "Administrador"
     E preenche o campo "E-mail" com "carlos.andrade@atu.ce.gov.br"
     E preenche o campo "Senha" com a senha correta
-    E toca no botão "Entrar"
+    E clica no botão "Entrar"
     Então o sistema impede o login
     E o sistema exibe a mensagem "Usuário inativo. Entre em contato com a coordenação."
 
@@ -100,9 +113,9 @@ Funcionalidade: Login de Usuários
     E preencheu o campo "E-mail" com "maria.souza@aluno.ufc.br"
     E preencheu o campo "Senha" com "Senha@123"
     Mas a comunicação com a API está indisponível
-    Quando o usuário toca no botão "Entrar"
+    Quando o usuário clica no botão "Entrar"
     Então o sistema exibe uma mensagem de erro de conexão
-    E o sistema mantém os dados já digitados para uma nova tentativa
+    E o sistema mantém os dados já digitados para uma nova tentativa posteriormente
 
 
   # REQUISITOS NÃO FUNCIONAIS - validação recomendada via testes de API/backend

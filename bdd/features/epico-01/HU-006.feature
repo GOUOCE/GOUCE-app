@@ -22,10 +22,10 @@ Funcionalidade: Gerenciamento de Administradores
   # FLUXO PRINCIPAL (CAMINHO FELIZ) - AC-02
   @fluxo_feliz @smoke @prioridade_alta
   Cenário: Administrador cria um novo perfil administrativo com sucesso
-    Quando o administrador toca em "Novo Administrador"
+    Quando o administrador clica em "Novo Administrador"
     E preenche o campo "Nome" com "Carlos Andrade"
     E preenche o campo "E-mail" com "carlos.andrade@atu.ce.gov.br"
-    E toca no botão "Salvar"
+    E clica no botão "Salvar"
     Então o sistema valida que o e-mail é único
     E o sistema cria o novo perfil administrativo
     E o sistema exibe a mensagem "Operação realizada com sucesso"
@@ -36,10 +36,10 @@ Funcionalidade: Gerenciamento de Administradores
   @fluxo_infeliz @FA001 @prioridade_alta
   Cenário: Sistema bloqueia a criação de administrador com e-mail já utilizado
     Dado que já existe um usuário cadastrado com o e-mail "carlos.andrade@atu.ce.gov.br"
-    Quando o administrador toca em "Novo Administrador"
+    Quando o administrador clica em "Novo Administrador"
     E preenche o campo "Nome" com "Carlos Andrade Filho"
     E preenche o campo "E-mail" com "carlos.andrade@atu.ce.gov.br"
-    E toca no botão "Salvar"
+    E clica no botão "Salvar"
     Então o sistema bloqueia a criação
     E o sistema exibe a mensagem "Este e-mail já está em uso por outro usuário no sistema."
 
@@ -50,7 +50,7 @@ Funcionalidade: Gerenciamento de Administradores
     Dado que existe um administrador ativo chamado "Carlos Andrade"
     Quando o administrador seleciona "Carlos Andrade" na listagem
     E altera o campo "Nome" para "Carlos Andrade Filho"
-    E toca no botão "Salvar"
+    E clica no botão "Salvar"
     Então o sistema atualiza os dados do administrador
     E o sistema exibe a mensagem "Operação realizada com sucesso"
 
@@ -74,6 +74,19 @@ Funcionalidade: Gerenciamento de Administradores
     Quando o administrador seleciona a ação "Inativar" para a própria conta "Carlos Andrade"
     Então o sistema bloqueia a ação
     E o sistema exibe a mensagem "Não é possível inativar a conta atualmente em uso."
+
+
+  # Esclarecimento: inativação de outro administrador é permitida (restrição é só de auto-inativação)
+  @fluxo_feliz @prioridade_alta
+  Cenário: Um administrador consegue inativar outro administrador (apenas auto-inativação é bloqueada)
+    Dado que existe um administrador "João Silva" cadastrado e ativo
+    E o administrador logado é "Maria Costa" (diferente de João Silva)
+    Quando o administrador "Maria Costa" seleciona a ação "Inativar" para "João Silva"
+    E confirma a inativação
+    Então o sistema aplica soft delete no registro de "João Silva"
+    E o sistema gera um registro de auditoria contendo usuário responsável ("Maria Costa"), ação e timestamp
+    E o sistema exibe a mensagem "Operação realizada com sucesso"
+    E a listagem de administradores é atualizada removendo "João Silva" dos ativos
 
 
   # AC-08 - Visualização de administradores inativos
