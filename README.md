@@ -63,3 +63,4 @@ npm start
 Para acessar o backend local nessa opção, defina `EXPO_PUBLIC_API_URL=http://localhost:8000` no ambiente do Expo.
 ---
 Este projeto faz parte da disciplina de Projeto Integrado III - UFC Quixadá.
+Teste do template de PR
