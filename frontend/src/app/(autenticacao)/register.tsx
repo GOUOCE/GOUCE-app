@@ -20,11 +20,15 @@ import { Passo4Documentacao } from '@/components/cadastro/Passo4Documentacao';
 import { TermosDeUso } from '@/components/cadastro/TermosDeUso';
 import { TelaSucesso } from '@/components/cadastro/TelaSucesso';
 
+import { userService } from '@services/userService';
+import { useAuth } from '@contexts/AuthContext';
+
 export default function RegisterScreen() {
   const router = useRouter();
   const theme = useTheme();
+  const { setUserAndToken } = useAuth();
   const [passo, setPasso] = useState(1);
-  const [enviado, setEnviado] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [modalSairVisivel, setModalSairVisivel] = useState(false);
 
   const metodos = useForm<AlunoFormData>({
@@ -75,14 +79,27 @@ export default function RegisterScreen() {
     }
   };
 
-  const onSubmit = (dados: AlunoFormData) => {
-    console.log('Dados do Cadastro:', dados);
-    setEnviado(true);
-  };
+  const onSubmit = async (dados: AlunoFormData) => {
+    setIsLoading(true);
+    try {
+      const response = await userService.register(dados);
 
-  if (enviado) {
-    return <TelaSucesso onVoltarLogin={() => router.replace('/(autenticacao)/login')} />;
-  }
+      const userData = {
+        id: String(response.usuario.id),
+        name: response.usuario.nome,
+        email: response.usuario.email,
+        role: 'ALUNO' as const,
+      };
+
+      await setUserAndToken(userData, response.token_acesso);
+      // O AuthContext cuidará do redirecionamento para /cadastro-pendente
+    } catch (error: any) {
+      const message = error.response?.data?.detail || 'Erro ao realizar cadastro. Tente novamente.';
+      alert(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <FormProvider {...metodos}>
@@ -102,33 +119,28 @@ export default function RegisterScreen() {
         <Portal>
           <Modal
             visible={modalSairVisivel}
-            transparent={true}
-            animationType="fade"
-            onRequestClose={() => setModalSairVisivel(false)}
+            onDismiss={() => setModalSairVisivel(false)}
+            contentContainerStyle={styles.modalContent}
           >
-            <View style={styles.modalOverlay}>
-              <View style={styles.modalContent}>
-                <Text variant="headlineSmall" style={styles.modalTitle}>Cancelar cadastro?</Text>
-                <Text variant="bodyLarge" style={styles.modalText}>
-                  Se você sair agora, todos os dados preenchidos até este passo serão perdidos.
-                </Text>
-                <View style={styles.modalButtons}>
-                  <Button
-                    mode="text"
-                    onPress={() => setModalSairVisivel(false)}
-                    style={styles.modalBtn}
-                  >
-                    Continuar preenchendo
-                  </Button>
-                  <Button
-                    mode="contained"
-                    onPress={confirmarSaida}
-                    style={[styles.modalBtn, { backgroundColor: '#B00020' }]}
-                  >
-                    Sim, sair
-                  </Button>
-                </View>
-              </View>
+            <Text variant="headlineSmall" style={styles.modalTitle}>Cancelar cadastro?</Text>
+            <Text variant="bodyLarge" style={styles.modalText}>
+              Se você sair agora, todos os dados preenchidos até este passo serão perdidos.
+            </Text>
+            <View style={styles.modalButtons}>
+              <Button
+                mode="text"
+                onPress={() => setModalSairVisivel(false)}
+                style={styles.modalBtn}
+              >
+                Continuar preenchendo
+              </Button>
+              <Button
+                mode="contained"
+                onPress={confirmarSaida}
+                style={[styles.modalBtn, { backgroundColor: '#B00020' }]}
+              >
+                Sim, sair
+              </Button>
             </View>
           </Modal>
         </Portal>
@@ -182,9 +194,10 @@ export default function RegisterScreen() {
             <Button
               mode="contained"
               onPress={handleSubmit(onSubmit)}
+              loading={isLoading}
               style={styles.actionButton}
               contentStyle={styles.buttonContent}
-              disabled={!metodos.watch('aceitouTermos')}
+              disabled={!metodos.watch('aceitouTermos') || isLoading}
             >
               Concluir cadastro
             </Button>
@@ -253,18 +266,11 @@ const styles = StyleSheet.create({
   buttonContent: {
     height: 55,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
   modalContent: {
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: 24,
-    width: '100%',
+    margin: 24,
     gap: 16,
   },
   modalTitle: {

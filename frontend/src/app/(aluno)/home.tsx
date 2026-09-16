@@ -1,25 +1,9 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, Surface, useTheme, Button } from 'react-native-paper';
 import { CalendarPlus, ClipboardList, Megaphone, Contact } from 'lucide-react-native';
 import { useAuth } from '@contexts/AuthContext';
-
-interface QuickActionProps {
-  title: string;
-  Icone: any;
-  onPress?: () => void;
-}
-
-function QuickAction({ title, Icone, onPress }: QuickActionProps) {
-  return (
-    <Surface style={styles.actionCard} elevation={0}>
-      <TouchableOpacity style={styles.actionButton} onPress={onPress}>
-        <Icone size={36} color="#333" strokeWidth={1.2} />
-        <Text variant="bodySmall" style={styles.actionLabel}>{title}</Text>
-      </TouchableOpacity>
-    </Surface>
-  );
-}
+import { QuickAction } from '@/components/dashboard/QuickAction';
 
 export default function StudentHomeScreen() {
   const theme = useTheme();
@@ -30,7 +14,7 @@ export default function StudentHomeScreen() {
       {/* Saudação */}
       <View style={styles.header}>
         <Text variant="displaySmall" style={styles.greeting}>
-          Olá, João!
+          Olá, {user?.name?.split(' ')[0] || 'Aluno'}!
         </Text>
       </View>
 
@@ -116,25 +100,5 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 12,
     justifyContent: 'space-between',
-  },
-  actionCard: {
-    width: '48%',
-    height: 120,
-    borderRadius: 16,
-    backgroundColor: '#F8F9FF',
-    borderWidth: 1,
-    borderColor: '#E0E2EC',
-  },
-  actionButton: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 12,
-  },
-  actionLabel: {
-    textAlign: 'center',
-    color: '#191C20',
-    fontWeight: '500',
-    fontSize: 14,
   }
 });

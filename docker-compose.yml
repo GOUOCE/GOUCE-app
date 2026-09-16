@@ -17,7 +17,7 @@ services:
       retries: 5
 
   minio:
-    image: minio/minio
+    image: quay.io/minio/minio
     container_name: gouce_minio
     env_file:
       - ./backend/.env

@@ -37,6 +37,11 @@ export default function RepresentativeLayout() {
               <Route size={24} color={focused ? '#000' : '#666'} />
             </View>
           ),
+          tabBarButton: (props) => (
+            <View {...props} pointerEvents="none">
+              {props.children}
+            </View>
+          ),
         }}
       />
       <Tabs.Screen
@@ -46,6 +51,11 @@ export default function RepresentativeLayout() {
           tabBarIcon: ({ focused }) => (
             <View style={[styles.iconContainer, focused && styles.activeIconContainer]}>
               <UserCircle size={24} color={focused ? '#000' : '#666'} />
+            </View>
+          ),
+          tabBarButton: (props) => (
+            <View {...props} pointerEvents="none">
+              {props.children}
             </View>
           ),
         }}

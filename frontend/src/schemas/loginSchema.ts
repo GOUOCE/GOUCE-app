@@ -7,12 +7,12 @@ const passwordRules = z.string()
   .regex(/[0-9]/, 'A senha deve conter pelo menos um número');
 
 export const loginSchema = z.object({
-  email: z.string().email('E-mail inválido'),
-  senha: z.string().min(1, 'Senha é obrigatória'),
+  email: z.string().min(1, 'O e-mail é obrigatório').email('Informe um e-mail válido'),
+  senha: z.string().min(1, 'A senha é obrigatória'),
 });
 
 export const forgotPasswordSchema = z.object({
-  email: z.string().email('E-mail inválido'),
+  email: z.string().min(1, 'O e-mail é obrigatório').email('Informe um e-mail válido'),
 });
 
 export const resetPasswordSchema = z.object({

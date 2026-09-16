@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TouchableOpacity, Modal } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Text, useTheme, Button, Portal } from 'react-native-paper';
-import { ChevronLeft, UserCircle, Users, ShieldCheck } from 'lucide-react-native';
+import { Text, useTheme, Button, Portal, Modal } from 'react-native-paper';
+import { ChevronLeft, IdCard, Contact, Shield } from 'lucide-react-native';
 
 import { CardPerfil } from '@/components/auth/CardPerfil';
 import { useAuth } from '@contexts/AuthContext';
@@ -10,8 +10,8 @@ import { useAuth } from '@contexts/AuthContext';
 export default function SelecaoPerfilScreen() {
   const router = useRouter();
   const theme = useTheme();
-  const { email } = useLocalSearchParams();
-  const { signIn } = useAuth();
+  const { email, senha } = useLocalSearchParams<{ email: string; senha: string }>();
+  const { signIn, isLoading } = useAuth();
   const [modalSairVisivel, setModalSairVisivel] = useState(false);
 
   const handleBack = () => {
@@ -28,8 +28,21 @@ export default function SelecaoPerfilScreen() {
   };
 
   const handleSelectProfile = async (perfil: 'ALUNO' | 'MOTORISTA' | 'ADMINISTRADOR') => {
-    console.log('Finalizando login para:', email, 'como', perfil);
-    await signIn(email as string, perfil);
+    try {
+      await signIn(email, senha);
+    } catch (error: any) {
+      const status = error.response?.status;
+      const detail = error.response?.data?.detail || "";
+
+      // Caso a conta esteja pendente (HU-001/HU-002)
+      if (status === 403 && detail.includes('pendente')) {
+        router.replace('/(autenticacao)/cadastro-pendente');
+        return;
+      }
+
+      const message = detail || 'E-mail ou senha incorretos. Tente novamente.';
+      Alert.alert('Falha na autenticação', message);
+    }
   };
 
   return (
@@ -42,33 +55,28 @@ export default function SelecaoPerfilScreen() {
       <Portal>
         <Modal
           visible={modalSairVisivel}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setModalSairVisivel(false)}
+          onDismiss={() => setModalSairVisivel(false)}
+          contentContainerStyle={styles.modalContent}
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text variant="headlineSmall" style={styles.modalTitle}>Sair desta tela?</Text>
-              <Text variant="bodyLarge" style={styles.modalText}>
-                As credenciais informadas serão perdidas e você precisará digitá-las novamente.
-              </Text>
-              <View style={styles.modalButtons}>
-                <Button
-                  mode="text"
-                  onPress={() => setModalSairVisivel(false)}
-                  style={styles.modalBtn}
-                >
-                  Continuar aqui
-                </Button>
-                <Button
-                  mode="contained"
-                  onPress={confirmarSaida}
-                  style={[styles.modalBtn, { backgroundColor: '#B00020' }]}
-                >
-                  Sim, sair
-                </Button>
-              </View>
-            </View>
+          <Text variant="headlineSmall" style={styles.modalTitle}>Sair desta tela?</Text>
+          <Text variant="bodyLarge" style={styles.modalText}>
+            As credenciais informadas serão perdidas e você precisará digitá-las novamente.
+          </Text>
+          <View style={styles.modalButtons}>
+            <Button
+              mode="text"
+              onPress={() => setModalSairVisivel(false)}
+              style={styles.modalBtn}
+            >
+              Continuar aqui
+            </Button>
+            <Button
+              mode="contained"
+              onPress={confirmarSaida}
+              style={[styles.modalBtn, { backgroundColor: '#B00020' }]}
+            >
+              Sim, sair
+            </Button>
           </View>
         </Modal>
       </Portal>
@@ -79,24 +87,30 @@ export default function SelecaoPerfilScreen() {
         <CardPerfil
           titulo="Sou aluno"
           descricao="Agendamento, mural e carteirinha digital"
-          Icone={UserCircle}
+          Icone={IdCard}
           onPress={() => handleSelectProfile('ALUNO')}
         />
 
         <CardPerfil
           titulo="Sou representante"
           descricao="Chamada e lista de embarque da sua universidade"
-          Icone={Users}
+          Icone={Contact}
           onPress={() => handleSelectProfile('MOTORISTA')}
         />
 
         <CardPerfil
           titulo="Sou administrador"
           descricao="Gestão completa do transporte"
-          Icone={ShieldCheck}
+          Icone={Shield}
           onPress={() => handleSelectProfile('ADMINISTRADOR')}
         />
       </View>
+
+      {isLoading && (
+        <View style={styles.loadingOverlay}>
+          <Text>Autenticando...</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -119,18 +133,11 @@ const styles = StyleSheet.create({
   cardList: {
     gap: 8,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
   modalContent: {
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: 24,
-    width: '100%',
+    margin: 24,
     gap: 16,
   },
   modalTitle: {
@@ -148,5 +155,11 @@ const styles = StyleSheet.create({
   },
   modalBtn: {
     borderRadius: 8,
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
   }
 });

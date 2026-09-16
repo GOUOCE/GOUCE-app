@@ -14,11 +14,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft, Mail, X } from 'lucide-react-native';
 
 import { forgotPasswordSchema, ForgotPasswordFormData } from '@/schemas/loginSchema';
+import { authService } from '@services/authService';
 
 export default function EsqueciSenhaScreen() {
   const router = useRouter();
   const theme = useTheme();
   const [visivel, setVisivel] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [modalSairVisivel, setModalSairVisivel] = useState(false);
 
   const handleBack = () => {
@@ -38,9 +40,17 @@ export default function EsqueciSenhaScreen() {
     resolver: zodResolver(forgotPasswordSchema)
   });
 
-  const onSubmit = (dados: ForgotPasswordFormData) => {
-    console.log('Recuperar:', dados);
-    setVisivel(true);
+  const onSubmit = async (dados: ForgotPasswordFormData) => {
+    setIsLoading(true);
+    try {
+      await authService.forgotPassword(dados);
+      setVisivel(true);
+    } catch (error: any) {
+      const message = error.response?.data?.detail || 'Erro ao solicitar recuperação. Tente novamente.';
+      alert(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -116,6 +126,8 @@ export default function EsqueciSenhaScreen() {
         <Button
           mode="contained"
           onPress={handleSubmit(onSubmit)}
+          loading={isLoading}
+          disabled={isLoading}
           style={styles.button}
           contentStyle={styles.btnContent}
         >

@@ -126,18 +126,41 @@ export function Passo1DadosBasicos() {
       <Controller
         control={control}
         name="dataNascimento"
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            label="Data de Nascimento *"
-            mode="outlined"
-            placeholder="DD/MM/AAAA"
-            value={value}
-            onChangeText={onChange}
-            error={!!errors.dataNascimento}
-            left={<TextInput.Icon icon={() => <Calendar size={20} color="#666" />} />}
-            style={styles.input}
-          />
-        )}
+        render={({ field: { onChange, value } }) => {
+          const formatarData = (texto: string) => {
+            // Remove tudo que não é número
+            let limpo = texto.replace(/\D/g, '');
+
+            // Limita a 8 dígitos (DDMMYYYY)
+            if (limpo.length > 8) limpo = limpo.slice(0, 8);
+
+            // Aplica a máscara DD/MM/YYYY
+            let formatado = limpo;
+            if (limpo.length > 2) {
+              formatado = `${limpo.slice(0, 2)}/${limpo.slice(2)}`;
+            }
+            if (limpo.length > 4) {
+              formatado = `${limpo.slice(0, 2)}/${limpo.slice(2, 4)}/${limpo.slice(4)}`;
+            }
+
+            return formatado;
+          };
+
+          return (
+            <TextInput
+              label="Data de Nascimento *"
+              mode="outlined"
+              placeholder="DD/MM/AAAA"
+              keyboardType="numeric"
+              maxLength={10}
+              value={value}
+              onChangeText={(text) => onChange(formatarData(text))}
+              error={!!errors.dataNascimento}
+              left={<TextInput.Icon icon={() => <Calendar size={20} color="#666" />} />}
+              style={styles.input}
+            />
+          );
+        }}
       />
       {errors.dataNascimento && <Text style={styles.errorText}>{errors.dataNascimento.message as string}</Text>}
 

@@ -13,12 +13,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft, Lock, Eye, EyeOff } from 'lucide-react-native';
 
 import { resetPasswordSchema, ResetPasswordFormData } from '@/schemas/loginSchema';
+import { useLocalSearchParams } from 'expo-router';
+import { authService } from '@services/authService';
 
 export default function RedefinirSenhaScreen() {
   const router = useRouter();
   const theme = useTheme();
+  const { token } = useLocalSearchParams<{ token: string }>();
   const [verSenha, setVerSenha] = useState(false);
   const [verConfirmarSenha, setVerConfirmarSenha] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [modalSairVisivel, setModalSairVisivel] = useState(false);
 
   const handleBack = () => {
@@ -38,9 +42,23 @@ export default function RedefinirSenhaScreen() {
     resolver: zodResolver(resetPasswordSchema)
   });
 
-  const onSubmit = (dados: ResetPasswordFormData) => {
-    console.log('Nova Senha:', dados);
-    router.replace('/(autenticacao)/login');
+  const onSubmit = async (dados: ResetPasswordFormData) => {
+    if (!token) {
+      alert('Token de recuperação inválido ou expirado.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await authService.resetPassword(dados, token);
+      alert('Senha redefinida com sucesso!');
+      router.replace('/(autenticacao)/login');
+    } catch (error: any) {
+      const message = error.response?.data?.detail || 'Erro ao redefinir senha. Tente novamente.';
+      alert(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -148,6 +166,8 @@ export default function RedefinirSenhaScreen() {
         <Button
           mode="contained"
           onPress={handleSubmit(onSubmit)}
+          loading={isLoading}
+          disabled={isLoading}
           style={styles.button}
           contentStyle={styles.btnContent}
         >

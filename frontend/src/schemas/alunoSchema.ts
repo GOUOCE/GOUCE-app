@@ -22,13 +22,13 @@ export const alunoSchema = z.object({
 
   // Passo 3: Contato e Vínculo
   bairro: z.string().min(1, 'Selecione o bairro'),
-  whatsapp: z.string().min(10, 'Telefone inválido'),
+  whatsapp: z.string().min(10, 'O telefone deve ter pelo menos 10 dígitos'),
   instituicao: z.string().min(1, 'Selecione a instituição'),
   curso: z.string().min(1, 'Selecione o curso'),
   campus: z.string().min(1, 'Selecione o campus'),
-  periodoIngresso: z.string().min(1, 'Selecione o período'),
+  periodoIngresso: z.string().min(1, 'Selecione o período de ingresso'),
   turno: z.string().min(1, 'Selecione o turno'),
-  semestreAtual: z.string().min(1, 'Selecione o semestre'),
+  semestreAtual: z.string().min(1, 'Selecione o semestre atual'),
 
   // Passo 4: Documentação
   comprovanteMatricula: z.any().refine((file) => file, 'Obrigatório anexar comprovante de matrícula'),

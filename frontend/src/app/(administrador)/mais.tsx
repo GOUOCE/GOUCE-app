@@ -5,7 +5,7 @@ export default function Page() {
   const { signOut } = useAuth();
   return (
     <View style={{flex:1, justifyContent:'center', alignItems:'center', gap: 20}}>
-      <Text>Mais Opções</Text>
+      <Text>Mais</Text>
       <Button mode="contained" onPress={signOut} buttonColor="#904a45">Sair</Button>
     </View>
   )

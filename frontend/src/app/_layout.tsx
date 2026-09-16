@@ -15,6 +15,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { AuthProvider } from '@contexts/AuthContext';
 import { theme } from '@/theme';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 const queryClient = new QueryClient();
 
@@ -42,7 +43,12 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <PaperProvider theme={theme}>
+        <PaperProvider
+          theme={theme}
+          settings={{
+            icon: props => <MaterialCommunityIcons {...props} />,
+          }}
+        >
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="(autenticacao)" options={{ headerShown: false }} />

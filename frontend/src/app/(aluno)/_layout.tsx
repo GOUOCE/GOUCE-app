@@ -37,6 +37,11 @@ export default function StudentLayout() {
               <ClipboardList size={24} color={focused ? '#000' : '#666'} />
             </View>
           ),
+          tabBarButton: (props) => (
+            <View {...props} pointerEvents="none">
+              {props.children}
+            </View>
+          ),
         }}
       />
       <Tabs.Screen
@@ -48,6 +53,11 @@ export default function StudentLayout() {
               <Megaphone size={24} color={focused ? '#000' : '#666'} />
             </View>
           ),
+          tabBarButton: (props) => (
+            <View {...props} pointerEvents="none">
+              {props.children}
+            </View>
+          ),
         }}
       />
       <Tabs.Screen
@@ -57,6 +67,11 @@ export default function StudentLayout() {
           tabBarIcon: ({ focused }) => (
             <View style={[styles.iconContainer, focused && styles.activeIconContainer]}>
               <UserCircle size={24} color={focused ? '#000' : '#666'} />
+            </View>
+          ),
+          tabBarButton: (props) => (
+            <View {...props} pointerEvents="none">
+              {props.children}
             </View>
           ),
         }}
@@ -75,6 +90,6 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   activeIconContainer: {
-    backgroundColor: '#C2E7FF', // Azul claro da pílula no protótipo
+    backgroundColor: '#C2E7FF',
   },
 });

@@ -37,6 +37,11 @@ export default function AdminLayout() {
               <Archive size={24} color={focused ? '#000' : '#666'} />
             </View>
           ),
+          tabBarButton: (props) => (
+            <View {...props} pointerEvents="none">
+              {props.children}
+            </View>
+          ),
         }}
       />
       <Tabs.Screen
@@ -48,6 +53,11 @@ export default function AdminLayout() {
               <Bus size={24} color={focused ? '#000' : '#666'} />
             </View>
           ),
+          tabBarButton: (props) => (
+            <View {...props} pointerEvents="none">
+              {props.children}
+            </View>
+          ),
         }}
       />
       <Tabs.Screen
@@ -57,6 +67,11 @@ export default function AdminLayout() {
           tabBarIcon: ({ focused }) => (
             <View style={[styles.iconContainer, focused && styles.activeIconContainer]}>
               <MoreHorizontal size={24} color={focused ? '#000' : '#666'} />
+            </View>
+          ),
+          tabBarButton: (props) => (
+            <View {...props} pointerEvents="none">
+              {props.children}
             </View>
           ),
         }}
