@@ -19,7 +19,12 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router"
+      [
+        "expo-router",
+        {
+          "root": "./frontend/src/app"
+        }
+      ]
     ],
     "scheme": "gouce-app"
   }

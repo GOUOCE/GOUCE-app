@@ -1,22 +1,17 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { useRouter, useSegments } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { authService, User } from '../services/authService';
 
-// Tipagem do usuário baseada na arquitetura (Seção 4.1)
 export type UserRole = 'ALUNO' | 'MOTORISTA' | 'ADMINISTRADOR';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-}
 
 interface AuthContextData {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  signIn: (email: string, role: UserRole) => Promise<void>;
+  signIn: (email: string, senha: string, role?: UserRole) => Promise<void>;
   signOut: () => Promise<void>;
+  setUserAndToken: (user: User, token: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -29,56 +24,97 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const segments = useSegments();
 
-  // Proteção de rotas baseada no estado de autenticação
+  useEffect(() => {
+    async function loadStorageData() {
+      const storageUser = await AsyncStorage.getItem('@GOUOCE:user');
+      const storageToken = await AsyncStorage.getItem('@GOUOCE:token');
+
+      if (storageUser && storageToken) {
+        setUser(JSON.parse(storageUser));
+        setToken(storageToken);
+      }
+      setIsLoading(false);
+    }
+
+    loadStorageData();
+  }, []);
+
   useEffect(() => {
     if (isLoading) return;
 
-    const inAuthGroup = segments[0] === '(auth)';
+    const firstSegment = segments[0];
+    const inAuthGroup = firstSegment === '(autenticacao)';
+    const isProtected = ['(aluno)', '(representante)', '(administrador)'].includes(firstSegment);
 
-    if (!user && !inAuthGroup) {
-      // Se não está logado e não está em rotas de auth, vai para login
-      router.replace('/(auth)/login');
-    } else if (user && inAuthGroup) {
-      // Se já está logado e tenta acessar rotas de auth, vai para a home correta
-      const root = user.role === 'MOTORISTA' ? '/(driver)/home' : '/(student)/home';
-      router.replace(root);
+    if (!user && isProtected) {
+      router.replace('/(autenticacao)/login');
+      return;
+    }
+
+    if (user) {
+      // Se o cadastro está pendente, força a tela de análise (HU-001)
+      const isAtPendingScreen = segments.includes('cadastro-pendente');
+      if (user.status === 'pendente' && !isAtPendingScreen) {
+        router.replace('/(autenticacao)/cadastro-pendente');
+        return;
+      }
+
+      if (inAuthGroup && user.status === 'ativado') {
+        const root = user.role === 'ADMINISTRADOR' ? '/(administrador)/home' :
+                     user.role === 'MOTORISTA' ? '/(representante)/home' : '/(aluno)/home';
+        router.replace(root);
+        return;
+      }
+
+      const roleMatches = (user.role === 'ADMINISTRADOR' && firstSegment === '(administrador)') ||
+                          (user.role === 'MOTORISTA' && firstSegment === '(representante)') ||
+                          (user.role === 'ALUNO' && firstSegment === '(aluno)');
+
+      if (isProtected && !roleMatches && user.status === 'ativado') {
+        router.replace('/acesso-negado');
+      }
     }
   }, [user, segments, isLoading]);
 
-  async function signIn(email: string, role: UserRole) {
+  async function setUserAndToken(userData: User, userToken: string) {
+    await AsyncStorage.setItem('@GOUOCE:token', userToken);
+    await AsyncStorage.setItem('@GOUOCE:user', JSON.stringify(userData));
+    setUser(userData);
+    setToken(userToken);
+  }
+
+  async function signIn(email: string, senha: string) {
     setIsLoading(true);
     try {
-      // Simulação de chamada de API (HU-002)
-      // Futuramente aqui será usado o Axios para chamar /auth/login
-      const mockUser: User = {
-        id: '1',
-        name: 'Usuário de Teste',
-        email,
-        role,
+      const response = await authService.login({ email, senha });
+
+      const userData: User = {
+        id: String(response.usuario.id),
+        name: response.usuario.nome,
+        email: response.usuario.email,
+        role: authService.mapRole(response.usuario.role),
+        status: response.usuario.status_cadastro,
       };
 
-      setUser(mockUser);
-      setToken('fake-jwt-token');
-      // Salvar token no storage futuramente
+      await setUserAndToken(userData, response.token_acesso);
+    } catch (error) {
+      console.error('Erro no login:', error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
   }
 
   async function signOut() {
+    await AsyncStorage.removeItem('@GOUOCE:token');
+    await AsyncStorage.removeItem('@GOUOCE:user');
     setUser(null);
     setToken(null);
-    // Limpar storage futuramente
-    router.replace('/(auth)/login');
+    router.replace('/(autenticacao)/login');
   }
 
-  useEffect(() => {
-    // Lógica para carregar token salvo do storage ao iniciar o app
-    setTimeout(() => setIsLoading(false), 1000);
-  }, []);
-
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, token, isLoading, signIn, signOut, setUserAndToken }}>
       {children}
     </AuthContext.Provider>
   );

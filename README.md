@@ -53,13 +53,24 @@ Para parar os containers:
 docker compose down
 ```
 
-### 4. Executar somente o frontend localmente
-Com o Node.js instalado, execute:
-```bash
-npm install
-npm start
-```
+### 4. Executar somente o frontend localmente (Desenvolvimento Mobile)
+Com o Node.js instalado, siga estes passos para garantir a comunicação com a API:
 
-Para acessar o backend local nessa opção, defina `EXPO_PUBLIC_API_URL=http://localhost:8000` no ambiente do Expo.
+1.  **Instale as dependências:**
+    ```bash
+    npm install --legacy-peer-deps
+    ```
+
+2.  **Configure o IP da API:**
+    Para que o celular/emulador encontre o backend na sua rede, crie um arquivo `.env` na raiz do projeto com o seu IP local (descubra usando `ipconfig` no Windows):
+    ```text
+    EXPO_PUBLIC_API_URL=http://SEU_IP_AQUI:3000
+    ```
+
+3.  **Inicie o Expo:**
+    ```bash
+    npx expo start --tunnel
+    ```
+
 ---
 Este projeto faz parte da disciplina de Projeto Integrado III - UFC Quixadá.
