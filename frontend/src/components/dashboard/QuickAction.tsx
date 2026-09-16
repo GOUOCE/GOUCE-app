@@ -1,12 +1,12 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, DimensionValue } from 'react-native';
 import { Text, Surface } from 'react-native-paper';
 
 interface QuickActionProps {
   title: string;
   Icone: any;
   onPress?: () => void;
-  width?: string | number;
+  width?: DimensionValue;
 }
 
 export function QuickAction({ title, Icone, onPress, width = '48%' }: QuickActionProps) {

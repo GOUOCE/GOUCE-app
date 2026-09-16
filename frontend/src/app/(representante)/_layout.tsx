@@ -37,9 +37,9 @@ export default function RepresentativeLayout() {
               <Route size={24} color={focused ? '#000' : '#666'} />
             </View>
           ),
-          tabBarButton: (props) => (
-            <View {...props} pointerEvents="none">
-              {props.children}
+          tabBarButton: ({ children, style }) => (
+            <View style={style} pointerEvents="none">
+              {children}
             </View>
           ),
         }}
@@ -53,9 +53,9 @@ export default function RepresentativeLayout() {
               <UserCircle size={24} color={focused ? '#000' : '#666'} />
             </View>
           ),
-          tabBarButton: (props) => (
-            <View {...props} pointerEvents="none">
-              {props.children}
+          tabBarButton: ({ children, style }) => (
+            <View style={style} pointerEvents="none">
+              {children}
             </View>
           ),
         }}

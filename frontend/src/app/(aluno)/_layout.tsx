@@ -37,9 +37,9 @@ export default function StudentLayout() {
               <ClipboardList size={24} color={focused ? '#000' : '#666'} />
             </View>
           ),
-          tabBarButton: (props) => (
-            <View {...props} pointerEvents="none">
-              {props.children}
+          tabBarButton: ({ children, style }) => (
+            <View style={style} pointerEvents="none">
+              {children}
             </View>
           ),
         }}
@@ -53,9 +53,9 @@ export default function StudentLayout() {
               <Megaphone size={24} color={focused ? '#000' : '#666'} />
             </View>
           ),
-          tabBarButton: (props) => (
-            <View {...props} pointerEvents="none">
-              {props.children}
+          tabBarButton: ({ children, style }) => (
+            <View style={style} pointerEvents="none">
+              {children}
             </View>
           ),
         }}
@@ -69,9 +69,9 @@ export default function StudentLayout() {
               <UserCircle size={24} color={focused ? '#000' : '#666'} />
             </View>
           ),
-          tabBarButton: (props) => (
-            <View {...props} pointerEvents="none">
-              {props.children}
+          tabBarButton: ({ children, style }) => (
+            <View style={style} pointerEvents="none">
+              {children}
             </View>
           ),
         }}
