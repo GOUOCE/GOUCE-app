@@ -3,6 +3,9 @@
 .env.*
 !.env.example
 
+__pycache__/
+*.py[cod]
+
 # Credentials and signing keys
 secrets/
 credentials.json
