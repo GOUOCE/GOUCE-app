@@ -46,17 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const inAuthGroup = firstSegment === '(autenticacao)';
     const isProtected = ['(aluno)', '(representante)', '(administrador)'].includes(firstSegment);
 
-    console.log('[AUTH DEBUG] State:', {
-      firstSegment,
-      inAuthGroup,
-      isProtected,
-      userStatus: user?.status,
-      userRole: user?.role,
-      segments
-    });
-
     if (!user && isProtected) {
-      console.log('[AUTH DEBUG] No user and protected route, redirecting to login');
       router.replace('/(autenticacao)/login');
       return;
     }
@@ -65,7 +55,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Se o cadastro está pendente, força a tela de análise (HU-001)
       const isAtPendingScreen = segments.includes('cadastro-pendente');
       if (user.status === 'pendente' && !isAtPendingScreen) {
-        console.log('[AUTH DEBUG] User pending, redirecting to status screen');
         router.replace('/(autenticacao)/cadastro-pendente');
         return;
       }
@@ -73,7 +62,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (inAuthGroup && user.status === 'ativado') {
         const root = user.role === 'ADMINISTRADOR' ? '/(administrador)/home' :
                      user.role === 'MOTORISTA' ? '/(representante)/home' : '/(aluno)/home';
-        console.log('[AUTH DEBUG] User active and in auth group, redirecting to home:', root);
         router.replace(root);
         return;
       }
@@ -83,14 +71,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                           (user.role === 'ALUNO' && firstSegment === '(aluno)');
 
       if (isProtected && !roleMatches && user.status === 'ativado') {
-        console.log('[AUTH DEBUG] Role mismatch, redirecting to access denied');
         router.replace('/acesso-negado');
       }
     }
   }, [user, segments, isLoading]);
 
   async function setUserAndToken(userData: User, userToken: string) {
-    console.log('[AUTH DEBUG] Saving user and token to storage');
     await AsyncStorage.setItem('@GOUOCE:token', userToken);
     await AsyncStorage.setItem('@GOUOCE:user', JSON.stringify(userData));
     setUser(userData);
@@ -99,12 +85,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signIn(email: string, senha: string) {
     setIsLoading(true);
-    console.log('[AUTH DEBUG] Signing in:', email);
     try {
       const response = await authService.login({ email, senha });
-      console.log('[AUTH DEBUG] Raw API Response Usuario:', JSON.stringify(response.usuario, null, 2));
 
-      // Mapeamento minucioso
       const userData: User = {
         id: String(response.usuario.id),
         name: response.usuario.nome || response.usuario.nome_completo || 'Usuário',
@@ -119,11 +102,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         foto_perfil: response.usuario.foto_perfil,
       };
 
-      console.log('[AUTH DEBUG] Final User Object to be saved:', JSON.stringify(userData, null, 2));
-
       await setUserAndToken(userData, response.token_acesso);
     } catch (error) {
-      console.error('[AUTH DEBUG] Login error:', error);
       throw error;
     } finally {
       setIsLoading(false);
