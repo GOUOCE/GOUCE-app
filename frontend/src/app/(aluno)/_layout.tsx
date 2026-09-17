@@ -69,11 +69,24 @@ export default function StudentLayout() {
               <UserCircle size={24} color={focused ? '#000' : '#666'} />
             </View>
           ),
-          tabBarButton: ({ children, style }) => (
-            <View style={style} pointerEvents="none">
-              {children}
-            </View>
-          ),
+        }}
+      />
+      <Tabs.Screen
+        name="editar-perfil"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="carteirinha-digital"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="renovar-vinculo"
+        options={{
+          href: null,
         }}
       />
     </Tabs>

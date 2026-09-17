@@ -8,6 +8,12 @@ export interface User {
   email: string;
   role: UserRole;
   status?: string;
+  telefone?: string;
+  curso?: string;
+  faculdade?: string;
+  periodo_ingresso?: string;
+  turno?: string;
+  foto_perfil?: string;
 }
 
 export interface LoginResponse {
