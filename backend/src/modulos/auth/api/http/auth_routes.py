@@ -10,13 +10,33 @@ from src.modulos.auth.application.dtos.login_dto import (
     LoginResponseDTO,
     RefreshTokenResponseDTO,
 )
+from src.modulos.auth.application.dtos.recuperacao_senha_dto import (
+    SolicitarRecuperacaoSenhaDTO,
+    SolicitarRecuperacaoSenhaResponseDTO,
+    ValidarTokenRecuperacaoDTO,
+    ValidarTokenRecuperacaoResponseDTO,
+    RedefinirSenhaDTO,
+    RedefinirSenhaResponseDTO,
+)
 from src.modulos.auth.application.use_cases.login_use_case import (
     LoginUseCase,
     UsuarioInativoError,
 )
 from src.modulos.auth.application.use_cases.refresh_token_use_case import RefreshTokenUseCase
+from src.modulos.auth.application.use_cases.solicitar_recuperacao_use_case import (
+    SolicitarRecuperacaoSenhaUseCase,
+)
+from src.modulos.auth.application.use_cases.validar_token_recuperacao_use_case import (
+    ValidarTokenRecuperacaoUseCase,
+)
+from src.modulos.auth.application.use_cases.redefinir_senha_use_case import (
+    RedefinirSenhaUseCase,
+)
 from src.modulos.usuarios.infrastructure.repositories.usuario_repository import (
     SQLAlchemyUsuarioRepository,
+)
+from src.modulos.auth.infrastructure.repositories.password_reset_token_repository import (
+    SQLAlchemyPasswordResetTokenRepository,
 )
 
 router = APIRouter(prefix="/auth", tags=["Autenticação"])
@@ -24,6 +44,10 @@ router = APIRouter(prefix="/auth", tags=["Autenticação"])
 
 def get_repository(session: Annotated[Session, Depends(get_session)]):
     return SQLAlchemyUsuarioRepository(session)
+
+
+def get_token_repository(session: Annotated[Session, Depends(get_session)]):
+    return SQLAlchemyPasswordResetTokenRepository(session)
 
 
 def get_hasher():
@@ -118,3 +142,77 @@ async def refresh_token(
         raise HTTPException(status_code=401, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao renovar token: {str(e)}")
+
+
+from src.shared.infrastructure.services.email_service import SMTPEmailService
+
+def get_email_service():
+    return SMTPEmailService()
+
+
+@router.post(
+    "/solicitar-recuperacao",
+    response_model=SolicitarRecuperacaoSenhaResponseDTO,
+    status_code=200,
+    summary="Solicitar Recuperação de Senha",
+    description="Gera token de recuperação seguro e envia instruções por e-mail. Retorna resposta genérica para evitar enumeração de contas."
+)
+async def solicitar_recuperacao(
+    dto: SolicitarRecuperacaoSenhaDTO,
+    usuario_repository=Depends(get_repository),
+    token_repository=Depends(get_token_repository),
+    email_service=Depends(get_email_service),
+):
+    try:
+        use_case = SolicitarRecuperacaoSenhaUseCase(
+            usuario_repository=usuario_repository,
+            token_repository=token_repository,
+            email_service=email_service,
+        )
+        return use_case.execute(dto)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao solicitar recuperação de senha: {str(e)}")
+
+
+@router.post(
+    "/validar-token",
+    response_model=ValidarTokenRecuperacaoResponseDTO,
+    status_code=200,
+    summary="Validar Token de Recuperação",
+    description="Verifica se o token/código de recuperação é válido, não expirou e não foi utilizado."
+)
+async def validar_token(
+    dto: ValidarTokenRecuperacaoDTO,
+    token_repository=Depends(get_token_repository),
+):
+    try:
+        use_case = ValidarTokenRecuperacaoUseCase(token_repository)
+        return use_case.execute(dto)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao validar token de recuperação: {str(e)}")
+
+
+@router.post(
+    "/redefinir-senha",
+    response_model=RedefinirSenhaResponseDTO,
+    status_code=200,
+    summary="Redefinir Senha do Usuário",
+    description="Altera a senha do usuário associada ao token e invalida o token após utilização."
+)
+async def redefinir_senha(
+    dto: RedefinirSenhaDTO,
+    usuario_repository=Depends(get_repository),
+    token_repository=Depends(get_token_repository),
+    hasher=Depends(get_hasher),
+):
+    try:
+        use_case = RedefinirSenhaUseCase(usuario_repository, token_repository, hasher)
+        return use_case.execute(dto)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao redefinir senha: {str(e)}")
