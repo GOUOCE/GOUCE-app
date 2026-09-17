@@ -29,6 +29,7 @@ def create_tables():
     from src.modulos.arquivos.model.entities.arquivo import ArquivoORM
     from src.modulos.usuarios.model.entities.usuario import UsuarioORM
     from src.modulos.usuarios.model.entities.aluno import AlunoORM
+    from src.modulos.auth.domain.entities.password_reset_token import PasswordResetTokenORM
 
     Base.metadata.create_all(bind=engine)
 
