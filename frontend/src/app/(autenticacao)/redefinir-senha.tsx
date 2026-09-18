@@ -75,27 +75,28 @@ export default function RedefinirSenhaScreen() {
         <Modal
           visible={modalSairVisivel}
           onDismiss={() => setModalSairVisivel(false)}
-          contentContainerStyle={styles.modalContent}
         >
-          <Text variant="headlineSmall" style={styles.modalTitle}>Sair desta tela?</Text>
-          <Text variant="bodyLarge" style={styles.modalText}>
-            As alterações não salvas serão perdidas.
-          </Text>
-          <View style={styles.modalButtons}>
-            <Button
-              mode="text"
-              onPress={() => setModalSairVisivel(false)}
-              style={styles.modalBtn}
-            >
-              Continuar aqui
-            </Button>
-            <Button
-              mode="contained"
-              onPress={confirmarSaida}
-              style={[styles.modalBtn, { backgroundColor: '#B00020' }]}
-            >
-              Sim, sair
-            </Button>
+          <View style={styles.modalContent}>
+            <Text variant="headlineSmall" style={styles.modalTitle}>Sair desta tela?</Text>
+            <Text variant="bodyLarge" style={styles.modalText}>
+              As alterações não salvas serão perdidas.
+            </Text>
+            <View style={styles.modalButtons}>
+              <Button
+                mode="text"
+                onPress={() => setModalSairVisivel(false)}
+                style={styles.modalBtn}
+              >
+                Continuar aqui
+              </Button>
+              <Button
+                mode="contained"
+                onPress={confirmarSaida}
+                style={[styles.modalBtn, { backgroundColor: '#B00020' }]}
+              >
+                Sim, sair
+              </Button>
+            </View>
           </View>
         </Modal>
       </Portal>

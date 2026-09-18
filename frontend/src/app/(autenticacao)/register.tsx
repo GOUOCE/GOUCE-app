@@ -85,7 +85,7 @@ export default function RegisterScreen() {
 
       const userData = {
         id: String(response.usuario.id),
-        name: response.usuario.nome || response.usuario.nome_completo,
+        name: response.usuario.nome || response.usuario.nome_completo || '',
         email: response.usuario.email,
         role: 'ALUNO' as const,
         status: 'pendente' as const, // Força o status inicial para análise
@@ -120,27 +120,28 @@ export default function RegisterScreen() {
           <Modal
             visible={modalSairVisivel}
             onDismiss={() => setModalSairVisivel(false)}
-            contentContainerStyle={styles.modalContent}
           >
-            <Text variant="headlineSmall" style={styles.modalTitle}>Cancelar cadastro?</Text>
-            <Text variant="bodyLarge" style={styles.modalText}>
-              Se você sair agora, todos os dados preenchidos até este passo serão perdidos.
-            </Text>
-            <View style={styles.modalButtons}>
-              <Button
-                mode="text"
-                onPress={() => setModalSairVisivel(false)}
-                style={styles.modalBtn}
-              >
-                Continuar preenchendo
-              </Button>
-              <Button
-                mode="contained"
-                onPress={confirmarSaida}
-                style={[styles.modalBtn, { backgroundColor: '#B00020' }]}
-              >
-                Sim, sair
-              </Button>
+            <View style={styles.modalContent}>
+              <Text variant="headlineSmall" style={styles.modalTitle}>Cancelar cadastro?</Text>
+              <Text variant="bodyLarge" style={styles.modalText}>
+                Se você sair agora, todos os dados preenchidos até este passo serão perdidos.
+              </Text>
+              <View style={styles.modalButtons}>
+                <Button
+                  mode="text"
+                  onPress={() => setModalSairVisivel(false)}
+                  style={styles.modalBtn}
+                >
+                  Continuar preenchendo
+                </Button>
+                <Button
+                  mode="contained"
+                  onPress={confirmarSaida}
+                  style={[styles.modalBtn, { backgroundColor: '#B00020' }]}
+                >
+                  Sim, sair
+                </Button>
+              </View>
             </View>
           </Modal>
         </Portal>
