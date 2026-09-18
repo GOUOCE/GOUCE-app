@@ -28,6 +28,8 @@ class CadastroUsuarioDTO(BaseModel):
     identificacao_sexual: str | None = Field(default=None, max_length=100)
     motivo_reprovacao: str | None = Field(default=None, max_length=255)
     termos_de_uso: bool = False
+    consentimento_lgpd_em: datetime | None = None
+    versao_termos: str | None = Field(default="1.0", max_length=20)
 
 
 # Alias para retrocompatibilidade se necessário

@@ -61,8 +61,8 @@ class DataNascimentoValidator:
             raise ValueError("Data de nascimento não pode ser no futuro")
 
         idade = hoje.year - dt.year - ((hoje.month, hoje.day) < (dt.month, dt.day))
-        if idade < 12 or idade > 120:
-            raise ValueError(f"Idade inválida ({idade} anos). Deve ter entre 12 e 120 anos")
+        if idade < 16 or idade > 120:
+            raise ValueError(f"Idade inválida ({idade} anos). Deve ter entre 16 e 120 anos")
 
         return dt
 

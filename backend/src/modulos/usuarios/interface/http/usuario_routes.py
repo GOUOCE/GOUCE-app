@@ -41,14 +41,17 @@ def get_storage_service():
     return MinioStorageService()
 
 
+from src.shared.auth.dependencies import verify_any_user
+
 @router.get(
     "/",
     response_model=list[dict],
     summary="Listar Todos os Usuários e Alunos",
-    description="Retorna a lista completa com 100% das informações e atributos de todos os usuários e alunos cadastrados."
+    description="Retorna a lista completa de usuários e alunos cadastrados. Requer autenticação por token JWT."
 )
 async def listar_usuarios(
     repository=Depends(get_repository),
+    current_user: Annotated[dict, Depends(verify_any_user)] = None,
 ):
     try:
         use_case = ListarUsuariosUseCase(repository)
@@ -57,11 +60,12 @@ async def listar_usuarios(
         raise HTTPException(status_code=500, detail=f"Erro ao listar usuários e alunos: {str(e)}")
 
 
-@router.get("/alunos", response_model=list[dict], summary="Listar Todos os Alunos", description="Alias para listar todas as informações dos alunos.")
+@router.get("/alunos", response_model=list[dict], summary="Listar Todos os Alunos", description="Alias para listar todas as informações dos alunos. Requer autenticação por token JWT.")
 async def listar_alunos(
     repository=Depends(get_repository),
+    current_user: Annotated[dict, Depends(verify_any_user)] = None,
 ):
-    return await listar_usuarios(repository)
+    return await listar_usuarios(repository, current_user)
 
 
 @router.post(

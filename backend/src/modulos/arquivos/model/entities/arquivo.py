@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime, timezone
 from sqlalchemy import Column, String, Integer, DateTime
 from src.shared.infrastructure.db import Base
+from src.shared.security.lgpd_encryption import EncryptedString
 
 
 class ArquivoORM(Base):
@@ -9,7 +10,7 @@ class ArquivoORM(Base):
     __tablename__ = "arquivos"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    nome = Column(String(255), nullable=False)
+    nome = Column(EncryptedString(500), nullable=False)
     url = Column(String(500), nullable=False)
     content_type = Column(String(100), nullable=True)
     tamanho_bytes = Column(Integer, nullable=True)

@@ -1,8 +1,11 @@
+from datetime import datetime, timezone
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
 from src.modulos.usuarios.model.entities.aluno import AlunoORM
 from src.modulos.usuarios.model.entities.usuario import UsuarioORM
+from src.shared.security.lgpd_encryption import hash_email
 
 
 class CadastroDuplicadoError(Exception):
@@ -14,13 +17,19 @@ class SQLAlchemyUsuarioRepository:
         self.session = session
 
     def buscar_por_email(self, email: str):
-        return self.session.query(UsuarioORM).filter(UsuarioORM.email == email.lower().strip()).first()
+        email_limpo = email.lower().strip()
+        h = hash_email(email_limpo)
+        return self.session.query(UsuarioORM).filter(
+            or_(UsuarioORM.email_hash == h, UsuarioORM.email == email_limpo)
+        ).first()
 
     def buscar_com_detalhes_por_email(self, email: str):
+        email_limpo = email.lower().strip()
+        h = hash_email(email_limpo)
         resultado = (
             self.session.query(UsuarioORM, AlunoORM)
             .outerjoin(AlunoORM, UsuarioORM.id == AlunoORM.aluno_id)
-            .filter(UsuarioORM.email == email.lower().strip())
+            .filter(or_(UsuarioORM.email_hash == h, UsuarioORM.email == email_limpo))
             .first()
         )
         if not resultado:
@@ -38,8 +47,9 @@ class SQLAlchemyUsuarioRepository:
             # Serializa 100% de todas as colunas de UsuarioORM
             dados_usuario = {c.name: getattr(usuario, c.name) for c in usuario.__table__.columns}
             
-            # Remove o hash da senha por boas práticas de segurança
+            # Remove o hash da senha e email_hash por boas práticas de segurança
             dados_usuario.pop("senha", None)
+            dados_usuario.pop("email_hash", None)
 
             # Serializa 100% de todas as colunas de AlunoORM se existir
             dados_aluno = {}
@@ -54,14 +64,22 @@ class SQLAlchemyUsuarioRepository:
 
     def criar_aluno(self, comando, senha_hash: str):
         status_str = str(comando.status_cadastro.value if hasattr(comando.status_cadastro, "value") else comando.status_cadastro)
+        email_limpo = comando.email.lower().strip()
 
         usuario = UsuarioORM(
             nome_completo=comando.nome.strip(),
-            email=comando.email.lower().strip(),
+            email=email_limpo,
+            email_hash=hash_email(email_limpo),
             telefone=comando.telefone,
             senha=senha_hash,
         )
         self.session.add(usuario)
+
+        consentimento_dt = (
+            getattr(comando, "consentimento_lgpd_em", None)
+            or (datetime.now(timezone.utc) if comando.termos_de_uso else None)
+        )
+        versao_termos_val = getattr(comando, "versao_termos", "1.0") or "1.0"
 
         try:
             self.session.flush()
@@ -85,6 +103,8 @@ class SQLAlchemyUsuarioRepository:
                 identificacao_sexual=comando.identificacao_sexual,
                 motivo_reprovacao=comando.motivo_reprovacao,
                 termos_de_uso=comando.termos_de_uso,
+                consentimento_lgpd_em=consentimento_dt,
+                versao_termos=versao_termos_val,
             ))
             self.session.commit()
             self.session.refresh(usuario)
