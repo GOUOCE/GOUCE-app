@@ -21,7 +21,8 @@ class SMTPEmailService(IEmailService):
     def enviar_email_recuperacao_senha(self, email_destino: str, nome_usuario: str, token_recuperacao: str) -> bool:
         assunto = "Recuperação de Senha - GOUCE"
         base_url = self.app_url.rstrip("/")
-        link_recuperacao = f"{base_url}/redefinir-senha?token={token_recuperacao}"
+        # Incluído /auth para bater com a rota do servidor
+        link_recuperacao = f"{base_url}/auth/redefinir-senha?token={token_recuperacao}"
 
         conteudo_texto = (
             f"Olá {nome_usuario},\n\n"

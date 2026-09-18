@@ -196,6 +196,40 @@ async def validar_token(
         raise HTTPException(status_code=500, detail=f"Erro ao validar token de recuperação: {str(e)}")
 
 
+@router.get(
+    "/redefinir-senha",
+    include_in_schema=False
+)
+async def redirect_to_app(token: str):
+    """
+    Rota 'ponte' para abrir o aplicativo móvel a partir do link do e-mail.
+    """
+    from fastapi.responses import HTMLResponse
+
+    # Tenta abrir o app no Expo Go usando o IP local e o túnel
+    content = f"""
+    <html>
+        <body style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; background-color: #F8F9FF;">
+            <div style="text-align: center; padding: 20px;">
+                <h2 style="color: #333;">Recuperação de Senha</h2>
+                <p style="color: #666;">Clique no botão abaixo para abrir o GOUOCE no seu celular.</p>
+                <div style="margin-top: 30px;">
+                    <a href="exp://192.168.0.3:8081/--/redefinir-senha?token={token}"
+                       style="background-color: #3e5f90; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                        ABRIR NO APLICATIVO
+                    </a>
+                </div>
+                <script>
+                    // Tenta redirecionar para o esquema do Expo Go
+                    window.location.href = "exp://192.168.0.3:8081/--/redefinir-senha?token={token}";
+                </script>
+            </div>
+        </body>
+    </html>
+    """
+    return HTMLResponse(content=content)
+
+
 @router.post(
     "/redefinir-senha",
     response_model=RedefinirSenhaResponseDTO,
