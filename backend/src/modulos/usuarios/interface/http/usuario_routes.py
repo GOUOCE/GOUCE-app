@@ -3,20 +3,30 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 
 from src.shared.infrastructure.db import get_session
+from src.shared.auth.dependencies import verify_any_user
 from src.shared.auth.jwt_service import JWTService
 from src.shared.security.argon2_hasher import Argon2PasswordHasher
-from src.modulos.auth.application.dtos.login_dto import LoginResponseDTO
-from src.modulos.usuarios.application.dtos.usuario_dto import CadastroUsuarioDTO
+from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
+
+from src.modulos.usuarios.application.dtos.usuario_dto import (
+    CadastroUsuarioDTO,
+    CadastroSucessoDTO,
+    AtualizarStatusAlunoDTO,
+    AprovacaoAlunoResponseDTO,
+    PerfilAlunoResponseDTO,
+)
 from src.modulos.usuarios.application.use_cases.criar_usuario_use_case import CriarUsuarioUseCase
 from src.modulos.usuarios.application.use_cases.listar_usuarios_use_case import ListarUsuariosUseCase
+from src.modulos.usuarios.application.use_cases.aprovar_aluno_use_case import AprovarAlunoUseCase
+from src.modulos.usuarios.application.use_cases.obter_perfil_aluno_use_case import ObterPerfilAlunoUseCase
 from src.modulos.usuarios.infrastructure.repositories.usuario_repository import (
     SQLAlchemyUsuarioRepository,
     CadastroDuplicadoError,
 )
+
 from src.modulos.arquivos.infrastructure.repositories.arquivo_repository import SQLAlchemyArquivoRepository
 from src.modulos.arquivos.infrastructure.services.minio_storage import MinioStorageService
 from src.modulos.arquivos.application.use_cases.salvar_arquivo_use_case import SalvarArquivoUseCase
-from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
 
 router = APIRouter(prefix="/usuarios", tags=["Usuários e Alunos"])
 
@@ -45,10 +55,11 @@ def get_storage_service():
     "/",
     response_model=list[dict],
     summary="Listar Todos os Usuários e Alunos",
-    description="Retorna a lista completa com 100% das informações e atributos de todos os usuários e alunos cadastrados."
+    description="Retorna a lista completa de usuários e alunos cadastrados. Requer autenticação por token JWT."
 )
 async def listar_usuarios(
     repository=Depends(get_repository),
+    current_user: Annotated[dict, Depends(verify_any_user)] = None,
 ):
     try:
         use_case = ListarUsuariosUseCase(repository)
@@ -57,16 +68,22 @@ async def listar_usuarios(
         raise HTTPException(status_code=500, detail=f"Erro ao listar usuários e alunos: {str(e)}")
 
 
-@router.get("/alunos", response_model=list[dict], summary="Listar Todos os Alunos", description="Alias para listar todas as informações dos alunos.")
+@router.get(
+    "/alunos",
+    response_model=list[dict],
+    summary="Listar Todos os Alunos",
+    description="Alias para listar todas as informações dos alunos. Requer autenticação por token JWT."
+)
 async def listar_alunos(
     repository=Depends(get_repository),
+    current_user: Annotated[dict, Depends(verify_any_user)] = None,
 ):
-    return await listar_usuarios(repository)
+    return await listar_usuarios(repository, current_user)
 
 
 @router.post(
     "/cadastrar",
-    response_model=LoginResponseDTO,
+    response_model=CadastroSucessoDTO,
     status_code=201,
     summary="Cadastrar Usuário / Aluno com Upload Direto de Comprovantes (Opção 1)",
     description="Recebe os dados do aluno e os arquivos de comprovante de matrícula e residência via multipart/form-data. Faz upload automático para o MinIO, gera registros de arquivos com UUID e realiza o cadastro."
@@ -155,7 +172,7 @@ async def cadastrar_usuario_com_arquivos(
 
 @router.post(
     "/cadastrar-json",
-    response_model=LoginResponseDTO,
+    response_model=CadastroSucessoDTO,
     status_code=201,
     summary="Cadastrar Usuário via JSON (com UUIDs de arquivos já enviados)",
     description="Permite cadastrar usuário enviando JSON contendo os UUIDs dos comprovantes já carregados."
@@ -182,8 +199,8 @@ async def cadastrar_usuario_json(
 
 
 # Aliases para retrocompatibilidade
-@router.post("/cadastro", response_model=LoginResponseDTO, status_code=201, include_in_schema=False)
-@router.post("/register", response_model=LoginResponseDTO, status_code=201, include_in_schema=False)
+@router.post("/cadastro", response_model=CadastroSucessoDTO, status_code=201, include_in_schema=False)
+@router.post("/register", response_model=CadastroSucessoDTO, status_code=201, include_in_schema=False)
 async def cadastrar_usuario_alias(
     data: CadastroUsuarioDTO,
     repository=Depends(get_repository),
@@ -192,3 +209,83 @@ async def cadastrar_usuario_alias(
     token_service=Depends(get_token_service),
 ):
     return await cadastrar_usuario_json(data, repository, arquivo_repository, hasher, token_service)
+
+
+@router.patch(
+    "/alunos/{aluno_id}/aprovar",
+    response_model=AprovacaoAlunoResponseDTO,
+    summary="Aprovar Cadastro de Aluno por ID",
+    description="Altera o status do aluno para 'ativado', permitindo o acesso à plataforma. Requer autenticação."
+)
+async def aprovar_aluno(
+    aluno_id: int,
+    repository=Depends(get_repository),
+    current_user: Annotated[dict, Depends(verify_any_user)] = None,
+):
+    try:
+        use_case = AprovarAlunoUseCase(repository)
+        return use_case.execute(aluno_id=aluno_id, novo_status=StatusCadastroEnum.ATIVADO)
+    except ValueError as e:
+        msg = str(e)
+        if "não encontrado" in msg.lower():
+            raise HTTPException(status_code=404, detail=msg)
+        raise HTTPException(status_code=400, detail=msg)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao aprovar cadastro do aluno: {str(e)}")
+
+
+@router.patch(
+    "/alunos/{aluno_id}/status",
+    response_model=AprovacaoAlunoResponseDTO,
+    summary="Atualizar Status do Cadastro do Aluno (Ativado, Pendente ou Inativado)",
+    description="Permite alterar o status do aluno para 'ativado', 'inativado' ou 'pendente', com suporte a motivo de reprovação. Requer autenticação."
+)
+async def atualizar_status_aluno(
+    aluno_id: int,
+    data: AtualizarStatusAlunoDTO,
+    repository=Depends(get_repository),
+    current_user: Annotated[dict, Depends(verify_any_user)] = None,
+):
+    try:
+        use_case = AprovarAlunoUseCase(repository)
+        return use_case.execute(
+            aluno_id=aluno_id,
+            novo_status=data.status_cadastro,
+            motivo_reprovacao=data.motivo_reprovacao
+        )
+    except ValueError as e:
+        msg = str(e)
+        if "não encontrado" in msg.lower():
+            raise HTTPException(status_code=404, detail=msg)
+        raise HTTPException(status_code=400, detail=msg)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao atualizar status do aluno: {str(e)}")
+
+
+@router.get(
+    "/me",
+    response_model=PerfilAlunoResponseDTO,
+    summary="Consultar Perfil do Aluno Autenticado",
+    description="Retorna os dados do perfil do aluno autenticado extraído do token JWT, omitindo informações sensíveis de sistema."
+)
+async def obter_meu_perfil(
+    current_user: Annotated[dict, Depends(verify_any_user)],
+    repository=Depends(get_repository),
+):
+    try:
+        user_id_str = current_user.get("sub")
+        if not user_id_str:
+            raise HTTPException(status_code=401, detail="Sessão inválida: identificador de usuário não encontrado no token")
+        
+        user_id = int(user_id_str)
+        use_case = ObterPerfilAlunoUseCase(repository)
+        return use_case.execute(user_id)
+    except ValueError as e:
+        msg = str(e)
+        if "não encontrado" in msg.lower():
+            raise HTTPException(status_code=404, detail=msg)
+        raise HTTPException(status_code=400, detail=msg)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao consultar perfil: {str(e)}")

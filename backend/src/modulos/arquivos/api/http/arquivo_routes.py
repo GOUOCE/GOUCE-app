@@ -4,6 +4,8 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from src.shared.infrastructure.db import get_session
+from src.shared.auth.dependencies import verify_any_user
+from src.shared.security.lgpd_encryption import decrypt_bytes
 from src.modulos.arquivos.application.dtos.arquivo_dto import ArquivoResponseDTO, ArquivoPresignedUrlDTO
 from src.modulos.arquivos.application.use_cases.salvar_arquivo_use_case import SalvarArquivoUseCase
 from src.modulos.arquivos.infrastructure.repositories.arquivo_repository import SQLAlchemyArquivoRepository
@@ -46,11 +48,12 @@ async def upload_arquivo(
     "/{arquivo_id}",
     response_model=ArquivoResponseDTO,
     summary="Obter Detalhes do Arquivo por UUID",
-    description="Retorna as informações do arquivo pelo seu UUID."
+    description="Retorna as informações do arquivo pelo seu UUID. Requer autenticação."
 )
 async def obter_arquivo(
     arquivo_id: str,
     repository=Depends(get_repository),
+    current_user: Annotated[dict, Depends(verify_any_user)] = None,
 ):
     arquivo = repository.buscar_por_id(arquivo_id)
     if not arquivo:
@@ -69,13 +72,14 @@ async def obter_arquivo(
     "/{arquivo_id}/url-assinada",
     response_model=ArquivoPresignedUrlDTO,
     summary="Gerar URL Assinada Temporária (Presigned URL)",
-    description="Gera uma URL temporária com assinatura válida por 15 minutos (ou tempo customizado) para acesso ao arquivo no MinIO."
+    description="Gera uma URL temporária com assinatura válida por 15 minutos (ou tempo customizado) para acesso ao arquivo no MinIO. Requer autenticação."
 )
 async def obter_url_assinada(
     arquivo_id: str,
     expira_em_segundos: int = 900,
     repository=Depends(get_repository),
     storage_service=Depends(get_storage_service),
+    current_user: Annotated[dict, Depends(verify_any_user)] = None,
 ):
     arquivo = repository.buscar_por_id(arquivo_id)
     if not arquivo:
@@ -96,8 +100,8 @@ async def obter_url_assinada(
 
 @router.get(
     "/{arquivo_id}/view",
-    summary="Visualizar Conteúdo do Arquivo por UUID (Redirecionamento Assinado)",
-    description="Redireciona para a URL temporária assinada do MinIO com validade de 15 minutos."
+    summary="Visualizar Conteúdo do Arquivo por UUID (Descriptografado em tempo real)",
+    description="Retorna o arquivo PDF ou Imagem descriptografado em tempo de execução. Requer autenticação."
 )
 @router.get(
     "/{arquivo_id}/download",
@@ -108,6 +112,7 @@ async def visualizar_arquivo(
     arquivo_id: str,
     repository=Depends(get_repository),
     storage_service=Depends(get_storage_service),
+    current_user: Annotated[dict, Depends(verify_any_user)] = None,
 ):
     arquivo = repository.buscar_por_id(arquivo_id)
     if not arquivo:
@@ -115,8 +120,16 @@ async def visualizar_arquivo(
 
     try:
         nome_objeto = arquivo.url.split(f"/{storage_service.bucket_name}/", 1)[-1]
-        url_assinada = storage_service.gerar_url_presigned(nome_objeto, expira_em_segundos=900)
-        return RedirectResponse(url=url_assinada, status_code=307)
+        bytes_cifrados = storage_service.obter_bytes_arquivo(nome_objeto)
+        bytes_descriptografados = decrypt_bytes(bytes_cifrados)
+        
+        media_type = arquivo.content_type or "application/octet-stream"
+        disposition = f'inline; filename="{arquivo.nome}"'
+        
+        return Response(
+            content=bytes_descriptografados,
+            media_type=media_type,
+            headers={"Content-Disposition": disposition}
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao visualizar arquivo: {str(e)}")
-

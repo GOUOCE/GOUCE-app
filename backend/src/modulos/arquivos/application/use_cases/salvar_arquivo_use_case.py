@@ -1,4 +1,5 @@
 import uuid
+from src.shared.security.lgpd_encryption import encrypt_bytes
 from src.modulos.arquivos.application.dtos.arquivo_dto import ArquivoResponseDTO
 from src.modulos.arquivos.model.entities.arquivo import ArquivoORM
 
@@ -25,6 +26,10 @@ class SalvarArquivoUseCase:
         if not conteudo_bytes:
             raise ValueError("O arquivo enviado está vazio")
 
+        tamanho_maximo = 10 * 1024 * 1024  # 10MB
+        if len(conteudo_bytes) > tamanho_maximo:
+            raise ValueError(f"O arquivo '{nome_original}' excede o tamanho máximo permitido de 10MB")
+
         ct = (content_type or "application/octet-stream").lower().strip()
         
         # Extensão de fallback para o nome original
@@ -40,7 +45,8 @@ class SalvarArquivoUseCase:
         arquivo_id = str(uuid.uuid4())
         nome_objeto_minio = f"{arquivo_id}_{nome_original.replace(' ', '_')}"
 
-        url_arquivo = self.storage_service.salvar_arquivo(conteudo_bytes, nome_objeto_minio, ct)
+        conteudo_criptografado = encrypt_bytes(conteudo_bytes)
+        url_arquivo = self.storage_service.salvar_arquivo(conteudo_criptografado, nome_objeto_minio, ct)
 
         arquivo_orm = ArquivoORM(
             id=arquivo_id,

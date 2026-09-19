@@ -1,5 +1,6 @@
 from sqlalchemy import Column, String, Integer, Boolean, ForeignKey, DateTime
 from src.shared.infrastructure.db import Base
+from src.shared.security.lgpd_encryption import EncryptedString
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
@@ -21,18 +22,20 @@ class AlunoORM(Base):
     id_comprovante_matricula = Column(String(36), ForeignKey("arquivos.id"), nullable=False)
     id_comprovante_residencia = Column(String(36), ForeignKey("arquivos.id"), nullable=False)
     data_nascimento = Column(Integer, default=0, nullable=False)
-    identificacao_genero = Column(String(100), nullable=True)
+    identificacao_genero = Column(EncryptedString(500), nullable=True)
     tem_filhos = Column(Boolean, nullable=True)
     curso = Column(String(150), nullable=False)
     semestre_atual = Column(Integer, nullable=True)
     periodo_ingresso = Column(String(20), nullable=True)
     turno_curso = Column(String(30), nullable=True)
-    raca = Column(String(50), nullable=True)
+    raca = Column(EncryptedString(500), nullable=True)
     validade_acesso = Column(DateTime(timezone=True), nullable=True)
     id_foto_aluno = Column(String(255), nullable=True)
-    identificacao_sexual = Column(String(100), nullable=True)
+    identificacao_sexual = Column(EncryptedString(500), nullable=True)
     motivo_reprovacao = Column(String(255), nullable=True)
     termos_de_uso = Column(Boolean, nullable=False, default=False)
+    consentimento_lgpd_em = Column(DateTime(timezone=True), nullable=True)
+    versao_termos = Column(String(20), default="1.0", nullable=True)
 
 
 class Aluno(BaseModel):
