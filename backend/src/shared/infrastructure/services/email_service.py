@@ -41,21 +41,15 @@ class SMTPEmailService(IEmailService):
               <p>Recebemos uma solicitação para redefinir a senha da sua conta na plataforma <strong>GOUCE</strong>.</p>
               
               <p style="margin: 25px 0; text-align: center;">
-                <a href="{link_recuperacao}" 
+                <a href="{link_recuperacao}"
                    style="background-color: #0056b3; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; display: inline-block;">
                   Redefinir Minha Senha
                 </a>
               </p>
 
-              <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #0056b3; margin: 20px 0;">
-                <p style="margin: 0; font-size: 13px; color: #555;">Caso o botão não funcione, copie e cole o link abaixo no seu navegador:</p>
-                <p style="word-break: break-all; font-size: 13px; color: #0056b3; margin-top: 5px;">
-                  <a href="{link_recuperacao}" style="color: #0056b3;">{link_recuperacao}</a>
-                </p>
-                <p style="margin-top: 10px; font-size: 12px; color: #777;">Código do Token: <code>{token_recuperacao}</code></p>
-              </div>
-
               <p style="font-size: 13px; color: #666;">Se você não solicitou a recuperação de senha, por favor ignore este e-mail. Este link é válido por <strong>15 minutos</strong>.</p>
+
+
               <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
               <p style="font-size: 12px; color: #888;">GOUCE - Sistema de Gestão Universitária</p>
             </div>
