@@ -1,5 +1,4 @@
-from src.modulos.auth.application.dtos.login_dto import LoginResponseDTO
-from src.modulos.usuarios.application.dtos.usuario_dto import CadastroUsuarioDTO
+from src.modulos.usuarios.application.dtos.usuario_dto import CadastroUsuarioDTO, CadastroSucessoDTO
 from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.validators.data_nascimento_validator import DataNascimentoValidator
 from src.shared.validators.email_validator import EmailValidator
@@ -37,7 +36,7 @@ class CriarUsuarioUseCase:
         self.turno_curso_validator = turno_curso_validator or TurnoCursoValidator()
         self.arquivo_repository = arquivo_repository
 
-    def execute(self, dto: CadastroUsuarioDTO) -> LoginResponseDTO:
+    def execute(self, dto: CadastroUsuarioDTO) -> CadastroSucessoDTO:
         # 1. Validação de Nome Completo (Exige Nome + Sobrenome e apenas letras)
         nome = dto.nome.strip() if dto.nome else ""
         if not nome or len(nome) < 3:
@@ -119,21 +118,10 @@ class CriarUsuarioUseCase:
         senha_hash = self.hasher.hash(dto.senha)
         usuario = self.repository.criar_aluno(dto, senha_hash)
 
-        cargo = CargoEnum.ALUNO.value
-
-        token_acesso = self.token_service.generate(usuario, cargo)
-        token_atualizacao = self.token_service.generate_refresh_token(usuario, cargo)
-
-        dados_usuario = {
-            "id": usuario.id,
-            "nome": usuario.nome_completo,
-            "email": usuario.email,
-            "role": cargo,
-        }
-
-        return LoginResponseDTO(
-            token_acesso=token_acesso,
-            token_atualizacao=token_atualizacao,
-            tipo_token="bearer",
-            usuario=dados_usuario
+        return CadastroSucessoDTO(
+            id=usuario.id,
+            nome=usuario.nome_completo,
+            email=usuario.email,
+            status_cadastro="pendente",
+            mensagem="Cadastro realizado com sucesso! Aguarde a aprovação da coordenação para realizar o login."
         )

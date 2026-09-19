@@ -112,3 +112,21 @@ class SQLAlchemyUsuarioRepository:
         except IntegrityError as error:
             self.session.rollback()
             raise CadastroDuplicadoError from error
+
+    def buscar_aluno_por_id(self, aluno_id: int) -> AlunoORM | None:
+        return self.session.query(AlunoORM).filter(AlunoORM.aluno_id == aluno_id).first()
+
+    def atualizar_status_aluno(
+        self, aluno_id: int, novo_status: str, motivo_reprovacao: str | None = None
+    ) -> AlunoORM | None:
+        aluno = self.buscar_aluno_por_id(aluno_id)
+        if not aluno:
+            return None
+
+        aluno.status_cadastro = novo_status
+        if motivo_reprovacao is not None:
+            aluno.motivo_reprovacao = motivo_reprovacao
+
+        self.session.commit()
+        self.session.refresh(aluno)
+        return aluno

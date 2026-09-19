@@ -43,3 +43,29 @@ class UsuarioResponseDTO(BaseModel):
     nome_completo: str
     email: str
     telefone: str | None = None
+
+
+class AtualizarStatusAlunoDTO(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    status_cadastro: StatusCadastroEnum = StatusCadastroEnum.ATIVADO
+    motivo_reprovacao: str | None = Field(default=None, max_length=255)
+
+
+class AprovacaoAlunoResponseDTO(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    aluno_id: int
+    status_cadastro: str
+    motivo_reprovacao: str | None = None
+    mensagem: str
+
+
+class CadastroSucessoDTO(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: int
+    nome: str
+    email: str
+    status_cadastro: str = "pendente"
+    mensagem: str = "Cadastro realizado com sucesso! Aguarde a aprovação da coordenação para realizar o login."

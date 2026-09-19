@@ -70,7 +70,7 @@ async def listar_alunos(
 
 @router.post(
     "/cadastrar",
-    response_model=LoginResponseDTO,
+    response_model=CadastroSucessoDTO,
     status_code=201,
     summary="Cadastrar Usuário / Aluno com Upload Direto de Comprovantes (Opção 1)",
     description="Recebe os dados do aluno e os arquivos de comprovante de matrícula e residência via multipart/form-data. Faz upload automático para o MinIO, gera registros de arquivos com UUID e realiza o cadastro."
@@ -159,7 +159,7 @@ async def cadastrar_usuario_com_arquivos(
 
 @router.post(
     "/cadastrar-json",
-    response_model=LoginResponseDTO,
+    response_model=CadastroSucessoDTO,
     status_code=201,
     summary="Cadastrar Usuário via JSON (com UUIDs de arquivos já enviados)",
     description="Permite cadastrar usuário enviando JSON contendo os UUIDs dos comprovantes já carregados."
@@ -185,9 +185,17 @@ async def cadastrar_usuario_json(
         raise HTTPException(status_code=500, detail=f"Erro ao cadastrar usuário: {str(e)}")
 
 
+from src.modulos.usuarios.application.dtos.usuario_dto import (
+    CadastroUsuarioDTO,
+    CadastroSucessoDTO,
+    AtualizarStatusAlunoDTO,
+    AprovacaoAlunoResponseDTO,
+)
+from src.modulos.usuarios.application.use_cases.aprovar_aluno_use_case import AprovarAlunoUseCase
+
 # Aliases para retrocompatibilidade
-@router.post("/cadastro", response_model=LoginResponseDTO, status_code=201, include_in_schema=False)
-@router.post("/register", response_model=LoginResponseDTO, status_code=201, include_in_schema=False)
+@router.post("/cadastro", response_model=CadastroSucessoDTO, status_code=201, include_in_schema=False)
+@router.post("/register", response_model=CadastroSucessoDTO, status_code=201, include_in_schema=False)
 async def cadastrar_usuario_alias(
     data: CadastroUsuarioDTO,
     repository=Depends(get_repository),
@@ -196,3 +204,54 @@ async def cadastrar_usuario_alias(
     token_service=Depends(get_token_service),
 ):
     return await cadastrar_usuario_json(data, repository, arquivo_repository, hasher, token_service)
+
+
+@router.patch(
+    "/alunos/{aluno_id}/aprovar",
+    response_model=AprovacaoAlunoResponseDTO,
+    summary="Aprovar Cadastro de Aluno por ID",
+    description="Altera o status do aluno para 'ativado', permitindo o acesso à plataforma. Requer autenticação."
+)
+async def aprovar_aluno(
+    aluno_id: int,
+    repository=Depends(get_repository),
+    current_user: Annotated[dict, Depends(verify_any_user)] = None,
+):
+    try:
+        use_case = AprovarAlunoUseCase(repository)
+        return use_case.execute(aluno_id=aluno_id, novo_status=StatusCadastroEnum.ATIVADO)
+    except ValueError as e:
+        msg = str(e)
+        if "não encontrado" in msg.lower():
+            raise HTTPException(status_code=404, detail=msg)
+        raise HTTPException(status_code=400, detail=msg)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao aprovar cadastro do aluno: {str(e)}")
+
+
+@router.patch(
+    "/alunos/{aluno_id}/status",
+    response_model=AprovacaoAlunoResponseDTO,
+    summary="Atualizar Status do Cadastro do Aluno (Ativado, Pendente ou Inativado)",
+    description="Permite alterar o status do aluno para 'ativado', 'inativado' ou 'pendente', com suporte a motivo de reprovação. Requer autenticação."
+)
+async def atualizar_status_aluno(
+    aluno_id: int,
+    data: AtualizarStatusAlunoDTO,
+    repository=Depends(get_repository),
+    current_user: Annotated[dict, Depends(verify_any_user)] = None,
+):
+    try:
+        use_case = AprovarAlunoUseCase(repository)
+        return use_case.execute(
+            aluno_id=aluno_id,
+            novo_status=data.status_cadastro,
+            motivo_reprovacao=data.motivo_reprovacao
+        )
+    except ValueError as e:
+        msg = str(e)
+        if "não encontrado" in msg.lower():
+            raise HTTPException(status_code=404, detail=msg)
+        raise HTTPException(status_code=400, detail=msg)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao atualizar status do aluno: {str(e)}")
