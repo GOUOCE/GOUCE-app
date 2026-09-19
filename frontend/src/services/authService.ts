@@ -1,5 +1,5 @@
 import { api } from '../api/api';
-import { LoginFormData, ForgotPasswordFormData, ResetPasswordFormData } from '../../frontend/src/schemas/loginSchema';
+import { LoginFormData, ForgotPasswordFormData, ResetPasswordFormData } from '@/schemas/loginSchema';
 import { UserRole } from '../contexts/AuthContext';
 
 export interface User {

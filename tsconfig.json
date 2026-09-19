@@ -5,9 +5,9 @@
     "ignoreDeprecations": "5.0",
     "paths": {
       "@/*": ["./frontend/src/*"],
-      "@api/*": ["./src/api/*"],
-      "@contexts/*": ["./src/contexts/*"],
-      "@services/*": ["./src/services/*"],
+      "@api/*": ["./frontend/src/api/*"],
+      "@contexts/*": ["./frontend/src/contexts/*"],
+      "@services/*": ["./frontend/src/services/*"],
       "@theme/*": ["./frontend/src/theme/*"]
     }
   }

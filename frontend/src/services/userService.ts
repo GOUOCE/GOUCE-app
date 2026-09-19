@@ -1,9 +1,9 @@
 import { api } from '../api/api';
-import { AlunoFormData } from '../../frontend/src/schemas/alunoSchema';
+import { AlunoFormData } from '@/schemas/alunoSchema';
 import { LoginResponse } from './authService';
 
-export const usuarioService = {
-  async cadastrar(data: AlunoFormData): Promise<LoginResponse> {
+export const userService = {
+  async register(data: AlunoFormData): Promise<LoginResponse> {
     const formData = new FormData();
 
     // Dados básicos
@@ -11,9 +11,9 @@ export const usuarioService = {
     formData.append('email', data.email);
     formData.append('senha', data.senha);
     formData.append('data_nascimento', data.dataNascimento);
-    formData.append('termos_de_uso', String(data.aceitouTermos));
+    formData.append('telefone', data.whatsapp);
 
-    // Perfil demográfico
+    // Perfil Demográfico
     formData.append('raca', data.raca);
     formData.append('identificacao_sexual', data.identificacaoSexual);
     formData.append('identificacao_genero', data.genero);
@@ -21,45 +21,41 @@ export const usuarioService = {
     formData.append('tem_filhos', String(data.temFilhos));
 
     // Contato e Vínculo
-    formData.append('telefone', data.whatsapp);
     formData.append('bairro_id', data.bairro);
     formData.append('faculdade_id', data.instituicao);
     formData.append('curso', data.curso);
-    formData.append('campus', data.campus);
+    formData.append('semestre_atual', String(data.semestreAtual).replace(/[^0-9]/g, ''));
     formData.append('periodo_ingresso', data.periodoIngresso);
     formData.append('turno_curso', data.turno);
-    formData.append('semestre_atual', data.semestreAtual.replace('º', '')); // Removendo o caractere ordinal se houver
 
-    // Documentação (Arquivos)
+    // Documentação (Arquivos do expo-document-picker)
     if (data.comprovanteMatricula) {
+      const file = data.comprovanteMatricula;
       formData.append('comprovante_matricula', {
-        uri: data.comprovanteMatricula.uri,
-        name: data.comprovanteMatricula.name || 'comprovante_matricula.pdf',
-        type: data.comprovanteMatricula.mimeType || 'application/pdf',
+        uri: file.uri,
+        name: file.name,
+        type: file.mimeType || 'application/octet-stream',
       } as any);
     }
 
     if (data.comprovanteResidencia) {
+      const file = data.comprovanteResidencia;
       formData.append('comprovante_residencia', {
-        uri: data.comprovanteResidencia.uri,
-        name: data.comprovanteResidencia.name || 'comprovante_residencia.pdf',
-        type: data.comprovanteResidencia.mimeType || 'application/pdf',
+        uri: file.uri,
+        name: file.name,
+        type: file.mimeType || 'application/octet-stream',
       } as any);
     }
 
-    // Foto de perfil se houver
-    if (data.fotoPerfil) {
-      // O backend parece esperar id_foto_aluno como string (UUID),
-      // mas se estivermos fazendo upload direto aqui, poderíamos precisar de outro endpoint
-      // ou o backend precisaria suportar o arquivo da foto.
-      // Por enquanto, vamos assumir que id_foto_aluno é preenchido após upload ou ignorado.
-      // formData.append('foto_perfil', ...);
-    }
+    formData.append('termos_de_uso', String(data.aceitouTermos));
+
+    console.log('[DEBUG] Enviando cadastro para:', api.defaults.baseURL + '/usuarios/cadastrar');
 
     const response = await api.post<LoginResponse>('/usuarios/cadastrar', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      timeout: 15000, // 15 segundos para dar tempo do upload
     });
 
     return response.data;
