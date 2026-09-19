@@ -5,8 +5,8 @@ module.exports = {
     'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)',
   ],
   collectCoverageFrom: [
-    'src/**/*.{ts,tsx}',
-    '!src/**/*.d.ts',
-    '!src/app/**/_layout.tsx',
+    'frontend/src/**/*.{ts,tsx}',
+    '!frontend/src/**/*.d.ts',
+    '!frontend/src/app/**/_layout.tsx',
   ],
 };

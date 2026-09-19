@@ -1,5 +1,5 @@
 import { api } from '../api/api';
-import { LoginFormData, ForgotPasswordFormData, ResetPasswordFormData } from '../../frontend/src/schemas/loginSchema';
+import { LoginFormData, ForgotPasswordFormData, ResetPasswordFormData } from '@/schemas/loginSchema';
 import { UserRole } from '../contexts/AuthContext';
 
 export interface User {
@@ -60,15 +60,15 @@ export const authService = {
   },
 
   async forgotPassword(data: ForgotPasswordFormData): Promise<void> {
-    // Endpoint a ser confirmado, assumindo /auth/recuperar-senha baseado no padrão
-    await api.post('/auth/recuperar-senha', data);
+    await api.post('/auth/solicitar-recuperacao', {
+      email: data.email
+    }, { timeout: 10000 }); // 10 segundos de limite
   },
 
   async resetPassword(data: ResetPasswordFormData, token: string): Promise<void> {
-    // Endpoint a ser confirmado, assumindo /auth/redefinir-senha baseado no padrão
     await api.post('/auth/redefinir-senha', {
+      token: token,
       nova_senha: data.novaSenha,
-      token,
     });
   },
 
