@@ -130,3 +130,14 @@ class SQLAlchemyUsuarioRepository:
         self.session.commit()
         self.session.refresh(aluno)
         return aluno
+
+    def buscar_com_detalhes_por_id(self, user_id: int) -> tuple[UsuarioORM | None, AlunoORM | None]:
+        resultado = (
+            self.session.query(UsuarioORM, AlunoORM)
+            .outerjoin(AlunoORM, UsuarioORM.id == AlunoORM.aluno_id)
+            .filter(UsuarioORM.id == user_id)
+            .first()
+        )
+        if not resultado:
+            return None, None
+        return resultado[0], resultado[1]

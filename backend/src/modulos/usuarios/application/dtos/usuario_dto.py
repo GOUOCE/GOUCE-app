@@ -69,3 +69,29 @@ class CadastroSucessoDTO(BaseModel):
     email: str
     status_cadastro: str = "pendente"
     mensagem: str = "Cadastro realizado com sucesso! Aguarde a aprovação da coordenação para realizar o login."
+
+
+class PerfilAlunoResponseDTO(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: int
+    nome: str
+    email: str
+    telefone: str | None = None
+    status_cadastro: str
+    faculdade_id: str | None = None
+    bairro_id: str | None = None
+    curso: str | None = None
+    semestre_atual: int | None = None
+    periodo_ingresso: str | None = None
+    turno_curso: str | None = None
+    data_nascimento: str | int | float | date | datetime | None = None
+    identificacao_genero: str | None = None
+    raca: str | None = None
+    identificacao_sexual: str | None = None
+    tem_filhos: bool | None = None
+    id_foto_aluno: str | None = None
+    validade_acesso: datetime | None = None
+    motivo_reprovacao: str | None = None
+    id_comprovante_matricula: str | None = None
+    id_comprovante_residencia: str | None = None

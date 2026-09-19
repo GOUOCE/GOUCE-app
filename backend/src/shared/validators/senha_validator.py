@@ -16,8 +16,8 @@ class SenhaValidator:
             return False, "A senha é obrigatória"
 
         senha_clean = senha.strip()
-        if len(senha_clean) < 8:
-            return False, "A senha deve ter pelo menos 8 caracteres"
+        if len(senha_clean) < 6:
+            return False, "A senha deve ter pelo menos 6 caracteres"
 
         if len(senha_clean) > 128:
             return False, "A senha não pode exceder 128 caracteres"
