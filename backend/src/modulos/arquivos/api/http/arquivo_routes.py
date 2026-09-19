@@ -4,6 +4,8 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from src.shared.infrastructure.db import get_session
+from src.shared.auth.dependencies import verify_any_user
+from src.shared.security.lgpd_encryption import decrypt_bytes
 from src.modulos.arquivos.application.dtos.arquivo_dto import ArquivoResponseDTO, ArquivoPresignedUrlDTO
 from src.modulos.arquivos.application.use_cases.salvar_arquivo_use_case import SalvarArquivoUseCase
 from src.modulos.arquivos.infrastructure.repositories.arquivo_repository import SQLAlchemyArquivoRepository
@@ -41,8 +43,6 @@ async def upload_arquivo(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao realizar upload do arquivo: {str(e)}")
 
-
-from src.shared.auth.dependencies import verify_any_user
 
 @router.get(
     "/{arquivo_id}",
@@ -98,8 +98,6 @@ async def obter_url_assinada(
         raise HTTPException(status_code=500, detail=f"Erro ao gerar URL assinada: {str(e)}")
 
 
-from src.shared.security.lgpd_encryption import decrypt_bytes
-
 @router.get(
     "/{arquivo_id}/view",
     summary="Visualizar Conteúdo do Arquivo por UUID (Descriptografado em tempo real)",
@@ -135,4 +133,3 @@ async def visualizar_arquivo(
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao visualizar arquivo: {str(e)}")
-
