@@ -52,16 +52,28 @@ def sync_schema():
             
             existing_columns = {col['name']: col for col in inspector.get_columns(table_name)}
             
-            # Correções específicas de colunas
-            if table_name == "aluno" and "identificacao_genero" in existing_columns:
-                col_type_str = str(existing_columns["identificacao_genero"]["type"]).upper()
-                if "TIMESTAMP" in col_type_str or "DATETIME" in col_type_str:
-                    try:
-                        sql = "ALTER TABLE aluno ALTER COLUMN identificacao_genero TYPE VARCHAR(100) USING NULL;"
-                        connection.execute(text(sql))
-                        print("✓ Coluna aluno.identificacao_genero convertida para VARCHAR(100)")
-                    except Exception as e:
-                        print(f"Aviso ao alterar aluno.identificacao_genero: {e}")
+            # Correções e expansão de tipos para criptografia LGPD (EncryptedString & Blind Index)
+            if table_name == "usuario":
+                for col_lgpd in ["telefone", "email", "nome_completo"]:
+                    if col_lgpd in existing_columns:
+                        try:
+                            connection.execute(text(f"ALTER TABLE usuario ALTER COLUMN {col_lgpd} TYPE VARCHAR(500);"))
+                        except Exception as e:
+                            print(f"Aviso ao alterar usuario.{col_lgpd}: {e}")
+
+            if table_name == "arquivos" and "nome" in existing_columns:
+                try:
+                    connection.execute(text("ALTER TABLE arquivos ALTER COLUMN nome TYPE VARCHAR(500);"))
+                except Exception as e:
+                    print(f"Aviso ao alterar arquivos.nome: {e}")
+
+            if table_name == "aluno":
+                for col_lgpd in ["identificacao_genero", "identificacao_sexual", "raca"]:
+                    if col_lgpd in existing_columns:
+                        try:
+                            connection.execute(text(f"ALTER TABLE aluno ALTER COLUMN {col_lgpd} TYPE VARCHAR(500);"))
+                        except Exception as e:
+                            print(f"Aviso ao alterar aluno.{col_lgpd}: {e}")
 
             # Verificar se há colunas novas
             for column in table.columns:

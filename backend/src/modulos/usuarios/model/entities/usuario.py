@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Enum
 from src.shared.infrastructure.db import Base
 from src.shared.enums.cargo_enum import CargoEnum
+from src.shared.security.lgpd_encryption import EncryptedString
 from pydantic import BaseModel
 from typing import Optional
 from sqlalchemy import DateTime
@@ -12,12 +13,14 @@ class UsuarioORM(Base):
     __tablename__ = "usuario"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    nome_completo = Column(String(150), nullable=False)
-    email = Column(String(150), unique=True, nullable=False)
-    telefone = Column(String(20), unique=True, nullable=True)
+    nome_completo = Column(EncryptedString(500), nullable=False)
+    email = Column(EncryptedString(500), nullable=False)
+    email_hash = Column(String(64), index=True, nullable=True)
+    telefone = Column(EncryptedString(500), nullable=True)
     senha = Column(String(255), nullable=False)
     tentativas_falhas = Column(Integer, default=0, nullable=False)
     limite_de_bloqueio = Column(DateTime(timezone=True), nullable=True)
+
     
 
 
