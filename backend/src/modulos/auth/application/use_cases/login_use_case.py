@@ -54,17 +54,32 @@ class LoginUseCase:
                 if agora > validade_dt:
                     raise UsuarioInativoError("A validade de acesso da sua conta expirou. Entre em contato com a coordenação.")
 
+        # Define o cargo (aluno por padrão para este fluxo)
         cargo = CargoEnum.ALUNO.value
 
+        # Gera os tokens
         token_acesso = self.token_service.generate(usuario, cargo, login_data.lembrar_me)
         token_atualizacao = self.token_service.generate_refresh_token(usuario, cargo, login_data.lembrar_me)
 
+        # Monta os dados do usuário para o frontend
         dados_usuario = {
             "id": usuario.id,
             "nome": usuario.nome_completo,
             "email": usuario.email,
+            "telefone": usuario.telefone,
             "role": cargo,
         }
+
+        # Se for aluno, adiciona detalhes específicos
+        if aluno:
+            dados_usuario.update({
+                "status_cadastro": aluno.status_cadastro,
+                "curso": aluno.curso,
+                "faculdade": aluno.faculdade_id,
+                "periodo_ingresso": aluno.periodo_ingresso,
+                "turno": aluno.turno_curso,
+                "foto_perfil": aluno.id_foto_aluno
+            })
 
         return LoginResponseDTO(
             token_acesso=token_acesso,
