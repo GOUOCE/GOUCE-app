@@ -13,7 +13,23 @@
       "bundleIdentifier": "com.gouce.app"
     },
     "android": {
-      "package": "com.gouce.app"
+      "package": "com.gouce.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "https",
+              "host": "octopus-ragweed-shorter.ngrok-free.dev",
+              "pathPrefix": "/auth/redefinir-senha"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
       "bundler": "metro"
@@ -26,6 +42,11 @@
         }
       ]
     ],
-    "scheme": "gouce-app"
+    "scheme": "gouoce-app",
+    "extra": {
+      "expoClient": {
+        "scheme": "gouoce-app"
+      }
+    }
   }
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, Button, Avatar, Surface, useTheme, Portal, Modal, Divider } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { LogOut, UserCircle, CreditCard, RefreshCw, ChevronRight, Pencil } from 'lucide-react-native';
@@ -10,9 +10,6 @@ export default function PerfilScreen() {
   const router = useRouter();
   const { user, signOut } = useAuth();
   const [modalSairVisivel, setModalSairVisivel] = useState(false);
-
-  // Mock de status do aluno para demonstração visual
-  const statusAluno = 'Aprovado'; // Pode ser 'Aprovado', 'Pendente', 'Expirado'
 
   const handleSignOut = async () => {
     setModalSairVisivel(false);
@@ -37,17 +34,9 @@ export default function PerfilScreen() {
             size={120}
             source={{ uri: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=200&auto=format&fit=crop' }}
           />
-          <Text variant="headlineSmall" style={styles.userName}>{user?.name || 'João Neves'}</Text>
-          <Surface style={[
-            styles.statusBadge,
-            statusAluno === 'Aprovado' ? styles.statusAprovado : styles.statusPendente
-          ]} elevation={0}>
-            <Text style={[
-              styles.statusText,
-              statusAluno === 'Aprovado' ? styles.statusTextAprovado : styles.statusTextPendente
-            ]}>
-              {statusAluno}
-            </Text>
+          <Text variant="headlineSmall" style={styles.userName}>{user?.name}</Text>
+          <Surface style={styles.statusBadge} elevation={0}>
+            <Text style={styles.statusText}>{user?.status || 'Aprovado'}</Text>
           </Surface>
         </View>
 
@@ -173,22 +162,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 4,
     borderRadius: 20,
-  },
-  statusAprovado: {
     backgroundColor: '#E1F5FE',
   },
-  statusPendente: {
-    backgroundColor: '#FFF3E0',
-  },
   statusText: {
+    color: '#0288D1',
     fontWeight: '600',
     fontSize: 14,
-  },
-  statusTextAprovado: {
-    color: '#0288D1',
-  },
-  statusTextPendente: {
-    color: '#F57C00',
   },
   section: {
     paddingHorizontal: 24,

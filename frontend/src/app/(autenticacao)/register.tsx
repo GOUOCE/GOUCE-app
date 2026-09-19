@@ -18,7 +18,6 @@ import { Passo2Demografico } from '@/components/cadastro/Passo2Demografico';
 import { Passo3ContatoVinculo } from '@/components/cadastro/Passo3ContatoVinculo';
 import { Passo4Documentacao } from '@/components/cadastro/Passo4Documentacao';
 import { TermosDeUso } from '@/components/cadastro/TermosDeUso';
-import { TelaSucesso } from '@/components/cadastro/TelaSucesso';
 
 import { userService } from '@services/userService';
 import { useAuth } from '@contexts/AuthContext';
@@ -86,9 +85,10 @@ export default function RegisterScreen() {
 
       const userData = {
         id: String(response.usuario.id),
-        name: response.usuario.nome,
+        name: response.usuario.nome || response.usuario.nome_completo || '',
         email: response.usuario.email,
         role: 'ALUNO' as const,
+        status: 'pendente' as const, // Força o status inicial para análise
       };
 
       await setUserAndToken(userData, response.token_acesso);
