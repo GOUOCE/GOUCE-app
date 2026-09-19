@@ -1,6 +1,7 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
+from fastapi.responses import HTMLResponse
 
 from src.shared.infrastructure.db import get_session
 from src.shared.auth.jwt_service import JWTService
@@ -204,24 +205,35 @@ async def redirect_to_app(token: str):
     """
     Rota 'ponte' para abrir o aplicativo móvel a partir do link do e-mail.
     """
-    from fastapi.responses import HTMLResponse
+    # Usando o IP atual do seu computador para garantir o Expo Go
+    expo_link = f"exp://192.168.0.12:8081/--/redefinir-senha?token={token}"
+    custom_scheme_link = f"gouoce-app://redefinir-senha?token={token}"
 
-    # Tenta abrir o app no Expo Go usando o IP local e o túnel
     content = f"""
     <html>
-        <body style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; background-color: #F8F9FF;">
-            <div style="text-align: center; padding: 20px;">
-                <h2 style="color: #333;">Recuperação de Senha</h2>
-                <p style="color: #666;">Clique no botão abaixo para abrir o GOUOCE no seu celular.</p>
-                <div style="margin-top: 30px;">
-                    <a href="exp://192.168.0.3:8081/--/redefinir-senha?token={token}"
-                       style="background-color: #3e5f90; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
-                        ABRIR NO APLICATIVO
-                    </a>
-                </div>
+        <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+        </head>
+        <body style="margin:0; padding:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; font-family:sans-serif; background-color:#f8f9ff;">
+            <div style="text-align:center; max-width:400px;">
+                <h2 style="color:#333; margin-bottom:10px;">Recuperação de Senha</h2>
+                <p style="color:#666; text-align:center; margin-bottom:30px;">Clique no botão abaixo para abrir o GOUOCE no seu celular.</p>
+
+                <a href="{expo_link}"
+                   style="background-color:#3e5f90; color:white; padding:18px 30px; text-decoration:none; border-radius:10px; font-weight:bold; font-size:16px; width:100%; text-align:center; box-sizing:border-box; margin-bottom:20px; display:inline-block;">
+                    ABRIR NO APLICATIVO
+                </a>
+
+                <p style="font-size:12px; color:#999; margin-top:20px;">
+                    Caso o botão não funcione, tente abrir o link manual:
+                    <br><a href="{custom_scheme_link}" style="color:#3e5f90;">{custom_scheme_link}</a>
+                </p>
+
                 <script>
-                    // Tenta redirecionar para o esquema do Expo Go
-                    window.location.href = "exp://192.168.0.3:8081/--/redefinir-senha?token={token}";
+                    // Tenta redirecionar automaticamente para o Expo Go
+                    setTimeout(function() {{
+                        window.location.href = "{expo_link}";
+                    }}, 1000);
                 </script>
             </div>
         </body>
