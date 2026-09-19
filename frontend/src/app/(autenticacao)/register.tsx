@@ -18,15 +18,12 @@ import { Passo2Demografico } from '@/components/cadastro/Passo2Demografico';
 import { Passo3ContatoVinculo } from '@/components/cadastro/Passo3ContatoVinculo';
 import { Passo4Documentacao } from '@/components/cadastro/Passo4Documentacao';
 import { TermosDeUso } from '@/components/cadastro/TermosDeUso';
-import { TelaSucesso } from '@/components/cadastro/TelaSucesso';
 
 import { userService } from '@services/userService';
-import { useAuth } from '@contexts/AuthContext';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const theme = useTheme();
-  const { setUserAndToken } = useAuth();
   const [passo, setPasso] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [modalSairVisivel, setModalSairVisivel] = useState(false);
@@ -84,17 +81,13 @@ export default function RegisterScreen() {
     try {
       const response = await userService.register(dados);
 
-      const userData = {
-        id: String(response.usuario.id),
-        name: response.usuario.nome,
-        email: response.usuario.email,
-        role: 'ALUNO' as const,
-      };
-
-      await setUserAndToken(userData, response.token_acesso);
-      // O AuthContext cuidará do redirecionamento para /cadastro-pendente
+      if (response.success) {
+        router.replace('/(autenticacao)/cadastro-pendente');
+      }
     } catch (error: any) {
-      const message = error.response?.data?.detail || 'Erro ao realizar cadastro. Tente novamente.';
+      const message = error.response?.data?.error?.message
+        || error.response?.data?.detail
+        || 'Erro ao realizar cadastro. Tente novamente.';
       alert(message);
     } finally {
       setIsLoading(false);
