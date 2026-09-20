@@ -67,4 +67,14 @@ export const userService = {
 
     return response.data;
   },
+
+  async verificarEmail(email: string): Promise<boolean> {
+    try {
+      const response = await api.get<{ existe: boolean }>(`/usuarios/verificar-email/${email}`);
+      return response.data.existe;
+    } catch (error) {
+      console.error('Erro ao verificar e-mail:', error);
+      return false;
+    }
+  },
 };
