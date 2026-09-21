@@ -12,6 +12,10 @@ MIME_TYPES_PERMITIDOS = {
 }
 
 
+class ArquivoValidacaoError(ValueError):
+    """Indica uma rejeição controlada dos dados do arquivo enviado."""
+
+
 class SalvarArquivoUseCase:
     def __init__(self, repository, storage_service):
         self.repository = repository
@@ -24,11 +28,11 @@ class SalvarArquivoUseCase:
         content_type: str | None = None
     ) -> ArquivoResponseDTO:
         if not conteudo_bytes:
-            raise ValueError("O arquivo enviado está vazio")
+            raise ArquivoValidacaoError("O arquivo enviado está vazio")
 
         tamanho_maximo = 10 * 1024 * 1024  # 10MB
         if len(conteudo_bytes) > tamanho_maximo:
-            raise ValueError(f"O arquivo '{nome_original}' excede o tamanho máximo permitido de 10MB")
+            raise ArquivoValidacaoError(f"O arquivo '{nome_original}' excede o tamanho máximo permitido de 10MB")
 
         ct = (content_type or "application/octet-stream").lower().strip()
         
@@ -40,7 +44,7 @@ class SalvarArquivoUseCase:
             ct = f"image/{'jpeg' if extensao == 'jpg' else extensao}"
 
         if ct not in MIME_TYPES_PERMITIDOS and extensao not in ["pdf", "png", "jpg", "jpeg", "webp"]:
-            raise ValueError("Formato de arquivo inválido. Apenas arquivos PDF e Imagens (PNG, JPG, JPEG, WEBP) são permitidos.")
+            raise ArquivoValidacaoError("Formato de arquivo inválido. Apenas arquivos PDF e Imagens (PNG, JPG, JPEG, WEBP) são permitidos.")
 
         arquivo_id = str(uuid.uuid4())
         nome_objeto_minio = f"{arquivo_id}_{nome_original.replace(' ', '_')}"

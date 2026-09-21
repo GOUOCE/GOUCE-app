@@ -1,9 +1,19 @@
 import { api } from '../api/api';
 import { AlunoFormData } from '@/schemas/alunoSchema';
-import { LoginResponse } from './authService';
+
+export interface CadastroResponse {
+  success: true;
+  message: string;
+  data: {
+    id: number;
+    nome: string;
+    email: string;
+    status_cadastro: 'pendente';
+  };
+}
 
 export const userService = {
-  async register(data: AlunoFormData): Promise<LoginResponse> {
+  async register(data: AlunoFormData): Promise<CadastroResponse> {
     const formData = new FormData();
 
     // Dados básicos
@@ -58,7 +68,7 @@ export const userService = {
 
     console.log('[DEBUG] Enviando cadastro para:', api.defaults.baseURL + '/usuarios/cadastrar');
 
-    const response = await api.post<LoginResponse>('/usuarios/cadastrar', formData, {
+    const response = await api.post<CadastroResponse>('/usuarios/cadastrar', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -77,4 +87,24 @@ export const userService = {
       return false;
     }
   },
+
+  async getProfile(): Promise<any> {
+    const response = await api.get('/usuarios/me');
+    return response.data;
+  },
+
+  async updateProfile(data: { telefone?: string; bairro_id?: string }): Promise<any> {
+    const response = await api.patch('/usuarios/me', data);
+    return response.data;
+  },
+
+  async updateEmail(data: { novo_email: string; senha_atual: string }): Promise<any> {
+    // Note: O backend espera 'novo_email' e 'senha' no DTO, ajustando aqui
+    const response = await api.patch('/usuarios/me/email', {
+      novo_email: data.novo_email,
+      senha: data.senha_atual,
+    });
+    return response.data;
+  },
 };
+
