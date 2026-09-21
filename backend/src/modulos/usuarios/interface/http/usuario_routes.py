@@ -14,11 +14,16 @@ from src.modulos.usuarios.application.dtos.usuario_dto import (
     AtualizarStatusAlunoDTO,
     AprovacaoAlunoResponseDTO,
     PerfilAlunoResponseDTO,
+    RedefinirEmailDTO,
+    UsuarioResponseDTO,
+    AtualizarAlunoDTO,
 )
 from src.modulos.usuarios.application.use_cases.criar_usuario_use_case import CriarUsuarioUseCase
 from src.modulos.usuarios.application.use_cases.listar_usuarios_use_case import ListarUsuariosUseCase
 from src.modulos.usuarios.application.use_cases.aprovar_aluno_use_case import AprovarAlunoUseCase
 from src.modulos.usuarios.application.use_cases.obter_perfil_aluno_use_case import ObterPerfilAlunoUseCase
+from src.modulos.usuarios.application.use_cases.redefinir_email_use_case import RedefinirEmailUseCase
+from src.modulos.usuarios.application.use_cases.atualizar_aluno_use_case import AtualizarAlunoUseCase
 from src.modulos.usuarios.infrastructure.repositories.usuario_repository import (
     SQLAlchemyUsuarioRepository,
     CadastroDuplicadoError,
@@ -289,3 +294,65 @@ async def obter_meu_perfil(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao consultar perfil: {str(e)}")
+
+
+@router.patch(
+    "/me/email",
+    response_model=UsuarioResponseDTO,
+    summary="Redefinir E-mail do Aluno Autenticado",
+    description="Permite alterar o e-mail da conta se a senha atual for fornecida e estiver correta."
+)
+async def atualizar_email_autenticado(
+    data: RedefinirEmailDTO,
+    current_user: Annotated[dict, Depends(verify_any_user)],
+    repository=Depends(get_repository),
+    hasher=Depends(get_hasher),
+):
+    try:
+        user_id_str = current_user.get("sub")
+        if not user_id_str:
+            raise HTTPException(status_code=401, detail="Sessão inválida")
+
+        user_id = int(user_id_str)
+        use_case = RedefinirEmailUseCase(repository, hasher)
+        return use_case.execute(user_id, data)
+    except ValueError as e:
+        msg = str(e)
+        if "não encontrado" in msg.lower():
+            raise HTTPException(status_code=404, detail=msg)
+        raise HTTPException(status_code=400, detail=msg)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao atualizar e-mail: {str(e)}")
+
+
+@router.patch(
+    "/me",
+    response_model=AtualizarAlunoDTO,
+    summary="Atualizar Perfil do Aluno",
+    description="Permite que o aluno autenticado atualize parcialmente seus dados (bairro e telefone)."
+)
+async def atualizar_meu_perfil(
+    data: AtualizarAlunoDTO,
+    current_user: Annotated[dict, Depends(verify_any_user)],
+    repository=Depends(get_repository),
+):
+    try:
+        user_id_str = current_user.get("sub")
+        if not user_id_str:
+            raise HTTPException(status_code=401, detail="Sessão inválida")
+
+        user_id = int(user_id_str)
+        use_case = AtualizarAlunoUseCase(repository)
+        return use_case.execute(user_id, data)
+    except ValueError as e:
+        msg = str(e)
+        if "não encontrado" in msg.lower():
+            raise HTTPException(status_code=404, detail=msg)
+        raise HTTPException(status_code=400, detail=msg)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao atualizar perfil do aluno: {str(e)}")
+
