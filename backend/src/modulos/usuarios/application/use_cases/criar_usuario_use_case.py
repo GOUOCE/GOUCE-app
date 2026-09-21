@@ -1,5 +1,6 @@
 from src.modulos.usuarios.application.dtos.usuario_dto import CadastroUsuarioDTO, CadastroSucessoDTO
 from src.shared.enums.cargo_enum import CargoEnum
+from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
 from src.shared.validators.data_nascimento_validator import DataNascimentoValidator
 from src.shared.validators.email_validator import EmailValidator
 from src.shared.validators.periodo_ingresso_validator import PeriodoIngressoValidator
@@ -113,6 +114,12 @@ class CriarUsuarioUseCase:
         # 13. Validação de Termos de Uso
         if not dto.termos_de_uso:
             raise ValueError("Você deve aceitar os termos de uso para se cadastrar")
+
+        # A aprovação de um novo aluno é uma decisão administrativa. O valor
+        # recebido no cadastro público nunca pode ativar a conta diretamente.
+        dto = dto.model_copy(update={
+            "status_cadastro": StatusCadastroEnum.PENDENTE.value,
+        })
 
         # Criação do usuário após passar por todas as validações
         senha_hash = self.hasher.hash(dto.senha)

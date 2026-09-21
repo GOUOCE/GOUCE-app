@@ -3,9 +3,10 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 
 from src.shared.infrastructure.db import get_session
-from src.shared.auth.dependencies import verify_any_user
+from src.shared.auth.dependencies import require_roles
 from src.shared.auth.jwt_service import JWTService
 from src.shared.security.argon2_hasher import Argon2PasswordHasher
+from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
 
 from src.modulos.usuarios.application.dtos.usuario_dto import (
@@ -64,7 +65,7 @@ def get_storage_service():
 )
 async def listar_usuarios(
     repository=Depends(get_repository),
-    current_user: Annotated[dict, Depends(verify_any_user)] = None,
+    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ADMINISTRADOR.value))] = None,
 ):
     try:
         use_case = ListarUsuariosUseCase(repository)
@@ -81,7 +82,7 @@ async def listar_usuarios(
 )
 async def listar_alunos(
     repository=Depends(get_repository),
-    current_user: Annotated[dict, Depends(verify_any_user)] = None,
+    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ADMINISTRADOR.value))] = None,
 ):
     return await listar_usuarios(repository, current_user)
 
@@ -225,7 +226,7 @@ async def cadastrar_usuario_alias(
 async def aprovar_aluno(
     aluno_id: int,
     repository=Depends(get_repository),
-    current_user: Annotated[dict, Depends(verify_any_user)] = None,
+    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ADMINISTRADOR.value))] = None,
 ):
     try:
         use_case = AprovarAlunoUseCase(repository)
@@ -249,7 +250,7 @@ async def atualizar_status_aluno(
     aluno_id: int,
     data: AtualizarStatusAlunoDTO,
     repository=Depends(get_repository),
-    current_user: Annotated[dict, Depends(verify_any_user)] = None,
+    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ADMINISTRADOR.value))] = None,
 ):
     try:
         use_case = AprovarAlunoUseCase(repository)
@@ -290,15 +291,14 @@ async def verificar_email(
     description="Retorna os dados do perfil do aluno autenticado extraído do token JWT, omitindo informações sensíveis de sistema."
 )
 async def obter_meu_perfil(
-    current_user: Annotated[dict, Depends(verify_any_user)],
+    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ALUNO.value))],
     repository=Depends(get_repository),
 ):
     try:
-        user_id_str = current_user.get("sub")
-        if not user_id_str:
-            raise HTTPException(status_code=401, detail="Sessão inválida: identificador de usuário não encontrado no token")
-        
-        user_id = int(user_id_str)
+        user_id = current_user.get("current_user_id")
+        if not isinstance(user_id, int) or isinstance(user_id, bool):
+            raise HTTPException(status_code=401, detail="Sessão inválida")
+
         use_case = ObterPerfilAlunoUseCase(repository)
         return use_case.execute(user_id)
     except ValueError as e:
@@ -320,16 +320,15 @@ async def obter_meu_perfil(
 )
 async def atualizar_email_autenticado(
     data: RedefinirEmailDTO,
-    current_user: Annotated[dict, Depends(verify_any_user)],
+    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ALUNO.value))],
     repository=Depends(get_repository),
     hasher=Depends(get_hasher),
 ):
     try:
-        user_id_str = current_user.get("sub")
-        if not user_id_str:
+        user_id = current_user.get("current_user_id")
+        if not isinstance(user_id, int) or isinstance(user_id, bool):
             raise HTTPException(status_code=401, detail="Sessão inválida")
 
-        user_id = int(user_id_str)
         use_case = RedefinirEmailUseCase(repository, hasher)
         return use_case.execute(user_id, data)
     except ValueError as e:
@@ -351,15 +350,14 @@ async def atualizar_email_autenticado(
 )
 async def atualizar_meu_perfil(
     data: AtualizarAlunoDTO,
-    current_user: Annotated[dict, Depends(verify_any_user)],
+    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ALUNO.value))],
     repository=Depends(get_repository),
 ):
     try:
-        user_id_str = current_user.get("sub")
-        if not user_id_str:
+        user_id = current_user.get("current_user_id")
+        if not isinstance(user_id, int) or isinstance(user_id, bool):
             raise HTTPException(status_code=401, detail="Sessão inválida")
 
-        user_id = int(user_id_str)
         use_case = AtualizarAlunoUseCase(repository)
         return use_case.execute(user_id, data)
     except ValueError as e:
@@ -371,4 +369,3 @@ async def atualizar_meu_perfil(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao atualizar perfil do aluno: {str(e)}")
-

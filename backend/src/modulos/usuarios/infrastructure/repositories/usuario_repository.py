@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import inspect, or_, text
 
 from src.modulos.usuarios.model.entities.aluno import AlunoORM
 from src.modulos.usuarios.model.entities.usuario import UsuarioORM
+from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.security.lgpd_encryption import hash_email
 
 
@@ -15,6 +16,153 @@ class CadastroDuplicadoError(Exception):
 class SQLAlchemyUsuarioRepository:
     def __init__(self, session: Session):
         self.session = session
+
+    @staticmethod
+    def _normalizar_valor(valor) -> str | None:
+        if valor is None:
+            return None
+        return str(getattr(valor, "value", valor)).lower().strip()
+
+    def _buscar_flag_perfil_opcional(
+        self,
+        tabela: str,
+        coluna_id: str,
+        coluna_ativo: str,
+        user_id: int,
+    ) -> tuple[bool, bool] | None:
+        """Busca um perfil auxiliar somente quando sua tabela é utilizável.
+
+        Administrador e Representante não fazem parte do metadata carregado pelo
+        aplicativo atual. A reflexão evita que uma tabela ausente quebre todas as
+        requisições e não cria schema implicitamente.
+        """
+        try:
+            inspector = inspect(self.session.get_bind())
+            if tabela not in inspector.get_table_names():
+                return None
+
+            colunas = {coluna["name"] for coluna in inspector.get_columns(tabela)}
+            if coluna_id not in colunas or coluna_ativo not in colunas:
+                return None
+
+            resultado = self.session.execute(
+                text(
+                    f'SELECT "{coluna_id}", "{coluna_ativo}" '
+                    f'FROM "{tabela}" WHERE "{coluna_id}" = :user_id'
+                ),
+                {"user_id": user_id},
+            ).mappings().first()
+
+            if not resultado:
+                return False, False
+
+            return True, bool(resultado[coluna_ativo])
+        except Exception:
+            # Perfil auxiliar incompleto/indisponível não pode virar autorização
+            # baseada apenas no claim do JWT. Nesse caso, o perfil não é aceito.
+            return None
+
+    def buscar_contexto_autenticacao_por_id(self, user_id: int) -> dict | None:
+        """Retorna o perfil e o estado atual usados na validação de sessão."""
+        usuario, aluno = self.buscar_com_detalhes_por_id(user_id)
+        if not usuario:
+            return None
+
+        agora = datetime.now(timezone.utc)
+        candidatos: list[dict] = []
+
+        if aluno:
+            status_cadastro = self._normalizar_valor(aluno.status_cadastro)
+            ativo = status_cadastro == "ativado"
+            motivo = None
+
+            if status_cadastro == "pendente":
+                motivo = "Sua conta está pendente de aprovação pela coordenação."
+            elif status_cadastro != "ativado":
+                motivo_reprovacao = aluno.motivo_reprovacao or ""
+                complemento = f": {motivo_reprovacao}" if motivo_reprovacao else ""
+                motivo = f"Sua conta está inativada{complemento}."
+
+            validade_acesso = aluno.validade_acesso
+            if ativo and validade_acesso:
+                if validade_acesso.tzinfo is None:
+                    validade_acesso = validade_acesso.replace(tzinfo=timezone.utc)
+                if agora >= validade_acesso:
+                    ativo = False
+                    motivo = "A validade de acesso da sua conta expirou."
+
+            candidatos.append({
+                "role": CargoEnum.ALUNO.value,
+                "ativo": ativo,
+                "status": status_cadastro,
+                "motivo": motivo,
+                "aluno": aluno,
+            })
+
+        administrador = self._buscar_flag_perfil_opcional(
+            tabela="administrador",
+            coluna_id="administrador_id",
+            coluna_ativo="is_administrador_ativo",
+            user_id=user_id,
+        )
+        if administrador and administrador[0]:
+            candidatos.append({
+                "role": CargoEnum.ADMINISTRADOR.value,
+                "ativo": administrador[1],
+                "status": "ativado" if administrador[1] else "inativado",
+                "motivo": None if administrador[1] else "Usuário administrativo inativo.",
+                "aluno": None,
+            })
+
+        representante = self._buscar_flag_perfil_opcional(
+            tabela="representante",
+            coluna_id="administrador_id",
+            coluna_ativo="is_representante_ativo",
+            user_id=user_id,
+        )
+        if representante and representante[0]:
+            # "supervisor" é o valor legado presente no CargoEnum e no JWT
+            # atual para o perfil operacional equivalente a Representante.
+            candidatos.append({
+                "role": CargoEnum.SUPERVISOR.value,
+                "ativo": representante[1],
+                "status": "ativado" if representante[1] else "inativado",
+                "motivo": None if representante[1] else "Usuário representante inativo.",
+                "aluno": None,
+            })
+
+        # Um usuário sem perfil, ou com mais de um perfil, não deve receber
+        # autorização por inferência arbitrária.
+        if len(candidatos) != 1:
+            return {
+                "usuario": usuario,
+                "role": None,
+                "ativo": False,
+                "status": None,
+                "motivo": "Perfil de usuário não identificado.",
+                "aluno": aluno,
+            }
+
+        contexto = candidatos[0]
+
+        limite_de_bloqueio = usuario.limite_de_bloqueio
+        if contexto["ativo"] and limite_de_bloqueio:
+            if limite_de_bloqueio.tzinfo is None:
+                limite_de_bloqueio = limite_de_bloqueio.replace(tzinfo=timezone.utc)
+            if agora < limite_de_bloqueio:
+                contexto["ativo"] = False
+                contexto["motivo"] = "Conta temporariamente bloqueada."
+
+        return {
+            "usuario": usuario,
+            **contexto,
+        }
+
+    def buscar_contexto_autenticacao_por_email(self, email: str) -> dict | None:
+        usuario = self.buscar_por_email(email)
+        if not usuario or not usuario.id:
+            return None
+        return self.buscar_contexto_autenticacao_por_id(usuario.id)
 
     def buscar_por_email(self, email: str):
         email_limpo = email.lower().strip()

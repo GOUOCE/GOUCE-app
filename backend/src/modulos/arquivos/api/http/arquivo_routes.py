@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from src.shared.infrastructure.db import get_session
 from src.shared.auth.dependencies import verify_any_user
+from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.security.lgpd_encryption import decrypt_bytes
 from src.modulos.arquivos.application.dtos.arquivo_dto import ArquivoResponseDTO, ArquivoPresignedUrlDTO
 from src.modulos.arquivos.application.use_cases.salvar_arquivo_use_case import SalvarArquivoUseCase
@@ -20,6 +21,23 @@ def get_repository(session: Annotated[Session, Depends(get_session)]):
 
 def get_storage_service():
     return MinioStorageService()
+
+
+def _buscar_arquivo_autorizado(repository, arquivo_id: str, current_user: dict):
+    """Aplica a autorização de recurso antes de revelar o arquivo."""
+    perfil_atual = current_user.get("current_role")
+
+    if perfil_atual == CargoEnum.ADMINISTRADOR.value:
+        return repository.buscar_por_id(arquivo_id)
+
+    if perfil_atual != CargoEnum.ALUNO.value:
+        return None
+
+    user_id = current_user.get("current_user_id")
+    if not user_id:
+        return None
+
+    return repository.buscar_por_id_do_usuario(arquivo_id, user_id)
 
 
 @router.post(
@@ -55,7 +73,7 @@ async def obter_arquivo(
     repository=Depends(get_repository),
     current_user: Annotated[dict, Depends(verify_any_user)] = None,
 ):
-    arquivo = repository.buscar_por_id(arquivo_id)
+    arquivo = _buscar_arquivo_autorizado(repository, arquivo_id, current_user)
     if not arquivo:
         raise HTTPException(status_code=404, detail="Arquivo não encontrado")
 
@@ -81,7 +99,7 @@ async def obter_url_assinada(
     storage_service=Depends(get_storage_service),
     current_user: Annotated[dict, Depends(verify_any_user)] = None,
 ):
-    arquivo = repository.buscar_por_id(arquivo_id)
+    arquivo = _buscar_arquivo_autorizado(repository, arquivo_id, current_user)
     if not arquivo:
         raise HTTPException(status_code=404, detail="Arquivo não encontrado")
 
@@ -114,7 +132,7 @@ async def visualizar_arquivo(
     storage_service=Depends(get_storage_service),
     current_user: Annotated[dict, Depends(verify_any_user)] = None,
 ):
-    arquivo = repository.buscar_por_id(arquivo_id)
+    arquivo = _buscar_arquivo_autorizado(repository, arquivo_id, current_user)
     if not arquivo:
         raise HTTPException(status_code=404, detail="Arquivo não encontrado")
 

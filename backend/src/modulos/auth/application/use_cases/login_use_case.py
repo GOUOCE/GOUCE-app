@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 from src.modulos.auth.application.dtos.login_dto import LoginDTO, LoginResponseDTO
-from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
 
 
@@ -17,11 +16,9 @@ class LoginUseCase:
 
     def execute(self, login_data: LoginDTO) -> LoginResponseDTO:
         email_normalizado = login_data.email.lower().strip()
-        usuario, aluno = self.repository.buscar_com_detalhes_por_email(email_normalizado)
-
-        # Se não encontrar no buscar_com_detalhes, fallback para buscar_por_email simples
-        if not usuario:
-            usuario = self.repository.buscar_por_email(email_normalizado)
+        contexto = self.repository.buscar_contexto_autenticacao_por_email(email_normalizado)
+        usuario = contexto.get("usuario") if contexto else None
+        aluno = contexto.get("aluno") if contexto else None
 
         if not usuario or not self.hasher.verify(login_data.senha, usuario.senha):
             raise ValueError("Email ou senha inválidos")
@@ -35,27 +32,25 @@ class LoginUseCase:
             if agora < bloqueio_dt:
                 raise ValueError("Conta temporariamente bloqueada. Tente novamente mais tarde.")
 
-        # 2. Validação estrita de status: APENAS o estado 'ativado' tem permissão de acesso
-        if aluno:
-            status = (aluno.status_cadastro or "").lower().strip()
+        # O perfil e o estado são derivados das tabelas atuais pelo repository.
+        # O JWT não é usado como fonte de verdade para essa decisão.
+        if not contexto or not contexto.get("role"):
+            raise UsuarioInativoError("Usuário sem perfil de acesso válido.")
 
-            if status == StatusCadastroEnum.PENDENTE.value:
+        if not contexto.get("ativo"):
+            status_atual = contexto.get("status")
+            motivo_contexto = contexto.get("motivo")
+
+            if aluno and status_atual == StatusCadastroEnum.PENDENTE.value:
                 raise UsuarioInativoError("Sua conta está pendente de aprovação pela coordenação.")
 
-            if status != StatusCadastroEnum.ATIVADO.value:
+            if aluno and status_atual != StatusCadastroEnum.ATIVADO.value:
                 motivo = f": {aluno.motivo_reprovacao}" if aluno.motivo_reprovacao else ""
                 raise UsuarioInativoError(f"Sua conta está inativada{motivo}. Entre em contato com a coordenação.")
 
-            # Validação de validade de acesso expirada
-            if aluno.validade_acesso:
-                validade_dt = aluno.validade_acesso
-                if validade_dt.tzinfo is None:
-                    validade_dt = validade_dt.replace(tzinfo=timezone.utc)
-                if agora > validade_dt:
-                    raise UsuarioInativoError("A validade de acesso da sua conta expirou. Entre em contato com a coordenação.")
+            raise UsuarioInativoError(motivo_contexto or "Sua conta não está ativa.")
 
-        # Define o cargo (aluno por padrão para este fluxo)
-        cargo = CargoEnum.ALUNO.value
+        cargo = contexto["role"]
 
         # Gera os tokens
         token_acesso = self.token_service.generate(usuario, cargo, login_data.lembrar_me)
