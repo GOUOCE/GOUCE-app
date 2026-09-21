@@ -77,4 +77,24 @@ export const userService = {
       return false;
     }
   },
+
+  async getProfile(): Promise<any> {
+    const response = await api.get('/usuarios/me');
+    return response.data;
+  },
+
+  async updateProfile(data: { telefone?: string; bairro_id?: string }): Promise<any> {
+    const response = await api.patch('/usuarios/me', data);
+    return response.data;
+  },
+
+  async updateEmail(data: { novo_email: string; senha_atual: string }): Promise<any> {
+    // Note: O backend espera 'novo_email' e 'senha' no DTO, ajustando aqui
+    const response = await api.patch('/usuarios/me/email', {
+      novo_email: data.novo_email,
+      senha: data.senha_atual,
+    });
+    return response.data;
+  },
 };
+
