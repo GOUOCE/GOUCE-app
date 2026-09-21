@@ -154,3 +154,21 @@ class SQLAlchemyUsuarioRepository:
         self.session.commit()
         self.session.refresh(usuario)
         return usuario
+
+    def atualizar_dados_parciais(self, user_id: int, telefone: str | None = None, bairro_id: str | None = None):
+        usuario, aluno = self.buscar_com_detalhes_por_id(user_id)
+        if not usuario:
+            return None, None
+
+        if telefone is not None:
+            usuario.telefone = telefone
+        
+        if aluno and bairro_id is not None:
+            aluno.bairro_id = bairro_id
+
+        self.session.commit()
+        self.session.refresh(usuario)
+        if aluno:
+            self.session.refresh(aluno)
+            
+        return usuario, aluno
