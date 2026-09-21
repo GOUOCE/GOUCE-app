@@ -74,32 +74,28 @@ export default function RedefinirSenhaScreen() {
       <Portal>
         <Modal
           visible={modalSairVisivel}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setModalSairVisivel(false)}
+          onDismiss={() => setModalSairVisivel(false)}
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text variant="headlineSmall" style={styles.modalTitle}>Sair desta tela?</Text>
-              <Text variant="bodyLarge" style={styles.modalText}>
-                As alterações não salvas serão perdidas.
-              </Text>
-              <View style={styles.modalButtons}>
-                <Button
-                  mode="text"
-                  onPress={() => setModalSairVisivel(false)}
-                  style={styles.modalBtn}
-                >
-                  Continuar aqui
-                </Button>
-                <Button
-                  mode="contained"
-                  onPress={confirmarSaida}
-                  style={[styles.modalBtn, { backgroundColor: '#B00020' }]}
-                >
-                  Sim, sair
-                </Button>
-              </View>
+          <View style={styles.modalContent}>
+            <Text variant="headlineSmall" style={styles.modalTitle}>Sair desta tela?</Text>
+            <Text variant="bodyLarge" style={styles.modalText}>
+              As alterações não salvas serão perdidas.
+            </Text>
+            <View style={styles.modalButtons}>
+              <Button
+                mode="text"
+                onPress={() => setModalSairVisivel(false)}
+                style={styles.modalBtn}
+              >
+                Continuar aqui
+              </Button>
+              <Button
+                mode="contained"
+                onPress={confirmarSaida}
+                style={[styles.modalBtn, { backgroundColor: '#B00020' }]}
+              >
+                Sim, sair
+              </Button>
             </View>
           </View>
         </Modal>
@@ -229,18 +225,11 @@ const styles = StyleSheet.create({
   btnContent: {
     height: 55,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
   modalContent: {
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: 24,
-    width: '100%',
+    margin: 24,
     gap: 16,
   },
   modalTitle: {

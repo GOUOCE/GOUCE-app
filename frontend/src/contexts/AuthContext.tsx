@@ -90,15 +90,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const userData: User = {
         id: String(response.usuario.id),
-        name: response.usuario.nome,
+        name: response.usuario.nome || response.usuario.nome_completo || 'Usuário',
         email: response.usuario.email,
         role: authService.mapRole(response.usuario.role),
-        status: response.usuario.status_cadastro,
+        status: response.usuario.status_cadastro || 'ativado',
+        telefone: response.usuario.telefone,
+        curso: response.usuario.curso,
+        faculdade: response.usuario.faculdade,
+        periodo_ingresso: response.usuario.periodo_ingresso,
+        turno: response.usuario.turno,
+        foto_perfil: response.usuario.foto_perfil,
       };
 
       await setUserAndToken(userData, response.token_acesso);
     } catch (error) {
-      console.error('Erro no login:', error);
       throw error;
     } finally {
       setIsLoading(false);
