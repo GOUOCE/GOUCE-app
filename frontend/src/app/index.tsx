@@ -1,52 +1,48 @@
 import React from 'react';
-import { StyleSheet, View, Image } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, Text, useTheme } from 'react-native-paper';
+import { GouoceLogo, PrefeituraLogo } from '@/components/ui/Logos';
 
 export default function WelcomeScreen() {
   const router = useRouter();
   const theme = useTheme();
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.centerContent}>
-        {/* Logo principal GOUOCE */}
-        <Image
-          source={require('../../assets/logo-gouoce.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+    <View style={[styles.container, { backgroundColor: '#FFFFFF' }]}>
+      {/* Container do Logo Superior (GOUOCE) */}
+      <View style={styles.logoWrapper}>
+        <GouoceLogo width={220} height={180} />
       </View>
 
-      <View style={styles.buttonContainer}>
-        <Button
-          mode="contained"
-          onPress={() => router.push('/(autenticacao)/login')}
-          style={styles.button}
-          contentStyle={styles.buttonContent}
-        >
-          Entrar
-        </Button>
+      {/* Container de Conteúdo Inferior (Botões + Prefeitura) */}
+      <View style={styles.bottomSection}>
+        <View style={styles.buttonGroup}>
+          <Button
+            mode="contained"
+            onPress={() => router.push('/(autenticacao)/login')}
+            style={styles.mainButton}
+            contentStyle={styles.buttonContent}
+            labelStyle={styles.buttonLabel}
+          >
+            Entrar
+          </Button>
 
-        <Button
-          mode="outlined"
-          onPress={() => router.push('/(autenticacao)/register')}
-          style={[styles.button, styles.outlineButton]}
-          contentStyle={styles.buttonContent}
-          labelStyle={{ color: theme.colors.primary }}
-        >
-          Criar conta de aluno
-        </Button>
-      </View>
+          <Button
+            mode="outlined"
+            onPress={() => router.push('/(autenticacao)/register')}
+            style={[styles.mainButton, styles.outlineButton]}
+            contentStyle={styles.buttonContent}
+            labelStyle={[styles.buttonLabel, { color: theme.colors.primary }]}
+          >
+            Criar conta de aluno
+          </Button>
+        </View>
 
-      <View style={styles.footer}>
-         {/* Logo da Prefeitura */}
-         <Image
-            source={require('../../assets/logo-prefeitura.png')}
-            style={styles.prefeituraLogo}
-            resizeMode="contain"
-         />
-         <Text variant="labelSmall" style={styles.version}>Versão 1.0</Text>
+        <View style={styles.footer}>
+           <PrefeituraLogo width={130} height={60} />
+           <Text variant="labelSmall" style={styles.versionText}>Versão 1.0</Text>
+        </View>
       </View>
     </View>
   );
@@ -55,45 +51,43 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    paddingHorizontal: 24,
   },
-  centerContent: {
-    flex: 1,
+  logoWrapper: {
+    flex: 3,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 40,
   },
-  logo: {
-    width: 280,
-    height: 150,
+  bottomSection: {
+    flex: 2,
+    justifyContent: 'flex-end',
+    paddingBottom: 20,
   },
-  buttonContainer: {
+  buttonGroup: {
     width: '100%',
     gap: 16,
-    marginBottom: 80,
+    marginBottom: 40,
   },
-  button: {
-    borderRadius: 8,
+  mainButton: {
+    borderRadius: 12,
   },
   outlineButton: {
-    borderColor: '#3e5f90', // Cor Primária
+    borderColor: '#3e5f90',
     borderWidth: 1.5,
   },
   buttonContent: {
-    height: 55,
+    height: 56,
+  },
+  buttonLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   footer: {
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 30,
+    gap: 4,
   },
-  prefeituraLogo: {
-    width: 150,
-    height: 50,
-  },
-  version: {
+  versionText: {
     color: '#999',
+    fontSize: 12,
   }
 });

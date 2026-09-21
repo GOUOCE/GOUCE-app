@@ -268,6 +268,22 @@ async def atualizar_status_aluno(
 
 
 @router.get(
+    "/verificar-email/{email:path}",
+    summary="Verificar se E-mail já está cadastrado",
+    description="Verifica a existência de um e-mail no banco de dados para validação em tempo real."
+)
+async def verificar_email(
+    email: str,
+    repository=Depends(get_repository),
+):
+    try:
+        usuario = repository.buscar_por_email(email.lower().strip())
+        return {"existe": usuario is not None}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao verificar e-mail: {str(e)}")
+
+
+@router.get(
     "/me",
     response_model=PerfilAlunoResponseDTO,
     summary="Consultar Perfil do Aluno Autenticado",
