@@ -1,9 +1,19 @@
 import { api } from '../api/api';
 import { AlunoFormData } from '@/schemas/alunoSchema';
-import { LoginResponse } from './authService';
+
+export interface CadastroResponse {
+  success: true;
+  message: string;
+  data: {
+    id: number;
+    nome: string;
+    email: string;
+    status_cadastro: 'pendente';
+  };
+}
 
 export const userService = {
-  async register(data: AlunoFormData): Promise<LoginResponse> {
+  async register(data: AlunoFormData): Promise<CadastroResponse> {
     const formData = new FormData();
 
     // Dados básicos
@@ -58,7 +68,7 @@ export const userService = {
 
     console.log('[DEBUG] Enviando cadastro para:', api.defaults.baseURL + '/usuarios/cadastrar');
 
-    const response = await api.post<LoginResponse>('/usuarios/cadastrar', formData, {
+    const response = await api.post<CadastroResponse>('/usuarios/cadastrar', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
