@@ -95,3 +95,11 @@ class PerfilAlunoResponseDTO(BaseModel):
     motivo_reprovacao: str | None = None
     id_comprovante_matricula: str | None = None
     id_comprovante_residencia: str | None = None
+
+
+class RedefinirEmailDTO(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    novo_email: EmailStr
+    senha: str = Field(..., description="Senha atual do usuário para validação")
+

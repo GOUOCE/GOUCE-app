@@ -141,3 +141,16 @@ class SQLAlchemyUsuarioRepository:
         if not resultado:
             return None, None
         return resultado[0], resultado[1]
+
+    def atualizar_email(self, user_id: int, novo_email: str) -> UsuarioORM | None:
+        usuario = self.session.query(UsuarioORM).filter(UsuarioORM.id == user_id).first()
+        if not usuario:
+            return None
+        
+        email_limpo = novo_email.lower().strip()
+        usuario.email = email_limpo
+        usuario.email_hash = hash_email(email_limpo)
+        
+        self.session.commit()
+        self.session.refresh(usuario)
+        return usuario
