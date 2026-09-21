@@ -1,5 +1,5 @@
 import { api } from '../api/api';
-import { AlunoFormData } from '../../frontend/src/schemas/alunoSchema';
+import { AlunoFormData } from '@/schemas/alunoSchema';
 import { LoginResponse } from './authService';
 
 export const usuarioService = {

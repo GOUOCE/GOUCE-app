@@ -1,5 +1,5 @@
 import { api } from '../api/api';
-import { AlunoFormData } from '../../frontend/src/schemas/alunoSchema';
+import { AlunoFormData } from '@/schemas/alunoSchema';
 
 export interface CadastroResponse {
   success: true;
@@ -17,10 +17,17 @@ export const userService = {
     const formData = new FormData();
 
     // Dados básicos
+    // Converte data de DD/MM/YYYY para YYYY-MM-DD para o backend
+    const formatarDataParaISO = (dataStr: string) => {
+      const partes = dataStr.split('/');
+      if (partes.length !== 3) return dataStr;
+      return `${partes[2]}-${partes[1]}-${partes[0]}`;
+    };
+
     formData.append('nome', data.nomeCompleto);
     formData.append('email', data.email);
     formData.append('senha', data.senha);
-    formData.append('data_nascimento', data.dataNascimento);
+    formData.append('data_nascimento', formatarDataParaISO(data.dataNascimento));
     formData.append('telefone', data.whatsapp);
 
     // Perfil Demográfico
@@ -69,5 +76,15 @@ export const userService = {
     });
 
     return response.data;
+  },
+
+  async verificarEmail(email: string): Promise<boolean> {
+    try {
+      const response = await api.get<{ existe: boolean }>(`/usuarios/verificar-email/${email}`);
+      return response.data.existe;
+    } catch (error) {
+      console.error('Erro ao verificar e-mail:', error);
+      return false;
+    }
   },
 };

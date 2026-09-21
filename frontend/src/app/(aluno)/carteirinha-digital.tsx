@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { ChevronLeft, WifiOff } from 'lucide-react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { useAuth } from '@contexts/AuthContext';
+import { PrefeituraLogo } from '@/components/ui/Logos';
 
 export default function CarteirinhaDigitalScreen() {
   const theme = useTheme();
@@ -66,11 +67,7 @@ export default function CarteirinhaDigitalScreen() {
               <Text variant="labelSmall" style={styles.emissionDate}>
                 Data de Emissão: {dadosCarteirinha.emissao}
               </Text>
-              <Image
-                source={require('@/../assets/logo-prefeitura.png')}
-                style={styles.logoPrefeitura}
-                resizeMode="contain"
-              />
+              <PrefeituraLogo width={60} height={60} />
             </View>
           </View>
         </Surface>

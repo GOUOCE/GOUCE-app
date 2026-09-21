@@ -5,7 +5,6 @@ import {
   Button,
   Text,
   useTheme,
-  ProgressBar,
   Portal
 } from 'react-native-paper';
 import { useForm, FormProvider } from 'react-hook-form';
@@ -56,7 +55,19 @@ export default function RegisterScreen() {
     if (passo === 4) camposParaValidar = ['comprovanteMatricula', 'comprovanteResidencia'];
 
     const valido = await trigger(camposParaValidar);
-    if (valido) setPasso(passo + 1);
+    if (valido) {
+      if (passo === 1) {
+        setIsLoading(true);
+        const email = metodos.getValues('email');
+        const existe = await userService.verificarEmail(email);
+        setIsLoading(false);
+        if (existe) {
+          alert('Este e-mail já está em uso no sistema. Por favor, utilize outro ou recupere sua senha.');
+          return;
+        }
+      }
+      setPasso(passo + 1);
+    }
   };
 
   const voltarPasso = () => {
@@ -167,18 +178,14 @@ export default function RegisterScreen() {
           </View>
         </ScrollView>
 
-        {/* Footer com Progresso e Botão */}
+        {/* Footer com Botão */}
         <View style={styles.footer}>
-          <ProgressBar
-            progress={passo / 5}
-            color={theme.colors.primary}
-            style={styles.progress}
-          />
-
           {passo < 5 ? (
             <Button
               mode="contained"
               onPress={proximoPasso}
+              loading={isLoading}
+              disabled={isLoading}
               style={styles.actionButton}
               contentStyle={styles.buttonContent}
             >
@@ -247,12 +254,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
-  },
-  progress: {
-    height: 6,
-    borderRadius: 3,
-    marginBottom: 24,
-    backgroundColor: '#E0E0E0',
   },
   actionButton: {
     borderRadius: 8,
