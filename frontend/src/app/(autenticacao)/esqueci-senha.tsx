@@ -15,6 +15,7 @@ import { ChevronLeft, Mail, X } from 'lucide-react-native';
 
 import { forgotPasswordSchema, ForgotPasswordFormData } from '@/schemas/loginSchema';
 import { authService } from '@services/authService';
+import { getErrorMessage } from '@/utils/errorUtils';
 
 export default function EsqueciSenhaScreen() {
   const router = useRouter();
@@ -46,7 +47,7 @@ export default function EsqueciSenhaScreen() {
       await authService.forgotPassword(dados);
       setVisivel(true);
     } catch (error: any) {
-      const message = error.response?.data?.detail || 'Erro ao solicitar recuperação. Tente novamente.';
+      const message = getErrorMessage(error, 'Erro ao solicitar recuperação. Tente novamente.');
       alert(message);
     } finally {
       setIsLoading(false);
