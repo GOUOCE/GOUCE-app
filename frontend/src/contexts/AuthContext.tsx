@@ -12,6 +12,7 @@ interface AuthContextData {
   signIn: (email: string, senha: string, role?: UserRole) => Promise<void>;
   signOut: () => Promise<void>;
   setUserAndToken: (user: User, token: string) => Promise<void>;
+  updateUser: (data: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -118,8 +119,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.replace('/(autenticacao)/login');
   }
 
+  async function updateUser(data: Partial<User>) {
+    if (user) {
+      const updatedUser = { ...user, ...data };
+      await AsyncStorage.setItem('@GOUOCE:user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, signIn, signOut, setUserAndToken }}>
+    <AuthContext.Provider value={{ user, token, isLoading, signIn, signOut, setUserAndToken, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,5 +1,8 @@
-from src.modulos.usuarios.application.dtos.usuario_dto import CadastroUsuarioDTO, CadastroSucessoDTO
-from src.shared.enums.cargo_enum import CargoEnum
+from src.modulos.usuarios.application.dtos.usuario_dto import (
+    CadastroDataDTO,
+    CadastroSucessoDTO,
+    CadastroUsuarioDTO,
+)
 from src.shared.validators.data_nascimento_validator import DataNascimentoValidator
 from src.shared.validators.email_validator import EmailValidator
 from src.shared.validators.periodo_ingresso_validator import PeriodoIngressoValidator
@@ -13,6 +16,14 @@ class ValidacaoMultiplaError(Exception):
     def __init__(self, erros: list[str]):
         self.erros = erros
         super().__init__("Erros de validação encontrados")
+class EmailAlreadyRegisteredError(ValueError):
+    pass
+
+
+class CadastroValidationError(ValueError):
+    def __init__(self, field: str | None, message: str):
+        super().__init__(message)
+        self.field = field
 
 
 class CriarUsuarioUseCase:
@@ -143,9 +154,12 @@ class CriarUsuarioUseCase:
         usuario = self.repository.criar_aluno(dto, senha_hash)
 
         return CadastroSucessoDTO(
-            id=usuario.id,
-            nome=usuario.nome_completo,
-            email=usuario.email,
-            status_cadastro="pendente",
-            mensagem="Cadastro realizado com sucesso! Aguarde a aprovação da coordenação para realizar o login."
+            success=True,
+            message="Cadastro enviado para análise da coordenação",
+            data=CadastroDataDTO(
+                id=usuario.id,
+                nome=usuario.nome_completo,
+                email=usuario.email,
+                status_cadastro="pendente",
+            ),
         )

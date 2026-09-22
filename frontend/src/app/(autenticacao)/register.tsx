@@ -5,7 +5,6 @@ import {
   Button,
   Text,
   useTheme,
-  ProgressBar,
   Portal
 } from 'react-native-paper';
 import { useForm, FormProvider } from 'react-hook-form';
@@ -20,12 +19,10 @@ import { Passo4Documentacao } from '@/components/cadastro/Passo4Documentacao';
 import { TermosDeUso } from '@/components/cadastro/TermosDeUso';
 
 import { userService } from '@services/userService';
-import { useAuth } from '@contexts/AuthContext';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const theme = useTheme();
-  const { setUserAndToken } = useAuth();
   const [passo, setPasso] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [modalSairVisivel, setModalSairVisivel] = useState(false);
@@ -58,7 +55,19 @@ export default function RegisterScreen() {
     if (passo === 4) camposParaValidar = ['comprovanteMatricula', 'comprovanteResidencia'];
 
     const valido = await trigger(camposParaValidar);
-    if (valido) setPasso(passo + 1);
+    if (valido) {
+      if (passo === 1) {
+        setIsLoading(true);
+        const email = metodos.getValues('email');
+        const existe = await userService.verificarEmail(email);
+        setIsLoading(false);
+        if (existe) {
+          alert('Este e-mail já está em uso no sistema. Por favor, utilize outro ou recupere sua senha.');
+          return;
+        }
+      }
+      setPasso(passo + 1);
+    }
   };
 
   const voltarPasso = () => {
@@ -83,18 +92,13 @@ export default function RegisterScreen() {
     try {
       const response = await userService.register(dados);
 
-      const userData = {
-        id: String(response.usuario.id),
-        name: response.usuario.nome || response.usuario.nome_completo || '',
-        email: response.usuario.email,
-        role: 'ALUNO' as const,
-        status: 'pendente' as const, // Força o status inicial para análise
-      };
-
-      await setUserAndToken(userData, response.token_acesso);
-      // O AuthContext cuidará do redirecionamento para /cadastro-pendente
+      if (response.success) {
+        router.replace('/(autenticacao)/cadastro-pendente');
+      }
     } catch (error: any) {
-      const message = error.response?.data?.detail || 'Erro ao realizar cadastro. Tente novamente.';
+      const message = error.response?.data?.error?.message
+        || error.response?.data?.detail
+        || 'Erro ao realizar cadastro. Tente novamente.';
       alert(message);
     } finally {
       setIsLoading(false);
@@ -174,18 +178,14 @@ export default function RegisterScreen() {
           </View>
         </ScrollView>
 
-        {/* Footer com Progresso e Botão */}
+        {/* Footer com Botão */}
         <View style={styles.footer}>
-          <ProgressBar
-            progress={passo / 5}
-            color={theme.colors.primary}
-            style={styles.progress}
-          />
-
           {passo < 5 ? (
             <Button
               mode="contained"
               onPress={proximoPasso}
+              loading={isLoading}
+              disabled={isLoading}
               style={styles.actionButton}
               contentStyle={styles.buttonContent}
             >
@@ -254,12 +254,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
-  },
-  progress: {
-    height: 6,
-    borderRadius: 3,
-    marginBottom: 24,
-    backgroundColor: '#E0E0E0',
   },
   actionButton: {
     borderRadius: 8,

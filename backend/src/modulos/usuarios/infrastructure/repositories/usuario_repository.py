@@ -5,10 +5,15 @@ from sqlalchemy import or_
 
 from src.modulos.usuarios.model.entities.aluno import AlunoORM
 from src.modulos.usuarios.model.entities.usuario import UsuarioORM
+from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
 from src.shared.security.lgpd_encryption import hash_email
 
 
 class CadastroDuplicadoError(Exception):
+    pass
+
+
+class EmailDuplicadoError(CadastroDuplicadoError):
     pass
 
 
@@ -63,7 +68,7 @@ class SQLAlchemyUsuarioRepository:
         return lista
 
     def criar_aluno(self, comando, senha_hash: str):
-        status_str = str(comando.status_cadastro.value if hasattr(comando.status_cadastro, "value") else comando.status_cadastro)
+        status_str = StatusCadastroEnum.PENDENTE.value
         email_limpo = comando.email.lower().strip()
 
         usuario = UsuarioORM(
@@ -111,6 +116,13 @@ class SQLAlchemyUsuarioRepository:
             return usuario
         except IntegrityError as error:
             self.session.rollback()
+            try:
+                if self.buscar_por_email(email_limpo):
+                    raise EmailDuplicadoError from error
+            except EmailDuplicadoError:
+                raise
+            except Exception:
+                pass
             raise CadastroDuplicadoError from error
 
     def buscar_aluno_por_id(self, aluno_id: int) -> AlunoORM | None:
@@ -146,11 +158,11 @@ class SQLAlchemyUsuarioRepository:
         usuario = self.session.query(UsuarioORM).filter(UsuarioORM.id == user_id).first()
         if not usuario:
             return None
-        
+
         email_limpo = novo_email.lower().strip()
         usuario.email = email_limpo
         usuario.email_hash = hash_email(email_limpo)
-        
+
         self.session.commit()
         self.session.refresh(usuario)
         return usuario
@@ -162,7 +174,7 @@ class SQLAlchemyUsuarioRepository:
 
         if telefone is not None:
             usuario.telefone = telefone
-        
+
         if aluno and bairro_id is not None:
             aluno.bairro_id = bairro_id
 
@@ -170,5 +182,5 @@ class SQLAlchemyUsuarioRepository:
         self.session.refresh(usuario)
         if aluno:
             self.session.refresh(aluno)
-            
+
         return usuario, aluno
