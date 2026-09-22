@@ -1,24 +1,38 @@
+from enum import Enum
+
+
+class TurnoCursoEnum(str, Enum):
+    MATUTINO = "Matutino"
+    VESPERTINO = "Vespertino"
+    NOTURNO = "Noturno"
+    INTEGRAL = "Integral"
+
+
 class TurnoCursoValidator:
     """
     Valida e normaliza o turno do curso.
-    Opções válidas: Matutino, Vespertino, Noturno, Integral.
     """
 
     TURNOS_VALIDOS = {
-        "matutino": "Matutino",
-        "vespertino": "Vespertino",
-        "noturno": "Noturno",
-        "integral": "Integral",
+        "matutino": TurnoCursoEnum.MATUTINO,
+        "vespertino": TurnoCursoEnum.VESPERTINO,
+        "noturno": TurnoCursoEnum.NOTURNO,
+        "integral": TurnoCursoEnum.INTEGRAL,
     }
 
-    def validar_e_formatar(self, turno: str | None) -> str | None:
-        if not turno or not isinstance(turno, str) or not turno.strip():
-            return None
+    @classmethod
+    def validar_e_formatar(
+        cls, turno: str | None
+    ) -> tuple[bool, TurnoCursoEnum | None]:
+
+        if not isinstance(turno, str) or not turno.strip():
+            return False, None
 
         turno_clean = turno.strip().lower()
-        if turno_clean not in self.TURNOS_VALIDOS:
-            raise ValueError(
-                "Turno do curso inválido. Opções permitidas: Matutino, Vespertino, Noturno ou Integral"
-            )
 
-        return self.TURNOS_VALIDOS[turno_clean]
+        turno_enum = cls.TURNOS_VALIDOS.get(turno_clean)
+
+        if turno_enum is None:
+            return False, None
+
+        return True, turno_enum
