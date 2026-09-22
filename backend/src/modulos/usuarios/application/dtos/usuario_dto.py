@@ -22,15 +22,16 @@ class CadastroUsuarioDTO(BaseModel):
     curso: str = Field(min_length=1, max_length=150)
     semestre_atual: int | None = None
     periodo_ingresso: str | None = Field(default=None, max_length=20)
-    turno_curso: str | None = Field(default=None, max_length=30)
+    turno_curso: str | None = None
     raca: str | None = Field(default=None, max_length=50)
     validade_acesso: datetime | None = None
-    id_foto_aluno: str | None = Field(default=None, max_length=255)
+    id_foto_aluno: str | None = Field(default=None, max_length=36)
     identificacao_sexual: str | None = Field(default=None, max_length=100)
     motivo_reprovacao: str | None = Field(default=None, max_length=255)
     termos_de_uso: bool = False
     consentimento_lgpd_em: datetime | None = None
     versao_termos: str | None = Field(default="1.0", max_length=20)
+
 
 
 # Alias para retrocompatibilidade se necessário
