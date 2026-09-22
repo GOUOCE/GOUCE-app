@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, field_validator
 from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
 from src.shared.enums.turno_curso_enum import TurnoCursoEnum
 
@@ -25,12 +25,41 @@ class CadastroUsuarioDTO(BaseModel):
     turno_curso: TurnoCursoEnum | None = None
     raca: str | None = Field(default=None, max_length=50)
     validade_acesso: datetime | None = None
-    id_foto_aluno: str | None = Field(default=None, max_length=255)
+    id_foto_aluno: str | None = Field(default=None, max_length=36)
     identificacao_sexual: str | None = Field(default=None, max_length=100)
     motivo_reprovacao: str | None = Field(default=None, max_length=255)
     termos_de_uso: bool = False
     consentimento_lgpd_em: datetime | None = None
     versao_termos: str | None = Field(default="1.0", max_length=20)
+
+    @field_validator("turno_curso", mode="before")
+    @classmethod
+    def normalizar_turno_curso(cls, value):
+        if value is None:
+            return None
+
+        if isinstance(value, TurnoCursoEnum):
+            return value
+
+        if not isinstance(value, str):
+            return value
+
+        turno_limpo = value.strip()
+        if not turno_limpo:
+            return None
+
+        mapa = {
+            "matutino": TurnoCursoEnum.MATUTINO,
+            "vespertino": TurnoCursoEnum.VESPERTINO,
+            "noturno": TurnoCursoEnum.NOTURNO,
+            "integral": TurnoCursoEnum.INTEGRAL,
+        }
+
+        chave = turno_limpo.lower()
+        if chave not in mapa:
+            raise ValueError("Turno do curso inválido. Opções permitidas: Matutino, Vespertino, Noturno ou Integral")
+
+        return mapa[chave]
 
 
 # Alias para retrocompatibilidade se necessário

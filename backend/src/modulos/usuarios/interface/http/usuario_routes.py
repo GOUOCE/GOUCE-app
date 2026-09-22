@@ -28,6 +28,7 @@ from src.modulos.usuarios.infrastructure.repositories.usuario_repository import 
     SQLAlchemyUsuarioRepository,
     CadastroDuplicadoError,
 )
+from src.shared.validators.turno_curso_validator import TurnoCursoValidator
 
 from src.modulos.arquivos.infrastructure.repositories.arquivo_repository import SQLAlchemyArquivoRepository
 from src.modulos.arquivos.infrastructure.services.minio_storage import MinioStorageService
@@ -112,8 +113,7 @@ async def cadastrar_usuario_com_arquivos(
     turno_curso: Optional[str] = Form(None),
     raca: Optional[str] = Form(None),
     identificacao_sexual: Optional[str] = Form(None),
-    id_foto_aluno: Optional[str] = Form(None),
-    foto_perfil: Optional[UploadFile] = File(None, description="Foto de perfil do aluno"),
+    foto_perfil: UploadFile | str | None = File(None, description="Foto de perfil do aluno"),
     repository=Depends(get_repository),
     arquivo_repository=Depends(get_arquivo_repository),
     hasher=Depends(get_hasher),
@@ -122,6 +122,15 @@ async def cadastrar_usuario_com_arquivos(
 ):
     try:
         salvar_arquivo_uc = SalvarArquivoUseCase(arquivo_repository, storage_service)
+
+        # Normaliza campos opcionais para evitar strings vazias vindas do Swagger/FormData
+        telefone = telefone.strip() if isinstance(telefone, str) and telefone.strip() else None
+        bairro_id = bairro_id.strip() if isinstance(bairro_id, str) and bairro_id.strip() else None
+        identificacao_genero = identificacao_genero.strip() if isinstance(identificacao_genero, str) and identificacao_genero.strip() else None
+        raca = raca.strip() if isinstance(raca, str) and raca.strip() else None
+        identificacao_sexual = identificacao_sexual.strip() if isinstance(identificacao_sexual, str) and identificacao_sexual.strip() else None
+        periodo_ingresso = periodo_ingresso.strip() if isinstance(periodo_ingresso, str) and periodo_ingresso.strip() else None
+        turno_curso = TurnoCursoValidator().validar_e_formatar(turno_curso) if turno_curso is not None else None
 
         # 1. Upload do comprovante de matrícula
         conteudo_mat = await comprovante_matricula.read()
@@ -140,8 +149,8 @@ async def cadastrar_usuario_com_arquivos(
         )
 
         # 3. Upload da foto de perfil (se fornecida)
-        foto_id = id_foto_aluno
-        if foto_perfil:
+        foto_id = None
+        if foto_perfil is not None and getattr(foto_perfil, "filename", None):
             conteudo_foto = await foto_perfil.read()
             res_foto = salvar_arquivo_uc.execute(
                 conteudo_foto,
@@ -241,7 +250,7 @@ async def cadastrar_usuario_alias(
 async def aprovar_aluno(
     aluno_id: int,
     repository=Depends(get_repository),
-    current_user: Annotated[dict, Depends(verify_any_user)] = None,
+
 ):
     try:
         use_case = AprovarAlunoUseCase(repository)
