@@ -18,7 +18,7 @@ from src.modulos.usuarios.application.dtos.usuario_dto import (
     UsuarioResponseDTO,
     AtualizarAlunoDTO,
 )
-from src.modulos.usuarios.application.use_cases.criar_usuario_use_case import CriarUsuarioUseCase
+from src.modulos.usuarios.application.use_cases.criar_usuario_use_case import CriarUsuarioUseCase, ValidacaoMultiplaError
 from src.modulos.usuarios.application.use_cases.listar_usuarios_use_case import ListarUsuariosUseCase
 from src.modulos.usuarios.application.use_cases.aprovar_aluno_use_case import AprovarAlunoUseCase
 from src.modulos.usuarios.application.use_cases.obter_perfil_aluno_use_case import ObterPerfilAlunoUseCase
@@ -113,6 +113,7 @@ async def cadastrar_usuario_com_arquivos(
     raca: Optional[str] = Form(None),
     identificacao_sexual: Optional[str] = Form(None),
     id_foto_aluno: Optional[str] = Form(None),
+    foto_perfil: Optional[UploadFile] = File(None, description="Foto de perfil do aluno"),
     repository=Depends(get_repository),
     arquivo_repository=Depends(get_arquivo_repository),
     hasher=Depends(get_hasher),
@@ -138,7 +139,18 @@ async def cadastrar_usuario_com_arquivos(
             comprovante_residencia.content_type,
         )
 
-        # 3. Montar DTO de cadastro com os UUIDs gerados
+        # 3. Upload da foto de perfil (se fornecida)
+        foto_id = id_foto_aluno
+        if foto_perfil:
+            conteudo_foto = await foto_perfil.read()
+            res_foto = salvar_arquivo_uc.execute(
+                conteudo_foto,
+                foto_perfil.filename or "foto_perfil",
+                foto_perfil.content_type,
+            )
+            foto_id = res_foto.id
+
+        # 4. Montar DTO de cadastro com os UUIDs gerados
         dto = CadastroUsuarioDTO(
             nome=nome,
             email=email,
@@ -158,7 +170,7 @@ async def cadastrar_usuario_com_arquivos(
             turno_curso=turno_curso,
             raca=raca,
             identificacao_sexual=identificacao_sexual,
-            id_foto_aluno=id_foto_aluno,
+            id_foto_aluno=foto_id,
             termos_de_uso=termos_de_uso,
         )
 
@@ -169,6 +181,8 @@ async def cadastrar_usuario_com_arquivos(
             status_code=409,
             detail="E-mail, telefone, faculdade ou bairro já cadastrado"
         )
+    except ValidacaoMultiplaError as e:
+        raise HTTPException(status_code=400, detail={"erros": e.erros})
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -197,6 +211,8 @@ async def cadastrar_usuario_json(
             status_code=409,
             detail="E-mail, telefone, faculdade ou bairro já cadastrado"
         )
+    except ValidacaoMultiplaError as e:
+        raise HTTPException(status_code=400, detail={"erros": e.erros})
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:

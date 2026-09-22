@@ -9,6 +9,12 @@ from src.shared.validators.senha_validator import SenhaValidator
 from src.shared.validators.turno_curso_validator import TurnoCursoValidator
 
 
+class ValidacaoMultiplaError(Exception):
+    def __init__(self, erros: list[str]):
+        self.erros = erros
+        super().__init__("Erros de validação encontrados")
+
+
 class CriarUsuarioUseCase:
     def __init__(
         self,
@@ -37,82 +43,95 @@ class CriarUsuarioUseCase:
         self.arquivo_repository = arquivo_repository
 
     def execute(self, dto: CadastroUsuarioDTO) -> CadastroSucessoDTO:
-        # 1. Validação de Nome Completo (Exige Nome + Sobrenome e apenas letras)
+        erros = []
+
+        # 1. Validação de Nome Completo
         nome = dto.nome.strip() if dto.nome else ""
         if not nome or len(nome) < 3:
-            raise ValueError("Nome completo deve ter pelo menos 3 caracteres")
-        if len(nome.split()) < 2:
-            raise ValueError("Informe seu nome completo (nome e sobrenome)")
-        if not self.string_validator.validar_string_sem_numero(nome):
-            raise ValueError("O nome deve conter apenas letras e espaços")
+            erros.append("Nome completo deve ter pelo menos 3 caracteres")
+        elif len(nome.split()) < 2:
+            erros.append("Informe seu nome completo (nome e sobrenome)")
+        elif not self.string_validator.validar_string_sem_numero(nome):
+            erros.append("O nome deve conter apenas letras e espaços")
 
-        # 2. Validação de E-mail (formato e duplicidade)
+        # 2. Validação de E-mail
         email = str(dto.email).lower().strip() if dto.email else ""
         if not email:
-            raise ValueError("E-mail é obrigatório")
-        if not self.email_validator.validar_email(email):
-            raise ValueError("Formato de e-mail inválido")
-        if self.repository.buscar_por_email(email):
-            raise ValueError("E-mail já cadastrado no sistema")
+            erros.append("E-mail é obrigatório")
+        elif not self.email_validator.validar_email(email):
+            erros.append("Formato de e-mail inválido")
+        elif self.repository.buscar_por_email(email):
+            erros.append("E-mail já cadastrado no sistema")
 
         # 3. Validação de Senha Forte
         is_senha_valida, msg_senha = self.senha_validator.validar_senha(dto.senha or "")
         if not is_senha_valida:
-            raise ValueError(msg_senha)
+            erros.append(msg_senha)
 
         # 4. Validação de Telefone / Celular com DDD
         if dto.telefone and str(dto.telefone).strip():
             if not self.telefone_validator.validar_telefone(str(dto.telefone)):
-                raise ValueError("Telefone celular inválido. Informe um número celular válido com DDD (ex: 11987654321)")
+                erros.append("Telefone celular inválido. Informe um número celular válido com DDD (ex: 11987654321)")
 
-        # 5. Validação e conversão do formato da Data de Nascimento
+        # 5. Validação e conversão da Data de Nascimento
         if dto.data_nascimento is not None and dto.data_nascimento != "" and dto.data_nascimento != 0:
-            data_nascimento_int = self.data_nascimento_validator.converter_para_inteiro(dto.data_nascimento)
-            dto = dto.model_copy(update={"data_nascimento": data_nascimento_int})
+            try:
+                data_nascimento_int = self.data_nascimento_validator.converter_para_inteiro(dto.data_nascimento)
+                dto = dto.model_copy(update={"data_nascimento": data_nascimento_int})
+            except ValueError as e:
+                erros.append(str(e))
         else:
-            raise ValueError("Data de nascimento é obrigatória")
+            erros.append("Data de nascimento é obrigatória")
 
         # 6. Validação do Período de Ingresso
-        if dto.periodo_ingresso and dto.periodo_ingresso.strip():
-            periodo_formatado = self.periodo_ingresso_validator.validar_e_formatar(dto.periodo_ingresso)
-            dto = dto.model_copy(update={"periodo_ingresso": periodo_formatado})
+        if dto.periodo_ingresso and str(dto.periodo_ingresso).strip():
+            try:
+                periodo_formatado = self.periodo_ingresso_validator.validar_e_formatar(str(dto.periodo_ingresso))
+                dto = dto.model_copy(update={"periodo_ingresso": periodo_formatado})
+            except ValueError as e:
+                erros.append(str(e))
 
         # 7. Validação de Semestre Atual
         if dto.semestre_atual is not None:
             if not isinstance(dto.semestre_atual, int) or dto.semestre_atual < 1 or dto.semestre_atual > 16:
-                raise ValueError("O semestre atual deve ser um número inteiro entre 1 e 16")
+                erros.append("O semestre atual deve ser um número inteiro entre 1 e 16")
 
         # 8. Validação de Turno do Curso
-        if dto.turno_curso and str(dto.turno_curso).strip():
-            turno_formatado = self.turno_curso_validator.validar_e_formatar(str(dto.turno_curso))
-            dto = dto.model_copy(update={"turno_curso": turno_formatado})
-
+        # Agora usando o Enum do Pydantic, dto.turno_curso já é o valor correto ou None
+        # Se você quiser validar a string, verifique se está no Enum, mas o Pydantic já fez isso.
+        
         # 9. Validação de Instituição / Faculdade
         if not dto.faculdade_id or len(str(dto.faculdade_id).strip()) < 2:
-            raise ValueError("Instituição/Faculdade é obrigatória")
+            erros.append("Instituição/Faculdade é obrigatória")
 
         # 10. Validação de Curso
         if not dto.curso or len(str(dto.curso).strip()) < 2:
-            raise ValueError("O nome do curso é obrigatório")
+            erros.append("O nome do curso é obrigatório")
 
-        # 11. Validação de Comprovante de Matrícula (Obrigatório)
+        # 11. Validação de Comprovante de Matrícula
         if not dto.id_comprovante_matricula or not str(dto.id_comprovante_matricula).strip():
-            raise ValueError("Comprovante de matrícula é obrigatório (envie o arquivo ou UUID do arquivo enviado)")
+            erros.append("Comprovante de matrícula é obrigatório")
 
-        # 12. Validação de Comprovante de Residência (Obrigatório)
+        # 12. Validação de Comprovante de Residência
         if not dto.id_comprovante_residencia or not str(dto.id_comprovante_residencia).strip():
-            raise ValueError("Comprovante de residência é obrigatório (envie o arquivo ou UUID do arquivo enviado)")
+            erros.append("Comprovante de residência é obrigatório")
 
-        # Validar existência dos arquivos no banco/storage se o repositório estiver disponível
+        # Validar existência dos arquivos
         if self.arquivo_repository:
-            if not self.arquivo_repository.buscar_por_id(str(dto.id_comprovante_matricula)):
-                raise ValueError("O comprovante de matrícula informado não é um arquivo válido registrado no sistema")
-            if not self.arquivo_repository.buscar_por_id(str(dto.id_comprovante_residencia)):
-                raise ValueError("O comprovante de residência informado não é um arquivo válido registrado no sistema")
+            if dto.id_comprovante_matricula and not self.arquivo_repository.buscar_por_id(str(dto.id_comprovante_matricula)):
+                erros.append("O comprovante de matrícula informado não é um arquivo válido registrado no sistema")
+            if dto.id_comprovante_residencia and not self.arquivo_repository.buscar_por_id(str(dto.id_comprovante_residencia)):
+                erros.append("O comprovante de residência informado não é um arquivo válido registrado no sistema")
+            if dto.id_foto_aluno and not self.arquivo_repository.buscar_por_id(str(dto.id_foto_aluno)):
+                erros.append("A foto de perfil informada não é um arquivo válido registrado no sistema")
 
         # 13. Validação de Termos de Uso
         if not dto.termos_de_uso:
-            raise ValueError("Você deve aceitar os termos de uso para se cadastrar")
+            erros.append("Você deve aceitar os termos de uso para se cadastrar")
+
+        # Lança a exceção com a lista de erros, se existirem
+        if erros:
+            raise ValidacaoMultiplaError(erros)
 
         # Criação do usuário após passar por todas as validações
         senha_hash = self.hasher.hash(dto.senha)

@@ -1,6 +1,7 @@
-from sqlalchemy import Column, String, Integer, Boolean, ForeignKey, DateTime
+from sqlalchemy import Column, String, Integer, Boolean, ForeignKey, DateTime, Enum as SQLEnum
 from src.shared.infrastructure.db import Base
 from src.shared.security.lgpd_encryption import EncryptedString
+from src.shared.enums.turno_curso_enum import TurnoCursoEnum
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
@@ -17,8 +18,8 @@ class AlunoORM(Base):
         primary_key=True
     )
     status_cadastro = Column(String(150), nullable=False)
-    faculdade_id = Column(String(150), unique=True, nullable=False)
-    bairro_id = Column(String(20), unique=True, nullable=True)
+    faculdade_id = Column(String(150), nullable=False)
+    bairro_id = Column(String(20), nullable=True)
     id_comprovante_matricula = Column(String(36), ForeignKey("arquivos.id"), nullable=False)
     id_comprovante_residencia = Column(String(36), ForeignKey("arquivos.id"), nullable=False)
     data_nascimento = Column(Integer, default=0, nullable=False)
@@ -27,7 +28,7 @@ class AlunoORM(Base):
     curso = Column(String(150), nullable=False)
     semestre_atual = Column(Integer, nullable=True)
     periodo_ingresso = Column(String(20), nullable=True)
-    turno_curso = Column(String(30), nullable=True)
+    turno_curso = Column(SQLEnum(TurnoCursoEnum), nullable=True)
     raca = Column(EncryptedString(500), nullable=True)
     validade_acesso = Column(DateTime(timezone=True), nullable=True)
     id_foto_aluno = Column(String(255), nullable=True)
@@ -36,7 +37,6 @@ class AlunoORM(Base):
     termos_de_uso = Column(Boolean, nullable=False, default=False)
     consentimento_lgpd_em = Column(DateTime(timezone=True), nullable=True)
     versao_termos = Column(String(20), default="1.0", nullable=True)
-
 
 class Aluno(BaseModel):
     """DTO para usuário"""
