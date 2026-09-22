@@ -28,7 +28,6 @@ from src.modulos.usuarios.infrastructure.repositories.usuario_repository import 
     SQLAlchemyUsuarioRepository,
     CadastroDuplicadoError,
 )
-from src.shared.validators.turno_curso_validator import TurnoCursoValidator
 
 from src.modulos.arquivos.infrastructure.repositories.arquivo_repository import SQLAlchemyArquivoRepository
 from src.modulos.arquivos.infrastructure.services.minio_storage import MinioStorageService
@@ -130,7 +129,7 @@ async def cadastrar_usuario_com_arquivos(
         raca = raca.strip() if isinstance(raca, str) and raca.strip() else None
         identificacao_sexual = identificacao_sexual.strip() if isinstance(identificacao_sexual, str) and identificacao_sexual.strip() else None
         periodo_ingresso = periodo_ingresso.strip() if isinstance(periodo_ingresso, str) and periodo_ingresso.strip() else None
-        turno_curso = TurnoCursoValidator().validar_e_formatar(turno_curso) if turno_curso is not None else None
+        turno_curso = turno_curso.strip() if isinstance(turno_curso, str) and turno_curso.strip() else None
 
         # 1. Upload do comprovante de matrícula
         conteudo_mat = await comprovante_matricula.read()

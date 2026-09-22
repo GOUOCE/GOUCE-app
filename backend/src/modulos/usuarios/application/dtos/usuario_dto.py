@@ -1,7 +1,6 @@
 from datetime import date, datetime
-from pydantic import BaseModel, EmailStr, Field, ConfigDict, field_validator
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
-from src.shared.enums.turno_curso_enum import TurnoCursoEnum
 
 
 class CadastroUsuarioDTO(BaseModel):
@@ -22,7 +21,7 @@ class CadastroUsuarioDTO(BaseModel):
     curso: str = Field(min_length=1, max_length=150)
     semestre_atual: int | None = None
     periodo_ingresso: str | None = Field(default=None, max_length=20)
-    turno_curso: TurnoCursoEnum | None = None
+    turno_curso: str | None = None
     raca: str | None = Field(default=None, max_length=50)
     validade_acesso: datetime | None = None
     id_foto_aluno: str | None = Field(default=None, max_length=36)
@@ -32,34 +31,6 @@ class CadastroUsuarioDTO(BaseModel):
     consentimento_lgpd_em: datetime | None = None
     versao_termos: str | None = Field(default="1.0", max_length=20)
 
-    @field_validator("turno_curso", mode="before")
-    @classmethod
-    def normalizar_turno_curso(cls, value):
-        if value is None:
-            return None
-
-        if isinstance(value, TurnoCursoEnum):
-            return value
-
-        if not isinstance(value, str):
-            return value
-
-        turno_limpo = value.strip()
-        if not turno_limpo:
-            return None
-
-        mapa = {
-            "matutino": TurnoCursoEnum.MATUTINO,
-            "vespertino": TurnoCursoEnum.VESPERTINO,
-            "noturno": TurnoCursoEnum.NOTURNO,
-            "integral": TurnoCursoEnum.INTEGRAL,
-        }
-
-        chave = turno_limpo.lower()
-        if chave not in mapa:
-            raise ValueError("Turno do curso inválido. Opções permitidas: Matutino, Vespertino, Noturno ou Integral")
-
-        return mapa[chave]
 
 
 # Alias para retrocompatibilidade se necessário
@@ -114,7 +85,7 @@ class PerfilAlunoResponseDTO(BaseModel):
     curso: str | None = None
     semestre_atual: int | None = None
     periodo_ingresso: str | None = None
-    turno_curso: TurnoCursoEnum | None = None
+    turno_curso: str | None = None
     data_nascimento: str | int | float | date | datetime | None = None
     identificacao_genero: str | None = None
     raca: str | None = None

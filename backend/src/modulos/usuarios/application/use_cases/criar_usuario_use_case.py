@@ -97,9 +97,14 @@ class CriarUsuarioUseCase:
                 erros.append("O semestre atual deve ser um número inteiro entre 1 e 16")
 
         # 8. Validação de Turno do Curso
-        # Agora usando o Enum do Pydantic, dto.turno_curso já é o valor correto ou None
-        # Se você quiser validar a string, verifique se está no Enum, mas o Pydantic já fez isso.
+        turno_valido, turno_curso_formatado = self.turno_curso_validator.validar_e_formatar(dto.turno_curso)
         
+        if not turno_valido:
+            erros.append("Turno do curso inválido. Opções permitidas: Matutino, Vespertino, Noturno ou Integral")
+        
+        dto.turno_curso = turno_curso_formatado
+
+
         # 9. Validação de Instituição / Faculdade
         if not dto.faculdade_id or len(str(dto.faculdade_id).strip()) < 2:
             erros.append("Instituição/Faculdade é obrigatória")
