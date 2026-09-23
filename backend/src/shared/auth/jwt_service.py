@@ -42,7 +42,14 @@ class JWTService(TokenService):
 
     def decode(self, token: str) -> dict:
         try:
-            return jwt.decode(token, SECRET, algorithms=[ALGORITHM])
+            # O token precisa trazer expiração; a biblioteca verifica a data
+            # quando o claim existe, mas não o torna obrigatório por padrão.
+            return jwt.decode(
+                token,
+                SECRET,
+                algorithms=[ALGORITHM],
+                options={"require_exp": True},
+            )
         except JWTError as e:
             raise JWTError(f"Erro ao decodificar token: {str(e)}")
 
