@@ -19,6 +19,7 @@ import { Passo4Documentacao } from '@/components/cadastro/Passo4Documentacao';
 import { TermosDeUso } from '@/components/cadastro/TermosDeUso';
 
 import { userService } from '@services/userService';
+import { getErrorMessage } from '@/utils/errorUtils';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -96,9 +97,11 @@ export default function RegisterScreen() {
         router.replace('/(autenticacao)/cadastro-pendente');
       }
     } catch (error: any) {
-      const message = error.response?.data?.error?.message
-        || error.response?.data?.detail
-        || 'Erro ao realizar cadastro. Tente novamente.';
+      console.error('[REGISTER DEBUG] Full error:', JSON.stringify(error, null, 2));
+      if (error.response) {
+        console.error('[REGISTER DEBUG] Response data:', JSON.stringify(error.response.data, null, 2));
+      }
+      const message = getErrorMessage(error, 'Erro ao realizar cadastro. Tente novamente.');
       alert(message);
     } finally {
       setIsLoading(false);
