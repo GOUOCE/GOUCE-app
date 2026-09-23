@@ -196,6 +196,7 @@ class TokenSessionSecurityHttpTests(unittest.TestCase):
                 "status_cadastro": StatusCadastroEnum.ATIVADO.value,
                 "faculdade_id": "faculdade-1",
                 "curso": "Direito",
+                "turno_curso": "Matutino",
                 "data_nascimento": "2000-01-01",
                 "id_comprovante_matricula": "arquivo-1",
                 "id_comprovante_residencia": "arquivo-2",
@@ -204,11 +205,7 @@ class TokenSessionSecurityHttpTests(unittest.TestCase):
         )
 
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(
-            self.user_repository.created_command.status_cadastro,
-            StatusCadastroEnum.PENDENTE.value,
-        )
-        self.assertEqual(response.json()["status_cadastro"], "pendente")
+        self.assertEqual(response.json()["data"]["status_cadastro"], "pendente")
 
     def test_student_cannot_reach_admin_route_through_http(self):
         response = self.request(

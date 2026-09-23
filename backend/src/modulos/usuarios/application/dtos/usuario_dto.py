@@ -1,4 +1,6 @@
 from datetime import date, datetime
+from typing import Literal
+
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
 
@@ -10,7 +12,6 @@ class CadastroUsuarioDTO(BaseModel):
     email: EmailStr
     senha: str = Field(min_length=6, max_length=128)
     telefone: str | None = Field(default=None, max_length=20)
-    status_cadastro: StatusCadastroEnum = StatusCadastroEnum.PENDENTE
     faculdade_id: str = Field(min_length=1, max_length=150)
     bairro_id: str | None = Field(default=None, max_length=20)
     id_comprovante_matricula: str = Field(default="", max_length=255)
@@ -21,15 +22,16 @@ class CadastroUsuarioDTO(BaseModel):
     curso: str = Field(min_length=1, max_length=150)
     semestre_atual: int | None = None
     periodo_ingresso: str | None = Field(default=None, max_length=20)
-    turno_curso: str | None = Field(default=None, max_length=30)
+    turno_curso: str | None = None
     raca: str | None = Field(default=None, max_length=50)
     validade_acesso: datetime | None = None
-    id_foto_aluno: str | None = Field(default=None, max_length=255)
+    id_foto_aluno: str | None = Field(default=None, max_length=36)
     identificacao_sexual: str | None = Field(default=None, max_length=100)
     motivo_reprovacao: str | None = Field(default=None, max_length=255)
     termos_de_uso: bool = False
     consentimento_lgpd_em: datetime | None = None
     versao_termos: str | None = Field(default="1.0", max_length=20)
+
 
 
 # Alias para retrocompatibilidade se necessário
@@ -61,14 +63,35 @@ class AprovacaoAlunoResponseDTO(BaseModel):
     mensagem: str
 
 
-class CadastroSucessoDTO(BaseModel):
+class CadastroDataDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     id: int
     nome: str
     email: str
     status_cadastro: str = "pendente"
-    mensagem: str = "Cadastro realizado com sucesso! Aguarde a aprovação da coordenação para realizar o login."
+
+
+class CadastroSucessoDTO(BaseModel):
+    success: Literal[True] = True
+    message: str = "Cadastro enviado para análise da coordenação"
+    data: CadastroDataDTO
+
+
+class CadastroValidationDetailDTO(BaseModel):
+    field: str | None = None
+    message: str
+
+
+class CadastroErrorDTO(BaseModel):
+    code: str
+    message: str
+    details: list[CadastroValidationDetailDTO] | None = None
+
+
+class CadastroErrorResponseDTO(BaseModel):
+    success: Literal[False] = False
+    error: CadastroErrorDTO
 
 
 class PerfilAlunoResponseDTO(BaseModel):

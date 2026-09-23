@@ -1,5 +1,12 @@
+import logging
+from functools import wraps
 from typing import Annotated, Optional
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, Form
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from fastapi.routing import APIRoute
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from src.shared.infrastructure.db import get_session
@@ -12,6 +19,7 @@ from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
 from src.modulos.usuarios.application.dtos.usuario_dto import (
     CadastroUsuarioDTO,
     CadastroSucessoDTO,
+    CadastroErrorResponseDTO,
     AtualizarStatusAlunoDTO,
     AprovacaoAlunoResponseDTO,
     PerfilAlunoResponseDTO,
@@ -19,7 +27,12 @@ from src.modulos.usuarios.application.dtos.usuario_dto import (
     UsuarioResponseDTO,
     AtualizarAlunoDTO,
 )
-from src.modulos.usuarios.application.use_cases.criar_usuario_use_case import CriarUsuarioUseCase
+from src.modulos.usuarios.application.use_cases.criar_usuario_use_case import (
+    CadastroValidationError,
+    ValidacaoMultiplaError,
+    CriarUsuarioUseCase,
+    EmailAlreadyRegisteredError,
+)
 from src.modulos.usuarios.application.use_cases.listar_usuarios_use_case import ListarUsuariosUseCase
 from src.modulos.usuarios.application.use_cases.aprovar_aluno_use_case import AprovarAlunoUseCase
 from src.modulos.usuarios.application.use_cases.obter_perfil_aluno_use_case import ObterPerfilAlunoUseCase
@@ -28,13 +41,103 @@ from src.modulos.usuarios.application.use_cases.atualizar_aluno_use_case import 
 from src.modulos.usuarios.infrastructure.repositories.usuario_repository import (
     SQLAlchemyUsuarioRepository,
     CadastroDuplicadoError,
+    EmailDuplicadoError,
 )
 
 from src.modulos.arquivos.infrastructure.repositories.arquivo_repository import SQLAlchemyArquivoRepository
 from src.modulos.arquivos.infrastructure.services.minio_storage import MinioStorageService
-from src.modulos.arquivos.application.use_cases.salvar_arquivo_use_case import SalvarArquivoUseCase
+from src.modulos.arquivos.application.use_cases.salvar_arquivo_use_case import (
+    ArquivoValidacaoError,
+    SalvarArquivoUseCase,
+)
+
+logger = logging.getLogger(__name__)
+
+
+def _validation_details(errors: list[dict]) -> list[dict]:
+    details = []
+    for error in errors:
+        location = [
+            str(part)
+            for part in error.get("loc", ())
+            if part not in {"body", "path", "query", "form"}
+        ]
+        details.append({
+            "field": ".".join(location) or None,
+            "message": error.get("msg", "Valor inválido"),
+        })
+    return details
+
+
+def _multiple_validation_details(error: ValidacaoMultiplaError) -> list[dict]:
+    return [
+        {
+            "field": getattr(item, "field", None),
+            "message": str(item),
+        }
+        for item in error.erros
+    ]
+
+
+def _error_response(
+    status_code: int,
+    code: str,
+    message: str,
+    details: list[dict] | None = None,
+) -> JSONResponse:
+    error = {"code": code, "message": message}
+    if details is not None:
+        error["details"] = details
+    return JSONResponse(
+        status_code=status_code,
+        content={"success": False, "error": error},
+    )
+
+
+def _internal_error_response() -> JSONResponse:
+    logger.exception("Erro interno ao processar cadastro de aluno")
+    return _error_response(
+        status_code=500,
+        code="INTERNAL_ERROR",
+        message="Erro interno ao processar a solicitação",
+    )
+
+
+class CadastroValidationRoute(APIRoute):
+    """Padroniza apenas erros estruturais das rotas públicas de cadastro."""
+
+    def get_route_handler(self):
+        original_route_handler = super().get_route_handler()
+
+        @wraps(original_route_handler)
+        async def custom_route_handler(request: Request):
+            try:
+                return await original_route_handler(request)
+            except RequestValidationError as error:
+                return _error_response(
+                    status_code=422,
+                    code="REQUEST_VALIDATION_ERROR",
+                    message="Requisição inválida",
+                    details=_validation_details(error.errors()),
+                )
+            except HTTPException:
+                raise
+            except Exception:
+                return _internal_error_response()
+
+        return custom_route_handler
+
+
+CADASTRO_ERROR_RESPONSES = {
+    400: {"model": CadastroErrorResponseDTO},
+    409: {"model": CadastroErrorResponseDTO},
+    422: {"model": CadastroErrorResponseDTO},
+    500: {"model": CadastroErrorResponseDTO},
+}
+
 
 router = APIRouter(prefix="/usuarios", tags=["Usuários e Alunos"])
+cadastro_router = APIRouter(route_class=CadastroValidationRoute)
 
 
 def get_repository(session: Annotated[Session, Depends(get_session)]):
@@ -87,10 +190,11 @@ async def listar_alunos(
     return await listar_usuarios(repository, current_user)
 
 
-@router.post(
+@cadastro_router.post(
     "/cadastrar",
     response_model=CadastroSucessoDTO,
     status_code=201,
+    responses=CADASTRO_ERROR_RESPONSES,
     summary="Cadastrar Usuário / Aluno com Upload Direto de Comprovantes (Opção 1)",
     description="Recebe os dados do aluno e os arquivos de comprovante de matrícula e residência via multipart/form-data. Faz upload automático para o MinIO, gera registros de arquivos com UUID e realiza o cadastro."
 )
@@ -113,7 +217,7 @@ async def cadastrar_usuario_com_arquivos(
     turno_curso: Optional[str] = Form(None),
     raca: Optional[str] = Form(None),
     identificacao_sexual: Optional[str] = Form(None),
-    id_foto_aluno: Optional[str] = Form(None),
+    foto_perfil: UploadFile | str | None = File(None, description="Foto de perfil do aluno"),
     repository=Depends(get_repository),
     arquivo_repository=Depends(get_arquivo_repository),
     hasher=Depends(get_hasher),
@@ -122,6 +226,15 @@ async def cadastrar_usuario_com_arquivos(
 ):
     try:
         salvar_arquivo_uc = SalvarArquivoUseCase(arquivo_repository, storage_service)
+
+        # Normaliza campos opcionais para evitar strings vazias vindas do Swagger/FormData
+        telefone = telefone.strip() if isinstance(telefone, str) and telefone.strip() else None
+        bairro_id = bairro_id.strip() if isinstance(bairro_id, str) and bairro_id.strip() else None
+        identificacao_genero = identificacao_genero.strip() if isinstance(identificacao_genero, str) and identificacao_genero.strip() else None
+        raca = raca.strip() if isinstance(raca, str) and raca.strip() else None
+        identificacao_sexual = identificacao_sexual.strip() if isinstance(identificacao_sexual, str) and identificacao_sexual.strip() else None
+        periodo_ingresso = periodo_ingresso.strip() if isinstance(periodo_ingresso, str) and periodo_ingresso.strip() else None
+        turno_curso = turno_curso.strip() if isinstance(turno_curso, str) and turno_curso.strip() else None
 
         # 1. Upload do comprovante de matrícula
         conteudo_mat = await comprovante_matricula.read()
@@ -139,47 +252,101 @@ async def cadastrar_usuario_com_arquivos(
             comprovante_residencia.content_type,
         )
 
-        # 3. Montar DTO de cadastro com os UUIDs gerados
-        dto = CadastroUsuarioDTO(
-            nome=nome,
-            email=email,
-            senha=senha,
-            telefone=telefone,
-            status_cadastro=StatusCadastroEnum.PENDENTE,
-            faculdade_id=faculdade_id,
-            bairro_id=bairro_id,
-            id_comprovante_matricula=res_mat.id,
-            id_comprovante_residencia=res_res.id,
-            data_nascimento=data_nascimento,
-            identificacao_genero=identificacao_genero,
-            tem_filhos=tem_filhos,
-            curso=curso,
-            semestre_atual=semestre_atual,
-            periodo_ingresso=periodo_ingresso,
-            turno_curso=turno_curso,
-            raca=raca,
-            identificacao_sexual=identificacao_sexual,
-            id_foto_aluno=id_foto_aluno,
-            termos_de_uso=termos_de_uso,
-        )
+        # 3. Upload da foto de perfil (se fornecida)
+        foto_id = None
+        if foto_perfil is not None and getattr(foto_perfil, "filename", None):
+            conteudo_foto = await foto_perfil.read()
+            res_foto = salvar_arquivo_uc.execute(
+                conteudo_foto,
+                foto_perfil.filename or "foto_perfil",
+                foto_perfil.content_type,
+            )
+            foto_id = res_foto.id
+
+        # 4. Montar DTO de cadastro com os UUIDs gerados
+
+        try:
+            dto = CadastroUsuarioDTO(
+                nome=nome,
+                email=email,
+                senha=senha,
+                telefone=telefone,
+                status_cadastro=StatusCadastroEnum.PENDENTE,
+                faculdade_id=faculdade_id,
+                bairro_id=bairro_id,
+                id_comprovante_matricula=res_mat.id,
+                id_comprovante_residencia=res_res.id,
+                data_nascimento=data_nascimento,
+                identificacao_genero=identificacao_genero,
+                tem_filhos=tem_filhos,
+                curso=curso,
+                semestre_atual=semestre_atual,
+                periodo_ingresso=periodo_ingresso,
+                turno_curso=turno_curso,
+                raca=raca,
+                identificacao_sexual=identificacao_sexual,
+                id_foto_aluno=foto_id,
+                termos_de_uso=termos_de_uso,
+            )
+            
+        except ValidationError as error:
+            return _error_response(
+                status_code=422,
+                code="REQUEST_VALIDATION_ERROR",
+                message="Requisição inválida",
+                details=_validation_details(error.errors()),
+            )
 
         use_case = CriarUsuarioUseCase(repository, hasher, token_service, arquivo_repository=arquivo_repository)
         return use_case.execute(dto)
-    except CadastroDuplicadoError:
-        raise HTTPException(
+    except EmailAlreadyRegisteredError:
+        return _error_response(
             status_code=409,
-            detail="E-mail, telefone, faculdade ou bairro já cadastrado"
+            code="EMAIL_ALREADY_REGISTERED",
+            message="E-mail já cadastrado no sistema",
         )
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao cadastrar usuário: {str(e)}")
+    except ValidacaoMultiplaError as error:
+        return _error_response(
+            status_code=400,
+            code="VALIDATION_ERROR",
+            message="Dados inválidos",
+            details=_multiple_validation_details(error),
+        )
+    except ArquivoValidacaoError as error:
+        return _error_response(
+            status_code=400,
+            code="VALIDATION_ERROR",
+            message="Dados inválidos",
+            details=[{"field": "arquivo", "message": str(error)}],
+        )
+    except EmailDuplicadoError:
+        return _error_response(
+            status_code=409,
+            code="EMAIL_ALREADY_REGISTERED",
+            message="E-mail já cadastrado no sistema",
+        )
+    except CadastroDuplicadoError:
+        return _error_response(
+            status_code=409,
+            code="REGISTRATION_CONFLICT",
+            message="Não foi possível concluir o cadastro devido a dados já existentes",
+        )
+    except CadastroValidationError as error:
+        return _error_response(
+            status_code=400,
+            code="VALIDATION_ERROR",
+            message="Dados inválidos",
+            details=[{"field": error.field, "message": str(error)}],
+        )
+    except Exception:
+        return _internal_error_response()
 
 
-@router.post(
+@cadastro_router.post(
     "/cadastrar-json",
     response_model=CadastroSucessoDTO,
     status_code=201,
+    responses=CADASTRO_ERROR_RESPONSES,
     summary="Cadastrar Usuário via JSON (com UUIDs de arquivos já enviados)",
     description="Permite cadastrar usuário enviando JSON contendo os UUIDs dos comprovantes já carregados."
 )
@@ -193,20 +360,45 @@ async def cadastrar_usuario_json(
     try:
         use_case = CriarUsuarioUseCase(repository, hasher, token_service, arquivo_repository=arquivo_repository)
         return use_case.execute(data)
-    except CadastroDuplicadoError:
-        raise HTTPException(
+    except EmailAlreadyRegisteredError:
+        return _error_response(
             status_code=409,
-            detail="E-mail, telefone, faculdade ou bairro já cadastrado"
+            code="EMAIL_ALREADY_REGISTERED",
+            message="E-mail já cadastrado no sistema",
         )
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao cadastrar usuário: {str(e)}")
+    except ValidacaoMultiplaError as error:
+        return _error_response(
+            status_code=400,
+            code="VALIDATION_ERROR",
+            message="Dados inválidos",
+            details=_multiple_validation_details(error),
+        )
+    except EmailDuplicadoError:
+        return _error_response(
+            status_code=409,
+            code="EMAIL_ALREADY_REGISTERED",
+            message="E-mail já cadastrado no sistema",
+        )
+    except CadastroDuplicadoError:
+        return _error_response(
+            status_code=409,
+            code="REGISTRATION_CONFLICT",
+            message="Não foi possível concluir o cadastro devido a dados já existentes",
+        )
+    except CadastroValidationError as error:
+        return _error_response(
+            status_code=400,
+            code="VALIDATION_ERROR",
+            message="Dados inválidos",
+            details=[{"field": error.field, "message": str(error)}],
+        )
+    except Exception:
+        return _internal_error_response()
 
 
 # Aliases para retrocompatibilidade
-@router.post("/cadastro", response_model=CadastroSucessoDTO, status_code=201, include_in_schema=False)
-@router.post("/register", response_model=CadastroSucessoDTO, status_code=201, include_in_schema=False)
+@cadastro_router.post("/cadastro", response_model=CadastroSucessoDTO, status_code=201, include_in_schema=False)
+@cadastro_router.post("/register", response_model=CadastroSucessoDTO, status_code=201, include_in_schema=False)
 async def cadastrar_usuario_alias(
     data: CadastroUsuarioDTO,
     repository=Depends(get_repository),
@@ -369,3 +561,4 @@ async def atualizar_meu_perfil(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao atualizar perfil do aluno: {str(e)}")
+router.include_router(cadastro_router)

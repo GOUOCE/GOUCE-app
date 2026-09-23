@@ -7,24 +7,53 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft, Mail, Phone, MapPin, Eye, EyeOff } from 'lucide-react-native';
 import { editarPerfilSchema, EditarPerfilFormData } from '@/schemas/perfilSchema';
 import { useAuth } from '@contexts/AuthContext';
+import { userService } from '@/services/userService';
 
 export default function EditarPerfilScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [verSenha, setVerSenha] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [modalSenhaVisivel, setModalSenhaVisivel] = useState(false);
   const [tempData, setTempData] = useState<EditarPerfilFormData | null>(null);
 
-  const { control, handleSubmit, formState: { errors }, watch } = useForm<EditarPerfilFormData>({
+  const { control, handleSubmit, formState: { errors }, reset } = useForm<EditarPerfilFormData>({
     resolver: zodResolver(editarPerfilSchema),
     defaultValues: {
       email: user?.email || '',
-      telefone: '(88) 9 9999-9999',
-      bairro: 'Centro',
+      telefone: user?.telefone || '',
+      bairro: user?.faculdade || '',
     }
   });
+
+  // Carrega dados reais do perfil ao entrar na tela
+  React.useEffect(() => {
+    async function loadProfile() {
+      if (!user) return;
+
+      setIsLoading(true);
+      try {
+        const profile = await userService.getProfile();
+        reset({
+          email: profile.email,
+          telefone: profile.telefone || '',
+          bairro: profile.bairro_id || '',
+        });
+        updateUser({
+          email: profile.email,
+          telefone: profile.telefone,
+          curso: profile.curso,
+          faculdade: profile.faculdade_id,
+        });
+      } catch (error) {
+        console.error('Erro ao carregar perfil:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadProfile();
+  }, []);
 
   const onSubmit = async (data: EditarPerfilFormData) => {
     // Se o e-mail mudou, solicita a senha atual
@@ -40,13 +69,35 @@ export default function EditarPerfilScreen() {
   const handleSave = async (data: EditarPerfilFormData) => {
     setIsLoading(true);
     try {
-      console.log('Salvando alterações:', data);
-      // Simulação de delay de rede
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // 1. Se o e-mail mudou, atualiza o e-mail primeiro
+      if (data.email !== user?.email) {
+        if (!data.senhaAtual) {
+          Alert.alert('Erro', 'A senha atual é necessária para alterar o e-mail.');
+          return;
+        }
+        await userService.updateEmail({
+          novo_email: data.email,
+          senha_atual: data.senhaAtual
+        });
+      }
+
+      // 2. Atualiza dados de perfil (telefone e bairro)
+      await userService.updateProfile({
+        telefone: data.telefone,
+        bairro_id: data.bairro
+      });
+
+      // 3. Atualiza o estado global
+      await updateUser({
+        email: data.email,
+        telefone: data.telefone,
+      });
+
       Alert.alert('Sucesso', 'Perfil atualizado com sucesso!');
       router.back();
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível salvar as alterações.');
+    } catch (error: any) {
+      const message = error.response?.data?.detail || 'Não foi possível salvar as alterações.';
+      Alert.alert('Erro', message);
     } finally {
       setIsLoading(false);
       setModalSenhaVisivel(false);
@@ -176,7 +227,7 @@ export default function EditarPerfilScreen() {
             <Button mode="text" onPress={() => setModalSenhaVisivel(false)}>Cancelar</Button>
             <Button
               mode="contained"
-              onPress={() => tempData && handleSave(tempData)}
+              onPress={handleSubmit(handleSave)}
               loading={isLoading}
             >
               Confirmar
