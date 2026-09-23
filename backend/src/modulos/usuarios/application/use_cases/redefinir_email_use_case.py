@@ -2,6 +2,21 @@ from src.modulos.usuarios.application.dtos.usuario_dto import RedefinirEmailDTO,
 from src.modulos.usuarios.infrastructure.repositories.usuario_repository import SQLAlchemyUsuarioRepository
 
 
+class RedefinirEmailValidationError(ValueError):
+    def __init__(
+        self,
+        field: str,
+        message: str,
+        *,
+        status_code: int = 400,
+        code: str = "VALIDATION_ERROR",
+    ):
+        self.field = field
+        self.status_code = status_code
+        self.code = code
+        super().__init__(message)
+
+
 class RedefinirEmailUseCase:
     """
     Caso de uso responsável por alterar o email do aluno autenticado.
@@ -22,18 +37,29 @@ class RedefinirEmailUseCase:
 
         # Verificar senha
         if not self.hasher.verify(dto.senha, usuario.senha):
-            raise ValueError("Senha incorreta. Não é possível alterar o e-mail.")
+            raise RedefinirEmailValidationError(
+                "senha",
+                "Senha incorreta. Não é possível alterar o e-mail.",
+            )
 
         email_limpo = dto.novo_email.lower().strip()
 
         # Verificar se o novo e-mail é igual ao atual
         if usuario.email == email_limpo:
-            raise ValueError("O novo e-mail não pode ser igual ao atual.")
+            raise RedefinirEmailValidationError(
+                "novo_email",
+                "O novo e-mail não pode ser igual ao atual.",
+            )
 
         # Verificar se o novo e-mail já está em uso por outro usuário
         usuario_existente = self.repository.buscar_por_email(email_limpo)
         if usuario_existente and usuario_existente.id != user_id:
-            raise ValueError("Este e-mail já está sendo utilizado por outra conta.")
+            raise RedefinirEmailValidationError(
+                "novo_email",
+                "Este e-mail já está sendo utilizado por outra conta.",
+                status_code=409,
+                code="EMAIL_ALREADY_REGISTERED",
+            )
 
         # Atualizar no repositório
         usuario_atualizado = self.repository.atualizar_email(user_id, email_limpo)

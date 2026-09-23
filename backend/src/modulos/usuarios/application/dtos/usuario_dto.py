@@ -121,15 +121,14 @@ class PerfilAlunoResponseDTO(BaseModel):
 
 
 class RedefinirEmailDTO(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
 
     novo_email: EmailStr
     senha: str = Field(..., description="Senha atual do usuário para validação")
 
 
 class AtualizarAlunoDTO(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
 
     telefone: str | None = Field(default=None, max_length=20, description="Novo telefone do aluno")
     bairro_id: str | None = Field(default=None, max_length=20, description="Novo ID do bairro")
-
