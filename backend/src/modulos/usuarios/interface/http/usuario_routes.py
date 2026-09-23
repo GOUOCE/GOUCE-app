@@ -35,8 +35,14 @@ from src.modulos.usuarios.application.use_cases.criar_usuario_use_case import (
 from src.modulos.usuarios.application.use_cases.listar_usuarios_use_case import ListarUsuariosUseCase
 from src.modulos.usuarios.application.use_cases.aprovar_aluno_use_case import AprovarAlunoUseCase
 from src.modulos.usuarios.application.use_cases.obter_perfil_aluno_use_case import ObterPerfilAlunoUseCase
-from src.modulos.usuarios.application.use_cases.redefinir_email_use_case import RedefinirEmailUseCase
-from src.modulos.usuarios.application.use_cases.atualizar_aluno_use_case import AtualizarAlunoUseCase
+from src.modulos.usuarios.application.use_cases.redefinir_email_use_case import (
+    RedefinirEmailUseCase,
+    RedefinirEmailValidationError,
+)
+from src.modulos.usuarios.application.use_cases.atualizar_aluno_use_case import (
+    AtualizarAlunoUseCase,
+    AtualizarAlunoValidationError,
+)
 from src.modulos.usuarios.infrastructure.repositories.usuario_repository import (
     SQLAlchemyUsuarioRepository,
     CadastroDuplicadoError,
@@ -84,7 +90,7 @@ def _error_response(
 
 
 def _internal_error_response() -> JSONResponse:
-    logger.exception("Erro interno ao processar cadastro de aluno")
+    logger.exception("Erro interno ao processar solicitação")
     return _error_response(
         status_code=500,
         code="INTERNAL_ERROR",
@@ -117,6 +123,46 @@ class CadastroValidationRoute(APIRoute):
         return custom_route_handler
 
 
+class EdicaoPerfilValidationRoute(APIRoute):
+    """Padroniza erros estruturais e internos das rotas de edição de perfil."""
+
+    def get_route_handler(self):
+        original_route_handler = super().get_route_handler()
+
+        @wraps(original_route_handler)
+        async def custom_route_handler(request: Request):
+            try:
+                return await original_route_handler(request)
+            except RequestValidationError as error:
+                return _error_response(
+                    status_code=422,
+                    code="REQUEST_VALIDATION_ERROR",
+                    message="Requisição inválida",
+                    details=_validation_details(error.errors()),
+                )
+            except HTTPException as error:
+                if error.status_code >= 500:
+                    return _internal_error_response()
+
+                status_codes = {
+                    400: "VALIDATION_ERROR",
+                    401: "UNAUTHORIZED",
+                    403: "FORBIDDEN",
+                    404: "RESOURCE_NOT_FOUND",
+                    409: "CONFLICT",
+                    422: "REQUEST_VALIDATION_ERROR",
+                }
+                return _error_response(
+                    status_code=error.status_code,
+                    code=status_codes.get(error.status_code, "REQUEST_ERROR"),
+                    message="Não autorizado" if error.status_code == 401 else "Requisição inválida",
+                )
+            except Exception:
+                return _internal_error_response()
+
+        return custom_route_handler
+
+
 CADASTRO_ERROR_RESPONSES = {
     400: {"model": CadastroErrorResponseDTO},
     409: {"model": CadastroErrorResponseDTO},
@@ -127,6 +173,16 @@ CADASTRO_ERROR_RESPONSES = {
 
 router = APIRouter(prefix="/usuarios", tags=["Usuários e Alunos"])
 cadastro_router = APIRouter(route_class=CadastroValidationRoute)
+edicao_router = APIRouter(route_class=EdicaoPerfilValidationRoute)
+
+EDICAO_ERROR_RESPONSES = {
+    400: {"model": CadastroErrorResponseDTO},
+    401: {"model": CadastroErrorResponseDTO},
+    404: {"model": CadastroErrorResponseDTO},
+    409: {"model": CadastroErrorResponseDTO},
+    422: {"model": CadastroErrorResponseDTO},
+    500: {"model": CadastroErrorResponseDTO},
+}
 
 
 def get_repository(session: Annotated[Session, Depends(get_session)]):
@@ -492,9 +548,10 @@ async def obter_meu_perfil(
         raise HTTPException(status_code=500, detail=f"Erro ao consultar perfil: {str(e)}")
 
 
-@router.patch(
+@edicao_router.patch(
     "/me/email",
     response_model=UsuarioResponseDTO,
+    responses=EDICAO_ERROR_RESPONSES,
     summary="Redefinir E-mail do Aluno Autenticado",
     description="Permite alterar o e-mail da conta se a senha atual for fornecida e estiver correta."
 )
@@ -512,20 +569,43 @@ async def atualizar_email_autenticado(
         user_id = int(user_id_str)
         use_case = RedefinirEmailUseCase(repository, hasher)
         return use_case.execute(user_id, data)
+    except RedefinirEmailValidationError as error:
+        if error.code == "VALIDATION_ERROR":
+            return _error_response(
+                status_code=error.status_code,
+                code=error.code,
+                message="Dados inválidos",
+                details=[{"field": error.field, "message": str(error)}],
+            )
+        return _error_response(
+            status_code=error.status_code,
+            code=error.code,
+            message=str(error),
+        )
     except ValueError as e:
         msg = str(e)
         if "não encontrado" in msg.lower():
-            raise HTTPException(status_code=404, detail=msg)
-        raise HTTPException(status_code=400, detail=msg)
+            return _error_response(
+                status_code=404,
+                code="RESOURCE_NOT_FOUND",
+                message="Usuário não encontrado",
+            )
+        return _error_response(
+            status_code=400,
+            code="VALIDATION_ERROR",
+            message="Dados inválidos",
+            details=[{"field": None, "message": msg}],
+        )
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao atualizar e-mail: {str(e)}")
+    except Exception:
+        return _internal_error_response()
 
 
-@router.patch(
+@edicao_router.patch(
     "/me",
     response_model=AtualizarAlunoDTO,
+    responses=EDICAO_ERROR_RESPONSES,
     summary="Atualizar Perfil do Aluno",
     description="Permite que o aluno autenticado atualize parcialmente seus dados (bairro e telefone)."
 )
@@ -542,14 +622,31 @@ async def atualizar_meu_perfil(
         user_id = int(user_id_str)
         use_case = AtualizarAlunoUseCase(repository)
         return use_case.execute(user_id, data)
+    except AtualizarAlunoValidationError as error:
+        return _error_response(
+            status_code=400,
+            code="VALIDATION_ERROR",
+            message="Dados inválidos",
+            details=[{"field": error.field, "message": str(error)}],
+        )
     except ValueError as e:
         msg = str(e)
         if "não encontrado" in msg.lower():
-            raise HTTPException(status_code=404, detail=msg)
-        raise HTTPException(status_code=400, detail=msg)
+            return _error_response(
+                status_code=404,
+                code="RESOURCE_NOT_FOUND",
+                message="Usuário não encontrado",
+            )
+        return _error_response(
+            status_code=400,
+            code="VALIDATION_ERROR",
+            message="Dados inválidos",
+            details=[{"field": None, "message": msg}],
+        )
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao atualizar perfil do aluno: {str(e)}")
+    except Exception:
+        return _internal_error_response()
 
 router.include_router(cadastro_router)
+router.include_router(edicao_router)

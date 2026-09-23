@@ -3,6 +3,12 @@ from src.modulos.usuarios.infrastructure.repositories.usuario_repository import 
 from src.shared.validators.telefone_validator import TelefoneValidator
 
 
+class AtualizarAlunoValidationError(ValueError):
+    def __init__(self, field: str, message: str):
+        self.field = field
+        super().__init__(message)
+
+
 class AtualizarAlunoUseCase:
     """
     Caso de uso responsável por atualizar dados parciais do aluno (como telefone e bairro).
@@ -18,7 +24,16 @@ class AtualizarAlunoUseCase:
 
         if dto.telefone is not None:
             if not self.telefone_validator.validar_telefone(dto.telefone):
-                raise ValueError("Telefone celular inválido. Informe um número celular válido com DDD (ex: 11987654321)")
+                raise AtualizarAlunoValidationError(
+                    "telefone",
+                    "Telefone celular inválido. Informe um número celular válido com DDD (ex: 11987654321)",
+                )
+
+        if dto.bairro_id is not None and not dto.bairro_id.strip():
+            raise AtualizarAlunoValidationError(
+                "bairro_id",
+                "Bairro inválido. Informe um bairro não vazio.",
+            )
 
         usuario, aluno = self.repository.atualizar_dados_parciais(
             user_id=user_id,
@@ -33,4 +48,3 @@ class AtualizarAlunoUseCase:
             telefone=usuario.telefone,
             bairro_id=aluno.bairro_id if aluno else None
         )
-
