@@ -184,7 +184,7 @@ export function Passo3ContatoVinculo() {
               <CustomSelect
                 label="Turno do Curso *"
                 value={value}
-                options={['Manhã', 'Tarde', 'Noite', 'Integral']}
+                options={['Matutino', 'Vespertino', 'Noturno', 'Integral']}
                 onSelect={onChange}
                 error={!!errors.turno}
               />

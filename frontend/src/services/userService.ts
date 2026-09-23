@@ -37,13 +37,12 @@ export const userService = {
     formData.append('transgenero', data.transgenero);
     formData.append('tem_filhos', String(data.temFilhos));
 
-    // Contato e Vínculo
-    formData.append('bairro_id', data.bairro);
-    formData.append('faculdade_id', data.instituicao);
-    formData.append('curso', data.curso);
-    formData.append('semestre_atual', String(data.semestreAtual).replace(/[^0-9]/g, ''));
-    formData.append('periodo_ingresso', data.periodoIngresso);
-    formData.append('turno_curso', data.turno);
+    formData.append('bairro_id', data.bairro || '');
+    formData.append('faculdade_id', data.instituicao || '');
+    formData.append('curso', data.curso || '');
+    formData.append('semestre_atual', String(data.semestreAtual || '').replace(/[^0-9]/g, ''));
+    formData.append('periodo_ingresso', data.periodoIngresso || '');
+    formData.append('turno_curso', data.turno || '');
 
     // Documentação (Arquivos do expo-document-picker)
     if (data.comprovanteMatricula) {
