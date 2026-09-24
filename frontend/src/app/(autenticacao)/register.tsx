@@ -97,9 +97,11 @@ export default function RegisterScreen() {
         router.replace('/(autenticacao)/cadastro-pendente');
       }
     } catch (error: any) {
-      console.error('[REGISTER DEBUG] Full error:', JSON.stringify(error, null, 2));
-      if (error.response) {
-        console.error('[REGISTER DEBUG] Response data:', JSON.stringify(error.response.data, null, 2));
+      console.error('[REGISTER DEBUG] Error object:', error);
+      console.error('[REGISTER DEBUG] Message:', error?.message);
+      if (error?.response) {
+        console.error('[REGISTER DEBUG] Response status:', error.response.status);
+        console.error('[REGISTER DEBUG] Response data:', error.response.data);
       }
       const message = getErrorMessage(error, 'Erro ao realizar cadastro. Tente novamente.');
       alert(message);
