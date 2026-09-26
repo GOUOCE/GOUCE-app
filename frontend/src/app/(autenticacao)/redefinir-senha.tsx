@@ -15,6 +15,7 @@ import { ChevronLeft, Lock, Eye, EyeOff } from 'lucide-react-native';
 import { resetPasswordSchema, ResetPasswordFormData } from '@/schemas/loginSchema';
 import { useLocalSearchParams } from 'expo-router';
 import { authService } from '@services/authService';
+import { getErrorMessage } from '@/utils/errorUtils';
 
 export default function RedefinirSenhaScreen() {
   const router = useRouter();
@@ -54,7 +55,7 @@ export default function RedefinirSenhaScreen() {
       alert('Senha redefinida com sucesso!');
       router.replace('/(autenticacao)/login');
     } catch (error: any) {
-      const message = error.response?.data?.detail || 'Erro ao redefinir senha. Tente novamente.';
+      const message = getErrorMessage(error, 'Erro ao redefinir senha. Tente novamente.');
       alert(message);
     } finally {
       setIsLoading(false);

@@ -2,6 +2,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 from fastapi.responses import HTMLResponse
+from jose import JWTError
 
 from src.shared.infrastructure.db import get_session
 from src.shared.auth.jwt_service import JWTService
@@ -95,7 +96,7 @@ async def login(
 
         return login_response
     except UsuarioInativoError as e:
-        raise HTTPException(status_code=403, detail=str(e))
+        raise HTTPException(status_code=401, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e))
     except Exception as e:
@@ -112,6 +113,7 @@ async def login(
 async def refresh_token(
     request: Request,
     response: Response,
+    repository=Depends(get_repository),
     token_service=Depends(get_token_service),
 ):
     try:
@@ -128,7 +130,7 @@ async def refresh_token(
             raise ValueError("Token de atualização não encontrado")
 
         use_case = RefreshTokenUseCase(token_service)
-        refresh_response = use_case.execute(refresh_token_val)
+        refresh_response = use_case.execute(refresh_token_val, repository)
 
         response.set_cookie(
             key="access_token",
@@ -140,9 +142,11 @@ async def refresh_token(
 
         return refresh_response
     except ValueError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        raise HTTPException(status_code=401, detail="Token de atualização inválido ou sessão revogada")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token de atualização inválido ou expirado")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao renovar token: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erro interno ao renovar token")
 
 
 from src.shared.infrastructure.services.email_service import SMTPEmailService

@@ -38,12 +38,27 @@ class TelefoneValidator(ITelefoneValidator):
     Valida números de telefone/celular brasileiros com DDD estrito e 11 dígitos (DD9XXXXXXXX).
     """
 
-    def validar_telefone(self, telefone: str) -> bool:
-        if not telefone or not isinstance(telefone, str):
-            return False
+    @staticmethod
+    def _extrair_digitos(telefone: str) -> str | None:
+        """Retorna os dígitos apenas de formatos de entrada explicitamente aceitos."""
+        if not isinstance(telefone, str):
+            return None
 
-        apenas_numeros = re.sub(r"\D", "", telefone)
-        if len(apenas_numeros) != 11:
+        if re.fullmatch(r"[0-9]{11}", telefone):
+            return telefone
+
+        telefone_mascarado = re.fullmatch(
+            r"\(([0-9]{2})\) ?([0-9]{5})-([0-9]{4})",
+            telefone,
+        )
+        if telefone_mascarado:
+            return "".join(telefone_mascarado.groups())
+
+        return None
+
+    def validar_telefone(self, telefone: str) -> bool:
+        apenas_numeros = self._extrair_digitos(telefone)
+        if apenas_numeros is None:
             return False
 
         # Rejeitar números com todos os dígitos iguais (ex: 11999999999 ou 00000000000)
@@ -71,5 +86,5 @@ class TelefoneValidator(ITelefoneValidator):
         if not self.validar_telefone(telefone):
             return ""
 
-        apenas_numeros = re.sub(r"\D", "", telefone)
+        apenas_numeros = self._extrair_digitos(telefone)
         return f"({apenas_numeros[:2]}) {apenas_numeros[2:7]}-{apenas_numeros[7:]}"

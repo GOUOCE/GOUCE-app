@@ -6,6 +6,7 @@ import { ChevronLeft, IdCard, Contact, Shield } from 'lucide-react-native';
 
 import { CardPerfil } from '@/components/auth/CardPerfil';
 import { useAuth } from '@contexts/AuthContext';
+import { getErrorMessage } from '@/utils/errorUtils';
 
 export default function SelecaoPerfilScreen() {
   const router = useRouter();
@@ -35,12 +36,12 @@ export default function SelecaoPerfilScreen() {
       const detail = error.response?.data?.detail || "";
 
       // Caso a conta esteja pendente (HU-001/HU-002)
-      if (status === 403 && detail.includes('pendente')) {
+      if ((status === 401 || status === 403) && typeof detail === 'string' && detail.toLowerCase().includes('pendente')) {
         router.replace('/(autenticacao)/cadastro-pendente');
         return;
       }
 
-      const message = detail || 'E-mail ou senha incorretos. Tente novamente.';
+      const message = getErrorMessage(error, 'E-mail ou senha incorretos. Tente novamente.');
       Alert.alert('Falha na autenticação', message);
     }
   };
