@@ -54,15 +54,43 @@ def upgrade() -> None:
                type_=sa.String(length=36),
                existing_nullable=True)
 
-    op.drop_constraint('aluno_bairro_id_key', 'aluno', type_='unique')
-    op.drop_constraint('aluno_faculdade_id_key', 'aluno', type_='unique')
+    op.execute("""
+    DO $$
+    BEGIN
+        IF EXISTS (
+            SELECT 1 FROM pg_constraint
+            WHERE conname = 'aluno_bairro_id_key'
+              AND conrelid = 'aluno'::regclass
+        ) THEN
+            ALTER TABLE aluno DROP CONSTRAINT aluno_bairro_id_key;
+        END IF;
+        IF EXISTS (
+            SELECT 1 FROM pg_constraint
+            WHERE conname = 'aluno_faculdade_id_key'
+              AND conrelid = 'aluno'::regclass
+        ) THEN
+            ALTER TABLE aluno DROP CONSTRAINT aluno_faculdade_id_key;
+        END IF;
+        IF EXISTS (
+            SELECT 1 FROM pg_constraint
+            WHERE conname = 'usuario_email_key'
+              AND conrelid = 'usuario'::regclass
+        ) THEN
+            ALTER TABLE usuario DROP CONSTRAINT usuario_email_key;
+        END IF;
+        IF EXISTS (
+            SELECT 1 FROM pg_constraint
+            WHERE conname = 'usuario_telefone_key'
+              AND conrelid = 'usuario'::regclass
+        ) THEN
+            ALTER TABLE usuario DROP CONSTRAINT usuario_telefone_key;
+        END IF;
+    END $$;
+    """)
 
     op.create_foreign_key(FK_COMPROVANTE_RESIDENCIA, 'aluno', 'arquivos', ['id_comprovante_residencia'], ['id'])
     op.create_foreign_key(FK_FOTO_ALUNO, 'aluno', 'arquivos', ['id_foto_aluno'], ['id'])
     op.create_foreign_key(FK_COMPROVANTE_MATRICULA, 'aluno', 'arquivos', ['id_comprovante_matricula'], ['id'])
-
-    op.drop_constraint('usuario_email_key', 'usuario', type_='unique')
-    op.drop_constraint('usuario_telefone_key', 'usuario', type_='unique')
 
     # ix_usuario_email_hash já é criado na migration 004_encrypt_email_and_files — removido daqui para não duplicar
 
