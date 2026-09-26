@@ -1,9 +1,53 @@
 from datetime import date, datetime
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
+from src.shared.enums.turno_curso_enum import TurnoCursoEnum
+from src.shared.enums.demograficos_enum import (
+    RacaEnum,
+    IdentidadeSexualEnum,
+    IdentificacaoGeneroEnum,
+    SimNaoPrefiroEnum
+)
 
+
+class ValidarEtapa1CadastroUsuarioDTO(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    id_foto_aluno: str | None = Field(default=None, max_length=36)
+    nome: str = Field(min_length=3, max_length=150)
+    data_nascimento: str | int | float | date | datetime | None = None
+    email: EmailStr
+    senha: str = Field(min_length=6, max_length=128)
+    confirmar_senha: str = Field(min_length=6, max_length=128)
+
+class ValidarEtapa2CadastroUsuarioDTO(BaseModel):
+
+    model_config = ConfigDict(populate_by_name=True)
+    raca: RacaEnum | None = None
+    identificacao_sexual: IdentidadeSexualEnum | None = None
+    identificacao_genero: IdentificacaoGeneroEnum | None = None
+    transgenero: SimNaoPrefiroEnum | None = None
+    tem_filhos: bool | None = None
+
+class ValidarEtapa3CadastroUsuarioDTO(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    bairro_id: str | None = Field(default=None, max_length=20)
+    telefone: str | None = Field(default=None, max_length=20)
+    faculdade_id: str = Field(min_length=1, max_length=150)
+    curso: str = Field(min_length=1, max_length=150)
+    campus: str | None = Field(default=None, max_length=150)
+    periodo_ingresso: str | None = Field(default=None, max_length=20)
+    turno_curso: TurnoCursoEnum | str | None = None
+    semestre_atual: int | None = None
+
+class ValidarEtapa4CadastroUsuarioDTO(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    id_comprovante_matricula: str = Field(default="", max_length=255)
+    id_comprovante_residencia: str = Field(default="", max_length=255)
 
 class CadastroUsuarioDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -18,7 +62,8 @@ class CadastroUsuarioDTO(BaseModel):
     id_comprovante_residencia: str = Field(default="", max_length=255)
     data_nascimento: str | int | float | date | datetime | None = None
     identificacao_genero: str | None = None
-    tem_filhos: bool | None = None
+    transgenero: str | bool | None = None
+    tem_filhos: str | bool | None = None
     curso: str = Field(min_length=1, max_length=150)
     semestre_atual: int | None = None
     periodo_ingresso: str | None = Field(default=None, max_length=20)
@@ -82,6 +127,10 @@ class CadastroValidationDetailDTO(BaseModel):
     field: str | None = None
     message: str
 
+class ValidacaoSucessoDTO(BaseModel):
+    success: Literal[True] = True
+    message: str = "Validação ocorrida com sucesso"
+    data: CadastroValidationDetailDTO  
 
 class CadastroErrorDTO(BaseModel):
     code: str
@@ -109,10 +158,14 @@ class PerfilAlunoResponseDTO(BaseModel):
     periodo_ingresso: str | None = None
     turno_curso: str | None = None
     data_nascimento: str | int | float | date | datetime | None = None
-    identificacao_genero: str | None = None
-    raca: str | None = None
+    identificacao_genero: IdentificacaoGeneroEnum | None = None
+    transgenero: SimNaoPrefiroEnum | None = None
+    raca: RacaEnum | None = None
     identificacao_sexual: str | None = None
     tem_filhos: bool | None = None
+    raca: str | None = None
+    identificacao_sexual: str | None = None
+    tem_filhos: str | bool | None = None
     id_foto_aluno: str | None = None
     validade_acesso: datetime | None = None
     motivo_reprovacao: str | None = None
