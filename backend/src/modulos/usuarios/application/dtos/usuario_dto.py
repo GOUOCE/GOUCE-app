@@ -61,14 +61,14 @@ class CadastroUsuarioDTO(BaseModel):
     id_comprovante_matricula: str = Field(default="", max_length=255)
     id_comprovante_residencia: str = Field(default="", max_length=255)
     data_nascimento: str | int | float | date | datetime | None = None
-    identificacao_genero: str | None = None
-    transgenero: str | bool | None = None
-    tem_filhos: str | bool | None = None
+    identificacao_genero: str = Field(min_length=1, max_length=500)
+    transgenero: str = Field(min_length=1, max_length=500)
+    tem_filhos: bool
     curso: str = Field(min_length=1, max_length=150)
     semestre_atual: int | None = None
     periodo_ingresso: str | None = Field(default=None, max_length=20)
     turno_curso: str | None = None
-    raca: str | None = Field(default=None, max_length=50)
+    raca: str = Field(min_length=1, max_length=50)
     validade_acesso: datetime | None = None
     id_foto_aluno: str | None = Field(default=None, max_length=36)
     identificacao_sexual: str | None = Field(default=None, max_length=100)

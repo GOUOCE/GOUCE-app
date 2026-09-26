@@ -98,6 +98,7 @@ class SQLAlchemyUsuarioRepository:
                 data_nascimento=comando.data_nascimento,
                 identificacao_genero=comando.identificacao_genero,
                 tem_filhos=comando.tem_filhos,
+                transgenero=comando.transgenero,
                 curso=comando.curso,
                 semestre_atual=comando.semestre_atual,
                 periodo_ingresso=comando.periodo_ingresso,

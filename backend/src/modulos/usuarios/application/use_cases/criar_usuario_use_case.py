@@ -10,6 +10,8 @@ from src.shared.validators.string_sem_numero_validator import StringSemNumeroVal
 from src.shared.validators.telefone_validator import TelefoneValidator
 from src.shared.validators.senha_validator import SenhaValidator
 from src.shared.validators.turno_curso_validator import TurnoCursoValidator
+from src.shared.validators.demograficos_validator import DemograficosValidator
+
 
 
 class ValidacaoMultiplaError(Exception):
@@ -52,6 +54,7 @@ class CriarUsuarioUseCase:
         self.senha_validator = senha_validator or SenhaValidator()
         self.turno_curso_validator = turno_curso_validator or TurnoCursoValidator()
         self.arquivo_repository = arquivo_repository
+        self.dados_demograficos = DemograficosValidator()
 
     def execute(self, dto: CadastroUsuarioDTO) -> CadastroSucessoDTO:
         erros = []
@@ -115,20 +118,64 @@ class CriarUsuarioUseCase:
         
         dto.turno_curso = turno_curso_formatado
 
+        # 9. Validação e normalização dos dados demográficos
+        raca_valida, raca_formatada = self.dados_demograficos.validar_e_formatar_raca(dto.raca)
+        if not raca_valida:
+            erros.append(
+                "Raça inválida. Use: Branco, Pardo, Preto, Amarelo, Indígena ou Prefiro não dizer."
+            )
 
-        # 9. Validação de Instituição / Faculdade
+        sexual_valida = True
+        sexual_formatada = dto.identificacao_sexual
+        if dto.identificacao_sexual:
+            sexual_valida, sexual_formatada = self.dados_demograficos.validar_e_formatar_identidade_sexual(
+                dto.identificacao_sexual
+            )
+            if not sexual_valida:
+                erros.append(
+                    "Identidade sexual inválida. Use: Heterossexual, Homossexual (Gay/Lésbica), "
+                    "Bissexual, Assexual, Outra ou Prefiro não dizer."
+                )
+
+        genero_valido, genero_formatado = self.dados_demograficos.validar_e_formatar_genero(
+            dto.identificacao_genero
+        )
+        if not genero_valido:
+            erros.append(
+                "Identificação de gênero inválida. Use: Mulher, Homem, Não-binário, Outro ou "
+                "Prefiro não dizer."
+            )
+
+        transgenero_valido, transgenero_formatado = self.dados_demograficos.validar_e_formatar_sim_nao_prefiro(
+            dto.transgenero
+        )
+        if not transgenero_valido:
+            erros.append("Valor inválido para transgênero. Use Sim, Não ou Prefiro não dizer.")
+
+        if not isinstance(dto.tem_filhos, bool):
+            erros.append("Tem filhos inválido. Use um valor booleano: true ou false.")
+
+        if raca_valida and sexual_valida and genero_valido and transgenero_valido:
+            dto = dto.model_copy(update={
+                "raca": raca_formatada,
+                "identificacao_sexual": sexual_formatada,
+                "identificacao_genero": genero_formatado,
+                "transgenero": transgenero_formatado,
+            })
+
+        # 10. Validação de Instituição / Faculdade
         if not dto.faculdade_id or len(str(dto.faculdade_id).strip()) < 2:
             erros.append("Instituição/Faculdade é obrigatória")
 
-        # 10. Validação de Curso
+        # 11. Validação de Curso
         if not dto.curso or len(str(dto.curso).strip()) < 2:
             erros.append("O nome do curso é obrigatório")
 
-        # 11. Validação de Comprovante de Matrícula
+        # 12. Validação de Comprovante de Matrícula
         if not dto.id_comprovante_matricula or not str(dto.id_comprovante_matricula).strip():
             erros.append("Comprovante de matrícula é obrigatório")
 
-        # 12. Validação de Comprovante de Residência
+        # 13. Validação de Comprovante de Residência
         if not dto.id_comprovante_residencia or not str(dto.id_comprovante_residencia).strip():
             erros.append("Comprovante de residência é obrigatório")
 
@@ -141,7 +188,7 @@ class CriarUsuarioUseCase:
             if dto.id_foto_aluno and not self.arquivo_repository.buscar_por_id(str(dto.id_foto_aluno)):
                 erros.append("A foto de perfil informada não é um arquivo válido registrado no sistema")
 
-        # 13. Validação de Termos de Uso
+        # 14. Validação de Termos de Uso
         if not dto.termos_de_uso:
             erros.append("Você deve aceitar os termos de uso para se cadastrar")
 

@@ -40,7 +40,7 @@ class ValidarEtapa4UsuarioUseCase:
 
         return ValidacaoSucessoDTO(
             success=True,
-            message="Etapa 2 validada com sucesso",
+            message="Etapa 4 validada com sucesso",
             data=CadastroValidationDetailDTO(
                 field=None,
                 message="Sem erros"

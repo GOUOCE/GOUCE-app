@@ -23,7 +23,10 @@ class ValidarEtapa2UsuarioUseCase:
         else:
             is_valid, _ = self.demograficos_validator.validar_e_formatar_raca(raca_val)
             if not is_valid:
-                erros.append({"field": "raca", "message": "Raça inválida. Selecione uma opção válida."})
+                erros.append({
+                    "field": "raca",
+                    "message": "Raça inválida. Use: Branco, Pardo, Preto, Amarelo, Indígena ou Prefiro não dizer.",
+                })
 
         # Validação de Identidade Sexual
         sexual_val = dto.identificacao_sexual.value if dto.identificacao_sexual else ""
@@ -32,7 +35,11 @@ class ValidarEtapa2UsuarioUseCase:
         else:
             is_valid, _ = self.demograficos_validator.validar_e_formatar_identidade_sexual(sexual_val)
             if not is_valid:
-                erros.append({"field": "identificacao_sexual", "message": "Identidade sexual inválida. Selecione uma opção válida."})
+                erros.append({
+                    "field": "identificacao_sexual",
+                    "message": "Identidade sexual inválida. Use: Heterossexual, Homossexual (Gay/Lésbica), "
+                    "Bissexual, Assexual, Outra ou Prefiro não dizer.",
+                })
 
         # Validação de Identificação de Gênero
         genero_val = dto.identificacao_genero.value if dto.identificacao_genero else ""
@@ -41,7 +48,11 @@ class ValidarEtapa2UsuarioUseCase:
         else:
             is_valid, _ = self.demograficos_validator.validar_e_formatar_genero(genero_val)
             if not is_valid:
-                erros.append({"field": "identificacao_genero", "message": "Identificação de gênero inválida. Selecione uma opção válida."})
+                erros.append({
+                    "field": "identificacao_genero",
+                    "message": "Identificação de gênero inválida. Use: Mulher, Homem, Não-binário, Outro ou "
+                    "Prefiro não dizer.",
+                })
 
         # Validação de Transgênero
         trans_val = dto.transgenero.value if dto.transgenero else ""
@@ -55,7 +66,7 @@ class ValidarEtapa2UsuarioUseCase:
         # Validação de Tem Filhos
        
         if dto.tem_filhos == None:
-            erros.append({"field": "tem_filhos", "message": "Informe se você tem filhos"})
+            erros.append({"field": "tem_filhos", "message": "Tem filhos é obrigatório. Use true ou false."})
 
         if erros:
             raise ValidacaoMultiplaError(erros)
