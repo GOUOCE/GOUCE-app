@@ -191,6 +191,7 @@ edicao_router = APIRouter(route_class=EdicaoPerfilValidationRoute)
 EDICAO_ERROR_RESPONSES = {
     400: {"model": CadastroErrorResponseDTO},
     401: {"model": CadastroErrorResponseDTO},
+    403: {"model": CadastroErrorResponseDTO},
     404: {"model": CadastroErrorResponseDTO},
     409: {"model": CadastroErrorResponseDTO},
     422: {"model": CadastroErrorResponseDTO},
@@ -553,9 +554,10 @@ async def verificar_email(
         raise HTTPException(status_code=500, detail="Erro interno ao verificar o e-mail")
 
 
-@router.get(
+@edicao_router.get(
     "/me",
     response_model=PerfilAlunoResponseDTO,
+    responses=EDICAO_ERROR_RESPONSES,
 )
 async def obter_meu_perfil(
     current_user: Annotated[dict, Depends(require_roles(CargoEnum.ALUNO.value))],

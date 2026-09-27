@@ -304,32 +304,40 @@ class SQLAlchemyUsuarioRepository:
         return resultado[0], resultado[1]
 
     def atualizar_email(self, user_id: int, novo_email: str) -> UsuarioORM | None:
-        usuario = self.session.query(UsuarioORM).filter(UsuarioORM.id == user_id).first()
-        if not usuario:
-            return None
+        try:
+            usuario = self.session.query(UsuarioORM).filter(UsuarioORM.id == user_id).first()
+            if not usuario:
+                return None
 
-        email_limpo = novo_email.lower().strip()
-        usuario.email = email_limpo
-        usuario.email_hash = hash_email(email_limpo)
+            email_limpo = novo_email.lower().strip()
+            usuario.email = email_limpo
+            usuario.email_hash = hash_email(email_limpo)
 
-        self.session.commit()
-        self.session.refresh(usuario)
-        return usuario
+            self.session.commit()
+            self.session.refresh(usuario)
+            return usuario
+        except Exception:
+            self.session.rollback()
+            raise
 
     def atualizar_dados_parciais(self, user_id: int, telefone: str | None = None, bairro_id: str | None = None):
-        usuario, aluno = self.buscar_com_detalhes_por_id(user_id)
-        if not usuario:
-            return None, None
+        try:
+            usuario, aluno = self.buscar_com_detalhes_por_id(user_id)
+            if not usuario:
+                return None, None
 
-        if telefone is not None:
-            usuario.telefone = telefone
+            if telefone is not None:
+                usuario.telefone = telefone
 
-        if aluno and bairro_id is not None:
-            aluno.bairro_id = bairro_id
+            if aluno and bairro_id is not None:
+                aluno.bairro_id = bairro_id
 
-        self.session.commit()
-        self.session.refresh(usuario)
-        if aluno:
-            self.session.refresh(aluno)
+            self.session.commit()
+            self.session.refresh(usuario)
+            if aluno:
+                self.session.refresh(aluno)
 
-        return usuario, aluno
+            return usuario, aluno
+        except Exception:
+            self.session.rollback()
+            raise
