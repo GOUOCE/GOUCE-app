@@ -1,4 +1,5 @@
-from typing import Optional
+from typing import Literal, Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -7,12 +8,33 @@ class SolicitarRecuperacaoSenhaDTO(BaseModel):
     email: str = Field(..., description="E-mail cadastrado na plataforma", example="usuario@dominio.com")
 
 
-class SolicitarRecuperacaoSenhaResponseDTO(BaseModel):
-    """Estrutura da resposta para solicitação de recuperação de senha"""
-    mensagem: str = Field(
-        ...,
+class RecuperacaoSucessoResponseDTO(BaseModel):
+    success: Literal[True] = True
+    message: str
+
+
+class RecuperacaoErroDetalheDTO(BaseModel):
+    field: Optional[str] = None
+    message: str
+
+
+class RecuperacaoErroDTO(BaseModel):
+    code: str
+    message: str
+    details: list[RecuperacaoErroDetalheDTO] = Field(default_factory=list)
+
+
+class RecuperacaoErroResponseDTO(BaseModel):
+    success: Literal[False] = False
+    error: RecuperacaoErroDTO
+
+
+class SolicitarRecuperacaoSenhaResponseDTO(RecuperacaoSucessoResponseDTO):
+    """Resposta genérica para evitar enumeração de contas."""
+
+    message: str = Field(
+        default="Se o e-mail estiver cadastrado no sistema, você receberá as instruções para redefinição de senha.",
         description="Mensagem genérica para evitar exposição da existência da conta",
-        example="Se o e-mail estiver cadastrado no sistema, você receberá as instruções para redefinição de senha."
     )
 
 
@@ -21,18 +43,20 @@ class ValidarTokenRecuperacaoDTO(BaseModel):
     token: str = Field(..., description="Token ou código de recuperação recebido")
 
 
-class ValidarTokenRecuperacaoResponseDTO(BaseModel):
+class ValidarTokenRecuperacaoResponseDTO(RecuperacaoSucessoResponseDTO):
     """Estrutura da resposta da validação de token/código de recuperação"""
+
     valido: bool = Field(..., example=True)
-    mensagem: str = Field(..., example="Token válido.")
+    message: str = Field(default="Token válido.", example="Token válido.")
 
 
 class RedefinirSenhaDTO(BaseModel):
     """Estrutura da requisição para redefinição de senha"""
     token: str = Field(..., description="Token ou código de recuperação recebido")
-    nova_senha: str = Field(..., min_length=6, description="Nova senha com no mínimo 6 caracteres")
+    nova_senha: str = Field(..., description="Nova senha conforme os critérios de segurança do sistema")
 
 
-class RedefinirSenhaResponseDTO(BaseModel):
+class RedefinirSenhaResponseDTO(RecuperacaoSucessoResponseDTO):
     """Estrutura da resposta da redefinição de senha"""
-    mensagem: str = Field(..., example="Senha alterada com sucesso.")
+
+    message: str = Field(default="Senha alterada com sucesso.", example="Senha alterada com sucesso.")

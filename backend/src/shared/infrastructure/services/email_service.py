@@ -73,19 +73,15 @@ class SMTPEmailService(IEmailService):
                     server.login(self.smtp_user, self.smtp_password)
                     server.sendmail(self.from_email, [email_destino], msg.as_string())
 
-                logger.info(f"E-mail de recuperação enviado com sucesso para {email_destino}")
+                logger.info("E-mail de recuperação enviado com sucesso")
                 return True
-            except Exception as e:
-                logger.error(f"Erro ao enviar e-mail via SMTP para {email_destino}: {str(e)}")
-                print(f"[EMERGENCY/DEV EMAIL LOG] E-mail para: {email_destino} | Link: {link_recuperacao} | Token: {token_recuperacao} | Erro SMTP: {e}")
+            except Exception as error:
+                logger.error(
+                    "Falha no envio do e-mail de recuperação (tipo=%s)",
+                    type(error).__name__,
+                )
                 return False
 
-        # Modo Desenvolvedor / Simulação caso SMTP não esteja preenchido no .env
-        print(f"\n==================================================")
-        print(f"[MODO DESENVOLVIMENTO - SIMULAÇÃO DE E-MAIL]")
-        print(f"Para: {email_destino} ({nome_usuario})")
-        print(f"Assunto: {assunto}")
-        print(f"Link de Acesso Direto: {link_recuperacao}")
-        print(f"Token de Recuperação: {token_recuperacao}")
-        print(f"==================================================\n")
-        return True
+        # Sem uma configuração explícita de simulação, SMTP incompleto é falha.
+        logger.warning("E-mail de recuperação não enviado: configuração indisponível")
+        return False
