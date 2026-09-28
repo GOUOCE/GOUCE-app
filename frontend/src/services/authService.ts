@@ -11,6 +11,7 @@ export interface User {
   telefone?: string;
   curso?: string;
   faculdade?: string;
+  bairro?: string;
   periodo_ingresso?: string;
   turno?: string;
   foto_perfil?: string;
