@@ -1,20 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, Button, Avatar, Surface, useTheme, Portal, Modal, Divider } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { LogOut, UserCircle, CreditCard, RefreshCw, ChevronRight, Pencil } from 'lucide-react-native';
 import { useAuth } from '@contexts/AuthContext';
+import { userService } from '@services/userService';
+import { api } from '../../api/api';
 
 export default function PerfilScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { user, signOut } = useAuth();
+  const { user, token, signOut, updateUser } = useAuth();
   const [modalSairVisivel, setModalSairVisivel] = useState(false);
+
+  useEffect(() => {
+    async function carregarPerfil() {
+      try {
+        const perfilApi = await userService.getProfile();
+        if (perfilApi) {
+          await updateUser({
+            name: perfilApi.nome || perfilApi.nome_completo,
+            email: perfilApi.email,
+            telefone: perfilApi.telefone,
+            faculdade: perfilApi.faculdade_id,
+            bairro: perfilApi.bairro_id,
+            curso: perfilApi.curso,
+            periodo_ingresso: perfilApi.periodo_ingresso,
+            turno: perfilApi.turno_curso,
+            foto_perfil: perfilApi.id_foto_aluno || perfilApi.foto_perfil,
+            status: perfilApi.status_cadastro,
+          });
+        }
+      } catch (err) {
+        console.warn('Erro ao atualizar perfil:', err);
+      }
+    }
+    carregarPerfil();
+  }, []);
 
   const handleSignOut = async () => {
     setModalSairVisivel(false);
     await signOut();
   };
+
+  const baseUrl = api.defaults.baseURL || process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
+  const fotoUri = user?.foto_perfil
+    ? (user.foto_perfil.startsWith('http')
+        ? user.foto_perfil
+        : `${baseUrl}/arquivos/${user.foto_perfil}/view?token=${token || ''}`)
+    : null;
+
+  const imageSource = fotoUri
+    ? {
+        uri: fotoUri,
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          'ngrok-skip-browser-warning': 'true',
+        },
+      }
+    : { uri: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=200&auto=format&fit=crop' };
 
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
@@ -32,7 +76,7 @@ export default function PerfilScreen() {
         <View style={styles.profileSection}>
           <Avatar.Image
             size={120}
-            source={{ uri: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=200&auto=format&fit=crop' }}
+            source={imageSource}
           />
           <Text variant="headlineSmall" style={styles.userName}>{user?.name}</Text>
           <Surface style={styles.statusBadge} elevation={0}>

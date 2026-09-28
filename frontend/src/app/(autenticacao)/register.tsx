@@ -1,12 +1,7 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import {
-  Button,
-  Text,
-  useTheme,
-  Portal
-} from 'react-native-paper';
+import { Button, Text, useTheme } from 'react-native-paper';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft, X } from 'lucide-react-native';
@@ -17,6 +12,7 @@ import { Passo2Demografico } from '@/components/cadastro/Passo2Demografico';
 import { Passo3ContatoVinculo } from '@/components/cadastro/Passo3ContatoVinculo';
 import { Passo4Documentacao } from '@/components/cadastro/Passo4Documentacao';
 import { TermosDeUso } from '@/components/cadastro/TermosDeUso';
+import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 import { userService } from '@services/userService';
 import { getErrorMessage } from '@/utils/errorUtils';
@@ -26,7 +22,30 @@ export default function RegisterScreen() {
   const theme = useTheme();
   const [passo, setPasso] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [modalSairVisivel, setModalSairVisivel] = useState(false);
+
+  // Estado centralizado do Pop-up estilizado
+  const [popup, setPopup] = useState<{
+    visible: boolean;
+    type?: PopupType;
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    confirmColor?: string;
+    onConfirm?: () => void;
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+  });
+
+  const showPopup = (config: Omit<typeof popup, 'visible'>) => {
+    setPopup({ ...config, visible: true });
+  };
+
+  const closePopup = () => {
+    setPopup((prev) => ({ ...prev, visible: false }));
+  };
 
   const metodos = useForm<AlunoFormData>({
     resolver: zodResolver(alunoSchema),
@@ -63,7 +82,12 @@ export default function RegisterScreen() {
         const existe = await userService.verificarEmail(email);
         setIsLoading(false);
         if (existe) {
-          alert('Este e-mail já está em uso no sistema. Por favor, utilize outro ou recupere sua senha.');
+          showPopup({
+            type: 'warning',
+            title: 'E-mail em uso',
+            message: 'Este e-mail já está cadastrado no sistema. Por favor, utilize outro e-mail ou a opção "Esqueci minha senha".',
+            confirmText: 'Entendido',
+          });
           return;
         }
       }
@@ -75,12 +99,24 @@ export default function RegisterScreen() {
     if (passo > 1) {
       setPasso(passo - 1);
     } else {
-      setModalSairVisivel(true);
+      solicitarConfirmacaoSaida();
     }
   };
 
+  const solicitarConfirmacaoSaida = () => {
+    showPopup({
+      type: 'warning',
+      title: 'Cancelar cadastro?',
+      message: 'Se você sair agora, todos os dados preenchidos até este passo serão perdidos.',
+      confirmText: 'Sim, sair',
+      cancelText: 'Continuar preenchendo',
+      confirmColor: '#B00020',
+      onConfirm: confirmarSaida,
+    });
+  };
+
   const confirmarSaida = () => {
-    setModalSairVisivel(false);
+    closePopup();
     if (router.canGoBack()) {
       router.back();
     } else {
@@ -98,13 +134,13 @@ export default function RegisterScreen() {
       }
     } catch (error: any) {
       console.error('[REGISTER DEBUG] Error object:', error);
-      console.error('[REGISTER DEBUG] Message:', error?.message);
-      if (error?.response) {
-        console.error('[REGISTER DEBUG] Response status:', error.response.status);
-        console.error('[REGISTER DEBUG] Response data:', error.response.data);
-      }
       const message = getErrorMessage(error, 'Erro ao realizar cadastro. Tente novamente.');
-      alert(message);
+      showPopup({
+        type: 'error',
+        title: 'Aviso no Cadastro',
+        message,
+        confirmText: 'Entendido',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -119,41 +155,23 @@ export default function RegisterScreen() {
             <ChevronLeft size={28} color="#333" />
           </TouchableOpacity>
           <Text variant="titleLarge" style={styles.headerTitle}>Criar conta</Text>
-          <TouchableOpacity onPress={() => setModalSairVisivel(true)}>
+          <TouchableOpacity onPress={solicitarConfirmacaoSaida}>
             <X size={28} color="#333" />
           </TouchableOpacity>
         </View>
 
-        {/* Modal de Confirmação de Saída */}
-        <Portal>
-          <Modal
-            visible={modalSairVisivel}
-            onDismiss={() => setModalSairVisivel(false)}
-          >
-            <View style={styles.modalContent}>
-              <Text variant="headlineSmall" style={styles.modalTitle}>Cancelar cadastro?</Text>
-              <Text variant="bodyLarge" style={styles.modalText}>
-                Se você sair agora, todos os dados preenchidos até este passo serão perdidos.
-              </Text>
-              <View style={styles.modalButtons}>
-                <Button
-                  mode="text"
-                  onPress={() => setModalSairVisivel(false)}
-                  style={styles.modalBtn}
-                >
-                  Continuar preenchendo
-                </Button>
-                <Button
-                  mode="contained"
-                  onPress={confirmarSaida}
-                  style={[styles.modalBtn, { backgroundColor: '#B00020' }]}
-                >
-                  Sim, sair
-                </Button>
-              </View>
-            </View>
-          </Modal>
-        </Portal>
+        {/* Pop-up Estilizado Personalizado */}
+        <AppPopup
+          visible={popup.visible}
+          type={popup.type}
+          title={popup.title}
+          message={popup.message}
+          confirmText={popup.confirmText}
+          cancelText={popup.cancelText}
+          confirmColor={popup.confirmColor}
+          onConfirm={popup.onConfirm}
+          onDismiss={closePopup}
+        />
 
         {/* Conteúdo */}
         <ScrollView
@@ -266,27 +284,4 @@ const styles = StyleSheet.create({
   buttonContent: {
     height: 55,
   },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 24,
-    margin: 24,
-    gap: 16,
-  },
-  modalTitle: {
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  modalText: {
-    color: '#666',
-    lineHeight: 24,
-  },
-  modalButtons: {
-    flexDirection: 'column',
-    gap: 8,
-    marginTop: 8,
-  },
-  modalBtn: {
-    borderRadius: 8,
-  }
 });

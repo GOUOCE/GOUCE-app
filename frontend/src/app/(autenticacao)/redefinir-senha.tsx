@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TouchableOpacity, Modal } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Modal, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   TextInput,
@@ -45,18 +45,19 @@ export default function RedefinirSenhaScreen() {
 
   const onSubmit = async (dados: ResetPasswordFormData) => {
     if (!token) {
-      alert('Token de recuperação inválido ou expirado.');
+      Alert.alert('Link Expirado', 'Token de recuperação inválido ou expirado. Por favor, solicite a recuperação de senha novamente.');
       return;
     }
 
     setIsLoading(true);
     try {
       await authService.resetPassword(dados, token);
-      alert('Senha redefinida com sucesso!');
-      router.replace('/(autenticacao)/login');
+      Alert.alert('Sucesso!', 'Senha redefinida com sucesso. Você já pode realizar o login com sua nova senha.', [
+        { text: 'OK', onPress: () => router.replace('/(autenticacao)/login') }
+      ]);
     } catch (error: any) {
       const message = getErrorMessage(error, 'Erro ao redefinir senha. Tente novamente.');
-      alert(message);
+      Alert.alert('Erro ao Redefinir Senha', message);
     } finally {
       setIsLoading(false);
     }

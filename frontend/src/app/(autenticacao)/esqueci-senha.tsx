@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TouchableOpacity, Modal } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Modal, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   TextInput,
@@ -48,7 +48,7 @@ export default function EsqueciSenhaScreen() {
       setVisivel(true);
     } catch (error: any) {
       const message = getErrorMessage(error, 'Erro ao solicitar recuperação. Tente novamente.');
-      alert(message);
+      Alert.alert('Recuperação de Senha', message);
     } finally {
       setIsLoading(false);
     }
