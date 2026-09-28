@@ -9,13 +9,17 @@ os.environ.setdefault(
 )
 
 from fastapi import FastAPI
+from jose import JWTError
 
 from src.modulos.usuarios.interface.http.usuario_routes import (
     get_hasher,
     get_repository,
     router,
 )
-from src.shared.auth.dependencies import verify_any_user
+from src.shared.auth import dependencies as auth_dependencies
+from src.shared.auth.dependencies import get_current_user
+from src.shared.enums.cargo_enum import CargoEnum
+from src.shared.security.lgpd_encryption import hash_email
 from src.shared.validators.telefone_validator import TelefoneValidator
 
 
@@ -25,15 +29,38 @@ class FakeEditRepository:
             id=1,
             nome_completo="Maria da Silva",
             email="atual@example.com",
+            email_hash=hash_email("atual@example.com"),
             telefone="85999990000",
             senha="hash-da-senha",
         )
-        self.aluno = SimpleNamespace(aluno_id=1, bairro_id="Centro")
+        self.aluno = SimpleNamespace(
+            aluno_id=1,
+            status_cadastro="ativado",
+            faculdade_id="faculdade-1",
+            bairro_id="Centro",
+            curso="Direito",
+            semestre_atual=3,
+            periodo_ingresso="2024.1",
+            turno_curso="Noturno",
+            data_nascimento=2000,
+            identificacao_genero="Prefiro não dizer",
+            transgenero="Prefiro não dizer",
+            raca="Prefiro não dizer",
+            identificacao_sexual="Prefiro não dizer",
+            tem_filhos=False,
+            id_foto_aluno=None,
+            validade_acesso=None,
+            motivo_reprovacao=None,
+            id_comprovante_matricula="matricula-1",
+            id_comprovante_residencia="residencia-1",
+        )
         self.email_ocupado = "ocupado@example.com"
         self.update_calls = []
         self.email_update_calls = []
+        self.profile_calls = []
         self.commit_count = 0
         self.internal_error = None
+        self.profile_not_found = False
 
     def _raise_internal_error(self):
         if self.internal_error:
@@ -41,6 +68,9 @@ class FakeEditRepository:
 
     def buscar_com_detalhes_por_id(self, user_id):
         self._raise_internal_error()
+        self.profile_calls.append(user_id)
+        if self.profile_not_found:
+            return None, None
         if user_id != self.usuario.id:
             return None, None
         return self.usuario, self.aluno
@@ -67,6 +97,7 @@ class FakeEditRepository:
         self._raise_internal_error()
         self.email_update_calls.append({"user_id": user_id, "email": novo_email})
         self.usuario.email = novo_email
+        self.usuario.email_hash = hash_email(novo_email)
         self.commit_count += 1
         return self.usuario
 
@@ -76,6 +107,11 @@ class FakeHasher:
         return senha == "Senha123" and senha_hash == "hash-da-senha"
 
 
+class InvalidTokenService:
+    def decode(self, token):
+        raise JWTError("token inválido")
+
+
 class EdicaoPerfilValidacoesTest(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.app = FastAPI()
@@ -83,12 +119,28 @@ class EdicaoPerfilValidacoesTest(unittest.IsolatedAsyncioTestCase):
         self.repository = FakeEditRepository()
         self.app.dependency_overrides[get_repository] = lambda: self.repository
         self.app.dependency_overrides[get_hasher] = FakeHasher
-        self.app.dependency_overrides[verify_any_user] = lambda: {"sub": "1"}
+        self.app.dependency_overrides[get_current_user] = lambda: {
+            "sub": "1",
+            "type": "access",
+            "role": CargoEnum.ALUNO.value,
+            "current_role": CargoEnum.ALUNO.value,
+            "current_user_id": 1,
+        }
 
-    async def asgi_request(self, path, payload, method="PATCH"):
-        raw_body = json.dumps(payload).encode("utf-8")
+    def tearDown(self):
+        self.app.dependency_overrides.clear()
+
+    async def asgi_request(self, path, payload=None, method="PATCH", headers=None):
+        raw_body = json.dumps(payload or {}).encode("utf-8")
         messages = []
         received = False
+
+        request_headers = [
+            (b"content-type", b"application/json"),
+            (b"content-length", str(len(raw_body)).encode("ascii")),
+        ]
+        for name, value in (headers or {}).items():
+            request_headers.append((name.lower().encode("ascii"), value.encode("ascii")))
 
         async def receive():
             nonlocal received
@@ -109,10 +161,7 @@ class EdicaoPerfilValidacoesTest(unittest.IsolatedAsyncioTestCase):
             "path": path,
             "raw_path": path.encode("utf-8"),
             "query_string": b"",
-            "headers": [
-                (b"content-type", b"application/json"),
-                (b"content-length", str(len(raw_body)).encode("ascii")),
-            ],
+            "headers": request_headers,
             "client": ("testclient", 50000),
             "server": ("testserver", 80),
             "root_path": "",
@@ -135,6 +184,73 @@ class EdicaoPerfilValidacoesTest(unittest.IsolatedAsyncioTestCase):
         test_case.assertEqual(body["error"]["code"], code)
         test_case.assertIsInstance(body["error"]["message"], str)
         test_case.assertTrue(body["error"]["message"])
+
+    async def test_get_me_retorna_o_proprio_perfil_sem_dados_sensiveis(self):
+        status, body = await self.asgi_request("/usuarios/me", {}, method="GET")
+
+        self.assertEqual(status, 200)
+        self.assertEqual(body["id"], 1)
+        self.assertEqual(body["email"], "atual@example.com")
+        self.assertEqual(body["bairro_id"], "Centro")
+        self.assertEqual(self.repository.profile_calls, [1])
+        for campo in ("senha", "senha_hash", "password", "email_hash", "token", "token_acesso"):
+            self.assertNotIn(campo, body)
+
+    async def test_get_me_sem_autenticacao_retorna_401_padronizado(self):
+        self.app.dependency_overrides.pop(get_current_user, None)
+
+        status, body = await self.asgi_request("/usuarios/me", {}, method="GET")
+
+        self.assertEqual(status, 401)
+        self.assert_error_response(self, body, "UNAUTHORIZED")
+
+    async def test_get_me_token_invalido_retorna_401_padronizado(self):
+        self.app.dependency_overrides.pop(get_current_user, None)
+        self.app.dependency_overrides[auth_dependencies.get_jwt_service] = (
+            lambda: InvalidTokenService()
+        )
+
+        status, body = await self.asgi_request(
+            "/usuarios/me",
+            {},
+            method="GET",
+            headers={"Authorization": "Bearer token-invalido"},
+        )
+
+        self.assertEqual(status, 401)
+        self.assert_error_response(self, body, "UNAUTHORIZED")
+
+    async def test_get_me_role_incorreta_retorna_403_padronizado(self):
+        self.app.dependency_overrides[get_current_user] = lambda: {
+            "sub": "1",
+            "type": "access",
+            "role": CargoEnum.ADMINISTRADOR.value,
+            "current_role": CargoEnum.ADMINISTRADOR.value,
+            "current_user_id": 1,
+        }
+
+        status, body = await self.asgi_request("/usuarios/me", {}, method="GET")
+
+        self.assertEqual(status, 403)
+        self.assert_error_response(self, body, "FORBIDDEN")
+
+    async def test_get_me_usuario_nao_encontrado_retorna_404_padronizado(self):
+        self.repository.profile_not_found = True
+
+        status, body = await self.asgi_request("/usuarios/me", {}, method="GET")
+
+        self.assertEqual(status, 404)
+        self.assert_error_response(self, body, "RESOURCE_NOT_FOUND")
+
+    async def test_get_me_erro_interno_retorna_500_sem_detalhes_tecnicos(self):
+        detalhe_interno = "SQL secret_table constraint senha=segredo"
+        self.repository.internal_error = RuntimeError(detalhe_interno)
+
+        status, body = await self.asgi_request("/usuarios/me", {}, method="GET")
+
+        self.assertEqual(status, 500)
+        self.assert_error_response(self, body, "INTERNAL_ERROR")
+        self.assertNotIn(detalhe_interno, json.dumps(body))
 
     def test_telefone_validator_aceita_formatos_mascarado_e_numerico(self):
         validator = TelefoneValidator()
@@ -185,6 +301,7 @@ class EdicaoPerfilValidacoesTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(status, 200)
         self.assertEqual(body["bairro_id"], "Aldeota")
         self.assertEqual(body["telefone"], "85999990000")
+        self.assertEqual(self.repository.update_calls[0]["user_id"], 1)
         self.assertEqual(self.repository.update_calls[0]["telefone"], None)
         self.assertEqual(self.repository.update_calls[0]["bairro_id"], "Aldeota")
 
@@ -209,6 +326,7 @@ class EdicaoPerfilValidacoesTest(unittest.IsolatedAsyncioTestCase):
             ("status_cadastro", "ativado"),
             ("nome", "Outro Nome"),
             ("curso", "Outro Curso"),
+            ("user_id", 2),
         ):
             with self.subTest(campo=campo):
                 status, body = await self.asgi_request("/usuarios/me", {campo: valor})
@@ -227,6 +345,10 @@ class EdicaoPerfilValidacoesTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(status, 200)
         self.assertEqual(body["email"], "novo@example.com")
         self.assertEqual(self.repository.email_update_calls[0]["email"], "novo@example.com")
+        self.assertEqual(
+            self.repository.usuario.email_hash,
+            hash_email("novo@example.com"),
+        )
 
     async def test_email_com_formato_invalido_retorna_envelope_padronizado(self):
         status, body = await self.asgi_request(

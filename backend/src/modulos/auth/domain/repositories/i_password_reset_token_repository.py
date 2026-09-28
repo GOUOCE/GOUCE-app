@@ -13,9 +13,13 @@ class IPasswordResetTokenRepository(ABC):
         pass
 
     @abstractmethod
+    def find_by_hash_for_update(self, token_hash: str):
+        pass
+
+    @abstractmethod
     def deactivate_active_tokens_for_user(self, usuario_id: int) -> None:
         pass
 
     @abstractmethod
-    def mark_as_used(self, token_id: int, used_at: Optional[datetime] = None) -> None:
-        pass
+    def mark_as_used(self, token_id: int, used_at: Optional[datetime] = None) -> bool:
+        pass
