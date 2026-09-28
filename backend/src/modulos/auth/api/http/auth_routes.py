@@ -210,7 +210,7 @@ async def redirect_to_app(token: str):
     Rota 'ponte' para abrir o aplicativo móvel a partir do link do e-mail.
     """
     # Usando o IP atual do seu computador para garantir o Expo Go
-    expo_link = f"exp://192.168.0.12:8081/--/redefinir-senha?token={token}"
+    expo_link = f"exp://192.168.0.3:8081/--/redefinir-senha?token={token}"
     custom_scheme_link = f"gouoce-app://redefinir-senha?token={token}"
 
     content = f"""

@@ -1,23 +1,41 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text, Surface, Avatar, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, WifiOff } from 'lucide-react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { useAuth } from '@contexts/AuthContext';
 import { PrefeituraLogo } from '@/components/ui/Logos';
+import { api } from '../../api/api';
 
 export default function CarteirinhaDigitalScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
+
+  const baseUrl = api.defaults.baseURL || process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
+  const fotoUri = user?.foto_perfil
+    ? (user.foto_perfil.startsWith('http')
+        ? user.foto_perfil
+        : `${baseUrl}/arquivos/${user.foto_perfil}/view?token=${token || ''}`)
+    : null;
+
+  const imageSource = fotoUri
+    ? {
+        uri: fotoUri,
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          'ngrok-skip-browser-warning': 'true',
+        },
+      }
+    : { uri: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=200&auto=format&fit=crop' };
 
   // Dados mockados para a carteirinha
   const dadosCarteirinha = {
-    instituicao: 'UFC - Campus Quixadá',
-    curso: 'Engenharia de Software',
-    ingresso: '2024.1',
-    emissao: '16/09/2026',
+    instituicao: user?.faculdade || 'UFC - Campus Quixadá',
+    curso: user?.curso || 'Engenharia de Software',
+    ingresso: user?.periodo_ingresso || '2024.1',
+    emissao: new Date().toLocaleDateString('pt-BR'),
     qrcode: JSON.stringify({ id: user?.id, email: user?.email, exp: '2026-12-31' })
   };
 
@@ -41,15 +59,15 @@ export default function CarteirinhaDigitalScreen() {
           <View style={styles.cardHeader}>
             <Avatar.Image
               size={100}
-              source={{ uri: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=200&auto=format&fit=crop' }}
+              source={imageSource}
             />
             <View style={styles.userMainInfo}>
-              <Text variant="titleLarge" style={styles.userName}>{user?.name || 'João Neves'}</Text>
+              <Text variant="titleLarge" style={styles.userName}>{user?.name || 'Aluno'}</Text>
               <Text variant="bodySmall" style={styles.courseInfo}>{dadosCarteirinha.instituicao}</Text>
               <Text variant="bodySmall" style={styles.courseInfo}>
                 {dadosCarteirinha.curso} - {dadosCarteirinha.ingresso}
               </Text>
-              <Text variant="bodySmall" style={styles.emailInfo}>{user?.email || 'joao@email.com'}</Text>
+              <Text variant="bodySmall" style={styles.emailInfo}>{user?.email || 'email@exemplo.com'}</Text>
             </View>
           </View>
 
@@ -155,10 +173,6 @@ const styles = StyleSheet.create({
   },
   emissionDate: {
     color: '#999',
-  },
-  logoPrefeitura: {
-    width: 120,
-    height: 40,
   },
   offlineBadge: {
     marginTop: 32,

@@ -20,7 +20,7 @@ function buildFilePart(file: any, defaultName: string, defaultType: string) {
   if (!file) return null;
 
   // Trata caso onde file seja um array ou contenha 'assets'
-  const target = Array.isArray(file) ? file[0] : (file.assets && file.assets[0]) ? file.assets[0] : file;
+  const target = Array.isArray(file) ? file[0] : (file && file.assets && file.assets[0]) ? file.assets[0] : file;
 
   if (!target) return null;
 
@@ -54,7 +54,7 @@ export const userService = {
     formData.append('data_nascimento', String(formatarDataParaISO(data.dataNascimento)));
     formData.append('telefone', String(data.whatsapp || ''));
 
-    // Perfil Demográfico (Alinhados com o backend)
+    // Perfil Demográfico
     formData.append('raca', String(data.raca || ''));
     formData.append('identificacao_sexual', String(data.identificacaoSexual || ''));
     formData.append('identificacao_genero', String(data.genero || ''));
@@ -98,41 +98,51 @@ export const userService = {
 
     formData.append('termos_de_uso', String(Boolean(data.aceitouTermos)));
 
-    const endpoint = (api.defaults.baseURL || 'http://localhost:8000') + '/usuarios/cadastrar';
-    console.log('[DEBUG] Enviando cadastro via fetch para:', endpoint);
+    console.log('[DEBUG] FormData partes:', JSON.stringify((formData as any)._parts, null, 2));
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      body: formData,
-    });
-
-    const resultText = await response.text();
-    let jsonResult: any;
     try {
-      jsonResult = JSON.parse(resultText);
-    } catch {
-      jsonResult = { message: resultText };
+      console.log('[DEBUG] Enviando via api.postForm...');
+      const response = await api.postForm<CadastroResponse>('/usuarios/cadastrar', formData, {
+        timeout: 25000,
+      });
+      return response.data;
+    } catch (apiError: any) {
+      console.warn('[DEBUG] api.postForm falhou, tentando fallback via fetch nativo...', apiError?.message);
+
+      const endpoint = (api.defaults.baseURL || 'http://localhost:8000') + '/usuarios/cadastrar';
+      const fetchResponse = await fetch(endpoint, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const resultText = await fetchResponse.text();
+      let jsonResult: any;
+      try {
+        jsonResult = JSON.parse(resultText);
+      } catch {
+        jsonResult = { message: resultText };
+      }
+
+      if (!fetchResponse.ok) {
+        const errorMsg =
+          jsonResult?.error?.message ||
+          (jsonResult?.error?.details && Array.isArray(jsonResult.error.details)
+            ? jsonResult.error.details.map((d: any) => (typeof d === 'string' ? d : d.message || JSON.stringify(d))).join('\n')
+            : null) ||
+          jsonResult?.detail?.erros?.join('\n') ||
+          (typeof jsonResult?.detail === 'string' ? jsonResult.detail : null) ||
+          'Erro ao realizar cadastro.';
+
+        const error: any = new Error(errorMsg);
+        error.response = {
+          status: fetchResponse.status,
+          data: jsonResult,
+        };
+        throw error;
+      }
+
+      return jsonResult as CadastroResponse;
     }
-
-    if (!response.ok) {
-      const errorMsg =
-        jsonResult?.error?.message ||
-        (jsonResult?.error?.details && Array.isArray(jsonResult.error.details)
-          ? jsonResult.error.details.map((d: any) => (typeof d === 'string' ? d : d.message || JSON.stringify(d))).join('\n')
-          : null) ||
-        jsonResult?.detail?.erros?.join('\n') ||
-        (typeof jsonResult?.detail === 'string' ? jsonResult.detail : null) ||
-        'Erro ao realizar cadastro.';
-
-      const error: any = new Error(errorMsg);
-      error.response = {
-        status: response.status,
-        data: jsonResult,
-      };
-      throw error;
-    }
-
-    return jsonResult as CadastroResponse;
   },
 
   async verificarEmail(email: string): Promise<boolean> {
