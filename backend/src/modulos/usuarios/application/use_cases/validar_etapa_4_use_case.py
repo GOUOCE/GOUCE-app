@@ -8,13 +8,13 @@ from src.modulos.usuarios.application.use_cases.criar_usuario_use_case import Va
 def validar_regras_arquivo(nome_original: str, content_type: str, conteudo_bytes: bytes) -> str | None:
     MIME_TYPES_PERMITIDOS = {"application/pdf", "image/jpeg", "image/jpg", "image/png", "image/webp"}
     if not conteudo_bytes:
-        return "O arquivo enviado está vazio"
-    if len(conteudo_bytes) > 10 * 1024 * 1024:
-        return "O arquivo excede o tamanho máximo permitido de 10MB"
+        return "Arquivo obrigatório"
+    if len(conteudo_bytes) > 5 * 1024 * 1024:
+        return "Arquivo excede o limite de tamanho"
     ct = (content_type or "application/octet-stream").lower().strip()
     extensao = nome_original.split(".")[-1].lower() if "." in nome_original else ""
     if ct not in MIME_TYPES_PERMITIDOS and extensao not in ["pdf", "png", "jpg", "jpeg", "webp"]:
-        return "Formato de arquivo inválido. Apenas PDF e Imagens (PNG, JPG, JPEG, WEBP) são permitidos."
+        return "Formato inválido"
     return None
 
 class ValidarEtapa4UsuarioUseCase:
