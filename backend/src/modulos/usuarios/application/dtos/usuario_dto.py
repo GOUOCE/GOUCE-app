@@ -173,6 +173,8 @@ class PerfilAlunoResponseDTO(BaseModel):
     motivo_reprovacao: str | None = None
     id_comprovante_matricula: str | None = None
     id_comprovante_residencia: str | None = None
+    nome_comprovante_matricula: str | None = None
+    nome_comprovante_residencia: str | None = None
 
 
 class RedefinirEmailDTO(BaseModel):

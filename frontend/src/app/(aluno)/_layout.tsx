@@ -78,6 +78,12 @@ export default function StudentLayout() {
         }}
       />
       <Tabs.Screen
+        name="alterar-email"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
         name="carteirinha-digital"
         options={{
           href: null,

@@ -1,5 +1,6 @@
 import { api } from '../api/api';
 import { AlunoFormData } from '@/schemas/alunoSchema';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface CadastroResponse {
   success: true;
@@ -27,6 +28,18 @@ function buildFilePart(file: any, defaultName: string, defaultType: string) {
   const uri = typeof target === 'string' ? target : target.uri;
   if (!uri || typeof uri !== 'string') return null;
 
+  // Se o URI for um marcador como 'existente' ou não tiver prefixo de arquivo válido
+  if (
+    uri === 'existente' ||
+    (!uri.startsWith('file:') &&
+     !uri.startsWith('content:') &&
+     !uri.startsWith('http:') &&
+     !uri.startsWith('https:') &&
+     !uri.startsWith('data:'))
+  ) {
+    return null;
+  }
+
   const name = (typeof target === 'object' && target.name) ? target.name : defaultName;
   const type = (typeof target === 'object' && (target.mimeType || target.type)) ? (target.mimeType || target.type) : defaultType;
 
@@ -35,6 +48,75 @@ function buildFilePart(file: any, defaultName: string, defaultType: string) {
     name,
     type,
   };
+}
+
+/**
+ * Envia um objeto FormData utilizando a ponte nativa XMLHttpRequest do React Native.
+ * Bypassa a limitação do polyfill 'fetch' do Expo (winter/fetch) que lança 'Unsupported FormDataPart implementation' para objetos { uri, name, type }.
+ */
+function sendFormDataViaXHR(url: string, method: 'POST' | 'PUT', formData: FormData, token?: string): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url);
+
+    if (token) {
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    }
+
+    xhr.onload = () => {
+      let responseData: any;
+      try {
+        responseData = JSON.parse(xhr.responseText);
+      } catch {
+        responseData = { message: xhr.responseText };
+      }
+
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(responseData);
+      } else {
+        let errorMsg =
+          responseData?.error?.message ||
+          (responseData?.error?.details && Array.isArray(responseData.error.details)
+            ? responseData.error.details.map((d: any) => (typeof d === 'string' ? d : d.message || JSON.stringify(d))).join('\n')
+            : null) ||
+          responseData?.detail?.erros?.join('\n');
+
+        if (!errorMsg && Array.isArray(responseData?.detail)) {
+          errorMsg = responseData.detail
+            .map((err: any) => {
+              const field = Array.isArray(err.loc) ? err.loc.slice(-1)[0] : '';
+              return field ? `${field}: ${err.msg}` : err.msg || JSON.stringify(err);
+            })
+            .join('\n');
+        }
+
+        if (!errorMsg && typeof responseData?.detail === 'string') {
+          errorMsg = responseData.detail;
+        }
+
+        if (!errorMsg) {
+          errorMsg = 'Dados de cadastro inválidos ou incompletos. Verifique os campos.';
+        }
+
+        const error: any = new Error(errorMsg);
+        error.response = { status: xhr.status, data: responseData };
+        reject(error);
+      }
+    };
+
+    xhr.onerror = () => {
+      const error: any = new Error('Erro de conexão com o servidor. Verifique sua internet.');
+      reject(error);
+    };
+
+    xhr.ontimeout = () => {
+      const error: any = new Error('Tempo limite da requisição excedido.');
+      reject(error);
+    };
+
+    xhr.timeout = 30000;
+    xhr.send(formData);
+  });
 }
 
 export const userService = {
@@ -64,6 +146,7 @@ export const userService = {
     formData.append('bairro_id', String(data.bairro || ''));
     formData.append('faculdade_id', String(data.instituicao || ''));
     formData.append('curso', String(data.curso || ''));
+    formData.append('campus', String(data.campus || 'Quixadá'));
 
     const semestre = String(data.semestreAtual || '').replace(/[^0-9]/g, '');
     if (semestre) {
@@ -98,51 +181,64 @@ export const userService = {
 
     formData.append('termos_de_uso', String(Boolean(data.aceitouTermos)));
 
-    console.log('[DEBUG] FormData partes:', JSON.stringify((formData as any)._parts, null, 2));
+    const endpoint = (api.defaults.baseURL || 'http://localhost:8000') + '/usuarios/cadastrar';
+    console.log('[DEBUG] Enviando cadastro via XMLHttpRequest para:', endpoint);
 
-    try {
-      console.log('[DEBUG] Enviando via api.postForm...');
-      const response = await api.postForm<CadastroResponse>('/usuarios/cadastrar', formData, {
-        timeout: 25000,
-      });
-      return response.data;
-    } catch (apiError: any) {
-      console.warn('[DEBUG] api.postForm falhou, tentando fallback via fetch nativo...', apiError?.message);
+    return await sendFormDataViaXHR(endpoint, 'POST', formData);
+  },
 
-      const endpoint = (api.defaults.baseURL || 'http://localhost:8000') + '/usuarios/cadastrar';
-      const fetchResponse = await fetch(endpoint, {
-        method: 'POST',
-        body: formData,
-      });
+  async renovarVinculo(data: AlunoFormData): Promise<any> {
+    const formData = new FormData();
 
-      const resultText = await fetchResponse.text();
-      let jsonResult: any;
-      try {
-        jsonResult = JSON.parse(resultText);
-      } catch {
-        jsonResult = { message: resultText };
-      }
+    formData.append('nome', String(data.nomeCompleto || ''));
+    formData.append('raca', String(data.raca || ''));
+    formData.append('identificacao_sexual', String(data.identificacaoSexual || ''));
+    formData.append('identificacao_genero', String(data.genero || ''));
+    formData.append('transgenero', String(data.transgenero || ''));
+    formData.append('tem_filhos', String(Boolean(data.temFilhos)));
 
-      if (!fetchResponse.ok) {
-        const errorMsg =
-          jsonResult?.error?.message ||
-          (jsonResult?.error?.details && Array.isArray(jsonResult.error.details)
-            ? jsonResult.error.details.map((d: any) => (typeof d === 'string' ? d : d.message || JSON.stringify(d))).join('\n')
-            : null) ||
-          jsonResult?.detail?.erros?.join('\n') ||
-          (typeof jsonResult?.detail === 'string' ? jsonResult.detail : null) ||
-          'Erro ao realizar cadastro.';
+    formData.append('telefone', String(data.whatsapp || ''));
+    formData.append('bairro_id', String(data.bairro || ''));
+    formData.append('faculdade_id', String(data.instituicao || ''));
+    formData.append('curso', String(data.curso || ''));
+    formData.append('campus', String(data.campus || 'Quixadá'));
 
-        const error: any = new Error(errorMsg);
-        error.response = {
-          status: fetchResponse.status,
-          data: jsonResult,
-        };
-        throw error;
-      }
-
-      return jsonResult as CadastroResponse;
+    let periodoIngresso = String(data.periodoIngresso || '');
+    if (periodoIngresso === 'Anterior') {
+      const anoAnterior = new Date().getFullYear() - 4;
+      periodoIngresso = `${anoAnterior}.1`;
     }
+    formData.append('periodo_ingresso', periodoIngresso);
+
+    formData.append('turno_curso', String(data.turno || ''));
+
+    const semestre = String(data.semestreAtual || '').replace(/[^0-9]/g, '');
+    formData.append('semestre_atual', semestre || '1');
+
+    // Documentação
+    const matPart = buildFilePart(data.comprovanteMatricula, 'comprovante_matricula.pdf', 'application/pdf');
+    if (matPart) {
+      formData.append('comprovante_matricula', matPart as any);
+    }
+
+    const resPart = buildFilePart(data.comprovanteResidencia, 'comprovante_residencia.pdf', 'application/pdf');
+    if (resPart) {
+      formData.append('comprovante_residencia', resPart as any);
+    } else {
+      // Se não enviou novo comprovante de residência na renovação, passa string vazia para o FastAPI manter o atual sem estourar erro de URI no React Native
+      formData.append('comprovante_residencia', '');
+    }
+
+    const fotoPart = buildFilePart(data.fotoPerfil, 'foto_perfil.jpg', 'image/jpeg');
+    if (fotoPart) {
+      formData.append('foto_perfil', fotoPart as any);
+    }
+
+    const endpoint = (api.defaults.baseURL || 'http://localhost:8000') + '/alunos/renovar-vinculo';
+    const token = await AsyncStorage.getItem('@GOUOCE:token');
+
+    console.log('[DEBUG] Enviando renovação via XMLHttpRequest para:', endpoint);
+    return await sendFormDataViaXHR(endpoint, 'PUT', formData, token || undefined);
   },
 
   async verificarEmail(email: string): Promise<boolean> {
