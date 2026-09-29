@@ -51,3 +51,47 @@ export const alunoSchema = z.object({
 });
 
 export type AlunoFormData = z.infer<typeof alunoSchema>;
+
+// Esquema específico para Renovação de Vínculo (sem campos de senha)
+export const renovacaoSchema = z.object({
+  // Passo 1: Dados Básicos
+  fotoPerfil: z.string().optional(),
+  nomeCompleto: z.string()
+    .min(3, 'Nome deve ter pelo menos 3 caracteres')
+    .refine(
+      (val) => val.trim().split(/\s+/).length >= 2,
+      'Informe seu nome completo (nome e sobrenome)'
+    )
+    .refine(
+      (val) => /^[a-zA-ZáàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ\s]+$/.test(val.trim()),
+      'O nome deve conter apenas letras e espaços'
+    ),
+  email: z.string().email('E-mail inválido'),
+  dataNascimento: z.string().min(10, 'Data de nascimento inválida (use DD/MM/AAAA)'),
+
+  // Passo 2: Perfil Demográfico
+  raca: z.string().min(1, 'Selecione a raça'),
+  identificacaoSexual: z.string().min(1, 'Selecione a identificação sexual'),
+  genero: z.string().min(1, 'Selecione o gênero'),
+  transgenero: z.string().min(1, 'Selecione se é transgênero'),
+  temFilhos: z.boolean(),
+
+  // Passo 3: Contato e Vínculo
+  bairro: z.string().min(1, 'Selecione o bairro'),
+  whatsapp: z.string().min(10, 'O telefone deve ter pelo menos 10 dígitos com DDD'),
+  instituicao: z.string().min(1, 'Selecione a instituição'),
+  curso: z.string().min(1, 'Selecione o curso'),
+  campus: z.string().min(1, 'Selecione o campus'),
+  periodoIngresso: z.string().min(1, 'Selecione o período de ingresso'),
+  turno: z.string().min(1, 'Selecione o turno'),
+  semestreAtual: z.string().min(1, 'Selecione o semestre atual'),
+
+  // Passo 4: Documentação
+  comprovanteMatricula: z.any().refine((file) => file, 'Obrigatório anexar comprovante de matrícula'),
+  comprovanteResidencia: z.any().optional(),
+
+  // Aceite
+  aceitouTermos: z.boolean().optional(),
+});
+
+export type RenovacaoFormData = z.infer<typeof renovacaoSchema>;

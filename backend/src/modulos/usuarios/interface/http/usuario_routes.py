@@ -565,13 +565,14 @@ async def verificar_email(
 async def obter_meu_perfil(
     current_user: Annotated[dict, Depends(require_roles(CargoEnum.ALUNO.value))],
     repository=Depends(get_repository),
+    arquivo_repository=Depends(get_arquivo_repository),
 ):
     try:
         user_id = current_user.get("current_user_id")
         if not isinstance(user_id, int) or isinstance(user_id, bool):
             raise HTTPException(status_code=401, detail="Sessão inválida")
 
-        use_case = ObterPerfilAlunoUseCase(repository)
+        use_case = ObterPerfilAlunoUseCase(repository, arquivo_repository)
         return use_case.execute(user_id)
     except HTTPException:
         raise

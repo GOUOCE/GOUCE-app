@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, Button, Avatar, Surface, useTheme, Portal, Modal, Divider } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import { LogOut, UserCircle, CreditCard, RefreshCw, ChevronRight, Pencil } from 'lucide-react-native';
+import { LogOut, UserCircle, CreditCard, RefreshCw, ChevronRight, Pencil, Mail, AlertCircle } from 'lucide-react-native';
 import { useAuth } from '@contexts/AuthContext';
 import { userService } from '@services/userService';
 import { api } from '../../api/api';
+import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function PerfilScreen() {
   const theme = useTheme();
@@ -60,6 +61,39 @@ export default function PerfilScreen() {
       }
     : { uri: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=200&auto=format&fit=crop' };
 
+  // Mapeamento dos badges de status
+  const renderStatusBadge = () => {
+    const status = (user?.status || '').toLowerCase();
+
+    if (status === 'expirado' || status === 'vencido') {
+      return (
+        <Surface style={[styles.statusBadge, { backgroundColor: '#FFEBEE' }]} elevation={0}>
+          <Text style={[styles.statusText, { color: '#B00020' }]}>
+            Vinculo expirado - renovação necessária
+          </Text>
+        </Surface>
+      );
+    }
+
+    if (status === 'analise_renovacao' || status === 'pendente') {
+      return (
+        <Surface style={[styles.statusBadge, { backgroundColor: '#FFF3E0' }]} elevation={0}>
+          <Text style={[styles.statusText, { color: '#E65100' }]}>
+            Pendente: vínculo em análise
+          </Text>
+        </Surface>
+      );
+    }
+
+    return (
+      <Surface style={[styles.statusBadge, { backgroundColor: '#E1F5FE' }]} elevation={0}>
+        <Text style={[styles.statusText, { color: '#0288D1' }]}>
+          Aprovado
+        </Text>
+      </Surface>
+    );
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
@@ -78,10 +112,8 @@ export default function PerfilScreen() {
             size={120}
             source={imageSource}
           />
-          <Text variant="headlineSmall" style={styles.userName}>{user?.name}</Text>
-          <Surface style={styles.statusBadge} elevation={0}>
-            <Text style={styles.statusText}>{user?.status || 'Aprovado'}</Text>
-          </Surface>
+          <Text variant="headlineSmall" style={styles.userName}>{user?.name || 'João Neves'}</Text>
+          {renderStatusBadge()}
         </View>
 
         {/* Informações Gerais */}
@@ -90,27 +122,27 @@ export default function PerfilScreen() {
           <View style={styles.infoGrid}>
             <View style={styles.infoItem}>
               <Text variant="labelSmall" style={styles.infoLabel}>E-mail</Text>
-              <Text variant="bodyMedium" style={styles.infoValue}>{user?.email}</Text>
+              <Text variant="bodyMedium" style={styles.infoValue}>{user?.email || 'joao@email.com'}</Text>
             </View>
             <View style={styles.infoItem}>
               <Text variant="labelSmall" style={styles.infoLabel}>Telefone (WhatsApp)</Text>
-              <Text variant="bodyMedium" style={styles.infoValue}>{user?.telefone || 'Não informado'}</Text>
+              <Text variant="bodyMedium" style={styles.infoValue}>{user?.telefone || '(88) 9 9999-9999'}</Text>
             </View>
             <View style={styles.infoItem}>
               <Text variant="labelSmall" style={styles.infoLabel}>Instituição - Campus</Text>
-              <Text variant="bodyMedium" style={styles.infoValue}>{user?.faculdade || 'Não informado'}</Text>
+              <Text variant="bodyMedium" style={styles.infoValue}>{user?.faculdade || 'UFC - Campus Quixadá'}</Text>
             </View>
             <View style={styles.infoItem}>
               <Text variant="labelSmall" style={styles.infoLabel}>Curso</Text>
-              <Text variant="bodyMedium" style={styles.infoValue}>{user?.curso || 'Não informado'}</Text>
+              <Text variant="bodyMedium" style={styles.infoValue}>{user?.curso || 'Engenharia de Software'}</Text>
             </View>
             <View style={styles.infoItem}>
               <Text variant="labelSmall" style={styles.infoLabel}>Período de Ingresso</Text>
-              <Text variant="bodyMedium" style={styles.infoValue}>{user?.periodo_ingresso || 'Não informado'}</Text>
+              <Text variant="bodyMedium" style={styles.infoValue}>{user?.periodo_ingresso || '2024.1'}</Text>
             </View>
             <View style={styles.infoItem}>
               <Text variant="labelSmall" style={styles.infoLabel}>Turno</Text>
-              <Text variant="bodyMedium" style={styles.infoValue}>{user?.turno || 'Não informado'}</Text>
+              <Text variant="bodyMedium" style={styles.infoValue}>{user?.turno || 'Noturno'}</Text>
             </View>
           </View>
         </View>
@@ -127,6 +159,14 @@ export default function PerfilScreen() {
 
           <Divider style={styles.divider} />
 
+          <TouchableOpacity style={styles.actionItem} onPress={() => router.push('/(aluno)/alterar-email')}>
+            <Mail size={24} color="#333" />
+            <Text variant="bodyLarge" style={styles.actionText}>Alterar endereço de e-mail</Text>
+            <ChevronRight size={20} color="#999" />
+          </TouchableOpacity>
+
+          <Divider style={styles.divider} />
+
           <TouchableOpacity style={styles.actionItem} onPress={() => router.push('/(aluno)/carteirinha-digital')}>
             <CreditCard size={24} color="#333" />
             <Text variant="bodyLarge" style={styles.actionText}>Ver carteirinha digital</Text>
@@ -138,28 +178,26 @@ export default function PerfilScreen() {
           <TouchableOpacity style={styles.actionItem} onPress={() => router.push('/(aluno)/renovar-vinculo')}>
             <RefreshCw size={24} color="#333" />
             <Text variant="bodyLarge" style={styles.actionText}>Renovar vínculo institucional</Text>
+            {user?.status === 'vencido' || user?.status === 'expirado' ? (
+              <AlertCircle size={20} color="#B00020" style={{ marginRight: 4 }} />
+            ) : null}
             <ChevronRight size={20} color="#999" />
           </TouchableOpacity>
         </View>
       </ScrollView>
 
-      {/* Modal Sair */}
-      <Portal>
-        <Modal
-          visible={modalSairVisivel}
-          onDismiss={() => setModalSairVisivel(false)}
-          contentContainerStyle={styles.modalContent}
-        >
-          <Text variant="headlineSmall" style={styles.modalTitle}>Sair do aplicativo?</Text>
-          <Text variant="bodyLarge" style={styles.modalText}>
-            Você precisará fazer login novamente para agendar transportes.
-          </Text>
-          <View style={styles.modalButtons}>
-            <Button mode="text" onPress={() => setModalSairVisivel(false)}>Continuar</Button>
-            <Button mode="text" onPress={handleSignOut} labelStyle={{ color: '#904a45' }}>Sair</Button>
-          </View>
-        </Modal>
-      </Portal>
+      {/* Modal Sair do Aplicativo */}
+      <AppPopup
+        visible={modalSairVisivel}
+        type="warning"
+        title="Sair do aplicativo?"
+        message="Você precisará fazer login novamente para agendar transportes."
+        confirmText="Sim, sair"
+        cancelText="Continuar"
+        confirmColor="#904a45"
+        onConfirm={handleSignOut}
+        onDismiss={() => setModalSairVisivel(false)}
+      />
     </View>
   );
 }
@@ -204,18 +242,16 @@ const styles = StyleSheet.create({
   statusBadge: {
     marginTop: 8,
     paddingHorizontal: 16,
-    paddingVertical: 4,
+    paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: '#E1F5FE',
   },
   statusText: {
-    color: '#0288D1',
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: 13,
   },
   section: {
     paddingHorizontal: 24,
-    marginTop: 32,
+    marginTop: 24,
   },
   sectionTitle: {
     marginBottom: 16,
@@ -252,25 +288,4 @@ const styles = StyleSheet.create({
   divider: {
     backgroundColor: '#E0E2EC',
   },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 24,
-    margin: 24,
-    gap: 16,
-  },
-  modalTitle: {
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  modalText: {
-    color: '#666',
-    lineHeight: 24,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 16,
-    marginTop: 16,
-  }
 });

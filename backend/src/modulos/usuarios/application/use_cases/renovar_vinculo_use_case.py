@@ -93,10 +93,17 @@ class RenovarVinculoUseCase:
             except ValidacaoMultiplaError as error:
                 erros.extend(error.erros)
 
-        try:
-            self.validar_etapa_4.execute(arquivo_matricula, arquivo_residencia)
-        except ValidacaoMultiplaError as error:
-            erros.extend(error.erros)
+        if not arquivo_matricula:
+            erros.append({"field": "comprovante_matricula", "message": "Comprovante de matrícula é obrigatório"})
+        else:
+            erro_mat = validar_regras_arquivo(arquivo_matricula[0], arquivo_matricula[1], arquivo_matricula[2])
+            if erro_mat:
+                erros.append({"field": "comprovante_matricula", "message": erro_mat})
+
+        if arquivo_residencia:
+            erro_res = validar_regras_arquivo(arquivo_residencia[0], arquivo_residencia[1], arquivo_residencia[2])
+            if erro_res:
+                erros.append({"field": "comprovante_residencia", "message": erro_res})
 
         if erros:
             raise ValidacaoMultiplaError(erros)
@@ -104,20 +111,26 @@ class RenovarVinculoUseCase:
         matricula = self.salvar_arquivo_use_case.execute(
             arquivo_matricula[2], arquivo_matricula[0], arquivo_matricula[1]
         )
-        residencia = self.salvar_arquivo_use_case.execute(
-            arquivo_residencia[2], arquivo_residencia[0], arquivo_residencia[1]
-        )
+
+        residencia_id = aluno.id_comprovante_residencia
+        if arquivo_residencia:
+            residencia = self.salvar_arquivo_use_case.execute(
+                arquivo_residencia[2], arquivo_residencia[0], arquivo_residencia[1]
+            )
+            residencia_id = residencia.id
+
         foto_id = None
         if arquivo_foto:
             foto = self.salvar_arquivo_use_case.execute(
                 arquivo_foto[2], arquivo_foto[0], arquivo_foto[1]
             )
             foto_id = foto.id
+
         atualizado = self.repository.atualizar_dados_renovacao(
             aluno_id=aluno_id,
             dados=dto,
             id_comprovante_matricula=matricula.id,
-            id_comprovante_residencia=residencia.id,
+            id_comprovante_residencia=residencia_id,
             id_foto_aluno=foto_id,
             novo_status=StatusCadastroEnum.ANALISE_RENOVACAO.value,
         )

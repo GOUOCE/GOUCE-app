@@ -34,12 +34,22 @@ export function getErrorMessage(error: any, defaultMessage: string = 'Erro ao pr
       .join('\n');
   }
 
-  // 3. Caso { detail: "..." } - Padrão FastAPI
+  // 3. Caso FastAPI 422 { detail: [ { loc: [...], msg: "..." } ] }
+  if (Array.isArray(data?.detail)) {
+    return data.detail
+      .map((err: any) => {
+        const field = Array.isArray(err.loc) ? err.loc.slice(-1)[0] : '';
+        return field ? `${field}: ${err.msg}` : err.msg || JSON.stringify(err);
+      })
+      .join('\n');
+  }
+
+  // 4. Caso { detail: "..." } - Padrão FastAPI
   if (data?.detail && typeof data.detail === 'string') {
     return data.detail;
   }
 
-  // 4. Caso { error: { message: "..." } }
+  // 5. Caso { error: { message: "..." } }
   if (data?.error?.message) {
     return data.error.message;
   }
