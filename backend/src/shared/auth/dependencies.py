@@ -109,6 +109,7 @@ async def get_current_user(
     usuario_validado = dict(payload)
     usuario_validado["current_role"] = perfil_atual
     usuario_validado["current_user_id"] = user_id
+    usuario_validado["current_status"] = contexto.get("status")
     return usuario_validado
 
 
@@ -156,3 +157,12 @@ def require_roles(*roles: str):
         return current_user
 
     return dependency
+
+
+async def verify_active_student(
+    current_user: Annotated[dict, Depends(require_roles("aluno"))],
+) -> dict:
+    """Restringe uma operacao ao aluno com acesso liberado."""
+    if current_user.get("current_status") not in {"ativado", "analise_renovacao"}:
+        raise _forbidden()
+    return current_user

@@ -11,3 +11,4 @@ class StatusCadastroEnum(str, Enum):
     ATIVADO = "ativado"
     PENDENTE = "pendente"
     INATIVADO = "inativado"
+    ANALISE_RENOVACAO = "analise_renovacao"

@@ -311,8 +311,8 @@ async def redirect_to_app(token: str):
     Rota 'ponte' para abrir o aplicativo móvel a partir do link do e-mail.
     """
     token_encoded = quote(token, safe="")
-    expo_link = f"exp://192.168.0.3:8081/--/redefinir-senha?token={token}"
-    custom_scheme_link = f"gouoce-app://redefinir-senha?token={token}"
+    expo_link = f"exp://192.168.0.3:8081/--/redefinir-senha?token={token_encoded}"
+    custom_scheme_link = f"gouoce-app://redefinir-senha?token={token_encoded}"
     expo_link_html = escape(expo_link, quote=True)
     custom_scheme_link_html = escape(custom_scheme_link, quote=True)
     expo_link_js = json.dumps(expo_link)

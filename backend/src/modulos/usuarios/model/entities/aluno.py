@@ -19,6 +19,7 @@ class AlunoORM(Base):
     )
     status_cadastro = Column(String(150), nullable=False)
     faculdade_id = Column(String(150), nullable=False)
+    campus = Column(String(150), nullable=True)
     bairro_id = Column(String(20), nullable=True)
     id_comprovante_matricula = Column(String(36), ForeignKey("arquivos.id"), nullable=False)
     id_comprovante_residencia = Column(String(36), ForeignKey("arquivos.id"), nullable=False)

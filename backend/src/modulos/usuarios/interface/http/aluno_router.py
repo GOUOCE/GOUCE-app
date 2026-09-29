@@ -10,9 +10,10 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from src.shared.infrastructure.db import get_session
-from src.shared.auth.dependencies import verify_any_user
+from src.shared.auth.dependencies import require_roles, verify_any_user
 from src.shared.auth.jwt_service import JWTService
 from src.shared.security.argon2_hasher import Argon2PasswordHasher
+from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
 
 from src.modulos.usuarios.application.dtos.usuario_dto import (
@@ -24,6 +25,10 @@ from src.modulos.usuarios.application.dtos.usuario_dto import (
     CadastroSucessoDTO,
     CadastroErrorResponseDTO,
 )
+from src.modulos.usuarios.application.dtos.renovacao_vinculo_dto import (
+    RenovacaoVinculoDTO,
+    RenovacaoVinculoRespostaDTO,
+)
 from src.modulos.usuarios.application.use_cases.criar_usuario_use_case import (
     CadastroValidationError,
     ValidacaoMultiplaError,
@@ -34,6 +39,7 @@ from src.modulos.usuarios.application.use_cases.validar_etapa_1_use_case import 
 from src.modulos.usuarios.application.use_cases.validar_etapa_2_use_case import ValidarEtapa2UsuarioUseCase
 from src.modulos.usuarios.application.use_cases.validar_etapa_3_use_case import ValidarEtapa3UsuarioUseCase
 from src.modulos.usuarios.application.use_cases.validar_etapa_4_use_case import ValidarEtapa4UsuarioUseCase
+from src.modulos.usuarios.application.use_cases.renovar_vinculo_use_case import RenovarVinculoUseCase
 from src.modulos.usuarios.infrastructure.repositories.usuario_repository import (
     SQLAlchemyUsuarioRepository,
     CadastroDuplicadoError,
@@ -268,5 +274,102 @@ async def validar_etapa_4_cadastro_usuario(
         return _error_response(status_code=422, code="BUSINESS_VALIDATION_ERROR", message="Erros de validação encontrados na Etapa 4", details=e.erros)
     except Exception as e:
         logger.exception("Erro ao validar etapa 4")
+        return _internal_error_response()
+
+
+@router.put(
+    "/renovar-vinculo",
+    response_model=RenovacaoVinculoRespostaDTO,
+    status_code=200,
+    responses=CADASTRO_ERROR_RESPONSES,
+    summary="Solicitar renovação de vínculo",
+    description="Atualiza os dados das etapas 2, 3 e 4 do aluno autenticado e envia a renovação para análise.",
+)
+async def renovar_vinculo(
+    nome: str = Form(...),
+    raca: str = Form(...),
+    identificacao_sexual: str = Form(...),
+    identificacao_genero: str = Form(...),
+    transgenero: str = Form(...),
+    tem_filhos: bool = Form(...),
+    telefone: str = Form(...),
+    bairro_id: str = Form(...),
+    faculdade_id: str = Form(...),
+    curso: str = Form(...),
+    campus: str = Form(...),
+    periodo_ingresso: str = Form(...),
+    turno_curso: str = Form(...),
+    semestre_atual: int = Form(...),
+    comprovante_matricula: UploadFile = File(...),
+    comprovante_residencia: UploadFile = File(...),
+    foto_perfil: UploadFile | str | None = File(None),
+    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ALUNO.value))] = None,
+    repository=Depends(get_repository),
+    arquivo_repository=Depends(get_arquivo_repository),
+    storage_service=Depends(get_storage_service),
+):
+    user_id = current_user.get("current_user_id") if current_user else None
+    if not isinstance(user_id, int) or isinstance(user_id, bool):
+        raise HTTPException(status_code=401, detail="Sessão inválida")
+
+    try:
+        dto = RenovacaoVinculoDTO(
+            nome=nome,
+            raca=raca,
+            identificacao_sexual=identificacao_sexual,
+            identificacao_genero=identificacao_genero,
+            transgenero=transgenero,
+            tem_filhos=tem_filhos,
+            telefone=telefone,
+            bairro_id=bairro_id,
+            faculdade_id=faculdade_id,
+            curso=curso,
+            campus=campus,
+            periodo_ingresso=periodo_ingresso,
+            turno_curso=turno_curso,
+            semestre_atual=semestre_atual,
+        )
+        arquivo_mat = (
+            comprovante_matricula.filename or "comprovante_matricula",
+            comprovante_matricula.content_type,
+            await comprovante_matricula.read(),
+        )
+        arquivo_res = (
+            comprovante_residencia.filename or "comprovante_residencia",
+            comprovante_residencia.content_type,
+            await comprovante_residencia.read(),
+        )
+        arquivo_foto = None
+        if foto_perfil and getattr(foto_perfil, "filename", None):
+            arquivo_foto = (
+                foto_perfil.filename,
+                foto_perfil.content_type,
+                await foto_perfil.read(),
+            )
+        salvar_arquivo = SalvarArquivoUseCase(arquivo_repository, storage_service)
+        use_case = RenovarVinculoUseCase(repository, salvar_arquivo)
+        return use_case.execute(user_id, dto, arquivo_mat, arquivo_res, arquivo_foto)
+    except ValidationError as error:
+        return _error_response(
+            status_code=422,
+            code="REQUEST_VALIDATION_ERROR",
+            message="Requisição inválida",
+            details=_validation_details(error.errors()),
+        )
+    except ValidacaoMultiplaError as error:
+        return _error_response(
+            status_code=422,
+            code="BUSINESS_VALIDATION_ERROR",
+            message="Erros de validação encontrados na renovação de vínculo",
+            details=error.erros,
+        )
+    except ValueError as error:
+        if "não encontrado" in str(error).lower():
+            return _error_response(404, "RESOURCE_NOT_FOUND", "Aluno autenticado não encontrado")
+        return _error_response(400, "VALIDATION_ERROR", "Dados inválidos")
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Erro ao processar renovação de vínculo")
         return _internal_error_response()
 
