@@ -1,26 +1,58 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, View, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Text, useTheme, Button, Portal, Modal } from 'react-native-paper';
+import { Text, useTheme } from 'react-native-paper';
 import { ChevronLeft, IdCard, Contact, Shield } from 'lucide-react-native';
 
 import { CardPerfil } from '@/components/auth/CardPerfil';
 import { useAuth } from '@contexts/AuthContext';
 import { getErrorMessage } from '@/utils/errorUtils';
+import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function SelecaoPerfilScreen() {
   const router = useRouter();
   const theme = useTheme();
   const { email, senha } = useLocalSearchParams<{ email: string; senha: string }>();
   const { signIn, isLoading } = useAuth();
-  const [modalSairVisivel, setModalSairVisivel] = useState(false);
+
+  // Estado do Pop-up
+  const [popup, setPopup] = useState<{
+    visible: boolean;
+    type?: PopupType;
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    confirmColor?: string;
+    onConfirm?: () => void;
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+  });
+
+  const showPopup = (config: Omit<typeof popup, 'visible'>) => {
+    setPopup({ ...config, visible: true });
+  };
+
+  const closePopup = () => {
+    setPopup((prev) => ({ ...prev, visible: false }));
+  };
 
   const handleBack = () => {
-    setModalSairVisivel(true);
+    showPopup({
+      type: 'warning',
+      title: 'Sair desta tela?',
+      message: 'As credenciais informadas serão perdidas e você precisará digitá-las novamente.',
+      confirmText: 'Sim, sair',
+      cancelText: 'Continuar aqui',
+      confirmColor: '#B00020',
+      onConfirm: confirmarSaida,
+    });
   };
 
   const confirmarSaida = () => {
-    setModalSairVisivel(false);
+    closePopup();
     if (router.canGoBack()) {
       router.back();
     } else {
@@ -42,7 +74,12 @@ export default function SelecaoPerfilScreen() {
       }
 
       const message = getErrorMessage(error, 'E-mail ou senha incorretos. Tente novamente.');
-      Alert.alert('Falha na autenticação', message);
+      showPopup({
+        type: 'error',
+        title: 'Falha na Autenticação',
+        message,
+        confirmText: 'Tentar novamente',
+      });
     }
   };
 
@@ -52,35 +89,18 @@ export default function SelecaoPerfilScreen() {
         <ChevronLeft size={32} color="#333" />
       </TouchableOpacity>
 
-      {/* Modal de Confirmação de Saída */}
-      <Portal>
-        <Modal
-          visible={modalSairVisivel}
-          onDismiss={() => setModalSairVisivel(false)}
-          contentContainerStyle={styles.modalContent}
-        >
-          <Text variant="headlineSmall" style={styles.modalTitle}>Sair desta tela?</Text>
-          <Text variant="bodyLarge" style={styles.modalText}>
-            As credenciais informadas serão perdidas e você precisará digitá-las novamente.
-          </Text>
-          <View style={styles.modalButtons}>
-            <Button
-              mode="text"
-              onPress={() => setModalSairVisivel(false)}
-              style={styles.modalBtn}
-            >
-              Continuar aqui
-            </Button>
-            <Button
-              mode="contained"
-              onPress={confirmarSaida}
-              style={[styles.modalBtn, { backgroundColor: '#B00020' }]}
-            >
-              Sim, sair
-            </Button>
-          </View>
-        </Modal>
-      </Portal>
+      {/* Pop-up Estilizado Personalizado */}
+      <AppPopup
+        visible={popup.visible}
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        confirmText={popup.confirmText}
+        cancelText={popup.cancelText}
+        confirmColor={popup.confirmColor}
+        onConfirm={popup.onConfirm}
+        onDismiss={closePopup}
+      />
 
       <Text variant="headlineMedium" style={styles.title}>Como você quer entrar?</Text>
 
@@ -133,29 +153,6 @@ const styles = StyleSheet.create({
   },
   cardList: {
     gap: 8,
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 24,
-    margin: 24,
-    gap: 16,
-  },
-  modalTitle: {
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  modalText: {
-    color: '#666',
-    lineHeight: 24,
-  },
-  modalButtons: {
-    flexDirection: 'column',
-    gap: 8,
-    marginTop: 8,
-  },
-  modalBtn: {
-    borderRadius: 8,
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFill,

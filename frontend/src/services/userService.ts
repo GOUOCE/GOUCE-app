@@ -12,69 +12,137 @@ export interface CadastroResponse {
   };
 }
 
+/**
+ * Converte com segurança qualquer tipo de objeto de arquivo (DocumentPicker, ImagePicker ou URI string)
+ * em uma estrutura válida aceita pelo FormData do React Native ({ uri, name, type }).
+ */
+function buildFilePart(file: any, defaultName: string, defaultType: string) {
+  if (!file) return null;
+
+  // Trata caso onde file seja um array ou contenha 'assets'
+  const target = Array.isArray(file) ? file[0] : (file && file.assets && file.assets[0]) ? file.assets[0] : file;
+
+  if (!target) return null;
+
+  const uri = typeof target === 'string' ? target : target.uri;
+  if (!uri || typeof uri !== 'string') return null;
+
+  const name = (typeof target === 'object' && target.name) ? target.name : defaultName;
+  const type = (typeof target === 'object' && (target.mimeType || target.type)) ? (target.mimeType || target.type) : defaultType;
+
+  return {
+    uri,
+    name,
+    type,
+  };
+}
+
 export const userService = {
   async register(data: AlunoFormData): Promise<CadastroResponse> {
     const formData = new FormData();
 
     // Dados básicos
-    // Converte data de DD/MM/YYYY para YYYY-MM-DD para o backend
     const formatarDataParaISO = (dataStr: string) => {
-      const partes = dataStr.split('/');
-      if (partes.length !== 3) return dataStr;
+      const partes = (dataStr || '').split('/');
+      if (partes.length !== 3) return dataStr || '';
       return `${partes[2]}-${partes[1]}-${partes[0]}`;
     };
 
-    formData.append('nome', data.nomeCompleto);
-    formData.append('email', data.email);
-    formData.append('senha', data.senha);
-    formData.append('data_nascimento', formatarDataParaISO(data.dataNascimento));
-    formData.append('telefone', data.whatsapp);
+    formData.append('nome', String(data.nomeCompleto || ''));
+    formData.append('email', String(data.email || ''));
+    formData.append('senha', String(data.senha || ''));
+    formData.append('data_nascimento', String(formatarDataParaISO(data.dataNascimento)));
+    formData.append('telefone', String(data.whatsapp || ''));
 
     // Perfil Demográfico
-    formData.append('raca', data.raca);
-    formData.append('identificacao_sexual', data.identificacaoSexual);
-    formData.append('identificacao_genero', data.genero);
-    formData.append('transgenero', data.transgenero);
-    formData.append('tem_filhos', String(data.temFilhos));
+    formData.append('raca', String(data.raca || ''));
+    formData.append('identificacao_sexual', String(data.identificacaoSexual || ''));
+    formData.append('identificacao_genero', String(data.genero || ''));
+    formData.append('transgenero', String(data.transgenero || ''));
+    formData.append('tem_filhos', String(Boolean(data.temFilhos)));
 
-    formData.append('bairro_id', data.bairro || '');
-    formData.append('faculdade_id', data.instituicao || '');
-    formData.append('curso', data.curso || '');
-    formData.append('semestre_atual', String(data.semestreAtual || '').replace(/[^0-9]/g, ''));
-    formData.append('periodo_ingresso', data.periodoIngresso || '');
-    formData.append('turno_curso', data.turno || '');
+    formData.append('bairro_id', String(data.bairro || ''));
+    formData.append('faculdade_id', String(data.instituicao || ''));
+    formData.append('curso', String(data.curso || ''));
 
-    // Documentação (Arquivos do expo-document-picker)
-    if (data.comprovanteMatricula) {
-      const file = data.comprovanteMatricula;
-      formData.append('comprovante_matricula', {
-        uri: file.uri,
-        name: file.name,
-        type: file.mimeType || 'application/octet-stream',
-      } as any);
+    const semestre = String(data.semestreAtual || '').replace(/[^0-9]/g, '');
+    if (semestre) {
+      formData.append('semestre_atual', semestre);
     }
 
-    if (data.comprovanteResidencia) {
-      const file = data.comprovanteResidencia;
-      formData.append('comprovante_residencia', {
-        uri: file.uri,
-        name: file.name,
-        type: file.mimeType || 'application/octet-stream',
-      } as any);
+    // Trata o período de ingresso para garantir formato AAAA.S esperado pelo backend
+    let periodoIngresso = String(data.periodoIngresso || '');
+    if (periodoIngresso === 'Anterior') {
+      const anoAnterior = new Date().getFullYear() - 4;
+      periodoIngresso = `${anoAnterior}.1`;
+    }
+    formData.append('periodo_ingresso', periodoIngresso);
+
+    formData.append('turno_curso', String(data.turno || ''));
+
+    // Documentação (Arquivos do expo-document-picker ou expo-image-picker)
+    const matPart = buildFilePart(data.comprovanteMatricula, 'comprovante_matricula.pdf', 'application/pdf');
+    if (matPart) {
+      formData.append('comprovante_matricula', matPart as any);
     }
 
-    formData.append('termos_de_uso', String(data.aceitouTermos));
+    const resPart = buildFilePart(data.comprovanteResidencia, 'comprovante_residencia.pdf', 'application/pdf');
+    if (resPart) {
+      formData.append('comprovante_residencia', resPart as any);
+    }
 
-    console.log('[DEBUG] Enviando cadastro para:', api.defaults.baseURL + '/usuarios/cadastrar');
+    const fotoPart = buildFilePart(data.fotoPerfil, 'foto_perfil.jpg', 'image/jpeg');
+    if (fotoPart) {
+      formData.append('foto_perfil', fotoPart as any);
+    }
 
-    const response = await api.post<CadastroResponse>('/usuarios/cadastrar', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-      timeout: 15000, // 15 segundos para dar tempo do upload
-    });
+    formData.append('termos_de_uso', String(Boolean(data.aceitouTermos)));
 
-    return response.data;
+    console.log('[DEBUG] FormData partes:', JSON.stringify((formData as any)._parts, null, 2));
+
+    try {
+      console.log('[DEBUG] Enviando via api.postForm...');
+      const response = await api.postForm<CadastroResponse>('/usuarios/cadastrar', formData, {
+        timeout: 25000,
+      });
+      return response.data;
+    } catch (apiError: any) {
+      console.warn('[DEBUG] api.postForm falhou, tentando fallback via fetch nativo...', apiError?.message);
+
+      const endpoint = (api.defaults.baseURL || 'http://localhost:8000') + '/usuarios/cadastrar';
+      const fetchResponse = await fetch(endpoint, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const resultText = await fetchResponse.text();
+      let jsonResult: any;
+      try {
+        jsonResult = JSON.parse(resultText);
+      } catch {
+        jsonResult = { message: resultText };
+      }
+
+      if (!fetchResponse.ok) {
+        const errorMsg =
+          jsonResult?.error?.message ||
+          (jsonResult?.error?.details && Array.isArray(jsonResult.error.details)
+            ? jsonResult.error.details.map((d: any) => (typeof d === 'string' ? d : d.message || JSON.stringify(d))).join('\n')
+            : null) ||
+          jsonResult?.detail?.erros?.join('\n') ||
+          (typeof jsonResult?.detail === 'string' ? jsonResult.detail : null) ||
+          'Erro ao realizar cadastro.';
+
+        const error: any = new Error(errorMsg);
+        error.response = {
+          status: fetchResponse.status,
+          data: jsonResult,
+        };
+        throw error;
+      }
+
+      return jsonResult as CadastroResponse;
+    }
   },
 
   async verificarEmail(email: string): Promise<boolean> {
@@ -98,7 +166,6 @@ export const userService = {
   },
 
   async updateEmail(data: { novo_email: string; senha_atual: string }): Promise<any> {
-    // Note: O backend espera 'novo_email' e 'senha' no DTO, ajustando aqui
     const response = await api.patch('/usuarios/me/email', {
       novo_email: data.novo_email,
       senha: data.senha_atual,
@@ -106,4 +173,3 @@ export const userService = {
     return response.data;
   },
 };
-

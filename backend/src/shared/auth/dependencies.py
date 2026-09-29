@@ -22,16 +22,21 @@ def get_token_from_request(
     request: Request,
     credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(security)] = None
 ) -> str:
-    """Extrai token do cookie HttpOnly ou do header Authorization"""
-    # Tentar ler do cookie primeiro
+    """Extrai token do cookie HttpOnly, header Authorization ou query params (token/access_token)"""
+    # 1. Tentar ler do cookie
     token = request.cookies.get("access_token")
     if token:
         return token
     
-    # Se não encontrar no cookie, tentar do header Bearer
+    # 2. Tentar ler do header Bearer
     if credentials:
         return credentials.credentials
-    
+
+    # 3. Tentar ler dos query params (suporte para <Image source={{ uri }}> em React Native Android)
+    token_param = request.query_params.get("token") or request.query_params.get("access_token")
+    if token_param:
+        return token_param
+
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Não autenticado",

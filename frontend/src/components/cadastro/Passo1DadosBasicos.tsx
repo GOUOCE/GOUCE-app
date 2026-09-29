@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, TouchableOpacity, Image, Modal } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Image, Modal, Alert } from 'react-native';
 import { TextInput, Text, Avatar, useTheme, Button, Portal } from 'react-native-paper';
 import { useFormContext, Controller } from 'react-hook-form';
 import * as ImagePicker from 'expo-image-picker';
@@ -18,7 +18,7 @@ export function Passo1DadosBasicos() {
     setMenuFotoVisivel(false);
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (permissionResult.granted === false) {
-      alert("Você recusou o acesso à câmera!");
+      Alert.alert("Permissão da Câmera", "É necessário conceder acesso à câmera para tirar sua foto de perfil.");
       return;
     }
 

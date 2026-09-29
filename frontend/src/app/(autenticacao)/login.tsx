@@ -1,19 +1,14 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TouchableOpacity, Modal } from 'react-native';
+import { StyleSheet, View, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import {
-  TextInput,
-  Button,
-  Text,
-  useTheme,
-  Portal
-} from 'react-native-paper';
+import { TextInput, Button, Text, useTheme } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft, Mail, Eye, EyeOff } from 'lucide-react-native';
 
 import { loginSchema, LoginFormData } from '@/schemas/loginSchema';
 import { useAuth } from '@contexts/AuthContext';
+import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -21,14 +16,45 @@ export default function LoginScreen() {
   const { perfil } = useLocalSearchParams();
   const { signIn, isLoading } = useAuth();
   const [verSenha, setVerSenha] = useState(false);
-  const [modalSairVisivel, setModalSairVisivel] = useState(false);
+
+  // Estado do Pop-up
+  const [popup, setPopup] = useState<{
+    visible: boolean;
+    type?: PopupType;
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    confirmColor?: string;
+    onConfirm?: () => void;
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+  });
+
+  const showPopup = (config: Omit<typeof popup, 'visible'>) => {
+    setPopup({ ...config, visible: true });
+  };
+
+  const closePopup = () => {
+    setPopup((prev) => ({ ...prev, visible: false }));
+  };
 
   const handleBack = () => {
-    setModalSairVisivel(true);
+    showPopup({
+      type: 'warning',
+      title: 'Sair do aplicativo?',
+      message: 'Você precisará fazer login novamente para agendar transportes.',
+      confirmText: 'Sim, sair',
+      cancelText: 'Continuar no app',
+      confirmColor: '#B00020',
+      onConfirm: confirmarSaida,
+    });
   };
 
   const confirmarSaida = () => {
-    setModalSairVisivel(false);
+    closePopup();
     if (router.canGoBack()) {
       router.back();
     } else {
@@ -57,40 +83,18 @@ export default function LoginScreen() {
         <Text variant="headlineSmall" style={styles.headerTitle}>Entrar</Text>
       </View>
 
-      {/* Modal de Confirmação de Saída do App */}
-      <Portal>
-        <Modal
-          visible={modalSairVisivel}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setModalSairVisivel(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text variant="headlineSmall" style={styles.modalTitle}>Sair do aplicativo?</Text>
-              <Text variant="bodyLarge" style={styles.modalText}>
-                Você precisará fazer login novamente para agendar transportes.
-              </Text>
-              <View style={styles.modalButtons}>
-                <Button
-                  mode="text"
-                  onPress={() => setModalSairVisivel(false)}
-                  style={styles.modalBtn}
-                >
-                  Continuar no app
-                </Button>
-                <Button
-                  mode="contained"
-                  onPress={confirmarSaida}
-                  style={[styles.modalBtn, { backgroundColor: '#B00020' }]}
-                >
-                  Sim, sair
-                </Button>
-              </View>
-            </View>
-          </View>
-        </Modal>
-      </Portal>
+      {/* Pop-up Estilizado Personalizado */}
+      <AppPopup
+        visible={popup.visible}
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        confirmText={popup.confirmText}
+        cancelText={popup.cancelText}
+        confirmColor={popup.confirmColor}
+        onConfirm={popup.onConfirm}
+        onDismiss={closePopup}
+      />
 
       <View style={styles.formContainer}>
         {/* E-mail */}
@@ -242,34 +246,4 @@ const styles = StyleSheet.create({
     borderColor: '#3e5f90',
     borderWidth: 1.5,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 24,
-    width: '100%',
-    gap: 16,
-  },
-  modalTitle: {
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  modalText: {
-    color: '#666',
-    lineHeight: 24,
-  },
-  modalButtons: {
-    flexDirection: 'column',
-    gap: 8,
-    marginTop: 8,
-  },
-  modalBtn: {
-    borderRadius: 8,
-  }
 });
