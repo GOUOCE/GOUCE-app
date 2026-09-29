@@ -262,6 +262,7 @@ async def cadastrar_usuario_com_arquivos(
     senha: str = Form(...),
     faculdade_id: str = Form(...),
     curso: str = Form(...),
+    campus: str = Form(...),
     data_nascimento: str = Form(...),
     termos_de_uso: bool = Form(...),
     comprovante_matricula: UploadFile = File(..., description="Arquivo PDF ou Imagem do comprovante de matrícula"),
@@ -294,6 +295,7 @@ async def cadastrar_usuario_com_arquivos(
         identificacao_sexual = identificacao_sexual.strip() if isinstance(identificacao_sexual, str) and identificacao_sexual.strip() else None
         periodo_ingresso = periodo_ingresso.strip() if isinstance(periodo_ingresso, str) and periodo_ingresso.strip() else None
         turno_curso = turno_curso.strip() if isinstance(turno_curso, str) and turno_curso.strip() else None
+        campus = campus.strip() if isinstance(campus, str) else campus
 
         # 1. Upload do comprovante de matrícula
         conteudo_mat = await comprovante_matricula.read()
@@ -331,6 +333,7 @@ async def cadastrar_usuario_com_arquivos(
                 telefone=telefone,
                 status_cadastro=StatusCadastroEnum.PENDENTE,
                 faculdade_id=faculdade_id,
+                campus=campus,
                 bairro_id=bairro_id,
                 id_comprovante_matricula=res_mat.id,
                 id_comprovante_residencia=res_res.id,

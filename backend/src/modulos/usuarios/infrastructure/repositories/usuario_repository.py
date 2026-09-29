@@ -78,11 +78,15 @@ class SQLAlchemyUsuarioRepository:
 
         if aluno:
             status_cadastro = self._normalizar_valor(aluno.status_cadastro)
-            ativo = status_cadastro == "ativado"
+            # A sessao continua valida durante a analise de renovacao; operacoes
+            # que exigem cadastro aprovado devem validar o status explicitamente.
+            ativo = status_cadastro in {"ativado", "analise_renovacao"}
             motivo = None
 
             if status_cadastro == "pendente":
                 motivo = "Sua conta está pendente de aprovação pela coordenação."
+            elif status_cadastro == "analise_renovacao":
+                motivo = "Sua renovação de vínculo está em análise."
             elif status_cadastro != "ativado":
                 motivo_reprovacao = aluno.motivo_reprovacao or ""
                 complemento = f": {motivo_reprovacao}" if motivo_reprovacao else ""
@@ -240,6 +244,7 @@ class SQLAlchemyUsuarioRepository:
                 aluno_id=usuario.id,
                 status_cadastro=status_str,
                 faculdade_id=comando.faculdade_id,
+                campus=comando.campus,
                 bairro_id=comando.bairro_id,
                 id_comprovante_matricula=comando.id_comprovante_matricula,
                 id_comprovante_residencia=comando.id_comprovante_residencia,
@@ -338,6 +343,52 @@ class SQLAlchemyUsuarioRepository:
                 self.session.refresh(aluno)
 
             return usuario, aluno
+        except Exception:
+            self.session.rollback()
+            raise
+
+    def atualizar_dados_renovacao(
+        self,
+        aluno_id: int,
+        dados,
+        id_comprovante_matricula: str,
+        id_comprovante_residencia: str,
+        id_foto_aluno: str | None,
+        novo_status: str,
+    ) -> AlunoORM | None:
+        try:
+            usuario, aluno = self.buscar_com_detalhes_por_id(aluno_id)
+            if not usuario or not aluno:
+                return None
+
+            usuario.nome_completo = dados.nome.strip()
+            usuario.telefone = dados.telefone
+
+            aluno.raca = getattr(dados.raca, "value", dados.raca)
+            aluno.identificacao_sexual = getattr(
+                dados.identificacao_sexual, "value", dados.identificacao_sexual
+            )
+            aluno.identificacao_genero = getattr(
+                dados.identificacao_genero, "value", dados.identificacao_genero
+            )
+            aluno.transgenero = getattr(dados.transgenero, "value", dados.transgenero)
+            aluno.tem_filhos = dados.tem_filhos
+            aluno.bairro_id = dados.bairro_id
+            aluno.faculdade_id = dados.faculdade_id
+            aluno.campus = dados.campus
+            aluno.curso = dados.curso
+            aluno.periodo_ingresso = dados.periodo_ingresso
+            aluno.turno_curso = getattr(dados.turno_curso, "value", dados.turno_curso)
+            aluno.semestre_atual = dados.semestre_atual
+            aluno.id_comprovante_matricula = id_comprovante_matricula
+            aluno.id_comprovante_residencia = id_comprovante_residencia
+            if id_foto_aluno:
+                aluno.id_foto_aluno = id_foto_aluno
+            aluno.status_cadastro = novo_status
+
+            self.session.commit()
+            self.session.refresh(aluno)
+            return aluno
         except Exception:
             self.session.rollback()
             raise

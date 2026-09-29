@@ -57,6 +57,7 @@ class CadastroUsuarioDTO(BaseModel):
     senha: str = Field(min_length=6, max_length=128)
     telefone: str | None = Field(default=None, max_length=20)
     faculdade_id: str = Field(min_length=1, max_length=150)
+    campus: str = Field(min_length=1, max_length=150)
     bairro_id: str | None = Field(default=None, max_length=20)
     id_comprovante_matricula: str = Field(default="", max_length=255)
     id_comprovante_residencia: str = Field(default="", max_length=255)
@@ -152,6 +153,7 @@ class PerfilAlunoResponseDTO(BaseModel):
     telefone: str | None = None
     status_cadastro: str
     faculdade_id: str | None = None
+    campus: str | None = None
     bairro_id: str | None = None
     curso: str | None = None
     semestre_atual: int | None = None

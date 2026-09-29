@@ -182,6 +182,10 @@ class CriarUsuarioUseCase:
         if not dto.curso or len(str(dto.curso).strip()) < 2:
             erros.append(CadastroValidationError("curso", "O nome do curso é obrigatório"))
 
+        # 11.1 Validação de Campus
+        if not dto.campus or not str(dto.campus).strip():
+            erros.append(CadastroValidationError("campus", "O campus é obrigatório"))
+
         # 12. Validação de Comprovante de Matrícula
         if not dto.id_comprovante_matricula or not str(dto.id_comprovante_matricula).strip():
             erros.append(CadastroValidationError("id_comprovante_matricula", "Comprovante de matrícula é obrigatório"))

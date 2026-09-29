@@ -114,6 +114,7 @@ class CadastroApiResponsesTest(unittest.IsolatedAsyncioTestCase):
             "senha": "Senha123",
             "telefone": "85999990000",
             "faculdade_id": "UFC",
+            "campus": "Quixadá",
             "bairro_id": "Centro",
             "identificacao_genero": "Mulher",
             "transgenero": "Não",
