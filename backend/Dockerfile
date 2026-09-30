@@ -21,5 +21,5 @@ RUN chmod +x /app/docker-entrypoint.sh
 
 EXPOSE 8000
 
-# Inicia o servidor diretamente. As tabelas serão criadas pelo main.py (create_tables())
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Executa as migrations antes de iniciar o servidor.
+CMD ["./docker-entrypoint.sh"]

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Enum
+from sqlalchemy import Column, Integer, String, Enum, text
 from src.shared.infrastructure.db import Base
 from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.security.lgpd_encryption import EncryptedString
@@ -20,6 +20,12 @@ class UsuarioORM(Base):
     senha = Column(String(255), nullable=False)
     tentativas_falhas = Column(Integer, default=0, nullable=False)
     limite_de_bloqueio = Column(DateTime(timezone=True), nullable=True)
+    data_criacao = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
 
     
 
@@ -35,3 +41,4 @@ class Usuario(BaseModel):
     senha: str
     tentativas_falhas: int = 0
     limite_de_bloqueio: Optional[datetime] = None
+    data_criacao: datetime

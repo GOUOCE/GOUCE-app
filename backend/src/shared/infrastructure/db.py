@@ -82,7 +82,13 @@ def sync_schema():
                 if col_name not in existing_columns:
                     try:
                         col_type = str(column.type.compile(dialect=connection.dialect))
-                        default = f"DEFAULT {column.default.arg}" if column.default is not None else ""
+                        default_clause = column.server_default
+                        default = (
+                            f"DEFAULT {default_clause.arg.text}"
+                            if default_clause is not None
+                            and hasattr(default_clause.arg, "text")
+                            else ""
+                        )
 
                         quoted_table_name = preparer.quote(table_name)
                         quoted_column_name = preparer.quote(col_name)

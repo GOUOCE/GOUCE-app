@@ -151,6 +151,7 @@ class PerfilAlunoResponseDTO(BaseModel):
     nome: str
     email: str
     telefone: str | None = None
+    data_criacao: datetime
     status_cadastro: str
     faculdade_id: str | None = None
     campus: str | None = None

@@ -1,6 +1,7 @@
 import json
 import os
 import unittest
+from datetime import datetime, timezone
 from types import SimpleNamespace
 
 os.environ.setdefault(
@@ -31,6 +32,7 @@ class FakeEditRepository:
             email="atual@example.com",
             email_hash=hash_email("atual@example.com"),
             telefone="85999990000",
+            data_criacao=datetime(2026, 9, 30, 12, 0, tzinfo=timezone.utc),
             senha="hash-da-senha",
         )
         self.aluno = SimpleNamespace(
@@ -192,6 +194,7 @@ class EdicaoPerfilValidacoesTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(body["id"], 1)
         self.assertEqual(body["email"], "atual@example.com")
         self.assertEqual(body["bairro_id"], "Centro")
+        self.assertEqual(body["data_criacao"], "2026-09-30T12:00:00Z")
         self.assertEqual(self.repository.profile_calls, [1])
         for campo in ("senha", "senha_hash", "password", "email_hash", "token", "token_acesso"):
             self.assertNotIn(campo, body)

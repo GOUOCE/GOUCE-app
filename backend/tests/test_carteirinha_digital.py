@@ -1,5 +1,6 @@
 import os
 import unittest
+from datetime import datetime, timezone
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -23,6 +24,7 @@ class CarteirinhaDigitalTest(unittest.IsolatedAsyncioTestCase):
                 nome_completo="Maria Souza",
                 email="maria@example.com",
                 telefone="85999990000",
+                data_criacao=datetime(2026, 9, 30, 12, 0, tzinfo=timezone.utc),
             ),
             SimpleNamespace(
                 status_cadastro=StatusCadastroEnum.ATIVADO.value,
@@ -58,6 +60,10 @@ class CarteirinhaDigitalTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(resposta.faculdade_id, "Universidade Federal")
         self.assertEqual(resposta.curso, "Engenharia de Software")
         self.assertEqual(resposta.id_foto_aluno, "foto-maria")
+        self.assertEqual(
+            resposta.data_criacao,
+            datetime(2026, 9, 30, 12, 0, tzinfo=timezone.utc),
+        )
         self.repository.buscar_com_detalhes_por_id.assert_called_once_with(1)
 
     async def test_carteirinha_fica_indisponivel_para_status_nao_aprovado(self):
