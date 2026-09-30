@@ -1,11 +1,11 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Image, Modal, Alert } from 'react-native';
-import { TextInput, Text, Avatar, useTheme, Button, Portal } from 'react-native-paper';
+import { TextInput, Text, Avatar, useTheme, Portal } from 'react-native-paper';
 import { useFormContext, Controller } from 'react-hook-form';
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, User, Calendar, Mail, Eye, EyeOff, Trash2, Image as ImageIcon } from 'lucide-react-native';
 
-export function Passo1DadosBasicos() {
+export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: boolean }) {
   const theme = useTheme();
   const { control, formState: { errors }, setValue, watch } = useFormContext();
   const [verSenha, setVerSenha] = useState(false);
@@ -128,21 +128,11 @@ export function Passo1DadosBasicos() {
         name="dataNascimento"
         render={({ field: { onChange, value } }) => {
           const formatarData = (texto: string) => {
-            // Remove tudo que não é número
             let limpo = texto.replace(/\D/g, '');
-
-            // Limita a 8 dígitos (DDMMYYYY)
             if (limpo.length > 8) limpo = limpo.slice(0, 8);
-
-            // Aplica a máscara DD/MM/YYYY
             let formatado = limpo;
-            if (limpo.length > 2) {
-              formatado = `${limpo.slice(0, 2)}/${limpo.slice(2)}`;
-            }
-            if (limpo.length > 4) {
-              formatado = `${limpo.slice(0, 2)}/${limpo.slice(2, 4)}/${limpo.slice(4)}`;
-            }
-
+            if (limpo.length > 2) formatado = `${limpo.slice(0, 2)}/${limpo.slice(2)}`;
+            if (limpo.length > 4) formatado = `${limpo.slice(0, 2)}/${limpo.slice(2, 4)}/${limpo.slice(4)}`;
             return formatado;
           };
 
@@ -164,61 +154,65 @@ export function Passo1DadosBasicos() {
       />
       {errors.dataNascimento && <Text style={styles.errorText}>{errors.dataNascimento.message as string}</Text>}
 
-      <Controller
-        control={control}
-        name="email"
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            label="E-mail *"
-            mode="outlined"
-            autoCapitalize="none"
-            keyboardType="email-address"
-            value={value}
-            onChangeText={onChange}
-            error={!!errors.email}
-            left={<TextInput.Icon icon={() => <Mail size={20} color="#666" />} />}
-            style={styles.input}
+      {!isRenovacao && (
+        <>
+          <Controller
+            control={control}
+            name="email"
+            render={({ field: { onChange, value } }) => (
+              <TextInput
+                label="E-mail *"
+                mode="outlined"
+                autoCapitalize="none"
+                keyboardType="email-address"
+                value={value}
+                onChangeText={onChange}
+                error={!!errors.email}
+                left={<TextInput.Icon icon={() => <Mail size={20} color="#666" />} />}
+                style={styles.input}
+              />
+            )}
           />
-        )}
-      />
-      {errors.email && <Text style={styles.errorText}>{errors.email.message as string}</Text>}
+          {errors.email && <Text style={styles.errorText}>{errors.email.message as string}</Text>}
 
-      <Controller
-        control={control}
-        name="senha"
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            label="Senha *"
-            mode="outlined"
-            secureTextEntry={!verSenha}
-            value={value}
-            onChangeText={onChange}
-            error={!!errors.senha}
-            right={<TextInput.Icon icon={() => verSenha ? <EyeOff size={20} /> : <Eye size={20} />} onPress={() => setVerSenha(!verSenha)} />}
-            style={styles.input}
+          <Controller
+            control={control}
+            name="senha"
+            render={({ field: { onChange, value } }) => (
+              <TextInput
+                label="Senha *"
+                mode="outlined"
+                secureTextEntry={!verSenha}
+                value={value}
+                onChangeText={onChange}
+                error={!!errors.senha}
+                right={<TextInput.Icon icon={() => verSenha ? <EyeOff size={20} /> : <Eye size={20} />} onPress={() => setVerSenha(!verSenha)} />}
+                style={styles.input}
+              />
+            )}
           />
-        )}
-      />
-      <Text style={styles.hint}>Mín. 8 caracteres, com letra maiúscula, minúscula e número.</Text>
-      {errors.senha && <Text style={styles.errorText}>{errors.senha.message as string}</Text>}
+          <Text style={styles.hint}>Mín. 8 caracteres, com letra maiúscula, minúscula e número.</Text>
+          {errors.senha && <Text style={styles.errorText}>{errors.senha.message as string}</Text>}
 
-      <Controller
-        control={control}
-        name="confirmarSenha"
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            label="Confirmar Senha *"
-            mode="outlined"
-            secureTextEntry={!verConfirmarSenha}
-            value={value}
-            onChangeText={onChange}
-            error={!!errors.confirmarSenha}
-            right={<TextInput.Icon icon={() => verConfirmarSenha ? <EyeOff size={20} /> : <Eye size={20} />} onPress={() => setVerConfirmarSenha(!verConfirmarSenha)} />}
-            style={styles.input}
+          <Controller
+            control={control}
+            name="confirmarSenha"
+            render={({ field: { onChange, value } }) => (
+              <TextInput
+                label="Confirmar Senha *"
+                mode="outlined"
+                secureTextEntry={!verConfirmarSenha}
+                value={value}
+                onChangeText={onChange}
+                error={!!errors.confirmarSenha}
+                right={<TextInput.Icon icon={() => verConfirmarSenha ? <EyeOff size={20} /> : <Eye size={20} />} onPress={() => setVerConfirmarSenha(!verConfirmarSenha)} />}
+                style={styles.input}
+              />
+            )}
           />
-        )}
-      />
-      {errors.confirmarSenha && <Text style={styles.errorText}>{errors.confirmarSenha.message as string}</Text>}
+          {errors.confirmarSenha && <Text style={styles.errorText}>{errors.confirmarSenha.message as string}</Text>}
+        </>
+      )}
     </View>
   );
 }

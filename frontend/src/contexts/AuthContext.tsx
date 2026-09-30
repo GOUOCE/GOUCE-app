@@ -44,7 +44,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (isLoading) return;
 
     const firstSegment = segments[0];
-    const inAuthGroup = firstSegment === '(autenticacao)';
     const isProtected = ['(aluno)', '(representante)', '(administrador)'].includes(firstSegment);
 
     if (!user && isProtected) {
@@ -57,13 +56,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const isAtPendingScreen = segments.includes('cadastro-pendente');
       if (user.status === 'pendente' && !isAtPendingScreen) {
         router.replace('/(autenticacao)/cadastro-pendente');
-        return;
-      }
-
-      if (inAuthGroup && user.status === 'ativado') {
-        const root = user.role === 'ADMINISTRADOR' ? '/(administrador)/home' :
-                     user.role === 'MOTORISTA' ? '/(representante)/home' : '/(aluno)/home';
-        router.replace(root);
         return;
       }
 
@@ -104,6 +96,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
 
       await setUserAndToken(userData, response.token_acesso);
+
+      const root = userData.role === 'ADMINISTRADOR' ? '/(administrador)/home' :
+                   userData.role === 'MOTORISTA' ? '/(representante)/home' : '/(aluno)/home';
+      router.replace(root);
     } catch (error) {
       throw error;
     } finally {

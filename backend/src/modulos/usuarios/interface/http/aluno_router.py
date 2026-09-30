@@ -311,7 +311,7 @@ async def renovar_vinculo(
     turno_curso: str = Form(...),
     semestre_atual: int = Form(...),
     comprovante_matricula: UploadFile = File(...),
-    comprovante_residencia: UploadFile = File(...),
+    comprovante_residencia: UploadFile | str | None = File(None),
     foto_perfil: UploadFile | str | None = File(None),
     current_user: Annotated[dict, Depends(require_roles(CargoEnum.ALUNO.value))] = None,
     repository=Depends(get_repository),
@@ -344,11 +344,13 @@ async def renovar_vinculo(
             comprovante_matricula.content_type,
             await comprovante_matricula.read(),
         )
-        arquivo_res = (
-            comprovante_residencia.filename or "comprovante_residencia",
-            comprovante_residencia.content_type,
-            await comprovante_residencia.read(),
-        )
+        arquivo_res = None
+        if comprovante_residencia and getattr(comprovante_residencia, "filename", None):
+            arquivo_res = (
+                comprovante_residencia.filename or "comprovante_residencia",
+                comprovante_residencia.content_type,
+                await comprovante_residencia.read(),
+            )
         arquivo_foto = None
         if foto_perfil and getattr(foto_perfil, "filename", None):
             arquivo_foto = (

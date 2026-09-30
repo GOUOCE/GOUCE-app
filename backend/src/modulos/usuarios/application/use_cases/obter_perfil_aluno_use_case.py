@@ -7,8 +7,9 @@ class ObterPerfilAlunoUseCase:
     Retorna apenas as informações permitidas, omitindo hashes, senhas e dados internos.
     """
 
-    def __init__(self, repository):
+    def __init__(self, repository, arquivo_repository=None):
         self.repository = repository
+        self.arquivo_repository = arquivo_repository
 
     def execute(self, user_id: int) -> PerfilAlunoResponseDTO:
         if not user_id or not isinstance(user_id, int) or user_id <= 0:
@@ -20,6 +21,18 @@ class ObterPerfilAlunoUseCase:
             raise ValueError(f"Usuário com ID {user_id} não encontrado")
 
         status_cadastro = aluno.status_cadastro if aluno else "desconhecido"
+
+        nome_mat = None
+        nome_res = None
+        if self.arquivo_repository and aluno:
+            if aluno.id_comprovante_matricula:
+                arq_mat = self.arquivo_repository.buscar_por_id(aluno.id_comprovante_matricula)
+                if arq_mat:
+                    nome_mat = arq_mat.nome
+            if aluno.id_comprovante_residencia:
+                arq_res = self.arquivo_repository.buscar_por_id(aluno.id_comprovante_residencia)
+                if arq_res:
+                    nome_res = arq_res.nome
 
         return PerfilAlunoResponseDTO(
             id=usuario.id,
@@ -45,4 +58,6 @@ class ObterPerfilAlunoUseCase:
             motivo_reprovacao=aluno.motivo_reprovacao if aluno else None,
             id_comprovante_matricula=aluno.id_comprovante_matricula if aluno else None,
             id_comprovante_residencia=aluno.id_comprovante_residencia if aluno else None,
+            nome_comprovante_matricula=nome_mat,
+            nome_comprovante_residencia=nome_res,
         )

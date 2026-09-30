@@ -1,50 +1,126 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { Text, TextInput, Button, useTheme, Portal, Modal } from 'react-native-paper';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Modal as RNModal } from 'react-native';
+import { Text, TextInput, Button, useTheme, Portal } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, Mail, Phone, MapPin, Eye, EyeOff } from 'lucide-react-native';
+import { ChevronLeft, Phone, ChevronDown } from 'lucide-react-native';
+
 import { editarPerfilSchema, EditarPerfilFormData } from '@/schemas/perfilSchema';
 import { useAuth } from '@contexts/AuthContext';
 import { userService } from '@/services/userService';
+import { getErrorMessage } from '@/utils/errorUtils';
+import { AppPopup, PopupType } from '@/components/ui/AppPopup';
+
+interface SelectInputProps {
+  label: string;
+  value: string;
+  options: string[];
+  onSelect: (val: string) => void;
+  error?: boolean;
+}
+
+function CustomSelect({ label, value, options, onSelect, error }: SelectInputProps) {
+  const [visible, setVisible] = useState(false);
+  const theme = useTheme();
+
+  return (
+    <View style={styles.selectContainer}>
+      <TouchableOpacity onPress={() => setVisible(true)}>
+        <TextInput
+          label={label}
+          value={value || 'Selecionar'}
+          mode="outlined"
+          editable={false}
+          error={error}
+          right={<TextInput.Icon icon={() => <ChevronDown size={20} />} />}
+          pointerEvents="none"
+          style={{ backgroundColor: '#fff' }}
+        />
+      </TouchableOpacity>
+
+      <Portal>
+        <RNModal
+          visible={visible}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setVisible(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setVisible(false)}
+          >
+            <View style={styles.modalSelectContent}>
+              <Text variant="titleMedium" style={styles.modalSelectTitle}>{label}</Text>
+              {options.map((opt) => (
+                <TouchableOpacity
+                  key={opt}
+                  style={styles.optionItem}
+                  onPress={() => { onSelect(opt); setVisible(false); }}
+                >
+                  <Text variant="bodyLarge" style={[
+                    styles.optionText,
+                    value === opt && { color: theme.colors.primary, fontWeight: 'bold' }
+                  ]}>
+                    {opt}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </TouchableOpacity>
+        </RNModal>
+      </Portal>
+    </View>
+  );
+}
 
 export default function EditarPerfilScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { user, updateUser } = useAuth();
-  const [verSenha, setVerSenha] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [modalSenhaVisivel, setModalSenhaVisivel] = useState(false);
-  const [tempData, setTempData] = useState<EditarPerfilFormData | null>(null);
+
+  // Pop-up estilizado
+  const [popup, setPopup] = useState<{
+    visible: boolean;
+    type?: PopupType;
+    title: string;
+    message: string;
+    confirmText?: string;
+    onConfirm?: () => void;
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+  });
+
+  const showPopup = (config: Omit<typeof popup, 'visible'>) => {
+    setPopup({ ...config, visible: true });
+  };
+
+  const closePopup = () => {
+    setPopup((prev) => ({ ...prev, visible: false }));
+  };
 
   const { control, handleSubmit, formState: { errors }, reset } = useForm<EditarPerfilFormData>({
     resolver: zodResolver(editarPerfilSchema),
     defaultValues: {
-      email: user?.email || '',
       telefone: user?.telefone || '',
-      bairro: user?.faculdade || '',
+      bairro: user?.bairro || 'Croatá',
     }
   });
 
-  // Carrega dados reais do perfil ao entrar na tela
-  React.useEffect(() => {
+  // Carrega dados atualizados do perfil ao entrar
+  useEffect(() => {
     async function loadProfile() {
       if (!user) return;
-
       setIsLoading(true);
       try {
         const profile = await userService.getProfile();
         reset({
-          email: profile.email,
-          telefone: profile.telefone || '',
-          bairro: profile.bairro_id || '',
-        });
-        updateUser({
-          email: profile.email,
-          telefone: profile.telefone,
-          curso: profile.curso,
-          faculdade: profile.faculdade_id,
+          telefone: profile.telefone || user.telefone || '',
+          bairro: profile.bairro_id || user.bairro || 'Croatá',
         });
       } catch (error) {
         console.error('Erro ao carregar perfil:', error);
@@ -56,51 +132,38 @@ export default function EditarPerfilScreen() {
   }, []);
 
   const onSubmit = async (data: EditarPerfilFormData) => {
-    // Se o e-mail mudou, solicita a senha atual
-    if (data.email !== user?.email) {
-      setTempData(data);
-      setModalSenhaVisivel(true);
-      return;
-    }
-
-    handleSave(data);
-  };
-
-  const handleSave = async (data: EditarPerfilFormData) => {
     setIsLoading(true);
     try {
-      // 1. Se o e-mail mudou, atualiza o e-mail primeiro
-      if (data.email !== user?.email) {
-        if (!data.senhaAtual) {
-          Alert.alert('Erro', 'A senha atual é necessária para alterar o e-mail.');
-          return;
-        }
-        await userService.updateEmail({
-          novo_email: data.email,
-          senha_atual: data.senhaAtual
-        });
-      }
-
-      // 2. Atualiza dados de perfil (telefone e bairro)
       await userService.updateProfile({
         telefone: data.telefone,
-        bairro_id: data.bairro
+        bairro_id: data.bairro,
       });
 
-      // 3. Atualiza o estado global
       await updateUser({
-        email: data.email,
         telefone: data.telefone,
+        bairro: data.bairro,
       });
 
-      Alert.alert('Sucesso', 'Perfil atualizado com sucesso!');
-      router.back();
+      showPopup({
+        type: 'success',
+        title: 'Perfil Atualizado',
+        message: 'Suas informações de perfil foram atualizadas com sucesso!',
+        confirmText: 'OK',
+        onConfirm: () => {
+          closePopup();
+          router.back();
+        },
+      });
     } catch (error: any) {
-      const message = error.response?.data?.detail || 'Não foi possível salvar as alterações.';
-      Alert.alert('Erro', message);
+      const message = getErrorMessage(error, 'Não foi possível salvar as alterações.');
+      showPopup({
+        type: 'error',
+        title: 'Erro ao Salvar',
+        message,
+        confirmText: 'Entendido',
+      });
     } finally {
       setIsLoading(false);
-      setModalSenhaVisivel(false);
     }
   };
 
@@ -114,37 +177,26 @@ export default function EditarPerfilScreen() {
         <Text variant="headlineSmall" style={styles.headerTitle}>Editar Perfil</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.formContainer}>
-        {/* E-mail */}
-        <View style={styles.inputBox}>
-          <Text variant="labelMedium" style={styles.label}>E-mail *</Text>
-          <Controller
-            control={control}
-            name="email"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                mode="outlined"
-                value={value}
-                onChangeText={onChange}
-                error={!!errors.email}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                left={<TextInput.Icon icon={() => <Mail size={20} color="#666" />} />}
-                style={styles.input}
-              />
-            )}
-          />
-          {errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
-        </View>
+      {/* Pop-up Estilizado */}
+      <AppPopup
+        visible={popup.visible}
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        confirmText={popup.confirmText}
+        onConfirm={popup.onConfirm}
+        onDismiss={closePopup}
+      />
 
+      <ScrollView contentContainerStyle={styles.formContainer}>
         {/* Telefone */}
         <View style={styles.inputBox}>
-          <Text variant="labelMedium" style={styles.label}>Telefone (WhatsApp) *</Text>
           <Controller
             control={control}
             name="telefone"
             render={({ field: { onChange, value } }) => (
               <TextInput
+                label="Telefone (WhatsApp) *"
                 mode="outlined"
                 value={value}
                 onChangeText={onChange}
@@ -158,21 +210,18 @@ export default function EditarPerfilScreen() {
           {errors.telefone && <Text style={styles.errorText}>{errors.telefone.message}</Text>}
         </View>
 
-        {/* Bairro */}
+        {/* Bairro / Localidade */}
         <View style={styles.inputBox}>
-          <Text variant="labelMedium" style={styles.label}>Bairro / Localidade *</Text>
           <Controller
             control={control}
             name="bairro"
             render={({ field: { onChange, value } }) => (
-              <TextInput
-                mode="outlined"
+              <CustomSelect
+                label="Bairro / Localidade *"
                 value={value}
-                onChangeText={onChange}
+                options={['Centro', 'Croatá', 'Bairro Novo', 'Planalto', 'Serra', 'Outro']}
+                onSelect={onChange}
                 error={!!errors.bairro}
-                left={<TextInput.Icon icon={() => <MapPin size={20} color="#666" />} />}
-                style={styles.input}
-                placeholder="Selecionar"
               />
             )}
           />
@@ -190,51 +239,6 @@ export default function EditarPerfilScreen() {
           Salvar alterações
         </Button>
       </ScrollView>
-
-      {/* Modal Confirmação de Senha (para mudança de e-mail) */}
-      <Portal>
-        <Modal
-          visible={modalSenhaVisivel}
-          onDismiss={() => setModalSenhaVisivel(false)}
-          contentContainerStyle={styles.modalContent}
-        >
-          <Text variant="titleLarge" style={styles.modalTitle}>Confirme sua senha</Text>
-          <Text variant="bodyMedium" style={styles.modalText}>
-            Para alterar seu e-mail de acesso, é necessário confirmar sua senha atual por segurança.
-          </Text>
-
-          <Controller
-            control={control}
-            name="senhaAtual"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                label="Senha Atual"
-                mode="outlined"
-                secureTextEntry={!verSenha}
-                value={value}
-                onChangeText={onChange}
-                right={
-                  <TextInput.Icon
-                    icon={() => verSenha ? <EyeOff size={20} /> : <Eye size={20} />}
-                    onPress={() => setVerSenha(!verSenha)}
-                  />
-                }
-              />
-            )}
-          />
-
-          <View style={styles.modalButtons}>
-            <Button mode="text" onPress={() => setModalSenhaVisivel(false)}>Cancelar</Button>
-            <Button
-              mode="contained"
-              onPress={handleSubmit(handleSave)}
-              loading={isLoading}
-            >
-              Confirmar
-            </Button>
-          </View>
-        </Modal>
-      </Portal>
     </View>
   );
 }
@@ -259,11 +263,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   inputBox: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
-  label: {
-    marginBottom: 8,
-    color: '#666',
+  selectContainer: {
+    marginBottom: 4,
   },
   input: {
     backgroundColor: '#fff',
@@ -272,35 +275,43 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 12,
     marginTop: 4,
+    marginLeft: 4,
   },
   saveButton: {
     borderRadius: 8,
-    marginTop: 16,
+    marginTop: 24,
     backgroundColor: '#3e5f90',
   },
   buttonContent: {
     height: 55,
   },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 24,
-    margin: 24,
-    gap: 16,
   },
-  modalTitle: {
+  modalSelectContent: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    width: '100%',
+    paddingVertical: 16,
+    maxHeight: '80%',
+  },
+  modalSelectTitle: {
+    paddingHorizontal: 24,
+    paddingBottom: 16,
     fontWeight: 'bold',
-    color: '#333',
-  },
-  modalText: {
-    color: '#666',
-    lineHeight: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
     marginBottom: 8,
   },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 16,
-    marginTop: 8,
-  }
+  optionItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+  },
+  optionText: {
+    color: '#333',
+  },
 });
