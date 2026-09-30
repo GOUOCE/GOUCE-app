@@ -39,6 +39,7 @@ class ObterPerfilAlunoUseCase:
             nome=usuario.nome_completo,
             email=usuario.email,
             telefone=usuario.telefone,
+            data_criacao=usuario.data_criacao,
             status_cadastro=status_cadastro,
             faculdade_id=aluno.faculdade_id if aluno else None,
             campus=getattr(aluno, "campus", None) if aluno else None,
