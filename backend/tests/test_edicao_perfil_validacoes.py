@@ -13,6 +13,7 @@ from fastapi import FastAPI
 from jose import JWTError
 
 from src.modulos.usuarios.interface.http.usuario_routes import (
+    get_arquivo_repository,
     get_hasher,
     get_repository,
     router,
@@ -120,6 +121,10 @@ class EdicaoPerfilValidacoesTest(unittest.IsolatedAsyncioTestCase):
         self.app.include_router(router)
         self.repository = FakeEditRepository()
         self.app.dependency_overrides[get_repository] = lambda: self.repository
+        arquivo_repository = SimpleNamespace(buscar_por_id=lambda arquivo_id: None)
+        self.app.dependency_overrides[get_arquivo_repository] = (
+            lambda: arquivo_repository
+        )
         self.app.dependency_overrides[get_hasher] = FakeHasher
         self.app.dependency_overrides[get_current_user] = lambda: {
             "sub": "1",
