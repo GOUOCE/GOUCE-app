@@ -23,6 +23,7 @@ from src.modulos.usuarios.application.dtos.usuario_dto import (
     ValidarEtapa3CadastroUsuarioDTO,
     ValidarEtapa4CadastroUsuarioDTO,
     CadastroSucessoDTO,
+    PerfilAlunoResponseDTO,
     CadastroErrorResponseDTO,
 )
 from src.modulos.usuarios.application.dtos.renovacao_vinculo_dto import (
@@ -40,6 +41,7 @@ from src.modulos.usuarios.application.use_cases.validar_etapa_2_use_case import 
 from src.modulos.usuarios.application.use_cases.validar_etapa_3_use_case import ValidarEtapa3UsuarioUseCase
 from src.modulos.usuarios.application.use_cases.validar_etapa_4_use_case import ValidarEtapa4UsuarioUseCase
 from src.modulos.usuarios.application.use_cases.renovar_vinculo_use_case import RenovarVinculoUseCase
+from src.modulos.usuarios.application.use_cases.obter_perfil_aluno_use_case import ObterPerfilAlunoUseCase
 from src.modulos.usuarios.infrastructure.repositories.usuario_repository import (
     SQLAlchemyUsuarioRepository,
     CadastroDuplicadoError,
@@ -55,7 +57,15 @@ from src.modulos.arquivos.application.use_cases.salvar_arquivo_use_case import (
 
 logger = logging.getLogger(__name__)
 
-
+EDICAO_ERROR_RESPONSES = {
+    400: {"model": CadastroErrorResponseDTO},
+    401: {"model": CadastroErrorResponseDTO},
+    403: {"model": CadastroErrorResponseDTO},
+    404: {"model": CadastroErrorResponseDTO},
+    409: {"model": CadastroErrorResponseDTO},
+    422: {"model": CadastroErrorResponseDTO},
+    500: {"model": CadastroErrorResponseDTO},
+}
 
 
 
@@ -372,4 +382,34 @@ async def renovar_vinculo(
     except Exception:
         logger.exception("Erro ao processar renovação de vínculo")
         return _internal_error_response()
+
+
+@router.get(
+    "/me/carteirinha",
+    response_model=PerfilAlunoResponseDTO,
+    responses=EDICAO_ERROR_RESPONSES,
+)
+async def obter_carteirinha(
+    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ALUNO.value))],
+    repository=Depends(get_repository),
+):
+    try:
+        user_id = current_user.get("current_user_id")
+        status = current_user.get("current_status")
+
+        if status != StatusCadastroEnum.ATIVADO:
+            raise  HTTPException(status_code=403, detail="Carteirinha indisponível. Seu cadastro está inativo ou em análise.")
+        if not isinstance(user_id, int) or isinstance(user_id, bool):
+            raise HTTPException(status_code=401, detail="Sessão inválida")
+
+        use_case = ObterPerfilAlunoUseCase(repository)
+        return use_case.execute(user_id)
+    except HTTPException:
+        raise
+    except ValueError as error:
+        if "não encontrado" in str(error).lower():
+            raise HTTPException(status_code=404, detail="Usuário não encontrado")
+        raise HTTPException(status_code=400, detail="Dados inválidos")
+    except Exception:
+        raise HTTPException(status_code=500, detail="Erro interno ao consultar o perfil")
 
