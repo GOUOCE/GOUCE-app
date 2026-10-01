@@ -88,7 +88,7 @@ Depois, coloque o nome/link da issue na tabela **Defeitos encontrados** da suít
 
 ## 8. Colocar as labels certas
 
-Adicione à issue as labels do projeto. Padrão sugerido (confirme com o líder quais existem no repositório):
+Adicione à issue as labels abaixo:
 
 | Tipo de label | Exemplos |
 | --- | --- |
