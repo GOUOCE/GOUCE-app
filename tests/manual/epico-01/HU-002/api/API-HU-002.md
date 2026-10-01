@@ -184,7 +184,7 @@ Executar na ordem abaixo. São **6 casos essenciais**; registrar cada variação
 
 ## Observações gerais
 
-- Referências: [HU-002, seção 7.2.2](../../../../docs/requisitos.md) e [contrato atual das rotas](../../../../backend/src/modulos/auth/api/http/auth_routes.py). Conferir a versão implantada; esta suíte não foi executada durante sua criação.
+- Referências: [HU-002, seção 7.2.2](../../../../../docs/requisitos.md) e [contrato atual das rotas](../../../../../backend/src/modulos/auth/api/http/auth_routes.py). Conferir a versão implantada; esta suíte não foi executada durante sua criação.
 - A suíte cobre o login e a renovação básica. Bloqueio temporário por tentativas, `lembrar_me` (duração do refresh), HTTPS, hash de senha (RNF-002/003) e falha de conexão no app (AC-06) ficam para outra rodada. Aprovar estes 6 casos não significa cobertura total da HU.
 - Erros de login usam o formato padrão `{"detail": "..."}`, diferente do envelope `success/error` dos demais módulos; não tratar isso como falha desta suíte.
 - Registrar status e resposta obtidos em cada CT; ocultar senhas, tokens e dados pessoais nas evidências.

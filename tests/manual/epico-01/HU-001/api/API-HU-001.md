@@ -258,7 +258,7 @@ Executar na ordem abaixo. São **8 casos essenciais**, com poucas variações ex
 
 ## Observações gerais
 
-- Referências: [HU-001, seção 7.2.1](../../../../docs/requisitos.md) e [contrato atual das rotas](../../../../backend/src/modulos/usuarios/interface/http/usuario_routes.py). Conferir a versão implantada; esta suíte não foi executada durante sua criação.
+- Referências: [HU-001, seção 7.2.1](../../../../../docs/requisitos.md) e [contrato atual das rotas](../../../../../backend/src/modulos/usuarios/interface/http/usuario_routes.py). Conferir a versão implantada; esta suíte não foi executada durante sua criação.
 - A suíte cobre somente a rota principal usada pelo app. Rotas de validação por etapa, cadastro JSON, limites extensos, concorrência, falhas de infraestrutura e verificações completas de hash/HTTPS ficam para outra rodada. Aprovar estes 8 casos não significa cobertura total da HU.
 - Se o CT-001 falhar, registrar o defeito e executar os negativos que ainda possam ser isolados. Sem acesso à consulta dos registros, manter a verificação de persistência pendente. A ausência de aluno não implica que uploads temporários tenham sido removidos.
 - Registrar status e resposta obtidos em cada CT; ocultar senhas, tokens e dados pessoais nas evidências.

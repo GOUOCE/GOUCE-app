@@ -98,7 +98,7 @@ Executar na ordem abaixo. São **6 casos essenciais**; o CT-005 altera o estado 
 
 **Resultado esperado**
 
-- HTTP `403` com mensagem de acesso negado e nenhum dado de perfil.
+- HTTP `403` e nenhum dado de perfil. Esta rota usa o envelope padronizado: `success: false` e `error.code: "FORBIDDEN"`.
 - Os endpoints de aluno aceitam somente o perfil `aluno`; qualquer resposta diferente deve ser registrada.
 
 **Resultado obtido**
@@ -143,7 +143,7 @@ Executar na ordem abaixo. São **6 casos essenciais**; o CT-005 altera o estado 
 
 **Resultado esperado**
 
-- Passo 3: HTTP `401` (sessão revogada), mesmo com o token ainda dentro da validade.
+- Passo 3: HTTP `401` (sessão revogada), mesmo com o token ainda dentro da validade; envelope com `error.code: "UNAUTHORIZED"`.
 - Passo 4: HTTP `401` com mensagem de conta inativada.
 - A validação lê o estado atual do banco, não apenas o token (AC-07 e AC-08).
 
@@ -184,7 +184,8 @@ Executar na ordem abaixo. São **6 casos essenciais**; o CT-005 altera o estado 
 
 ## Observações gerais
 
-- Referências: [HU-003, seção 7.2.3](../../../../docs/requisitos.md) e [dependências de autorização](../../../../backend/src/shared/auth/dependencies.py). Conferir a versão implantada; esta suíte não foi executada durante sua criação.
+- Referências: [HU-003, seção 7.2.3](../../../../../docs/requisitos.md) e [dependências de autorização](../../../../../backend/src/shared/auth/dependencies.py). Conferir a versão implantada; esta suíte não foi executada durante sua criação.
 - A API só tem rotas protegidas para aluno e administrador; as rotas de lista de embarque e frequência do representante (AC-03) ainda não existem, então o bloqueio do representante é verificado apenas contra as rotas atuais.
 - Menus e telas por perfil (AC-01, AC-02, AC-04) e a mensagem "Acesso Negado" do app são de UI e ficam para a suíte de interface. Promoção de perfil durante a sessão e rotas de arquivos (`/arquivos/*`) ficam para outra rodada. Aprovar estes 6 casos não significa cobertura total da HU.
+- Formato do erro: as rotas `/usuarios/alunos` e `/usuarios/alunos/{id}/...` respondem `{"detail": "..."}`; `/usuarios/me` responde o envelope `success/error` (`FORBIDDEN`, `UNAUTHORIZED`). O que vale é o status HTTP; registrar o corpo obtido.
 - Registrar status e resposta obtidos em cada CT; ocultar senhas, tokens e dados pessoais nas evidências.

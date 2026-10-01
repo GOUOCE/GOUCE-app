@@ -172,7 +172,7 @@ Executar na ordem abaixo. São **7 casos essenciais**; cada solicitação válid
 
 - Passos 1 e 2: HTTP `400` com `error.code` `TOKEN_ALREADY_USED` (ou `TOKEN_INVALID`, se o token já tiver sido invalidado). Registrar o código obtido.
 - Login com `OutraSenha123` deve ser rejeitado; a senha continua `NovaSenha123`.
-- Passo 3: o primeiro token é rejeitado com HTTP `400` e o segundo continua válido.
+- Passo 3: o primeiro token é rejeitado com HTTP `400` e `error.code: "TOKEN_ALREADY_USED"` (cada nova solicitação marca os anteriores como usados); o segundo continua válido.
 
 **Resultado obtido**
 
@@ -208,7 +208,7 @@ Executar na ordem abaixo. São **7 casos essenciais**; cada solicitação válid
 
 ## Observações gerais
 
-- Referências: [HU-004, seção 7.2.4](../../../../docs/requisitos.md) e [contrato atual das rotas](../../../../backend/src/modulos/auth/api/http/auth_routes.py). Conferir a versão implantada; esta suíte não foi executada durante sua criação.
+- Referências: [HU-004, seção 7.2.4](../../../../../docs/requisitos.md) e [contrato atual das rotas](../../../../../backend/src/modulos/auth/api/http/auth_routes.py). Conferir a versão implantada; esta suíte não foi executada durante sua criação.
 - A suíte cobre os três endpoints principais. Falha de SMTP (AC-07, `EMAIL_SEND_FAILED`, exige indisponibilizar o serviço de e-mail), divergência entre "Nova Senha" e "Confirmar Nova Senha" (validada só no app) e a rota ponte `GET /auth/redefinir-senha` ficam para outra rodada ou para a suíte de UI. Aprovar estes 7 casos não significa cobertura total da HU.
 - Se o e-mail de teste não estiver acessível, executar apenas os CT-001 e CT-002 e registrar os demais como pendentes por falta de massa.
 - Registrar status e resposta obtidos em cada CT; ocultar senhas, tokens e dados pessoais nas evidências.

@@ -198,8 +198,8 @@ Executar na ordem abaixo. São **7 casos essenciais**; o CT-005 troca o e-mail d
 
 **Resultado esperado**
 
-- Sem token: HTTP `401`, sem dados.
-- Token de administrador: HTTP `403`, sem dados e sem alterar cadastro algum.
+- Sem token: HTTP `401`, `error.code: "UNAUTHORIZED"`, sem dados.
+- Token de administrador: HTTP `403`, `error.code: "FORBIDDEN"`, sem dados e sem alterar cadastro algum.
 - O aluno só edita o próprio perfil; a API não aceita `id` de outro usuário nessas rotas.
 
 **Resultado obtido**
@@ -215,7 +215,7 @@ Executar na ordem abaixo. São **7 casos essenciais**; o CT-005 troca o e-mail d
 
 ## Observações gerais
 
-- Referências: [HU-005, seção 7.2.5](../../../../docs/requisitos.md) e [contrato atual das rotas](../../../../backend/src/modulos/usuarios/interface/http/usuario_routes.py). Conferir a versão implantada; esta suíte não foi executada durante sua criação.
+- Referências: [HU-005, seção 7.2.5](../../../../../docs/requisitos.md) e [contrato atual das rotas](../../../../../backend/src/modulos/usuarios/interface/http/usuario_routes.py). Conferir a versão implantada; esta suíte não foi executada durante sua criação.
 - Divergência de requisito: o AC-02 e o AC-04 permitem editar o e-mail mediante senha, mas o AC-06 e o FA-002 pedem o e-mail somente leitura. A API atual implementa a troca com senha (CT-005); levar a dúvida ao líder antes de classificar como defeito.
 - A mensagem do AC-03 ("Este e-mail já está em uso no sistema.") é exibida pelo app; na API, validar status e código. Falha de comunicação (AC-07), campos desabilitados na tela, limites extensos (`telefone` com mais de 20 caracteres) e a troca do e-mail com o token anterior ficam para outra rodada ou para a suíte de UI. Aprovar estes 7 casos não significa cobertura total da HU.
 - Restaurar e-mail, telefone e bairro originais do aluno A ao final, para não afetar outras suítes.
