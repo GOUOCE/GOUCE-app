@@ -1,11 +1,12 @@
-import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Text, Surface, Avatar, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, WifiOff } from 'lucide-react-native';
+import { ChevronLeft } from 'lucide-react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { useAuth } from '@contexts/AuthContext';
 import { PrefeituraLogo } from '@/components/ui/Logos';
+import { userService } from '@/services/userService';
 import { api } from '../../api/api';
 
 export default function CarteirinhaDigitalScreen() {
@@ -13,11 +14,33 @@ export default function CarteirinhaDigitalScreen() {
   const router = useRouter();
   const { user, token } = useAuth();
 
-  const baseUrl = api.defaults.baseURL || process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
-  const fotoUri = user?.foto_perfil
-    ? (user.foto_perfil.startsWith('http')
-        ? user.foto_perfil
-        : `${baseUrl}/arquivos/${user.foto_perfil}/view?token=${token || ''}`)
+  const [carteirinhaData, setCarteirinhaData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function carregarCarteirinha() {
+      setIsLoading(true);
+      try {
+        const data = await userService.getCarteirinha();
+        if (data) {
+          setCarteirinhaData(data);
+        }
+      } catch (err) {
+        console.warn('Carteirinha offline ou em carregamento, usando cache do usuário:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    carregarCarteirinha();
+  }, []);
+
+  // Dados reais combinados (API / Cache)
+  const idFoto = carteirinhaData?.id_foto_aluno || user?.foto_perfil;
+  const baseUrl = api.defaults.baseURL || 'http://192.168.0.3:8000';
+  const fotoUri = idFoto
+    ? (idFoto.startsWith('http')
+        ? idFoto
+        : `${baseUrl}/arquivos/${idFoto}/view?token=${token || ''}`)
     : null;
 
   const imageSource = fotoUri
@@ -30,14 +53,23 @@ export default function CarteirinhaDigitalScreen() {
       }
     : { uri: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=200&auto=format&fit=crop' };
 
-  // Dados mockados para a carteirinha
-  const dadosCarteirinha = {
-    instituicao: user?.faculdade || 'UFC - Campus Quixadá',
-    curso: user?.curso || 'Engenharia de Software',
-    ingresso: user?.periodo_ingresso || '2024.1',
-    emissao: new Date().toLocaleDateString('pt-BR'),
-    qrcode: JSON.stringify({ id: user?.id, email: user?.email, exp: '2026-12-31' })
-  };
+  const nomeAluno = carteirinhaData?.nome || user?.name || 'João Neves';
+  const emailAluno = carteirinhaData?.email || user?.email || 'joao@email.com';
+
+  const inst = carteirinhaData?.faculdade_id || user?.faculdade || 'UFC';
+  const campus = carteirinhaData?.campus || 'Campus Quixadá';
+  const instituicaoTexto = inst.includes('Campus') ? inst : `${inst} - ${campus.includes('Campus') ? campus : `Campus ${campus}`}`;
+
+  const cursoAluno = carteirinhaData?.curso || user?.curso || 'Engenharia de Software';
+  const ingressoAluno = carteirinhaData?.periodo_ingresso || user?.periodo_ingresso || '2024.1';
+  const cursoIngressoTexto = `${cursoAluno} - ${ingressoAluno}`;
+
+  const emissao = '10/09/2026';
+  const qrcodeValue = JSON.stringify({
+    id: carteirinhaData?.id || user?.id,
+    email: emailAluno,
+    token: token ? token.slice(0, 20) : 'gouoce_token',
+  });
 
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
@@ -49,53 +81,62 @@ export default function CarteirinhaDigitalScreen() {
         <Text variant="headlineSmall" style={styles.headerTitle}>Carteirinha Digital</Text>
       </View>
 
-      <View style={styles.content}>
-        <Text variant="bodyLarge" style={styles.description}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <Text variant="bodyMedium" style={styles.description}>
           Apresente esta tela ao representante no momento do embarque.
         </Text>
 
-        {/* Cartão Digital */}
-        <Surface style={styles.card} elevation={2}>
-          <View style={styles.cardHeader}>
+        {/* Cartão da Carteirinha */}
+        <Surface style={styles.card} elevation={1}>
+          {/* Parte Superior: Foto + Dados */}
+          <View style={styles.cardTopRow}>
             <Avatar.Image
-              size={100}
+              size={95}
               source={imageSource}
+              style={styles.avatar}
             />
-            <View style={styles.userMainInfo}>
-              <Text variant="titleLarge" style={styles.userName}>{user?.name || 'Aluno'}</Text>
-              <Text variant="bodySmall" style={styles.courseInfo}>{dadosCarteirinha.instituicao}</Text>
-              <Text variant="bodySmall" style={styles.courseInfo}>
-                {dadosCarteirinha.curso} - {dadosCarteirinha.ingresso}
+
+            <View style={styles.infoWrapper}>
+              <Text variant="titleLarge" style={styles.userName} numberOfLines={1}>
+                {nomeAluno}
               </Text>
-              <Text variant="bodySmall" style={styles.emailInfo}>{user?.email || 'email@exemplo.com'}</Text>
+              <Text variant="bodySmall" style={styles.infoText} numberOfLines={1}>
+                {instituicaoTexto}
+              </Text>
+              <Text variant="bodySmall" style={styles.infoText} numberOfLines={1}>
+                {cursoIngressoTexto}
+              </Text>
+              <Text variant="bodySmall" style={styles.infoText} numberOfLines={1}>
+                {emailAluno}
+              </Text>
+              <Text variant="labelSmall" style={styles.emissionText}>
+                Data de Emissão: {emissao}
+              </Text>
             </View>
           </View>
 
-          <View style={styles.cardFooter}>
-            <View style={styles.qrCodeBox}>
+          {/* Parte Inferior: QR Code + Logo Prefeitura */}
+          <View style={styles.cardBottomRow}>
+            <View style={styles.qrCodeContainer}>
               <QRCode
-                value={dadosCarteirinha.qrcode}
-                size={100}
-                color="black"
-                backgroundColor="white"
+                value={qrcodeValue}
+                size={85}
+                color="#000"
+                backgroundColor="#FFF"
               />
             </View>
 
-            <View style={styles.footerRight}>
-              <Text variant="labelSmall" style={styles.emissionDate}>
-                Data de Emissão: {dadosCarteirinha.emissao}
-              </Text>
-              <PrefeituraLogo width={60} height={60} />
+            <View style={styles.logoContainer}>
+              <PrefeituraLogo width={120} height={50} />
             </View>
           </View>
         </Surface>
 
-        {/* Badge Offline */}
-        <Surface style={styles.offlineBadge} elevation={0}>
-          <WifiOff size={16} color="#3e5f90" />
+        {/* Badge Disponível Offline */}
+        <View style={styles.offlineBadge}>
           <Text style={styles.offlineText}>Disponível offline</Text>
-        </Surface>
-      </View>
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -109,84 +150,86 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    marginBottom: 40,
+    marginBottom: 24,
     gap: 12,
   },
   headerTitle: {
     fontWeight: 'bold',
     color: '#333',
   },
-  content: {
+  scrollContent: {
     paddingHorizontal: 24,
     alignItems: 'center',
+    paddingBottom: 40,
   },
   description: {
     textAlign: 'center',
     color: '#666',
-    marginBottom: 32,
-    lineHeight: 22,
+    marginBottom: 28,
+    lineHeight: 20,
   },
   card: {
     width: '100%',
     borderRadius: 20,
-    backgroundColor: '#fff',
-    padding: 24,
-    gap: 24,
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    gap: 20,
   },
-  cardHeader: {
+  cardTopRow: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
     gap: 16,
   },
-  userMainInfo: {
+  avatar: {
+    backgroundColor: '#E3EFFF',
+  },
+  infoWrapper: {
     flex: 1,
-    justifyContent: 'center',
+    gap: 2,
   },
   userName: {
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
+    color: '#222',
+    fontSize: 18,
+    marginBottom: 2,
   },
-  courseInfo: {
-    color: '#666',
-    lineHeight: 16,
+  infoText: {
+    color: '#555',
+    fontSize: 13,
+    lineHeight: 18,
   },
-  emailInfo: {
-    color: '#666',
-    marginTop: 4,
+  emissionText: {
+    color: '#777',
+    fontSize: 11,
+    marginTop: 6,
   },
-  cardFooter: {
+  cardBottomRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
+    marginTop: 8,
   },
-  qrCodeBox: {
-    padding: 8,
-    backgroundColor: '#fff',
+  qrCodeContainer: {
+    padding: 6,
+    backgroundColor: '#FFF',
     borderWidth: 1,
-    borderColor: '#F0F0F0',
-    borderRadius: 12,
+    borderColor: '#EFEFEF',
+    borderRadius: 8,
   },
-  footerRight: {
+  logoContainer: {
+    justifyContent: 'flex-end',
     alignItems: 'flex-end',
-    gap: 8,
-    flex: 1,
-  },
-  emissionDate: {
-    color: '#999',
   },
   offlineBadge: {
-    marginTop: 32,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#E8EAF6',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    marginTop: 28,
+    backgroundColor: '#DCE7FE',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     borderRadius: 20,
   },
   offlineText: {
-    color: '#3e5f90',
+    color: '#3E5F90',
     fontWeight: '500',
     fontSize: 14,
-  }
+  },
 });

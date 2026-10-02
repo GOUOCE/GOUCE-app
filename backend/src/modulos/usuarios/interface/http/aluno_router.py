@@ -399,8 +399,8 @@ async def obter_carteirinha(
         user_id = current_user.get("current_user_id")
         status = current_user.get("current_status")
 
-        if status != StatusCadastroEnum.ATIVADO:
-            raise  HTTPException(status_code=403, detail="Carteirinha indisponível. Seu cadastro está inativo ou em análise.")
+        if status not in {StatusCadastroEnum.ATIVADO.value, StatusCadastroEnum.ANALISE_RENOVACAO.value, "ativado", "analise_renovacao"}:
+            raise HTTPException(status_code=403, detail="Carteirinha indisponível. Seu cadastro está inativo ou em análise.")
         if not isinstance(user_id, int) or isinstance(user_id, bool):
             raise HTTPException(status_code=401, detail="Sessão inválida")
 
