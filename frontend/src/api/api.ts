@@ -1,11 +1,20 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const getBaseUrl = () => {
+  const envUrl = process.env.EXPO_PUBLIC_API_URL;
+  // Se o env contiver o túnel antigo do ngrok ou for inválido, força o IP local da Wi-Fi
+  if (envUrl && !envUrl.includes('ngrok')) {
+    return envUrl;
+  }
+  return 'http://192.168.0.3:8000';
+};
+
 export const api = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000',
+  baseURL: getBaseUrl(),
 });
 
-// Interceptor para adicionar token
+// Interceptor para adicionar token e logar requisições
 api.interceptors.request.use(async (config) => {
   const token = await AsyncStorage.getItem('@GOUOCE:token');
   console.log(`[API REQUEST] ${config.method?.toUpperCase()} ${config.url}`, { baseURL: config.baseURL });
@@ -22,7 +31,6 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      // Opcional: Lógica de refresh token ou logout
       await AsyncStorage.removeItem('@GOUOCE:token');
       await AsyncStorage.removeItem('@GOUOCE:user');
     }

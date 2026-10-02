@@ -25,7 +25,6 @@ def get_session():
 
 def create_tables():
     """Criar todas tabelas"""
-    # Importar entidades para garantia de registro na Base
     from src.modulos.arquivos.model.entities.arquivo import ArquivoORM
     from src.modulos.usuarios.model.entities.usuario import UsuarioORM
     from src.modulos.usuarios.model.entities.aluno import AlunoORM
@@ -39,19 +38,18 @@ def sync_schema():
     Detecta automaticamente mudanças nas entidades e altera tipos ou cria colunas no banco.
     """
     inspector = inspect(engine)
-    
+
     with engine.begin() as connection:
         preparer = connection.dialect.identifier_preparer
 
         for table in Base.metadata.tables.values():
             table_name = table.name
-            
-            # Se a tabela não existe, será criada por create_tables()
+
             if table_name not in inspector.get_table_names():
                 continue
-            
+
             existing_columns = {col['name']: col for col in inspector.get_columns(table_name)}
-            
+
             # Correções e expansão de tipos para criptografia LGPD (EncryptedString & Blind Index)
             if table_name == "usuario":
                 for col_lgpd in ["telefone", "email", "nome_completo"]:
@@ -78,8 +76,9 @@ def sync_schema():
             # Verificar se há colunas novas
             for column in table.columns:
                 col_name = column.name
-                
+
                 if col_name not in existing_columns:
+                    savepoint_name = f"sp_{table_name}_{col_name}".replace("-", "_")
                     try:
                         col_type = str(column.type.compile(dialect=connection.dialect))
                         default_clause = column.server_default
@@ -93,9 +92,14 @@ def sync_schema():
                         quoted_table_name = preparer.quote(table_name)
                         quoted_column_name = preparer.quote(col_name)
 
+                        connection.execute(text(f"SAVEPOINT {savepoint_name};"))
                         sql = f"ALTER TABLE {quoted_table_name} ADD COLUMN {quoted_column_name} {col_type} NULL {default}".strip()
                         connection.execute(text(sql))
+                        connection.execute(text(f"RELEASE SAVEPOINT {savepoint_name};"))
                         print(f"✓ Coluna {table_name}.{col_name} criada")
                     except Exception as e:
-                        if "already exists" not in str(e).lower():
-                            print(f"Aviso ao criar {table_name}.{col_name}: {e}")
+                        try:
+                            connection.execute(text(f"ROLLBACK TO SAVEPOINT {savepoint_name};"))
+                        except Exception:
+                            pass
+                        print(f"Aviso ao criar {table_name}.{col_name}: {e}")
