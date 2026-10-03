@@ -1,5 +1,19 @@
 import { z } from 'zod';
 
+// Configuração global do mapa de erros do Zod em Português (Guia de Validação de Formulários - Seção 2.1)
+z.setErrorMap((issue, ctx) => {
+  if (issue.code === z.ZodIssueCode.invalid_type && issue.received === 'undefined') {
+    return { message: 'Campo obrigatório' };
+  }
+  if (issue.code === z.ZodIssueCode.too_small) {
+    return { message: `Informe pelo menos ${issue.minimum} caracteres` };
+  }
+  if (issue.code === z.ZodIssueCode.too_big) {
+    return { message: `Use no máximo ${issue.maximum} caracteres` };
+  }
+  return { message: ctx.defaultError };
+});
+
 const LETRAS = /^[A-Za-zÀ-ÖØ-öø-ÿ'’\-.]+$/;
 
 const DDDS = [
