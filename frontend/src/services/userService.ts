@@ -268,4 +268,9 @@ export const userService = {
     });
     return response.data;
   },
+
+  async getCarteirinha(): Promise<any> {
+    const response = await api.get('/alunos/me/carteirinha');
+    return response.data;
+  },
 };

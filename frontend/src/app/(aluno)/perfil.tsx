@@ -44,7 +44,7 @@ export default function PerfilScreen() {
     await signOut();
   };
 
-  const baseUrl = api.defaults.baseURL || process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
+  const baseUrl = api.defaults.baseURL || 'http://192.168.0.3:8000';
   const fotoUri = user?.foto_perfil
     ? (user.foto_perfil.startsWith('http')
         ? user.foto_perfil
