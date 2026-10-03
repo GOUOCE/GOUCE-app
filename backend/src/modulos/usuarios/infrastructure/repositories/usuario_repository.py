@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, time, timezone
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy import inspect, or_, text
@@ -9,6 +9,7 @@ from src.modulos.usuarios.model.entities.tipo import TipoORM
 from src.modulos.usuarios.model.entities.usuario_tipo import UsuarioTipoORM
 from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
+from src.shared.infrastructure.audit_model import LogAuditoriaORM
 from src.shared.security.lgpd_encryption import hash_email
 
 
@@ -29,6 +30,38 @@ class SQLAlchemyUsuarioRepository:
         if valor is None:
             return None
         return str(getattr(valor, "value", valor)).lower().strip()
+
+    @staticmethod
+    def normalizar_documentos_reenvio(documentos_reenvio) -> list[dict] | None:
+        if documentos_reenvio is None:
+            return None
+
+        if isinstance(documentos_reenvio, list):
+            itens = documentos_reenvio
+        elif isinstance(documentos_reenvio, dict):
+            itens = []
+            for tipo, dados in documentos_reenvio.items():
+                if isinstance(dados, dict):
+                    motivo = dados.get("motivo") or dados.get("mensagem") or "Motivo não informado"
+                    itens.append({"tipo": str(tipo), "motivo": str(motivo).strip()})
+                elif dados is not None:
+                    itens.append({"tipo": str(tipo), "motivo": str(dados).strip()})
+        else:
+            return None
+
+        itens_validos = []
+        for item in itens:
+            if hasattr(item, "model_dump"):
+                item = item.model_dump()
+            if not isinstance(item, dict):
+                continue
+            tipo_valor = item.get("tipo") or item.get("documento") or ""
+            tipo = str(getattr(tipo_valor, "value", tipo_valor)).strip()
+            motivo = str(item.get("motivo") or item.get("mensagem") or "").strip()
+            if not tipo or not motivo:
+                continue
+            itens_validos.append({"tipo": tipo, "motivo": motivo})
+        return itens_validos or None
 
     def _buscar_flag_perfil_opcional(
         self,
@@ -93,15 +126,16 @@ class SQLAlchemyUsuarioRepository:
 
         if aluno:
             status_cadastro = self._normalizar_valor(aluno.status_cadastro)
-            # A sessao continua valida durante a analise de renovacao; operacoes
-            # que exigem cadastro aprovado devem validar o status explicitamente.
-            ativo = status_cadastro in {"ativado", "analise_renovacao"}
+            # O aluno rejeitado ainda pode logar para reenviar documentos.
+            ativo = status_cadastro in {"ativado", "analise_renovacao", "rejeitado"}
             motivo = None
 
             if status_cadastro == "pendente":
                 motivo = "Sua conta está pendente de aprovação pela coordenação."
             elif status_cadastro == "analise_renovacao":
                 motivo = "Sua renovação de vínculo está em análise."
+            elif status_cadastro == "rejeitado":
+                motivo = "Existem documentos pendentes de reenvio. Consulte o motivo na área de cadastro."
             elif status_cadastro != "ativado":
                 motivo_reprovacao = aluno.motivo_reprovacao or ""
                 complemento = f": {motivo_reprovacao}" if motivo_reprovacao else ""
@@ -235,6 +269,53 @@ class SQLAlchemyUsuarioRepository:
 
         return lista
 
+    @staticmethod
+    def validar_ordem_data(ordem: str | None) -> str | None:
+        if ordem is None:
+            return None
+        ordem_limpa = str(ordem).strip().lower()
+        if ordem_limpa not in {"asc", "desc"}:
+            raise ValueError("O parâmetro 'ordem' deve ser 'asc' ou 'desc'.")
+        return ordem_limpa
+
+    @staticmethod
+    def validar_status_cadastro(status: str | None) -> str | None:
+        if status is None:
+            return None
+        status_limpo = str(status).strip().lower()
+        if not status_limpo:
+            return None
+        status_permitidos = {item.value for item in StatusCadastroEnum}
+        if status_limpo not in status_permitidos:
+            raise ValueError(
+                "Status inválido. Informe um dos valores: "
+                + ", ".join(sorted(status_permitidos))
+            )
+        return status_limpo
+
+    def listar_usuarios_filtrados(
+        self,
+        status: str | None = None,
+        ordem: str | None = None,
+    ) -> list[dict]:
+        ordem_aceita = self.validar_ordem_data(ordem)
+        status_limpo = self.validar_status_cadastro(status)
+        resultados = self.listar_todos()
+
+        if status_limpo:
+            resultados = [
+                item for item in resultados
+                if str(item.get("status_cadastro") or "").lower() == status_limpo
+            ]
+
+        if ordem_aceita:
+            resultados.sort(
+                key=lambda item: (item.get("data_hora_envio_analise") or datetime.min.replace(tzinfo=timezone.utc)).timestamp(),
+                reverse=(ordem_aceita == "desc"),
+            )
+
+        return resultados
+
     def listar_nomes_e_emails_por_roles(self, roles: list[str] | None = None) -> list[dict]:
         query = self.session.query(
             UsuarioORM.nome_completo.label("nome"),
@@ -253,21 +334,84 @@ class SQLAlchemyUsuarioRepository:
             for nome, email in query.order_by(UsuarioORM.nome_completo).all()
         ]
 
-    def listar_alunos_resumo(self) -> list[dict]:
+    def listar_alunos_resumo(
+        self,
+        status: str | None = None,
+        ordem: str | None = None,
+    ) -> list[dict]:
+        ordem_aceita = self.validar_ordem_data(ordem)
+        status_limpo = self.validar_status_cadastro(status)
         resultados = (
             self.session.query(
+                AlunoORM.aluno_id.label("id"),
                 UsuarioORM.nome_completo.label("nome"),
                 UsuarioORM.email,
                 AlunoORM.faculdade_id.label("faculdade"),
                 AlunoORM.campus,
+                AlunoORM.status_cadastro,
+                AlunoORM.data_hora_envio_analise,
+                AlunoORM.data_hora_ultima_renovacao_matricula,
+                AlunoORM.motivo_reprovacao,
+                AlunoORM.documentos_reenvio,
             )
             .join(AlunoORM, AlunoORM.aluno_id == UsuarioORM.id)
             .order_by(UsuarioORM.nome_completo)
             .all()
         )
+
+        lista = [
+            {
+                "id": aluno_id,
+                "nome": nome_aluno,
+                "email": email,
+                "faculdade": faculdade,
+                "campus": campus,
+                "status_cadastro": status_cadastro,
+                "data_hora_envio_analise": data_envio_analise,
+                "data_hora_ultima_renovacao_matricula": data_ultima_renovacao,
+                "motivo_reprovacao": motivo_reprovacao,
+                "documentos_reenvio": self.normalizar_documentos_reenvio(documentos_reenvio),
+            }
+            for (
+                aluno_id,
+                nome_aluno,
+                email,
+                faculdade,
+                campus,
+                status_cadastro,
+                data_envio_analise,
+                data_ultima_renovacao,
+                motivo_reprovacao,
+                documentos_reenvio,
+            ) in resultados
+        ]
+
+        if status_limpo:
+            lista = [
+                item for item in lista
+                if str(item.get("status_cadastro") or "").lower() == status_limpo
+            ]
+
+        if ordem_aceita:
+            lista.sort(
+                key=lambda item: (item.get("data_hora_envio_analise") or datetime.min.replace(tzinfo=timezone.utc)).timestamp(),
+                reverse=(ordem_aceita == "desc"),
+            )
+
         return [
-            {"nome": nome, "email": email, "faculdade": faculdade, "campus": campus}
-            for nome, email, faculdade, campus in resultados
+            {
+                "id": item["id"],
+                "nome": item["nome"],
+                "email": item["email"],
+                "faculdade": item["faculdade"],
+                "campus": item["campus"],
+                "status_cadastro": item["status_cadastro"],
+                "data_hora_envio_analise": item["data_hora_envio_analise"],
+                "data_hora_ultima_renovacao_matricula": item["data_hora_ultima_renovacao_matricula"],
+                "motivo_reprovacao": item["motivo_reprovacao"],
+                "documentos_reenvio": item["documentos_reenvio"],
+            }
+            for item in lista
         ]
 
     def criar_aluno(self, comando, senha_hash: str):
@@ -291,6 +435,7 @@ class SQLAlchemyUsuarioRepository:
 
         try:
             self.session.flush()
+            agora = datetime.now(timezone.utc)
             self.session.add(AlunoORM(
                 aluno_id=usuario.id,
                 status_cadastro=status_str,
@@ -312,6 +457,7 @@ class SQLAlchemyUsuarioRepository:
                 id_foto_aluno=comando.id_foto_aluno,
                 identificacao_sexual=comando.identificacao_sexual,
                 motivo_reprovacao=comando.motivo_reprovacao,
+                data_hora_envio_analise=agora,
                 termos_de_uso=comando.termos_de_uso,
                 consentimento_lgpd_em=consentimento_dt,
                 versao_termos=versao_termos_val,
@@ -344,7 +490,11 @@ class SQLAlchemyUsuarioRepository:
         return self.session.query(AlunoORM).filter(AlunoORM.aluno_id == aluno_id).first()
 
     def atualizar_status_aluno(
-        self, aluno_id: int, novo_status: str, motivo_reprovacao: str | None = None
+        self,
+        aluno_id: int,
+        novo_status: str,
+        motivo_reprovacao: str | None = None,
+        documentos_reenvio: list[dict] | None = None,
     ) -> AlunoORM | None:
         aluno = self.buscar_aluno_por_id(aluno_id)
         if not aluno:
@@ -353,7 +503,61 @@ class SQLAlchemyUsuarioRepository:
         aluno.status_cadastro = novo_status
         if motivo_reprovacao is not None:
             aluno.motivo_reprovacao = motivo_reprovacao
+        elif novo_status == StatusCadastroEnum.REJEITADO.value:
+            aluno.motivo_reprovacao = None
 
+        if novo_status == StatusCadastroEnum.REJEITADO.value:
+            aluno.documentos_reenvio = documentos_reenvio or aluno.documentos_reenvio
+        elif novo_status in {StatusCadastroEnum.PENDENTE.value, StatusCadastroEnum.ANALISE_RENOVACAO.value}:
+            aluno.documentos_reenvio = None
+        else:
+            aluno.documentos_reenvio = None
+
+        if novo_status in {StatusCadastroEnum.PENDENTE.value, StatusCadastroEnum.ANALISE_RENOVACAO.value}:
+            aluno.data_hora_envio_analise = datetime.now(timezone.utc)
+        if novo_status == StatusCadastroEnum.ANALISE_RENOVACAO.value:
+            aluno.data_hora_ultima_renovacao_matricula = datetime.now(timezone.utc)
+
+        self.session.add(LogAuditoriaORM(
+            usuario_id=aluno.aluno_id,
+            acao="UPDATE_STATUS",
+            entidade="aluno",
+            entidade_id=aluno.aluno_id,
+            valor_anterior=str(aluno.status_cadastro),
+            valor_novo=str(novo_status),
+        ))
+
+        self.session.commit()
+        self.session.refresh(aluno)
+        return aluno
+
+    def atualizar_documentos_reenvio(
+        self,
+        aluno_id: int,
+        documentos_reenvio: list[dict],
+        ids_documentos: dict[str, str],
+    ) -> AlunoORM | None:
+        aluno = self.buscar_aluno_por_id(aluno_id)
+        if not aluno:
+            return None
+
+        for documento in documentos_reenvio:
+            arquivo_id = ids_documentos.get(documento["tipo"])
+            if arquivo_id:
+                documento["arquivo_id"] = arquivo_id
+
+        if ids_documentos.get("comprovante_matricula"):
+            aluno.id_comprovante_matricula = ids_documentos["comprovante_matricula"]
+        if ids_documentos.get("comprovante_residencia"):
+            aluno.id_comprovante_residencia = ids_documentos["comprovante_residencia"]
+        if ids_documentos.get("foto_perfil"):
+            aluno.id_foto_aluno = ids_documentos["foto_perfil"]
+
+        aluno.documentos_reenvio = documentos_reenvio
+        aluno.status_cadastro = StatusCadastroEnum.PENDENTE.value
+        aluno.data_hora_envio_analise = datetime.now(timezone.utc)
+
+        self.session.add(aluno)
         self.session.commit()
         self.session.refresh(aluno)
         return aluno

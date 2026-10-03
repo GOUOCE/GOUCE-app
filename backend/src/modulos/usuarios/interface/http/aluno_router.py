@@ -10,7 +10,11 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from src.shared.infrastructure.db import get_session
-from src.shared.auth.dependencies import require_roles, verify_any_user
+from src.shared.auth.dependencies import (
+    require_roles,
+    verify_any_user,
+    verify_student_standard_access,
+)
 from src.shared.auth.jwt_service import JWTService
 from src.shared.security.argon2_hasher import Argon2PasswordHasher
 from src.shared.enums.cargo_enum import CargoEnum
@@ -174,10 +178,26 @@ def get_storage_service():
     summary="Listar resumo dos alunos",
 )
 async def listar_alunos_resumo(
+    status: str | None = None,
+    ordem: str | None = None,
     repository=Depends(get_repository),
     _: dict = Depends(require_roles(CargoEnum.ADMINISTRADOR.value)),
 ):
-    return repository.listar_alunos_resumo()
+    status_normalizado = status.strip().lower() if status is not None else None
+    status_permitidos = {item.value for item in StatusCadastroEnum}
+    if status_normalizado and status_normalizado not in status_permitidos:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Status inválido. Informe um dos valores: "
+                + ", ".join(sorted(status_permitidos))
+            ),
+        )
+
+    return repository.listar_alunos_resumo(
+        status=status_normalizado or None,
+        ordem=ordem,
+    )
 
 
 @router.post(
@@ -326,7 +346,7 @@ async def renovar_vinculo(
     comprovante_matricula: UploadFile = File(...),
     comprovante_residencia: UploadFile | str | None = File(None),
     foto_perfil: UploadFile | str | None = File(None),
-    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ALUNO.value))] = None,
+    current_user: Annotated[dict, Depends(verify_student_standard_access)] = None,
     repository=Depends(get_repository),
     arquivo_repository=Depends(get_arquivo_repository),
     storage_service=Depends(get_storage_service),
@@ -405,7 +425,7 @@ async def renovar_vinculo(
     responses=EDICAO_ERROR_RESPONSES,
 )
 async def obter_carteirinha(
-    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ALUNO.value))],
+    current_user: Annotated[dict, Depends(verify_student_standard_access)],
     repository=Depends(get_repository),
 ):
     try:
@@ -429,4 +449,3 @@ async def obter_carteirinha(
         raise HTTPException(status_code=400, detail="Dados inválidos")
     except Exception:
         raise HTTPException(status_code=500, detail="Erro interno ao consultar o perfil")
-
