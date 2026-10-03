@@ -19,8 +19,8 @@ class ValidarEtapa1CadastroUsuarioDTO(BaseModel):
     nome: str = Field(min_length=3, max_length=150)
     data_nascimento: str | int | float | date | datetime | None = None
     email: EmailStr
-    senha: str = Field(min_length=6, max_length=128)
-    confirmar_senha: str = Field(min_length=6, max_length=128)
+    senha: str = Field(min_length=8, max_length=128)
+    confirmar_senha: str = Field(min_length=8, max_length=128)
 
 class ValidarEtapa2CadastroUsuarioDTO(BaseModel):
 
@@ -54,7 +54,7 @@ class CadastroUsuarioDTO(BaseModel):
 
     nome: str = Field(min_length=3, max_length=150)
     email: EmailStr
-    senha: str = Field(min_length=6, max_length=128)
+    senha: str = Field(min_length=8, max_length=128)
     telefone: str | None = Field(default=None, max_length=20)
     faculdade_id: str = Field(min_length=1, max_length=150)
     campus: str = Field(min_length=1, max_length=150)

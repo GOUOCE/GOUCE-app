@@ -443,13 +443,13 @@ class RecuperacaoSenhaApiResponsesTest(unittest.IsolatedAsyncioTestCase):
 
         status, body = await self.request(
             "/auth/redefinir-senha",
-            {"token": "token-valido", "nova_senha": "Nova123"},
+            {"token": "token-valido", "nova_senha": "Nova1234"},
         )
 
         self.assertEqual(status, 200)
         self.assertIs(body["success"], True)
         self.assertEqual(body["message"], "Senha alterada com sucesso.")
-        self.assertEqual(self.usuario.senha, "argon2-hash::Nova123")
+        self.assertEqual(self.usuario.senha, "argon2-hash::Nova1234")
         self.assertIsNotNone(token.used_at)
         self.assertEqual(self.token_repository.session.commit_count, 1)
         self.assertEqual(self.token_repository.lock_calls, 1)
@@ -461,14 +461,14 @@ class RecuperacaoSenhaApiResponsesTest(unittest.IsolatedAsyncioTestCase):
 
         status, body = await self.request(
             "/auth/redefinir-senha",
-            {"token": "token-valido", "nova_senha": "Outra123"},
+            {"token": "token-valido", "nova_senha": "Outra1234"},
         )
         self.assert_error(self, status, body, "TOKEN_ALREADY_USED", 400)
 
     async def test_redefinicao_retorna_erros_de_token_e_senha(self):
         status, body = await self.request(
             "/auth/redefinir-senha",
-            {"token": "token-inexistente", "nova_senha": "Nova123"},
+            {"token": "token-inexistente", "nova_senha": "Nova1234"},
         )
         self.assert_error(self, status, body, "TOKEN_INVALID", 400)
 
@@ -478,14 +478,14 @@ class RecuperacaoSenhaApiResponsesTest(unittest.IsolatedAsyncioTestCase):
         )
         status, body = await self.request(
             "/auth/redefinir-senha",
-            {"token": "token-expirado", "nova_senha": "Nova123"},
+            {"token": "token-expirado", "nova_senha": "Nova1234"},
         )
         self.assert_error(self, status, body, "TOKEN_EXPIRED", 400)
 
         self.add_reset_token("token-utilizado", used_at=datetime.now(timezone.utc))
         status, body = await self.request(
             "/auth/redefinir-senha",
-            {"token": "token-utilizado", "nova_senha": "Nova123"},
+            {"token": "token-utilizado", "nova_senha": "Nova1234"},
         )
         self.assert_error(self, status, body, "TOKEN_ALREADY_USED", 400)
 
@@ -502,7 +502,7 @@ class RecuperacaoSenhaApiResponsesTest(unittest.IsolatedAsyncioTestCase):
 
         status, body = await self.request(
             "/auth/redefinir-senha",
-            {"token": "token-commit", "nova_senha": "Nova123"},
+            {"token": "token-commit", "nova_senha": "Nova1234"},
         )
 
         self.assert_error(self, status, body, "INTERNAL_ERROR")
@@ -517,7 +517,7 @@ class RecuperacaoSenhaApiResponsesTest(unittest.IsolatedAsyncioTestCase):
 
         status, body = await self.request(
             "/auth/redefinir-senha",
-            {"token": "token-concorrente", "nova_senha": "Nova123"},
+            {"token": "token-concorrente", "nova_senha": "Nova1234"},
         )
 
         self.assert_error(self, status, body, "TOKEN_ALREADY_USED", 400)
