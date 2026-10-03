@@ -1,0 +1,66 @@
+# Preenche o Passo 1 do cadastro (dados básicos).
+#
+# Parâmetros (todos obrigatórios; passe "" para deixar o campo vazio):
+#   NOME, DATA_NASCIMENTO, EMAIL, SENHA, CONFIRMAR_SENHA
+#
+# Exemplo:
+#   - runFlow:
+#       file: ../../../subflows/cadastro/preencher-dados-basicos.yaml
+#       env:
+#         NOME: "Maria da Silva"
+#         DATA_NASCIMENTO: "01012000"
+#         EMAIL: ""
+#         SENHA: "Senha123"
+#         CONFIRMAR_SENHA: "Senha123"
+appId: com.gouce.app
+---
+- runFlow:
+    when:
+      true: ${NOME}
+    commands:
+      - tapOn:
+          id: "cadastro-input-nome"
+      - inputText: ${NOME}
+      - hideKeyboard
+
+- runFlow:
+    when:
+      true: ${DATA_NASCIMENTO}
+    commands:
+      - tapOn:
+          id: "cadastro-input-data-nascimento"
+      - inputText: ${DATA_NASCIMENTO}
+      - hideKeyboard
+
+- runFlow:
+    when:
+      true: ${EMAIL}
+    commands:
+      - tapOn:
+          id: "cadastro-input-email"
+      - inputText: ${EMAIL}
+      - hideKeyboard
+
+- runFlow:
+    when:
+      true: ${SENHA}
+    commands:
+      - scrollUntilVisible:
+          element:
+            id: "cadastro-input-senha"
+      - tapOn:
+          id: "cadastro-input-senha"
+      - inputText: ${SENHA}
+      - hideKeyboard
+
+- runFlow:
+    when:
+      true: ${CONFIRMAR_SENHA}
+    commands:
+      - scrollUntilVisible:
+          element:
+            id: "cadastro-input-confirmar-senha"
+      - tapOn:
+          id: "cadastro-input-confirmar-senha"
+      - inputText: ${CONFIRMAR_SENHA}
+      - hideKeyboard

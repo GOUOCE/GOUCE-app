@@ -1,0 +1,20 @@
+# CT-HU001-UI-009 — Mensagens de campo obrigatório em português
+# Caso manual: tests/manual/epico-01/HU-001/ui/UI-HU-001.md#ct-hu001-ui-009--dados-básicos-obrigatórios
+# Bug: https://github.com/GOUOCE/GOUCE-app/issues/53
+appId: com.gouce.app
+name: "CT-HU001-UI-009 — Mensagens em português"
+tags:
+  - hu-001
+  - bug-conhecido
+---
+- runFlow: ../../../subflows/cadastro/abrir-cadastro.yaml
+# Todos os campos vazios: cada um deve mostrar uma mensagem em português
+- tapOn:
+    id: "cadastro-btn-proximo"
+- assertVisible:
+    id: "cadastro-erro-nome"
+- assertNotVisible: "Required"
+- scrollUntilVisible:
+    element:
+      id: "cadastro-erro-confirmar-senha"
+- assertNotVisible: "Required"

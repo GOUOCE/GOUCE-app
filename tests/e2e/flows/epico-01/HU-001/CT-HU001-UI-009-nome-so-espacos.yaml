@@ -1,0 +1,47 @@
+# CT-HU001-UI-009 — Nome preenchido só com espaços não conta como preenchido
+# Caso manual: tests/manual/epico-01/HU-001/ui/UI-HU-001.md#ct-hu001-ui-009--dados-básicos-obrigatórios
+# Regressão do bug https://github.com/GOUOCE/GOUCE-app/issues/52 (corrigido para este caso)
+appId: com.gouce.app
+name: "CT-HU001-UI-009 — Nome só com espaços"
+tags:
+  - hu-001
+  - regressao
+---
+- runFlow: ../../../subflows/cadastro/abrir-cadastro.yaml
+- runFlow:
+    file: ../../../subflows/cadastro/preencher-dados-basicos.yaml
+    env:
+      NOME: ""
+      DATA_NASCIMENTO: "01012000"
+      EMAIL: "maria.e2e@teste.com"
+      SENHA: "Senha123"
+      CONFIRMAR_SENHA: "Senha123"
+
+# Os espaços são digitados aqui, e não pelo subflow: o Maestro remove os
+# espaços dos valores passados em `env`, e o campo ficaria vazio.
+- scrollUntilVisible:
+    element:
+      id: "cadastro-input-nome"
+    direction: UP
+- tapOn:
+    id: "cadastro-input-nome"
+- inputText: "   "
+- hideKeyboard
+
+# Pré-condição: o campo precisa ter os 3 espaços. Sem isso, o erro de campo
+# vazio faria o teste passar pelo motivo errado.
+- copyTextFrom:
+    id: "cadastro-input-nome"
+- assertTrue:
+    condition: ${maestro.copiedText == "   "}
+    label: "Pré-condição: o campo Nome contém só os 3 espaços digitados"
+
+- tapOn:
+    id: "cadastro-btn-proximo"
+- assertVisible:
+    id: "cadastro-txt-passo"
+    text: "Passo 1 de 4.*"
+- scrollUntilVisible:
+    element:
+      id: "cadastro-erro-nome"
+    direction: UP

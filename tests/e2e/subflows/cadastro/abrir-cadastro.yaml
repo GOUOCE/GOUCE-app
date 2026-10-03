@@ -1,0 +1,10 @@
+# Abre o app do zero (sem dados salvos) e vai até o Passo 1 do cadastro.
+appId: com.gouce.app
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "inicio-btn-criar-conta"
+- assertVisible:
+    id: "cadastro-txt-passo"
+    text: "Passo 1 de 4.*"
