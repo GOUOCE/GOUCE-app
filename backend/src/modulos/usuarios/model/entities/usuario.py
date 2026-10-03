@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Enum, text
+from sqlalchemy import Boolean, Column, Integer, String, Enum, text
 from src.shared.infrastructure.db import Base
 from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.security.lgpd_encryption import EncryptedString
@@ -16,6 +16,7 @@ class UsuarioORM(Base):
     nome_completo = Column(EncryptedString(500), nullable=False)
     email = Column(EncryptedString(500), nullable=False)
     email_hash = Column(String(64), index=True, nullable=True)
+    ativo = Column(Boolean, default=True, nullable=False)
     telefone = Column(EncryptedString(500), nullable=True)
     senha = Column(String(255), nullable=False)
     tentativas_falhas = Column(Integer, default=0, nullable=False)

@@ -3,7 +3,7 @@ import traceback
 from functools import wraps
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile, File, Form
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
@@ -26,6 +26,7 @@ from src.modulos.usuarios.application.dtos.usuario_dto import (
     PerfilAlunoResponseDTO,
     RedefinirEmailDTO,
     UsuarioResponseDTO,
+    UsuarioNomeEmailResponseDTO,
     AtualizarAlunoDTO,
 )
 from src.modulos.usuarios.application.use_cases.criar_usuario_use_case import (
@@ -247,6 +248,19 @@ async def listar_alunos(
     current_user: Annotated[dict, Depends(require_roles(CargoEnum.ADMINISTRADOR.value))] = None,
 ):
     return await listar_usuarios(repository, current_user)
+
+
+@router.get(
+    "/nomes-e-emails",
+    response_model=list[UsuarioNomeEmailResponseDTO],
+    summary="Listar Nome e E-mail dos Usuários",
+)
+async def listar_nomes_e_emails(
+    roles: list[str] | None = Query(default=None),
+    repository=Depends(get_repository),
+    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ADMINISTRADOR.value))] = None,
+):
+    return repository.listar_nomes_e_emails_por_roles(roles)
 
 
 @cadastro_router.post(

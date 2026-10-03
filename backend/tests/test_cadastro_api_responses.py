@@ -77,6 +77,16 @@ class FakeSession:
     def __init__(self):
         self.added = []
 
+    class Query:
+        def filter(self, *args, **kwargs):
+            return self
+
+        def first(self):
+            return SimpleNamespace(id=2)
+
+    def query(self, model):
+        return self.Query()
+
     def add(self, entity):
         if isinstance(entity, UsuarioORM):
             entity.id = 1

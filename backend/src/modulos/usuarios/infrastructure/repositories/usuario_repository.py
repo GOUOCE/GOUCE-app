@@ -5,6 +5,8 @@ from sqlalchemy import inspect, or_, text
 
 from src.modulos.usuarios.model.entities.aluno import AlunoORM
 from src.modulos.usuarios.model.entities.usuario import UsuarioORM
+from src.modulos.usuarios.model.entities.tipo import TipoORM
+from src.modulos.usuarios.model.entities.usuario_tipo import UsuarioTipoORM
 from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
 from src.shared.security.lgpd_encryption import hash_email
@@ -67,6 +69,19 @@ class SQLAlchemyUsuarioRepository:
             # baseada apenas no claim do JWT. Nesse caso, o perfil não é aceito.
             return None
 
+    def _buscar_tipo_associado(self, user_id: int) -> str | None:
+        """Retorna o tipo relacional quando o schema novo estiver disponível."""
+        try:
+            resultado = (
+                self.session.query(TipoORM.tipo_usuario)
+                .join(UsuarioTipoORM, UsuarioTipoORM.id_tipo == TipoORM.id)
+                .filter(UsuarioTipoORM.id_usuario == user_id)
+                .first()
+            )
+            return resultado[0] if resultado else None
+        except Exception:
+            return None
+
     def buscar_contexto_autenticacao_por_id(self, user_id: int) -> dict | None:
         """Retorna o perfil e o estado atual usados na validação de sessão."""
         usuario, aluno = self.buscar_com_detalhes_por_id(user_id)
@@ -114,7 +129,8 @@ class SQLAlchemyUsuarioRepository:
             coluna_ativo="is_administrador_ativo",
             user_id=user_id,
         )
-        if administrador and administrador[0]:
+        tipo_associado = self._buscar_tipo_associado(user_id)
+        if administrador and administrador[0] and tipo_associado == CargoEnum.ADMINISTRADOR.value:
             candidatos.append({
                 "role": CargoEnum.ADMINISTRADOR.value,
                 "ativo": administrador[1],
@@ -219,6 +235,41 @@ class SQLAlchemyUsuarioRepository:
 
         return lista
 
+    def listar_nomes_e_emails_por_roles(self, roles: list[str] | None = None) -> list[dict]:
+        query = self.session.query(
+            UsuarioORM.nome_completo.label("nome"),
+            UsuarioORM.email,
+        )
+        if roles:
+            query = (
+                query.join(UsuarioTipoORM, UsuarioTipoORM.id_usuario == UsuarioORM.id)
+                .join(TipoORM, TipoORM.id == UsuarioTipoORM.id_tipo)
+                .filter(TipoORM.tipo_usuario.in_(roles))
+                .distinct()
+            )
+
+        return [
+            {"nome": nome, "email": email}
+            for nome, email in query.order_by(UsuarioORM.nome_completo).all()
+        ]
+
+    def listar_alunos_resumo(self) -> list[dict]:
+        resultados = (
+            self.session.query(
+                UsuarioORM.nome_completo.label("nome"),
+                UsuarioORM.email,
+                AlunoORM.faculdade_id.label("faculdade"),
+                AlunoORM.campus,
+            )
+            .join(AlunoORM, AlunoORM.aluno_id == UsuarioORM.id)
+            .order_by(UsuarioORM.nome_completo)
+            .all()
+        )
+        return [
+            {"nome": nome, "email": email, "faculdade": faculdade, "campus": campus}
+            for nome, email, faculdade, campus in resultados
+        ]
+
     def criar_aluno(self, comando, senha_hash: str):
         status_str = StatusCadastroEnum.PENDENTE.value
         email_limpo = comando.email.lower().strip()
@@ -264,6 +315,16 @@ class SQLAlchemyUsuarioRepository:
                 termos_de_uso=comando.termos_de_uso,
                 consentimento_lgpd_em=consentimento_dt,
                 versao_termos=versao_termos_val,
+            ))
+            tipo_aluno = self.session.query(TipoORM).filter(
+                TipoORM.tipo_usuario == CargoEnum.ALUNO.value
+            ).first()
+            if not tipo_aluno:
+                self.session.rollback()
+                raise RuntimeError("O tipo de usuário aluno não está inicializado.")
+            self.session.add(UsuarioTipoORM(
+                id_usuario=usuario.id,
+                id_tipo=tipo_aluno.id,
             ))
             self.session.commit()
             self.session.refresh(usuario)
