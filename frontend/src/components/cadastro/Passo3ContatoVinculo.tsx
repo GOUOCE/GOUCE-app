@@ -72,6 +72,25 @@ function CustomSelect({ label, value, options, onSelect, error, leftIcon }: Sele
 export function Passo3ContatoVinculo() {
   const { control, formState: { errors } } = useFormContext();
 
+  const gerarPeriodosIngresso = () => {
+    const anoAtual = new Date().getFullYear();
+    const periodos: string[] = [];
+    for (let ano = anoAtual; ano >= anoAtual - 5; ano--) {
+      periodos.push(`${ano}.2`);
+      periodos.push(`${ano}.1`);
+    }
+    periodos.push('Anterior');
+    return periodos;
+  };
+
+  const formatarTelefone = (texto: string) => {
+    let limpo = texto.replace(/\D/g, '');
+    if (limpo.length > 11) limpo = limpo.slice(0, 11);
+    if (limpo.length <= 2) return limpo ? `(${limpo}` : '';
+    if (limpo.length <= 7) return `(${limpo.slice(0, 2)}) ${limpo.slice(2)}`;
+    return `(${limpo.slice(0, 2)}) ${limpo.slice(2, 3)} ${limpo.slice(3, 7)}-${limpo.slice(7)}`;
+  };
+
   return (
     <View style={styles.container}>
       <Controller
@@ -81,7 +100,7 @@ export function Passo3ContatoVinculo() {
           <CustomSelect
             label="Bairro / Localidade *"
             value={value}
-            options={['Centro', 'Bairro Novo', 'Planalto', 'Serra', 'Outro']}
+            options={['Centro', 'Croatá', 'Bairro Novo', 'Planalto', 'Serra', 'Outro']}
             onSelect={onChange}
             error={!!errors.bairro}
           />
@@ -97,8 +116,10 @@ export function Passo3ContatoVinculo() {
             label="Telefone (WhatsApp) *"
             mode="outlined"
             placeholder="(88) 9 9999-9999"
+            keyboardType="number-pad"
+            maxLength={16}
             value={value}
-            onChangeText={onChange}
+            onChangeText={(text) => onChange(formatarTelefone(text))}
             error={!!errors.whatsapp}
             left={<TextInput.Icon icon={() => <Phone size={20} color="#666" />} />}
             style={styles.input}
@@ -114,7 +135,7 @@ export function Passo3ContatoVinculo() {
           <CustomSelect
             label="Instituição de Ensino *"
             value={value}
-            options={['UFC', 'UNILAB', 'IFCE', 'Estácio', 'Outra']}
+            options={['UFC - Universidade Federal do Ceará', 'IFCE', 'UNILAB', 'Estácio', 'Outra']}
             onSelect={onChange}
             error={!!errors.instituicao}
             leftIcon={<School size={20} color="#666" />}
@@ -130,7 +151,7 @@ export function Passo3ContatoVinculo() {
           <CustomSelect
             label="Curso *"
             value={value}
-            options={['Engenharia de Software', 'Sistemas de Informação', 'Ciência da Computação', 'Medicina', 'Outro']}
+            options={['Engenharia de Software', 'Sistemas de Informação', 'Ciência da Computação', 'Engenharia de Computação', 'Design Digital', 'Redes de Computadores', 'Outro']}
             onSelect={onChange}
             error={!!errors.curso}
             leftIcon={<GraduationCap size={20} color="#666" />}
@@ -148,7 +169,7 @@ export function Passo3ContatoVinculo() {
               <CustomSelect
                 label="Campus *"
                 value={value}
-                options={['Quixadá', 'Redenção', 'Fortaleza', 'Itapipoca']}
+                options={['Quixadá', 'Redenção', 'Fortaleza', 'Itapipoca', 'Russas']}
                 onSelect={onChange}
                 error={!!errors.campus}
               />
@@ -165,7 +186,7 @@ export function Passo3ContatoVinculo() {
               <CustomSelect
                 label="Período de Ingresso *"
                 value={value}
-                options={['2024.1', '2023.2', '2023.1', '2022.2', 'Anterior']}
+                options={gerarPeriodosIngresso()}
                 onSelect={onChange}
                 error={!!errors.periodoIngresso}
               />
@@ -201,7 +222,7 @@ export function Passo3ContatoVinculo() {
               <CustomSelect
                 label="Semestre Atual *"
                 value={value}
-                options={['1º', '2º', '3º', '4º', '5º', '6º', '7º', '8º', '9º', '10º']}
+                options={['1º', '2º', '3º', '4º', '5º', '6º', '7º', '8º', '9º', '10º', '11º', '12º']}
                 onSelect={onChange}
                 error={!!errors.semestreAtual}
               />
@@ -228,6 +249,8 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 12,
     marginLeft: 4,
+    flexShrink: 1,
+    flexWrap: 'wrap',
   },
   row: {
     flexDirection: 'row',
