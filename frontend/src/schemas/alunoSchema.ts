@@ -1,96 +1,183 @@
 import { z } from 'zod';
 
-export const alunoSchema = z.object({
-  // Passo 1: Dados Básicos
-  fotoPerfil: z.string().optional(), // URI da imagem
-  nomeCompleto: z.string()
-    .min(3, 'Nome deve ter pelo menos 3 caracteres')
-    .refine(
-      (val) => val.trim().split(/\s+/).length >= 2,
-      'Informe seu nome completo (nome e sobrenome)'
-    )
-    .refine(
-      (val) => /^[a-zA-ZáàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ\s]+$/.test(val.trim()),
-      'O nome deve conter apenas letras e espaços'
-    ),
-  email: z.string().email('E-mail inválido'),
-  dataNascimento: z.string().min(10, 'Data de nascimento inválida (use DD/MM/AAAA)'),
-  senha: z.string()
-    .min(8, 'A senha deve ter pelo menos 8 caracteres')
-    .regex(/[A-Z]/, 'A senha deve conter pelo menos uma letra maiúscula')
-    .regex(/[a-z]/, 'A senha deve conter pelo menos uma letra minúscula')
-    .regex(/[0-9]/, 'A senha deve conter pelo menos um número'),
-  confirmarSenha: z.string(),
+const LETRAS = /^[A-Za-zÀ-ÖØ-öø-ÿ'’\-.]+$/;
 
-  // Passo 2: Perfil Demográfico
+const DDDS = [
+  11, 12, 13, 14, 15, 16, 17, 18, 19,
+  21, 22, 24, 27, 28,
+  31, 32, 33, 34, 35, 37, 38,
+  41, 42, 43, 44, 45, 46, 47, 48, 49,
+  51, 53, 54, 55,
+  61, 62, 63, 64, 65, 66, 67, 68, 69,
+  71, 73, 74, 75, 77, 79,
+  81, 82, 83, 84, 85, 86, 87, 88, 89,
+  91, 92, 93, 94, 95, 96, 97, 98, 99
+];
+
+export const nomeSchema = z
+  .string()
+  .transform((v) => (v || '').trim().replace(/\s+/g, ' ').replace(/’/g, "'"))
+  .pipe(
+    z
+      .string()
+      .min(3, 'Informe seu nome completo')
+      .max(150, 'O nome deve ter no máximo 150 caracteres')
+      .refine((v) => v.split(' ').every((p) => LETRAS.test(p)), 'Use apenas letras, espaços, hífen ou apóstrofo')
+      .refine((v) => {
+        const partes = v.split(' ');
+        if (partes.length < 2) return false;
+        const primeira = partes[0].replace(/[^A-Za-zÀ-ÿ]/g, '');
+        const ultima = partes[partes.length - 1].replace(/[^A-Za-zÀ-ÿ]/g, '');
+        return primeira.length >= 2 && ultima.length >= 2;
+      }, 'Informe nome e sobrenome completos')
+  );
+
+export const emailSchema = z
+  .string()
+  .transform((v) => (v || '').trim().toLowerCase())
+  .pipe(z.string().min(1, 'Informe o e-mail').email('E-mail inválido'));
+
+export const senhaSchema = z
+  .string()
+  .min(8, 'A senha deve ter pelo menos 8 caracteres')
+  .max(128, 'A senha deve ter no máximo 128 caracteres')
+  .regex(/[A-Z]/, 'Inclua pelo menos uma letra maiúscula')
+  .regex(/[a-z]/, 'Inclua pelo menos uma letra minúscula')
+  .regex(/[0-9]/, 'Inclua pelo menos um número');
+
+export const dataNascimentoSchema = z
+  .string()
+  .regex(/^\d{2}\/\d{2}\/\d{4}$/, 'Use o formato DD/MM/AAAA')
+  .refine((v) => {
+    const [d, m, a] = v.split('/').map(Number);
+    const data = new Date(a, m - 1, d);
+    return data.getFullYear() === a && data.getMonth() === m - 1 && data.getDate() === d;
+  }, 'Data inválida')
+  .refine((v) => {
+    const [d, m, a] = v.split('/').map(Number);
+    const hoje = new Date();
+    let idade = hoje.getFullYear() - a;
+    if (hoje.getMonth() + 1 < m || (hoje.getMonth() + 1 === m && hoje.getDate() < d)) idade--;
+    return idade >= 16 && idade <= 120;
+  }, 'É preciso ter entre 16 e 120 anos');
+
+export const telefoneSchema = z
+  .string()
+  .transform((v) => (v || '').replace(/\D/g, ''))
+  .pipe(
+    z
+      .string()
+      .length(11, 'Informe DDD e número com 9 dígitos')
+      .refine((v) => DDDS.includes(Number(v.slice(0, 2))), 'DDD inválido')
+      .refine((v) => v[2] === '9', 'Informe um número de celular (começa com 9)')
+      .refine((v) => new Set(v).size > 1, 'Número de telefone inválido')
+  );
+
+const fileSchema = z.any().refine((file) => {
+  if (!file) return false;
+  const target = Array.isArray(file) ? file[0] : (file && file.assets && file.assets[0]) ? file.assets[0] : file;
+  if (!target) return false;
+  if (target === 'existente' || target?.uri === 'existente') return true;
+
+  const size = target.size || target.fileSize || 1;
+  const mime = (target.mimeType || target.type || '').toLowerCase();
+  const name = (target.name || target.fileName || '').toLowerCase();
+
+  const isValidType =
+    mime.includes('pdf') ||
+    mime.includes('image') ||
+    mime.includes('png') ||
+    mime.includes('jpg') ||
+    mime.includes('jpeg') ||
+    mime.includes('webp') ||
+    name.endsWith('.pdf') ||
+    name.endsWith('.png') ||
+    name.endsWith('.jpg') ||
+    name.endsWith('.jpeg') ||
+    name.endsWith('.webp');
+
+  const isValidSize = size <= 10 * 1024 * 1024; // 10 MB
+  return isValidType && isValidSize;
+}, 'Envie PDF ou imagem (PNG, JPG ou WEBP) de até 10 MB');
+
+// Schema do Passo 1 com superRefine de senhas iguais
+export const etapa1Schema = z
+  .object({
+    fotoPerfil: z.any().optional(),
+    nomeCompleto: nomeSchema,
+    email: emailSchema,
+    dataNascimento: dataNascimentoSchema,
+    senha: senhaSchema,
+    confirmarSenha: z.string().min(1, 'Confirme sua senha'),
+  })
+  .superRefine((dados, ctx) => {
+    if (dados.senha !== dados.confirmarSenha) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['confirmarSenha'],
+        message: 'As senhas não coincidem',
+      });
+    }
+  });
+
+export const etapa2Schema = z.object({
   raca: z.string().min(1, 'Selecione a raça'),
   identificacaoSexual: z.string().min(1, 'Selecione a identificação sexual'),
   genero: z.string().min(1, 'Selecione o gênero'),
   transgenero: z.string().min(1, 'Selecione se é transgênero'),
-  temFilhos: z.boolean(),
+  temFilhos: z.boolean({ required_error: 'Informe se tem filhos' }),
+});
 
-  // Passo 3: Contato e Vínculo
+export const etapa3Schema = z.object({
   bairro: z.string().min(1, 'Selecione o bairro'),
-  whatsapp: z.string().min(10, 'O telefone deve ter pelo menos 10 dígitos com DDD'),
+  whatsapp: telefoneSchema,
   instituicao: z.string().min(1, 'Selecione a instituição'),
   curso: z.string().min(1, 'Selecione o curso'),
   campus: z.string().min(1, 'Selecione o campus'),
   periodoIngresso: z.string().min(1, 'Selecione o período de ingresso'),
   turno: z.string().min(1, 'Selecione o turno'),
   semestreAtual: z.string().min(1, 'Selecione o semestre atual'),
-
-  // Passo 4: Documentação
-  comprovanteMatricula: z.any().refine((file) => file, 'Obrigatório anexar comprovante de matrícula'),
-  comprovanteResidencia: z.any().refine((file) => file, 'Obrigatório anexar comprovante de residência'),
-
-  // Aceite
-  aceitouTermos: z.boolean().refine((val) => val === true, 'Você deve aceitar os termos de uso'),
-}).refine((data) => data.senha === data.confirmarSenha, {
-  message: "As senhas não coincidem",
-  path: ["confirmarSenha"],
 });
+
+export const etapa4Schema = z.object({
+  comprovanteMatricula: fileSchema,
+  comprovanteResidencia: fileSchema,
+});
+
+export const etapa5Schema = z.object({
+  aceitouTermos: z.boolean().refine((val) => val === true, 'Você deve aceitar os termos de uso para continuar'),
+});
+
+// Schema completo do cadastro de aluno
+export const alunoSchema = etapa1Schema
+  .and(etapa2Schema)
+  .and(etapa3Schema)
+  .and(etapa4Schema)
+  .and(etapa5Schema);
 
 export type AlunoFormData = z.infer<typeof alunoSchema>;
 
-// Esquema específico para Renovação de Vínculo (sem campos de senha)
+// Schema da renovação de vínculo
 export const renovacaoSchema = z.object({
-  // Passo 1: Dados Básicos
-  fotoPerfil: z.string().optional(),
-  nomeCompleto: z.string()
-    .min(3, 'Nome deve ter pelo menos 3 caracteres')
-    .refine(
-      (val) => val.trim().split(/\s+/).length >= 2,
-      'Informe seu nome completo (nome e sobrenome)'
-    )
-    .refine(
-      (val) => /^[a-zA-ZáàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ\s]+$/.test(val.trim()),
-      'O nome deve conter apenas letras e espaços'
-    ),
-  email: z.string().email('E-mail inválido'),
-  dataNascimento: z.string().min(10, 'Data de nascimento inválida (use DD/MM/AAAA)'),
-
-  // Passo 2: Perfil Demográfico
+  fotoPerfil: z.any().optional(),
+  nomeCompleto: nomeSchema,
+  email: emailSchema,
+  dataNascimento: dataNascimentoSchema,
   raca: z.string().min(1, 'Selecione a raça'),
   identificacaoSexual: z.string().min(1, 'Selecione a identificação sexual'),
   genero: z.string().min(1, 'Selecione o gênero'),
   transgenero: z.string().min(1, 'Selecione se é transgênero'),
   temFilhos: z.boolean(),
-
-  // Passo 3: Contato e Vínculo
   bairro: z.string().min(1, 'Selecione o bairro'),
-  whatsapp: z.string().min(10, 'O telefone deve ter pelo menos 10 dígitos com DDD'),
+  whatsapp: telefoneSchema,
   instituicao: z.string().min(1, 'Selecione a instituição'),
   curso: z.string().min(1, 'Selecione o curso'),
   campus: z.string().min(1, 'Selecione o campus'),
   periodoIngresso: z.string().min(1, 'Selecione o período de ingresso'),
   turno: z.string().min(1, 'Selecione o turno'),
   semestreAtual: z.string().min(1, 'Selecione o semestre atual'),
-
-  // Passo 4: Documentação
-  comprovanteMatricula: z.any().refine((file) => file, 'Obrigatório anexar comprovante de matrícula'),
+  comprovanteMatricula: fileSchema,
   comprovanteResidencia: z.any().optional(),
-
-  // Aceite
   aceitouTermos: z.boolean().optional(),
 });
 

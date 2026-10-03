@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, Text, useTheme } from 'react-native-paper';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft, X } from 'lucide-react-native';
 
-import { alunoSchema, AlunoFormData } from '@/schemas/alunoSchema';
+import { alunoSchema, AlunoFormData, etapa1Schema, etapa2Schema, etapa3Schema, etapa4Schema } from '@/schemas/alunoSchema';
 import { Passo1DadosBasicos } from '@/components/cadastro/Passo1DadosBasicos';
 import { Passo2Demografico } from '@/components/cadastro/Passo2Demografico';
 import { Passo3ContatoVinculo } from '@/components/cadastro/Passo3ContatoVinculo';
@@ -49,14 +49,15 @@ export default function RegisterScreen() {
 
   const metodos = useForm<AlunoFormData>({
     resolver: zodResolver(alunoSchema),
-    mode: 'onChange',
+    mode: 'onTouched',
+    reValidateMode: 'onChange',
     defaultValues: {
       temFilhos: false,
       aceitouTermos: false,
     }
   });
 
-  const { handleSubmit, trigger } = metodos;
+  const { handleSubmit, trigger, setError, getValues } = metodos;
 
   const titulos = [
     'Dados básicos',
@@ -67,32 +68,43 @@ export default function RegisterScreen() {
   ];
 
   const proximoPasso = async () => {
-    let camposParaValidar: any[] = [];
+    let schemaEtapa: any;
+    if (passo === 1) schemaEtapa = etapa1Schema;
+    if (passo === 2) schemaEtapa = etapa2Schema;
+    if (passo === 3) schemaEtapa = etapa3Schema;
+    if (passo === 4) schemaEtapa = etapa4Schema;
 
-    if (passo === 1) camposParaValidar = ['nomeCompleto', 'email', 'dataNascimento', 'senha', 'confirmarSenha'];
-    if (passo === 2) camposParaValidar = ['raca', 'identificacaoSexual', 'genero', 'transgenero'];
-    if (passo === 3) camposParaValidar = ['bairro', 'whatsapp', 'instituicao', 'curso', 'campus', 'periodoIngresso', 'turno', 'semestreAtual'];
-    if (passo === 4) camposParaValidar = ['comprovanteMatricula', 'comprovanteResidencia'];
+    if (schemaEtapa) {
+      const valores = getValues();
+      const resultado = schemaEtapa.safeParse(valores);
 
-    const valido = await trigger(camposParaValidar);
-    if (valido) {
-      if (passo === 1) {
-        setIsLoading(true);
-        const email = metodos.getValues('email');
-        const existe = await userService.verificarEmail(email);
-        setIsLoading(false);
-        if (existe) {
-          showPopup({
-            type: 'warning',
-            title: 'E-mail em uso',
-            message: 'Este e-mail já está cadastrado no sistema. Por favor, utilize outro e-mail ou a opção "Esqueci minha senha".',
-            confirmText: 'Entendido',
-          });
-          return;
-        }
+      if (!resultado.success) {
+        resultado.error.issues.forEach((issue: any) => {
+          if (issue.path && issue.path.length > 0) {
+            setError(issue.path[0] as any, { message: issue.message });
+          }
+        });
+        return;
       }
-      setPasso(passo + 1);
     }
+
+    if (passo === 1) {
+      setIsLoading(true);
+      const email = metodos.getValues('email');
+      const existe = await userService.verificarEmail(email);
+      setIsLoading(false);
+      if (existe) {
+        showPopup({
+          type: 'warning',
+          title: 'E-mail em uso',
+          message: 'Este e-mail já está cadastrado no sistema. Por favor, utilize outro e-mail ou a opção "Esqueci minha senha".',
+          confirmText: 'Entendido',
+        });
+        return;
+      }
+    }
+
+    setPasso(passo + 1);
   };
 
   const voltarPasso = () => {
@@ -148,7 +160,10 @@ export default function RegisterScreen() {
 
   return (
     <FormProvider {...metodos}>
-      <View style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
+      <KeyboardAvoidingView
+        style={[styles.safeArea, { backgroundColor: theme.colors.background }]}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={voltarPasso}>
@@ -177,6 +192,7 @@ export default function RegisterScreen() {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
           {passo <= 4 && (
             <Text variant="titleMedium" style={styles.stepIndicator}>
@@ -227,7 +243,7 @@ export default function RegisterScreen() {
             </Button>
           )}
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </FormProvider>
   );
 }

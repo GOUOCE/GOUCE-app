@@ -69,7 +69,7 @@ export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: bool
         </TouchableOpacity>
       </View>
 
-      {/* Modal Simulado para Opções de Foto (Bottom Sheet Style) */}
+      {/* Modal para Opções de Foto */}
       <Portal>
         <Modal
           visible={menuFotoVisivel}
@@ -115,6 +115,7 @@ export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: bool
             mode="outlined"
             value={value}
             onChangeText={onChange}
+            maxLength={150}
             error={!!errors.nomeCompleto}
             left={<TextInput.Icon icon={() => <User size={20} color="#666" />} />}
             style={styles.input}
@@ -164,7 +165,9 @@ export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: bool
                 label="E-mail *"
                 mode="outlined"
                 autoCapitalize="none"
+                autoCorrect={false}
                 keyboardType="email-address"
+                maxLength={150}
                 value={value}
                 onChangeText={onChange}
                 error={!!errors.email}
@@ -183,6 +186,7 @@ export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: bool
                 label="Senha *"
                 mode="outlined"
                 secureTextEntry={!verSenha}
+                maxLength={128}
                 value={value}
                 onChangeText={onChange}
                 error={!!errors.senha}
@@ -202,6 +206,7 @@ export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: bool
                 label="Confirmar Senha *"
                 mode="outlined"
                 secureTextEntry={!verConfirmarSenha}
+                maxLength={128}
                 value={value}
                 onChangeText={onChange}
                 error={!!errors.confirmarSenha}
@@ -256,6 +261,8 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 12,
     marginLeft: 4,
+    flexShrink: 1,
+    flexWrap: 'wrap',
   },
   hint: {
     fontSize: 12,
