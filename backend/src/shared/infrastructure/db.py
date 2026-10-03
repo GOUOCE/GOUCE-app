@@ -27,8 +27,12 @@ def create_tables():
     """Criar todas tabelas"""
     from src.modulos.arquivos.model.entities.arquivo import ArquivoORM
     from src.modulos.usuarios.model.entities.usuario import UsuarioORM
+    from src.modulos.usuarios.model.entities.tipo import TipoORM
+    from src.modulos.usuarios.model.entities.usuario_tipo import UsuarioTipoORM
     from src.modulos.usuarios.model.entities.aluno import AlunoORM
+    from src.modulos.usuarios.model.entities.administrador import AdministradorORM
     from src.modulos.auth.domain.entities.password_reset_token import PasswordResetTokenORM
+    from src.shared.infrastructure.audit_model import LogAuditoriaORM
 
     Base.metadata.create_all(bind=engine)
 

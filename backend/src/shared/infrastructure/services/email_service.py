@@ -18,6 +18,17 @@ class SMTPEmailService(IEmailService):
         self.from_email = os.getenv("FROM_EMAIL") or self.smtp_user or "no-reply@gouce.edu.br"
         self.app_url = os.getenv("APP_URL", "http://localhost:3000")
 
+    def enviar_senha_temporaria(self, email_destino: str, nome_usuario: str, senha: str) -> bool:
+        assunto = "Acesso de administrador - GOUCE"
+        conteudo_texto = (
+            f"Olá {nome_usuario},\n\n"
+            "Seu acesso de administrador no GOUCE foi criado.\n\n"
+            f"E-mail: {email_destino}\n"
+            f"Senha temporária: {senha}\n\n"
+            "Altere sua senha após o primeiro acesso.\n"
+        )
+        return self._enviar_mensagem(email_destino, assunto, conteudo_texto)
+
     def enviar_email_recuperacao_senha(self, email_destino: str, nome_usuario: str, token_recuperacao: str) -> bool:
         assunto = "Recuperação de Senha - GOUCE"
         base_url = self.app_url.rstrip("/")
@@ -57,6 +68,15 @@ class SMTPEmailService(IEmailService):
         </html>
         """
 
+        return self._enviar_mensagem(email_destino, assunto, conteudo_texto, conteudo_html)
+
+    def _enviar_mensagem(
+        self,
+        email_destino: str,
+        assunto: str,
+        conteudo_texto: str,
+        conteudo_html: str | None = None,
+    ) -> bool:
         # Se as credenciais de SMTP estiverem configuradas, envia via smtplib
         if self.smtp_server and self.smtp_user and self.smtp_password:
             try:
@@ -66,7 +86,8 @@ class SMTPEmailService(IEmailService):
                 msg["To"] = email_destino
 
                 msg.attach(MIMEText(conteudo_texto, "plain", "utf-8"))
-                msg.attach(MIMEText(conteudo_html, "html", "utf-8"))
+                if conteudo_html:
+                    msg.attach(MIMEText(conteudo_html, "html", "utf-8"))
 
                 with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
                     server.starttls()

@@ -24,6 +24,7 @@ from src.modulos.usuarios.application.dtos.usuario_dto import (
     ValidarEtapa4CadastroUsuarioDTO,
     CadastroSucessoDTO,
     PerfilAlunoResponseDTO,
+    AlunoResumoResponseDTO,
     CadastroErrorResponseDTO,
 )
 from src.modulos.usuarios.application.dtos.renovacao_vinculo_dto import (
@@ -165,6 +166,18 @@ def get_storage_service():
 
 
 
+
+
+@router.get(
+    "",
+    response_model=list[AlunoResumoResponseDTO],
+    summary="Listar resumo dos alunos",
+)
+async def listar_alunos_resumo(
+    repository=Depends(get_repository),
+    _: dict = Depends(require_roles(CargoEnum.ADMINISTRADOR.value)),
+):
+    return repository.listar_alunos_resumo()
 
 
 @router.post(
@@ -399,7 +412,9 @@ async def obter_carteirinha(
         user_id = current_user.get("current_user_id")
         status = current_user.get("current_status")
 
-        if status not in {StatusCadastroEnum.ATIVADO.value, StatusCadastroEnum.ANALISE_RENOVACAO.value, "ativado", "analise_renovacao"}:
+        # HU-029 (AC-02): somente aluno aprovado acessa a carteirinha;
+        # "Em Análise" (renovação da HU-028), pendente e inativado ficam bloqueados.
+        if status != StatusCadastroEnum.ATIVADO.value:
             raise HTTPException(status_code=403, detail="Carteirinha indisponível. Seu cadastro está inativo ou em análise.")
         if not isinstance(user_id, int) or isinstance(user_id, bool):
             raise HTTPException(status_code=401, detail="Sessão inválida")

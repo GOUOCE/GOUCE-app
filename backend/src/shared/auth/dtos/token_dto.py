@@ -8,7 +8,7 @@ class RegisterDTO(BaseModel):
 
     nome: str = Field(min_length=3, max_length=150)
     email: EmailStr
-    senha: str = Field(min_length=6, max_length=128)
+    senha: str = Field(min_length=8, max_length=128)
     telefone: str | None = Field(default=None, max_length=20)
     status_cadastro: str = Field(default="pendente", max_length=150)
     faculdade_id: str = Field(min_length=1, max_length=150)

@@ -3,7 +3,7 @@ import traceback
 from functools import wraps
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile, File, Form
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
@@ -16,6 +16,7 @@ from src.shared.auth.jwt_service import JWTService
 from src.shared.security.argon2_hasher import Argon2PasswordHasher
 from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
+from src.shared.validators.senha_validator import SenhaValidator
 
 from src.modulos.usuarios.application.dtos.usuario_dto import (
     CadastroUsuarioDTO,
@@ -26,6 +27,7 @@ from src.modulos.usuarios.application.dtos.usuario_dto import (
     PerfilAlunoResponseDTO,
     RedefinirEmailDTO,
     UsuarioResponseDTO,
+    UsuarioNomeEmailResponseDTO,
     AtualizarAlunoDTO,
 )
 from src.modulos.usuarios.application.use_cases.criar_usuario_use_case import (
@@ -249,6 +251,19 @@ async def listar_alunos(
     return await listar_usuarios(repository, current_user)
 
 
+@router.get(
+    "/nomes-e-emails",
+    response_model=list[UsuarioNomeEmailResponseDTO],
+    summary="Listar Nome e E-mail dos Usuários",
+)
+async def listar_nomes_e_emails(
+    roles: list[str] | None = Query(default=None),
+    repository=Depends(get_repository),
+    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ADMINISTRADOR.value))] = None,
+):
+    return repository.listar_nomes_e_emails_por_roles(roles)
+
+
 @cadastro_router.post(
     "/cadastrar",
     response_model=CadastroSucessoDTO,
@@ -285,6 +300,15 @@ async def cadastrar_usuario_com_arquivos(
     storage_service=Depends(get_storage_service),
 ):
     try:
+        senha_valida, mensagem_senha = SenhaValidator().validar_senha(senha)
+        if not senha_valida:
+            return _error_response(
+                status_code=400,
+                code="VALIDATION_ERROR",
+                message="Dados inválidos",
+                details=[{"field": "senha", "message": mensagem_senha}],
+            )
+
         salvar_arquivo_uc = SalvarArquivoUseCase(arquivo_repository, storage_service)
 
         # Normaliza campos opcionais para evitar strings vazias vindas do Swagger/FormData.
