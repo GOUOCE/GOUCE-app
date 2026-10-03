@@ -37,7 +37,7 @@
 - **Pendentes:** CT-006 (o defeito de turno do CT-002 impediu verificar o fluxo de conclusão) e CT-008 (não executado).
 - **Retirados da suíte:** CT-022 e CT-023 (tamanho máximo de e-mail), porque o limite não foi definido para o projeto.
 
-**Após correção dos defeitos:** retestar os casos que falharam, além do CT-006. Em especial, retestar o CT-002: durante a execução, um cadastro foi aceito (status pendente, ID 5), o que indica que o bloqueio de turno pode ter sido corrigido.
+**Após correção dos defeitos:** retestar os casos que falharam e o CT-006. O defeito de turno do CT-002 já foi corrigido no código (durante a execução um cadastro foi aceito, status pendente, ID 5), então o CT-002 e o CT-006 já podem ser retestados.
 
 Os IDs completos usam o prefixo `CT-HU001-UI-`. A numeração segue a ordem de leitura, de 001 a 054, sem reiniciar em cada seção; com a retirada do CT-022 e do CT-023, a numeração dos demais casos foi mantida para preservar as referências. Não marcar um caso parametrizado como aprovado se faltarem variações.
 
@@ -1252,7 +1252,7 @@ LOG  [API ERROR] 400 POST /usuarios/cadastrar {
 
 | Caso            | Defeito                                                                                                                                                                                              | Issue |
 | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| CT-HU001-UI-002 | O backend rejeita o cadastro com `Turno do curso inválido. Opções permitidas: Matutino, Vespertino, Noturno ou Integral`, mas essas opções não estão disponíveis no seletor da interface, impedindo a conclusão do cadastro por qualquer usuário. | [BUG-HU001-UI-002-turno-curso-invalido](issues/BUG-HU001-UI-002-turno-curso-invalido.md) |
+| CT-HU001-UI-002 | O backend rejeita o cadastro com `Turno do curso inválido. Opções permitidas: Matutino, Vespertino, Noturno ou Integral`, mas essas opções não estão disponíveis no seletor da interface, impedindo a conclusão do cadastro por qualquer usuário. **Resolvido no código; falta reteste.** | [BUG-HU001-UI-002-turno-curso-invalido](issues/BUG-HU001-UI-002-turno-curso-invalido.md) |
 | CT-HU001-UI-006 | O alerta exibido após toques repetidos em Concluir cadastro mostra a mensagem `[object Object]` em vez de um texto compreensível.                                                                       | [BUG-HU001-UI-006-mensagem-erro-object-object](issues/BUG-HU001-UI-006-mensagem-erro-object-object.md) |
 | CT-HU001-UI-007 | Com o teclado aberto nos campos superiores (Nome completo), a tela não rola corretamente: campos inferiores, mensagens de erro e o botão de avanço ficam inacessíveis. Ocorre nas etapas 1 e 3.         | [BUG-HU001-UI-007-teclado-cobre-campos](issues/BUG-HU001-UI-007-teclado-cobre-campos.md) |
 | CT-HU001-UI-009 | Campos vazios exibem “Required” em inglês; nome só com espaços avança todas as etapas e só é recusado no envio, com alerta “[object Object]”. | [BUG-HU001-UI-009-validacao-tardia-no-envio](issues/BUG-HU001-UI-009-validacao-tardia-no-envio.md)<br>[BUG-HU001-UI-009-mensagens-validacao-em-ingles](issues/BUG-HU001-UI-009-mensagens-validacao-em-ingles.md)<br>[BUG-HU001-UI-006-mensagem-erro-object-object](issues/BUG-HU001-UI-006-mensagem-erro-object-object.md) |
@@ -1270,7 +1270,7 @@ LOG  [API ERROR] 400 POST /usuarios/cadastrar {
 - Formatos e tamanho máximo dos comprovantes ainda precisam ser formalizados na HU-001. O CT-HU001-UI-050 foi executado e passou; as observações sobre limite e mensagens estão no próprio caso.
 - O campo “Você é uma pessoa transgênero?” aparece na tela, mas sua obrigatoriedade não está explícita na HU. Confirmar a regra; preenchê-lo nos demais testes para isolar as validações.
 - Se uma falha anterior ou a perda da sessão do Expo impedir o teste, manter o caso pendente e registrar o impedimento em Observações.
-- O defeito de turno do curso inválido (CT-HU001-UI-002) bloqueou a conclusão do cadastro na primeira rodada e impediu a verificação completa do CT-HU001-UI-006. Em testes posteriores, um cadastro foi aceito (status pendente, ID 5); retestar o CT-002 e o CT-006 para confirmar a correção.
+- O defeito de turno do curso inválido (CT-HU001-UI-002) bloqueou a conclusão do cadastro na primeira rodada e impediu a verificação completa do CT-HU001-UI-006. O defeito foi corrigido no código (o seletor passou a oferecer os turnos aceitos pela API) e, em testes posteriores, um cadastro foi aceito (status pendente, ID 5). O CT-002 permanece ❌ porque registra a execução original; reexecutar o CT-002 e o CT-006 para registrar o reteste.
 - As issues de defeitos, melhorias e pontos a discutir estão em [`issues/`](issues/README.md).
 - Validação tardia (CT-009, CT-029, CT-031 e CT-033): vários erros que deveriam ser apontados na etapa em que o dado é informado só aparecem no envio final, muitas vezes com mensagens em inglês.
 - O CT-HU001-UI-022 e o CT-HU001-UI-023 (tamanho máximo de e-mail) foram retirados da suíte porque o limite não foi definido para o projeto. Recriá-los quando houver essa definição.

@@ -2,6 +2,7 @@
 
 | Campo | Valor |
 |---|---|
+| **Status** | ✅ Resolvida — corrigida no código; falta reexecutar o CT-HU001-UI-002 |
 | **Tipo** | Bug funcional |
 | **Severidade** | 🟠 Alta |
 | **Ambiente** | Desenvolvimento — app mobile no iPhone (Expo) |
@@ -36,7 +37,11 @@ A API recusou o cadastro com HTTP `400` e a mensagem “Turno do curso inválido
 
 ### Causa aparente
 
-Na versão atual do código, o seletor de turno (`frontend/src/components/cadastro/Passo3ContatoVinculo.tsx:187`) já oferece Matutino, Vespertino, Noturno e Integral, e durante os testes um cadastro foi aceito (status pendente, ID 5). O defeito provavelmente já foi corrigido; confirmar com o reteste antes de fechar a issue.
+O seletor de turno não oferecia os valores aceitos pela API.
+
+### ✅ Resolução
+
+Corrigida: o seletor de turno (`frontend/src/components/cadastro/Passo3ContatoVinculo.tsx:187`) passou a oferecer Matutino, Vespertino, Noturno e Integral, e durante os testes um cadastro foi aceito (status pendente, ID 5). Falta reexecutar o `CT-HU001-UI-002` e o `CT-HU001-UI-006` para registrar o reteste na suíte.
 
 ### Critérios de aceite
 

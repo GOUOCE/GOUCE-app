@@ -5,7 +5,7 @@ Issues abertas a partir da execução da suíte [UI-HU-001](../UI-HU-001.md). To
 | # | Issue | Tipo | Severidade | Casos |
 |---:|---|---|---|---|
 | 1 | [Confirmação de senha divergente permite avançar e o erro só aparece na etapa 1 depois de concluir](BUG-HU001-UI-029-confirmacao-senha-divergente-avanca.md) | Bug funcional / validação | 🔴 Crítica | CT-HU001-UI-029, CT-HU001-UI-032 |
-| 2 | [Turno do curso sem as opções aceitas pela API impede concluir o cadastro](BUG-HU001-UI-002-turno-curso-invalido.md) | Bug funcional | 🟠 Alta | CT-HU001-UI-002 |
+| 2 | [Turno do curso sem as opções aceitas pela API impede concluir o cadastro](BUG-HU001-UI-002-turno-curso-invalido.md) | Bug funcional — ✅ Resolvida | 🟠 Alta | CT-HU001-UI-002 |
 | 3 | [Teclado cobre campos, mensagens de erro e o botão Avançar nas etapas 1 e 3](BUG-HU001-UI-007-teclado-cobre-campos.md) | Bug de UX | 🟠 Alta | CT-HU001-UI-007 |
 | 4 | [Erros da API aparecem como “[object Object]” no alerta do cadastro](BUG-HU001-UI-006-mensagem-erro-object-object.md) | Bug funcional / tratamento de erros | 🟠 Alta | CT-HU001-UI-006, CT-HU001-UI-009 |
 | 5 | [Validações só ocorrem no envio final, e não na etapa em que o dado é informado](BUG-HU001-UI-009-validacao-tardia-no-envio.md) | Bug de validação | 🟠 Alta | CT-HU001-UI-009, CT-HU001-UI-013, CT-HU001-UI-031, CT-HU001-UI-033 |
