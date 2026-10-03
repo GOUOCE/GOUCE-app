@@ -93,6 +93,11 @@ class UsuarioResponseDTO(BaseModel):
     telefone: str | None = None
 
 
+class UsuarioNomeEmailResponseDTO(BaseModel):
+    nome: str
+    email: str
+
+
 class AtualizarStatusAlunoDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 

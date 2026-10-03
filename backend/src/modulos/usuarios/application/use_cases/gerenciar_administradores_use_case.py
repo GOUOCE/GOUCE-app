@@ -22,6 +22,10 @@ class AdministradorNaoEncontradoError(ValueError):
     pass
 
 
+class AdministradorEmailEnvioError(RuntimeError):
+    pass
+
+
 class GerenciarAdministradoresUseCase:
     def __init__(
         self,
@@ -37,17 +41,26 @@ class GerenciarAdministradoresUseCase:
         self.string_validator = string_validator or StringSemNumeroValidator()
         self.senha_validator = senha_validator or SenhaValidator()
 
-    def criar(self, nome: str, email: str, senha: str | None):
+    def criar(self, nome: str, email: str, senha: str | None = None, email_service=None):
         nome = self._validar_nome(nome)
         email = self._validar_email(email)
-        if senha is not None:
-            self._validar_senha(senha)
         if self.repository.email_em_uso(email):
             raise AdministradorEmailEmUsoError
 
-        senha = senha or secrets.token_urlsafe(18)
+        senha = self._gerar_senha()
         try:
-            return self.repository.criar(nome, email, self.hasher.hash(senha))
+            resultado = self.repository.criar(nome, email, self.hasher.hash(senha))
+            if email_service is None:
+                return resultado, False
+            try:
+                email_enviado = email_service.enviar_senha_temporaria(email, nome, senha)
+            except Exception as error:
+                self.repository.remover_criacao(resultado[0].id)
+                raise AdministradorEmailEnvioError from error
+            if not email_enviado:
+                self.repository.remover_criacao(resultado[0].id)
+                raise AdministradorEmailEnvioError
+            return resultado, email_enviado
         except AdministradorEmailEmUsoError:
             raise
 
@@ -104,10 +117,11 @@ class GerenciarAdministradoresUseCase:
 
     def _validar_nome(self, nome: str) -> str:
         nome_normalizado = self.string_validator.formatar_string_sem_numero(str(nome or ""))
-        if not nome_normalizado or len(nome_normalizado) < 3:
+        primeiro_nome = nome_normalizado.split()[0] if nome_normalizado else ""
+        if len(primeiro_nome) < 3:
             raise AdministradorValidationError(
                 "nome",
-                "Nome deve ter pelo menos 3 caracteres.",
+                "O primeiro nome deve ter pelo menos 3 letras.",
             )
         if not self.string_validator.validar_string_sem_numero(nome_normalizado):
             raise AdministradorValidationError(
@@ -115,6 +129,12 @@ class GerenciarAdministradoresUseCase:
                 "O nome deve conter apenas letras, espaços e hífen.",
             )
         return nome_normalizado
+
+    def _gerar_senha(self) -> str:
+        while True:
+            senha = secrets.token_urlsafe(18)
+            if self.senha_validator.validar_senha(senha)[0]:
+                return senha
 
     def _validar_email(self, email: str) -> str:
         email_normalizado = str(email or "").lower().strip()

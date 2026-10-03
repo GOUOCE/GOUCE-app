@@ -235,6 +235,24 @@ class SQLAlchemyUsuarioRepository:
 
         return lista
 
+    def listar_nomes_e_emails_por_roles(self, roles: list[str] | None = None) -> list[dict]:
+        query = self.session.query(
+            UsuarioORM.nome_completo.label("nome"),
+            UsuarioORM.email,
+        )
+        if roles:
+            query = (
+                query.join(UsuarioTipoORM, UsuarioTipoORM.id_usuario == UsuarioORM.id)
+                .join(TipoORM, TipoORM.id == UsuarioTipoORM.id_tipo)
+                .filter(TipoORM.tipo_usuario.in_(roles))
+                .distinct()
+            )
+
+        return [
+            {"nome": nome, "email": email}
+            for nome, email in query.order_by(UsuarioORM.nome_completo).all()
+        ]
+
     def criar_aluno(self, comando, senha_hash: str):
         status_str = StatusCadastroEnum.PENDENTE.value
         email_limpo = comando.email.lower().strip()

@@ -8,6 +8,7 @@ from src.shared.auth.dependencies import require_roles
 from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.infrastructure.db import get_session
 from src.shared.security.argon2_hasher import Argon2PasswordHasher
+from src.shared.infrastructure.services.email_service import SMTPEmailService
 from src.modulos.usuarios.application.dtos.administrador_dto import (
     AdministradorResponseDTO,
     AtualizarAdministradorDTO,
@@ -17,6 +18,7 @@ from src.modulos.usuarios.application.dtos.administrador_dto import (
 )
 from src.modulos.usuarios.application.use_cases.gerenciar_administradores_use_case import (
     AdministradorValidationError,
+    AdministradorEmailEnvioError,
     AdministradorNaoEncontradoError,
     GerenciarAdministradoresUseCase,
 )
@@ -35,8 +37,12 @@ def get_repository(session: Annotated[Session, Depends(get_session)]):
     return AdministradorRepository(session)
 
 
-def get_use_case(repository=Depends(get_repository)):
-    return GerenciarAdministradoresUseCase(repository, Argon2PasswordHasher())
+def get_email_service():
+    return SMTPEmailService()
+
+
+def get_use_case(repository=Depends(get_repository), email_service=Depends(get_email_service)):
+    return GerenciarAdministradoresUseCase(repository, Argon2PasswordHasher()), email_service
 
 
 def _data(resultado) -> dict:
@@ -55,12 +61,23 @@ async def listar_administradores(
 @router.post("", response_model=OperacaoAdministradorResponseDTO, status_code=status.HTTP_201_CREATED)
 async def criar_administrador(
     dados: CriarAdministradorDTO,
-    use_case: GerenciarAdministradoresUseCase = Depends(get_use_case),
+    dependencias=Depends(get_use_case),
     _: dict = Depends(require_roles(CargoEnum.ADMINISTRADOR.value)),
 ):
     try:
-        resultado = use_case.criar(dados.nome, str(dados.email), dados.senha)
-        return {"message": "Operação realizada com sucesso", "data": _data(resultado)}
+        use_case, email_service = dependencias
+        resultado, email_enviado = use_case.criar(dados.nome, str(dados.email), email_service=email_service)
+        mensagem = (
+            "Administrador criado com sucesso. A senha foi gerada automaticamente e enviada por e-mail."
+            if email_enviado
+            else "Administrador criado com sucesso, mas não foi possível enviar a senha por e-mail."
+        )
+        return {"message": mensagem, "data": _data(resultado)}
+    except AdministradorEmailEnvioError:
+        raise HTTPException(
+            status_code=503,
+            detail="Não foi possível enviar a senha por e-mail. O administrador não foi criado.",
+        )
     except AdministradorEmailEmUsoError:
         raise HTTPException(status_code=409, detail="Este e-mail já está em uso por outro usuário no sistema.")
 

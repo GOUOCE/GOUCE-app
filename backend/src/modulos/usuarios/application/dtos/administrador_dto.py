@@ -5,7 +5,6 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 class CriarAdministradorDTO(BaseModel):
     nome: str = Field(min_length=3, max_length=150)
     email: EmailStr
-    senha: str | None = Field(default=None, min_length=6, max_length=128)
 
 
 class PromoverAdministradorDTO(BaseModel):

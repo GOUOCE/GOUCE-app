@@ -73,6 +73,18 @@ class AdministradorRepository:
         self.session.commit()
         return self.buscar(usuario.id)
 
+    def remover_criacao(self, administrador_id: int) -> None:
+        self.session.query(UsuarioTipoORM).filter(
+            UsuarioTipoORM.id_usuario == administrador_id
+        ).delete(synchronize_session=False)
+        self.session.query(AdministradorORM).filter(
+            AdministradorORM.administrador_id == administrador_id
+        ).delete(synchronize_session=False)
+        self.session.query(UsuarioORM).filter(
+            UsuarioORM.id == administrador_id
+        ).delete(synchronize_session=False)
+        self.session.commit()
+
     def promover(self, aluno_id: int | None = None, email: str | None = None):
         query = self.session.query(UsuarioORM, AlunoORM).join(
             AlunoORM, AlunoORM.aluno_id == UsuarioORM.id
