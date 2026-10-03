@@ -12,9 +12,10 @@ interface FileUploadProps {
   error?: boolean;
   isRequired?: boolean;
   hintText?: string;
+  testID?: string;
 }
 
-function FileUpload({ label, value, onSelect, error, isRequired = true, hintText }: FileUploadProps) {
+function FileUpload({ label, value, onSelect, error, isRequired = true, hintText, testID }: FileUploadProps) {
   const theme = useTheme();
 
   const selecionarDocumento = async () => {
@@ -36,6 +37,7 @@ function FileUpload({ label, value, onSelect, error, isRequired = true, hintText
       </Text>
 
       <TouchableOpacity
+        testID={testID}
         onPress={selecionarDocumento}
         style={[
           styles.dropzone,
@@ -81,6 +83,7 @@ export function Passo4Documentacao({ isRenovacao = false }: { isRenovacao?: bool
         name="comprovanteMatricula"
         render={({ field: { onChange, value } }) => (
           <FileUpload
+            testID="cadastro-btn-comprovante-matricula"
             label="Comprovante de Matrícula"
             value={value}
             onSelect={onChange}
@@ -89,13 +92,14 @@ export function Passo4Documentacao({ isRenovacao = false }: { isRenovacao?: bool
           />
         )}
       />
-      {errors.comprovanteMatricula && <Text style={styles.errorText}>{errors.comprovanteMatricula.message as string}</Text>}
+      {errors.comprovanteMatricula && <Text testID="cadastro-erro-comprovante-matricula" style={styles.errorText}>{errors.comprovanteMatricula.message as string}</Text>}
 
       <Controller
         control={control}
         name="comprovanteResidencia"
         render={({ field: { onChange, value } }) => (
           <FileUpload
+            testID="cadastro-btn-comprovante-residencia"
             label="Comprovante de Residência"
             value={value}
             onSelect={onChange}
@@ -105,7 +109,7 @@ export function Passo4Documentacao({ isRenovacao = false }: { isRenovacao?: bool
           />
         )}
       />
-      {errors.comprovanteResidencia && <Text style={styles.errorText}>{errors.comprovanteResidencia.message as string}</Text>}
+      {errors.comprovanteResidencia && <Text testID="cadastro-erro-comprovante-residencia" style={styles.errorText}>{errors.comprovanteResidencia.message as string}</Text>}
     </View>
   );
 }

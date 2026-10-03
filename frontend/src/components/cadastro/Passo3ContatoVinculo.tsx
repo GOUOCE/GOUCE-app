@@ -11,15 +11,16 @@ interface SelectInputProps {
   onSelect: (val: string) => void;
   error?: boolean;
   leftIcon?: React.ReactNode;
+  testID?: string;
 }
 
-function CustomSelect({ label, value, options, onSelect, error, leftIcon }: SelectInputProps) {
+function CustomSelect({ label, value, options, onSelect, error, leftIcon, testID }: SelectInputProps) {
   const [visible, setVisible] = useState(false);
   const theme = useTheme();
 
   return (
     <View style={styles.selectContainer}>
-      <TouchableOpacity onPress={() => setVisible(true)}>
+      <TouchableOpacity testID={testID} onPress={() => setVisible(true)}>
         <TextInput
           label={label}
           value={value || 'Selecionar'}
@@ -79,6 +80,7 @@ export function Passo3ContatoVinculo() {
         name="bairro"
         render={({ field: { onChange, value } }) => (
           <CustomSelect
+            testID="cadastro-select-bairro"
             label="Bairro / Localidade *"
             value={value}
             options={['Centro', 'Bairro Novo', 'Planalto', 'Serra', 'Outro']}
@@ -87,13 +89,14 @@ export function Passo3ContatoVinculo() {
           />
         )}
       />
-      {errors.bairro && <Text style={styles.errorText}>{errors.bairro.message as string}</Text>}
+      {errors.bairro && <Text testID="cadastro-erro-bairro" style={styles.errorText}>{errors.bairro.message as string}</Text>}
 
       <Controller
         control={control}
         name="whatsapp"
         render={({ field: { onChange, value } }) => (
           <TextInput
+            testID="cadastro-input-whatsapp"
             label="Telefone (WhatsApp) *"
             mode="outlined"
             placeholder="(88) 9 9999-9999"
@@ -105,13 +108,14 @@ export function Passo3ContatoVinculo() {
           />
         )}
       />
-      {errors.whatsapp && <Text style={styles.errorText}>{errors.whatsapp.message as string}</Text>}
+      {errors.whatsapp && <Text testID="cadastro-erro-whatsapp" style={styles.errorText}>{errors.whatsapp.message as string}</Text>}
 
       <Controller
         control={control}
         name="instituicao"
         render={({ field: { onChange, value } }) => (
           <CustomSelect
+            testID="cadastro-select-instituicao"
             label="Instituição de Ensino *"
             value={value}
             options={['UFC', 'UNILAB', 'IFCE', 'Estácio', 'Outra']}
@@ -121,13 +125,14 @@ export function Passo3ContatoVinculo() {
           />
         )}
       />
-      {errors.instituicao && <Text style={styles.errorText}>{errors.instituicao.message as string}</Text>}
+      {errors.instituicao && <Text testID="cadastro-erro-instituicao" style={styles.errorText}>{errors.instituicao.message as string}</Text>}
 
       <Controller
         control={control}
         name="curso"
         render={({ field: { onChange, value } }) => (
           <CustomSelect
+            testID="cadastro-select-curso"
             label="Curso *"
             value={value}
             options={['Engenharia de Software', 'Sistemas de Informação', 'Ciência da Computação', 'Medicina', 'Outro']}
@@ -137,7 +142,7 @@ export function Passo3ContatoVinculo() {
           />
         )}
       />
-      {errors.curso && <Text style={styles.errorText}>{errors.curso.message as string}</Text>}
+      {errors.curso && <Text testID="cadastro-erro-curso" style={styles.errorText}>{errors.curso.message as string}</Text>}
 
       <View style={styles.row}>
         <View style={styles.half}>
@@ -146,6 +151,7 @@ export function Passo3ContatoVinculo() {
             name="campus"
             render={({ field: { onChange, value } }) => (
               <CustomSelect
+                testID="cadastro-select-campus"
                 label="Campus *"
                 value={value}
                 options={['Quixadá', 'Redenção', 'Fortaleza', 'Itapipoca']}
@@ -154,7 +160,7 @@ export function Passo3ContatoVinculo() {
               />
             )}
           />
-          {errors.campus && <Text style={styles.errorText}>{errors.campus.message as string}</Text>}
+          {errors.campus && <Text testID="cadastro-erro-campus" style={styles.errorText}>{errors.campus.message as string}</Text>}
         </View>
 
         <View style={styles.half}>
@@ -163,6 +169,7 @@ export function Passo3ContatoVinculo() {
             name="periodoIngresso"
             render={({ field: { onChange, value } }) => (
               <CustomSelect
+                testID="cadastro-select-periodo-ingresso"
                 label="Período de Ingresso *"
                 value={value}
                 options={['2024.1', '2023.2', '2023.1', '2022.2', 'Anterior']}
@@ -171,7 +178,7 @@ export function Passo3ContatoVinculo() {
               />
             )}
           />
-          {errors.periodoIngresso && <Text style={styles.errorText}>{errors.periodoIngresso.message as string}</Text>}
+          {errors.periodoIngresso && <Text testID="cadastro-erro-periodo-ingresso" style={styles.errorText}>{errors.periodoIngresso.message as string}</Text>}
         </View>
       </View>
 
@@ -182,6 +189,7 @@ export function Passo3ContatoVinculo() {
             name="turno"
             render={({ field: { onChange, value } }) => (
               <CustomSelect
+                testID="cadastro-select-turno"
                 label="Turno do Curso *"
                 value={value}
                 options={['Matutino', 'Vespertino', 'Noturno', 'Integral']}
@@ -190,7 +198,7 @@ export function Passo3ContatoVinculo() {
               />
             )}
           />
-          {errors.turno && <Text style={styles.errorText}>{errors.turno.message as string}</Text>}
+          {errors.turno && <Text testID="cadastro-erro-turno" style={styles.errorText}>{errors.turno.message as string}</Text>}
         </View>
 
         <View style={styles.half}>
@@ -199,6 +207,7 @@ export function Passo3ContatoVinculo() {
             name="semestreAtual"
             render={({ field: { onChange, value } }) => (
               <CustomSelect
+                testID="cadastro-select-semestre-atual"
                 label="Semestre Atual *"
                 value={value}
                 options={['1º', '2º', '3º', '4º', '5º', '6º', '7º', '8º', '9º', '10º']}
@@ -207,7 +216,7 @@ export function Passo3ContatoVinculo() {
               />
             )}
           />
-          {errors.semestreAtual && <Text style={styles.errorText}>{errors.semestreAtual.message as string}</Text>}
+          {errors.semestreAtual && <Text testID="cadastro-erro-semestre-atual" style={styles.errorText}>{errors.semestreAtual.message as string}</Text>}
         </View>
       </View>
     </View>

@@ -151,11 +151,11 @@ export default function RegisterScreen() {
       <View style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={voltarPasso}>
+          <TouchableOpacity testID="cadastro-btn-voltar" onPress={voltarPasso}>
             <ChevronLeft size={28} color="#333" />
           </TouchableOpacity>
           <Text variant="titleLarge" style={styles.headerTitle}>Criar conta</Text>
-          <TouchableOpacity onPress={solicitarConfirmacaoSaida}>
+          <TouchableOpacity testID="cadastro-btn-fechar" onPress={solicitarConfirmacaoSaida}>
             <X size={28} color="#333" />
           </TouchableOpacity>
         </View>
@@ -179,7 +179,7 @@ export default function RegisterScreen() {
           showsVerticalScrollIndicator={false}
         >
           {passo <= 4 && (
-            <Text variant="titleMedium" style={styles.stepIndicator}>
+            <Text testID="cadastro-txt-passo" variant="titleMedium" style={styles.stepIndicator}>
               Passo {passo} de 4 - {titulos[passo-1]}
             </Text>
           )}
@@ -205,6 +205,7 @@ export default function RegisterScreen() {
         <View style={styles.footer}>
           {passo < 5 ? (
             <Button
+              testID="cadastro-btn-proximo"
               mode="contained"
               onPress={proximoPasso}
               loading={isLoading}
@@ -216,6 +217,7 @@ export default function RegisterScreen() {
             </Button>
           ) : (
             <Button
+              testID="cadastro-btn-concluir"
               mode="contained"
               onPress={handleSubmit(onSubmit)}
               loading={isLoading}

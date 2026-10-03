@@ -188,6 +188,7 @@ export function TermosDeUso() {
           render={({ field: { onChange, value } }) => (
             <View style={styles.checkboxRow}>
               <Checkbox
+                testID="cadastro-checkbox-termos"
                 status={value ? 'checked' : 'unchecked'}
                 onPress={() => onChange(!value)}
                 color={theme.colors.primary}
@@ -203,7 +204,7 @@ export function TermosDeUso() {
           )}
         />
         {errors.aceitouTermos && (
-          <Text style={styles.errorText}>{errors.aceitouTermos.message as string}</Text>
+          <Text testID="cadastro-erro-termos" style={styles.errorText}>{errors.aceitouTermos.message as string}</Text>
         )}
       </View>
     </View>

@@ -10,15 +10,16 @@ interface SelectInputProps {
   options: string[];
   onSelect: (val: string) => void;
   error?: boolean;
+  testID?: string;
 }
 
-function CustomSelect({ label, value, options, onSelect, error }: SelectInputProps) {
+function CustomSelect({ label, value, options, onSelect, error, testID }: SelectInputProps) {
   const [visible, setVisible] = useState(false);
   const theme = useTheme();
 
   return (
     <View style={styles.selectContainer}>
-      <TouchableOpacity onPress={() => setVisible(true)}>
+      <TouchableOpacity testID={testID} onPress={() => setVisible(true)}>
         <TextInput
           label={label}
           value={value || 'Selecionar'}
@@ -77,6 +78,7 @@ export function Passo2Demografico() {
         name="raca"
         render={({ field: { onChange, value } }) => (
           <CustomSelect
+            testID="cadastro-select-raca"
             label="Raça *"
             value={value}
             options={['Branco', 'Pardo', 'Preto', 'Amarelo', 'Indígena', 'Prefiro não dizer']}
@@ -85,13 +87,14 @@ export function Passo2Demografico() {
           />
         )}
       />
-      {errors.raca && <Text style={styles.errorText}>{errors.raca.message as string}</Text>}
+      {errors.raca && <Text testID="cadastro-erro-raca" style={styles.errorText}>{errors.raca.message as string}</Text>}
 
       <Controller
         control={control}
         name="identificacaoSexual"
         render={({ field: { onChange, value } }) => (
           <CustomSelect
+            testID="cadastro-select-identificacao-sexual"
             label="Identificação Sexual *"
             value={value}
             options={['Heterossexual', 'Homossexual (Gay/Lésbica)', 'Bissexual', 'Assexual', 'Outra', 'Prefiro não dizer']}
@@ -100,13 +103,14 @@ export function Passo2Demografico() {
           />
         )}
       />
-      {errors.identificacaoSexual && <Text style={styles.errorText}>{errors.identificacaoSexual.message as string}</Text>}
+      {errors.identificacaoSexual && <Text testID="cadastro-erro-identificacao-sexual" style={styles.errorText}>{errors.identificacaoSexual.message as string}</Text>}
 
       <Controller
         control={control}
         name="genero"
         render={({ field: { onChange, value } }) => (
           <CustomSelect
+            testID="cadastro-select-genero"
             label="Gênero *"
             value={value}
             options={['Mulher', 'Homem', 'Não-binário', 'Outro', 'Prefiro não dizer']}
@@ -115,13 +119,14 @@ export function Passo2Demografico() {
           />
         )}
       />
-      {errors.genero && <Text style={styles.errorText}>{errors.genero.message as string}</Text>}
+      {errors.genero && <Text testID="cadastro-erro-genero" style={styles.errorText}>{errors.genero.message as string}</Text>}
 
       <Controller
         control={control}
         name="transgenero"
         render={({ field: { onChange, value } }) => (
           <CustomSelect
+            testID="cadastro-select-transgenero"
             label="Você é uma pessoa transgênero? *"
             value={value}
             options={['Sim', 'Não', 'Prefiro não dizer']}
@@ -130,7 +135,7 @@ export function Passo2Demografico() {
           />
         )}
       />
-      {errors.transgenero && <Text style={styles.errorText}>{errors.transgenero.message as string}</Text>}
+      {errors.transgenero && <Text testID="cadastro-erro-transgenero" style={styles.errorText}>{errors.transgenero.message as string}</Text>}
 
       <View style={styles.toggleContainer}>
         <Text variant="bodyLarge" style={styles.toggleLabel}>Tem filhos? *</Text>
@@ -142,8 +147,8 @@ export function Passo2Demografico() {
               value={value ? 'sim' : 'nao'}
               onValueChange={(val) => onChange(val === 'sim')}
               buttons={[
-                { value: 'sim', label: 'Sim' },
-                { value: 'nao', label: 'Não' },
+                { value: 'sim', label: 'Sim', testID: 'cadastro-btn-tem-filhos-sim' },
+                { value: 'nao', label: 'Não', testID: 'cadastro-btn-tem-filhos-nao' },
               ]}
               style={styles.segmented}
             />

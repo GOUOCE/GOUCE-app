@@ -95,7 +95,7 @@ export function AppPopup({
             onPress={(e) => e.stopPropagation()}
           >
             {/* Botão Fechar no Canto */}
-            <TouchableOpacity style={styles.closeBtn} onPress={onDismiss}>
+            <TouchableOpacity testID="popup-btn-fechar" style={styles.closeBtn} onPress={onDismiss}>
               <X size={20} color="#999" />
             </TouchableOpacity>
 
@@ -105,13 +105,14 @@ export function AppPopup({
             </View>
 
             {/* Título e Mensagem */}
-            <Text variant="titleLarge" style={styles.title}>{title}</Text>
-            <Text variant="bodyMedium" style={styles.message}>{message}</Text>
+            <Text testID="popup-titulo" variant="titleLarge" style={styles.title}>{title}</Text>
+            <Text testID="popup-mensagem" variant="bodyMedium" style={styles.message}>{message}</Text>
 
             {/* Botões de Ação */}
             <View style={styles.buttonContainer}>
               {cancelText && (
                 <Button
+                  testID="popup-btn-cancelar"
                   mode="outlined"
                   onPress={handleCancel}
                   style={styles.cancelBtn}
@@ -122,6 +123,7 @@ export function AppPopup({
               )}
 
               <Button
+                testID="popup-btn-confirmar"
                 mode="contained"
                 onPress={handleConfirm}
                 style={[

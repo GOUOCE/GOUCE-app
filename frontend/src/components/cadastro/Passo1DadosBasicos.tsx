@@ -57,7 +57,7 @@ export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: bool
       <Text variant="titleMedium" style={styles.labelFoto}>Imagem de Perfil *</Text>
 
       <View style={styles.avatarContainer}>
-        <TouchableOpacity onPress={() => setMenuFotoVisivel(true)} style={styles.avatarWrapper}>
+        <TouchableOpacity testID="cadastro-btn-foto" onPress={() => setMenuFotoVisivel(true)} style={styles.avatarWrapper}>
           {fotoPerfil ? (
             <Image source={{ uri: fotoPerfil }} style={styles.avatarImage} />
           ) : (
@@ -85,18 +85,18 @@ export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: bool
             <View style={styles.modalContent}>
               <View style={styles.modalHandle} />
 
-              <TouchableOpacity style={styles.modalOption} onPress={tirarFoto}>
+              <TouchableOpacity testID="cadastro-btn-tirar-foto" style={styles.modalOption} onPress={tirarFoto}>
                 <Camera size={24} color="#333" />
                 <Text variant="bodyLarge" style={styles.modalOptionText}>Tirar nova foto</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.modalOption} onPress={escolherDaGaleria}>
+              <TouchableOpacity testID="cadastro-btn-escolher-galeria" style={styles.modalOption} onPress={escolherDaGaleria}>
                 <ImageIcon size={24} color="#333" />
                 <Text variant="bodyLarge" style={styles.modalOptionText}>Escolher da galeria</Text>
               </TouchableOpacity>
 
               {fotoPerfil && (
-                <TouchableOpacity style={styles.modalOption} onPress={removerFoto}>
+                <TouchableOpacity testID="cadastro-btn-remover-foto" style={styles.modalOption} onPress={removerFoto}>
                   <Trash2 size={24} color="#B00020" />
                   <Text variant="bodyLarge" style={[styles.modalOptionText, { color: '#B00020' }]}>Remover foto</Text>
                 </TouchableOpacity>
@@ -111,6 +111,7 @@ export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: bool
         name="nomeCompleto"
         render={({ field: { onChange, value } }) => (
           <TextInput
+            testID="cadastro-input-nome"
             label="Nome Completo *"
             mode="outlined"
             value={value}
@@ -121,7 +122,7 @@ export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: bool
           />
         )}
       />
-      {errors.nomeCompleto && <Text style={styles.errorText}>{errors.nomeCompleto.message as string}</Text>}
+      {errors.nomeCompleto && <Text testID="cadastro-erro-nome" style={styles.errorText}>{errors.nomeCompleto.message as string}</Text>}
 
       <Controller
         control={control}
@@ -138,6 +139,7 @@ export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: bool
 
           return (
             <TextInput
+              testID="cadastro-input-data-nascimento"
               label="Data de Nascimento *"
               mode="outlined"
               placeholder="DD/MM/AAAA"
@@ -152,7 +154,7 @@ export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: bool
           );
         }}
       />
-      {errors.dataNascimento && <Text style={styles.errorText}>{errors.dataNascimento.message as string}</Text>}
+      {errors.dataNascimento && <Text testID="cadastro-erro-data-nascimento" style={styles.errorText}>{errors.dataNascimento.message as string}</Text>}
 
       {!isRenovacao && (
         <>
@@ -161,6 +163,7 @@ export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: bool
             name="email"
             render={({ field: { onChange, value } }) => (
               <TextInput
+                testID="cadastro-input-email"
                 label="E-mail *"
                 mode="outlined"
                 autoCapitalize="none"
@@ -173,44 +176,46 @@ export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: bool
               />
             )}
           />
-          {errors.email && <Text style={styles.errorText}>{errors.email.message as string}</Text>}
+          {errors.email && <Text testID="cadastro-erro-email" style={styles.errorText}>{errors.email.message as string}</Text>}
 
           <Controller
             control={control}
             name="senha"
             render={({ field: { onChange, value } }) => (
               <TextInput
+                testID="cadastro-input-senha"
                 label="Senha *"
                 mode="outlined"
                 secureTextEntry={!verSenha}
                 value={value}
                 onChangeText={onChange}
                 error={!!errors.senha}
-                right={<TextInput.Icon icon={() => verSenha ? <EyeOff size={20} /> : <Eye size={20} />} onPress={() => setVerSenha(!verSenha)} />}
+                right={<TextInput.Icon testID="cadastro-btn-ver-senha" icon={() => verSenha ? <EyeOff size={20} /> : <Eye size={20} />} onPress={() => setVerSenha(!verSenha)} />}
                 style={styles.input}
               />
             )}
           />
           <Text style={styles.hint}>Mín. 8 caracteres, com letra maiúscula, minúscula e número.</Text>
-          {errors.senha && <Text style={styles.errorText}>{errors.senha.message as string}</Text>}
+          {errors.senha && <Text testID="cadastro-erro-senha" style={styles.errorText}>{errors.senha.message as string}</Text>}
 
           <Controller
             control={control}
             name="confirmarSenha"
             render={({ field: { onChange, value } }) => (
               <TextInput
+                testID="cadastro-input-confirmar-senha"
                 label="Confirmar Senha *"
                 mode="outlined"
                 secureTextEntry={!verConfirmarSenha}
                 value={value}
                 onChangeText={onChange}
                 error={!!errors.confirmarSenha}
-                right={<TextInput.Icon icon={() => verConfirmarSenha ? <EyeOff size={20} /> : <Eye size={20} />} onPress={() => setVerConfirmarSenha(!verConfirmarSenha)} />}
+                right={<TextInput.Icon testID="cadastro-btn-ver-confirmar-senha" icon={() => verConfirmarSenha ? <EyeOff size={20} /> : <Eye size={20} />} onPress={() => setVerConfirmarSenha(!verConfirmarSenha)} />}
                 style={styles.input}
               />
             )}
           />
-          {errors.confirmarSenha && <Text style={styles.errorText}>{errors.confirmarSenha.message as string}</Text>}
+          {errors.confirmarSenha && <Text testID="cadastro-erro-confirmar-senha" style={styles.errorText}>{errors.confirmarSenha.message as string}</Text>}
         </>
       )}
     </View>

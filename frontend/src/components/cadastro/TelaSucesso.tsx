@@ -30,6 +30,7 @@ export function TelaSucesso({ onVoltarLogin }: TelaSucessoProps) {
       </Text>
 
       <Button
+        testID="cadastro-btn-ir-login"
         mode="contained"
         onPress={onVoltarLogin}
         style={styles.button}
