@@ -169,6 +169,7 @@ export default function LoginScreen() {
         </View>
 
         <Button
+          testID="login-btn-criar-conta"
           mode="outlined"
           onPress={() => router.push('/(autenticacao)/register')}
           style={styles.btnRegister}

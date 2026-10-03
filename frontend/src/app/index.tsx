@@ -19,6 +19,7 @@ export default function WelcomeScreen() {
       <View style={styles.bottomSection}>
         <View style={styles.buttonGroup}>
           <Button
+            testID="inicio-btn-entrar"
             mode="contained"
             onPress={() => router.push('/(autenticacao)/login')}
             style={styles.mainButton}
@@ -29,6 +30,7 @@ export default function WelcomeScreen() {
           </Button>
 
           <Button
+            testID="inicio-btn-criar-conta"
             mode="outlined"
             onPress={() => router.push('/(autenticacao)/register')}
             style={[styles.mainButton, styles.outlineButton]}
