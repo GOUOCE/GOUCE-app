@@ -35,6 +35,17 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
+      # Detecta versões incompatíveis que o --legacy-peer-deps deixa passar.
+      # Por enquanto só avisa: há conflitos conhecidos (issues #77 e #78).
+      # Quando forem corrigidos, remover o continue-on-error para bloquear o CI.
+      - name: Check dependency tree
+        continue-on-error: true
+        run: |
+          if ! npm ls --all > /dev/null 2> npm-ls.log; then
+            grep -E "invalid|missing" npm-ls.log | sed 's/^npm error /::warning title=Dependência incompatível::/'
+            exit 1
+          fi
+
       - name: Run ESLint
         run: npm run lint
 
