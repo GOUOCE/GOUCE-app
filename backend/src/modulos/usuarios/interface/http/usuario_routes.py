@@ -16,6 +16,7 @@ from src.shared.auth.jwt_service import JWTService
 from src.shared.security.argon2_hasher import Argon2PasswordHasher
 from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
+from src.shared.validators.senha_validator import SenhaValidator
 
 from src.modulos.usuarios.application.dtos.usuario_dto import (
     CadastroUsuarioDTO,
@@ -299,6 +300,15 @@ async def cadastrar_usuario_com_arquivos(
     storage_service=Depends(get_storage_service),
 ):
     try:
+        senha_valida, mensagem_senha = SenhaValidator().validar_senha(senha)
+        if not senha_valida:
+            return _error_response(
+                status_code=400,
+                code="VALIDATION_ERROR",
+                message="Dados inválidos",
+                details=[{"field": "senha", "message": mensagem_senha}],
+            )
+
         salvar_arquivo_uc = SalvarArquivoUseCase(arquivo_repository, storage_service)
 
         # Normaliza campos opcionais para evitar strings vazias vindas do Swagger/FormData.
