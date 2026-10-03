@@ -1,0 +1,6 @@
+# Configuração do workspace do Maestro.
+# Roda todos os fluxos dentro de flows/ (em qualquer subpasta).
+# A pasta subflows/ fica de fora de propósito: são passos reutilizáveis, não testes.
+# Filtros por tag são passados na linha de comando (ver README).
+flows:
+  - "flows/**"
