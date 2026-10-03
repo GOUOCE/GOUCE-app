@@ -6,7 +6,6 @@ from src.modulos.usuarios.interface.http.aluno_router import router as aluno_rou
 from src.modulos.usuarios.interface.http.administrador_routes import router as administrador_router
 from src.modulos.arquivos.api.http.arquivo_routes import router as arquivo_router
 from src.modulos.arquivos.infrastructure.services.minio_client import ensure_bucket_exists
-from src.shared.infrastructure.db import Base, engine, create_tables, sync_schema
 
 app = FastAPI(
     title="API GOUCE",
@@ -28,8 +27,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-create_tables()
-sync_schema()
 ensure_bucket_exists()
 
 app.include_router(auth_router)
