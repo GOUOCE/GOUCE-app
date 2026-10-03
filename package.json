@@ -10,7 +10,7 @@
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "test": "jest --passWithNoTests",
-    "test:ci": "jest --passWithNoTests --coverage --ci"
+    "test:ci": "jest --coverage --ci"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
