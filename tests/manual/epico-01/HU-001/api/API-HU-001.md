@@ -9,16 +9,16 @@
 | Camada | API |
 | Tipo de teste | Funcional manual — suíte essencial |
 | Endpoint | `POST /usuarios/cadastrar` — `multipart/form-data` |
-| Ambiente | A preencher — URL e commit testado |
+| Ambiente | Docker local — `http://localhost:8000` — branch `feature/testes-api-hu-001` — commit `9cd5d3da` |
 | Total de casos | 8 |
-| Última execução | Não realizada |
+| Última execução | 2026-10-02 — execução dos CT-HU001-API-001 a 008 |
 | Testador | Radlei Doroth |
 
 ## Resultado geral
 
-| Situação | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
-| --- | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 8 | 0 | 0 | 8 |
+| Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | ⏳ Pendentes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| ⚠️ Execução parcial | 8 | 2 | 2 | 4 | 0 |
 
 ## Pré-condições
 
@@ -31,25 +31,27 @@
 
 **Dados válidos de referência**
 
+Os valores pessoais e a senha de referência não são registrados nesta documentação. Use valores fictícios válidos no cliente de teste e varie o e-mail por tentativa.
+
 | Campo | Valor |
 | --- | --- |
-| nome | Maria da Silva Souza |
-| email | qa.hu001.001@example.com — variar por tentativa |
-| senha | Abcde123 |
-| data_nascimento | 2002-03-15 |
-| telefone | 85999990000 |
-| raca | Pardo |
-| identificacao_sexual | Heterossexual |
-| identificacao_genero | Mulher |
-| transgenero | Não |
-| tem_filhos | false |
-| bairro_id | Centro |
-| faculdade_id | UFC |
-| curso | Engenharia de Software |
-| campus | Quixadá |
-| semestre_atual | 5 |
-| periodo_ingresso | 2024.1 |
-| turno_curso | Matutino |
+| nome | valor fictício válido omitido |
+| email | e-mail fictício novo por tentativa omitido |
+| senha | senha fictícia válida omitida |
+| data_nascimento | data fictícia válida omitida |
+| telefone | telefone fictício válido omitido |
+| raca | valor fictício válido omitido |
+| identificacao_sexual | valor fictício válido omitido |
+| identificacao_genero | valor fictício válido omitido |
+| transgenero | valor fictício válido omitido |
+| tem_filhos | valor fictício válido omitido |
+| bairro_id | identificador válido omitido |
+| faculdade_id | identificador válido omitido |
+| curso | valor fictício válido omitido |
+| campus | valor fictício válido omitido |
+| semestre_atual | valor inteiro válido omitido |
+| periodo_ingresso | período válido omitido |
+| turno_curso | turno válido omitido |
 | comprovante_matricula | `matricula.pdf` — arquivo fictício, válido, pequeno e não vazio |
 | comprovante_residencia | `residencia.pdf` — arquivo fictício, válido, pequeno e não vazio |
 | termos_de_uso | true |
@@ -62,14 +64,14 @@ Executar na ordem abaixo. São **8 casos essenciais**, com poucas variações ex
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU001-API-001 | Cadastro válido e pendente | Massa válida e dois comprovantes | HTTP 201; aluno pendente, dados e documentos vinculados | ⏳ PENDENTE | Não executado. |
-| CT-HU001-API-002 | E-mail duplicado | E-mail criado no CT-001 | HTTP 409; impedir segundo cadastro | ⏳ PENDENTE | Não executado. |
-| CT-HU001-API-003 | Campo obrigatório ausente | Omitir nome, depois telefone, em tentativas separadas | Rejeitar ausência e indicar o campo | ⏳ PENDENTE | Não executado. |
-| CT-HU001-API-004 | Dados inválidos | E-mail inválido; depois data inexistente | Rejeitar com erro de validação | ⏳ PENDENTE | Não executado. |
-| CT-HU001-API-005 | Senha fora das regras | Senha curta ou sem maiúscula, minúscula ou número | Rejeitar conforme AC-03 | ⏳ PENDENTE | Não executado. |
-| CT-HU001-API-006 | Cadastro sem aceite | termos_de_uso=false | HTTP 400; exigir aceite | ⏳ PENDENTE | Não executado. |
-| CT-HU001-API-007 | Comprovante obrigatório ausente | Omitir matrícula; depois residência | HTTP 422; identificar o arquivo ausente | ⏳ PENDENTE | Não executado. |
-| CT-HU001-API-008 | Arquivo inválido | PDF vazio; depois TXT | HTTP 400; rejeitar o comprovante | ⏳ PENDENTE | Não executado. |
+| CT-HU001-API-001 | Cadastro válido e pendente | Massa válida e dois comprovantes | HTTP 201; aluno pendente, dados e documentos vinculados | ✅ APROVADO | HTTP 201; `success: true`; usuário ID 2 persistido no PostgreSQL, com status `pendente` e telefone preenchido. Os dois comprovantes estão associados no PostgreSQL e os arquivos foram localizados no bucket `smp-fotos` do MinIO. |
+| CT-HU001-API-002 | E-mail duplicado | E-mail criado no CT-001 | HTTP 409; impedir segundo cadastro | ⚠️ PARCIAL | HTTP 409; `success: false`; `EMAIL_ALREADY_REGISTERED`. A investigação confirmou dois registros órfãos em `arquivos` e dois objetos correspondentes no MinIO; a resposta HTTP foi correta, mas houve efeito colateral de armazenamento. |
+| CT-HU001-API-003 | Campo obrigatório ausente | Omitir nome, depois telefone, em tentativas separadas | Rejeitar ausência e indicar o campo | ❌ FALHOU | Sem `nome`: 422 conforme esperado; a consulta posterior por `email_hash` retornou zero usuários para essa tentativa. Sem `telefone`: HTTP 201, cadastro aceito com status pendente; o usuário ID 3 foi persistido no PostgreSQL. A investigação não encontrou arquivos órfãos atribuíveis ao caso. |
+| CT-HU001-API-004 | Dados inválidos | E-mail inválido; depois data inexistente | Rejeitar com erro de validação | ⚠️ PARCIAL | As respostas foram conforme esperado: e-mail `422` e data `400`. As consultas posteriores por `email_hash` retornaram zero usuários para as duas tentativas. Cada tentativa deixou dois registros órfãos em `arquivos` e dois objetos no MinIO; houve efeito colateral de armazenamento. |
+| CT-HU001-API-005 | Senha fora das regras | Senha curta ou sem maiúscula, minúscula ou número | Rejeitar conforme AC-03 | ❌ FALHOU | Senha curta, sem maiúscula e sem minúscula foram aceitas com HTTP 201 e persistidas no PostgreSQL como usuários IDs 4, 5 e 6, respectivamente. A tentativa sem número foi rejeitada com HTTP 400 e `VALIDATION_ERROR`, mas deixou dois registros órfãos e dois objetos no MinIO. |
+| CT-HU001-API-006 | Cadastro sem aceite | termos_de_uso=false | HTTP 400; exigir aceite | ⚠️ PARCIAL | HTTP 400; `VALIDATION_ERROR`; detalhe referente a `termos_de_uso`, conforme esperado. A consulta posterior por `email_hash` retornou zero usuários para a tentativa. Ainda assim, a tentativa deixou dois registros órfãos em `arquivos` e dois objetos no MinIO. |
+| CT-HU001-API-007 | Comprovante obrigatório ausente | Omitir matrícula; depois residência | HTTP 422; identificar o arquivo ausente | ✅ APROVADO | As duas tentativas retornaram HTTP 422 e `REQUEST_VALIDATION_ERROR`, identificando o campo ausente. As consultas posteriores por `email_hash` retornaram zero usuários para as tentativas sem comprovante de matrícula e sem comprovante de residência. A investigação não encontrou arquivos órfãos atribuíveis ao caso. |
+| CT-HU001-API-008 | Arquivo inválido | PDF vazio; depois TXT | HTTP 400; rejeitar o comprovante | ⚠️ PARCIAL | PDF vazio: HTTP 400, `VALIDATION_ERROR`, “O arquivo enviado está vazio”; TXT: HTTP 400, `VALIDATION_ERROR`, formato não permitido. As consultas posteriores por `email_hash` retornaram zero usuários para as duas tentativas. A investigação não encontrou arquivos órfãos atribuíveis ao caso. A classificação permanece parcial porque os requisitos da HU-001 não definem explicitamente a política de formatos PDF/imagem e a suíte registra que essa política ainda precisa ser confirmada com o time. |
 
 ## Detalhamento dos casos
 
@@ -91,8 +93,12 @@ Executar na ordem abaixo. São **8 casos essenciais**, com poucas variações ex
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- HTTP `201`, `success: true`, com `status_cadastro: "pendente"`.
+- Os campos `nome`, `email` e `id` foram retornados corretamente; o usuário foi criado com ID `2`.
+- O PostgreSQL confirmou a persistência do usuário, com status `pendente` e telefone preenchido.
+- Os dois comprovantes estão associados ao usuário no PostgreSQL, e os arquivos correspondentes foram localizados no bucket `smp-fotos` do MinIO.
+- O texto completo de `message` e do corpo JSON não foi preservado no registro disponível; não foi reconstruído.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -116,8 +122,11 @@ Executar na ordem abaixo. São **8 casos essenciais**, com poucas variações ex
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- HTTP `409`, `success: false`, `error.code: "EMAIL_ALREADY_REGISTERED"` e mensagem de e-mail já cadastrado.
+- A consulta posterior por `email_hash` encontrou somente o usuário ID `2` e não encontrou usuários adicionais associados ao e-mail rejeitado.
+- A investigação posterior de persistência confirmou que a tentativa deixou dois registros órfãos em `arquivos` e dois objetos no MinIO. O caso permanece parcial: a resposta HTTP foi correta, mas os comprovantes não foram removidos.
+- O texto completo da mensagem não foi preservado; o registro disponível apenas descreve a mensagem como referente a e-mail já cadastrado.
+- Status: ⚠️ Parcial.
 
 ---
 
@@ -139,14 +148,19 @@ Executar na ordem abaixo. São **8 casos essenciais**, com poucas variações ex
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Primeira tentativa, sem `nome`: HTTP `422`, `success: false`, `error.code: "REQUEST_VALIDATION_ERROR"` e `error.details` identificando `nome`, conforme esperado.
+- Segunda tentativa, sem `telefone` e mantendo nome e demais dados válidos: HTTP `201`, `success: true`; cadastro aceito com `status_cadastro: "pendente"`, contrariando o requisito.
+- O PostgreSQL confirmou a persistência do usuário ID `3` sem telefone.
+- A consulta posterior por `email_hash` retornou zero usuários para a tentativa sem `nome`.
+- A investigação não encontrou arquivos órfãos atribuíveis às tentativas deste caso.
+- A tentativa sem `telefone` foi uma resposta de sucesso; não há `error.code` ou mensagem de erro aplicável. O trecho JSON preservado está registrado no BUG-001.
+- Status: ❌ Falhou.
 
 ---
 
 ### CT-HU001-API-004 — Dados inválidos
 
-**Dados de entrada:** duas tentativas: `email=maria@`; depois e-mail válido e novo com `data_nascimento=31/02/2002`.
+**Dados de entrada:** duas tentativas: e-mail em formato inválido; depois e-mail fictício válido e novo com data de nascimento inexistente.
 
 **Passos**
 
@@ -161,14 +175,18 @@ Executar na ordem abaixo. São **8 casos essenciais**, com poucas variações ex
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- E-mail inválido: HTTP `422`, `success: false`, `error.code: "REQUEST_VALIDATION_ERROR"` e `error.details` identificando `email`, conforme esperado.
+- Data de nascimento inexistente: HTTP `400`, `success: false`, `error.code: "VALIDATION_ERROR"`, `error.details` identificando `data_nascimento` e mensagem: `Data de nascimento inválida (verifique dia e mês).`, conforme esperado.
+- As consultas posteriores por `email_hash` retornaram zero usuários para as duas tentativas: e-mail inválido e data de nascimento inválida.
+- A investigação posterior confirmou dois registros órfãos e dois objetos no MinIO para cada tentativa rejeitada. As respostas HTTP foram corretas, mas os efeitos colaterais de armazenamento impedem a aprovação completa.
+- Para a tentativa de e-mail inválido, o texto completo da mensagem não foi preservado; somente o código e a identificação do campo estão registrados.
+- Status: ⚠️ Parcial.
 
 ---
 
 ### CT-HU001-API-005 — Senha fora das regras
 
-**Dados de entrada:** uma tentativa por senha: `Abcd123` (7 caracteres), `abcdefg1` (sem maiúscula), `ABCDEFG1` (sem minúscula) e `Abcdefgh` (sem número).
+**Dados de entrada:** uma tentativa por categoria: senha com 7 caracteres, senha sem maiúscula, senha sem minúscula e senha sem número. Os valores das senhas não foram preservados.
 
 **Passos**
 
@@ -183,8 +201,21 @@ Executar na ordem abaixo. São **8 casos essenciais**, com poucas variações ex
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Senha curta, com 7 caracteres: HTTP `201`; cadastro aceito indevidamente.
+- Senha sem maiúscula: HTTP `201`; cadastro aceito indevidamente.
+- Senha sem minúscula: HTTP `201`; cadastro aceito indevidamente.
+- Senha sem número: HTTP `400`, `success: false`, `error.code: "VALIDATION_ERROR"` e mensagem informando que a senha deve conter pelo menos um número.
+- O PostgreSQL confirmou a persistência dos cadastros aceitos:
+
+  | Cenário | ID |
+  | --- | ---: |
+  | Senha curta | 4 |
+  | Senha sem maiúscula | 5 |
+  | Senha sem minúscula | 6 |
+
+- A consulta posterior por `email_hash` retornou zero usuários para a tentativa sem número. A investigação confirmou dois registros órfãos em `arquivos` e dois objetos no MinIO. Os três cadastros aceitos possuem arquivos associados; a rejeição HTTP correta não evitou o efeito colateral.
+- Não foram preservados trechos JSON das três respostas HTTP `201`; os registros disponíveis contêm somente status e confirmação de persistência. O corpo da rejeição sem número contém o código indicado acima, mas sua mensagem completa também não foi transcrita.
+- Status: ❌ Falhou.
 
 ---
 
@@ -204,8 +235,11 @@ Executar na ordem abaixo. São **8 casos essenciais**, com poucas variações ex
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- HTTP `400`, `success: false`, `error.code: "VALIDATION_ERROR"` e `error.details` referente a `termos_de_uso`, conforme esperado.
+- A consulta posterior por `email_hash` retornou zero usuários para a tentativa com termos de uso não aceitos.
+- A investigação posterior confirmou dois registros órfãos em `arquivos` e dois objetos no MinIO. A resposta HTTP foi correta, mas os comprovantes não foram removidos.
+- O texto completo da mensagem de validação não foi preservado; somente o código e o campo identificado estão registrados.
+- Status: ⚠️ Parcial.
 
 ---
 
@@ -225,8 +259,13 @@ Executar na ordem abaixo. São **8 casos essenciais**, com poucas variações ex
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Tentativa sem `comprovante_matricula`: HTTP `422`, `success: false`, `error.code: "REQUEST_VALIDATION_ERROR"` e `error.details` identificando `comprovante_matricula`, conforme esperado.
+- Tentativa sem `comprovante_residencia`: HTTP `422`, `success: false`, `error.code: "REQUEST_VALIDATION_ERROR"` e `error.details` identificando `comprovante_residencia`, conforme esperado.
+- As duas tentativas apresentaram as validações esperadas.
+- As consultas posteriores por `email_hash` retornaram zero usuários para ambas as tentativas: sem comprovante de matrícula e sem comprovante de residência.
+- A investigação posterior não encontrou arquivos órfãos atribuíveis às duas tentativas.
+- O texto completo da mensagem não foi preservado; o código e o campo ausente estão registrados.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -247,18 +286,44 @@ Executar na ordem abaixo. São **8 casos essenciais**, com poucas variações ex
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- PDF vazio: HTTP `400`, `success: false`, `error.code: "VALIDATION_ERROR"` e mensagem `O arquivo enviado está vazio`, conforme esperado.
+- Arquivo TXT: HTTP `400`, `success: false`, `error.code: "VALIDATION_ERROR"` e mensagem informando que apenas PDF e imagens PNG, JPG, JPEG e WEBP são permitidos, conforme esperado.
+- As duas tentativas apresentaram as validações esperadas.
+- As consultas posteriores por `email_hash` retornaram zero usuários para ambas as tentativas: PDF vazio e arquivo TXT.
+- A investigação posterior não encontrou arquivos órfãos atribuíveis às duas tentativas.
+- A classificação permanece parcial porque os requisitos não explicitam os formatos aceitos e a confirmação da política técnica PDF/imagem, prevista no resultado esperado, não está registrada.
+- Status: ⚠️ Parcial.
+
+## Investigação de persistência
+
+A investigação posterior foi realizada com consultas somente leitura ao PostgreSQL, logs da API e metadados do MinIO. Ela confirmou 10 registros órfãos na tabela `arquivos`, todos com `content_type=application/pdf`, distribuídos em cinco pares. Os 10 registros possuem objetos correspondentes no bucket `smp-fotos` do MinIO, um objeto por UUID do registro.
+
+| Caso | Horário UTC | Resposta HTTP | Resultado da investigação |
+| --- | --- | ---: | --- |
+| `CT-HU001-API-002` — e-mail duplicado | `21:20:48` | `409` | 2 registros órfãos e 2 objetos no MinIO |
+| `CT-HU001-API-004` — e-mail inválido | `21:38:28` | `422` | 2 registros órfãos e 2 objetos no MinIO |
+| `CT-HU001-API-004` — data inválida | `21:39:51` | `400` | 2 registros órfãos e 2 objetos no MinIO |
+| `CT-HU001-API-005` — senha sem número | `21:48:30` | `400` | 2 registros órfãos e 2 objetos no MinIO |
+| `CT-HU001-API-006` — termos não aceitos | `22:05:32` | `400` | 2 registros órfãos e 2 objetos no MinIO |
+
+As consultas posteriores por `email_hash` retornaram zero usuários para as tentativas rejeitadas, exceto a consulta do CT-002, que encontrou somente o usuário ID `2` e nenhum usuário adicional. Não há evidência de arquivos órfãos atribuível aos casos `CT-HU001-API-003`, `CT-HU001-API-007` ou `CT-HU001-API-008`.
+
+Essas consultas foram realizadas após a execução dos testes e registram o estado encontrado naquele momento; não comprovam, isoladamente, a ausência de persistência de usuário durante todo o intervalo entre cada requisição e a consulta posterior.
+
+A investigação distingue a validação da resposta HTTP dos efeitos colaterais de armazenamento: uma resposta `400`, `409` ou `422` pode estar correta e, ainda assim, o caso não deve ser aprovado se deixar registros ou objetos sem associação.
 
 ## Defeitos encontrados
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-HU001-API-003 | A API aceita o cadastro sem o campo obrigatório `telefone` e retorna HTTP `201`. | [BUG-HU001-API-001 — Issue #81](https://github.com/GOUOCE/GOUCE-app/issues/81) |
+| CT-HU001-API-005 | A API aceita senhas sem comprimento mínimo, maiúscula ou minúscula, embora rejeite corretamente a ausência de número. | [BUG-HU001-API-002 — Issue #84](https://github.com/GOUOCE/GOUCE-app/issues/84) |
+| CT-HU001-API-002, CT-HU001-API-004, CT-HU001-API-005 e CT-HU001-API-006 | A API rejeita as requisições, mas deixa comprovantes persistidos na tabela `arquivos` e no bucket `smp-fotos`, sem associação com alunos. | [BUG-HU001-API-003 — Issue #85](https://github.com/GOUOCE/GOUCE-app/issues/85) |
 
 ## Observações gerais
 
 - Referências: [HU-001, seção 7.2.1](../../../../../docs/requisitos.md) e [contrato atual das rotas](../../../../../backend/src/modulos/usuarios/interface/http/usuario_routes.py). Conferir a versão implantada; esta suíte não foi executada durante sua criação.
 - A suíte cobre somente a rota principal usada pelo app. Rotas de validação por etapa, cadastro JSON, limites extensos, concorrência, falhas de infraestrutura e verificações completas de hash/HTTPS ficam para outra rodada. Aprovar estes 8 casos não significa cobertura total da HU.
-- Se o CT-001 falhar, registrar o defeito e executar os negativos que ainda possam ser isolados. Sem acesso à consulta dos registros, manter a verificação de persistência pendente. A ausência de aluno não implica que uploads temporários tenham sido removidos.
+- Se o CT-001 falhar, registrar o defeito e executar os negativos que ainda possam ser isolados. Quando não houver acesso às consultas de persistência, registrar essa verificação como pendente. A ausência de aluno não implica que uploads temporários tenham sido removidos.
+- A investigação de persistência desta execução está documentada em [BUG-HU001-API-003-arquivos-orfaos.md](issues/BUG-HU001-API-003-arquivos-orfaos.md); a ausência de registros em `aluno` não foi tratada como evidência de remoção dos arquivos.
 - Registrar status e resposta obtidos em cada CT; ocultar senhas, tokens e dados pessoais nas evidências.
