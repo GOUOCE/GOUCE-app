@@ -253,6 +253,23 @@ class SQLAlchemyUsuarioRepository:
             for nome, email in query.order_by(UsuarioORM.nome_completo).all()
         ]
 
+    def listar_alunos_resumo(self) -> list[dict]:
+        resultados = (
+            self.session.query(
+                UsuarioORM.nome_completo.label("nome"),
+                UsuarioORM.email,
+                AlunoORM.faculdade_id.label("faculdade"),
+                AlunoORM.campus,
+            )
+            .join(AlunoORM, AlunoORM.aluno_id == UsuarioORM.id)
+            .order_by(UsuarioORM.nome_completo)
+            .all()
+        )
+        return [
+            {"nome": nome, "email": email, "faculdade": faculdade, "campus": campus}
+            for nome, email, faculdade, campus in resultados
+        ]
+
     def criar_aluno(self, comando, senha_hash: str):
         status_str = StatusCadastroEnum.PENDENTE.value
         email_limpo = comando.email.lower().strip()

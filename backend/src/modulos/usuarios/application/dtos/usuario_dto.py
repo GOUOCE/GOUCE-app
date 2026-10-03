@@ -98,6 +98,13 @@ class UsuarioNomeEmailResponseDTO(BaseModel):
     email: str
 
 
+class AlunoResumoResponseDTO(BaseModel):
+    nome: str
+    email: str
+    faculdade: str
+    campus: str | None = None
+
+
 class AtualizarStatusAlunoDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
