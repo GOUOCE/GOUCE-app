@@ -1,0 +1,18 @@
+# Toca em Próximo e confere que o app continua no Passo 1
+# mostrando a mensagem esperada no campo indicado.
+#
+# Parâmetros:
+#   ERRO_ID   testID da mensagem de erro (ex.: cadastro-erro-email)
+#   MENSAGEM  texto esperado. É uma expressão regular: escape ( ) . ? com \\
+appId: com.gouce.app
+---
+- tapOn:
+    id: "cadastro-btn-proximo"
+- assertVisible:
+    id: "cadastro-txt-passo"
+    text: "Passo 1 de 4.*"
+- scrollUntilVisible:
+    element:
+      id: ${ERRO_ID}
+      text: ${MENSAGEM}
+    direction: DOWN

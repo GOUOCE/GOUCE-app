@@ -1,0 +1,34 @@
+# CT-HU001-UI-027 — Senha sem letra minúscula
+# Caso manual: tests/manual/epico-01/HU-001/ui/UI-HU-001.md#ct-hu001-ui-027--senha-sem-letra-minúscula
+appId: com.gouce.app
+name: "CT-HU001-UI-027 — Senha sem letra minúscula"
+tags:
+  - hu-001
+  - smoke
+---
+- runFlow: ../../../subflows/cadastro/abrir-cadastro.yaml
+- runFlow:
+    file: ../../../subflows/cadastro/preencher-dados-basicos.yaml
+    env:
+      NOME: "Maria da Silva"
+      DATA_NASCIMENTO: "01012000"
+      EMAIL: "maria.e2e@teste.com"
+      SENHA: ""
+      CONFIRMAR_SENHA: ""
+
+# --- "ABCDEFG1" ---
+- runFlow:
+    file: ../../../subflows/cadastro/redigitar-campo.yaml
+    env:
+      CAMPO_ID: "cadastro-input-senha"
+      VALOR: "ABCDEFG1"
+- runFlow:
+    file: ../../../subflows/cadastro/redigitar-campo.yaml
+    env:
+      CAMPO_ID: "cadastro-input-confirmar-senha"
+      VALOR: "ABCDEFG1"
+- runFlow:
+    file: ../../../subflows/cadastro/deve-bloquear-passo-1.yaml
+    env:
+      ERRO_ID: "cadastro-erro-senha"
+      MENSAGEM: "A senha deve conter pelo menos uma letra minúscula"

@@ -1,0 +1,20 @@
+# Apaga o conteúdo de um campo de texto e digita um valor novo.
+#
+# Parâmetros:
+#   CAMPO_ID  testID do campo (ex.: cadastro-input-email)
+#   VALOR     texto a digitar. Atenção: o Maestro remove espaços nas pontas
+#             de valores passados por `env`; para testar espaços, digite no fluxo.
+#
+# Apaga até 40 caracteres (cada um leva ~0,2 s). Para valores maiores, use
+# um eraseText próprio no fluxo.
+appId: com.gouce.app
+---
+- scrollUntilVisible:
+    element:
+      id: ${CAMPO_ID}
+    direction: UP
+- tapOn:
+    id: ${CAMPO_ID}
+- eraseText: 40
+- inputText: ${VALOR}
+- hideKeyboard

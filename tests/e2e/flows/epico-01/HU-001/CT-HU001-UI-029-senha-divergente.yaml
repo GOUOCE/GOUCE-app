@@ -1,0 +1,35 @@
+# CT-HU001-UI-029 — Confirmação de senha divergente
+# Caso manual: tests/manual/epico-01/HU-001/ui/UI-HU-001.md#ct-hu001-ui-029--confirmação-de-senha-divergente
+# Bug: https://github.com/GOUOCE/GOUCE-app/issues/49
+appId: com.gouce.app
+name: "CT-HU001-UI-029 — Confirmação de senha divergente"
+tags:
+  - hu-001
+  - bug-conhecido
+---
+- runFlow: ../../../subflows/cadastro/abrir-cadastro.yaml
+- runFlow:
+    file: ../../../subflows/cadastro/preencher-dados-basicos.yaml
+    env:
+      NOME: "Maria da Silva"
+      DATA_NASCIMENTO: "01012000"
+      EMAIL: "maria.e2e@teste.com"
+      SENHA: ""
+      CONFIRMAR_SENHA: ""
+
+# --- Senha "Abcde123" e confirmação "Abcde124" ---
+- runFlow:
+    file: ../../../subflows/cadastro/redigitar-campo.yaml
+    env:
+      CAMPO_ID: "cadastro-input-senha"
+      VALOR: "Abcde123"
+- runFlow:
+    file: ../../../subflows/cadastro/redigitar-campo.yaml
+    env:
+      CAMPO_ID: "cadastro-input-confirmar-senha"
+      VALOR: "Abcde124"
+- runFlow:
+    file: ../../../subflows/cadastro/deve-bloquear-passo-1.yaml
+    env:
+      ERRO_ID: "cadastro-erro-confirmar-senha"
+      MENSAGEM: "As senhas não coincidem"

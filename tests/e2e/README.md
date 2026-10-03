@@ -101,3 +101,15 @@ maestro studio
 ```
 
 No emulador, o backend local é acessado por `http://10.0.2.2:<porta>`.
+
+---
+
+## Armadilhas conhecidas
+
+- **`env` remove espaços nas pontas.** Um valor como `"   "` passado para um subflow chega vazio.
+  Para testar espaços, digite direto no fluxo e confira o campo antes de seguir (veja
+  `CT-HU001-UI-009-nome-so-espacos.yaml`, que usa `copyTextFrom` + `assertTrue`).
+- **`eraseText` é lento** (~0,2 s por caractere). Apague só o necessário e, quando possível,
+  deixe o campo testado vazio no preenchimento inicial em vez de preencher e apagar.
+- **Confira que o teste falharia.** Um fluxo verde pode estar passando pelo motivo errado.
+  Ao conferir mensagens de erro, use `id` + `text` para garantir a mensagem certa no campo certo.

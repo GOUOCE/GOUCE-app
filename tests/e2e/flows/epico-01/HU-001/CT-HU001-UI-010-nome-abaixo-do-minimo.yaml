@@ -1,0 +1,41 @@
+# CT-HU001-UI-010 — Nome abaixo do mínimo
+# Caso manual: tests/manual/epico-01/HU-001/ui/UI-HU-001.md#ct-hu001-ui-010--nome-abaixo-do-mínimo
+appId: com.gouce.app
+name: "CT-HU001-UI-010 — Nome abaixo do mínimo"
+tags:
+  - hu-001
+  - regressao
+---
+- runFlow: ../../../subflows/cadastro/abrir-cadastro.yaml
+- runFlow:
+    file: ../../../subflows/cadastro/preencher-dados-basicos.yaml
+    env:
+      NOME: ""
+      DATA_NASCIMENTO: "01012000"
+      EMAIL: "maria.e2e@teste.com"
+      SENHA: "Senha123"
+      CONFIRMAR_SENHA: "Senha123"
+
+# --- "A" (1 caractere) ---
+- runFlow:
+    file: ../../../subflows/cadastro/redigitar-campo.yaml
+    env:
+      CAMPO_ID: "cadastro-input-nome"
+      VALOR: "A"
+- runFlow:
+    file: ../../../subflows/cadastro/deve-bloquear-passo-1.yaml
+    env:
+      ERRO_ID: "cadastro-erro-nome"
+      MENSAGEM: "Nome deve ter pelo menos 3 caracteres"
+
+# --- "Li" (2 caracteres) ---
+- runFlow:
+    file: ../../../subflows/cadastro/redigitar-campo.yaml
+    env:
+      CAMPO_ID: "cadastro-input-nome"
+      VALOR: "Li"
+- runFlow:
+    file: ../../../subflows/cadastro/deve-bloquear-passo-1.yaml
+    env:
+      ERRO_ID: "cadastro-erro-nome"
+      MENSAGEM: "Nome deve ter pelo menos 3 caracteres"

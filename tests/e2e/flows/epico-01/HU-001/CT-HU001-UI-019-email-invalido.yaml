@@ -1,0 +1,65 @@
+# CT-HU001-UI-019 — E-mail inválido
+# Caso manual: tests/manual/epico-01/HU-001/ui/UI-HU-001.md#ct-hu001-ui-019--e-mail-inválido
+appId: com.gouce.app
+name: "CT-HU001-UI-019 — E-mail inválido"
+tags:
+  - hu-001
+  - smoke
+---
+- runFlow: ../../../subflows/cadastro/abrir-cadastro.yaml
+- runFlow:
+    file: ../../../subflows/cadastro/preencher-dados-basicos.yaml
+    env:
+      NOME: "Maria da Silva"
+      DATA_NASCIMENTO: "01012000"
+      EMAIL: ""
+      SENHA: "Senha123"
+      CONFIRMAR_SENHA: "Senha123"
+
+# --- maria ---
+- runFlow:
+    file: ../../../subflows/cadastro/redigitar-campo.yaml
+    env:
+      CAMPO_ID: "cadastro-input-email"
+      VALOR: "maria"
+- runFlow:
+    file: ../../../subflows/cadastro/deve-bloquear-passo-1.yaml
+    env:
+      ERRO_ID: "cadastro-erro-email"
+      MENSAGEM: "E-mail inválido"
+
+# --- maria@ ---
+- runFlow:
+    file: ../../../subflows/cadastro/redigitar-campo.yaml
+    env:
+      CAMPO_ID: "cadastro-input-email"
+      VALOR: "maria@"
+- runFlow:
+    file: ../../../subflows/cadastro/deve-bloquear-passo-1.yaml
+    env:
+      ERRO_ID: "cadastro-erro-email"
+      MENSAGEM: "E-mail inválido"
+
+# --- maria..silva@example.com ---
+- runFlow:
+    file: ../../../subflows/cadastro/redigitar-campo.yaml
+    env:
+      CAMPO_ID: "cadastro-input-email"
+      VALOR: "maria..silva@example.com"
+- runFlow:
+    file: ../../../subflows/cadastro/deve-bloquear-passo-1.yaml
+    env:
+      ERRO_ID: "cadastro-erro-email"
+      MENSAGEM: "E-mail inválido"
+
+# --- maria exemplo@example.com ---
+- runFlow:
+    file: ../../../subflows/cadastro/redigitar-campo.yaml
+    env:
+      CAMPO_ID: "cadastro-input-email"
+      VALOR: "maria exemplo@example.com"
+- runFlow:
+    file: ../../../subflows/cadastro/deve-bloquear-passo-1.yaml
+    env:
+      ERRO_ID: "cadastro-erro-email"
+      MENSAGEM: "E-mail inválido"

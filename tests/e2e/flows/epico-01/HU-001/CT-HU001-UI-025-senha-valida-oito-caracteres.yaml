@@ -1,0 +1,35 @@
+# CT-HU001-UI-025 — Senha válida com oito caracteres
+# Caso manual: tests/manual/epico-01/HU-001/ui/UI-HU-001.md#ct-hu001-ui-025--senha-válida-com-oito-caracteres
+# Ao avançar, o app consulta a API (verificar e-mail): precisa do backend rodando.
+appId: com.gouce.app
+name: "CT-HU001-UI-025 — Senha válida com oito caracteres"
+tags:
+  - hu-001
+  - smoke
+---
+- runFlow: ../../../subflows/cadastro/abrir-cadastro.yaml
+- runFlow:
+    file: ../../../subflows/cadastro/preencher-dados-basicos.yaml
+    env:
+      NOME: "Maria da Silva"
+      DATA_NASCIMENTO: "01012000"
+      EMAIL: "maria.e2e@teste.com"
+      SENHA: ""
+      CONFIRMAR_SENHA: ""
+
+# --- "Abcde123" deve avançar para o Passo 2 ---
+- runFlow:
+    file: ../../../subflows/cadastro/redigitar-campo.yaml
+    env:
+      CAMPO_ID: "cadastro-input-senha"
+      VALOR: "Abcde123"
+- runFlow:
+    file: ../../../subflows/cadastro/redigitar-campo.yaml
+    env:
+      CAMPO_ID: "cadastro-input-confirmar-senha"
+      VALOR: "Abcde123"
+- tapOn:
+    id: "cadastro-btn-proximo"
+- assertVisible:
+    id: "cadastro-txt-passo"
+    text: "Passo 2 de 4.*"
