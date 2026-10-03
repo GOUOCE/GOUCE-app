@@ -13,7 +13,10 @@ from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
 class FakeRenewalRepository:
     def __init__(self):
         self.usuario = SimpleNamespace(id=7, email="aluno@example.com")
-        self.aluno = SimpleNamespace(aluno_id=7)
+        self.aluno = SimpleNamespace(
+            aluno_id=7,
+            id_comprovante_residencia=None,
+        )
         self.update_call = None
 
     def buscar_com_detalhes_por_id(self, aluno_id):

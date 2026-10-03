@@ -49,8 +49,9 @@ class ValidarEtapa1UsuarioUseCase:
 
         # Validação de Nome Completo
         nome = dto.nome.strip() if dto.nome else ""
-        if not nome or len(nome) < 3:
-            erros.append({"field": "nome", "message": "Nome completo deve ter pelo menos 3 caracteres"})
+        primeiro_nome = nome.split()[0] if nome else ""
+        if len(primeiro_nome) < 3:
+            erros.append({"field": "nome", "message": "O primeiro nome deve ter pelo menos 3 letras"})
         elif len(nome.split()) < 2:
             erros.append({"field": "nome", "message": "Informe seu nome completo (nome e sobrenome)"})
         elif not self.string_validator.validar_string_sem_numero(nome):

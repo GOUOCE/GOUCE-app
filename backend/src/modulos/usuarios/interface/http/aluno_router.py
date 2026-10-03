@@ -24,6 +24,7 @@ from src.modulos.usuarios.application.dtos.usuario_dto import (
     ValidarEtapa4CadastroUsuarioDTO,
     CadastroSucessoDTO,
     PerfilAlunoResponseDTO,
+    AlunoResumoResponseDTO,
     CadastroErrorResponseDTO,
 )
 from src.modulos.usuarios.application.dtos.renovacao_vinculo_dto import (
@@ -165,6 +166,18 @@ def get_storage_service():
 
 
 
+
+
+@router.get(
+    "",
+    response_model=list[AlunoResumoResponseDTO],
+    summary="Listar resumo dos alunos",
+)
+async def listar_alunos_resumo(
+    repository=Depends(get_repository),
+    _: dict = Depends(require_roles(CargoEnum.ADMINISTRADOR.value)),
+):
+    return repository.listar_alunos_resumo()
 
 
 @router.post(
