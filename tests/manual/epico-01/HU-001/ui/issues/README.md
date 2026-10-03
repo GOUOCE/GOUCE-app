@@ -17,7 +17,7 @@ Issues abertas a partir da execução da suíte [UI-HU-001](../UI-HU-001.md). To
 | 11 | [Opção “Anterior” no período de ingresso grava um período inventado](BUG-HU001-UI-043-periodo-anterior-grava-valor-inventado.md) | Bug funcional / integridade de dados | 🟡 Média | CT-HU001-UI-043 |
 | 12 | [Termos de uso sem LGPD e com texto provisório em outro idioma](BUG-HU001-UI-051-termos-sem-lgpd-texto-provisorio.md) | Bug funcional / conteúdo | 🟡 Média | CT-HU001-UI-051 |
 | 13 | [Caixa de aceite dos termos não aparece na tela](BUG-HU001-UI-052-caixa-aceite-invisivel.md) | Bug de UX | 🟡 Média | CT-HU001-UI-052 |
-| 14 | [Mensagem de erro da senha sobrepõe os outros campos](BUG-HU001-UI-031-mensagem-senha-sobrepoe-campos.md) | Bug de UX / layout | 🟢 Baixa | CT-HU001-UI-031 |
+| 14 | [Mensagem de erro muito longa extrapola o campo em vez de quebrar a linha](BUG-HU001-UI-031-mensagem-erro-longa-extrapola-campo.md) | Bug de UX / layout | 🟢 Baixa | CT-HU001-UI-031 |
 | 15 | [Validação da data de nascimento dispara já no primeiro dígito digitado](BUG-HU001-UI-033-validacao-data-durante-digitacao.md) | Bug de UX | 🟢 Baixa | CT-HU001-UI-033 |
 | 16 | [Seta do seletor não abre a lista de opções](BUG-HU001-UI-043-seta-seletor-nao-abre.md) | Bug de UX | 🟢 Baixa | CT-HU001-UI-043 |
 | 17 | [Semestre atual vai só até o 10º, mas o backend aceita até o 16º](DISCUSSAO-HU001-UI-044-limite-semestre-atual.md) | Divergência de requisito — discutir com o time | 🟡 Média | CT-HU001-UI-044 |
