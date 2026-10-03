@@ -40,13 +40,36 @@ flows/epico-01/HU-001/CT-HU001-UI-019-email-invalido.yaml
 
 ### Seletores
 
-Prefira `testID` (no Maestro: `id:`) a texto da tela. Padrão: `<tela>-<tipo>-<campo>`.
+Seguindo a [recomendação do Maestro para React Native](https://docs.maestro.dev/get-started/supported-platform/react-native):
 
+| O que | Seletor | Por quê |
+|---|---|---|
+| Elementos que o teste **aciona** (campos, botões, selects, checkbox) | `id:` (o `testID` do componente) | Não quebra se o texto mudar ou o app for traduzido |
+| Mensagens que o teste **confere** (erros, popups, títulos) | texto | O texto é o comportamento testado: se a mensagem mudar, o teste deve falhar |
+| Opções de listas (ex.: "Parda", "Noite") | texto | São os valores do domínio e já são estáveis |
+
+Para conferir uma mensagem de erro, combine os dois. Assim o teste garante que a mensagem certa
+apareceu no campo certo:
+
+```yaml
+- assertVisible:
+    id: "cadastro-erro-email"
+    text: "E-mail inválido"
 ```
-cadastro-input-email
-cadastro-btn-proximo
-login-input-senha
-```
+
+Padrão dos `testID`s: `<tela>-<tipo>-<campo>`.
+
+| Tipo | Exemplo |
+|---|---|
+| `input` | `cadastro-input-email` |
+| `select` | `cadastro-select-curso` |
+| `btn` | `cadastro-btn-proximo`, `cadastro-btn-ver-senha` |
+| `checkbox` | `cadastro-checkbox-termos` |
+| `erro` | `cadastro-erro-email` (mensagem de validação do campo) |
+| `txt` | `cadastro-txt-passo` |
+
+O popup genérico (`AppPopup`) usa `popup-titulo`, `popup-mensagem`, `popup-btn-confirmar`,
+`popup-btn-cancelar` e `popup-btn-fechar`.
 
 ### Subflows
 
