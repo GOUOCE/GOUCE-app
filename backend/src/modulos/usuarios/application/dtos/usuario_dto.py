@@ -1,8 +1,9 @@
 from datetime import date, datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, model_validator
 from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
+from src.shared.enums.tipo_documento_reenvio_enum import TipoDocumentoReenvioEnum
 from src.shared.enums.turno_curso_enum import TurnoCursoEnum
 from src.shared.enums.demograficos_enum import (
     RacaEnum,
@@ -98,18 +99,104 @@ class UsuarioNomeEmailResponseDTO(BaseModel):
     email: str
 
 
+class DocumentoReenvioRespostaDTO(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    tipo: str
+    motivo: str
+
+
+class DocumentoReenvioSolicitadoDTO(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    tipo: TipoDocumentoReenvioEnum = Field(
+        description="Tipo do documento que deve ser reenviado pelo aluno.",
+        json_schema_extra={
+            "examples": [
+                "comprovante_matricula",
+                "comprovante_residencia",
+                "foto_perfil",
+            ]
+        },
+    )
+    motivo: str = Field(
+        min_length=1,
+        max_length=255,
+        description="Motivo específico da rejeição deste documento.",
+        json_schema_extra={"examples": ["Documento ilegível. Envie uma nova cópia."]},
+    )
+
+
 class AlunoResumoResponseDTO(BaseModel):
+    id: int
     nome: str
     email: str
     faculdade: str
     campus: str | None = None
+    status_cadastro: str
+    data_hora_envio_analise: datetime | None = None
+    data_hora_ultima_renovacao_matricula: datetime | None = None
+    motivo_reprovacao: str | None = None
+    documentos_reenvio: list[DocumentoReenvioRespostaDTO] | None = None
 
 
 class AtualizarStatusAlunoDTO(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(
+        populate_by_name=True,
+        json_schema_extra={
+            "examples": [
+                {
+                    "status_cadastro": "rejeitado",
+                    "motivo_reprovacao": "Documentos precisam ser reenviados.",
+                    "documentos_reenvio": [
+                        {
+                            "tipo": "comprovante_matricula",
+                            "motivo": "Documento ilegível. Envie uma nova cópia.",
+                        },
+                        {
+                            "tipo": "comprovante_residencia",
+                            "motivo": "Comprovante fora do prazo de validade.",
+                        },
+                    ],
+                },
+            ]
+        },
+    )
 
-    status_cadastro: StatusCadastroEnum = StatusCadastroEnum.ATIVADO
-    motivo_reprovacao: str | None = Field(default=None, max_length=255)
+    status_cadastro: StatusCadastroEnum = Field(
+        default=StatusCadastroEnum.ATIVADO,
+        description="Novo status do cadastro do aluno.",
+    )
+    motivo_reprovacao: str | None = Field(
+        default=None,
+        max_length=255,
+        description="Motivo geral da rejeição. Use junto com status_cadastro=rejeitado.",
+    )
+    documentos_reenvio: list[DocumentoReenvioSolicitadoDTO] | None = Field(
+        default=None,
+        description=(
+            "Documentos específicos que o aluno deverá reenviar. "
+            "Obrigatório quando status_cadastro=rejeitado."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def validar_dados_de_rejeicao(self):
+        if self.status_cadastro == StatusCadastroEnum.REJEITADO:
+            if not self.motivo_reprovacao or not self.motivo_reprovacao.strip():
+                raise ValueError(
+                    "motivo_reprovacao é obrigatório quando status_cadastro é rejeitado."
+                )
+            if not self.documentos_reenvio:
+                raise ValueError(
+                    "documentos_reenvio é obrigatório quando status_cadastro é rejeitado."
+                )
+        elif self.motivo_reprovacao or self.documentos_reenvio:
+            raise ValueError(
+                "motivo_reprovacao e documentos_reenvio só devem ser informados "
+                "quando status_cadastro é rejeitado."
+            )
+        return self
 
 
 class AprovacaoAlunoResponseDTO(BaseModel):
@@ -118,6 +205,15 @@ class AprovacaoAlunoResponseDTO(BaseModel):
     aluno_id: int
     status_cadastro: str
     motivo_reprovacao: str | None = None
+    documentos_reenvio: list[DocumentoReenvioRespostaDTO] | None = None
+    mensagem: str
+
+
+class AprovarAlunoResponseDTO(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    aluno_id: int
+    status_cadastro: str
     mensagem: str
 
 
@@ -188,6 +284,18 @@ class PerfilAlunoResponseDTO(BaseModel):
     id_comprovante_residencia: str | None = None
     nome_comprovante_matricula: str | None = None
     nome_comprovante_residencia: str | None = None
+
+
+class AdminAlunoDetalhesResponseDTO(PerfilAlunoResponseDTO):
+    """Dados seguros e completos de um aluno para consulta administrativa."""
+
+    transgenero: SimNaoPrefiroEnum | str | None = None
+    documentos_reenvio: list[DocumentoReenvioRespostaDTO] | None = None
+    data_hora_envio_analise: datetime | None = None
+    data_hora_ultima_renovacao_matricula: datetime | None = None
+    termos_de_uso: bool | None = None
+    consentimento_lgpd_em: datetime | None = None
+    versao_termos: str | None = None
 
 
 class RedefinirEmailDTO(BaseModel):

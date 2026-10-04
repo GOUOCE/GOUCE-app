@@ -10,7 +10,11 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from src.shared.infrastructure.db import get_session
-from src.shared.auth.dependencies import require_roles, verify_any_user
+from src.shared.auth.dependencies import (
+    require_roles,
+    verify_any_user,
+    verify_student_standard_access,
+)
 from src.shared.auth.jwt_service import JWTService
 from src.shared.security.argon2_hasher import Argon2PasswordHasher
 from src.shared.enums.cargo_enum import CargoEnum
@@ -24,6 +28,7 @@ from src.modulos.usuarios.application.dtos.usuario_dto import (
     ValidarEtapa4CadastroUsuarioDTO,
     CadastroSucessoDTO,
     PerfilAlunoResponseDTO,
+    AdminAlunoDetalhesResponseDTO,
     AlunoResumoResponseDTO,
     CadastroErrorResponseDTO,
 )
@@ -174,10 +179,26 @@ def get_storage_service():
     summary="Listar resumo dos alunos",
 )
 async def listar_alunos_resumo(
+    status: str | None = None,
+    ordem: str | None = None,
     repository=Depends(get_repository),
     _: dict = Depends(require_roles(CargoEnum.ADMINISTRADOR.value)),
 ):
-    return repository.listar_alunos_resumo()
+    status_normalizado = status.strip().lower() if status is not None else None
+    status_permitidos = {item.value for item in StatusCadastroEnum}
+    if status_normalizado and status_normalizado not in status_permitidos:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Status inválido. Informe um dos valores: "
+                + ", ".join(sorted(status_permitidos))
+            ),
+        )
+
+    return repository.listar_alunos_resumo(
+        status=status_normalizado or None,
+        ordem=ordem,
+    )
 
 
 @router.post(
@@ -326,7 +347,7 @@ async def renovar_vinculo(
     comprovante_matricula: UploadFile = File(...),
     comprovante_residencia: UploadFile | str | None = File(None),
     foto_perfil: UploadFile | str | None = File(None),
-    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ALUNO.value))] = None,
+    current_user: Annotated[dict, Depends(verify_student_standard_access)] = None,
     repository=Depends(get_repository),
     arquivo_repository=Depends(get_arquivo_repository),
     storage_service=Depends(get_storage_service),
@@ -405,7 +426,7 @@ async def renovar_vinculo(
     responses=EDICAO_ERROR_RESPONSES,
 )
 async def obter_carteirinha(
-    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ALUNO.value))],
+    current_user: Annotated[dict, Depends(verify_student_standard_access)],
     repository=Depends(get_repository),
 ):
     try:
@@ -430,3 +451,48 @@ async def obter_carteirinha(
     except Exception:
         raise HTTPException(status_code=500, detail="Erro interno ao consultar o perfil")
 
+
+@router.get(
+    "/{aluno_id}",
+    response_model=AdminAlunoDetalhesResponseDTO,
+    summary="Consultar todos os dados de um aluno",
+    description="Retorna os dados seguros e completos de um aluno. Acesso exclusivo para administradores.",
+)
+async def obter_detalhes_aluno(
+    aluno_id: int,
+    repository=Depends(get_repository),
+    arquivo_repository=Depends(get_arquivo_repository),
+    _: dict = Depends(require_roles(CargoEnum.ADMINISTRADOR.value)),
+):
+    try:
+        aluno = repository.buscar_aluno_por_id(aluno_id)
+        if not aluno:
+            raise HTTPException(status_code=404, detail="Aluno não encontrado")
+
+        perfil = ObterPerfilAlunoUseCase(repository, arquivo_repository).execute(aluno_id)
+        resposta = perfil.model_dump()
+        resposta.update(
+            {
+                "transgenero": aluno.transgenero,
+                "documentos_reenvio": repository.normalizar_documentos_reenvio(
+                    getattr(aluno, "documentos_reenvio", None)
+                ),
+                "data_hora_envio_analise": aluno.data_hora_envio_analise,
+                "data_hora_ultima_renovacao_matricula": (
+                    aluno.data_hora_ultima_renovacao_matricula
+                ),
+                "termos_de_uso": aluno.termos_de_uso,
+                "consentimento_lgpd_em": aluno.consentimento_lgpd_em,
+                "versao_termos": aluno.versao_termos,
+            }
+        )
+        return resposta
+    except HTTPException:
+        raise
+    except ValueError as error:
+        if "não encontrado" in str(error).lower():
+            raise HTTPException(status_code=404, detail="Aluno não encontrado")
+        raise HTTPException(status_code=400, detail="Não foi possível consultar os dados do aluno")
+    except Exception:
+        logger.exception("Erro ao consultar detalhes do aluno %s", aluno_id)
+        raise HTTPException(status_code=500, detail="Erro interno ao consultar os dados do aluno")

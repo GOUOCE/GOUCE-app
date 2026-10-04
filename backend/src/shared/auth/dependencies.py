@@ -163,6 +163,15 @@ async def verify_active_student(
     current_user: Annotated[dict, Depends(require_roles("aluno"))],
 ) -> dict:
     """Restringe uma operacao ao aluno com acesso liberado."""
-    if current_user.get("current_status") not in {"ativado", "analise_renovacao"}:
+    if current_user.get("current_status") not in {"ativado", "analise_renovacao", "rejeitado"}:
+        raise _forbidden()
+    return current_user
+
+
+async def verify_student_standard_access(
+    current_user: Annotated[dict, Depends(require_roles("aluno"))],
+) -> dict:
+    """Bloqueia o aluno rejeitado fora do fluxo de reenvio de documentos."""
+    if current_user.get("current_status") == "rejeitado":
         raise _forbidden()
     return current_user
