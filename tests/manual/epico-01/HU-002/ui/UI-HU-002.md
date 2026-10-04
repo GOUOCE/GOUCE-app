@@ -263,6 +263,7 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 - O AC-08 exige escolher o perfil antes de entrar. Ao escolher um perfil que não é o da conta, o app deve informar a divergência e não entrar, ou pedir para escolher o perfil correto.
 - Não deve entrar em silêncio na área de outro perfil, como se a escolha não existisse.
+- Ordem do fluxo: o requisito (AC-08) e o BDD (`HU-002.feature`) preveem que o perfil seja escolhido **antes** de informar e-mail e senha; no app atual, a escolha vem **depois**. Registrar a ordem observada como divergência, mesmo que o restante do caso passe.
 
 **Resultado obtido**
 
@@ -477,4 +478,5 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 - O e-mail e a senha são passados da tela de login para a de seleção de perfil como parâmetros de navegação. No iPhone isso não aparece, mas na versão web pode expor a senha na barra de endereço. Fica registrado para uma eventual suíte web.
 - “Lembrar de mim” (`lembrar_me`) existe na API, mas não aparece na tela; não há caso para ele nesta suíte.
 - Recuperação de senha é coberta pela HU-004; aqui só se verifica que o link abre a tela correta (CT-018).
+- Cenários BDD de referência: [`bdd/features/epico-01/HU-002.feature`](../../../../../bdd/features/epico-01/HU-002.feature). As mensagens esperadas dos CT-011, CT-012 e CT-014 seguem os textos do BDD. Os cenários de token de sessão e de HTTPS (RNF-003) são marcados no BDD como `@teste_api` e ficam fora desta suíte de UI.
 - Registrar o texto exato de cada mensagem exibida. Ocultar senhas e dados pessoais nas evidências.
