@@ -20,7 +20,10 @@ class LoginUseCase:
         usuario = contexto.get("usuario") if contexto else None
         aluno = contexto.get("aluno") if contexto else None
 
-        if not usuario or not self.hasher.verify(login_data.senha, usuario.senha):
+        # Senhas temporárias são copiadas do e-mail; espaços/quebras de linha
+        # acidentais não fazem parte da senha gerada pelo sistema.
+        senha_informada = login_data.senha.strip()
+        if not usuario or not self.hasher.verify(senha_informada, usuario.senha):
             raise ValueError("Email ou senha inválidos")
 
         # 1. Validação de bloqueio por limite de tempo

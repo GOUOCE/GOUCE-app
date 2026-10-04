@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Boolean, ForeignKey, DateTime, Enum as SQLEnum
+from sqlalchemy import Column, String, Integer, Boolean, ForeignKey, DateTime, Enum as SQLEnum, JSON
 from src.shared.infrastructure.db import Base
 from src.shared.security.lgpd_encryption import EncryptedString
 from src.shared.enums.turno_curso_enum import TurnoCursoEnum
@@ -36,6 +36,9 @@ class AlunoORM(Base):
     id_foto_aluno = Column(String(36), ForeignKey("arquivos.id"), nullable=True)
     identificacao_sexual = Column(EncryptedString(500), nullable=True)
     motivo_reprovacao = Column(String(255), nullable=True)
+    documentos_reenvio = Column(JSON, nullable=True)
+    data_hora_envio_analise = Column(DateTime(timezone=True), nullable=True)
+    data_hora_ultima_renovacao_matricula = Column(DateTime(timezone=True), nullable=True)
     termos_de_uso = Column(Boolean, nullable=False, default=False)
     consentimento_lgpd_em = Column(DateTime(timezone=True), nullable=True)
     versao_termos = Column(String(20), default="1.0", nullable=True)

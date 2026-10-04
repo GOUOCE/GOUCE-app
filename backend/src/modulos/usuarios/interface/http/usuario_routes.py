@@ -11,11 +11,12 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from src.shared.infrastructure.db import get_session
-from src.shared.auth.dependencies import require_roles
+from src.shared.auth.dependencies import require_roles, verify_student_standard_access
 from src.shared.auth.jwt_service import JWTService
 from src.shared.security.argon2_hasher import Argon2PasswordHasher
 from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
+from src.shared.enums.tipo_documento_reenvio_enum import TipoDocumentoReenvioEnum
 from src.shared.validators.senha_validator import SenhaValidator
 
 from src.modulos.usuarios.application.dtos.usuario_dto import (
@@ -24,6 +25,7 @@ from src.modulos.usuarios.application.dtos.usuario_dto import (
     CadastroErrorResponseDTO,
     AtualizarStatusAlunoDTO,
     AprovacaoAlunoResponseDTO,
+    AprovarAlunoResponseDTO,
     PerfilAlunoResponseDTO,
     RedefinirEmailDTO,
     UsuarioResponseDTO,
@@ -55,6 +57,7 @@ from src.modulos.usuarios.infrastructure.repositories.usuario_repository import 
 
 from src.modulos.arquivos.infrastructure.repositories.arquivo_repository import SQLAlchemyArquivoRepository
 from src.modulos.arquivos.infrastructure.services.minio_storage import MinioStorageService
+from src.shared.infrastructure.services.email_service import SMTPEmailService
 from src.modulos.arquivos.application.use_cases.salvar_arquivo_use_case import (
     ArquivoValidacaoError,
     SalvarArquivoUseCase,
@@ -167,10 +170,18 @@ class EdicaoPerfilValidationRoute(APIRoute):
                     409: "CONFLICT",
                     422: "REQUEST_VALIDATION_ERROR",
                 }
+                detail = error.detail
+                if isinstance(detail, dict):
+                    message = detail.get("message") or "Requisição inválida"
+                    details = detail.get("details")
+                else:
+                    message = str(detail) if detail else "Requisição inválida"
+                    details = None
                 return _error_response(
                     status_code=error.status_code,
                     code=status_codes.get(error.status_code, "REQUEST_ERROR"),
-                    message="Não autorizado" if error.status_code == 401 else "Requisição inválida",
+                    message="Não autorizado" if error.status_code == 401 else message,
+                    details=details,
                 )
             except Exception as error:
                 return _internal_error_response(error, context="edicao-perfil")
@@ -221,18 +232,26 @@ def get_storage_service():
     return MinioStorageService()
 
 
+def get_email_service():
+    return SMTPEmailService()
+
+
 @router.get(
     "/",
     response_model=list[dict],
     summary="Listar Todos os Usuários e Alunos",
 )
 async def listar_usuarios(
+    status: str | None = Query(default=None, description="Filtrar por status do cadastro"),
+    ordem: str | None = Query(default=None, description="asc|desc para ordenar por data de envio para análise"),
     repository=Depends(get_repository),
     current_user: Annotated[dict, Depends(require_roles(CargoEnum.ADMINISTRADOR.value))] = None,
 ):
     try:
         use_case = ListarUsuariosUseCase(repository)
-        return use_case.execute()
+        return use_case.execute(status=status, ordem=ordem)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
     except HTTPException:
         raise
     except Exception:
@@ -245,10 +264,19 @@ async def listar_usuarios(
     summary="Listar Todos os Alunos",
 )
 async def listar_alunos(
+    status: str | None = Query(default=None, description="Filtrar por status do cadastro"),
+    ordem: str | None = Query(default=None, description="asc|desc para ordenar por data de envio para análise"),
     repository=Depends(get_repository),
     current_user: Annotated[dict, Depends(require_roles(CargoEnum.ADMINISTRADOR.value))] = None,
 ):
-    return await listar_usuarios(repository, current_user)
+    try:
+        return repository.listar_alunos_resumo(status=status, ordem=ordem)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Erro interno ao listar os alunos")
 
 
 @router.get(
@@ -522,7 +550,7 @@ async def cadastrar_usuario_alias(
 
 @router.patch(
     "/alunos/{aluno_id}/aprovar",
-    response_model=AprovacaoAlunoResponseDTO,
+    response_model=AprovarAlunoResponseDTO,
 )
 async def aprovar_aluno(
     aluno_id: int,
@@ -545,6 +573,14 @@ async def aprovar_aluno(
 @router.patch(
     "/alunos/{aluno_id}/status",
     response_model=AprovacaoAlunoResponseDTO,
+    summary="Atualizar status e solicitar reenvio de documentos",
+    description=(
+        "Use status_cadastro=rejeitado para rejeitar o cadastro. "
+        "Nesse caso, informe documentos_reenvio como uma lista contendo "
+        "tipo e motivo para cada documento que o aluno deverá reenviar. "
+        "Os tipos aceitos são comprovante_matricula, comprovante_residencia "
+        "e foto_perfil."
+    ),
 )
 async def atualizar_status_aluno(
     aluno_id: int,
@@ -554,7 +590,29 @@ async def atualizar_status_aluno(
 ):
     try:
         use_case = AprovarAlunoUseCase(repository)
-        return use_case.execute(aluno_id=aluno_id, novo_status=data.status_cadastro, motivo_reprovacao=data.motivo_reprovacao)
+        resultado = use_case.execute(
+            aluno_id=aluno_id,
+            novo_status=data.status_cadastro,
+            motivo_reprovacao=data.motivo_reprovacao,
+            documentos_reenvio=getattr(data, "documentos_reenvio", None),
+        )
+
+        if data.status_cadastro == StatusCadastroEnum.REJEITADO:
+            usuario, aluno = repository.buscar_com_detalhes_por_id(aluno_id)
+            if usuario and aluno and getattr(usuario, "email", None):
+                email_service = get_email_service()
+                enviado = email_service.enviar_documentos_rejeitados(
+                    email_destino=usuario.email,
+                    nome_usuario=usuario.nome_completo,
+                    documentos=repository.normalizar_documentos_reenvio(getattr(aluno, "documentos_reenvio", None)) or [],
+                )
+                if not enviado:
+                    logger.warning(
+                        "E-mail de rejeição não enviado para o aluno %s",
+                        aluno_id,
+                    )
+
+        return resultado
     except HTTPException:
         raise
     except ValueError as error:
@@ -587,7 +645,7 @@ async def verificar_email(
     responses=EDICAO_ERROR_RESPONSES,
 )
 async def obter_meu_perfil(
-    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ALUNO.value))],
+    current_user: Annotated[dict, Depends(verify_student_standard_access)],
     repository=Depends(get_repository),
     arquivo_repository=Depends(get_arquivo_repository),
 ):
@@ -608,6 +666,145 @@ async def obter_meu_perfil(
         raise HTTPException(status_code=500, detail="Erro interno ao consultar o perfil")
 
 
+@edicao_router.get(
+    "/reenvio_documento",
+    summary="Consultar documentos pendentes de reenvio",
+)
+async def consultar_reenvio_documento(
+    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ALUNO.value))],
+    repository=Depends(get_repository),
+):
+    user_id = current_user.get("current_user_id")
+    if not isinstance(user_id, int) or isinstance(user_id, bool):
+        raise HTTPException(status_code=401, detail="Sessão inválida")
+
+    _, aluno = repository.buscar_com_detalhes_por_id(user_id)
+    if not aluno:
+        raise HTTPException(status_code=404, detail="Aluno não encontrado")
+
+    documentos = repository.normalizar_documentos_reenvio(getattr(aluno, "documentos_reenvio", None)) or []
+    return {"documentos": documentos}
+
+
+@edicao_router.put(
+    "/reenvio_documento",
+    summary="Reenviar documentos depois de rejeição",
+)
+@edicao_router.patch(
+    "/reenvio_documento",
+    summary="Reenviar documentos depois de rejeição",
+)
+async def reenviar_documentos(
+    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ALUNO.value))],
+    comprovante_matricula: UploadFile | str | None = File(
+        default=None,
+        description="Novo comprovante de matrícula",
+    ),
+    comprovante_residencia: UploadFile | str | None = File(
+        default=None,
+        description="Novo comprovante de residência",
+    ),
+    foto_perfil: UploadFile | str | None = File(
+        default=None,
+        description="Nova foto de perfil",
+    ),
+    repository=Depends(get_repository),
+    arquivo_repository=Depends(get_arquivo_repository),
+    storage_service=Depends(get_storage_service),
+):
+    user_id = current_user.get("current_user_id")
+    if not isinstance(user_id, int) or isinstance(user_id, bool):
+        raise HTTPException(status_code=401, detail="Sessão inválida")
+    if current_user.get("current_status") != StatusCadastroEnum.REJEITADO.value:
+        raise HTTPException(
+            status_code=403,
+            detail="O reenvio de documentos está disponível somente para cadastros rejeitados.",
+        )
+
+    aluno = repository.buscar_aluno_por_id(user_id)
+    if not aluno:
+        raise HTTPException(status_code=404, detail="Aluno não encontrado")
+
+    documentos_reenvio = repository.normalizar_documentos_reenvio(
+        getattr(aluno, "documentos_reenvio", None)
+    ) or []
+    arquivos = {
+        "comprovante_matricula": comprovante_matricula,
+        "comprovante_residencia": comprovante_residencia,
+        "foto_perfil": foto_perfil,
+    }
+    arquivos_enviados = {
+        tipo: arquivo
+        for tipo, arquivo in arquivos.items()
+        if getattr(arquivo, "filename", None) and callable(getattr(arquivo, "read", None))
+    }
+    if not arquivos_enviados:
+        raise HTTPException(
+            status_code=400,
+            detail="Selecione pelo menos um documento para continuar o reenvio.",
+        )
+
+    tipos_permitidos = {tipo.value for tipo in TipoDocumentoReenvioEnum}
+    tipos_solicitados = {documento["tipo"] for documento in documentos_reenvio}
+    tipos_invalidos = tipos_solicitados - tipos_permitidos
+    if tipos_invalidos:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Não foi possível processar a solicitação porque há tipos de documento inválidos: "
+                + ", ".join(sorted(tipos_invalidos))
+            ),
+        )
+
+    tipos_enviados = set(arquivos_enviados)
+    nao_solicitados = tipos_enviados - tipos_solicitados
+    faltantes = tipos_solicitados - tipos_enviados
+    if nao_solicitados:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Este documento não foi solicitado pelo administrador: "
+                + ", ".join(sorted(nao_solicitados))
+            ),
+        )
+    if faltantes:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Para concluir o reenvio, envie também os seguintes documentos: "
+                + ", ".join(sorted(faltantes))
+            ),
+        )
+
+    salvar_arquivo_uc = SalvarArquivoUseCase(arquivo_repository, storage_service)
+    ids_documentos = {}
+    try:
+        for tipo, arquivo in arquivos_enviados.items():
+            resultado = salvar_arquivo_uc.execute(
+                await arquivo.read(),
+                arquivo.filename or tipo,
+                arquivo.content_type,
+            )
+            ids_documentos[tipo] = resultado.id
+    except ArquivoValidacaoError as error:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Não foi possível enviar o documento. {error}",
+        )
+
+    aluno_atualizado = repository.atualizar_documentos_reenvio(
+        aluno_id=user_id,
+        documentos_reenvio=documentos_reenvio,
+        ids_documentos=ids_documentos,
+    )
+
+    return {
+        "mensagem": "Documentos enviados com sucesso! Seu cadastro foi encaminhado para análise.",
+        "status": aluno_atualizado.status_cadastro,
+        "documentos_reenvio": repository.normalizar_documentos_reenvio(aluno_atualizado.documentos_reenvio) or [],
+    }
+
+
 @edicao_router.patch(
     "/me/email",
     response_model=UsuarioResponseDTO,
@@ -617,7 +814,7 @@ async def obter_meu_perfil(
 )
 async def atualizar_email_autenticado(
     data: RedefinirEmailDTO,
-    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ALUNO.value))],
+    current_user: Annotated[dict, Depends(verify_student_standard_access)],
     repository=Depends(get_repository),
     hasher=Depends(get_hasher),
 ):
@@ -668,7 +865,7 @@ async def atualizar_email_autenticado(
 )
 async def atualizar_meu_perfil(
     data: AtualizarAlunoDTO,
-    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ALUNO.value))],
+    current_user: Annotated[dict, Depends(verify_student_standard_access)],
     repository=Depends(get_repository),
 ):
     try:

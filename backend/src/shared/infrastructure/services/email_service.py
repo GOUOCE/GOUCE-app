@@ -70,6 +70,44 @@ class SMTPEmailService(IEmailService):
 
         return self._enviar_mensagem(email_destino, assunto, conteudo_texto, conteudo_html)
 
+    def enviar_documentos_rejeitados(
+        self,
+        email_destino: str,
+        nome_usuario: str,
+        documentos: list[dict],
+    ) -> bool:
+        assunto = "Documentos pendentes para reenvio - GOUCE"
+        linhas = []
+        for item in documentos:
+            tipo = str(item.get("tipo", "Documento")).replace("_", " ").title()
+            motivo = str(item.get("motivo", "Motivo não informado")).strip()
+            linhas.append(f"- {tipo}: {motivo}")
+
+        conteudo_texto = (
+            f"Olá {nome_usuario},\n\n"
+            "Foram identificados documentos do seu cadastro que precisam ser reenviados.\n\n"
+            f"{chr(10).join(linhas)}\n\n"
+            "Faça login na plataforma para reenviar os documentos solicitados.\n"
+        )
+
+        conteudo_html = f"""
+        <html>
+          <body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+              <h2 style="color: #0056b3;">Documentos pendentes de reenvio</h2>
+              <p>Olá <strong>{nome_usuario}</strong>,</p>
+              <p>Foram identificados documentos do seu cadastro que precisam ser reenviados.</p>
+              <ul>
+                {''.join(f'<li><strong>{str(item.get("tipo", "Documento")).replace("_", " ").title()}</strong>: {str(item.get("motivo", "Motivo não informado"))}</li>' for item in documentos)}
+              </ul>
+              <p>Faça login na plataforma para reenviar os documentos solicitados.</p>
+            </div>
+          </body>
+        </html>
+        """
+
+        return self._enviar_mensagem(email_destino, assunto, conteudo_texto, conteudo_html)
+
     def _enviar_mensagem(
         self,
         email_destino: str,
