@@ -286,6 +286,18 @@ class PerfilAlunoResponseDTO(BaseModel):
     nome_comprovante_residencia: str | None = None
 
 
+class AdminAlunoDetalhesResponseDTO(PerfilAlunoResponseDTO):
+    """Dados seguros e completos de um aluno para consulta administrativa."""
+
+    transgenero: SimNaoPrefiroEnum | str | None = None
+    documentos_reenvio: list[DocumentoReenvioRespostaDTO] | None = None
+    data_hora_envio_analise: datetime | None = None
+    data_hora_ultima_renovacao_matricula: datetime | None = None
+    termos_de_uso: bool | None = None
+    consentimento_lgpd_em: datetime | None = None
+    versao_termos: str | None = None
+
+
 class RedefinirEmailDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
 

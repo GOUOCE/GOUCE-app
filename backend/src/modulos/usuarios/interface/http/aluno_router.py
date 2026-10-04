@@ -28,6 +28,7 @@ from src.modulos.usuarios.application.dtos.usuario_dto import (
     ValidarEtapa4CadastroUsuarioDTO,
     CadastroSucessoDTO,
     PerfilAlunoResponseDTO,
+    AdminAlunoDetalhesResponseDTO,
     AlunoResumoResponseDTO,
     CadastroErrorResponseDTO,
 )
@@ -449,3 +450,49 @@ async def obter_carteirinha(
         raise HTTPException(status_code=400, detail="Dados inválidos")
     except Exception:
         raise HTTPException(status_code=500, detail="Erro interno ao consultar o perfil")
+
+
+@router.get(
+    "/{aluno_id}",
+    response_model=AdminAlunoDetalhesResponseDTO,
+    summary="Consultar todos os dados de um aluno",
+    description="Retorna os dados seguros e completos de um aluno. Acesso exclusivo para administradores.",
+)
+async def obter_detalhes_aluno(
+    aluno_id: int,
+    repository=Depends(get_repository),
+    arquivo_repository=Depends(get_arquivo_repository),
+    _: dict = Depends(require_roles(CargoEnum.ADMINISTRADOR.value)),
+):
+    try:
+        aluno = repository.buscar_aluno_por_id(aluno_id)
+        if not aluno:
+            raise HTTPException(status_code=404, detail="Aluno não encontrado")
+
+        perfil = ObterPerfilAlunoUseCase(repository, arquivo_repository).execute(aluno_id)
+        resposta = perfil.model_dump()
+        resposta.update(
+            {
+                "transgenero": aluno.transgenero,
+                "documentos_reenvio": repository.normalizar_documentos_reenvio(
+                    getattr(aluno, "documentos_reenvio", None)
+                ),
+                "data_hora_envio_analise": aluno.data_hora_envio_analise,
+                "data_hora_ultima_renovacao_matricula": (
+                    aluno.data_hora_ultima_renovacao_matricula
+                ),
+                "termos_de_uso": aluno.termos_de_uso,
+                "consentimento_lgpd_em": aluno.consentimento_lgpd_em,
+                "versao_termos": aluno.versao_termos,
+            }
+        )
+        return resposta
+    except HTTPException:
+        raise
+    except ValueError as error:
+        if "não encontrado" in str(error).lower():
+            raise HTTPException(status_code=404, detail="Aluno não encontrado")
+        raise HTTPException(status_code=400, detail="Não foi possível consultar os dados do aluno")
+    except Exception:
+        logger.exception("Erro ao consultar detalhes do aluno %s", aluno_id)
+        raise HTTPException(status_code=500, detail="Erro interno ao consultar os dados do aluno")

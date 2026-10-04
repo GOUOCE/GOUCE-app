@@ -715,6 +715,11 @@ async def reenviar_documentos(
     user_id = current_user.get("current_user_id")
     if not isinstance(user_id, int) or isinstance(user_id, bool):
         raise HTTPException(status_code=401, detail="Sessão inválida")
+    if current_user.get("current_status") != StatusCadastroEnum.REJEITADO.value:
+        raise HTTPException(
+            status_code=403,
+            detail="O reenvio de documentos está disponível somente para cadastros rejeitados.",
+        )
 
     aluno = repository.buscar_aluno_por_id(user_id)
     if not aluno:
