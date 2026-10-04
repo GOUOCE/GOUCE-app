@@ -7,7 +7,7 @@ import { Camera, User, Calendar, Mail, Eye, EyeOff, Trash2, Image as ImageIcon }
 
 export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: boolean }) {
   const theme = useTheme();
-  const { control, formState: { errors }, setValue, watch } = useFormContext();
+  const { control, formState: { errors }, setValue, watch, trigger } = useFormContext();
   const [verSenha, setVerSenha] = useState(false);
   const [verConfirmarSenha, setVerConfirmarSenha] = useState(false);
   const [menuFotoVisivel, setMenuFotoVisivel] = useState(false);
@@ -188,7 +188,12 @@ export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: bool
                 secureTextEntry={!verSenha}
                 maxLength={128}
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(text) => {
+                  onChange(text);
+                  if (watch('confirmarSenha')) {
+                    trigger('confirmarSenha');
+                  }
+                }}
                 error={!!errors.senha}
                 right={<TextInput.Icon icon={() => verSenha ? <EyeOff size={20} /> : <Eye size={20} />} onPress={() => setVerSenha(!verSenha)} />}
                 style={styles.input}
@@ -208,7 +213,10 @@ export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: bool
                 secureTextEntry={!verConfirmarSenha}
                 maxLength={128}
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(text) => {
+                  onChange(text);
+                  trigger(['senha', 'confirmarSenha']);
+                }}
                 error={!!errors.confirmarSenha}
                 right={<TextInput.Icon icon={() => verConfirmarSenha ? <EyeOff size={20} /> : <Eye size={20} />} onPress={() => setVerConfirmarSenha(!verConfirmarSenha)} />}
                 style={styles.input}

@@ -65,7 +65,7 @@ export default function RenovarVinculoScreen() {
     },
   });
 
-  const { handleSubmit, trigger, reset, setValue } = metodos;
+  const { handleSubmit, trigger, reset, setValue, clearErrors } = metodos;
 
   // Pré-preenchimento dos dados do aluno autenticado
   const carregarEPreencherDados = async () => {
@@ -119,10 +119,13 @@ export default function RenovarVinculoScreen() {
 
   const iniciarRenovacao = async () => {
     await carregarEPreencherDados();
+    clearErrors();
     setPasso(1);
   };
 
   const proximoPasso = async () => {
+    clearErrors();
+
     let camposParaValidar: any[] = [];
 
     if (passo === 1) camposParaValidar = ['nomeCompleto', 'dataNascimento'];
@@ -132,6 +135,7 @@ export default function RenovarVinculoScreen() {
 
     const valido = await trigger(camposParaValidar);
     if (valido) {
+      clearErrors();
       if (passo < 4) {
         setPasso(passo + 1);
       } else {
@@ -141,6 +145,7 @@ export default function RenovarVinculoScreen() {
   };
 
   const voltarPasso = () => {
+    clearErrors();
     if (passo > 1) {
       setPasso(passo - 1);
     } else if (passo === 1) {

@@ -57,7 +57,7 @@ export default function RegisterScreen() {
     }
   });
 
-  const { handleSubmit, trigger, setError, getValues } = metodos;
+  const { handleSubmit, trigger, setError, clearErrors, getValues } = metodos;
 
   const titulos = [
     'Dados básicos',
@@ -68,6 +68,8 @@ export default function RegisterScreen() {
   ];
 
   const proximoPasso = async () => {
+    clearErrors();
+
     let schemaEtapa: any;
     if (passo === 1) schemaEtapa = etapa1Schema;
     if (passo === 2) schemaEtapa = etapa2Schema;
@@ -104,10 +106,12 @@ export default function RegisterScreen() {
       }
     }
 
+    clearErrors();
     setPasso(passo + 1);
   };
 
   const voltarPasso = () => {
+    clearErrors();
     if (passo > 1) {
       setPasso(passo - 1);
     } else {

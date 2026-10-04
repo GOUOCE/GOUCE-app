@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { TextInput, Text, useTheme, Portal } from 'react-native-paper';
 import { useFormContext, Controller } from 'react-hook-form';
-import { ChevronDown, Phone, School, GraduationCap } from 'lucide-react-native';
+import { ChevronDown, Phone, School, GraduationCap, Search, X } from 'lucide-react-native';
 
 interface SelectInputProps {
   label: string;
@@ -11,26 +11,49 @@ interface SelectInputProps {
   onSelect: (val: string) => void;
   error?: boolean;
   leftIcon?: React.ReactNode;
+  searchable?: boolean;
 }
 
-function CustomSelect({ label, value, options, onSelect, error, leftIcon }: SelectInputProps) {
+function CustomSelect({ label, value, options, onSelect, error, leftIcon, searchable }: SelectInputProps) {
   const [visible, setVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const theme = useTheme();
+
+  const filteredOptions = searchable && searchQuery.trim()
+    ? options.filter((opt) => opt.toLowerCase().includes(searchQuery.toLowerCase().trim()))
+    : options;
 
   return (
     <View style={styles.selectContainer}>
-      <TouchableOpacity onPress={() => setVisible(true)}>
-        <TextInput
-          label={label}
-          value={value || 'Selecionar'}
-          mode="outlined"
-          editable={false}
-          error={error}
-          left={leftIcon ? <TextInput.Icon icon={() => leftIcon} /> : undefined}
-          right={<TextInput.Icon icon={() => <ChevronDown size={20} />} />}
-          pointerEvents="none"
-          style={{ backgroundColor: '#fff' }}
-        />
+      <TouchableOpacity activeOpacity={0.7} onPress={() => setVisible(true)}>
+        <View pointerEvents="none">
+          <TextInput
+            label={label}
+            mode="outlined"
+            editable={false}
+            error={error}
+            left={leftIcon ? <TextInput.Icon icon={() => leftIcon} /> : undefined}
+            right={<TextInput.Icon icon={() => <ChevronDown size={20} color="#333" />} onPress={() => setVisible(true)} />}
+            style={{ backgroundColor: '#fff' }}
+            render={(props) => (
+              <Text
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                style={[
+                  props.style,
+                  {
+                    paddingTop: 16,
+                    paddingBottom: 8,
+                    paddingRight: 40,
+                    color: value ? '#333' : '#888',
+                  },
+                ]}
+              >
+                {value || 'Selecionar'}
+              </Text>
+            )}
+          />
+        </View>
       </TouchableOpacity>
 
       <Portal>
@@ -38,30 +61,64 @@ function CustomSelect({ label, value, options, onSelect, error, leftIcon }: Sele
           visible={visible}
           transparent={true}
           animationType="fade"
-          onRequestClose={() => setVisible(false)}
+          onRequestClose={() => { setVisible(false); setSearchQuery(''); }}
         >
           <TouchableOpacity
             style={styles.modalOverlay}
             activeOpacity={1}
-            onPress={() => setVisible(false)}
+            onPress={() => { setVisible(false); setSearchQuery(''); }}
           >
-            <View style={styles.modalContent}>
+            <TouchableOpacity
+              activeOpacity={1}
+              style={styles.modalContent}
+              onPress={(e) => e.stopPropagation()}
+            >
               <Text variant="titleMedium" style={styles.modalTitle}>{label}</Text>
-              {options.map((opt) => (
-                <TouchableOpacity
-                  key={opt}
-                  style={styles.optionItem}
-                  onPress={() => { onSelect(opt); setVisible(false); }}
-                >
-                  <Text variant="bodyLarge" style={[
-                    styles.optionText,
-                    value === opt && { color: theme.colors.primary, fontWeight: 'bold' }
-                  ]}>
-                    {opt}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+
+              {searchable && (
+                <View style={styles.searchBox}>
+                  <TextInput
+                    placeholder="Buscar opção..."
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    mode="outlined"
+                    dense
+                    left={<TextInput.Icon icon={() => <Search size={18} color="#666" />} />}
+                    right={searchQuery ? <TextInput.Icon icon={() => <X size={18} color="#666" />} onPress={() => setSearchQuery('')} /> : undefined}
+                    style={styles.searchInput}
+                  />
+                </View>
+              )}
+
+              <ScrollView
+                style={styles.optionsScroll}
+                contentContainerStyle={styles.optionsScrollContent}
+                showsVerticalScrollIndicator={true}
+                keyboardShouldPersistTaps="handled"
+                nestedScrollEnabled={true}
+              >
+                {filteredOptions.length > 0 ? (
+                  filteredOptions.map((opt) => (
+                    <TouchableOpacity
+                      key={opt}
+                      style={styles.optionItem}
+                      onPress={() => { onSelect(opt); setVisible(false); setSearchQuery(''); }}
+                    >
+                      <Text variant="bodyLarge" style={[
+                        styles.optionText,
+                        value === opt && { color: theme.colors.primary, fontWeight: 'bold' }
+                      ]}>
+                        {opt}
+                      </Text>
+                    </TouchableOpacity>
+                  ))
+                ) : (
+                  <View style={styles.noResultsBox}>
+                    <Text variant="bodyMedium" style={{ color: '#888' }}>Nenhuma opção encontrada</Text>
+                  </View>
+                )}
+              </ScrollView>
+            </TouchableOpacity>
           </TouchableOpacity>
         </Modal>
       </Portal>
@@ -69,17 +126,52 @@ function CustomSelect({ label, value, options, onSelect, error, leftIcon }: Sele
   );
 }
 
+const LISTA_DE_CURSOS = [
+  'Engenharia de Software',
+  'Sistemas de Informação',
+  'Ciência da Computação',
+  'Engenharia de Computação',
+  'Design Digital',
+  'Redes de Computadores',
+  'Medicina',
+  'Enfermagem',
+  'Odontologia',
+  'Direito',
+  'Administração',
+  'Ciências Contábeis',
+  'Pedagogia',
+  'Psicologia',
+  'Agronomia',
+  'Zootecnia',
+  'Engenharia Civil',
+  'Engenharia Elétrica',
+  'Engenharia Mecânica',
+  'Licenciatura em Matemática',
+  'Licenciatura em Física',
+  'Licenciatura em Química',
+  'Licenciatura em Biologia',
+  'Licenciatura em Letras',
+  'Arquitetura e Urbanismo',
+  'Farmácia',
+  'Fisioterapia',
+  'Nutrição',
+  'Outro',
+];
+
 export function Passo3ContatoVinculo() {
-  const { control, formState: { errors } } = useFormContext();
+  const { control, formState: { errors }, watch, setValue } = useFormContext();
+
+  const cursoSelecionado = watch('curso');
+  const instituicaoSelecionada = watch('instituicao');
+  const bairroSelecionado = watch('bairro');
 
   const gerarPeriodosIngresso = () => {
     const anoAtual = new Date().getFullYear();
     const periodos: string[] = [];
-    for (let ano = anoAtual; ano >= anoAtual - 5; ano--) {
+    for (let ano = anoAtual; ano >= anoAtual - 10; ano--) {
       periodos.push(`${ano}.2`);
       periodos.push(`${ano}.1`);
     }
-    periodos.push('Anterior');
     return periodos;
   };
 
@@ -101,12 +193,36 @@ export function Passo3ContatoVinculo() {
             label="Bairro / Localidade *"
             value={value}
             options={['Centro', 'Croatá', 'Bairro Novo', 'Planalto', 'Serra', 'Outro']}
-            onSelect={onChange}
+            onSelect={(val) => {
+              onChange(val);
+              if (val !== 'Outro') setValue('bairroEspecifico', '');
+            }}
             error={!!errors.bairro}
           />
         )}
       />
       {errors.bairro && <Text style={styles.errorText}>{errors.bairro.message as string}</Text>}
+
+      {bairroSelecionado === 'Outro' && (
+        <Controller
+          control={control}
+          name="bairroEspecifico"
+          render={({ field: { onChange, value } }) => (
+            <TextInput
+              label="Especifique seu Bairro / Localidade *"
+              mode="outlined"
+              placeholder="Informe o nome do seu bairro"
+              value={value}
+              onChangeText={onChange}
+              error={!!errors.bairroEspecifico}
+              style={styles.input}
+            />
+          )}
+        />
+      )}
+      {bairroSelecionado === 'Outro' && errors.bairroEspecifico && (
+        <Text style={styles.errorText}>{errors.bairroEspecifico.message as string}</Text>
+      )}
 
       <Controller
         control={control}
@@ -136,13 +252,37 @@ export function Passo3ContatoVinculo() {
             label="Instituição de Ensino *"
             value={value}
             options={['UFC - Universidade Federal do Ceará', 'IFCE', 'UNILAB', 'Estácio', 'Outra']}
-            onSelect={onChange}
+            onSelect={(val) => {
+              onChange(val);
+              if (val !== 'Outra') setValue('instituicaoEspecifica', '');
+            }}
             error={!!errors.instituicao}
             leftIcon={<School size={20} color="#666" />}
           />
         )}
       />
       {errors.instituicao && <Text style={styles.errorText}>{errors.instituicao.message as string}</Text>}
+
+      {instituicaoSelecionada === 'Outra' && (
+        <Controller
+          control={control}
+          name="instituicaoEspecifica"
+          render={({ field: { onChange, value } }) => (
+            <TextInput
+              label="Especifique a sua Instituição de Ensino *"
+              mode="outlined"
+              placeholder="Informe o nome da instituição"
+              value={value}
+              onChangeText={onChange}
+              error={!!errors.instituicaoEspecifica}
+              style={styles.input}
+            />
+          )}
+        />
+      )}
+      {instituicaoSelecionada === 'Outra' && errors.instituicaoEspecifica && (
+        <Text style={styles.errorText}>{errors.instituicaoEspecifica.message as string}</Text>
+      )}
 
       <Controller
         control={control}
@@ -151,14 +291,39 @@ export function Passo3ContatoVinculo() {
           <CustomSelect
             label="Curso *"
             value={value}
-            options={['Engenharia de Software', 'Sistemas de Informação', 'Ciência da Computação', 'Engenharia de Computação', 'Design Digital', 'Redes de Computadores', 'Outro']}
-            onSelect={onChange}
+            options={LISTA_DE_CURSOS}
+            onSelect={(val) => {
+              onChange(val);
+              if (val !== 'Outro') setValue('cursoEspecifico', '');
+            }}
             error={!!errors.curso}
+            searchable={true}
             leftIcon={<GraduationCap size={20} color="#666" />}
           />
         )}
       />
       {errors.curso && <Text style={styles.errorText}>{errors.curso.message as string}</Text>}
+
+      {cursoSelecionado === 'Outro' && (
+        <Controller
+          control={control}
+          name="cursoEspecifico"
+          render={({ field: { onChange, value } }) => (
+            <TextInput
+              label="Especifique o seu Curso *"
+              mode="outlined"
+              placeholder="Informe o nome do seu curso"
+              value={value}
+              onChangeText={onChange}
+              error={!!errors.cursoEspecifico}
+              style={styles.input}
+            />
+          )}
+        />
+      )}
+      {cursoSelecionado === 'Outro' && errors.cursoEspecifico && (
+        <Text style={styles.errorText}>{errors.cursoEspecifico.message as string}</Text>
+      )}
 
       <View style={styles.row}>
         <View style={styles.half}>
@@ -222,7 +387,7 @@ export function Passo3ContatoVinculo() {
               <CustomSelect
                 label="Semestre Atual *"
                 value={value}
-                options={['1º', '2º', '3º', '4º', '5º', '6º', '7º', '8º', '9º', '10º', '11º', '12º']}
+                options={['1º', '2º', '3º', '4º', '5º', '6º', '7º', '8º', '9º', '10º', '11º', '12º', '13º', '14º', '15º', '16º']}
                 onSelect={onChange}
                 error={!!errors.semestreAtual}
               />
@@ -264,22 +429,37 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: 20,
   },
   modalContent: {
     backgroundColor: '#fff',
-    borderRadius: 12,
+    borderRadius: 16,
     width: '100%',
-    paddingVertical: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
     maxHeight: '80%',
+    overflow: 'hidden',
   },
   modalTitle: {
     paddingHorizontal: 24,
-    paddingBottom: 16,
+    paddingBottom: 12,
     fontWeight: 'bold',
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
-    marginBottom: 8,
+  },
+  searchBox: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  searchInput: {
+    backgroundColor: '#FFF',
+  },
+  optionsScroll: {
+    flexGrow: 0,
+    flexShrink: 1,
+  },
+  optionsScrollContent: {
+    paddingBottom: 16,
   },
   optionItem: {
     paddingVertical: 14,
@@ -287,5 +467,9 @@ const styles = StyleSheet.create({
   },
   optionText: {
     color: '#333',
+  },
+  noResultsBox: {
+    padding: 24,
+    alignItems: 'center',
   },
 });

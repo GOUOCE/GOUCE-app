@@ -26,17 +26,34 @@ function CustomSelect({ label, value, options, onSelect, error }: SelectInputPro
 
   return (
     <View style={styles.selectContainer}>
-      <TouchableOpacity onPress={() => setVisible(true)}>
-        <TextInput
-          label={label}
-          value={value || 'Selecionar'}
-          mode="outlined"
-          editable={false}
-          error={error}
-          right={<TextInput.Icon icon={() => <ChevronDown size={20} />} />}
-          pointerEvents="none"
-          style={{ backgroundColor: '#fff' }}
-        />
+      <TouchableOpacity activeOpacity={0.7} onPress={() => setVisible(true)}>
+        <View pointerEvents="none">
+          <TextInput
+            label={label}
+            mode="outlined"
+            editable={false}
+            error={error}
+            right={<TextInput.Icon icon={() => <ChevronDown size={20} color="#333" />} onPress={() => setVisible(true)} />}
+            style={{ backgroundColor: '#fff' }}
+            render={(props) => (
+              <Text
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                style={[
+                  props.style,
+                  {
+                    paddingTop: 16,
+                    paddingBottom: 8,
+                    paddingRight: 40,
+                    color: value ? '#333' : '#888',
+                  },
+                ]}
+              >
+                {value || 'Selecionar'}
+              </Text>
+            )}
+          />
+        </View>
       </TouchableOpacity>
 
       <Portal>
@@ -53,20 +70,22 @@ function CustomSelect({ label, value, options, onSelect, error }: SelectInputPro
           >
             <View style={styles.modalSelectContent}>
               <Text variant="titleMedium" style={styles.modalSelectTitle}>{label}</Text>
-              {options.map((opt) => (
-                <TouchableOpacity
-                  key={opt}
-                  style={styles.optionItem}
-                  onPress={() => { onSelect(opt); setVisible(false); }}
-                >
-                  <Text variant="bodyLarge" style={[
-                    styles.optionText,
-                    value === opt && { color: theme.colors.primary, fontWeight: 'bold' }
-                  ]}>
-                    {opt}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              <ScrollView style={{ maxHeight: 320 }} showsVerticalScrollIndicator={true}>
+                {options.map((opt) => (
+                  <TouchableOpacity
+                    key={opt}
+                    style={styles.optionItem}
+                    onPress={() => { onSelect(opt); setVisible(false); }}
+                  >
+                    <Text variant="bodyLarge" style={[
+                      styles.optionText,
+                      value === opt && { color: theme.colors.primary, fontWeight: 'bold' }
+                    ]}>
+                      {opt}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
             </View>
           </TouchableOpacity>
         </RNModal>

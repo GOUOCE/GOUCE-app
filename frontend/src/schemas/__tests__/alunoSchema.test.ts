@@ -321,6 +321,41 @@ describe('Suíte de Testes Unitários Completa - HU-001 (Solicitação de Cadast
         expect(res.error.issues[0].message).toBe('Selecione a instituição');
       }
     });
+
+    it('deve recusar combinações matematicamente impossíveis entre período de ingresso e semestre atual (ex: 2024.1 com 10º semestre)', () => {
+      const dadosImpossiveis = {
+        bairro: 'Centro',
+        whatsapp: '(88) 9 9999-8888',
+        instituicao: 'UFC - Universidade Federal do Ceará',
+        curso: 'Engenharia de Software',
+        campus: 'Quixadá',
+        periodoIngresso: '2024.1',
+        turno: 'Vespertino',
+        semestreAtual: '10º',
+      };
+      const res = etapa3Schema.safeParse(dadosImpossiveis);
+      expect(res.success).toBe(false);
+      if (!res.success) {
+        const erroSemestre = res.error.issues.find((i) => i.path.includes('semestreAtual'));
+        expect(erroSemestre).toBeDefined();
+        expect(erroSemestre?.message).toContain('Semestre incompatível com o ingresso (2024.1)');
+      }
+    });
+
+    it('deve aprovar combinações coerentes entre período de ingresso e semestre atual (ex: 2023.1 com 6º semestre)', () => {
+      const dadosCoerentes = {
+        bairro: 'Centro',
+        whatsapp: '(88) 9 9999-8888',
+        instituicao: 'UFC - Universidade Federal do Ceará',
+        curso: 'Engenharia de Software',
+        campus: 'Quixadá',
+        periodoIngresso: '2023.1',
+        turno: 'Vespertino',
+        semestreAtual: '6º',
+      };
+      const res = etapa3Schema.safeParse(dadosCoerentes);
+      expect(res.success).toBe(true);
+    });
   });
 
   // ---------------------------------------------------------------------------

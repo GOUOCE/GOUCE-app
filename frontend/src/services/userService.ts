@@ -143,9 +143,13 @@ export const userService = {
     formData.append('transgenero', String(data.transgenero || ''));
     formData.append('tem_filhos', String(Boolean(data.temFilhos)));
 
-    formData.append('bairro_id', String(data.bairro || ''));
-    formData.append('faculdade_id', String(data.instituicao || ''));
-    formData.append('curso', String(data.curso || ''));
+    const bairroFinal = data.bairro === 'Outro' && data.bairroEspecifico ? data.bairroEspecifico : data.bairro;
+    const instFinal = data.instituicao === 'Outra' && data.instituicaoEspecifica ? data.instituicaoEspecifica : data.instituicao;
+    const cursoFinal = data.curso === 'Outro' && data.cursoEspecifico ? data.cursoEspecifico : data.curso;
+
+    formData.append('bairro_id', String(bairroFinal || ''));
+    formData.append('faculdade_id', String(instFinal || ''));
+    formData.append('curso', String(cursoFinal || ''));
     formData.append('campus', String(data.campus || 'Quixadá'));
 
     const semestre = String(data.semestreAtual || '').replace(/[^0-9]/g, '');
@@ -153,13 +157,7 @@ export const userService = {
       formData.append('semestre_atual', semestre);
     }
 
-    // Trata o período de ingresso para garantir formato AAAA.S esperado pelo backend
-    let periodoIngresso = String(data.periodoIngresso || '');
-    if (periodoIngresso === 'Anterior') {
-      const anoAnterior = new Date().getFullYear() - 4;
-      periodoIngresso = `${anoAnterior}.1`;
-    }
-    formData.append('periodo_ingresso', periodoIngresso);
+    formData.append('periodo_ingresso', String(data.periodoIngresso || ''));
 
     formData.append('turno_curso', String(data.turno || ''));
 
@@ -197,18 +195,17 @@ export const userService = {
     formData.append('transgenero', String(data.transgenero || ''));
     formData.append('tem_filhos', String(Boolean(data.temFilhos)));
 
+    const bairroFinal = data.bairro === 'Outro' && data.bairroEspecifico ? data.bairroEspecifico : data.bairro;
+    const instFinal = data.instituicao === 'Outra' && data.instituicaoEspecifica ? data.instituicaoEspecifica : data.instituicao;
+    const cursoFinal = data.curso === 'Outro' && data.cursoEspecifico ? data.cursoEspecifico : data.curso;
+
     formData.append('telefone', String(data.whatsapp || ''));
-    formData.append('bairro_id', String(data.bairro || ''));
-    formData.append('faculdade_id', String(data.instituicao || ''));
-    formData.append('curso', String(data.curso || ''));
+    formData.append('bairro_id', String(bairroFinal || ''));
+    formData.append('faculdade_id', String(instFinal || ''));
+    formData.append('curso', String(cursoFinal || ''));
     formData.append('campus', String(data.campus || 'Quixadá'));
 
-    let periodoIngresso = String(data.periodoIngresso || '');
-    if (periodoIngresso === 'Anterior') {
-      const anoAnterior = new Date().getFullYear() - 4;
-      periodoIngresso = `${anoAnterior}.1`;
-    }
-    formData.append('periodo_ingresso', periodoIngresso);
+    formData.append('periodo_ingresso', String(data.periodoIngresso || ''));
 
     formData.append('turno_curso', String(data.turno || ''));
 

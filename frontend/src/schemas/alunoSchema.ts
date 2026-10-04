@@ -144,13 +144,70 @@ export const etapa2Schema = z.object({
 
 export const etapa3Schema = z.object({
   bairro: z.string().min(1, 'Selecione o bairro'),
+  bairroEspecifico: z.string().optional(),
   whatsapp: telefoneSchema,
   instituicao: z.string().min(1, 'Selecione a instituição'),
+  instituicaoEspecifica: z.string().optional(),
   curso: z.string().min(1, 'Selecione o curso'),
+  cursoEspecifico: z.string().optional(),
   campus: z.string().min(1, 'Selecione o campus'),
   periodoIngresso: z.string().min(1, 'Selecione o período de ingresso'),
   turno: z.string().min(1, 'Selecione o turno'),
   semestreAtual: z.string().min(1, 'Selecione o semestre atual'),
+}).superRefine((dados, ctx) => {
+  if (dados.curso === 'Outro' && (!dados.cursoEspecifico || !dados.cursoEspecifico.trim())) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['cursoEspecifico'],
+      message: 'Informe o nome do seu curso',
+    });
+  }
+  if (dados.instituicao === 'Outra' && (!dados.instituicaoEspecifica || !dados.instituicaoEspecifica.trim())) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['instituicaoEspecifica'],
+      message: 'Informe o nome da sua instituição',
+    });
+  }
+  if (dados.bairro === 'Outro' && (!dados.bairroEspecifico || !dados.bairroEspecifico.trim())) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['bairroEspecifico'],
+      message: 'Informe o seu bairro / localidade',
+    });
+  }
+
+  // Validação de coerência matemática entre período de ingresso e semestre atual
+  if (dados.periodoIngresso && dados.semestreAtual && dados.periodoIngresso !== 'Anterior') {
+    const partesIngresso = dados.periodoIngresso.split('.');
+    if (partesIngresso.length === 2) {
+      const anoIngresso = Number(partesIngresso[0]);
+      const semIngresso = Number(partesIngresso[1]);
+      const semAtualNum = Number(dados.semestreAtual.replace(/\D/g, ''));
+
+      if (!isNaN(anoIngresso) && !isNaN(semIngresso) && !isNaN(semAtualNum)) {
+        const hoje = new Date();
+        const anoAtual = hoje.getFullYear();
+        const semAnoAtual = hoje.getMonth() + 1 <= 7 ? 1 : 2;
+
+        const semestresDecorridos = (anoAtual - anoIngresso) * 2 + (semAnoAtual - semIngresso) + 1;
+
+        if (semestresDecorridos < 1) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['periodoIngresso'],
+            message: 'O período de ingresso informado não pode ser no futuro',
+          });
+        } else if (semAtualNum > semestresDecorridos) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['semestreAtual'],
+            message: `Semestre incompatível com o ingresso (${dados.periodoIngresso}). Máximo possível: ${semestresDecorridos}º`,
+          });
+        }
+      }
+    }
+  }
 });
 
 export const etapa4Schema = z.object({

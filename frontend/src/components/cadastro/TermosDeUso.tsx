@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Checkbox, useTheme } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { Text, useTheme } from 'react-native-paper';
 import { useFormContext, Controller } from 'react-hook-form';
+import { Check } from 'lucide-react-native';
 
 export function TermosDeUso() {
   const theme = useTheme();
@@ -12,7 +13,7 @@ export function TermosDeUso() {
       <Text variant="bodyLarge" style={styles.intro}>Leia os termos com atenção:</Text>
 
       <View style={styles.termsBox}>
-        <ScrollView style={styles.termsScroll}>
+        <ScrollView style={styles.termsScroll} showsVerticalScrollIndicator={true}>
           <Text style={styles.termsText}>
             <Text style={styles.bold}>ESTATUTO DA ASSOCIAÇÃO DOS UNIVERSITÁRIOS DE OCARA - AUO</Text>
             {"\n"}Fundada no dia 23 de outubro do ano de 2004 | Ocara - Ceará
@@ -37,7 +38,7 @@ export function TermosDeUso() {
             {"\n\n"}
             Art. 8º. SÃO DIREITOS DOS ASSOCIADOS: a) Votar e ser votado para cargos eletivos na diretoria da Entidade; b) Participar, tomar parte das reuniões de Assembleia Geral da Entidade; c) Utilizar o transporte universitário, tendo preferência dos assentos do coletivo; d) Nenhum associado responderá, mesmo subsidiariamente, pelas obrigações e encargos de qualquer dívida contraída pela atual administração da Diretoria da Entidade; e) Qualquer associado poderá ser afastado do seu quadro social por irregularidade ou indisciplina na permanência da mesma; f) Propor a admissão de novos associados; g) Ter acesso a todos os documentos da associação; h) Recorrer das decisões da Diretoria Executiva; i) Nenhum associado poderá ser impedido de exercer direito ou função que lhe tenha sido legitimamente conferido, a não ser nos casos e pela forma previstos na lei ou no Estatuto da Entidade.
             {"\n\n"}
-            Art. 9º. SÃO DEVERES DOS ASSOCIADOS: Os deveres dos associados são os previstos na lei, no Estatuto da Entidade e nas deliberações da Diretoria Executiva, mas em especial: a) Cumprir rigorosamente com as disposições estatuárias, regimento interno e outros documentos da referida Entidade; b) Participar ativamente e assiduamente das reuniões de Assembleia Geral, eventos sociais e decisões na administração da Diretoria da Entidade; c) Acatar as determinações e decisões corretas da Diretoria da Entidade; d) Estar em dia com as suas obrigações sociais junto à Tesouraria da Entidade; e) Recorrer por escrito ou verbalmente nas reuniões de Assembleia Geral, das atas que discordam; f) Propor, dar ideias de medidas que visem o processo e organização da referida Entidade; g) Contribuir mensalmente com um determinado valor financeiro proposto pela Diretoria da referida Entidade; h) Zelar pela integridade e conservação do transporte universitário; i) Respeitar mutualmente os demais associados e outros usuários do transporte universitário; j) Respeitar e cumprir rigorosamente os horários do transporte universitário; k) Respeitar os horários de funcionamento das instituições de ensino dos associados. Salvo as exceções e ocorrências em particular, desde que sejam previamente comunicadas a diretoria da associação; l) Cooperar para o desenvolvimento e a realização das atividades da Associação; m) Fazer cumprir este Estatuto e as deliberações decorrentes da Assembleia Geral e da Diretoria Executiva; n) Comparecer às Assembleias Gerais e às reuniões a que for convocado; o) Prestar conta dos actos praticados nos cargos e comissões para que for eleito ou designado.
+            Art. 9º. SÃO DEVERES DOS ASSOCIADOS: Os deveres dos associados são os previstos na lei, no Estatuto da Entidade e nas deliberações da Diretoria Executiva, mas em especial: a) Cumprir rigorosamente com as disposições estatuárias, regimento interno e outros documentos da referida Entidade; b) Participar ativamente e assiduamente das reuniões de Assembleia Geral, eventos sociais e decisões na administração da Diretoria da Entidade; c) Acatar as determinations e decisões corretas da Diretoria da Entidade; d) Estar em dia com as suas obrigações sociais junto à Tesouraria da Entidade; e) Recorrer por escrito ou verbalmente nas reuniões de Assembleia Geral, das atas que discordam; f) Propor, dar ideias de medidas que visem o processo e organização da referida Entidade; g) Contribuir mensalmente com um determinado valor financeiro proposto pela Diretoria da referida Entidade; h) Zelar pela integridade e conservação do transporte universitário; i) Respeitar mutualmente os demais associados e outros usuários do transporte universitário; j) Respeitar e cumprir rigorosamente os horários do transporte universitário; k) Respeitar os horários de funcionamento das instituições de ensino dos associados. Salvo as exceções e ocorrências em particular, desde que sejam previamente comunicadas a diretoria da associação; l) Cooperar para o desenvolvimento e a realização das atividades da Associação; m) Fazer cumprir este Estatuto e as deliberações decorrentes da Assembleia Geral e da Diretoria Executiva; n) Comparecer às Assembleias Gerais e às reuniões a que for convocado; o) Prestar conta dos actos praticados nos cargos e comissões para que for eleito ou designado.
             {"\n\n"}
             <Text style={styles.bold}>CAPÍTULO III - DA ADMINISTRAÇÃO DA DIRETORIA DA ASSOCIAÇÃO</Text>
             {"\n\n"}
@@ -145,7 +146,7 @@ export function TermosDeUso() {
             {"\n\n"}
             <Text style={styles.bold}>Das obrigações</Text>
             {"\n\n"}
-            Art. 17. São deveres dos associados: I. Zelar pelo bom nome da AUO, sendo-lhe vetado o uso do nome desta entidade sem a devida autorização; II. Cumprir e fazer cumprir o presente regimento interno, assim como o estatuto e os regulamentos aprovados nas assembleias; III. Contribuir mensalmente junto a tesouraria da associação com a quantia de cinco reais, estando sujeito a alterações; IV. Votar nas eleições da AUO; V. Comunicar à diretoria da AUO, por escrito, o trancamento da matrícula ou desistência da faculdade e solicitar, ou não, o desligamento temporário ou definitivo do quadro social da AUO; VI. Organizar-se em fila, por ordem de chegada, para entrar no transporte universitário; VII. Cumprir com os horários estabelecidos no inciso I do parágrafo primeiro do Art. 19º deste regimento; (Nota: A referência original aponta para o Art. 19, mas a regra de horário está descrita no Art. 20, § 1º, inciso I deste documento). VIII. Manter a ordem e respeitar mutualmente os demais membros da associação; IX. Participar das assembleias da associação; X. Zelar pelo transporte universitário; XI. Na ocorrência de eventuais problemas com o transporte, dar-se a prioridade aos universitários que forem realizar prova, apresentação de trabalhos, ou não puderem mais ter nenhuma falta na disciplina do dia em questão. Fazendo uso do bom senso; XII. Esperar o ônibus nos locais de paradas designados pela diretoria da associação.
+            Art. 17. São deveres dos associados: I. Zelar pelo bom nome da AUO, sendo-lhe vetado o uso do nome desta entidade sem a devida autorização; II. Cumprir e fazer cumprir o presente regimento interno, assim como o estatuto e os regulamentos aprovados nas assembleias; III. Contribuir mensalmente junto a tesouraria da associação com a quantia de cinco reais, estando sujeito a alterações; IV. Votar nas eleições da AUO; V. Comunicar à diretoria da AUO, por escrito, o trancamento da matrícula ou desistência da faculdade e solicitar, ou não, o desligamento temporário ou definitivo do quadro social da AUO; VI. Organizar-se em fila, por ordem de chegada, para entrar no transporte universitário; VII. Cumprir com os horários estabelecidos no inciso I do parágrafo primeiro do Art. 19º deste regimento; (Nota: A referência original aponta para o Art. 19, mas a regra de horário está descrita no Art. 20, § 1º, inciso I deste documento). VIII. Manter a ordem e respeitar mutualmente os demais membros da associação; IX. Participar das assembleias da associação; X. Zelar pelo transporte universitário; XI. Na ocorrência de eventuais problemas com o transporte, dar-se a prioridade aos universitários que forem realizar prova, presentation de trabalhos, ou não puderem mais ter nenhuma falta na disciplina do dia em questão. Fazendo uso do bom senso; XII. Esperar o ônibus nos locais de paradas designados pela diretoria da associação.
             {"\n\n"}
             <Text style={styles.bold}>Dos procedimentos disciplinares</Text>
             {"\n\n"}
@@ -159,7 +160,7 @@ export function TermosDeUso() {
             {"\n\n"}
             Parágrafo terceiro: Exclusão da condição de associado; aplicável às infrações consideradas graves, assim consideradas, sem prejuízo de outros que se possa verificar: I. Reincidência em suspensão; II. Tentativa ou participação individual ou em conluio destinado a lesar os interesses da associação ou dos demais associados; III. Descumprimento das cláusulas estatutárias ou legais.
             {"\n\n"}
-            Art. 21. Após a abertura de procedimento disciplinar, deverá ocorrer comunicação escrita ao associado envolvido, onde conste a infração que lhe é atribuída, o prazo – nunca inferior a 03 dias – e a quem deverá apresentar sua defesa; Parágrafo primeiro: A recusa ao recebimento, a não apresentação de defesa, a apresentação de defesa genérica ou relativa a fato diverso do contido na comunicação, implica em confissão e nos efeitos da revelia;Parágrafo segundo: As decisões serão materializadas em comunicado formal por escrito, que poderão determinar a aplicação ou não da sanção, sua natureza, bem como o prazo de sua vigência. Parágrafo terceiro: As sanções de advertência e suspensão poderão ser aplicadas liminarmente pelo Presidente, cabendo recurso de sua decisão à diretoria ou à primeira assembleia geral subsequente. Parágrafo quarto: A sanção de exclusão poderá ser aplicada pela diretoria, cabendo recurso de sua decisão à diretoria e a primeira assembleia geral subsequente.
+            Art. 21. Após a abertura de procedimento disciplinar, deverá ocorrer comunicação escrita ao associado envolvido, onde conste a infração que lhe é atribuída, o prazo – nunca inferior a 03 dias – e a quem deverá apresentar sua defesa; Parágrafo primeiro: A recusa ao recebimento, a não apresentação de defesa, a apresentação de defesa genérica ou relativa a fato diverso do contido na comunicação, implica em confissão e nos efeitos da revelia;Parágrafo segundo: As decisões serão materializadas em comunicado formal por escrito, que poderão determinar a application ou não da sanção, sua natureza, bem como o prazo de sua vigência. Parágrafo terceiro: As sanções de advertência e suspensão poderão ser aplicadas liminarmente pelo Presidente, cabendo recurso de sua decisão à diretoria ou à primeira assembleia geral subsequente. Parágrafo quarto: A sanção de exclusão poderá ser aplicada pela diretoria, cabendo recurso de sua decisão à diretoria e a primeira assembleia geral subsequente.
             {"\n\n"}
             <Text style={styles.bold}>Do processo eleitoral</Text>
             {"\n\n"}
@@ -186,20 +187,26 @@ export function TermosDeUso() {
           control={control}
           name="aceitouTermos"
           render={({ field: { onChange, value } }) => (
-            <View style={styles.checkboxRow}>
-              <Checkbox
-                status={value ? 'checked' : 'unchecked'}
-                onPress={() => onChange(!value)}
-                color={theme.colors.primary}
-              />
-              <Text
-                variant="bodyMedium"
-                style={styles.checkboxLabel}
-                onPress={() => onChange(!value)}
+            <TouchableOpacity
+              style={styles.checkboxRow}
+              activeOpacity={0.7}
+              onPress={() => onChange(!value)}
+            >
+              <View
+                style={[
+                  styles.customCheckbox,
+                  {
+                    borderColor: value ? theme.colors.primary : '#666',
+                    backgroundColor: value ? theme.colors.primary : '#FFFFFF',
+                  },
+                ]}
               >
-                Li e aceito os termos de uso e a política de privacidade
+                {value && <Check size={16} color="#FFFFFF" strokeWidth={3} />}
+              </View>
+              <Text variant="bodyMedium" style={styles.checkboxLabel}>
+                Li e aceito os termos de uso e a política de privacidade *
               </Text>
-            </View>
+            </TouchableOpacity>
           )}
         />
         {errors.aceitouTermos && (
@@ -241,15 +248,25 @@ const styles = StyleSheet.create({
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
+    paddingVertical: 8,
+  },
+  customCheckbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   checkboxLabel: {
     flex: 1,
     color: '#333',
+    fontWeight: '500',
   },
   errorText: {
     color: 'red',
     fontSize: 12,
-    marginLeft: 40,
+    marginLeft: 36,
   },
 });
