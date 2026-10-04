@@ -40,9 +40,11 @@ def upgrade() -> None:
             sa.text(
                 """
                 INSERT INTO usuario (
-                    nome_completo, email, email_hash, senha, ativo
+                    nome_completo, email, email_hash, senha, ativo,
+                    tentativas_falhas
                 ) VALUES (
-                    :nome_completo, :email, :email_hash, :senha, TRUE
+                    :nome_completo, :email, :email_hash, :senha, TRUE,
+                    0
                 )
                 RETURNING id
                 """

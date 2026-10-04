@@ -164,7 +164,7 @@ class SQLAlchemyUsuarioRepository:
             user_id=user_id,
         )
         tipo_associado = self._buscar_tipo_associado(user_id)
-        if administrador and administrador[0] and tipo_associado == CargoEnum.ADMINISTRADOR.value:
+        if administrador and administrador[0]:
             candidatos.append({
                 "role": CargoEnum.ADMINISTRADOR.value,
                 "ativo": administrador[1],
