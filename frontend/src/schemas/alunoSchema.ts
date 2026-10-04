@@ -84,7 +84,7 @@ export const telefoneSchema = z
       .length(11, 'Informe DDD e número com 9 dígitos')
       .refine((v) => DDDS.includes(Number(v.slice(0, 2))), 'DDD inválido')
       .refine((v) => v[2] === '9', 'Informe um número de celular (começa com 9)')
-      .refine((v) => new Set(v).size > 1, 'Número de telefone inválido')
+      .refine((v) => new Set(v.slice(2)).size > 1, 'Número de telefone inválido')
   );
 
 const fileSchema = z.any().refine((file) => {

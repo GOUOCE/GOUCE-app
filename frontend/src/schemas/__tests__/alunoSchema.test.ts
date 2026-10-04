@@ -1,3 +1,4 @@
+import { describe, it, expect } from '@jest/globals';
 import {
   alunoSchema,
   etapa1Schema,
@@ -12,6 +13,8 @@ import {
   telefoneSchema,
   renovacaoSchema,
 } from '../alunoSchema';
+import { loginSchema, forgotPasswordSchema, resetPasswordSchema } from '../loginSchema';
+import { editarPerfilSchema, alterarEmailSchema } from '../perfilSchema';
 
 describe('Suíte de Testes Unitários Completa - HU-001 (Solicitação de Cadastro de Aluno)', () => {
 
@@ -276,7 +279,7 @@ describe('Suíte de Testes Unitários Completa - HU-001 (Solicitação de Cadast
       }
     });
 
-    it('deve recusar número com todos os dígitos repetidos (ex: 88999999999)', () => {
+    it('deve recusar número com todos os dígitos repetidos no corpo (ex: 88999999999)', () => {
       const res = telefoneSchema.safeParse('88999999999');
       expect(res.success).toBe(false);
       if (!res.success) {
@@ -376,9 +379,9 @@ describe('Suíte de Testes Unitários Completa - HU-001 (Solicitação de Cadast
   });
 
   // ---------------------------------------------------------------------------
-  // SCHEMA COMPLETO INTEGRADO DO CADASTRO (alunoSchema)
+  // SCHEMA COMPLETO INTEGRADO E OUTROS SCHEMAS
   // ---------------------------------------------------------------------------
-  describe('Cadastro Completo Integrado (alunoSchema)', () => {
+  describe('Cadastro Completo Integrado (alunoSchema e renovacaoSchema)', () => {
     it('deve aprovar o objeto de cadastro completo contendo todos os dados válidos de todas as etapas', () => {
       const cadastroCompleto = {
         fotoPerfil: 'file:///foto.jpg',
@@ -407,6 +410,45 @@ describe('Suíte de Testes Unitários Completa - HU-001 (Solicitação de Cadast
 
       const res = alunoSchema.safeParse(cadastroCompleto);
       expect(res.success).toBe(true);
+    });
+
+    it('deve aprovar o schema de renovação de vínculo', () => {
+      const renovacaoCompleta = {
+        fotoPerfil: 'file:///foto.jpg',
+        nomeCompleto: 'João Silva Neves',
+        email: 'joao.neves@gmail.com',
+        dataNascimento: '15/05/2002',
+        raca: 'Branco',
+        identificacaoSexual: 'Heterossexual',
+        genero: 'Homem',
+        transgenero: 'Não',
+        temFilhos: false,
+        bairro: 'Centro',
+        whatsapp: '(88) 9 9999-8888',
+        instituicao: 'UFC - Universidade Federal do Ceará',
+        curso: 'Engenharia de Software',
+        campus: 'Quixadá',
+        periodoIngresso: '2023.1',
+        turno: 'Vespertino',
+        semestreAtual: '8º',
+        comprovanteMatricula: { name: 'matricula.pdf', type: 'application/pdf', size: 1024, uri: 'file:///mat.pdf' },
+      };
+
+      const res = renovacaoSchema.safeParse(renovacaoCompleta);
+      expect(res.success).toBe(true);
+    });
+  });
+
+  describe('Outros Schemas (loginSchema e perfilSchema)', () => {
+    it('deve validar login e esqueci senha', () => {
+      expect(loginSchema.safeParse({ email: 'joao@email.com', senha: '123' }).success).toBe(true);
+      expect(forgotPasswordSchema.safeParse({ email: 'joao@email.com' }).success).toBe(true);
+      expect(resetPasswordSchema.safeParse({ novaSenha: 'Senha123Forte', confirmarNovaSenha: 'Senha123Forte' }).success).toBe(true);
+    });
+
+    it('deve validar editar perfil e alterar e-mail', () => {
+      expect(editarPerfilSchema.safeParse({ telefone: '88999998888', bairro: 'Centro' }).success).toBe(true);
+      expect(alterarEmailSchema.safeParse({ emailAtual: 'antigo@email.com', novoEmail: 'novo@email.com', senhaAtual: 'Senha123' }).success).toBe(true);
     });
   });
 });

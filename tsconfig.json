@@ -3,6 +3,7 @@
   "compilerOptions": {
     "strict": true,
     "ignoreDeprecations": "5.0",
+    "types": ["jest"],
     "paths": {
       "@/*": ["./frontend/src/*"],
       "@api/*": ["./frontend/src/api/*"],
