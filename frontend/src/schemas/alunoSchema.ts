@@ -142,6 +142,27 @@ export const etapa2Schema = z.object({
   temFilhos: z.boolean({ required_error: 'Informe se tem filhos' }),
 });
 
+// Texto livre dos campos "Outro": só letras (com acento), espaços, hífen, apóstrofo e ponto.
+const TEXTO_LIVRE = /^[A-Za-zÀ-ÖØ-öø-ÿ'’\-. ]+$/;
+
+function validarTextoLivre(
+  valor: string | undefined,
+  ctx: z.RefinementCtx,
+  path: string,
+  mensagemVazio: string,
+) {
+  const texto = (valor || '').trim();
+  if (!texto) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: [path], message: mensagemVazio });
+  } else if (texto.length < 3) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: [path], message: 'Informe pelo menos 3 letras' });
+  } else if (texto.length > 150) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: [path], message: 'Use no máximo 150 caracteres' });
+  } else if (!TEXTO_LIVRE.test(texto)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: [path], message: 'Use apenas letras, espaços, hífen ou apóstrofo' });
+  }
+}
+
 export const etapa3Schema = z.object({
   bairro: z.string().min(1, 'Selecione o bairro'),
   bairroEspecifico: z.string().optional(),
@@ -155,26 +176,14 @@ export const etapa3Schema = z.object({
   turno: z.string().min(1, 'Selecione o turno'),
   semestreAtual: z.string().min(1, 'Selecione o semestre atual'),
 }).superRefine((dados, ctx) => {
-  if (dados.curso === 'Outro' && (!dados.cursoEspecifico || !dados.cursoEspecifico.trim())) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ['cursoEspecifico'],
-      message: 'Informe o nome do seu curso',
-    });
+  if (dados.curso === 'Outro') {
+    validarTextoLivre(dados.cursoEspecifico, ctx, 'cursoEspecifico', 'Informe o nome do seu curso');
   }
-  if (dados.instituicao === 'Outra' && (!dados.instituicaoEspecifica || !dados.instituicaoEspecifica.trim())) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ['instituicaoEspecifica'],
-      message: 'Informe o nome da sua instituição',
-    });
+  if (dados.instituicao === 'Outra') {
+    validarTextoLivre(dados.instituicaoEspecifica, ctx, 'instituicaoEspecifica', 'Informe o nome da sua instituição');
   }
-  if (dados.bairro === 'Outro' && (!dados.bairroEspecifico || !dados.bairroEspecifico.trim())) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ['bairroEspecifico'],
-      message: 'Informe o seu bairro / localidade',
-    });
+  if (dados.bairro === 'Outro') {
+    validarTextoLivre(dados.bairroEspecifico, ctx, 'bairroEspecifico', 'Informe o seu bairro / localidade');
   }
 
   // Validação de coerência matemática entre período de ingresso e semestre atual

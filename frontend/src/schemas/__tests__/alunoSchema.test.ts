@@ -289,6 +289,49 @@ describe('Suíte de Testes Unitários Completa - HU-001 (Solicitação de Cadast
   });
 
   describe('Passo 3 - Vínculo Acadêmico (etapa3Schema)', () => {
+    describe('Campos "Outro" (texto livre)', () => {
+      const base = {
+        bairro: 'Centro',
+        whatsapp: '(88) 9 9999-8888',
+        instituicao: 'UFC - Universidade Federal do Ceará',
+        curso: 'Outro',
+        campus: 'Quixadá',
+        periodoIngresso: '2023.1',
+        turno: 'Vespertino',
+        semestreAtual: '8º',
+      };
+      const erroDoCurso = (cursoEspecifico: string) => {
+        const res = etapa3Schema.safeParse({ ...base, cursoEspecifico });
+        return res.success ? undefined : res.error.issues.find((i) => i.path[0] === 'cursoEspecifico')?.message;
+      };
+
+      it('aceita nome de curso com acentos, hífen e apóstrofo', () => {
+        expect(erroDoCurso('Engenharia de Produção')).toBeUndefined();
+        expect(erroDoCurso("Ciências Sociais - D'Ávila")).toBeUndefined();
+      });
+
+      it('recusa números e emoji', () => {
+        expect(erroDoCurso('Engenharia 123')).toBe('Use apenas letras, espaços, hífen ou apóstrofo');
+        expect(erroDoCurso('Medicina 😀')).toBe('Use apenas letras, espaços, hífen ou apóstrofo');
+      });
+
+      it('recusa vazio e menos de 3 letras', () => {
+        expect(erroDoCurso('   ')).toBe('Informe o nome do seu curso');
+        expect(erroDoCurso('Ab')).toBe('Informe pelo menos 3 letras');
+      });
+
+      it('aplica a mesma regra à instituição e ao bairro', () => {
+        const res = etapa3Schema.safeParse({
+          ...base, curso: 'Engenharia de Software',
+          instituicao: 'Outra', instituicaoEspecifica: 'Faculdade 2000',
+          bairro: 'Outro', bairroEspecifico: 'Sítio 😀',
+        });
+        expect(res.success).toBe(false);
+        const campos = res.success ? [] : res.error.issues.map((i) => i.path[0]);
+        expect(campos).toEqual(expect.arrayContaining(['instituicaoEspecifica', 'bairroEspecifico']));
+      });
+    });
+
     it('deve aprovar dados de contato e vínculo acadêmico válidos', () => {
       const dados = {
         bairro: 'Centro',
