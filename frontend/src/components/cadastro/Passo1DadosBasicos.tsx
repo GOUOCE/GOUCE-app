@@ -7,7 +7,7 @@ import { Camera, User, Calendar, Mail, Eye, EyeOff, Trash2, Image as ImageIcon }
 
 export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: boolean }) {
   const theme = useTheme();
-  const { control, formState: { errors }, setValue, watch } = useFormContext();
+  const { control, formState: { errors }, setValue, watch, trigger } = useFormContext();
   const [verSenha, setVerSenha] = useState(false);
   const [verConfirmarSenha, setVerConfirmarSenha] = useState(false);
   const [menuFotoVisivel, setMenuFotoVisivel] = useState(false);
@@ -69,7 +69,7 @@ export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: bool
         </TouchableOpacity>
       </View>
 
-      {/* Modal Simulado para Opções de Foto (Bottom Sheet Style) */}
+      {/* Modal para Opções de Foto */}
       <Portal>
         <Modal
           visible={menuFotoVisivel}
@@ -115,6 +115,7 @@ export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: bool
             mode="outlined"
             value={value}
             onChangeText={onChange}
+            maxLength={150}
             error={!!errors.nomeCompleto}
             left={<TextInput.Icon icon={() => <User size={20} color="#666" />} />}
             style={styles.input}
@@ -164,7 +165,9 @@ export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: bool
                 label="E-mail *"
                 mode="outlined"
                 autoCapitalize="none"
+                autoCorrect={false}
                 keyboardType="email-address"
+                maxLength={150}
                 value={value}
                 onChangeText={onChange}
                 error={!!errors.email}
@@ -183,8 +186,14 @@ export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: bool
                 label="Senha *"
                 mode="outlined"
                 secureTextEntry={!verSenha}
+                maxLength={128}
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(text) => {
+                  onChange(text);
+                  if (watch('confirmarSenha')) {
+                    trigger('confirmarSenha');
+                  }
+                }}
                 error={!!errors.senha}
                 right={<TextInput.Icon icon={() => verSenha ? <EyeOff size={20} /> : <Eye size={20} />} onPress={() => setVerSenha(!verSenha)} />}
                 style={styles.input}
@@ -202,8 +211,12 @@ export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: bool
                 label="Confirmar Senha *"
                 mode="outlined"
                 secureTextEntry={!verConfirmarSenha}
+                maxLength={128}
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(text) => {
+                  onChange(text);
+                  trigger(['senha', 'confirmarSenha']);
+                }}
                 error={!!errors.confirmarSenha}
                 right={<TextInput.Icon icon={() => verConfirmarSenha ? <EyeOff size={20} /> : <Eye size={20} />} onPress={() => setVerConfirmarSenha(!verConfirmarSenha)} />}
                 style={styles.input}
@@ -256,6 +269,8 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 12,
     marginLeft: 4,
+    flexShrink: 1,
+    flexWrap: 'wrap',
   },
   hint: {
     fontSize: 12,
