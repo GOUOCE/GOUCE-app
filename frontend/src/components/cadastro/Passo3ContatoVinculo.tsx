@@ -3,6 +3,7 @@ import { View, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-nat
 import { TextInput, Text, useTheme, Portal } from 'react-native-paper';
 import { useFormContext, Controller } from 'react-hook-form';
 import { ChevronDown, Phone, School, GraduationCap, Search, X } from 'lucide-react-native';
+import { abreviarParaLargura } from '../../utils/abreviarTexto';
 
 interface SelectInputProps {
   label: string;
@@ -16,6 +17,8 @@ interface SelectInputProps {
 
 function CustomSelect({ label, value, options, onSelect, error, leftIcon, searchable }: SelectInputProps) {
   const [visible, setVisible] = useState(false);
+  const [largura, setLargura] = useState(0);
+  const texto = value || 'Selecionar';
   const [searchQuery, setSearchQuery] = useState('');
   const theme = useTheme();
 
@@ -26,32 +29,18 @@ function CustomSelect({ label, value, options, onSelect, error, leftIcon, search
   return (
     <View style={styles.selectContainer}>
       <TouchableOpacity activeOpacity={0.7} onPress={() => setVisible(true)}>
-        <View pointerEvents="none">
+        <View pointerEvents="none" onLayout={(e) => setLargura(e.nativeEvent.layout.width)}>
           <TextInput
             label={label}
             mode="outlined"
+            value={abreviarParaLargura(texto, largura, leftIcon ? 108 : 68)}
+            accessibilityLabel={`${label} ${texto}`}
+            textColor={value ? '#333' : '#888'}
             editable={false}
             error={error}
             left={leftIcon ? <TextInput.Icon icon={() => leftIcon} /> : undefined}
             right={<TextInput.Icon icon={() => <ChevronDown size={20} color="#333" />} onPress={() => setVisible(true)} />}
             style={{ backgroundColor: '#fff' }}
-            render={(props) => (
-              <Text
-                numberOfLines={1}
-                ellipsizeMode="tail"
-                style={[
-                  props.style,
-                  {
-                    paddingTop: 16,
-                    paddingBottom: 8,
-                    paddingRight: 40,
-                    color: value ? '#333' : '#888',
-                  },
-                ]}
-              >
-                {value || 'Selecionar'}
-              </Text>
-            )}
           />
         </View>
       </TouchableOpacity>
