@@ -4,7 +4,7 @@ appId: com.gouce.app
 name: "CT-HU001-UI-026 — Senha sem letra maiúscula"
 tags:
   - hu-001
-  - smoke
+  - regressao
 ---
 - runFlow: ../../../subflows/cadastro/abrir-cadastro.yaml
 - runFlow:

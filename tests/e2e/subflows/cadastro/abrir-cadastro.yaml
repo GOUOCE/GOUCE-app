@@ -1,8 +1,20 @@
 # Abre o app do zero (sem dados salvos) e vai até o Passo 1 do cadastro.
 appId: com.gouce.app
 ---
+# Em máquinas carregadas (e no CI), o Android pode exibir "System UI isn't
+# responding" logo após o boot, cobrindo a tela. Se aparecer, espera e segue.
+- runFlow:
+    when:
+      visible: "System UI isn't responding"
+    commands:
+      - tapOn: "Wait"
 - launchApp:
     clearState: true
+- runFlow:
+    when:
+      visible: "System UI isn't responding"
+    commands:
+      - tapOn: "Wait"
 - tapOn:
     id: "inicio-btn-criar-conta"
 - assertVisible:

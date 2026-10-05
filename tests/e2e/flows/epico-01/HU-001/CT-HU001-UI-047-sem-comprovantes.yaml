@@ -1,0 +1,40 @@
+# E2E-HU001-07 — Passo 4 sem nenhum comprovante
+# Caso manual: CT-HU001-UI-047 (tests/manual/epico-01/HU-001/ui/UI-HU-001.md)
+#
+# Confere o erro pelo testID de cada comprovante, sem conferir o texto.
+appId: com.gouce.app
+name: "E2E-HU001-07 — Sem comprovantes"
+tags:
+  - hu-001
+  - essencial
+  - infeliz
+---
+- runFlow: ../../../subflows/cadastro/abrir-cadastro.yaml
+- runFlow:
+    file: ../../../subflows/cadastro/preencher-dados-basicos.yaml
+    env:
+      NOME: "Maria da Silva Souza"
+      DATA_NASCIMENTO: "15032002"
+      EMAIL: "maria.e2e@teste.com"
+      SENHA: "Abcde123"
+      CONFIRMAR_SENHA: "Abcde123"
+- tapOn:
+    id: "cadastro-btn-proximo"
+- extendedWaitUntil:
+    visible:
+      id: "cadastro-txt-passo"
+      text: "Passo 2 de 4.*"
+    timeout: 15000
+- runFlow: ../../../subflows/cadastro/preencher-perfil-demografico.yaml
+- runFlow: ../../../subflows/cadastro/preencher-contato-vinculo.yaml
+
+- tapOn:
+    id: "cadastro-btn-proximo"
+- assertVisible:
+    id: "cadastro-txt-passo"
+    text: "Passo 4 de 4.*"
+- assertVisible:
+    id: "cadastro-erro-comprovante-matricula"
+- scrollUntilVisible:
+    element:
+      id: "cadastro-erro-comprovante-residencia"

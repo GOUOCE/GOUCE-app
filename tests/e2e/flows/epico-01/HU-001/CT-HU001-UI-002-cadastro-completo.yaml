@@ -1,0 +1,71 @@
+# E2E-HU001-01 — Cadastro completo com sucesso
+# Casos manuais: CT-HU001-UI-002, CT-HU001-UI-048, CT-HU001-UI-052
+# (tests/manual/epico-01/HU-001/ui/UI-HU-001.md)
+#
+# Único fluxo que passa por todas as camadas: app → API → banco → MinIO.
+# Usa um e-mail novo a cada execução (scripts/gerar-email.js).
+appId: com.gouce.app
+name: "E2E-HU001-01 — Cadastro completo"
+tags:
+  - hu-001
+  - essencial
+  - feliz
+---
+- runScript: ../../../scripts/gerar-email.js
+- runFlow: ../../../subflows/cadastro/abrir-cadastro.yaml
+
+# Passo 1
+- runFlow:
+    file: ../../../subflows/cadastro/preencher-dados-basicos.yaml
+    env:
+      NOME: "Maria da Silva Souza"
+      DATA_NASCIMENTO: "15032002"
+      EMAIL: ${output.email}
+      SENHA: "Abcde123"
+      CONFIRMAR_SENHA: "Abcde123"
+- tapOn:
+    id: "cadastro-btn-proximo"
+- extendedWaitUntil:
+    visible:
+      id: "cadastro-txt-passo"
+      text: "Passo 2 de 4.*"
+    timeout: 15000
+
+# Passos 2 e 3
+- runFlow: ../../../subflows/cadastro/preencher-perfil-demografico.yaml
+- runFlow: ../../../subflows/cadastro/preencher-contato-vinculo.yaml
+
+# Passo 4
+- runFlow:
+    file: ../../../subflows/cadastro/anexar-comprovante.yaml
+    env: { BOTAO_ID: "cadastro-btn-comprovante-matricula" }
+- runFlow:
+    file: ../../../subflows/cadastro/anexar-comprovante.yaml
+    env: { BOTAO_ID: "cadastro-btn-comprovante-residencia" }
+- tapOn:
+    id: "cadastro-btn-proximo"
+
+# Termos: sem o aceite, não dá para concluir (CT-052)
+- assertVisible: "Termos de Uso"
+- scrollUntilVisible:
+    element:
+      id: "cadastro-checkbox-termos"
+- assertVisible:
+    id: "cadastro-btn-concluir"
+    enabled: false
+- tapOn:
+    id: "cadastro-checkbox-termos"
+- assertVisible:
+    id: "cadastro-btn-concluir"
+    enabled: true
+
+# Envio
+- tapOn:
+    id: "cadastro-btn-concluir"
+- extendedWaitUntil:
+    visible: "Cadastro enviado para análise"
+    timeout: 30000
+- tapOn:
+    id: "cadastro-btn-ir-login"
+- assertVisible:
+    id: "login-btn-criar-conta"

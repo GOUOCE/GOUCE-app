@@ -1,0 +1,13 @@
+# Abre um seletor do cadastro e escolhe uma opção pelo texto.
+#
+# Parâmetros:
+#   SELECT_ID  testID do seletor (ex.: cadastro-select-raca)
+#   OPCAO      texto da opção (ex.: Pardo)
+appId: com.gouce.app
+---
+- scrollUntilVisible:
+    element:
+      id: ${SELECT_ID}
+- tapOn:
+    id: ${SELECT_ID}
+- tapOn: ${OPCAO}

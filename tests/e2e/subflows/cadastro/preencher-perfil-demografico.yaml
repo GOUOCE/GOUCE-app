@@ -1,0 +1,20 @@
+# Preenche o Passo 2 com a massa válida do planejamento e avança para o Passo 3.
+appId: com.gouce.app
+---
+- runFlow:
+    file: selecionar-opcao.yaml
+    env: { SELECT_ID: "cadastro-select-raca", OPCAO: "Pardo" }
+- runFlow:
+    file: selecionar-opcao.yaml
+    env: { SELECT_ID: "cadastro-select-identificacao-sexual", OPCAO: "Heterossexual" }
+- runFlow:
+    file: selecionar-opcao.yaml
+    env: { SELECT_ID: "cadastro-select-genero", OPCAO: "Mulher" }
+- runFlow:
+    file: selecionar-opcao.yaml
+    env: { SELECT_ID: "cadastro-select-transgenero", OPCAO: "Não" }
+- tapOn:
+    id: "cadastro-btn-proximo"
+- assertVisible:
+    id: "cadastro-txt-passo"
+    text: "Passo 3 de 4.*"

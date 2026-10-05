@@ -12,8 +12,9 @@ tests/e2e/
 ├── flows/               ← os testes: 1 arquivo = 1 caso de teste
 │   └── epico-01/
 │       └── HU-001/
-├── subflows/            ← passos reutilizáveis (abrir cadastro, preencher etapa, login...)
-└── scripts/             ← scripts JS (ex.: gerar e-mail/CPF únicos por execução)
+├── subflows/            ← passos reutilizáveis (abrir cadastro, preencher etapa, anexar...)
+├── scripts/             ← scripts JS (ex.: gerar e-mail único por execução)
+└── dados/               ← arquivos usados nos testes (ex.: comprovante.pdf)
 ```
 
 ---
@@ -34,8 +35,9 @@ flows/epico-01/HU-001/CT-HU001-UI-019-email-invalido.yaml
 | Tag              | Uso                                                                     |
 |------------------|-------------------------------------------------------------------------|
 | `hu-001`, ...    | HU a que o fluxo pertence                                               |
-| `smoke`          | Fluxos principais, rodam em todo PR                                     |
-| `regressao`      | Demais casos                                                            |
+| `essencial`      | Suíte mínima de cada HU (fluxo feliz + infelizes críticos)              |
+| `feliz`, `infeliz` | Tipo do cenário                                                       |
+| `regressao`      | Casos extras, rodam sob demanda                                         |
 | `bug-conhecido`  | Reproduz um bug com issue aberta; falha até o bug ser corrigido         |
 
 ### Seletores
@@ -87,8 +89,8 @@ Pré-requisitos: Java 17+, Android SDK com emulador, Maestro, backend rodando
 # todos os fluxos
 maestro test tests/e2e
 
-# só os principais
-maestro test tests/e2e --include-tags smoke
+# suíte essencial
+maestro test tests/e2e --include-tags essencial --exclude-tags bug-conhecido
 
 # sem os bugs conhecidos
 maestro test tests/e2e --exclude-tags bug-conhecido

@@ -1,0 +1,33 @@
+# Preenche o Passo 3 com a massa válida do planejamento e avança para o Passo 4.
+appId: com.gouce.app
+---
+- runFlow:
+    file: selecionar-opcao.yaml
+    env: { SELECT_ID: "cadastro-select-bairro", OPCAO: "Centro" }
+- tapOn:
+    id: "cadastro-input-whatsapp"
+- inputText: "85999990000"
+- hideKeyboard
+- runFlow:
+    file: selecionar-opcao.yaml
+    env: { SELECT_ID: "cadastro-select-instituicao", OPCAO: "UFC" }
+- runFlow:
+    file: selecionar-opcao.yaml
+    env: { SELECT_ID: "cadastro-select-curso", OPCAO: "Engenharia de Software" }
+- runFlow:
+    file: selecionar-opcao.yaml
+    env: { SELECT_ID: "cadastro-select-campus", OPCAO: "Quixadá" }
+- runFlow:
+    file: selecionar-opcao.yaml
+    env: { SELECT_ID: "cadastro-select-periodo-ingresso", OPCAO: "2024.1" }
+- runFlow:
+    file: selecionar-opcao.yaml
+    env: { SELECT_ID: "cadastro-select-turno", OPCAO: "Noturno" }
+- runFlow:
+    file: selecionar-opcao.yaml
+    env: { SELECT_ID: "cadastro-select-semestre-atual", OPCAO: "5º" }
+- tapOn:
+    id: "cadastro-btn-proximo"
+- assertVisible:
+    id: "cadastro-txt-passo"
+    text: "Passo 4 de 4.*"

@@ -1,0 +1,24 @@
+# Anexa tests/e2e/dados/comprovante.pdf em um dos comprovantes do Passo 4,
+# pelo seletor de arquivos do Android (DocumentsUI).
+#
+# Pré-condição: o PDF precisa estar em /sdcard/Download do emulador
+# (adb push tests/e2e/dados/comprovante.pdf /sdcard/Download/comprovante.pdf).
+#
+# Parâmetros:
+#   BOTAO_ID  testID do botão do comprovante
+#             (cadastro-btn-comprovante-matricula ou cadastro-btn-comprovante-residencia)
+appId: com.gouce.app
+---
+- scrollUntilVisible:
+    element:
+      id: ${BOTAO_ID}
+- tapOn:
+    id: ${BOTAO_ID}
+# O seletor abre em "Recent", onde arquivos copiados pelo adb não aparecem.
+- tapOn: "Show roots"
+- tapOn: "Downloads"
+- tapOn: "comprovante.pdf"
+# De volta ao app, o card do comprovante mostra o nome do arquivo.
+- assertVisible:
+    id: ${BOTAO_ID}
+    text: ".*comprovante.pdf.*"

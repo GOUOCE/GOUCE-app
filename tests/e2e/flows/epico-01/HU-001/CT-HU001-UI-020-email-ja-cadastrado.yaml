@@ -1,0 +1,33 @@
+# E2E-HU001-06 — E-mail já cadastrado
+# Caso manual: CT-HU001-UI-020 (tests/manual/epico-01/HU-001/ui/UI-HU-001.md)
+#
+# Usa o admin padrão criado pelas migrations (admin@gouce.app), que existe em
+# todo banco novo: não precisa preparar dados antes.
+appId: com.gouce.app
+name: "E2E-HU001-06 — E-mail já cadastrado"
+tags:
+  - hu-001
+  - essencial
+  - infeliz
+---
+- runFlow: ../../../subflows/cadastro/abrir-cadastro.yaml
+- runFlow:
+    file: ../../../subflows/cadastro/preencher-dados-basicos.yaml
+    env:
+      NOME: "Maria da Silva Souza"
+      DATA_NASCIMENTO: "15032002"
+      EMAIL: "admin@gouce.app"
+      SENHA: "Abcde123"
+      CONFIRMAR_SENHA: "Abcde123"
+- tapOn:
+    id: "cadastro-btn-proximo"
+- extendedWaitUntil:
+    visible:
+      id: "popup-titulo"
+      text: "E-mail em uso"
+    timeout: 15000
+- tapOn:
+    id: "popup-btn-confirmar"
+- assertVisible:
+    id: "cadastro-txt-passo"
+    text: "Passo 1 de 4.*"

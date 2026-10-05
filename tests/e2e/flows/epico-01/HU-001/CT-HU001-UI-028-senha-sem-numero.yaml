@@ -4,7 +4,7 @@ appId: com.gouce.app
 name: "CT-HU001-UI-028 — Senha sem número"
 tags:
   - hu-001
-  - smoke
+  - regressao
 ---
 - runFlow: ../../../subflows/cadastro/abrir-cadastro.yaml
 - runFlow:

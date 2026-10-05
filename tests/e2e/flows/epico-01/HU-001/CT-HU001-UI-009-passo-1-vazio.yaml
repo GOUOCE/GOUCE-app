@@ -1,0 +1,30 @@
+# E2E-HU001-02 — Passo 1 sem preencher nada
+# Caso manual: CT-HU001-UI-009 (tests/manual/epico-01/HU-001/ui/UI-HU-001.md)
+#
+# Confere o erro pelo testID de cada campo, sem conferir o texto, porque as
+# mensagens de campo obrigatório mudam no PR #74.
+appId: com.gouce.app
+name: "E2E-HU001-02 — Passo 1 vazio"
+tags:
+  - hu-001
+  - essencial
+  - infeliz
+---
+- runFlow: ../../../subflows/cadastro/abrir-cadastro.yaml
+- tapOn:
+    id: "cadastro-btn-proximo"
+- assertVisible:
+    id: "cadastro-txt-passo"
+    text: "Passo 1 de 4.*"
+- assertVisible:
+    id: "cadastro-erro-nome"
+- assertVisible:
+    id: "cadastro-erro-data-nascimento"
+- assertVisible:
+    id: "cadastro-erro-email"
+- scrollUntilVisible:
+    element:
+      id: "cadastro-erro-senha"
+- scrollUntilVisible:
+    element:
+      id: "cadastro-erro-confirmar-senha"
