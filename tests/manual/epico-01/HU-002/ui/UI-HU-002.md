@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Em execução | 18 | 7 | 1 | 1 | 9 |
+| ⏳ Em execução | 18 | 7 | 2 | 1 | 8 |
 
 ## Pré-condições
 
@@ -52,7 +52,7 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 | CT-HU002-UI-006 | Login válido de aluno | Credenciais do aluno ativo; Sou aluno | Entrar na área do aluno em até 3 segundos | ✅ APROVADO | O aluno ativo entrou na área do aluno em menos de 3 segundos. A conta foi aprovada pela API, porque o painel do administrador ainda não tem a tela de aprovação. Confirmado pelo testador em 05/10/2026. |
 | CT-HU002-UI-007 | Login válido de administrador | Credenciais do administrador; Sou administrador | Entrar no Painel do administrador | ✅ APROVADO | O administrador padrão autenticou e entrou no Painel, com as abas Painel, Cadastros, Logística e Mais. O conteúdo do painel ainda é provisório (fora do escopo da HU-002). Confirmado pelo testador em 05/10/2026. |
 | CT-HU002-UI-008 | Login válido de representante | Credenciais do representante; Sou representante | Entrar na área de Chamada do representante | 🚫 BLOQUEADO | O perfil representante ainda não existe no backend: o login procura a tabela `representante`, que nenhuma migration cria, e não há rota para cadastrar representante. Nenhuma conta pode ter esse perfil. Registrado em 05/10/2026. |
-| CT-HU002-UI-009 | Perfil escolhido diferente do perfil da conta | Aluno escolhe Sou administrador; administrador escolhe Sou aluno | Não entrar sem aviso em um perfil diferente do escolhido | ⏳ PENDENTE | Não executado. |
+| CT-HU002-UI-009 | Perfil escolhido diferente do perfil da conta | Aluno escolhe Sou administrador; administrador escolhe Sou aluno | Não entrar sem aviso em um perfil diferente do escolhido | ❌ REPROVADO | A escolha do perfil é ignorada: o aluno que toca em Sou administrador ou Sou representante entra na área do aluno, e o administrador que toca em Sou aluno ou Sou representante entra no Painel do administrador, sempre sem aviso. Ver [BUG-HU002-UI-009](issues/BUG-HU002-UI-009-perfil-escolhido-ignorado.md). Confirmado pelo testador em 05/10/2026. |
 | CT-HU002-UI-010 | Voltar da seleção de perfil | Seta de voltar; Continuar aqui; Sim, sair | Pedir confirmação e respeitar a escolha | ✅ APROVADO | A seta exibiu a confirmação; Continuar aqui manteve a tela de seleção e Sim, sair voltou sem entrar no app. Confirmado pelo testador em 05/10/2026. |
 
 ### Seção C — Credenciais inválidas e status da conta
@@ -283,8 +283,12 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Aluno ativo tocando em **Sou administrador** ou **Sou representante**: entrou na área do aluno, sem aviso.
+- Administrador tocando em **Sou aluno** ou **Sou representante**: entrou no Painel do administrador, sem aviso.
+- A escolha do perfil não tem efeito: `handleSelectProfile` em `selecao-perfil.tsx` recebe o perfil e não o usa, e o `signIn` (`AuthContext.tsx`) redireciona sempre para o perfil que vem da conta.
+- Divergência de ordem: o app pede o perfil **depois** de e-mail e senha; o AC-08 e o BDD preveem **antes**.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ❌ Reprovado — [BUG-HU002-UI-009](issues/BUG-HU002-UI-009-perfil-escolhido-ignorado.md).
 
 ---
 
@@ -487,6 +491,7 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 | Caso | Defeito | Issue |
 | ---- | ------- | ----- |
 | CT-HU002-UI-003 | E-mail válido com espaço no início ou no fim é recusado como inválido no login (e no Esqueci minha senha). | [BUG-HU002-UI-003-email-com-espacos-recusado](issues/BUG-HU002-UI-003-email-com-espacos-recusado.md) |
+| CT-HU002-UI-009 | O perfil escolhido na tela “Como você quer entrar?” é ignorado: o app entra sempre no perfil da conta, sem aviso. A seleção ocorre depois das credenciais, e não antes (AC-08). | [BUG-HU002-UI-009-perfil-escolhido-ignorado](issues/BUG-HU002-UI-009-perfil-escolhido-ignorado.md) |
 | CT-HU002-UI-004 | Melhoria: o campo de e-mail mantém as letras maiúsculas digitadas. | [MELHORIA-HU002-UI-004-email-em-minusculas](issues/MELHORIA-HU002-UI-004-email-em-minusculas.md) |
 
 ## Observações gerais
