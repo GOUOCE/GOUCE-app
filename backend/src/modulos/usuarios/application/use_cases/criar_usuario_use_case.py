@@ -11,6 +11,7 @@ from src.shared.validators.telefone_validator import TelefoneValidator
 from src.shared.validators.senha_validator import SenhaValidator
 from src.shared.validators.turno_curso_validator import TurnoCursoValidator
 from src.shared.validators.demograficos_validator import DemograficosValidator
+from src.shared.validators.nome_completo_validator import validar_nome_completo
 
 
 
@@ -62,14 +63,9 @@ class CriarUsuarioUseCase:
         erros = []
 
         # 1. Validação de Nome Completo
-        nome = dto.nome.strip() if dto.nome else ""
-        primeiro_nome = nome.split()[0] if nome else ""
-        if len(primeiro_nome) < 3:
-            erros.append(CadastroValidationError("nome", "O primeiro nome deve ter pelo menos 3 letras"))
-        elif len(nome.split()) < 2:
-            erros.append(CadastroValidationError("nome", "Informe seu nome completo (nome e sobrenome)"))
-        elif not self.string_validator.validar_string_sem_numero(nome):
-            erros.append(CadastroValidationError("nome", "O nome deve conter apenas letras e espaços"))
+        erro_nome = validar_nome_completo(dto.nome)
+        if erro_nome:
+            erros.append(CadastroValidationError("nome", erro_nome))
 
         # 2. Validação de E-mail
         email = str(dto.email).lower().strip() if dto.email else ""
