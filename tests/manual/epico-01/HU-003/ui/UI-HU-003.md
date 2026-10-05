@@ -11,14 +11,14 @@
 | Tela            | Áreas do aluno, do representante e do administrador; tela Acesso Negado                 |
 | Ambiente        | Desenvolvimento — app mobile no iPhone (Expo Go)                                        |
 | Total de casos  | 11 |
-| Última execução | Não realizada                                                                           |
+| Última execução | 05/10/2026                                                                              |
 | Testador        | Cauan Ricardo                                                                           |
 
 ## Resultado geral
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Não executada | 11 | 0 | 0 | 11 |
+| ⏳ Em execução | 11 | 1 | 0 | 10 |
 
 ## Pré-condições
 
@@ -37,7 +37,7 @@ Executar na ordem abaixo. São **11 casos**, em três seções. Os IDs completos
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU003-UI-001 | Menus do aluno | Login como aluno ativo | Exibir só funções de aluno, sem telas administrativas | ⏳ PENDENTE | Não executado. |
+| CT-HU003-UI-001 | Menus do aluno | Login como aluno ativo | Exibir só funções de aluno, sem telas administrativas | ✅ APROVADO | Exibiu só funções de aluno: card Sua viagem hoje, atalhos Agendar Transporte, Meus Agendamentos, Mural de Avisos e Carteirinha Digital, e abas Início, Agenda, Avisos e Perfil. Nenhuma função administrativa. Minha Alocação não tem entrada própria; o card Sua viagem hoje é estático e Ver detalhes não funciona. Confirmado pelo testador em 05/10/2026. |
 | CT-HU003-UI-002 | Menus do administrador | Login como administrador | Exibir os menus de gestão | ⏳ PENDENTE | Não executado. |
 | CT-HU003-UI-003 | Menus do representante | Login como representante | Exibir só chamada e rota, sem funções administrativas | ⏳ PENDENTE | Não executado. |
 | CT-HU003-UI-004 | Ações exclusivas do administrador | Cadastrar, editar e inativar ônibus; publicar aviso, com cada perfil | Só o administrador executa; aluno e representante não têm a ação | ⏳ PENDENTE | Não executado. |
@@ -82,8 +82,12 @@ Executar na ordem abaixo. São **11 casos**, em três seções. Os IDs completos
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Tela **Início**: card **Sua viagem hoje** (ônibus, placa e rota) com o botão **Ver detalhes**; seção **Acesso rápido** com **Agendar Transporte**, **Meus Agendamentos**, **Mural de Avisos** e **Carteirinha Digital**.
+- Abas inferiores: **Início**, **Agenda**, **Avisos** e **Perfil**.
+- Nenhuma função administrativa encontrada (gestão de frota, motoristas, rotas, relatórios, aprovação de alunos ou gestão de administradores).
+- **Minha Alocação** (AC-02) não tem entrada própria. O card **Sua viagem hoje** é o mais próximo, mas é estático: os dados (`Ônibus 04 - Placa OCR-1234`, `Rota Centro → UFC`) são fixos no código e **Ver detalhes** não faz nada. Funcionalidade de outra HU, ainda não implementada; não reprova este caso, que verifica apenas o que o perfil aluno exibe.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
