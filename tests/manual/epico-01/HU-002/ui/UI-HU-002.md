@@ -16,9 +16,9 @@
 
 ## Resultado geral
 
-| Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
-| --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 18 | 6 | 1 | 11 |
+| Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
+| --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
+| ⏳ Em execução | 18 | 7 | 1 | 1 | 9 |
 
 ## Pré-condições
 
@@ -51,9 +51,9 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 | --- | --- | --- | --- | --- | --- |
 | CT-HU002-UI-006 | Login válido de aluno | Credenciais do aluno ativo; Sou aluno | Entrar na área do aluno em até 3 segundos | ✅ APROVADO | O aluno ativo entrou na área do aluno em menos de 3 segundos. A conta foi aprovada pela API, porque o painel do administrador ainda não tem a tela de aprovação. Confirmado pelo testador em 05/10/2026. |
 | CT-HU002-UI-007 | Login válido de administrador | Credenciais do administrador; Sou administrador | Entrar no Painel do administrador | ✅ APROVADO | O administrador padrão autenticou e entrou no Painel, com as abas Painel, Cadastros, Logística e Mais. O conteúdo do painel ainda é provisório (fora do escopo da HU-002). Confirmado pelo testador em 05/10/2026. |
-| CT-HU002-UI-008 | Login válido de representante | Credenciais do representante; Sou representante | Entrar na área de Chamada do representante | ⏳ PENDENTE | Não executado. |
+| CT-HU002-UI-008 | Login válido de representante | Credenciais do representante; Sou representante | Entrar na área de Chamada do representante | 🚫 BLOQUEADO | O perfil representante ainda não existe no backend: o login procura a tabela `representante`, que nenhuma migration cria, e não há rota para cadastrar representante. Nenhuma conta pode ter esse perfil. Registrado em 05/10/2026. |
 | CT-HU002-UI-009 | Perfil escolhido diferente do perfil da conta | Aluno escolhe Sou administrador; administrador escolhe Sou aluno | Não entrar sem aviso em um perfil diferente do escolhido | ⏳ PENDENTE | Não executado. |
-| CT-HU002-UI-010 | Voltar da seleção de perfil | Seta de voltar; Continuar aqui; Sim, sair | Pedir confirmação e respeitar a escolha | ⏳ PENDENTE | Não executado. |
+| CT-HU002-UI-010 | Voltar da seleção de perfil | Seta de voltar; Continuar aqui; Sim, sair | Pedir confirmação e respeitar a escolha | ✅ APROVADO | A seta exibiu a confirmação; Continuar aqui manteve a tela de seleção e Sim, sair voltou sem entrar no app. Confirmado pelo testador em 05/10/2026. |
 
 ### Seção C — Credenciais inválidas e status da conta
 
@@ -258,8 +258,10 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Não foi possível executar: o perfil representante ainda não existe no backend. O login reconhece representante pela tabela `representante` (`usuario_repository.py`, `buscar_contexto_autenticacao_por_id`), mas nenhuma migration cria essa tabela, e não há rota para cadastrar representante. Nenhuma conta pode ter esse perfil, nem preparada pela API.
+- Não é defeito da HU-002: a funcionalidade ainda não foi implementada. Reexecutar quando o cadastro de representante existir.
+- Registrado em 05/10/2026.
+- Status: 🚫 Bloqueado.
 
 ---
 
@@ -303,8 +305,9 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- A seta de voltar exibiu a confirmação “Sair desta tela?”; **Continuar aqui** manteve a tela de seleção e **Sim, sair** voltou para a tela anterior sem entrar no app.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ### Seção C — Credenciais inválidas e status da conta
 
