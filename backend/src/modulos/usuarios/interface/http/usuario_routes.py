@@ -310,7 +310,7 @@ async def cadastrar_usuario_com_arquivos(
     termos_de_uso: bool = Form(...),
     comprovante_matricula: UploadFile = File(..., description="Arquivo PDF ou Imagem do comprovante de matrícula"),
     comprovante_residencia: UploadFile = File(..., description="Arquivo PDF ou Imagem do comprovante de residência"),
-    telefone: str = Form(None),
+    telefone: str = Form(...),
     bairro_id: str = Form(None),
     identificacao_genero: str = Form(...),
     tem_filhos: bool = Form(...),

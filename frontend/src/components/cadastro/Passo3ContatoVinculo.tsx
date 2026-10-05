@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { TextInput, Text, useTheme, Portal } from 'react-native-paper';
 import { useFormContext, Controller } from 'react-hook-form';
-import { ChevronDown, Phone, School, GraduationCap } from 'lucide-react-native';
+import { ChevronDown, Phone, School, GraduationCap, Search, X } from 'lucide-react-native';
+import { abreviarParaLargura } from '../../utils/abreviarTexto';
 
 interface SelectInputProps {
   label: string;
@@ -11,26 +12,37 @@ interface SelectInputProps {
   onSelect: (val: string) => void;
   error?: boolean;
   leftIcon?: React.ReactNode;
+  searchable?: boolean;
 }
 
-function CustomSelect({ label, value, options, onSelect, error, leftIcon }: SelectInputProps) {
+function CustomSelect({ label, value, options, onSelect, error, leftIcon, searchable }: SelectInputProps) {
   const [visible, setVisible] = useState(false);
+  const [largura, setLargura] = useState(0);
+  const texto = value || 'Selecionar';
+  const [searchQuery, setSearchQuery] = useState('');
   const theme = useTheme();
+
+  const filteredOptions = searchable && searchQuery.trim()
+    ? options.filter((opt) => opt.toLowerCase().includes(searchQuery.toLowerCase().trim()))
+    : options;
 
   return (
     <View style={styles.selectContainer}>
-      <TouchableOpacity onPress={() => setVisible(true)}>
-        <TextInput
-          label={label}
-          value={value || 'Selecionar'}
-          mode="outlined"
-          editable={false}
-          error={error}
-          left={leftIcon ? <TextInput.Icon icon={() => leftIcon} /> : undefined}
-          right={<TextInput.Icon icon={() => <ChevronDown size={20} />} />}
-          pointerEvents="none"
-          style={{ backgroundColor: '#fff' }}
-        />
+      <TouchableOpacity activeOpacity={0.7} onPress={() => setVisible(true)}>
+        <View pointerEvents="none" onLayout={(e) => setLargura(e.nativeEvent.layout.width)}>
+          <TextInput
+            label={label}
+            mode="outlined"
+            value={abreviarParaLargura(texto, largura, leftIcon ? 108 : 68)}
+            accessibilityLabel={`${label} ${texto}`}
+            textColor={value ? '#333' : '#888'}
+            editable={false}
+            error={error}
+            left={leftIcon ? <TextInput.Icon icon={() => leftIcon} /> : undefined}
+            right={<TextInput.Icon icon={() => <ChevronDown size={20} color="#333" />} onPress={() => setVisible(true)} />}
+            style={{ backgroundColor: '#fff' }}
+          />
+        </View>
       </TouchableOpacity>
 
       <Portal>
@@ -38,30 +50,64 @@ function CustomSelect({ label, value, options, onSelect, error, leftIcon }: Sele
           visible={visible}
           transparent={true}
           animationType="fade"
-          onRequestClose={() => setVisible(false)}
+          onRequestClose={() => { setVisible(false); setSearchQuery(''); }}
         >
           <TouchableOpacity
             style={styles.modalOverlay}
             activeOpacity={1}
-            onPress={() => setVisible(false)}
+            onPress={() => { setVisible(false); setSearchQuery(''); }}
           >
-            <View style={styles.modalContent}>
+            <TouchableOpacity
+              activeOpacity={1}
+              style={styles.modalContent}
+              onPress={(e) => e.stopPropagation()}
+            >
               <Text variant="titleMedium" style={styles.modalTitle}>{label}</Text>
-              {options.map((opt) => (
-                <TouchableOpacity
-                  key={opt}
-                  style={styles.optionItem}
-                  onPress={() => { onSelect(opt); setVisible(false); }}
-                >
-                  <Text variant="bodyLarge" style={[
-                    styles.optionText,
-                    value === opt && { color: theme.colors.primary, fontWeight: 'bold' }
-                  ]}>
-                    {opt}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+
+              {searchable && (
+                <View style={styles.searchBox}>
+                  <TextInput
+                    placeholder="Buscar opção..."
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    mode="outlined"
+                    dense
+                    left={<TextInput.Icon icon={() => <Search size={18} color="#666" />} />}
+                    right={searchQuery ? <TextInput.Icon icon={() => <X size={18} color="#666" />} onPress={() => setSearchQuery('')} /> : undefined}
+                    style={styles.searchInput}
+                  />
+                </View>
+              )}
+
+              <ScrollView
+                style={styles.optionsScroll}
+                contentContainerStyle={styles.optionsScrollContent}
+                showsVerticalScrollIndicator={true}
+                keyboardShouldPersistTaps="handled"
+                nestedScrollEnabled={true}
+              >
+                {filteredOptions.length > 0 ? (
+                  filteredOptions.map((opt) => (
+                    <TouchableOpacity
+                      key={opt}
+                      style={styles.optionItem}
+                      onPress={() => { onSelect(opt); setVisible(false); setSearchQuery(''); }}
+                    >
+                      <Text variant="bodyLarge" style={[
+                        styles.optionText,
+                        value === opt && { color: theme.colors.primary, fontWeight: 'bold' }
+                      ]}>
+                        {opt}
+                      </Text>
+                    </TouchableOpacity>
+                  ))
+                ) : (
+                  <View style={styles.noResultsBox}>
+                    <Text variant="bodyMedium" style={{ color: '#888' }}>Nenhuma opção encontrada</Text>
+                  </View>
+                )}
+              </ScrollView>
+            </TouchableOpacity>
           </TouchableOpacity>
         </Modal>
       </Portal>
@@ -69,8 +115,66 @@ function CustomSelect({ label, value, options, onSelect, error, leftIcon }: Sele
   );
 }
 
+const LISTA_DE_CURSOS = [
+  'Engenharia de Software',
+  'Sistemas de Informação',
+  'Ciência da Computação',
+  'Engenharia de Computação',
+  'Design Digital',
+  'Redes de Computadores',
+  'Medicina',
+  'Enfermagem',
+  'Odontologia',
+  'Direito',
+  'Administração',
+  'Ciências Contábeis',
+  'Pedagogia',
+  'Psicologia',
+  'Agronomia',
+  'Zootecnia',
+  'Engenharia Civil',
+  'Engenharia Elétrica',
+  'Engenharia Mecânica',
+  'Licenciatura em Matemática',
+  'Licenciatura em Física',
+  'Licenciatura em Química',
+  'Licenciatura em Biologia',
+  'Licenciatura em Letras',
+  'Arquitetura e Urbanismo',
+  'Farmácia',
+  'Fisioterapia',
+  'Nutrição',
+  'Outro',
+];
+
 export function Passo3ContatoVinculo() {
-  const { control, formState: { errors } } = useFormContext();
+  const { control, formState: { errors }, watch, setValue } = useFormContext();
+  // Enquanto o campo está em foco, mostra só os dígitos (dá para apagar e editar
+  // em qualquer posição); a máscara é aplicada ao sair do campo. Reformatar a cada
+  // tecla impedia apagar no meio do número e fazia o cursor pular para o final.
+  const [editandoTelefone, setEditandoTelefone] = useState(false);
+
+  const cursoSelecionado = watch('curso');
+  const instituicaoSelecionada = watch('instituicao');
+  const bairroSelecionado = watch('bairro');
+
+  const gerarPeriodosIngresso = () => {
+    const anoAtual = new Date().getFullYear();
+    const periodos: string[] = [];
+    for (let ano = anoAtual; ano >= anoAtual - 10; ano--) {
+      periodos.push(`${ano}.2`);
+      periodos.push(`${ano}.1`);
+    }
+    return periodos;
+  };
+
+  const formatarTelefone = (texto: string) => {
+    let limpo = texto.replace(/\D/g, '');
+    if (limpo.length > 11) limpo = limpo.slice(0, 11);
+    if (limpo.length <= 2) return limpo ? `(${limpo}` : '';
+    if (limpo.length <= 7) return `(${limpo.slice(0, 2)}) ${limpo.slice(2)}`;
+    return `(${limpo.slice(0, 2)}) ${limpo.slice(2, 3)} ${limpo.slice(3, 7)}-${limpo.slice(7)}`;
+  };
 
   return (
     <View style={styles.container}>
@@ -81,24 +185,52 @@ export function Passo3ContatoVinculo() {
           <CustomSelect
             label="Bairro / Localidade *"
             value={value}
-            options={['Centro', 'Bairro Novo', 'Planalto', 'Serra', 'Outro']}
-            onSelect={onChange}
+            options={['Centro', 'Croatá', 'Bairro Novo', 'Planalto', 'Serra', 'Outro']}
+            onSelect={(val) => {
+              onChange(val);
+              if (val !== 'Outro') setValue('bairroEspecifico', '');
+            }}
             error={!!errors.bairro}
           />
         )}
       />
       {errors.bairro && <Text style={styles.errorText}>{errors.bairro.message as string}</Text>}
 
+      {bairroSelecionado === 'Outro' && (
+        <Controller
+          control={control}
+          name="bairroEspecifico"
+          render={({ field: { onChange, value } }) => (
+            <TextInput
+              label="Especifique seu Bairro / Localidade *"
+              mode="outlined"
+              placeholder="Informe o nome do seu bairro"
+              value={value}
+              onChangeText={onChange}
+              error={!!errors.bairroEspecifico}
+              style={styles.input}
+            />
+          )}
+        />
+      )}
+      {bairroSelecionado === 'Outro' && errors.bairroEspecifico && (
+        <Text style={styles.errorText}>{errors.bairroEspecifico.message as string}</Text>
+      )}
+
       <Controller
         control={control}
         name="whatsapp"
-        render={({ field: { onChange, value } }) => (
+        render={({ field: { onChange, onBlur, value } }) => (
           <TextInput
             label="Telefone (WhatsApp) *"
             mode="outlined"
             placeholder="(88) 9 9999-9999"
-            value={value}
-            onChangeText={onChange}
+            keyboardType="number-pad"
+            maxLength={editandoTelefone ? 11 : 16}
+            value={editandoTelefone ? (value || '').replace(/\D/g, '') : formatarTelefone(value || '')}
+            onFocus={() => setEditandoTelefone(true)}
+            onBlur={() => { setEditandoTelefone(false); onBlur(); }}
+            onChangeText={(text) => onChange(text.replace(/\D/g, '').slice(0, 11))}
             error={!!errors.whatsapp}
             left={<TextInput.Icon icon={() => <Phone size={20} color="#666" />} />}
             style={styles.input}
@@ -114,14 +246,38 @@ export function Passo3ContatoVinculo() {
           <CustomSelect
             label="Instituição de Ensino *"
             value={value}
-            options={['UFC', 'UNILAB', 'IFCE', 'Estácio', 'Outra']}
-            onSelect={onChange}
+            options={['UFC - Universidade Federal do Ceará', 'IFCE', 'UNILAB', 'Estácio', 'Outra']}
+            onSelect={(val) => {
+              onChange(val);
+              if (val !== 'Outra') setValue('instituicaoEspecifica', '');
+            }}
             error={!!errors.instituicao}
             leftIcon={<School size={20} color="#666" />}
           />
         )}
       />
       {errors.instituicao && <Text style={styles.errorText}>{errors.instituicao.message as string}</Text>}
+
+      {instituicaoSelecionada === 'Outra' && (
+        <Controller
+          control={control}
+          name="instituicaoEspecifica"
+          render={({ field: { onChange, value } }) => (
+            <TextInput
+              label="Especifique a sua Instituição de Ensino *"
+              mode="outlined"
+              placeholder="Informe o nome da instituição"
+              value={value}
+              onChangeText={onChange}
+              error={!!errors.instituicaoEspecifica}
+              style={styles.input}
+            />
+          )}
+        />
+      )}
+      {instituicaoSelecionada === 'Outra' && errors.instituicaoEspecifica && (
+        <Text style={styles.errorText}>{errors.instituicaoEspecifica.message as string}</Text>
+      )}
 
       <Controller
         control={control}
@@ -130,14 +286,39 @@ export function Passo3ContatoVinculo() {
           <CustomSelect
             label="Curso *"
             value={value}
-            options={['Engenharia de Software', 'Sistemas de Informação', 'Ciência da Computação', 'Medicina', 'Outro']}
-            onSelect={onChange}
+            options={LISTA_DE_CURSOS}
+            onSelect={(val) => {
+              onChange(val);
+              if (val !== 'Outro') setValue('cursoEspecifico', '');
+            }}
             error={!!errors.curso}
+            searchable={true}
             leftIcon={<GraduationCap size={20} color="#666" />}
           />
         )}
       />
       {errors.curso && <Text style={styles.errorText}>{errors.curso.message as string}</Text>}
+
+      {cursoSelecionado === 'Outro' && (
+        <Controller
+          control={control}
+          name="cursoEspecifico"
+          render={({ field: { onChange, value } }) => (
+            <TextInput
+              label="Especifique o seu Curso *"
+              mode="outlined"
+              placeholder="Informe o nome do seu curso"
+              value={value}
+              onChangeText={onChange}
+              error={!!errors.cursoEspecifico}
+              style={styles.input}
+            />
+          )}
+        />
+      )}
+      {cursoSelecionado === 'Outro' && errors.cursoEspecifico && (
+        <Text style={styles.errorText}>{errors.cursoEspecifico.message as string}</Text>
+      )}
 
       <View style={styles.row}>
         <View style={styles.half}>
@@ -148,7 +329,7 @@ export function Passo3ContatoVinculo() {
               <CustomSelect
                 label="Campus *"
                 value={value}
-                options={['Quixadá', 'Redenção', 'Fortaleza', 'Itapipoca']}
+                options={['Quixadá', 'Redenção', 'Fortaleza', 'Itapipoca', 'Russas']}
                 onSelect={onChange}
                 error={!!errors.campus}
               />
@@ -165,7 +346,7 @@ export function Passo3ContatoVinculo() {
               <CustomSelect
                 label="Período de Ingresso *"
                 value={value}
-                options={['2024.1', '2023.2', '2023.1', '2022.2', 'Anterior']}
+                options={gerarPeriodosIngresso()}
                 onSelect={onChange}
                 error={!!errors.periodoIngresso}
               />
@@ -201,7 +382,7 @@ export function Passo3ContatoVinculo() {
               <CustomSelect
                 label="Semestre Atual *"
                 value={value}
-                options={['1º', '2º', '3º', '4º', '5º', '6º', '7º', '8º', '9º', '10º']}
+                options={['1º', '2º', '3º', '4º', '5º', '6º', '7º', '8º', '9º', '10º', '11º', '12º', '13º', '14º', '15º', '16º']}
                 onSelect={onChange}
                 error={!!errors.semestreAtual}
               />
@@ -228,6 +409,8 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 12,
     marginLeft: 4,
+    flexShrink: 1,
+    flexWrap: 'wrap',
   },
   row: {
     flexDirection: 'row',
@@ -241,22 +424,37 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: 20,
   },
   modalContent: {
     backgroundColor: '#fff',
-    borderRadius: 12,
+    borderRadius: 16,
     width: '100%',
-    paddingVertical: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
     maxHeight: '80%',
+    overflow: 'hidden',
   },
   modalTitle: {
     paddingHorizontal: 24,
-    paddingBottom: 16,
+    paddingBottom: 12,
     fontWeight: 'bold',
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
-    marginBottom: 8,
+  },
+  searchBox: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  searchInput: {
+    backgroundColor: '#FFF',
+  },
+  optionsScroll: {
+    flexGrow: 0,
+    flexShrink: 1,
+  },
+  optionsScrollContent: {
+    paddingBottom: 16,
   },
   optionItem: {
     paddingVertical: 14,
@@ -264,5 +462,9 @@ const styles = StyleSheet.create({
   },
   optionText: {
     color: '#333',
+  },
+  noResultsBox: {
+    padding: 24,
+    alignItems: 'center',
   },
 });

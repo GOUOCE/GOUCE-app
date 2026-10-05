@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { TextInput, Text, useTheme, SegmentedButtons, Portal } from 'react-native-paper';
 import { useFormContext, Controller } from 'react-hook-form';
 import { ChevronDown } from 'lucide-react-native';
+import { abreviarParaLargura } from '../../utils/abreviarTexto';
 
 interface SelectInputProps {
   label: string;
@@ -14,21 +15,26 @@ interface SelectInputProps {
 
 function CustomSelect({ label, value, options, onSelect, error }: SelectInputProps) {
   const [visible, setVisible] = useState(false);
+  const [largura, setLargura] = useState(0);
+  const texto = value || 'Selecionar';
   const theme = useTheme();
 
   return (
     <View style={styles.selectContainer}>
-      <TouchableOpacity onPress={() => setVisible(true)}>
-        <TextInput
-          label={label}
-          value={value || 'Selecionar'}
-          mode="outlined"
-          editable={false}
-          error={error}
-          right={<TextInput.Icon icon={() => <ChevronDown size={20} />} />}
-          pointerEvents="none"
-          style={{ backgroundColor: '#fff' }}
-        />
+      <TouchableOpacity activeOpacity={0.7} onPress={() => setVisible(true)}>
+        <View pointerEvents="none" onLayout={(e) => setLargura(e.nativeEvent.layout.width)}>
+          <TextInput
+            label={label}
+            mode="outlined"
+            value={abreviarParaLargura(texto, largura, 68)}
+            accessibilityLabel={`${label} ${texto}`}
+            textColor={value ? '#333' : '#888'}
+            editable={false}
+            error={error}
+            right={<TextInput.Icon icon={() => <ChevronDown size={20} color="#333" />} onPress={() => setVisible(true)} />}
+            style={{ backgroundColor: '#fff' }}
+          />
+        </View>
       </TouchableOpacity>
 
       <Portal>
@@ -43,23 +49,34 @@ function CustomSelect({ label, value, options, onSelect, error }: SelectInputPro
             activeOpacity={1}
             onPress={() => setVisible(false)}
           >
-            <View style={styles.modalContent}>
+            <TouchableOpacity
+              activeOpacity={1}
+              style={styles.modalContent}
+              onPress={(e) => e.stopPropagation()}
+            >
               <Text variant="titleMedium" style={styles.modalTitle}>{label}</Text>
-              {options.map((opt) => (
-                <TouchableOpacity
-                  key={opt}
-                  style={styles.optionItem}
-                  onPress={() => { onSelect(opt); setVisible(false); }}
-                >
-                  <Text variant="bodyLarge" style={[
-                    styles.optionText,
-                    value === opt && { color: theme.colors.primary, fontWeight: 'bold' }
-                  ]}>
-                    {opt}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+              <ScrollView
+                style={styles.optionsScroll}
+                contentContainerStyle={styles.optionsScrollContent}
+                showsVerticalScrollIndicator={true}
+                nestedScrollEnabled={true}
+              >
+                {options.map((opt) => (
+                  <TouchableOpacity
+                    key={opt}
+                    style={styles.optionItem}
+                    onPress={() => { onSelect(opt); setVisible(false); }}
+                  >
+                    <Text variant="bodyLarge" style={[
+                      styles.optionText,
+                      value === opt && { color: theme.colors.primary, fontWeight: 'bold' }
+                    ]}>
+                      {opt}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </TouchableOpacity>
           </TouchableOpacity>
         </Modal>
       </Portal>
@@ -181,22 +198,30 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: 20,
   },
   modalContent: {
     backgroundColor: '#fff',
-    borderRadius: 12,
+    borderRadius: 16,
     width: '100%',
-    paddingVertical: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
     maxHeight: '80%',
+    overflow: 'hidden',
   },
   modalTitle: {
     paddingHorizontal: 24,
-    paddingBottom: 16,
+    paddingBottom: 12,
     fontWeight: 'bold',
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
-    marginBottom: 8,
+  },
+  optionsScroll: {
+    flexGrow: 0,
+    flexShrink: 1,
+  },
+  optionsScrollContent: {
+    paddingBottom: 16,
   },
   optionItem: {
     paddingVertical: 14,

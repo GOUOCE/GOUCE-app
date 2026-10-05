@@ -26,6 +26,7 @@ from src.modulos.usuarios.application.dtos.usuario_dto import (
 )
 from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
 from src.shared.validators.string_sem_numero_validator import StringSemNumeroValidator
+from src.shared.validators.nome_completo_validator import validar_nome_completo
 
 
 class RenovarVinculoUseCase:
@@ -54,14 +55,9 @@ class RenovarVinculoUseCase:
             raise ValueError("Aluno autenticado não encontrado")
 
         erros = []
-        nome = dto.nome.strip()
-        primeiro_nome = nome.split()[0] if nome else ""
-        if len(primeiro_nome) < 3:
-            erros.append({"field": "nome", "message": "O primeiro nome deve ter pelo menos 3 letras"})
-        elif len(nome.split()) < 2:
-            erros.append({"field": "nome", "message": "Informe seu nome completo (nome e sobrenome)"})
-        elif not self.string_validator.validar_string_sem_numero(nome):
-            erros.append({"field": "nome", "message": "O nome deve conter apenas letras e espaços"})
+        erro_nome = validar_nome_completo(dto.nome)
+        if erro_nome:
+            erros.append({"field": "nome", "message": erro_nome})
 
         if arquivo_foto:
             erro_foto = validar_regras_arquivo(

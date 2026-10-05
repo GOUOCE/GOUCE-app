@@ -11,6 +11,7 @@ from src.shared.validators.email_validator import EmailValidator
 from src.shared.validators.string_sem_numero_validator import StringSemNumeroValidator
 from src.shared.validators.senha_validator import SenhaValidator
 from src.modulos.usuarios.application.use_cases.criar_usuario_use_case import ValidacaoMultiplaError
+from src.shared.validators.nome_completo_validator import validar_nome_completo
 
 def validar_regras_arquivo(nome_original: str, content_type: str, conteudo_bytes: bytes) -> str | None:
     MIME_TYPES_PERMITIDOS = {"application/pdf", "image/jpeg", "image/jpg", "image/png", "image/webp"}
@@ -48,14 +49,9 @@ class ValidarEtapa1UsuarioUseCase:
                 erros.append({"field": "foto_perfil", "message": erro_foto})
 
         # Validação de Nome Completo
-        nome = dto.nome.strip() if dto.nome else ""
-        primeiro_nome = nome.split()[0] if nome else ""
-        if len(primeiro_nome) < 3:
-            erros.append({"field": "nome", "message": "O primeiro nome deve ter pelo menos 3 letras"})
-        elif len(nome.split()) < 2:
-            erros.append({"field": "nome", "message": "Informe seu nome completo (nome e sobrenome)"})
-        elif not self.string_validator.validar_string_sem_numero(nome):
-            erros.append({"field": "nome", "message": "O nome deve conter apenas letras e espaços"})
+        erro_nome = validar_nome_completo(dto.nome)
+        if erro_nome:
+            erros.append({"field": "nome", "message": erro_nome})
 
         # Validação de Data de Nascimento
         if dto.data_nascimento is not None and dto.data_nascimento != "" and dto.data_nascimento != 0:

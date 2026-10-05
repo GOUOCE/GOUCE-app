@@ -11,6 +11,7 @@ from src.shared.validators.telefone_validator import TelefoneValidator
 from src.shared.validators.senha_validator import SenhaValidator
 from src.shared.validators.turno_curso_validator import TurnoCursoValidator
 from src.shared.validators.demograficos_validator import DemograficosValidator
+from src.shared.validators.nome_completo_validator import validar_nome_completo
 
 
 
@@ -62,14 +63,9 @@ class CriarUsuarioUseCase:
         erros = []
 
         # 1. Validação de Nome Completo
-        nome = dto.nome.strip() if dto.nome else ""
-        primeiro_nome = nome.split()[0] if nome else ""
-        if len(primeiro_nome) < 3:
-            erros.append(CadastroValidationError("nome", "O primeiro nome deve ter pelo menos 3 letras"))
-        elif len(nome.split()) < 2:
-            erros.append(CadastroValidationError("nome", "Informe seu nome completo (nome e sobrenome)"))
-        elif not self.string_validator.validar_string_sem_numero(nome):
-            erros.append(CadastroValidationError("nome", "O nome deve conter apenas letras e espaços"))
+        erro_nome = validar_nome_completo(dto.nome)
+        if erro_nome:
+            erros.append(CadastroValidationError("nome", erro_nome))
 
         # 2. Validação de E-mail
         email = str(dto.email).lower().strip() if dto.email else ""
@@ -86,12 +82,13 @@ class CriarUsuarioUseCase:
             erros.append(CadastroValidationError("senha", msg_senha))
 
         # 4. Validação de Telefone / Celular com DDD
-        if dto.telefone and str(dto.telefone).strip():
-            if not self.telefone_validator.validar_telefone(str(dto.telefone)):
-                erros.append(CadastroValidationError(
-                    "telefone",
-                    "Telefone celular inválido. Informe um número celular válido com DDD (ex: 11987654321)",
-                ))
+        if not dto.telefone or not str(dto.telefone).strip():
+            erros.append(CadastroValidationError("telefone", "Telefone é obrigatório"))
+        elif not self.telefone_validator.validar_telefone(str(dto.telefone)):
+            erros.append(CadastroValidationError(
+                "telefone",
+                "Telefone celular inválido. Informe um número celular válido com DDD (ex: 11987654321)",
+            ))
 
         # 5. Validação e conversão da Data de Nascimento
         if dto.data_nascimento is not None and dto.data_nascimento != "" and dto.data_nascimento != 0:
@@ -104,6 +101,7 @@ class CriarUsuarioUseCase:
             erros.append(CadastroValidationError("data_nascimento", "Data de nascimento é obrigatória"))
 
         # 6. Validação do Período de Ingresso
+        periodo_formatado = None
         if dto.periodo_ingresso and str(dto.periodo_ingresso).strip():
             try:
                 periodo_formatado = self.periodo_ingresso_validator.validar_e_formatar(str(dto.periodo_ingresso))
@@ -113,11 +111,26 @@ class CriarUsuarioUseCase:
 
         # 7. Validação de Semestre Atual
         if dto.semestre_atual is not None:
-            if not isinstance(dto.semestre_atual, int) or dto.semestre_atual < 1 or dto.semestre_atual > 16:
+            if not isinstance(dto.semestre_atual, int) or dto.semestre_atual < 1:
                 erros.append(CadastroValidationError(
                     "semestre_atual",
                     "O semestre atual deve ser um número inteiro entre 1 e 16",
                 ))
+            elif periodo_formatado is not None:
+                maximo_semestre = min(
+                    16,
+                    self.periodo_ingresso_validator.quantidade_semestres_decorridos(
+                        periodo_formatado
+                    ),
+                )
+                if dto.semestre_atual > maximo_semestre:
+                    erros.append(CadastroValidationError(
+                        "semestre_atual",
+                        (
+                            f"O semestre atual não pode ser maior que {maximo_semestre}, "
+                            "considerando o período de ingresso informado"
+                        ),
+                    ))
 
         # 8. Validação de Turno do Curso
         turno_valido, turno_curso_formatado = self.turno_curso_validator.validar_e_formatar(dto.turno_curso)
