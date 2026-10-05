@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Em execução | 18 | 11 | 2 | 1 | 4 |
+| ⏳ Em execução | 18 | 11 | 3 | 1 | 3 |
 
 ## Pré-condições
 
@@ -68,7 +68,7 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU002-UI-015 | Sessão mantida ao reabrir o app | Aluno logado; fechar e reabrir o app | Voltar logado, direto na área do aluno | ⏳ PENDENTE | Não executado. |
+| CT-HU002-UI-015 | Sessão mantida ao reabrir o app | Aluno logado; fechar e reabrir o app | Voltar logado, direto na área do aluno | ❌ REPROVADO | Após fechar completamente e reabrir o app, ele voltou para a tela de boas-vindas e pediu login de novo. Ver [BUG-HU002-UI-015](issues/BUG-HU002-UI-015-sessao-nao-restaurada.md). Executado pelo testador em 05/10/2026. |
 | CT-HU002-UI-016 | Sair da conta | Aluno: Perfil → Sair; administrador: Mais → Sair | Encerrar a sessão e voltar ao login; reabrir o app não entra logado | ⏳ PENDENTE | Não executado. |
 
 ### Seção E — Conexão e navegação
@@ -422,8 +422,10 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Após fechar completamente o app e abri-lo novamente, ele voltou para a tela de boas-vindas e solicitou login.
+- Causa aparente: o `AuthContext` recupera o usuário e o token salvos, mas só redireciona quando a rota atual é protegida. Como o app abre na tela de boas-vindas (`/`), nada leva o usuário de volta à área dele.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ❌ Reprovado — [BUG-HU002-UI-015](issues/BUG-HU002-UI-015-sessao-nao-restaurada.md).
 
 ---
 
@@ -500,6 +502,7 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 | ---- | ------- | ----- |
 | CT-HU002-UI-003 | E-mail válido com espaço no início ou no fim é recusado como inválido no login (e no Esqueci minha senha). | [BUG-HU002-UI-003-email-com-espacos-recusado](issues/BUG-HU002-UI-003-email-com-espacos-recusado.md) |
 | CT-HU002-UI-009 | O perfil escolhido na tela “Como você quer entrar?” é ignorado: o app entra sempre no perfil da conta, sem aviso. A seleção ocorre depois das credenciais, e não antes (AC-08). | [BUG-HU002-UI-009-perfil-escolhido-ignorado](issues/BUG-HU002-UI-009-perfil-escolhido-ignorado.md) |
+| CT-HU002-UI-015 | Ao reabrir o app com sessão salva, ele volta para a tela de boas-vindas e pede login, em vez de abrir a área do usuário. | [BUG-HU002-UI-015-sessao-nao-restaurada](issues/BUG-HU002-UI-015-sessao-nao-restaurada.md) |
 | CT-HU002-UI-004 | Melhoria: o campo de e-mail mantém as letras maiúsculas digitadas. | [MELHORIA-HU002-UI-004-email-em-minusculas](issues/MELHORIA-HU002-UI-004-email-em-minusculas.md) |
 
 ## Observações gerais
