@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Em execução | 11 | 2 | 1 | 2 | 6 |
+| ⏳ Em execução | 11 | 2 | 1 | 3 | 5 |
 
 ## Pré-condições
 
@@ -47,7 +47,7 @@ Executar na ordem abaixo. São **11 casos**, em três seções. Os IDs completos
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU003-UI-005 | Aluno abre tela administrativa por link | Aluno logado; link para `cadastros` | Exibir Acesso Negado, sem dados administrativos | ✅ APROVADO | O link abriu o app na tela Acesso Negado, com “Você não tem permissão para acessar esta área.” e “Erro 403 - Forbidden”, sem exibir a tela administrativa. O botão Voltar levou ao painel do aluno. Confirmado pelo testador em 05/10/2026. |
-| CT-HU003-UI-006 | Representante abre tela administrativa por link | Representante logado; link para `cadastros` | Exibir Acesso Negado | ⏳ PENDENTE | Não executado. |
+| CT-HU003-UI-006 | Representante abre tela administrativa por link | Representante logado; link para `cadastros` | Exibir Acesso Negado | 🚫 BLOQUEADO | Exige representante logado, perfil que ainda não existe no backend (ver CT-003). Registrado em 05/10/2026. |
 | CT-HU003-UI-007 | Administrador abre tela do aluno por link | Administrador logado; link para `carteirinha-digital` | Exibir Acesso Negado, sem dados de aluno | ⏳ PENDENTE | Não executado. |
 | CT-HU003-UI-008 | Aluno abre tela do representante por link | Aluno logado; link para `rota` | Exibir Acesso Negado | ⏳ PENDENTE | Não executado. |
 | CT-HU003-UI-009 | Voltar da tela Acesso Negado | Tela Acesso Negado aberta pelo CT-005 e pelo CT-007 | Voltar para a tela inicial do próprio perfil | ⏳ PENDENTE | Não executado. |
@@ -217,8 +217,9 @@ Executar na ordem abaixo. São **11 casos**, em três seções. Os IDs completos
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Não foi possível executar: exige um representante logado, e o perfil representante ainda não existe no backend (ver CT-HU003-UI-003).
+- Registrado em 05/10/2026.
+- Status: 🚫 Bloqueado.
 
 ---
 
