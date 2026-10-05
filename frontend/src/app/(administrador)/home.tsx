@@ -1,24 +1,20 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, useTheme } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import { Contact, UserCog } from 'lucide-react-native';
-import { useAuth } from '@contexts/AuthContext';
 import { SummaryCard } from '@/components/dashboard/SummaryCard';
 import { ActionItem } from '@/components/dashboard/ActionItem';
-
 import { useRouter } from 'expo-router';
 
 export default function AdminHomeScreen() {
-  const theme = useTheme();
   const router = useRouter();
-  const { user } = useAuth();
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Saudação */}
       <View style={styles.header}>
         <Text variant="displaySmall" style={styles.greeting}>
-          Olá, Clidenor!
+          Olá, Administrador!
         </Text>
       </View>
 

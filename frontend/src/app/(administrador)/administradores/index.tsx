@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Switch, Surface, Avatar, Snackbar, useTheme } from 'react-native-paper';
+import { Text, TextInput, Switch, Avatar, Snackbar } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Plus, Search, Pencil, Trash2, RotateCcw, X } from 'lucide-react-native';
 
@@ -10,14 +10,12 @@ import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function AdministradoresListScreen() {
-  const theme = useTheme();
   const router = useRouter();
   const { user } = useAuth();
 
   const [busca, setBusca] = useState('');
   const [mostrarInativos, setMostrarInativos] = useState(true);
   const [administradores, setAdministradores] = useState<AdministradorItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
@@ -45,20 +43,18 @@ export default function AdministradoresListScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const carregarAdministradores = async () => {
-    setIsLoading(true);
-    try {
-      const lista = await adminService.listarAdministradores();
+  const carregarAdministradores = () => {
+    adminService.listarAdministradores().then((lista) => {
       setAdministradores(lista);
-    } catch (error) {
-      console.warn('Erro ao carregar administradores:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    }).catch((err) => console.warn('Erro ao carregar administradores:', err));
   };
 
   useEffect(() => {
-    carregarAdministradores();
+    let isMounted = true;
+    adminService.listarAdministradores().then((lista) => {
+      if (isMounted) setAdministradores(lista);
+    }).catch((err) => console.warn('Erro ao carregar administradores:', err));
+    return () => { isMounted = false; };
   }, []);
 
   const getIniciais = (nome: string) => {

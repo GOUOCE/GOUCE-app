@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
-import { Text, TextInput, Button, Snackbar, useTheme } from 'react-native-paper';
+import { Text, TextInput, Button, Snackbar } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,7 +12,6 @@ import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function EditarAdministradorScreen() {
-  const theme = useTheme();
   const router = useRouter();
   const { id, nome: nomeParam, email: emailParam } = useLocalSearchParams<{ id: string; nome: string; email: string }>();
 
@@ -57,7 +56,7 @@ export default function EditarAdministradorScreen() {
         email: emailParam || '',
       });
     }
-  }, [nomeParam, emailParam]);
+  }, [nomeParam, emailParam, reset]);
 
   const onSubmit = async (dados: EditarAdminFormData) => {
     if (!id) return;

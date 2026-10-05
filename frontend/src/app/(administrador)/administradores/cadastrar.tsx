@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
-import { Text, TextInput, Button, SegmentedButtons, Avatar, Snackbar, Checkbox, useTheme } from 'react-native-paper';
+import { Text, TextInput, Button, SegmentedButtons, Avatar, Snackbar, Checkbox } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,7 +12,6 @@ import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function CadastrarAdministradorScreen() {
-  const theme = useTheme();
   const router = useRouter();
 
   const [aba, setAba] = useState<'promover' | 'novo'>('promover');
@@ -52,19 +51,14 @@ export default function CadastrarAdministradorScreen() {
     mode: 'onTouched',
   });
 
-  const carregarAlunos = async (q?: string) => {
-    try {
-      const lista = await adminService.listarAlunosAprovados(q);
-      setAlunos(lista);
-    } catch (error) {
-      console.warn('Erro ao listar alunos aprovados:', error);
-    }
-  };
-
   useEffect(() => {
+    let isMounted = true;
     if (aba === 'promover') {
-      carregarAlunos(buscaAluno);
+      adminService.listarAlunosAprovados(buscaAluno).then((lista) => {
+        if (isMounted) setAlunos(lista);
+      }).catch((err) => console.warn('Erro ao listar alunos aprovados:', err));
     }
+    return () => { isMounted = false; };
   }, [aba, buscaAluno]);
 
   const getIniciais = (nome: string) => {
