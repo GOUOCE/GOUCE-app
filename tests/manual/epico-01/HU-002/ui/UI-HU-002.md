@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Em execução | 18 | 10 | 2 | 1 | 5 |
+| ⏳ Em execução | 18 | 11 | 2 | 1 | 4 |
 
 ## Pré-condições
 
@@ -62,7 +62,7 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 | CT-HU002-UI-011 | Senha incorreta | E-mail do aluno ativo; senha errada | Mensagem genérica, sem dizer qual campo está errado | ✅ APROVADO | Não entrou e exibiu mensagem genérica, sem indicar o campo errado, permitindo nova tentativa. A mensagem só aparece depois de escolher o perfil, porque a tela Entrar não consulta a API. Confirmado pelo testador em 05/10/2026. |
 | CT-HU002-UI-012 | E-mail não cadastrado | naoexiste@example.com; qualquer senha | A mesma mensagem genérica do CT-011 | ✅ APROVADO | Não entrou e exibiu a mesma mensagem genérica do CT-011, sem revelar se a conta existe. Confirmado pelo testador em 05/10/2026. |
 | CT-HU002-UI-013 | Conta pendente de aprovação | Credenciais do aluno pendente | Exibir que o cadastro está em análise e não abrir a área do aluno | ✅ APROVADO | O aluno pendente viu a tela Cadastro enviado para análise e não acessou a área do aluno. A mesma tela aparece se ele tocar em Sou administrador ou Sou representante: a escolha do perfil é ignorada, como no CT-009 ([BUG-HU002-UI-009](issues/BUG-HU002-UI-009-perfil-escolhido-ignorado.md)). Confirmado pelo testador em 05/10/2026. |
-| CT-HU002-UI-014 | Conta inativada | Credenciais do aluno inativado | Bloquear o acesso e orientar contato com a coordenação | ⏳ PENDENTE | Não executado. |
+| CT-HU002-UI-014 | Conta inativada | Credenciais do aluno inativado | Bloquear o acesso e orientar contato com a coordenação | ✅ APROVADO | O acesso foi bloqueado com o pop-up “Falha na autenticação” e a mensagem “Sua conta está inativada. Entre em contato com a coordenação.” A mesma mensagem aparece em qualquer perfil escolhido, o que é aceitável: a conta fica bloqueada de qualquer forma. Conta inativada pela API. Confirmado pelo testador em 05/10/2026. |
 
 ### Seção D — Sessão
 
@@ -399,8 +399,11 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O acesso foi bloqueado com o pop-up **Falha na autenticação** e a mensagem “Sua conta está inativada. Entre em contato com a coordenação.”, equivalente ao texto de referência.
+- A mesma mensagem aparece com qualquer perfil escolhido (aluno, representante ou administrador). Para conta inativada isso é aceitável: o bloqueio vale para a conta inteira. A escolha do perfil ser ignorada está registrada no [BUG-HU002-UI-009](issues/BUG-HU002-UI-009-perfil-escolhido-ignorado.md).
+- Preparação: a conta foi inativada pela API (`PATCH /usuarios/alunos/{id}/status` com `status_cadastro: inativado`, como administrador).
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ### Seção D — Sessão
 
