@@ -28,6 +28,7 @@ Ao escolher um perfil que não é o da conta, o app informa a divergência e nã
 
 - O aluno entra na área do aluno, qualquer que seja o cartão tocado.
 - O administrador entra no Painel do administrador, qualquer que seja o cartão tocado.
+- O aluno pendente vê a tela **Cadastro enviado para análise** mesmo tocando em **Sou administrador** ou **Sou representante** (observado no `CT-HU002-UI-013`).
 - Nenhum aviso é exibido. A escolha do perfil não tem efeito.
 
 ### ⚠️ Impacto
