@@ -33,3 +33,16 @@ class PeriodoIngressoValidator:
             raise ValueError(f"Ano de ingresso ({ano_ingresso}) muito antigo")
 
         return f"{ano_ingresso}.{semestre_ingresso}"
+
+    def quantidade_semestres_decorridos(self, periodo: str, hoje: date | None = None) -> int:
+        periodo_formatado = self.validar_e_formatar(periodo)
+        ano_ingresso, semestre_ingresso = (
+            int(parte) for parte in periodo_formatado.split(".")
+        )
+        data_atual = hoje or date.today()
+        semestre_atual = 1 if data_atual.month <= 6 else 2
+        return (
+            (data_atual.year - ano_ingresso) * 2
+            + (semestre_atual - semestre_ingresso)
+            + 1
+        )

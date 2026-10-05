@@ -360,6 +360,17 @@ class CadastroApiResponsesTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(body["error"]["details"][0]["field"], "nome")
         self.assertTrue(body["error"]["details"][0]["message"])
 
+    async def test_cadastro_multipart_sem_telefone_retorna_422(self):
+        payload = self.payload()
+        payload.pop("telefone")
+
+        status, body = await self.multipart_request(payload)
+
+        self.assert_error_response(self, body, "REQUEST_VALIDATION_ERROR")
+        self.assertEqual(status, 422)
+        self.assertEqual(body["error"]["details"][0]["field"], "telefone")
+        self.assertFalse(hasattr(self.repository, "last_command") and self.repository.last_command)
+
     async def test_cadastro_multipart_arquivo_invalido_retorna_400(self):
         status, body = await self.multipart_request(self.payload(), file_content=b"")
 

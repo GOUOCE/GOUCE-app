@@ -23,6 +23,7 @@ class ValidarEtapa3UsuarioUseCase:
 
     def execute(self, dto: ValidarEtapa3CadastroUsuarioDTO) -> CadastroSucessoDTO:
         erros = []
+        periodo_formatado = None
 
         # Validação de Bairro
         bairro_id = str(dto.bairro_id).strip() if dto.bairro_id else ""
@@ -56,7 +57,9 @@ class ValidarEtapa3UsuarioUseCase:
             erros.append({"field": "periodo_ingresso", "message": "Período de ingresso é obrigatório"})
         else:
             try:
-                self.periodo_ingresso_validator.validar_e_formatar(str(dto.periodo_ingresso).strip())
+                periodo_formatado = self.periodo_ingresso_validator.validar_e_formatar(
+                    str(dto.periodo_ingresso).strip()
+                )
             except ValueError as e:
                 erros.append({"field": "periodo_ingresso", "message": str(e)})
 
@@ -72,8 +75,23 @@ class ValidarEtapa3UsuarioUseCase:
         # Validação de Semestre Atual
         if dto.semestre_atual is None:
             erros.append({"field": "semestre_atual", "message": "Semestre atual é obrigatório"})
-        elif not isinstance(dto.semestre_atual, int) or dto.semestre_atual < 1 or dto.semestre_atual > 16:
+        elif not isinstance(dto.semestre_atual, int) or dto.semestre_atual < 1:
             erros.append({"field": "semestre_atual", "message": "O semestre atual deve ser um número inteiro entre 1 e 16"})
+        elif periodo_formatado is not None:
+            maximo_semestre = min(
+                16,
+                self.periodo_ingresso_validator.quantidade_semestres_decorridos(
+                    periodo_formatado
+                ),
+            )
+            if dto.semestre_atual > maximo_semestre:
+                erros.append({
+                    "field": "semestre_atual",
+                    "message": (
+                        f"O semestre atual não pode ser maior que {maximo_semestre}, "
+                        "considerando o período de ingresso informado"
+                    ),
+                })
 
         if erros:
             raise ValidacaoMultiplaError(erros)
