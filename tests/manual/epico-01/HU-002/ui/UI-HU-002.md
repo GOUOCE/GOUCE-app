@@ -511,12 +511,13 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 | CT-HU002-UI-015 | Ao reabrir o app com sessão salva, ele volta para a tela de boas-vindas e pede login, em vez de abrir a área do usuário. | [BUG-HU002-UI-015-sessao-nao-restaurada](issues/BUG-HU002-UI-015-sessao-nao-restaurada.md) |
 | CT-HU002-UI-016 | O administrador não consegue sair da conta: a aba Mais, onde fica o botão Sair, está desativada. | [BUG-HU002-UI-016-admin-sem-acesso-ao-sair](issues/BUG-HU002-UI-016-admin-sem-acesso-ao-sair.md) |
 | CT-HU002-UI-004 | Melhoria: o campo de e-mail mantém as letras maiúsculas digitadas. | [MELHORIA-HU002-UI-004-email-em-minusculas](issues/MELHORIA-HU002-UI-004-email-em-minusculas.md) |
+| Observação | Segurança: a senha é passada como parâmetro de rota do login para a seleção de perfil (visível na URL na versão web). | [SEGURANCA-HU002-UI-senha-em-parametro-de-rota](issues/SEGURANCA-HU002-UI-senha-em-parametro-de-rota.md) |
 
 ## Observações gerais
 
 - Referências: [HU-002, seção 7.2.2](../../../../../docs/requisitos.md), [tela de login](../../../../../frontend/src/app/%28autenticacao%29/login.tsx), [seleção de perfil](../../../../../frontend/src/app/%28autenticacao%29/selecao-perfil.tsx) e [contexto de autenticação](../../../../../frontend/src/contexts/AuthContext.tsx). A suíte de API correspondente está em [`../api/API-HU-002.md`](../api/API-HU-002.md).
 - No código atual, a escolha do perfil não é enviada para a API: o app entra no perfil que vem da conta. Por isso o CT-009 é importante para verificar o AC-08.
-- O e-mail e a senha são passados da tela de login para a de seleção de perfil como parâmetros de navegação. No iPhone isso não aparece, mas na versão web pode expor a senha na barra de endereço. Fica registrado para uma eventual suíte web.
+- O e-mail e a senha são passados da tela de login para a de seleção de perfil como parâmetros de navegação. No iPhone isso não aparece, mas na versão web pode expor a senha na barra de endereço. Registrado como issue de segurança: [SEGURANCA-HU002-UI-senha-em-parametro-de-rota](issues/SEGURANCA-HU002-UI-senha-em-parametro-de-rota.md).
 - “Lembrar de mim” (`lembrar_me`) existe na API, mas não aparece na tela; não há caso para ele nesta suíte.
 - Recuperação de senha é coberta pela HU-004; aqui só se verifica que o link abre a tela correta (CT-018).
 - Cenários BDD de referência: [`bdd/features/epico-01/HU-002.feature`](../../../../../bdd/features/epico-01/HU-002.feature). As mensagens esperadas dos CT-011, CT-012 e CT-014 seguem os textos do BDD. Os cenários de token de sessão e de HTTPS (RNF-003) são marcados no BDD como `@teste_api` e ficam fora desta suíte de UI.
