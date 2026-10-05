@@ -11,14 +11,14 @@
 | Tela            | Boas-vindas, Entrar (e-mail e senha), Como você quer entrar? (seleção de perfil) e telas iniciais de cada perfil |
 | Ambiente        | Desenvolvimento — app mobile no iPhone (Expo)                                           |
 | Total de casos  | 18 |
-| Última execução | Não realizada                                                                           |
+| Última execução | 05/10/2026                                                                           |
 | Testador        | Cauan Ricardo                                                                           |
 
 ## Resultado geral
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Não executada | 18 | 0 | 0 | 18 |
+| ⏳ Em execução | 18 | 4 | 1 | 13 |
 
 ## Pré-condições
 
@@ -39,11 +39,11 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU002-UI-001 | Elementos da tela de login | Abrir Entrar a partir das boas-vindas | Exibir E-mail, Senha, Esqueci minha senha, Entrar e Criar conta de aluno | ⏳ PENDENTE | Não executado. |
-| CT-HU002-UI-002 | Campos obrigatórios vazios | E-mail vazio; senha vazia; ambos vazios | Bloquear o avanço e indicar cada campo pendente | ⏳ PENDENTE | Não executado. |
-| CT-HU002-UI-003 | E-mail em formato inválido | maria; maria@; maria@example | Indicar e-mail inválido e bloquear o avanço | ⏳ PENDENTE | Não executado. |
-| CT-HU002-UI-004 | E-mail com caixa mista e espaços | E-mail do aluno com letras maiúsculas; depois com espaços nas pontas | Reconhecer o mesmo e-mail e autenticar | ⏳ PENDENTE | Não executado. |
-| CT-HU002-UI-005 | Ocultar e exibir senha | Senha válida; ícone de olho | Alternar a visibilidade sem alterar o valor | ⏳ PENDENTE | Não executado. |
+| CT-HU002-UI-001 | Elementos da tela de login | Abrir Entrar a partir das boas-vindas | Exibir E-mail, Senha, Esqueci minha senha, Entrar e Criar conta de aluno | ✅ APROVADO | Todos os elementos esperados exibidos; senha inicialmente oculta. Confirmado pelo testador em 05/10/2026. |
+| CT-HU002-UI-002 | Campos obrigatórios vazios | E-mail vazio; senha vazia; ambos vazios | Bloquear o avanço e indicar cada campo pendente | ✅ APROVADO | Nas três tentativas (apenas senha preenchida, apenas e-mail preenchido e ambos vazios), o avanço foi bloqueado e cada campo vazio foi indicado com a mensagem de obrigatoriedade em português. Confirmado pelo testador em 05/10/2026. |
+| CT-HU002-UI-003 | E-mail em formato inválido | maria; maria@; maria@example | Indicar e-mail inválido e bloquear o avanço | ❌ REPROVADO | Os formatos inválidos foram recusados corretamente, mas um e-mail válido com espaço no início ou no fim (` aluno@gmail.com`, `aluno@gmail.com `) também é recusado com “Informe um e-mail válido”: o login não remove os espaços antes de validar, como o cadastro já faz. Ver [BUG-HU002-UI-003](issues/BUG-HU002-UI-003-email-com-espacos-recusado.md). Executado pelo testador em 05/10/2026. |
+| CT-HU002-UI-004 | E-mail com caixa mista e espaços | E-mail do aluno com letras maiúsculas; depois com espaços nas pontas | Reconhecer o mesmo e-mail e autenticar | ✅ APROVADO | O aluno ativo autenticou com o e-mail em letras maiúsculas. A recusa do e-mail com espaços nas pontas está registrada no CT-003. Sugestão do testador: exibir o e-mail em minúsculas no campo ([MELHORIA-HU002-UI-004](issues/MELHORIA-HU002-UI-004-email-em-minusculas.md)). Confirmado pelo testador em 05/10/2026. |
+| CT-HU002-UI-005 | Ocultar e exibir senha | Senha válida; ícone de olho | Alternar a visibilidade sem alterar o valor | ✅ APROVADO | O ícone de olho alternou a senha entre visível e oculta, sem alterar o valor digitado. Confirmado pelo testador em 05/10/2026. |
 
 ### Seção B — Seleção de perfil e redirecionamento
 
@@ -98,8 +98,10 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Exibidos o título **Entrar**, os campos **E-mail \*** e **Senha \***, o link **Esqueci minha senha** e os botões **Entrar** e **Criar conta de aluno**.
+- A senha começa com os caracteres ocultos.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -119,8 +121,9 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Nas três tentativas (apenas senha preenchida, apenas e-mail preenchido e ambos vazios), o avanço foi bloqueado e cada campo vazio foi indicado com a mensagem de obrigatoriedade em português.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -139,8 +142,11 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Os e-mails `maria`, `maria@` e `maria@example` foram recusados com a mensagem “Informe um e-mail válido”, sem avançar para a seleção de perfil.
+- Porém um e-mail válido com espaço no início ou no fim (` aluno@gmail.com`, `aluno@gmail.com `) também foi recusado com “Informe um e-mail válido”. O teclado do iPhone costuma inserir um espaço depois de uma sugestão, e o usuário recebe o erro sem entender o motivo.
+- Causa: o `loginSchema` (`frontend/src/schemas/loginSchema.ts`) valida o e-mail sem remover os espaços, ao contrário do `emailSchema` do cadastro (`frontend/src/schemas/alunoSchema.ts:49`), corrigido pela issue #51.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ❌ Reprovado — [BUG-HU002-UI-003](issues/BUG-HU002-UI-003-email-com-espacos-recusado.md).
 
 ---
 
@@ -160,8 +166,11 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O aluno ativo autenticou com o e-mail em letras maiúsculas; o backend converte o e-mail para minúsculas antes da busca.
+- A recusa do e-mail com espaços nas pontas está registrada no CT-HU002-UI-003.
+- Sugestão do testador: exibir o e-mail em minúsculas no próprio campo — [MELHORIA-HU002-UI-004](issues/MELHORIA-HU002-UI-004-email-em-minusculas.md).
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -180,8 +189,9 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O ícone de olho alternou a senha entre visível e oculta, sem alterar o valor digitado.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ### Seção B — Seleção de perfil e redirecionamento
 
@@ -469,7 +479,8 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 | Caso | Defeito | Issue |
 | ---- | ------- | ----- |
-| — | Nenhuma execução realizada. | — |
+| CT-HU002-UI-003 | E-mail válido com espaço no início ou no fim é recusado como inválido no login (e no Esqueci minha senha). | [BUG-HU002-UI-003-email-com-espacos-recusado](issues/BUG-HU002-UI-003-email-com-espacos-recusado.md) |
+| CT-HU002-UI-004 | Melhoria: o campo de e-mail mantém as letras maiúsculas digitadas. | [MELHORIA-HU002-UI-004-email-em-minusculas](issues/MELHORIA-HU002-UI-004-email-em-minusculas.md) |
 
 ## Observações gerais
 
