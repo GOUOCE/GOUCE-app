@@ -36,7 +36,7 @@ class ValidarEtapa3CadastroUsuarioDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     bairro_id: str | None = Field(default=None, max_length=20)
-    telefone: str | None = Field(default=None, max_length=20)
+    telefone: str = Field(min_length=1, max_length=20)
     faculdade_id: str = Field(min_length=1, max_length=150)
     curso: str = Field(min_length=1, max_length=150)
     campus: str | None = Field(default=None, max_length=150)
@@ -56,7 +56,7 @@ class CadastroUsuarioDTO(BaseModel):
     nome: str = Field(min_length=3, max_length=150)
     email: EmailStr
     senha: str = Field(min_length=8, max_length=128)
-    telefone: str | None = Field(default=None, max_length=20)
+    telefone: str = Field(min_length=1, max_length=20)
     faculdade_id: str = Field(min_length=1, max_length=150)
     campus: str = Field(min_length=1, max_length=150)
     bairro_id: str | None = Field(default=None, max_length=20)

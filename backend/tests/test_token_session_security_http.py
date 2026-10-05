@@ -193,6 +193,7 @@ class TokenSessionSecurityHttpTests(unittest.TestCase):
                 "nome": "Maria Silva",
                 "email": "maria@example.com",
                 "senha": "Senha123",
+                "telefone": "85999990000",
                 "status_cadastro": StatusCadastroEnum.ATIVADO.value,
                 "faculdade_id": "faculdade-1",
                 "campus": "Campus Central",

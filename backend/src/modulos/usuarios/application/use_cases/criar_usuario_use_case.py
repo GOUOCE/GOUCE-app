@@ -82,12 +82,13 @@ class CriarUsuarioUseCase:
             erros.append(CadastroValidationError("senha", msg_senha))
 
         # 4. Validação de Telefone / Celular com DDD
-        if dto.telefone and str(dto.telefone).strip():
-            if not self.telefone_validator.validar_telefone(str(dto.telefone)):
-                erros.append(CadastroValidationError(
-                    "telefone",
-                    "Telefone celular inválido. Informe um número celular válido com DDD (ex: 11987654321)",
-                ))
+        if not dto.telefone or not str(dto.telefone).strip():
+            erros.append(CadastroValidationError("telefone", "Telefone é obrigatório"))
+        elif not self.telefone_validator.validar_telefone(str(dto.telefone)):
+            erros.append(CadastroValidationError(
+                "telefone",
+                "Telefone celular inválido. Informe um número celular válido com DDD (ex: 11987654321)",
+            ))
 
         # 5. Validação e conversão da Data de Nascimento
         if dto.data_nascimento is not None and dto.data_nascimento != "" and dto.data_nascimento != 0:
