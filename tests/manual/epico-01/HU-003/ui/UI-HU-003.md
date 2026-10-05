@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 11 | 1 | 0 | 10 |
+| ⏳ Em execução | 11 | 1 | 1 | 9 |
 
 ## Pré-condições
 
@@ -38,7 +38,7 @@ Executar na ordem abaixo. São **11 casos**, em três seções. Os IDs completos
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU003-UI-001 | Menus do aluno | Login como aluno ativo | Exibir só funções de aluno, sem telas administrativas | ✅ APROVADO | Exibiu só funções de aluno: card Sua viagem hoje, atalhos Agendar Transporte, Meus Agendamentos, Mural de Avisos e Carteirinha Digital, e abas Início, Agenda, Avisos e Perfil. Nenhuma função administrativa. Minha Alocação não tem entrada própria; o card Sua viagem hoje é estático e Ver detalhes não funciona. Confirmado pelo testador em 05/10/2026. |
-| CT-HU003-UI-002 | Menus do administrador | Login como administrador | Exibir os menus de gestão | ⏳ PENDENTE | Não executado. |
+| CT-HU003-UI-002 | Menus do administrador | Login como administrador | Exibir os menus de gestão | ❌ REPROVADO | O Painel exibe apenas o Resumo de hoje e os atalhos Fila de solicitações e Gestão de administradores, que não abrem nada; as abas Cadastros, Logística e Mais não respondem. Nenhum dos menus de gestão do requisito existe. Ver [GAP-HU003-UI-002](issues/GAP-HU003-UI-002-menus-de-gestao-do-admin-inexistentes.md). Confirmado pelo testador em 05/10/2026. |
 | CT-HU003-UI-003 | Menus do representante | Login como representante | Exibir só chamada e rota, sem funções administrativas | ⏳ PENDENTE | Não executado. |
 | CT-HU003-UI-004 | Ações exclusivas do administrador | Cadastrar, editar e inativar ônibus; publicar aviso, com cada perfil | Só o administrador executa; aluno e representante não têm a ação | ⏳ PENDENTE | Não executado. |
 
@@ -109,8 +109,13 @@ Executar na ordem abaixo. São **11 casos**, em três seções. Os IDs completos
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Painel**: seção **Resumo de hoje** com os cards **Solicitações pendentes** e **Alunos ativos**, e **Acesso rápido** com **Fila de solicitações** e **Gestão de administradores**.
+- Os números do resumo são fixos no código (`3` e `42`), não vêm do banco.
+- Nenhum atalho abre tela. As abas **Cadastros**, **Logística** e **Mais** não respondem ao toque (`pointerEvents="none"` em `frontend/src/app/(administrador)/_layout.tsx`).
+- Nenhum dos menus de gestão do requisito existe: **Gestão de Frota**, **Gestão de Motoristas**, **Gestão de Rotas**, **Gestão de Faculdades**, **Relatórios** e **Mural de Avisos** (AC-04, RN-006).
+- Nenhuma função de aluno aparece para o administrador. ✅
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ❌ Reprovado — [GAP-HU003-UI-002](issues/GAP-HU003-UI-002-menus-de-gestao-do-admin-inexistentes.md).
 
 ---
 
@@ -317,7 +322,7 @@ Executar na ordem abaixo. São **11 casos**, em três seções. Os IDs completos
 
 | Caso | Defeito | Issue |
 | ---- | ------- | ----- |
-| — | Nenhuma execução realizada. | — |
+| CT-HU003-UI-002 | Área do administrador sem os menus de gestão do requisito: painel provisório, atalhos sem ação e abas desativadas. | [GAP-HU003-UI-002-menus-de-gestao-do-admin-inexistentes](issues/GAP-HU003-UI-002-menus-de-gestao-do-admin-inexistentes.md) |
 
 ## Observações gerais
 
