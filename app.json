@@ -14,7 +14,6 @@
     },
     "android": {
       "package": "com.gouce.app",
-      "usesCleartextTraffic": true,
       "intentFilters": [
         {
           "action": "VIEW",
@@ -40,6 +39,14 @@
         "expo-router",
         {
           "root": "./frontend/src/app"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
         }
       ]
     ],
