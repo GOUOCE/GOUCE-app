@@ -149,6 +149,10 @@ const LISTA_DE_CURSOS = [
 
 export function Passo3ContatoVinculo() {
   const { control, formState: { errors }, watch, setValue } = useFormContext();
+  // Enquanto o campo está em foco, mostra só os dígitos (dá para apagar e editar
+  // em qualquer posição); a máscara é aplicada ao sair do campo. Reformatar a cada
+  // tecla impedia apagar no meio do número e fazia o cursor pular para o final.
+  const [editandoTelefone, setEditandoTelefone] = useState(false);
 
   const cursoSelecionado = watch('curso');
   const instituicaoSelecionada = watch('instituicao');
@@ -216,15 +220,17 @@ export function Passo3ContatoVinculo() {
       <Controller
         control={control}
         name="whatsapp"
-        render={({ field: { onChange, value } }) => (
+        render={({ field: { onChange, onBlur, value } }) => (
           <TextInput
             label="Telefone (WhatsApp) *"
             mode="outlined"
             placeholder="(88) 9 9999-9999"
             keyboardType="number-pad"
-            maxLength={16}
-            value={value}
-            onChangeText={(text) => onChange(formatarTelefone(text))}
+            maxLength={editandoTelefone ? 11 : 16}
+            value={editandoTelefone ? (value || '').replace(/\D/g, '') : formatarTelefone(value || '')}
+            onFocus={() => setEditandoTelefone(true)}
+            onBlur={() => { setEditandoTelefone(false); onBlur(); }}
+            onChangeText={(text) => onChange(text.replace(/\D/g, '').slice(0, 11))}
             error={!!errors.whatsapp}
             left={<TextInput.Icon icon={() => <Phone size={20} color="#666" />} />}
             style={styles.input}

@@ -275,7 +275,7 @@ describe('Suíte de Testes Unitários Completa - HU-001 (Solicitação de Cadast
       const res = telefoneSchema.safeParse('(88) 3 3333-3333');
       expect(res.success).toBe(false);
       if (!res.success) {
-        expect(res.error.issues[0].message).toBe('Informe um número de celular (começa com 9)');
+        expect(res.error.issues[0].message).toBe('O celular deve começar com 9 depois do DDD');
       }
     });
 
