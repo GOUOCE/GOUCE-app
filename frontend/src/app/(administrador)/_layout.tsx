@@ -76,6 +76,12 @@ export default function AdminLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="administradores"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

@@ -6,8 +6,11 @@ import { useAuth } from '@contexts/AuthContext';
 import { SummaryCard } from '@/components/dashboard/SummaryCard';
 import { ActionItem } from '@/components/dashboard/ActionItem';
 
+import { useRouter } from 'expo-router';
+
 export default function AdminHomeScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const { user } = useAuth();
 
   return (
@@ -44,6 +47,7 @@ export default function AdminHomeScreen() {
         <ActionItem
           title="Gestão de administradores"
           Icone={UserCog}
+          onPress={() => router.push('/(administrador)/administradores')}
         />
       </View>
     </ScrollView>
