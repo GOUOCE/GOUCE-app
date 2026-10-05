@@ -16,9 +16,9 @@
 
 ## Resultado geral
 
-| Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
-| --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 11 | 1 | 1 | 9 |
+| Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
+| --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
+| ⏳ Em execução | 11 | 1 | 1 | 2 | 7 |
 
 ## Pré-condições
 
@@ -39,8 +39,8 @@ Executar na ordem abaixo. São **11 casos**, em três seções. Os IDs completos
 | --- | --- | --- | --- | --- | --- |
 | CT-HU003-UI-001 | Menus do aluno | Login como aluno ativo | Exibir só funções de aluno, sem telas administrativas | ✅ APROVADO | Exibiu só funções de aluno: card Sua viagem hoje, atalhos Agendar Transporte, Meus Agendamentos, Mural de Avisos e Carteirinha Digital, e abas Início, Agenda, Avisos e Perfil. Nenhuma função administrativa. Minha Alocação não tem entrada própria; o card Sua viagem hoje é estático e Ver detalhes não funciona. Confirmado pelo testador em 05/10/2026. |
 | CT-HU003-UI-002 | Menus do administrador | Login como administrador | Exibir os menus de gestão | ❌ REPROVADO | O Painel exibe apenas o Resumo de hoje e os atalhos Fila de solicitações e Gestão de administradores, que não abrem nada; as abas Cadastros, Logística e Mais não respondem. Nenhum dos menus de gestão do requisito existe. Ver [GAP-HU003-UI-002](issues/GAP-HU003-UI-002-menus-de-gestao-do-admin-inexistentes.md). Confirmado pelo testador em 05/10/2026. |
-| CT-HU003-UI-003 | Menus do representante | Login como representante | Exibir só chamada e rota, sem funções administrativas | ⏳ PENDENTE | Não executado. |
-| CT-HU003-UI-004 | Ações exclusivas do administrador | Cadastrar, editar e inativar ônibus; publicar aviso, com cada perfil | Só o administrador executa; aluno e representante não têm a ação | ⏳ PENDENTE | Não executado. |
+| CT-HU003-UI-003 | Menus do representante | Login como representante | Exibir só chamada e rota, sem funções administrativas | 🚫 BLOQUEADO | O perfil representante ainda não existe no backend (sem tabela `representante` e sem rota de cadastro), como no CT-HU002-UI-008. Nenhuma conta pode ter esse perfil. Registrado em 05/10/2026. |
+| CT-HU003-UI-004 | Ações exclusivas do administrador | Cadastrar, editar e inativar ônibus; publicar aviso, com cada perfil | Só o administrador executa; aluno e representante não têm a ação | 🚫 BLOQUEADO | As telas de gestão de frota e de publicação no mural ainda não existem no app, então nenhuma das quatro ações pode ser executada. Ver CT-002. Registrado em 05/10/2026. |
 
 ### Seção B — Acesso direto a telas de outro perfil
 
@@ -139,8 +139,11 @@ Executar na ordem abaixo. São **11 casos**, em três seções. Os IDs completos
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Não foi possível executar: o perfil representante ainda não existe no backend. O login reconhece representante pela tabela `representante`, que nenhuma migration cria, e não há rota para cadastrar representante (mesma situação do CT-HU002-UI-008).
+- As telas do representante existem no app (`frontend/src/app/(representante)/`: `home`, `rota` e `perfil`), mas nenhuma conta consegue chegar a elas.
+- Reexecutar quando o cadastro de representante existir.
+- Registrado em 05/10/2026.
+- Status: 🚫 Bloqueado.
 
 ---
 
@@ -164,8 +167,10 @@ Executar na ordem abaixo. São **11 casos**, em três seções. Os IDs completos
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Não foi possível executar: não há no app telas para cadastrar, editar ou inativar ônibus, nem para publicar aviso no mural. A área do administrador ainda não tem os menus de gestão (ver CT-HU003-UI-002 e [GAP-HU003-UI-002](issues/GAP-HU003-UI-002-menus-de-gestao-do-admin-inexistentes.md)).
+- Reexecutar quando as telas de gestão de frota e de mural existirem.
+- Registrado em 05/10/2026.
+- Status: 🚫 Bloqueado.
 
 ### Seção B — Acesso direto a telas de outro perfil
 
