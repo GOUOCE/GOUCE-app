@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 18 | 5 | 1 | 12 |
+| ⏳ Em execução | 18 | 6 | 1 | 11 |
 
 ## Pré-condições
 
@@ -49,7 +49,7 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU002-UI-006 | Login válido de aluno | Credenciais do aluno ativo; Sou aluno | Entrar na área do aluno em até 3 segundos | ⏳ PENDENTE | Não executado. |
+| CT-HU002-UI-006 | Login válido de aluno | Credenciais do aluno ativo; Sou aluno | Entrar na área do aluno em até 3 segundos | ✅ APROVADO | O aluno ativo entrou na área do aluno em menos de 3 segundos. A conta foi aprovada pela API, porque o painel do administrador ainda não tem a tela de aprovação. Confirmado pelo testador em 05/10/2026. |
 | CT-HU002-UI-007 | Login válido de administrador | Credenciais do administrador; Sou administrador | Entrar no Painel do administrador | ✅ APROVADO | O administrador padrão autenticou e entrou no Painel, com as abas Painel, Cadastros, Logística e Mais. O conteúdo do painel ainda é provisório (fora do escopo da HU-002). Confirmado pelo testador em 05/10/2026. |
 | CT-HU002-UI-008 | Login válido de representante | Credenciais do representante; Sou representante | Entrar na área de Chamada do representante | ⏳ PENDENTE | Não executado. |
 | CT-HU002-UI-009 | Perfil escolhido diferente do perfil da conta | Aluno escolhe Sou administrador; administrador escolhe Sou aluno | Não entrar sem aviso em um perfil diferente do escolhido | ⏳ PENDENTE | Não executado. |
@@ -212,8 +212,10 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O aluno ativo entrou na área do aluno em menos de 3 segundos.
+- Preparação: a conta foi aprovada pela API (`PATCH /usuarios/alunos/{id}/aprovar`, como administrador), porque o painel do administrador ainda não tem a tela de aprovação.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
