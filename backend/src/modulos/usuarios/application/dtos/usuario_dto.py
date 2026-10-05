@@ -35,14 +35,14 @@ class ValidarEtapa2CadastroUsuarioDTO(BaseModel):
 class ValidarEtapa3CadastroUsuarioDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    bairro_id: str | None = Field(default=None, max_length=20)
+    bairro_id: str = Field(min_length=1, max_length=20)
     telefone: str = Field(min_length=1, max_length=20)
     faculdade_id: str = Field(min_length=1, max_length=150)
     curso: str = Field(min_length=1, max_length=150)
     campus: str | None = Field(default=None, max_length=150)
-    periodo_ingresso: str | None = Field(default=None, max_length=20)
+    periodo_ingresso: str = Field(min_length=1, max_length=20)
     turno_curso: TurnoCursoEnum | str | None = None
-    semestre_atual: int | None = None
+    semestre_atual: int
 
 class ValidarEtapa4CadastroUsuarioDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -59,7 +59,7 @@ class CadastroUsuarioDTO(BaseModel):
     telefone: str = Field(min_length=1, max_length=20)
     faculdade_id: str = Field(min_length=1, max_length=150)
     campus: str = Field(min_length=1, max_length=150)
-    bairro_id: str | None = Field(default=None, max_length=20)
+    bairro_id: str = Field(min_length=1, max_length=20)
     id_comprovante_matricula: str = Field(default="", max_length=255)
     id_comprovante_residencia: str = Field(default="", max_length=255)
     data_nascimento: str | int | float | date | datetime | None = None
@@ -67,8 +67,8 @@ class CadastroUsuarioDTO(BaseModel):
     transgenero: str = Field(min_length=1, max_length=500)
     tem_filhos: bool
     curso: str = Field(min_length=1, max_length=150)
-    semestre_atual: int | None = None
-    periodo_ingresso: str | None = Field(default=None, max_length=20)
+    semestre_atual: int
+    periodo_ingresso: str = Field(min_length=1, max_length=20)
     turno_curso: str | None = None
     raca: str = Field(min_length=1, max_length=50)
     validade_acesso: datetime | None = None

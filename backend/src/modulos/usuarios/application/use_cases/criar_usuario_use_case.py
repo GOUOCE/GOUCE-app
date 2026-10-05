@@ -101,6 +101,7 @@ class CriarUsuarioUseCase:
             erros.append(CadastroValidationError("data_nascimento", "Data de nascimento é obrigatória"))
 
         # 6. Validação do Período de Ingresso
+        periodo_formatado = None
         if dto.periodo_ingresso and str(dto.periodo_ingresso).strip():
             try:
                 periodo_formatado = self.periodo_ingresso_validator.validar_e_formatar(str(dto.periodo_ingresso))
@@ -110,11 +111,26 @@ class CriarUsuarioUseCase:
 
         # 7. Validação de Semestre Atual
         if dto.semestre_atual is not None:
-            if not isinstance(dto.semestre_atual, int) or dto.semestre_atual < 1 or dto.semestre_atual > 16:
+            if not isinstance(dto.semestre_atual, int) or dto.semestre_atual < 1:
                 erros.append(CadastroValidationError(
                     "semestre_atual",
                     "O semestre atual deve ser um número inteiro entre 1 e 16",
                 ))
+            elif periodo_formatado is not None:
+                maximo_semestre = min(
+                    16,
+                    self.periodo_ingresso_validator.quantidade_semestres_decorridos(
+                        periodo_formatado
+                    ),
+                )
+                if dto.semestre_atual > maximo_semestre:
+                    erros.append(CadastroValidationError(
+                        "semestre_atual",
+                        (
+                            f"O semestre atual não pode ser maior que {maximo_semestre}, "
+                            "considerando o período de ingresso informado"
+                        ),
+                    ))
 
         # 8. Validação de Turno do Curso
         turno_valido, turno_curso_formatado = self.turno_curso_validator.validar_e_formatar(dto.turno_curso)
