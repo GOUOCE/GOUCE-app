@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 18 | 4 | 1 | 13 |
+| ⏳ Em execução | 18 | 5 | 1 | 12 |
 
 ## Pré-condições
 
@@ -50,7 +50,7 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU002-UI-006 | Login válido de aluno | Credenciais do aluno ativo; Sou aluno | Entrar na área do aluno em até 3 segundos | ⏳ PENDENTE | Não executado. |
-| CT-HU002-UI-007 | Login válido de administrador | Credenciais do administrador; Sou administrador | Entrar no Painel do administrador | ⏳ PENDENTE | Não executado. |
+| CT-HU002-UI-007 | Login válido de administrador | Credenciais do administrador; Sou administrador | Entrar no Painel do administrador | ✅ APROVADO | O administrador padrão autenticou e entrou no Painel, com as abas Painel, Cadastros, Logística e Mais. O conteúdo do painel ainda é provisório (fora do escopo da HU-002). Confirmado pelo testador em 05/10/2026. |
 | CT-HU002-UI-008 | Login válido de representante | Credenciais do representante; Sou representante | Entrar na área de Chamada do representante | ⏳ PENDENTE | Não executado. |
 | CT-HU002-UI-009 | Perfil escolhido diferente do perfil da conta | Aluno escolhe Sou administrador; administrador escolhe Sou aluno | Não entrar sem aviso em um perfil diferente do escolhido | ⏳ PENDENTE | Não executado. |
 | CT-HU002-UI-010 | Voltar da seleção de perfil | Seta de voltar; Continuar aqui; Sim, sair | Pedir confirmação e respeitar a escolha | ⏳ PENDENTE | Não executado. |
@@ -231,8 +231,10 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O administrador padrão autenticou e entrou no **Painel**, com as abas **Painel**, **Cadastros**, **Logística** e **Mais**.
+- O conteúdo do painel ainda é provisório: os números são fixos no código, “Fila de solicitações” não abre nada e as abas Cadastros e Logística estão desativadas. Isso não faz parte da HU-002 e não reprova o caso.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
