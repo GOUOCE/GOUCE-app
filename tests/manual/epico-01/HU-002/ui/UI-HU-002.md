@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Em execução | 18 | 11 | 4 | 1 | 2 |
+| ✅ Executada | 18 | 13 | 4 | 1 | 0 |
 
 ## Pré-condições
 
@@ -75,8 +75,8 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU002-UI-017 | Falha de conexão ao entrar | Credenciais válidas; Wi-Fi e dados móveis desligados | Informar erro de conexão e permitir nova tentativa sem redigitar | ⏳ PENDENTE | Não executado. |
-| CT-HU002-UI-018 | Links e saída da tela de login | Esqueci minha senha; Criar conta de aluno; seta de voltar | Abrir as telas corretas e confirmar a saída | ⏳ PENDENTE | Não executado. |
+| CT-HU002-UI-017 | Falha de conexão ao entrar | Credenciais válidas; Wi-Fi e dados móveis desligados | Informar erro de conexão e permitir nova tentativa sem redigitar | ✅ APROVADO | Sem conexão, exibiu mensagem de falha de conexão com o servidor sem travar o app. Com a conexão religada, tocar em Sou aluno de novo entrou na área do aluno sem redigitar. Confirmado pelo testador em 05/10/2026. |
+| CT-HU002-UI-018 | Links e saída da tela de login | Esqueci minha senha; Criar conta de aluno; seta de voltar | Abrir as telas corretas e confirmar a saída | ✅ APROVADO | Esqueci minha senha e Criar conta de aluno abriram as telas corretas; a seta de voltar pediu confirmação e respeitou a escolha. Confirmado pelo testador em 05/10/2026. |
 
 ## Detalhamento dos casos
 
@@ -473,8 +473,10 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Sem Wi-Fi e dados móveis, ao tocar em **Sou aluno** o app exibiu mensagem de falha de conexão com o servidor, sem travar.
+- Com a conexão religada, tocar em **Sou aluno** de novo entrou na área do aluno, sem redigitar e-mail e senha.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -495,8 +497,10 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Esqueci minha senha** abriu a tela de recuperação e **Criar conta de aluno** abriu o cadastro.
+- A seta de voltar exibiu a confirmação; **Continuar no app** manteve a tela de login e **Sim, sair** voltou para as boas-vindas.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ## Defeitos encontrados
 
