@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Em execução | 18 | 11 | 3 | 1 | 3 |
+| ⏳ Em execução | 18 | 11 | 4 | 1 | 2 |
 
 ## Pré-condições
 
@@ -69,7 +69,7 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU002-UI-015 | Sessão mantida ao reabrir o app | Aluno logado; fechar e reabrir o app | Voltar logado, direto na área do aluno | ❌ REPROVADO | Após fechar completamente e reabrir o app, ele voltou para a tela de boas-vindas e pediu login de novo. Ver [BUG-HU002-UI-015](issues/BUG-HU002-UI-015-sessao-nao-restaurada.md). Executado pelo testador em 05/10/2026. |
-| CT-HU002-UI-016 | Sair da conta | Aluno: Perfil → Sair; administrador: Mais → Sair | Encerrar a sessão e voltar ao login; reabrir o app não entra logado | ⏳ PENDENTE | Não executado. |
+| CT-HU002-UI-016 | Sair da conta | Aluno: Perfil → Sair; administrador: Mais → Sair | Encerrar a sessão e voltar ao login; reabrir o app não entra logado | ❌ REPROVADO | Aluno: passou (confirmação exibida, Sim, sair voltou ao login). Administrador: não consegue sair, porque a aba Mais, onde fica o botão Sair, está desativada no menu. Ver [BUG-HU002-UI-016](issues/BUG-HU002-UI-016-admin-sem-acesso-ao-sair.md). Executado pelo testador em 05/10/2026. |
 
 ### Seção E — Conexão e navegação
 
@@ -447,8 +447,10 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Aluno: em **Perfil → Sair**, a confirmação foi exibida; **Continuar** manteve a sessão e **Sim, sair** voltou para a tela de login. ✅
+- Administrador: não foi possível sair. A aba **Mais**, onde fica o botão **Sair**, está desativada no menu inferior (`pointerEvents="none"` em `frontend/src/app/(administrador)/_layout.tsx`), assim como Cadastros e Logística. O único jeito de deixar o painel é fechar o app, o que não encerra a sessão. ❌
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ❌ Reprovado — [BUG-HU002-UI-016](issues/BUG-HU002-UI-016-admin-sem-acesso-ao-sair.md).
 
 ### Seção E — Conexão e navegação
 
@@ -503,6 +505,7 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 | CT-HU002-UI-003 | E-mail válido com espaço no início ou no fim é recusado como inválido no login (e no Esqueci minha senha). | [BUG-HU002-UI-003-email-com-espacos-recusado](issues/BUG-HU002-UI-003-email-com-espacos-recusado.md) |
 | CT-HU002-UI-009 | O perfil escolhido na tela “Como você quer entrar?” é ignorado: o app entra sempre no perfil da conta, sem aviso. A seleção ocorre depois das credenciais, e não antes (AC-08). | [BUG-HU002-UI-009-perfil-escolhido-ignorado](issues/BUG-HU002-UI-009-perfil-escolhido-ignorado.md) |
 | CT-HU002-UI-015 | Ao reabrir o app com sessão salva, ele volta para a tela de boas-vindas e pede login, em vez de abrir a área do usuário. | [BUG-HU002-UI-015-sessao-nao-restaurada](issues/BUG-HU002-UI-015-sessao-nao-restaurada.md) |
+| CT-HU002-UI-016 | O administrador não consegue sair da conta: a aba Mais, onde fica o botão Sair, está desativada. | [BUG-HU002-UI-016-admin-sem-acesso-ao-sair](issues/BUG-HU002-UI-016-admin-sem-acesso-ao-sair.md) |
 | CT-HU002-UI-004 | Melhoria: o campo de e-mail mantém as letras maiúsculas digitadas. | [MELHORIA-HU002-UI-004-email-em-minusculas](issues/MELHORIA-HU002-UI-004-email-em-minusculas.md) |
 
 ## Observações gerais
