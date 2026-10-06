@@ -11,14 +11,14 @@
 | Tela            | Entrar, Esqueci minha senha, e-mail de recuperação e Redefinir Senha                    |
 | Ambiente        | Desenvolvimento — app mobile no iPhone (Expo Go)                                        |
 | Total de casos  | 7 |
-| Última execução | Não realizada                                                                           |
+| Última execução | 06/10/2026                                                                              |
 | Testador        | Cauan Ricardo                                                                           |
 
 ## Resultado geral
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Não executada | 7 | 0 | 0 | 7 |
+| ⏳ Em execução | 7 | 1 | 0 | 6 |
 
 ## Pré-condições
 
@@ -37,7 +37,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU004-UI-001 | Acesso à tela Esqueci minha senha | Entrar → Esqueci minha senha | Abrir a tela com campo E-mail e botão de envio | ⏳ PENDENTE | Não executado. |
+| CT-HU004-UI-001 | Acesso à tela Esqueci minha senha | Entrar → Esqueci minha senha | Abrir a tela com campo E-mail e botão de envio | ✅ APROVADO | A tela abriu com a orientação “Informe o e-mail cadastrado para receber o link de redefinição”, o campo E-mail e o botão de envio; a seta de voltar pediu confirmação e respeitou a escolha. Confirmado pelo testador em 06/10/2026. |
 | CT-HU004-UI-002 | Solicitação com e-mail cadastrado | E-mail da conta de teste | Mensagem genérica e e-mail com link recebido | ⏳ PENDENTE | Não executado. |
 | CT-HU004-UI-003 | E-mail não cadastrado ou inválido | naoexiste@example.com; maria@; vazio | Mesma mensagem do CT-002 para o inexistente; alerta no campo nos demais | ⏳ PENDENTE | Não executado. |
 
@@ -71,8 +71,10 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- A tela **Esqueci minha senha** abriu com a orientação para informar o e-mail cadastrado e receber o link de redefinição, o campo **E-mail \*** e o botão **Enviar instruções**.
+- A seta de voltar pediu confirmação; continuar manteve a tela e sair voltou para **Entrar**.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
