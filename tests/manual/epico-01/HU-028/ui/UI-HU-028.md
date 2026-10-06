@@ -39,7 +39,7 @@ Executar na ordem abaixo. São **9 casos essenciais**, em três seções. Os IDs
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU028-UI-001 | Aviso de renovação após o login | Aluno com vínculo vencido | Login permitido e aviso destacado com a opção de renovar | ❌ REPROVADO | O login foi barrado com o pop-up “Falha na autenticação — A validade de acesso da sua conta expirou.” e o botão Tentar novamente; o aluno não chega à área do aluno nem à renovação. Mesmo defeito do CT-HU028-API-004 (BUG-HU028-API-002). Executado pelo testador em 06/10/2026. |
-| CT-HU028-UI-002 | Envio sem comprovante | Passo 4 sem arquivo | Bloquear e alertar que o comprovante é obrigatório | ✅ APROVADO | O envio foi bloqueado com “Envie PDF ou imagem (PNG, JPG ou WEBP) de até 10 MB”. Observações: o botão continua habilitado antes do toque, e o texto não diz que o comprovante é obrigatório e cita 10 MB (o AC-03 fala em 5 MB). Confirmado pelo testador em 06/10/2026. |
+| CT-HU028-UI-002 | Envio sem comprovante | Passo 4 sem arquivo | Bloquear e alertar que o comprovante é obrigatório | ✅ APROVADO | O envio foi bloqueado com “Envie PDF ou imagem (PNG, JPG ou WEBP) de até 10 MB”. Observações: o botão continua habilitado antes do toque, e o texto não diz que o comprovante é obrigatório e cita 10 MB (o AC-03 fala em 5 MB) — ver [MELHORIA-HU028-UI-002](issues/MELHORIA-HU028-UI-002-mensagem-e-limite-do-comprovante.md). Confirmado pelo testador em 06/10/2026. |
 | CT-HU028-UI-003 | Arquivo inválido | `comprovante.docx`; `comprovante-grande.pdf` (8 MB) | Bloquear com “Formato inválido” / “Arquivo excede o limite de tamanho” | ⏳ PENDENTE | Não executado. |
 
 ### Seção B — Envio e status “Em análise”
@@ -110,7 +110,8 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 - No passo 4, sem anexar o comprovante de matrícula, o botão de envio continuou habilitado (azul).
 - Ao tocar, o envio foi bloqueado e o campo exibiu “Envie PDF ou imagem (PNG, JPG ou WEBP) de até 10 MB”. Nada foi enviado. ✅
-- Observações: o texto não diz que o comprovante é **obrigatório** (só orienta formato e tamanho) e informa limite de **10 MB**, enquanto o AC-03 define 5 MB — mesma divergência do CT-HU028-API-003 ([BUG-HU028-API-001](../api/issues/BUG-HU028-API-001-limite-de-5mb-nao-aplicado.md)), agora também no app (`fileSchema` em `frontend/src/schemas/alunoSchema.ts`).
+- Observações: o texto não diz que o comprovante é **obrigatório** (só orienta formato e tamanho) e informa limite de **10 MB**, enquanto o AC-03 define 5 MB — mesma divergência do CT-HU028-API-003 ([BUG-HU028-API-001](../api/issues/BUG-HU028-API-001-limite-de-5mb-nao-aplicado.md)), agora também no app (`fileSchema` em `frontend/src/schemas/alunoSchema.ts`). Registrado como melhoria: [MELHORIA-HU028-UI-002](issues/MELHORIA-HU028-UI-002-mensagem-e-limite-do-comprovante.md).
+- Passos 1 a 3 vieram preenchidos com os dados atuais do aluno (registrado também no CT-HU028-UI-007).
 - Execução confirmada pelo testador em 06/10/2026.
 - Status: ✅ Aprovado.
 
@@ -277,6 +278,7 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
+| CT-HU028-UI-002 | Melhoria: a mensagem sem comprovante não diz que é obrigatório e cita 10 MB (requisito: 5 MB). | [MELHORIA-HU028-UI-002](issues/MELHORIA-HU028-UI-002-mensagem-e-limite-do-comprovante.md) |
 | CT-HU028-UI-001 | O aluno com vínculo vencido é barrado no login e não consegue renovar. | BUG-HU028-API-002 (mesma causa, suíte de API) |
 
 ## Observações gerais
