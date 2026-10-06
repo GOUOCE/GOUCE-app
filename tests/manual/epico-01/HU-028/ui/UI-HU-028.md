@@ -16,9 +16,9 @@
 
 ## Resultado geral
 
-| Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
-| --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 9 | 4 | 4 | 1 |
+| Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
+| --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
+| ✅ Executada | 9 | 4 | 4 | 1 | 0 |
 
 ## Pré-condições
 
@@ -48,7 +48,7 @@ Executar na ordem abaixo. São **9 casos essenciais**, em três seções. Os IDs
 | --- | --- | --- | --- | --- | --- |
 | CT-HU028-UI-004 | Renovação válida | `comprovante.pdf` (2 MB) | “Comprovante enviado com sucesso”; status “Em análise” | ✅ APROVADO | Executado junto com o CT-005, após religar a conexão: a renovação foi enviada com o PDF de 2 MB, o status passou a “em análise” e o aluno entrou na fila do administrador (conferido no banco e na API). A confirmação foi o aviso rápido sem estilo, com texto diferente do AC-05 ([MELHORIA-HU028-UI-003](issues/MELHORIA-HU028-UI-003-confirmacao-do-envio-sem-estilo.md)). Confirmado pelo testador em 06/10/2026. |
 | CT-HU028-UI-005 | Falha de conexão no envio | Wi-Fi e dados móveis desligados no envio | Mensagem de falha; tela mantida para nova tentativa | ✅ APROVADO | Sem conexão, exibiu falha no envio por erro de conexão com o servidor, orientando verificar a internet; com a conexão de volta, o envio foi concluído sem refazer os passos. Confirmado pelo testador em 06/10/2026. |
-| CT-HU028-UI-006 | Agendamento bloqueado em análise | Aluno “Em análise”; aba Agenda e atalhos | Agendamento bloqueado com informativo | ⏳ PENDENTE | Não executado. |
+| CT-HU028-UI-006 | Agendamento bloqueado em análise | Aluno “Em análise”; aba Agenda e atalhos | Agendamento bloqueado com informativo | 🚫 BLOQUEADO | A funcionalidade de agendamento ainda não existe: a aba Agenda é uma tela provisória e os atalhos Agendar Transporte e Meus Agendamentos não abrem nada. Não há o que bloquear. Registrado em 06/10/2026. |
 
 ### Seção C — Formulário da renovação e reenvio
 
@@ -214,8 +214,11 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Com o aluno em análise, a aba **Agenda** não exibe nenhuma função de agendamento, e os atalhos **Agendar Transporte** e **Meus Agendamentos** do **Início** não abrem nada.
+- No código, `frontend/src/app/(aluno)/agenda.tsx` é uma tela provisória (só o título) e os atalhos não têm ação.
+- Sem a funcionalidade de agendamento, não é possível verificar o bloqueio do AC-06 (RN-011). Reexecutar quando o agendamento existir.
+- Registrado em 06/10/2026.
+- Status: 🚫 Bloqueado.
 
 ### Seção C — Formulário da renovação e reenvio
 
