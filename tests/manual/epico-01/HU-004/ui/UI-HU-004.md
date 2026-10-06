@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 7 | 4 | 2 | 1 |
+| ✅ Executada | 7 | 4 | 3 | 0 |
 
 ## Pré-condições
 
@@ -48,7 +48,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 | CT-HU004-UI-004 | Nova senha fora das regras | Abc123; abcdefgh1; ABCDEFGH1; Abcdefgh | Bloquear e indicar o critério não atendido | ✅ APROVADO | As quatro senhas foram bloqueadas, cada uma com a regra não atendida: mínimo de 8 caracteres, letra maiúscula, letra minúscula e número. Link aberto por `exp://<IP>:8081/--/redefinir-senha?token=...` (plano B do PC-03). Confirmado pelo testador em 06/10/2026. |
 | CT-HU004-UI-005 | Senha e confirmação divergentes | NovaSenha@1 / NovaSenha@2 | Botão desabilitado e aviso de senhas diferentes | ❌ REPROVADO | O botão Salvar nova senha ficou sempre habilitado; o aviso “As senhas não coincidem” só apareceu depois de tocar nele. Nada foi enviado, e ao corrigir a confirmação o aviso sumiu. Ver [BUG-HU004-UI-005](issues/BUG-HU004-UI-005-botao-salvar-nao-desabilita.md). Executado pelo testador em 06/10/2026. |
 | CT-HU004-UI-006 | Redefinição válida e login | NovaSenha@1 nos dois campos | Confirmação, volta ao login; entra só com a nova senha | ✅ APROVADO | Exibiu “Senha redefinida com sucesso” e levou à tela Entrar; a senha antiga foi recusada e a nova entrou na área do aluno. Observação de UX: a confirmação é o alerta nativo do iOS, sem o estilo dos pop-ups do app ([MELHORIA-HU004-UI-006](issues/MELHORIA-HU004-UI-006-padronizar-alertas-recuperacao.md)). Confirmado pelo testador em 06/10/2026. |
-| CT-HU004-UI-007 | Link já utilizado ou expirado | Link do CT-006; link com mais de 15 min | Bloquear a tela de nova senha e orientar a solicitar novamente | ⏳ PENDENTE | Não executado. |
+| CT-HU004-UI-007 | Link já utilizado ou expirado | Link do CT-006; link com mais de 15 min | Bloquear a tela de nova senha e orientar a solicitar novamente | ❌ REPROVADO | Falha parcial: com o link já usado e com o link expirado, a senha não foi alterada, mas a tela de nova senha abriu normalmente e o erro (“Token de recuperação já utilizado” / “expirado”) só apareceu ao salvar, sem orientar a pedir um novo link. Ver [BUG-HU004-UI-007](issues/BUG-HU004-UI-007-link-invalido-so-avisa-ao-salvar.md). Executado pelo testador em 06/10/2026. |
 
 ## Detalhamento dos casos
 
@@ -234,14 +234,20 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Link já utilizado** (o do CT-006): a tela **Redefinir Senha** abriu normalmente. Ao salvar `OutraSenha@1`, apareceu “Erro ao redefinir senha — Token de recuperação já utilizado.”
+- **Link expirado**: gerado pela API e com `expires_at` ajustado para o passado no banco local, para não esperar 15 minutos. A tela também abriu normalmente; ao salvar, apareceu “Erro ao redefinir senha — Token de recuperação expirado.”
+- Nas duas variações a senha **não** foi alterada (conferido pela API: `NovaSenha@1` continua válida e `OutraSenha@1` é recusada). ✅
+- **Falha parcial** (prevista neste caso): a tela de nova senha não é bloqueada ao abrir o link; o erro só aparece depois de preencher e salvar, e a mensagem não orienta a solicitar um novo link (AC-04, FA-002). ❌
+- As mensagens usam o alerta nativo do iOS (ver [MELHORIA-HU004-UI-006](issues/MELHORIA-HU004-UI-006-padronizar-alertas-recuperacao.md)).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU004-UI-007](issues/BUG-HU004-UI-007-link-invalido-so-avisa-ao-salvar.md).
 
 ## Defeitos encontrados
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
 | CT-HU004-UI-005 | Com senha e confirmação diferentes, o botão Salvar nova senha continua habilitado e o aviso só aparece depois do toque. | [BUG-HU004-UI-005-botao-salvar-nao-desabilita](issues/BUG-HU004-UI-005-botao-salvar-nao-desabilita.md) |
+| CT-HU004-UI-007 | Link já usado ou expirado abre a tela de nova senha; o erro só aparece ao salvar e não orienta a pedir novo link. | [BUG-HU004-UI-007-link-invalido-so-avisa-ao-salvar](issues/BUG-HU004-UI-007-link-invalido-so-avisa-ao-salvar.md) |
 | CT-HU004-UI-006 | Melhoria: mensagens da redefinição usam o alerta nativo do iOS, fora do padrão visual dos pop-ups do app. | [MELHORIA-HU004-UI-006-padronizar-alertas-recuperacao](issues/MELHORIA-HU004-UI-006-padronizar-alertas-recuperacao.md) |
 | CT-HU004-UI-002 | Confirmação do envio é um aviso discreto escondido pelo teclado, e o texto “E-mail enviado” não é genérico. | [BUG-HU004-UI-002-confirmacao-escondida-pelo-teclado](issues/BUG-HU004-UI-002-confirmacao-escondida-pelo-teclado.md) |
 

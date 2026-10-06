@@ -5,7 +5,7 @@
 | **Tipo** | Melhoria |
 | **Severidade** | 🟢 Baixa |
 | **Ambiente** | Desenvolvimento — app mobile no iPhone (Expo Go) |
-| **Caso relacionado** | `CT-HU004-UI-006` |
+| **Caso relacionado** | `CT-HU004-UI-006`, `CT-HU004-UI-007` |
 | **Documentação** | HU-004 — Testes manuais de UI: [CT-HU004-UI-006](../UI-HU-004.md#ct-hu004-ui-006--redefinição-válida-e-login) |
 | **Issue relacionada** | [BUG-HU004-UI-002-confirmacao-escondida-pelo-teclado](BUG-HU004-UI-002-confirmacao-escondida-pelo-teclado.md) |
 
@@ -40,6 +40,6 @@ A confirmação aparece no alerta nativo do iOS (caixa simples, sem as cores e o
 ### Critérios de aceite
 
 - As mensagens de sucesso e erro de **Esqueci minha senha** e **Redefinir Senha** usam o `AppPopup`.
-- Reexecutar `CT-HU004-UI-002` e `CT-HU004-UI-006`.
+- Reexecutar `CT-HU004-UI-002`, `CT-HU004-UI-006` e `CT-HU004-UI-007`.
 
 ### 📎 Evidência
