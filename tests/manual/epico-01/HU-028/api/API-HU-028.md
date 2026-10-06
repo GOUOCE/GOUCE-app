@@ -8,17 +8,17 @@
 | Funcionalidade | HU-028 — Renovação de Vínculo Institucional |
 | Camada | API |
 | Tipo de teste | Funcional manual — suíte essencial |
-| Endpoints | `POST /alunos/renovar-vinculo` — `multipart/form-data`, com token de aluno; apoio: `POST /auth/login`, `GET /usuarios/me` e `GET /usuarios/alunos?status=` (administrador) |
-| Ambiente | A preencher — URL e commit testado |
+| Endpoints | `PUT /alunos/renovar-vinculo` — `multipart/form-data`, com token de aluno; apoio: `POST /auth/login`, `GET /usuarios/me` e `GET /usuarios/alunos?status=` (administrador) |
+| Ambiente | Docker local isolado — `http://localhost:8001` — branch `feature/testes-api-hu-028` — commit `a0a08b5f` |
 | Total de casos | 8 |
-| Última execução | Não realizada |
-| Testador | A definir |
+| Última execução | 2026-10-06 — execução dos CT-HU028-API-001 a 008 |
+| Testador | Cauan Ricardo — execução com apoio de IA (Claude Code) |
 
 ## Resultado geral
 
-| Situação | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
-| --- | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 8 | 0 | 0 | 8 |
+| Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | ⏳ Pendentes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| ❌ Reprovada | 8 | 3 | 3 | 2 | 0 |
 
 ## Pré-condições
 
@@ -37,14 +37,14 @@ Executar na ordem abaixo. São **8 casos essenciais**. O CT-001 muda o status do
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU028-API-001 | Renovação válida | Corpo base + `comprovante.pdf` (2 MB) | HTTP 200; status `analise_renovacao`; aluno na fila do administrador | ⏳ PENDENTE | Não executado. |
-| CT-HU028-API-002 | Renovação sem comprovante | Corpo base sem `comprovante_matricula` | HTTP 422 indicando o comprovante obrigatório; status inalterado | ⏳ PENDENTE | Não executado. |
-| CT-HU028-API-003 | Arquivo inválido | `comprovante.docx`; `comprovante-grande.pdf` (8 MB) | HTTP 422 “Formato inválido” e “Arquivo excede o limite de tamanho” | ⏳ PENDENTE | Não executado. |
-| CT-HU028-API-004 | Aluno com vínculo vencido consegue renovar | Login do aluno V; renovação válida | Login permitido para renovar (AC-01); renovação aceita | ⏳ PENDENTE | Não executado. |
-| CT-HU028-API-005 | Acesso sem permissão | Sem token; token de administrador; aluno rejeitado | HTTP 401; 403; 403 | ⏳ PENDENTE | Não executado. |
-| CT-HU028-API-006 | Efeitos do status “Em análise” | Aluno A após o CT-001 | Login permitido; carteirinha bloqueada (403) | ⏳ PENDENTE | Não executado. |
-| CT-HU028-API-007 | Nova renovação estando em análise | Aluno A após o CT-001; corpo base + PDF | Bloquear (ex.: HTTP 409) sem substituir o comprovante em análise | ⏳ PENDENTE | Não executado. |
-| CT-HU028-API-008 | Dados inválidos no corpo | `telefone` `8599`; `semestre_atual` `0`; `nome` vazio | HTTP 422 com o campo e o motivo em português; status inalterado | ⏳ PENDENTE | Não executado. |
+| CT-HU028-API-001 | Renovação válida | Corpo base + `comprovante.pdf` (2 MB) | HTTP 200; status `analise_renovacao`; aluno na fila do administrador | ✅ APROVADO | HTTP 200 com `status_cadastro: "analise_renovacao"`; `GET /usuarios/me` mostrou o novo status e um novo comprovante; o aluno apareceu em `GET /usuarios/alunos?status=analise_renovacao`. |
+| CT-HU028-API-002 | Renovação sem comprovante | Corpo base sem `comprovante_matricula` | HTTP 422 indicando o comprovante obrigatório; status inalterado | ⚠️ PARCIAL | HTTP 422 `REQUEST_VALIDATION_ERROR` no campo `comprovante_matricula` e status inalterado, mas a mensagem veio em inglês: `Field required`. |
+| CT-HU028-API-003 | Arquivo inválido | `comprovante.docx`; `comprovante-grande.pdf` (8 MB) | HTTP 422 “Formato inválido” e “Arquivo excede o limite de tamanho” | ❌ FALHOU | DOCX: HTTP 422 com “Formato de arquivo inválido…”, conforme esperado. PDF de 8 MB: **HTTP 200**, renovação aceita e status alterado; a API só recusa acima de 10 MB. |
+| CT-HU028-API-004 | Aluno com vínculo vencido consegue renovar | Login do aluno V; renovação válida | Login permitido para renovar (AC-01); renovação aceita | ❌ FALHOU | O login do aluno com vínculo vencido foi recusado: HTTP 401 “A validade de acesso da sua conta expirou.” O aluno não consegue chegar à renovação. |
+| CT-HU028-API-005 | Acesso sem permissão | Sem token; token de administrador; aluno rejeitado | HTTP 401; 403; 403 | ✅ APROVADO | Sem token: HTTP 401; token de administrador: HTTP 403; aluno rejeitado: HTTP 403. Nenhum dado alterado. |
+| CT-HU028-API-006 | Efeitos do status “Em análise” | Aluno A após o CT-001 | Login permitido; carteirinha bloqueada (403) | ✅ APROVADO | Login do aluno em análise: HTTP 200; carteirinha: HTTP 403 “Carteirinha indisponível. Seu cadastro está inativo ou em análise.” |
+| CT-HU028-API-007 | Nova renovação estando em análise | Aluno A após o CT-001; corpo base + PDF | Bloquear (ex.: HTTP 409) sem substituir o comprovante em análise | ❌ FALHOU | A segunda renovação foi aceita (HTTP 200) e substituiu o comprovante que estava em análise. |
+| CT-HU028-API-008 | Dados inválidos no corpo | `telefone` `8599`; `semestre_atual` `0`; `nome` vazio | HTTP 422 com o campo e o motivo em português; status inalterado | ⚠️ PARCIAL | As três tentativas foram recusadas com HTTP 422 e status inalterado. Telefone e semestre com mensagens em português; nome vazio com mensagem em inglês: `String should have at least 3 characters`. |
 
 ## Detalhamento dos casos
 
@@ -54,7 +54,7 @@ Executar na ordem abaixo. São **8 casos essenciais**. O CT-001 muda o status do
 
 **Passos**
 
-1. Enviar `POST /alunos/renovar-vinculo`.
+1. Enviar `PUT /alunos/renovar-vinculo`.
 2. Conferir o status em `GET /usuarios/me` (token do aluno A).
 3. Com o token do administrador, chamar `GET /usuarios/alunos?status=analise_renovacao`.
 
@@ -66,8 +66,10 @@ Executar na ordem abaixo. São **8 casos essenciais**. O CT-001 muda o status do
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `PUT /alunos/renovar-vinculo` com o corpo base e `comprovante.pdf` (2 MB): HTTP `200`, `{"success": true, "message": "Renovação de vínculo enviada para análise", "aluno_id": 2, "status_cadastro": "analise_renovacao"}`, em 0,10 s. ✅
+- `GET /usuarios/me`: `status_cadastro: analise_renovacao`, novo `id_comprovante_matricula` e `semestre_atual` atualizado de 6 para 7. ✅
+- `GET /usuarios/alunos?status=analise_renovacao` (administrador): o aluno A aparece na fila. ✅
+- Status: ✅ Aprovado.
 
 ---
 
@@ -77,7 +79,7 @@ Executar na ordem abaixo. São **8 casos essenciais**. O CT-001 muda o status do
 
 **Passos**
 
-1. Enviar `POST /alunos/renovar-vinculo`.
+1. Enviar `PUT /alunos/renovar-vinculo`.
 2. Conferir o status do aluno em `GET /usuarios/me`.
 
 **Resultado esperado**
@@ -87,8 +89,10 @@ Executar na ordem abaixo. São **8 casos essenciais**. O CT-001 muda o status do
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- HTTP `422`, `error.code: "REQUEST_VALIDATION_ERROR"`, `details: [{"field": "comprovante_matricula", "message": "Field required"}]`. ✅ Código e campo corretos.
+- Status do aluno continuou `ativado` e o comprovante não mudou. ✅
+- A mensagem veio em inglês (`Field required`), e não em português. ⚠️ Mesmo padrão já observado nas suítes de API da HU-004 e da HU-005.
+- Status: ⚠️ Parcial — [BUG-HU028-API-004](issues/BUG-HU028-API-004-mensagens-de-validacao-em-ingles.md).
 
 ---
 
@@ -109,8 +113,11 @@ Executar na ordem abaixo. São **8 casos essenciais**. O CT-001 muda o status do
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `comprovante.docx` (2 MB): HTTP `422`, `error.code: "BUSINESS_VALIDATION_ERROR"`, campo `comprovante_matricula`: “Formato de arquivo inválido. Apenas PDF e Imagens (PNG, JPG, JPEG, WEBP) são permitidos.” ✅
+- `comprovante-grande.pdf` (8 MB): **HTTP `200`**, renovação aceita e status alterado para `analise_renovacao`. ❌
+- Teste complementar com PDF de 11 MB: HTTP `422` “O arquivo excede o tamanho máximo permitido de 10MB”. O limite aplicado na renovação é de 10 MB, e não de 5 MB (AC-03).
+- Causa aparente: `renovar_vinculo_use_case.py` importa `validar_regras_arquivo` de `validar_etapa_1_use_case.py` (limite de 10 MB, usado para a foto), em vez do validador da etapa 4 (`validar_etapa_4_use_case.py`, limite de 5 MB e mensagem “Arquivo excede o limite de tamanho”).
+- Status: ❌ Falhou — [BUG-HU028-API-001](issues/BUG-HU028-API-001-limite-de-5mb-nao-aplicado.md).
 
 ---
 
@@ -121,7 +128,7 @@ Executar na ordem abaixo. São **8 casos essenciais**. O CT-001 muda o status do
 **Passos**
 
 1. Enviar `POST /auth/login` com as credenciais do aluno V.
-2. Se o login for aceito, enviar `POST /alunos/renovar-vinculo` com o token obtido.
+2. Se o login for aceito, enviar `PUT /alunos/renovar-vinculo` com o token obtido.
 
 **Resultado esperado**
 
@@ -131,8 +138,10 @@ Executar na ordem abaixo. São **8 casos essenciais**. O CT-001 muda o status do
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Preparação: aluno V aprovado e `validade_acesso` ajustada para o dia anterior no banco local.
+- `POST /auth/login`: HTTP `401`, `{"detail": "A validade de acesso da sua conta expirou."}`. ❌
+- Sem token, a renovação não pôde ser tentada: o aluno com vínculo vencido, justamente quem precisa renovar, não consegue chegar à renovação (AC-01, RN-013).
+- Status: ❌ Falhou — [BUG-HU028-API-002](issues/BUG-HU028-API-002-aluno-com-vinculo-vencido-nao-entra.md).
 
 ---
 
@@ -142,7 +151,7 @@ Executar na ordem abaixo. São **8 casos essenciais**. O CT-001 muda o status do
 
 **Passos**
 
-1. Enviar `POST /alunos/renovar-vinculo` em cada situação.
+1. Enviar `PUT /alunos/renovar-vinculo` em cada situação.
 
 **Resultado esperado**
 
@@ -153,8 +162,10 @@ Executar na ordem abaixo. São **8 casos essenciais**. O CT-001 muda o status do
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Sem `Authorization`: HTTP `401` “Não autenticado”. ✅
+- Token do administrador: HTTP `403` “Acesso negado”. ✅
+- Token do aluno rejeitado: HTTP `403` “Acesso negado”; o status continuou `rejeitado`. ✅
+- Status: ✅ Aprovado.
 
 ---
 
@@ -175,8 +186,9 @@ Executar na ordem abaixo. São **8 casos essenciais**. O CT-001 muda o status do
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `POST /auth/login` do aluno A em análise: HTTP `200`. ✅
+- `GET /alunos/me/carteirinha`: HTTP `403`, “Carteirinha indisponível. Seu cadastro está inativo ou em análise.” ✅
+- Status: ✅ Aprovado.
 
 ---
 
@@ -187,7 +199,7 @@ Executar na ordem abaixo. São **8 casos essenciais**. O CT-001 muda o status do
 **Passos**
 
 1. Anotar o `id_comprovante_matricula` atual do aluno A (`GET /usuarios/me`).
-2. Enviar `POST /alunos/renovar-vinculo` de novo.
+2. Enviar `PUT /alunos/renovar-vinculo` de novo.
 3. Conferir se o comprovante mudou.
 
 **Resultado esperado**
@@ -198,8 +210,10 @@ Executar na ordem abaixo. São **8 casos essenciais**. O CT-001 muda o status do
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Antes: aluno A em `analise_renovacao`, com o comprovante `028409e4…` em análise.
+- Nova `PUT /alunos/renovar-vinculo`: HTTP `200`, “Renovação de vínculo enviada para análise”. ❌
+- Depois: o comprovante em análise foi trocado (`64807dcf…`); o anterior ficou na tabela `arquivos` sem vínculo com o aluno.
+- Status: ❌ Falhou — [BUG-HU028-API-003](issues/BUG-HU028-API-003-renovacao-duplicada-substitui-comprovante.md).
 
 ---
 
@@ -219,14 +233,21 @@ Executar na ordem abaixo. São **8 casos essenciais**. O CT-001 muda o status do
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Executado com o aluno D (aprovado, sem renovação), criado para este caso.
+- `telefone = 8599`: HTTP `422` `BUSINESS_VALIDATION_ERROR`, “Telefone celular inválido. Informe um número celular válido com DDD (ex: 11987654321)”. ✅
+- `semestre_atual = 0`: HTTP `422`, “O semestre atual deve ser um número inteiro entre 1 e 16”. ✅
+- `nome` vazio: HTTP `422` `REQUEST_VALIDATION_ERROR`, mas com mensagem em inglês: `String should have at least 3 characters`. ⚠️
+- Status do aluno D continuou `ativado`, com os dados originais. ✅
+- Status: ⚠️ Parcial — [BUG-HU028-API-004](issues/BUG-HU028-API-004-mensagens-de-validacao-em-ingles.md).
 
 ## Defeitos encontrados
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-HU028-API-003 | A renovação aceita comprovante de 8 MB: o limite aplicado é 10 MB, não os 5 MB do AC-03. | [BUG-HU028-API-001](issues/BUG-HU028-API-001-limite-de-5mb-nao-aplicado.md) |
+| CT-HU028-API-004 | O aluno com vínculo vencido não consegue entrar (“A validade de acesso da sua conta expirou.”) e, portanto, não consegue renovar. | [BUG-HU028-API-002](issues/BUG-HU028-API-002-aluno-com-vinculo-vencido-nao-entra.md) |
+| CT-HU028-API-007 | Uma segunda renovação é aceita enquanto a primeira está em análise e substitui o comprovante. | [BUG-HU028-API-003](issues/BUG-HU028-API-003-renovacao-duplicada-substitui-comprovante.md) |
+| CT-HU028-API-002, CT-HU028-API-008 | Mensagens de validação de formulário em inglês (`Field required`, `String should have at least 3 characters`). | [BUG-HU028-API-004](issues/BUG-HU028-API-004-mensagens-de-validacao-em-ingles.md) |
 
 ## Observações gerais
 
@@ -234,4 +255,7 @@ Executar na ordem abaixo. São **8 casos essenciais**. O CT-001 muda o status do
 - Divergência de escopo: o requisito fala apenas em enviar o comprovante de matrícula, mas a API exige reenviar todos os dados das etapas 2 e 3 do cadastro (perfil demográfico, contato e vínculo). Registrar e levar ao líder.
 - Ponto de atenção do CT-004: no código atual, o login recusa contas com `validade_acesso` vencida (“A validade de acesso da sua conta expirou”), o que impediria o aluno de chegar à renovação.
 - A aprovação ou recusa da renovação pelo administrador pertence à HU-027 e fica fora desta suíte.
+- Execução em banco isolado e limpo, com massa criada pela API (`POST /usuarios/cadastrar` + aprovação pelo administrador padrão): alunos A, C, V (vínculo vencido pelo banco), R (rejeitado pelo administrador) e D. Nenhum dado do ambiente de desenvolvimento foi alterado.
+- Correção da suíte: o método da rota é `PUT`, e não `POST` como estava no planejamento; os casos foram executados com `PUT`.
+- Arquivos sem vínculo: as tentativas recusadas não deixaram arquivos órfãos. Porém, a cada renovação aceita, o comprovante anterior fica na tabela `arquivos` sem vínculo com o aluno (3 registros ao final da execução). Avaliar com o líder se o histórico deve ser mantido de forma rastreável ou removido; relaciona-se à issue #85.
 - Restaurar o status e a validade dos alunos A e V ao final (pelo administrador ou pelo banco local), registrando a restauração. Ocultar tokens e dados pessoais nas evidências.
