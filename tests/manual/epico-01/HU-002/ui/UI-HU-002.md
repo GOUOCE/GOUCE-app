@@ -11,14 +11,14 @@
 | Tela            | Boas-vindas, Entrar (e-mail e senha), Como você quer entrar? (seleção de perfil) e telas iniciais de cada perfil |
 | Ambiente        | Desenvolvimento — app mobile no iPhone (Expo)                                           |
 | Total de casos  | 18 |
-| Última execução | Não realizada                                                                           |
+| Última execução | 05/10/2026                                                                           |
 | Testador        | Cauan Ricardo                                                                           |
 
 ## Resultado geral
 
-| Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
-| --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Não executada | 18 | 0 | 0 | 18 |
+| Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
+| --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
+| ✅ Executada | 18 | 13 | 4 | 1 | 0 |
 
 ## Pré-condições
 
@@ -39,44 +39,44 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU002-UI-001 | Elementos da tela de login | Abrir Entrar a partir das boas-vindas | Exibir E-mail, Senha, Esqueci minha senha, Entrar e Criar conta de aluno | ⏳ PENDENTE | Não executado. |
-| CT-HU002-UI-002 | Campos obrigatórios vazios | E-mail vazio; senha vazia; ambos vazios | Bloquear o avanço e indicar cada campo pendente | ⏳ PENDENTE | Não executado. |
-| CT-HU002-UI-003 | E-mail em formato inválido | maria; maria@; maria@example | Indicar e-mail inválido e bloquear o avanço | ⏳ PENDENTE | Não executado. |
-| CT-HU002-UI-004 | E-mail com caixa mista e espaços | E-mail do aluno com letras maiúsculas; depois com espaços nas pontas | Reconhecer o mesmo e-mail e autenticar | ⏳ PENDENTE | Não executado. |
-| CT-HU002-UI-005 | Ocultar e exibir senha | Senha válida; ícone de olho | Alternar a visibilidade sem alterar o valor | ⏳ PENDENTE | Não executado. |
+| CT-HU002-UI-001 | Elementos da tela de login | Abrir Entrar a partir das boas-vindas | Exibir E-mail, Senha, Esqueci minha senha, Entrar e Criar conta de aluno | ✅ APROVADO | Todos os elementos esperados exibidos; senha inicialmente oculta. Confirmado pelo testador em 05/10/2026. |
+| CT-HU002-UI-002 | Campos obrigatórios vazios | E-mail vazio; senha vazia; ambos vazios | Bloquear o avanço e indicar cada campo pendente | ✅ APROVADO | Nas três tentativas (apenas senha preenchida, apenas e-mail preenchido e ambos vazios), o avanço foi bloqueado e cada campo vazio foi indicado com a mensagem de obrigatoriedade em português. Confirmado pelo testador em 05/10/2026. |
+| CT-HU002-UI-003 | E-mail em formato inválido | maria; maria@; maria@example | Indicar e-mail inválido e bloquear o avanço | ❌ REPROVADO | Os formatos inválidos foram recusados corretamente, mas um e-mail válido com espaço no início ou no fim (` aluno@gmail.com`, `aluno@gmail.com `) também é recusado com “Informe um e-mail válido”: o login não remove os espaços antes de validar, como o cadastro já faz. Ver [BUG-HU002-UI-003](issues/BUG-HU002-UI-003-email-com-espacos-recusado.md). Executado pelo testador em 05/10/2026. |
+| CT-HU002-UI-004 | E-mail com caixa mista e espaços | E-mail do aluno com letras maiúsculas; depois com espaços nas pontas | Reconhecer o mesmo e-mail e autenticar | ✅ APROVADO | O aluno ativo autenticou com o e-mail em letras maiúsculas. A recusa do e-mail com espaços nas pontas está registrada no CT-003. Sugestão do testador: exibir o e-mail em minúsculas no campo ([MELHORIA-HU002-UI-004](issues/MELHORIA-HU002-UI-004-email-em-minusculas.md)). Confirmado pelo testador em 05/10/2026. |
+| CT-HU002-UI-005 | Ocultar e exibir senha | Senha válida; ícone de olho | Alternar a visibilidade sem alterar o valor | ✅ APROVADO | O ícone de olho alternou a senha entre visível e oculta, sem alterar o valor digitado. Confirmado pelo testador em 05/10/2026. |
 
 ### Seção B — Seleção de perfil e redirecionamento
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU002-UI-006 | Login válido de aluno | Credenciais do aluno ativo; Sou aluno | Entrar na área do aluno em até 3 segundos | ⏳ PENDENTE | Não executado. |
-| CT-HU002-UI-007 | Login válido de administrador | Credenciais do administrador; Sou administrador | Entrar no Painel do administrador | ⏳ PENDENTE | Não executado. |
-| CT-HU002-UI-008 | Login válido de representante | Credenciais do representante; Sou representante | Entrar na área de Chamada do representante | ⏳ PENDENTE | Não executado. |
-| CT-HU002-UI-009 | Perfil escolhido diferente do perfil da conta | Aluno escolhe Sou administrador; administrador escolhe Sou aluno | Não entrar sem aviso em um perfil diferente do escolhido | ⏳ PENDENTE | Não executado. |
-| CT-HU002-UI-010 | Voltar da seleção de perfil | Seta de voltar; Continuar aqui; Sim, sair | Pedir confirmação e respeitar a escolha | ⏳ PENDENTE | Não executado. |
+| CT-HU002-UI-006 | Login válido de aluno | Credenciais do aluno ativo; Sou aluno | Entrar na área do aluno em até 3 segundos | ✅ APROVADO | O aluno ativo entrou na área do aluno em menos de 3 segundos. A conta foi aprovada pela API, porque o painel do administrador ainda não tem a tela de aprovação. Confirmado pelo testador em 05/10/2026. |
+| CT-HU002-UI-007 | Login válido de administrador | Credenciais do administrador; Sou administrador | Entrar no Painel do administrador | ✅ APROVADO | O administrador padrão autenticou e entrou no Painel, com as abas Painel, Cadastros, Logística e Mais. O conteúdo do painel ainda é provisório (fora do escopo da HU-002). Confirmado pelo testador em 05/10/2026. |
+| CT-HU002-UI-008 | Login válido de representante | Credenciais do representante; Sou representante | Entrar na área de Chamada do representante | 🚫 BLOQUEADO | O perfil representante ainda não existe no backend: o login procura a tabela `representante`, que nenhuma migration cria, e não há rota para cadastrar representante. Nenhuma conta pode ter esse perfil. Registrado em 05/10/2026. |
+| CT-HU002-UI-009 | Perfil escolhido diferente do perfil da conta | Aluno escolhe Sou administrador; administrador escolhe Sou aluno | Não entrar sem aviso em um perfil diferente do escolhido | ❌ REPROVADO | A escolha do perfil é ignorada: o aluno que toca em Sou administrador ou Sou representante entra na área do aluno, e o administrador que toca em Sou aluno ou Sou representante entra no Painel do administrador, sempre sem aviso. Ver [BUG-HU002-UI-009](issues/BUG-HU002-UI-009-perfil-escolhido-ignorado.md). Confirmado pelo testador em 05/10/2026. |
+| CT-HU002-UI-010 | Voltar da seleção de perfil | Seta de voltar; Continuar aqui; Sim, sair | Pedir confirmação e respeitar a escolha | ✅ APROVADO | A seta exibiu a confirmação; Continuar aqui manteve a tela de seleção e Sim, sair voltou sem entrar no app. Confirmado pelo testador em 05/10/2026. |
 
 ### Seção C — Credenciais inválidas e status da conta
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU002-UI-011 | Senha incorreta | E-mail do aluno ativo; senha errada | Mensagem genérica, sem dizer qual campo está errado | ⏳ PENDENTE | Não executado. |
-| CT-HU002-UI-012 | E-mail não cadastrado | naoexiste@example.com; qualquer senha | A mesma mensagem genérica do CT-011 | ⏳ PENDENTE | Não executado. |
-| CT-HU002-UI-013 | Conta pendente de aprovação | Credenciais do aluno pendente | Exibir que o cadastro está em análise e não abrir a área do aluno | ⏳ PENDENTE | Não executado. |
-| CT-HU002-UI-014 | Conta inativada | Credenciais do aluno inativado | Bloquear o acesso e orientar contato com a coordenação | ⏳ PENDENTE | Não executado. |
+| CT-HU002-UI-011 | Senha incorreta | E-mail do aluno ativo; senha errada | Mensagem genérica, sem dizer qual campo está errado | ✅ APROVADO | Não entrou e exibiu mensagem genérica, sem indicar o campo errado, permitindo nova tentativa. A mensagem só aparece depois de escolher o perfil, porque a tela Entrar não consulta a API. Confirmado pelo testador em 05/10/2026. |
+| CT-HU002-UI-012 | E-mail não cadastrado | naoexiste@example.com; qualquer senha | A mesma mensagem genérica do CT-011 | ✅ APROVADO | Não entrou e exibiu a mesma mensagem genérica do CT-011, sem revelar se a conta existe. Confirmado pelo testador em 05/10/2026. |
+| CT-HU002-UI-013 | Conta pendente de aprovação | Credenciais do aluno pendente | Exibir que o cadastro está em análise e não abrir a área do aluno | ✅ APROVADO | O aluno pendente viu a tela Cadastro enviado para análise e não acessou a área do aluno. A mesma tela aparece se ele tocar em Sou administrador ou Sou representante: a escolha do perfil é ignorada, como no CT-009 ([BUG-HU002-UI-009](issues/BUG-HU002-UI-009-perfil-escolhido-ignorado.md)). Confirmado pelo testador em 05/10/2026. |
+| CT-HU002-UI-014 | Conta inativada | Credenciais do aluno inativado | Bloquear o acesso e orientar contato com a coordenação | ✅ APROVADO | O acesso foi bloqueado com o pop-up “Falha na autenticação” e a mensagem “Sua conta está inativada. Entre em contato com a coordenação.” A mesma mensagem aparece em qualquer perfil escolhido, o que é aceitável: a conta fica bloqueada de qualquer forma. Conta inativada pela API. Confirmado pelo testador em 05/10/2026. |
 
 ### Seção D — Sessão
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU002-UI-015 | Sessão mantida ao reabrir o app | Aluno logado; fechar e reabrir o app | Voltar logado, direto na área do aluno | ⏳ PENDENTE | Não executado. |
-| CT-HU002-UI-016 | Sair da conta | Aluno: Perfil → Sair; administrador: Mais → Sair | Encerrar a sessão e voltar ao login; reabrir o app não entra logado | ⏳ PENDENTE | Não executado. |
+| CT-HU002-UI-015 | Sessão mantida ao reabrir o app | Aluno logado; fechar e reabrir o app | Voltar logado, direto na área do aluno | ❌ REPROVADO | Após fechar completamente e reabrir o app, ele voltou para a tela de boas-vindas e pediu login de novo. Ver [BUG-HU002-UI-015](issues/BUG-HU002-UI-015-sessao-nao-restaurada.md). Executado pelo testador em 05/10/2026. |
+| CT-HU002-UI-016 | Sair da conta | Aluno: Perfil → Sair; administrador: Mais → Sair | Encerrar a sessão e voltar ao login; reabrir o app não entra logado | ❌ REPROVADO | Aluno: passou (confirmação exibida, Sim, sair voltou ao login). Administrador: não consegue sair, porque a aba Mais, onde fica o botão Sair, está desativada no menu. Ver [BUG-HU002-UI-016](issues/BUG-HU002-UI-016-admin-sem-acesso-ao-sair.md). Executado pelo testador em 05/10/2026. |
 
 ### Seção E — Conexão e navegação
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU002-UI-017 | Falha de conexão ao entrar | Credenciais válidas; Wi-Fi e dados móveis desligados | Informar erro de conexão e permitir nova tentativa sem redigitar | ⏳ PENDENTE | Não executado. |
-| CT-HU002-UI-018 | Links e saída da tela de login | Esqueci minha senha; Criar conta de aluno; seta de voltar | Abrir as telas corretas e confirmar a saída | ⏳ PENDENTE | Não executado. |
+| CT-HU002-UI-017 | Falha de conexão ao entrar | Credenciais válidas; Wi-Fi e dados móveis desligados | Informar erro de conexão e permitir nova tentativa sem redigitar | ✅ APROVADO | Sem conexão, exibiu mensagem de falha de conexão com o servidor sem travar o app. Com a conexão religada, tocar em Sou aluno de novo entrou na área do aluno sem redigitar. Confirmado pelo testador em 05/10/2026. |
+| CT-HU002-UI-018 | Links e saída da tela de login | Esqueci minha senha; Criar conta de aluno; seta de voltar | Abrir as telas corretas e confirmar a saída | ✅ APROVADO | Esqueci minha senha e Criar conta de aluno abriram as telas corretas; a seta de voltar pediu confirmação e respeitou a escolha. Confirmado pelo testador em 05/10/2026. |
 
 ## Detalhamento dos casos
 
@@ -98,8 +98,10 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Exibidos o título **Entrar**, os campos **E-mail \*** e **Senha \***, o link **Esqueci minha senha** e os botões **Entrar** e **Criar conta de aluno**.
+- A senha começa com os caracteres ocultos.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -119,8 +121,9 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Nas três tentativas (apenas senha preenchida, apenas e-mail preenchido e ambos vazios), o avanço foi bloqueado e cada campo vazio foi indicado com a mensagem de obrigatoriedade em português.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -139,8 +142,11 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Os e-mails `maria`, `maria@` e `maria@example` foram recusados com a mensagem “Informe um e-mail válido”, sem avançar para a seleção de perfil.
+- Porém um e-mail válido com espaço no início ou no fim (` aluno@gmail.com`, `aluno@gmail.com `) também foi recusado com “Informe um e-mail válido”. O teclado do iPhone costuma inserir um espaço depois de uma sugestão, e o usuário recebe o erro sem entender o motivo.
+- Causa: o `loginSchema` (`frontend/src/schemas/loginSchema.ts`) valida o e-mail sem remover os espaços, ao contrário do `emailSchema` do cadastro (`frontend/src/schemas/alunoSchema.ts:49`), corrigido pela issue #51.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ❌ Reprovado — [BUG-HU002-UI-003](issues/BUG-HU002-UI-003-email-com-espacos-recusado.md).
 
 ---
 
@@ -160,8 +166,11 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O aluno ativo autenticou com o e-mail em letras maiúsculas; o backend converte o e-mail para minúsculas antes da busca.
+- A recusa do e-mail com espaços nas pontas está registrada no CT-HU002-UI-003.
+- Sugestão do testador: exibir o e-mail em minúsculas no próprio campo — [MELHORIA-HU002-UI-004](issues/MELHORIA-HU002-UI-004-email-em-minusculas.md).
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -180,8 +189,9 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O ícone de olho alternou a senha entre visível e oculta, sem alterar o valor digitado.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ### Seção B — Seleção de perfil e redirecionamento
 
@@ -202,8 +212,10 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O aluno ativo entrou na área do aluno em menos de 3 segundos.
+- Preparação: a conta foi aprovada pela API (`PATCH /usuarios/alunos/{id}/aprovar`, como administrador), porque o painel do administrador ainda não tem a tela de aprovação.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -221,8 +233,10 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O administrador padrão autenticou e entrou no **Painel**, com as abas **Painel**, **Cadastros**, **Logística** e **Mais**.
+- O conteúdo do painel ainda é provisório: os números são fixos no código, “Fila de solicitações” não abre nada e as abas Cadastros e Logística estão desativadas. Isso não faz parte da HU-002 e não reprova o caso.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -244,8 +258,10 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Não foi possível executar: o perfil representante ainda não existe no backend. O login reconhece representante pela tabela `representante` (`usuario_repository.py`, `buscar_contexto_autenticacao_por_id`), mas nenhuma migration cria essa tabela, e não há rota para cadastrar representante. Nenhuma conta pode ter esse perfil, nem preparada pela API.
+- Não é defeito da HU-002: a funcionalidade ainda não foi implementada. Reexecutar quando o cadastro de representante existir.
+- Registrado em 05/10/2026.
+- Status: 🚫 Bloqueado.
 
 ---
 
@@ -267,8 +283,12 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Aluno ativo tocando em **Sou administrador** ou **Sou representante**: entrou na área do aluno, sem aviso.
+- Administrador tocando em **Sou aluno** ou **Sou representante**: entrou no Painel do administrador, sem aviso.
+- A escolha do perfil não tem efeito: `handleSelectProfile` em `selecao-perfil.tsx` recebe o perfil e não o usa, e o `signIn` (`AuthContext.tsx`) redireciona sempre para o perfil que vem da conta.
+- Divergência de ordem: o app pede o perfil **depois** de e-mail e senha; o AC-08 e o BDD preveem **antes**.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ❌ Reprovado — [BUG-HU002-UI-009](issues/BUG-HU002-UI-009-perfil-escolhido-ignorado.md).
 
 ---
 
@@ -289,8 +309,9 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- A seta de voltar exibiu a confirmação “Sair desta tela?”; **Continuar aqui** manteve a tela de seleção e **Sim, sair** voltou para a tela anterior sem entrar no app.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ### Seção C — Credenciais inválidas e status da conta
 
@@ -311,8 +332,10 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Não entrou no app e exibiu mensagem genérica em português, sem indicar se o erro está no e-mail ou na senha, permitindo nova tentativa.
+- Observação de UX: a tela **Entrar** só valida o formato; a senha errada só é acusada depois de tocar em um perfil em **Como você quer entrar?**.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -331,8 +354,9 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Não entrou no app e exibiu a mesma mensagem genérica do CT-011, sem revelar se a conta existe.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -352,8 +376,10 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Com **Sou aluno**, o aluno pendente viu a tela **Cadastro enviado para análise** e não acessou a área do aluno.
+- Tocando em **Sou administrador** ou **Sou representante**, aparece a mesma tela: a escolha do perfil é ignorada, mesma causa do CT-009 ([BUG-HU002-UI-009](issues/BUG-HU002-UI-009-perfil-escolhido-ignorado.md)).
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -373,8 +399,11 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O acesso foi bloqueado com o pop-up **Falha na autenticação** e a mensagem “Sua conta está inativada. Entre em contato com a coordenação.”, equivalente ao texto de referência.
+- A mesma mensagem aparece com qualquer perfil escolhido (aluno, representante ou administrador). Para conta inativada isso é aceitável: o bloqueio vale para a conta inteira. A escolha do perfil ser ignorada está registrada no [BUG-HU002-UI-009](issues/BUG-HU002-UI-009-perfil-escolhido-ignorado.md).
+- Preparação: a conta foi inativada pela API (`PATCH /usuarios/alunos/{id}/status` com `status_cadastro: inativado`, como administrador).
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ### Seção D — Sessão
 
@@ -393,8 +422,10 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Após fechar completamente o app e abri-lo novamente, ele voltou para a tela de boas-vindas e solicitou login.
+- Causa aparente: o `AuthContext` recupera o usuário e o token salvos, mas só redireciona quando a rota atual é protegida. Como o app abre na tela de boas-vindas (`/`), nada leva o usuário de volta à área dele.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ❌ Reprovado — [BUG-HU002-UI-015](issues/BUG-HU002-UI-015-sessao-nao-restaurada.md).
 
 ---
 
@@ -416,8 +447,10 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Aluno: em **Perfil → Sair**, a confirmação foi exibida; **Continuar** manteve a sessão e **Sim, sair** voltou para a tela de login. ✅
+- Administrador: não foi possível sair. A aba **Mais**, onde fica o botão **Sair**, está desativada no menu inferior (`pointerEvents="none"` em `frontend/src/app/(administrador)/_layout.tsx`), assim como Cadastros e Logística. O único jeito de deixar o painel é fechar o app, o que não encerra a sessão. ❌
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ❌ Reprovado — [BUG-HU002-UI-016](issues/BUG-HU002-UI-016-admin-sem-acesso-ao-sair.md).
 
 ### Seção E — Conexão e navegação
 
@@ -440,8 +473,10 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Sem Wi-Fi e dados móveis, ao tocar em **Sou aluno** o app exibiu mensagem de falha de conexão com o servidor, sem travar.
+- Com a conexão religada, tocar em **Sou aluno** de novo entrou na área do aluno, sem redigitar e-mail e senha.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -462,20 +497,27 @@ Os IDs completos usam o prefixo `CT-HU002-UI-`, numerados de 001 a 018 na ordem 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Esqueci minha senha** abriu a tela de recuperação e **Criar conta de aluno** abriu o cadastro.
+- A seta de voltar exibiu a confirmação; **Continuar no app** manteve a tela de login e **Sim, sair** voltou para as boas-vindas.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ## Defeitos encontrados
 
 | Caso | Defeito | Issue |
 | ---- | ------- | ----- |
-| — | Nenhuma execução realizada. | — |
+| CT-HU002-UI-003 | E-mail válido com espaço no início ou no fim é recusado como inválido no login (e no Esqueci minha senha). | [BUG-HU002-UI-003-email-com-espacos-recusado](issues/BUG-HU002-UI-003-email-com-espacos-recusado.md) |
+| CT-HU002-UI-009 | O perfil escolhido na tela “Como você quer entrar?” é ignorado: o app entra sempre no perfil da conta, sem aviso. A seleção ocorre depois das credenciais, e não antes (AC-08). | [BUG-HU002-UI-009-perfil-escolhido-ignorado](issues/BUG-HU002-UI-009-perfil-escolhido-ignorado.md) |
+| CT-HU002-UI-015 | Ao reabrir o app com sessão salva, ele volta para a tela de boas-vindas e pede login, em vez de abrir a área do usuário. | [BUG-HU002-UI-015-sessao-nao-restaurada](issues/BUG-HU002-UI-015-sessao-nao-restaurada.md) |
+| CT-HU002-UI-016 | O administrador não consegue sair da conta: a aba Mais, onde fica o botão Sair, está desativada. | [BUG-HU002-UI-016-admin-sem-acesso-ao-sair](issues/BUG-HU002-UI-016-admin-sem-acesso-ao-sair.md) |
+| CT-HU002-UI-004 | Melhoria: o campo de e-mail mantém as letras maiúsculas digitadas. | [MELHORIA-HU002-UI-004-email-em-minusculas](issues/MELHORIA-HU002-UI-004-email-em-minusculas.md) |
+| Observação | Segurança: a senha é passada como parâmetro de rota do login para a seleção de perfil (visível na URL na versão web). | [SEGURANCA-HU002-UI-senha-em-parametro-de-rota](issues/SEGURANCA-HU002-UI-senha-em-parametro-de-rota.md) |
 
 ## Observações gerais
 
 - Referências: [HU-002, seção 7.2.2](../../../../../docs/requisitos.md), [tela de login](../../../../../frontend/src/app/%28autenticacao%29/login.tsx), [seleção de perfil](../../../../../frontend/src/app/%28autenticacao%29/selecao-perfil.tsx) e [contexto de autenticação](../../../../../frontend/src/contexts/AuthContext.tsx). A suíte de API correspondente está em [`../api/API-HU-002.md`](../api/API-HU-002.md).
 - No código atual, a escolha do perfil não é enviada para a API: o app entra no perfil que vem da conta. Por isso o CT-009 é importante para verificar o AC-08.
-- O e-mail e a senha são passados da tela de login para a de seleção de perfil como parâmetros de navegação. No iPhone isso não aparece, mas na versão web pode expor a senha na barra de endereço. Fica registrado para uma eventual suíte web.
+- O e-mail e a senha são passados da tela de login para a de seleção de perfil como parâmetros de navegação. No iPhone isso não aparece, mas na versão web pode expor a senha na barra de endereço. Registrado como issue de segurança: [SEGURANCA-HU002-UI-senha-em-parametro-de-rota](issues/SEGURANCA-HU002-UI-senha-em-parametro-de-rota.md).
 - “Lembrar de mim” (`lembrar_me`) existe na API, mas não aparece na tela; não há caso para ele nesta suíte.
 - Recuperação de senha é coberta pela HU-004; aqui só se verifica que o link abre a tela correta (CT-018).
 - Cenários BDD de referência: [`bdd/features/epico-01/HU-002.feature`](../../../../../bdd/features/epico-01/HU-002.feature). As mensagens esperadas dos CT-011, CT-012 e CT-014 seguem os textos do BDD. Os cenários de token de sessão e de HTTPS (RNF-003) são marcados no BDD como `@teste_api` e ficam fora desta suíte de UI.
