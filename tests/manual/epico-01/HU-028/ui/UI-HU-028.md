@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 9 | 2 | 3 | 4 |
+| ⏳ Em execução | 9 | 4 | 3 | 2 |
 
 ## Pré-condições
 
@@ -46,8 +46,8 @@ Executar na ordem abaixo. São **9 casos essenciais**, em três seções. Os IDs
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU028-UI-004 | Renovação válida | `comprovante.pdf` (2 MB) | “Comprovante enviado com sucesso”; status “Em análise” | ⏳ PENDENTE | Não executado. |
-| CT-HU028-UI-005 | Falha de conexão no envio | Wi-Fi e dados móveis desligados no envio | Mensagem de falha; tela mantida para nova tentativa | ⏳ PENDENTE | Não executado. |
+| CT-HU028-UI-004 | Renovação válida | `comprovante.pdf` (2 MB) | “Comprovante enviado com sucesso”; status “Em análise” | ✅ APROVADO | Executado junto com o CT-005, após religar a conexão: a renovação foi enviada com o PDF de 2 MB, o status passou a “em análise” e o aluno entrou na fila do administrador (conferido no banco e na API). A confirmação foi o aviso rápido sem estilo, com texto diferente do AC-05 ([MELHORIA-HU028-UI-003](issues/MELHORIA-HU028-UI-003-confirmacao-do-envio-sem-estilo.md)). Confirmado pelo testador em 06/10/2026. |
+| CT-HU028-UI-005 | Falha de conexão no envio | Wi-Fi e dados móveis desligados no envio | Mensagem de falha; tela mantida para nova tentativa | ✅ APROVADO | Sem conexão, exibiu falha no envio por erro de conexão com o servidor, orientando verificar a internet; com a conexão de volta, o envio foi concluído sem refazer os passos. Confirmado pelo testador em 06/10/2026. |
 | CT-HU028-UI-006 | Agendamento bloqueado em análise | Aluno “Em análise”; aba Agenda e atalhos | Agendamento bloqueado com informativo | ⏳ PENDENTE | Não executado. |
 
 ### Seção C — Formulário da renovação e reenvio
@@ -163,8 +163,11 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Executado na sequência do CT-HU028-UI-005, após religar a conexão, com `comprovante.pdf` (2 MB).
+- A renovação foi enviada: o comprovante salvo tem 2 MB, o status passou a `analise_renovacao` e o aluno aparece em `GET /usuarios/alunos?status=analise_renovacao` (fila do administrador). ✅
+- A confirmação foi um aviso rápido no rodapé, sem o estilo do app, que o testador não conseguiu ler; o texto do app é “Renovação de vínculo solicitada com sucesso”, diferente do AC-05 (“Comprovante enviado com sucesso”). Registrado na [MELHORIA-HU028-UI-003](issues/MELHORIA-HU028-UI-003-confirmacao-do-envio-sem-estilo.md).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -187,8 +190,11 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Passos 1 a 4 preenchidos, com `comprovante.pdf` anexado; Wi-Fi e dados móveis desligados antes de **Concluir**.
+- O app exibiu falha no envio por erro de conexão com o servidor, orientando verificar a internet, sem travar. ✅
+- A tela continuou no passo 4 com os dados e o arquivo; com a conexão religada, **Concluir** enviou a renovação sem refazer os passos (ver CT-HU028-UI-004). ✅
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
