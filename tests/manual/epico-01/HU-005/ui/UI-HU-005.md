@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 7 | 2 | 0 | 5 |
+| ⏳ Em execução | 7 | 2 | 1 | 4 |
 
 ## Pré-condições
 
@@ -39,7 +39,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 | --- | --- | --- | --- | --- | --- |
 | CT-HU005-UI-001 | Visualizar o próprio perfil | Aluno A logado; aba Perfil | Exibir os dados cadastrais atuais do aluno A | ✅ APROVADO | Meu Perfil exibiu foto, nome completo, status Aprovado, e-mail, telefone, instituição, curso, período de ingresso e turno do aluno A, sem valores de exemplo, e as ações Editar perfil, Alterar endereço de e-mail, Ver carteirinha digital e Renovar vínculo. Observação: telefone sem máscara (ex.: `31997814542`), ver [MELHORIA-HU005-UI-002](issues/MELHORIA-HU005-UI-002-mascara-telefone-no-perfil.md). Confirmado pelo testador em 06/10/2026. |
 | CT-HU005-UI-002 | Editar telefone e bairro | (85) 98888-1111; outro bairro | Mensagem de sucesso e dados atualizados no perfil | ✅ APROVADO | Exibiu “Perfil atualizado — Suas informações de perfil foram atualizadas com sucesso!” e voltou a Meu Perfil com o telefone novo; telefone `85988881111` e bairro Serra confirmados no banco pela API. Observação: campo Telefone sem máscara ([MELHORIA-HU005-UI-002](issues/MELHORIA-HU005-UI-002-mascara-telefone-no-perfil.md)). Confirmado pelo testador em 06/10/2026. |
-| CT-HU005-UI-003 | Telefone inválido | 8599; 85abc123456; vazio | Bloquear e alertar no campo Telefone | ⏳ PENDENTE | Não executado. |
+| CT-HU005-UI-003 | Telefone inválido | 8599; 85abc123456; vazio | Bloquear e alertar no campo Telefone | ❌ REPROVADO | `8599` e vazio foram bloqueados com “O telefone deve ter pelo menos 10 dígitos com DDD”; o teclado não aceita letras. Porém, com mais de 20 dígitos o app enviou à API e exibiu o erro em inglês “String should have at most 20 characters”: a tela não limita nem valida o formato como o cadastro. Ver [BUG-HU005-UI-003](issues/BUG-HU005-UI-003-validacao-telefone-fraca-no-perfil.md). Executado pelo testador em 06/10/2026. |
 | CT-HU005-UI-004 | Campos acadêmicos somente leitura | Meu Perfil e Editar Perfil | Instituição, curso, período e turno não editáveis | ⏳ PENDENTE | Não executado. |
 
 ### Seção B — Alteração de e-mail e conexão
@@ -126,8 +126,15 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `8599`: bloqueado com “O telefone deve ter pelo menos 10 dígitos com DDD”. ✅
+- `85abc123456`: não foi possível digitar letras; o teclado do campo é numérico. ✅
+- Campo vazio: bloqueado com a mesma mensagem do `8599` (não há mensagem específica de campo obrigatório). ✅
+- **Teste adicional do testador**, mais de 20 dígitos: o app não bloqueou, enviou à API e exibiu o erro do backend em inglês, “String should have at most 20 characters”. ❌
+- Causa aparente: **Editar perfil** usa `perfilSchema` (`frontend/src/schemas/perfilSchema.ts`), que só exige mínimo de 10 caracteres. O cadastro usa `telefoneSchema` (`alunoSchema.ts:78`), que exige DDD válido + 9 dígitos começando com 9. O backend limita o campo a 20 caracteres e responde 422 com a mensagem padrão em inglês.
+- Ao final, o telefone salvo continuou `85988881111` (conferido pela API).
+- Sugestão do testador: usar no perfil a mesma máscara e as mesmas mensagens do cadastro ([MELHORIA-HU005-UI-002](issues/MELHORIA-HU005-UI-002-mascara-telefone-no-perfil.md)).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU005-UI-003](issues/BUG-HU005-UI-003-validacao-telefone-fraca-no-perfil.md).
 
 ---
 
@@ -226,6 +233,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
+| CT-HU005-UI-003 | Telefone com mais de 20 dígitos chega à API e o erro aparece em inglês; Editar perfil não valida o formato como o cadastro. | [BUG-HU005-UI-003-validacao-telefone-fraca-no-perfil](issues/BUG-HU005-UI-003-validacao-telefone-fraca-no-perfil.md) |
 | CT-HU005-UI-001, CT-HU005-UI-002 | Melhoria: telefone sem máscara em Meu Perfil e em Editar perfil, diferente do cadastro. | [MELHORIA-HU005-UI-002-mascara-telefone-no-perfil](issues/MELHORIA-HU005-UI-002-mascara-telefone-no-perfil.md) |
 
 ## Observações gerais
