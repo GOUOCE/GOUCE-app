@@ -1,9 +1,21 @@
 import React from 'react';
-import { Tabs } from 'expo-router';
+import { Tabs, Redirect } from 'expo-router';
 import { View, StyleSheet } from 'react-native';
 import { LayoutDashboard, Archive, Bus, MoreHorizontal } from 'lucide-react-native';
+import { useAuth } from '@contexts/AuthContext';
 
 export default function AdminLayout() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return null;
+  }
+
+  // Proteção síncrona no nível do Layout: bloqueia renderização de telas não autorizadas
+  if (!user || user.role !== 'ADMINISTRADOR') {
+    return <Redirect href="/acesso-negado" />;
+  }
+
   return (
     <Tabs screenOptions={{
       headerShown: false,
@@ -37,11 +49,6 @@ export default function AdminLayout() {
               <Archive size={24} color={focused ? '#000' : '#666'} />
             </View>
           ),
-          tabBarButton: ({ children, style }) => (
-            <View style={style} pointerEvents="none">
-              {children}
-            </View>
-          ),
         }}
       />
       <Tabs.Screen
@@ -53,11 +60,6 @@ export default function AdminLayout() {
               <Bus size={24} color={focused ? '#000' : '#666'} />
             </View>
           ),
-          tabBarButton: ({ children, style }) => (
-            <View style={style} pointerEvents="none">
-              {children}
-            </View>
-          ),
         }}
       />
       <Tabs.Screen
@@ -67,11 +69,6 @@ export default function AdminLayout() {
           tabBarIcon: ({ focused }) => (
             <View style={[styles.iconContainer, focused && styles.activeIconContainer]}>
               <MoreHorizontal size={24} color={focused ? '#000' : '#666'} />
-            </View>
-          ),
-          tabBarButton: ({ children, style }) => (
-            <View style={style} pointerEvents="none">
-              {children}
             </View>
           ),
         }}

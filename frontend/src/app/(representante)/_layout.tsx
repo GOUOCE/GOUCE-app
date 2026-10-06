@@ -1,9 +1,21 @@
 import React from 'react';
-import { Tabs } from 'expo-router';
+import { Tabs, Redirect } from 'expo-router';
 import { View, StyleSheet } from 'react-native';
 import { ClipboardList, Route, UserCircle } from 'lucide-react-native';
+import { useAuth } from '@contexts/AuthContext';
 
 export default function RepresentativeLayout() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return null;
+  }
+
+  // Proteção síncrona no nível do Layout: bloqueia renderização de telas não autorizadas
+  if (!user || user.role !== 'MOTORISTA') {
+    return <Redirect href="/acesso-negado" />;
+  }
+
   return (
     <Tabs screenOptions={{
       headerShown: false,
