@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Em execução | 11 | 4 | 2 | 3 | 2 |
+| ⏳ Em execução | 11 | 5 | 2 | 3 | 1 |
 
 ## Pré-condições
 
@@ -56,7 +56,7 @@ Executar na ordem abaixo. São **11 casos**, em três seções. Os IDs completos
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU003-UI-010 | Link de área protegida sem login | Sem sessão; link para `cadastros` e `carteirinha-digital` | Levar para a tela de login, sem exibir a área | ⏳ PENDENTE | Não executado. |
+| CT-HU003-UI-010 | Link de área protegida sem login | Sem sessão; link para `cadastros` e `carteirinha-digital` | Levar para a tela de login, sem exibir a área | ✅ APROVADO | Sem sessão, os dois links (`cadastros` e `carteirinha-digital`) levaram direto à tela de login, sem exibir a área protegida. Confirmado pelo testador em 05/10/2026. |
 | CT-HU003-UI-011 | Conta inativada durante a sessão | Aluno logado; administrador inativa a conta | Na próxima ação, encerrar o acesso e exigir novo login | ⏳ PENDENTE | Não executado. |
 
 ## Detalhamento dos casos
@@ -310,8 +310,10 @@ Executar na ordem abaixo. São **11 casos**, em três seções. Os IDs completos
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Preparação: o aluno saiu pelo **Perfil → Sair → Sim, sair**, deixando o app sem sessão na tela de login.
+- Os links `exp://<IP>:8081/--/cadastros` e `exp://<IP>:8081/--/carteirinha-digital` recarregaram o app direto na tela de login, sem exibir a área protegida nem dados.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
