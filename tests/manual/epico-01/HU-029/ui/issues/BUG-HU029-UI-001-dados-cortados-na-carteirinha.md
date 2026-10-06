@@ -5,7 +5,7 @@
 | **Tipo** | Bug de UX / layout |
 | **Severidade** | 🟡 Média |
 | **Ambiente** | Desenvolvimento — app mobile no iPhone (Expo Go) |
-| **Caso relacionado** | `CT-HU029-UI-001` |
+| **Caso relacionado** | `CT-HU029-UI-001`, `CT-HU029-UI-003` |
 | **Documentação** | HU-029 — Testes manuais de UI: [CT-HU029-UI-001](../UI-HU-029.md#ct-hu029-ui-001--abrir-a-carteirinha-do-aluno-aprovado) |
 
 ---
@@ -47,3 +47,5 @@ Os textos ficam limitados a uma linha e são cortados com reticências. O curso 
 - Reexecutar `CT-HU029-UI-001`.
 
 ### 📎 Evidência
+
+- `CT-HU029-UI-003`: com o curso “Licenciatura em Ciências Biológicas”, a carteirinha exibiu “Licenciatura em Ciências Bio…”.

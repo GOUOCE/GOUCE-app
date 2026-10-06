@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 7 | 0 | 2 | 5 |
+| ⏳ Em execução | 7 | 0 | 3 | 4 |
 
 ## Pré-condições
 
@@ -40,7 +40,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 | --- | --- | --- | --- | --- | --- |
 | CT-HU029-UI-001 | Abrir a carteirinha do aluno aprovado | Aluno A; Perfil e atalho do Início | Foto, nome, curso, instituição e QR Code; abre rápido | ❌ REPROVADO | Por Perfil → Ver carteirinha digital, abriu instantaneamente com a foto, nome, curso, instituição, e-mail, data de emissão, QR Code e logo da prefeitura; a seta voltou. Porém o atalho Carteirinha Digital do Início não abre nada, e textos longos (ex.: o curso) aparecem cortados com reticências. Ver [BUG-HU029-UI-001](issues/BUG-HU029-UI-001-atalho-do-inicio-sem-acao.md) e [BUG-HU029-UI-001-dados-cortados](issues/BUG-HU029-UI-001-dados-cortados-na-carteirinha.md). Executado pelo testador em 06/10/2026. |
 | CT-HU029-UI-002 | Aluno sem status aprovado | Aluno B (em análise ou pendente) | Documento oculto e “Carteirinha indisponível…” | ❌ REPROVADO | O aluno B, em análise de renovação, conseguiu abrir a carteirinha. A API recusou (HTTP 403 no log do backend), mas o app ignorou a recusa e montou o documento com os dados da sessão, sem a mensagem de indisponibilidade. Ver [BUG-HU029-UI-002](issues/BUG-HU029-UI-002-app-exibe-carteirinha-recusada-pela-api.md). Executado pelo testador em 06/10/2026. |
-| CT-HU029-UI-003 | Dados reais, sem valores de exemplo | Aluno A após editar o perfil | Só dados do aluno A, atualizados | ⏳ PENDENTE | Não executado. |
+| CT-HU029-UI-003 | Dados reais, sem valores de exemplo | Aluno A após editar o perfil | Só dados do aluno A, atualizados | ❌ REPROVADO | Nome, e-mail, instituição e curso eram do aluno A, mas a data de emissão “10/09/2026” é fixa no código. Com o curso alterado no cadastro, a carteirinha e o perfil só mostraram o curso novo depois de sair e entrar de novo; e o curso longo apareceu cortado (“Licenciatura em Ciências Bio…”). Ver [BUG-HU029-UI-003-emissao](issues/BUG-HU029-UI-003-data-de-emissao-e-valores-fixos.md) e [BUG-HU029-UI-003-atualizacao](issues/BUG-HU029-UI-003-carteirinha-nao-atualiza.md). Executado pelo testador em 06/10/2026. |
 
 ### Seção B — Uso no embarque
 
@@ -132,8 +132,15 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Nome, e-mail, instituição e curso exibidos eram os do aluno A. ✅
+- A data de emissão exibida é “10/09/2026”, fixa no código (`const emissao = '10/09/2026'`); a conta foi criada em 04/10/2026. Todo aluno vê a mesma data. ❌
+- A tela também tem valores padrão fixos para quando faltar dado: “João Neves”, “joao@email.com”, “UFC”, “Campus Quixadá”, “Engenharia de Software”, “2024.1” e uma foto de banco de imagens (`carteirinha-digital.tsx`, linhas 54 a 67). Para o aluno A eles não apareceram, porque a API devolveu os dados reais, mas são usados quando a API falha (ver CT-HU029-UI-002).
+- Alteração de bairro em **Editar perfil**: a carteirinha continuou correta (o bairro não aparece na carteirinha). ✅
+- Alteração do curso (preparação: curso do aluno A trocado no banco local para “Licenciatura em Ciências Biológicas”, já confirmado pela API): a carteirinha e o **Meu Perfil** continuaram mostrando o curso antigo até o aluno sair e entrar de novo. ❌
+- Depois do novo login, o curso novo apareceu, mas cortado: “Licenciatura em Ciências Bio…” (registrado no [BUG-HU029-UI-001-dados-cortados](issues/BUG-HU029-UI-001-dados-cortados-na-carteirinha.md)).
+- Ao final, o curso do aluno A voltou para “Engenharia de Software”.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU029-UI-003-emissao](issues/BUG-HU029-UI-003-data-de-emissao-e-valores-fixos.md) e [BUG-HU029-UI-003-atualizacao](issues/BUG-HU029-UI-003-carteirinha-nao-atualiza.md).
 
 ### Seção B — Uso no embarque
 
@@ -230,6 +237,8 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
+| CT-HU029-UI-003 | Data de emissão fixa (“10/09/2026”) e valores padrão de exemplo no código da carteirinha. | [BUG-HU029-UI-003-emissao](issues/BUG-HU029-UI-003-data-de-emissao-e-valores-fixos.md) |
+| CT-HU029-UI-003 | A carteirinha e o perfil não refletem dados alterados até sair e entrar de novo. | [BUG-HU029-UI-003-atualizacao](issues/BUG-HU029-UI-003-carteirinha-nao-atualiza.md) |
 | CT-HU029-UI-002 | Aluno sem status aprovado consegue abrir a carteirinha: o app ignora o 403 da API e monta o documento com os dados da sessão. | [BUG-HU029-UI-002](issues/BUG-HU029-UI-002-app-exibe-carteirinha-recusada-pela-api.md) |
 | CT-HU029-UI-001 | O atalho Carteirinha Digital da tela Início não abre nada. | [BUG-HU029-UI-001](issues/BUG-HU029-UI-001-atalho-do-inicio-sem-acao.md) |
 | CT-HU029-UI-001 | Nome, e-mail, instituição e curso são cortados em uma linha com reticências. | [BUG-HU029-UI-001-dados-cortados](issues/BUG-HU029-UI-001-dados-cortados-na-carteirinha.md) |
