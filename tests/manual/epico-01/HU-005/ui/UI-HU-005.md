@@ -185,7 +185,8 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 - **1ª tentativa** (sessão aberta havia mais de 15 minutos): “Falha ao alterar — E-mail não autorizado”. O backend respondeu `401` porque o token de acesso tinha vencido; com um login novo, a mesma troca é aceita pela API. O app não renova o token. Registrado no [BUG-HU005-UI-005](issues/BUG-HU005-UI-005-sessao-expira-em-15-minutos-sem-renovacao.md).
 - **2ª tentativa** (logo após sair e entrar de novo): pop-up do app “E-mail alterado — Endereço de e-mail alterado com sucesso. Utilize o novo e-mail no próximo login.” ✅
-- **Meu Perfil** passou a exibir `qa.hu005.novo@example.com`. ✅
+- Novo e-mail usado pelo testador: `qa.hu005@gmail.com` (no lugar do sugerido `qa.hu005.novo@example.com`).
+- **Meu Perfil** passou a exibir `qa.hu005@gmail.com`. ✅
 - Login com o e-mail antigo (`cauanrricardo@gmail.com`): recusado. ✅ Login com o novo: entrou na área do aluno. ✅ (Também conferido pela API.)
 - Execução confirmada pelo testador em 06/10/2026.
 - Status: ✅ Aprovado.
