@@ -99,7 +99,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 - Funcional: o e-mail de recuperação chegou (caixa de teste Mailpit) com “Olá, <nome>”, o aviso da solicitação, o botão **Redefinir minha senha** e a validade de 15 minutos. ✅
 - UX: depois de tocar em **Enviar instruções**, o teclado continua aberto e a confirmação aparece só como um aviso discreto (Snackbar) no rodapé, escondido pelo teclado. É preciso fechar o teclado para ler “E-mail enviado. Verifique sua caixa de entrada para continuar.” As outras telas usam pop-up para esse tipo de retorno. ❌
 - O texto afirma que o e-mail foi enviado, em vez da mensagem genérica do AC-03 (“Se o e-mail estiver cadastrado, enviaremos as instruções de recuperação”). Como a API responde sucesso para qualquer e-mail, o mesmo texto aparece para e-mails não cadastrados (verificar no CT-HU004-UI-003).
-- Ao tocar em **Redefinir minha senha**, abriu a página intermediária do backend, que pediu para abrir o aplicativo. A página tenta abrir `exp://192.168.0.3:8081`, IP fixo no código; o fluxo do link segue no CT-HU004-UI-006.
+- Ao tocar em **Redefinir minha senha**, abriu a página intermediária do backend, que pediu para abrir o aplicativo. A página tenta abrir `exp://192.168.0.3:8081`, IP fixo no código ([BUG-HU004-UI-002-link-do-email-com-ip-fixo](issues/BUG-HU004-UI-002-link-do-email-com-ip-fixo.md)); o app não abriu e os casos seguintes usaram o plano B do PC-03.
 - Execução confirmada pelo testador em 06/10/2026.
 - Status: ❌ Reprovado — [BUG-HU004-UI-002](issues/BUG-HU004-UI-002-confirmacao-escondida-pelo-teclado.md).
 
@@ -249,6 +249,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 | CT-HU004-UI-005 | Com senha e confirmação diferentes, o botão Salvar nova senha continua habilitado e o aviso só aparece depois do toque. | [BUG-HU004-UI-005-botao-salvar-nao-desabilita](issues/BUG-HU004-UI-005-botao-salvar-nao-desabilita.md) |
 | CT-HU004-UI-007 | Link já usado ou expirado abre a tela de nova senha; o erro só aparece ao salvar e não orienta a pedir novo link. | [BUG-HU004-UI-007-link-invalido-so-avisa-ao-salvar](issues/BUG-HU004-UI-007-link-invalido-so-avisa-ao-salvar.md) |
 | CT-HU004-UI-006 | Melhoria: mensagens da redefinição usam o alerta nativo do iOS, fora do padrão visual dos pop-ups do app. | [MELHORIA-HU004-UI-006-padronizar-alertas-recuperacao](issues/MELHORIA-HU004-UI-006-padronizar-alertas-recuperacao.md) |
+| CT-HU004-UI-002 | O botão do e-mail tenta abrir o app em `exp://192.168.0.3:8081`, IP fixo no código; o link não abre o app. | [BUG-HU004-UI-002-link-do-email-com-ip-fixo](issues/BUG-HU004-UI-002-link-do-email-com-ip-fixo.md) |
 | CT-HU004-UI-002 | Confirmação do envio é um aviso discreto escondido pelo teclado, e o texto “E-mail enviado” não é genérico. | [BUG-HU004-UI-002-confirmacao-escondida-pelo-teclado](issues/BUG-HU004-UI-002-confirmacao-escondida-pelo-teclado.md) |
 
 ## Observações gerais
