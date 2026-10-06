@@ -41,8 +41,15 @@ def get_email_service():
     return SMTPEmailService()
 
 
-def get_use_case(repository=Depends(get_repository), email_service=Depends(get_email_service)):
-    return GerenciarAdministradoresUseCase(repository, Argon2PasswordHasher()), email_service
+def get_use_case(repository=Depends(get_repository)):
+    return GerenciarAdministradoresUseCase(repository, Argon2PasswordHasher())
+
+
+def get_criar_administrador_dependencies(
+    use_case=Depends(get_use_case),
+    email_service=Depends(get_email_service),
+):
+    return use_case, email_service
 
 
 def _data(resultado) -> dict:
@@ -61,7 +68,7 @@ async def listar_administradores(
 @router.post("", response_model=OperacaoAdministradorResponseDTO, status_code=status.HTTP_201_CREATED)
 async def criar_administrador(
     dados: CriarAdministradorDTO,
-    dependencias=Depends(get_use_case),
+    dependencias=Depends(get_criar_administrador_dependencies),
     _: dict = Depends(require_roles(CargoEnum.ADMINISTRADOR.value)),
 ):
     try:

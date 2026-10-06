@@ -74,8 +74,16 @@ def _parse_user_id(payload: dict) -> int | None:
     return user_id if user_id > 0 else None
 
 
-def _role_matches(token_role: object, current_role: object) -> bool:
-    return isinstance(token_role, str) and token_role == current_role
+def _roles(value: object) -> set[str]:
+    if isinstance(value, str):
+        return {value}
+    if isinstance(value, list):
+        return {role for role in value if isinstance(role, str)}
+    return set()
+
+
+def _role_matches(token_role: object, current_roles: object) -> bool:
+    return bool(_roles(token_role) & _roles(current_roles))
 
 
 async def get_current_user(
@@ -100,14 +108,15 @@ async def get_current_user(
     if not contexto or not contexto.get("ativo"):
         raise _unauthorized()
 
-    perfil_atual = contexto.get("role")
-    if not perfil_atual or not _role_matches(payload.get("role"), perfil_atual):
+    perfis_atuais = contexto.get("roles") or [contexto.get("role")]
+    if not perfis_atuais or not _role_matches(payload.get("role"), perfis_atuais):
         raise _unauthorized()
 
     # Mantém os claims originais e adiciona o perfil consultado no banco para
     # que as dependências de autorização nunca precisem confiar só no JWT.
     usuario_validado = dict(payload)
-    usuario_validado["current_role"] = perfil_atual
+    usuario_validado["current_role"] = contexto.get("role")
+    usuario_validado["current_roles"] = perfis_atuais
     usuario_validado["current_user_id"] = user_id
     usuario_validado["current_status"] = contexto.get("status")
     return usuario_validado
@@ -152,7 +161,8 @@ def require_roles(*roles: str):
     async def dependency(
         current_user: Annotated[dict, Depends(get_current_user)],
     ) -> dict:
-        if current_user.get("current_role") not in allowed_roles:
+        current_roles = current_user.get("current_roles") or current_user.get("current_role")
+        if not (_roles(current_roles) & allowed_roles):
             raise _forbidden()
         return current_user
 

@@ -36,7 +36,9 @@ class RefreshTokenUseCase:
         if not contexto or not contexto.get("ativo"):
             raise ValueError("Sessão inválida ou expirada")
 
-        if payload.get("role") != contexto.get("role"):
+        token_roles = payload.get("role")
+        contexto_roles = contexto.get("roles") or [contexto.get("role")]
+        if set(token_roles if isinstance(token_roles, list) else [token_roles]) != set(contexto_roles):
             raise ValueError("Sessão inválida ou expirada")
 
         try:
