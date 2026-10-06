@@ -10,7 +10,7 @@
 | Tipo de teste | Funcional manual — suíte essencial |
 | Endpoints | `GET /alunos/me/carteirinha` e `GET /arquivos/{id}/view` (foto) — com token de aluno |
 | Ambiente | A preencher — URL e commit testado |
-| Total de casos | 5 |
+| Total de casos | 6 |
 | Última execução | Não realizada |
 | Testador | A definir |
 
@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 5 | 0 | 0 | 5 |
+| ⏳ Não executada | 6 | 0 | 0 | 6 |
 
 ## Pré-condições
 
@@ -31,7 +31,7 @@
 
 ## Resumo da execução
 
-Executar na ordem abaixo. São **5 casos essenciais**.
+Executar na ordem abaixo. São **6 casos essenciais**.
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
@@ -40,6 +40,7 @@ Executar na ordem abaixo. São **5 casos essenciais**.
 | CT-HU029-API-003 | Acesso sem permissão | Sem token; token de administrador | HTTP 401; HTTP 403 | ⏳ PENDENTE | Não executado. |
 | CT-HU029-API-004 | Foto da carteirinha | Foto do aluno A com o token de A e com o de B | Imagem para A; bloqueada para B | ⏳ PENDENTE | Não executado. |
 | CT-HU029-API-005 | Tempo de resposta | 5 chamadas do CT-001 | Cada resposta em até 1 s em rede local | ⏳ PENDENTE | Não executado. |
+| CT-HU029-API-006 | Status muda durante a sessão | Token do aluno A emitido quando aprovado; status muda para em análise | HTTP 403 na carteirinha com o token antigo | ⏳ PENDENTE | Não executado. |
 
 ## Detalhamento dos casos
 
@@ -141,6 +142,29 @@ Executar na ordem abaixo. São **5 casos essenciais**.
 **Resultado esperado**
 
 - Cada resposta em até **1 segundo** em rede local, sem erros (AC-05). Registrar a média e o maior tempo.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+### CT-HU029-API-006 — Status muda durante a sessão
+
+**Dados de entrada:** token do aluno A obtido enquanto aprovado; depois, o administrador muda o status de A para `analise_renovacao`.
+
+**Passos**
+
+1. Com o token de A, chamar `GET /alunos/me/carteirinha` (deve responder `200`).
+2. Mudar o status de A pelo administrador.
+3. Com o **mesmo** token, chamar `GET /alunos/me/carteirinha` de novo.
+4. Ao final, voltar A para aprovado.
+
+**Resultado esperado**
+
+- A segunda chamada responde HTTP `403` com “Carteirinha indisponível…”: a situação vem do banco, não do token (AC-02).
+- Se ainda responder `200` com os dados, registrar como falha.
 
 **Resultado obtido**
 

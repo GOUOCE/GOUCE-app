@@ -10,7 +10,7 @@
 | Tipo de teste | Funcional manual — suíte essencial |
 | Endpoints | `GET /administradores`, `POST /administradores`, `PATCH /administradores/{id}` e `PATCH /administradores/{id}/inativar` — `application/json`, com token de administrador |
 | Ambiente | A preencher — URL e commit testado |
-| Total de casos | 7 |
+| Total de casos | 9 |
 | Última execução | Não realizada |
 | Testador | A definir |
 
@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 7 | 0 | 0 | 7 |
+| ⏳ Não executada | 9 | 0 | 0 | 9 |
 
 ## Pré-condições
 
@@ -32,7 +32,7 @@
 
 ## Resumo da execução
 
-Executar na ordem abaixo. São **7 casos essenciais**. Todas as chamadas usam o token do administrador A, exceto onde indicado.
+Executar na ordem abaixo. São **9 casos essenciais**. Todas as chamadas usam o token do administrador A, exceto onde indicado.
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
@@ -43,6 +43,8 @@ Executar na ordem abaixo. São **7 casos essenciais**. Todas as chamadas usam o 
 | CT-HU006-API-005 | Inativar outro administrador | `id` do administrador B | HTTP 200; `ativo: false`; registro mantido; auditoria gravada; B não entra | ⏳ PENDENTE | Não executado. |
 | CT-HU006-API-006 | Auto-inativação bloqueada | `id` do administrador A | HTTP 409 “Não é possível inativar a conta atualmente em uso.” | ⏳ PENDENTE | Não executado. |
 | CT-HU006-API-007 | Acesso sem privilégio | Token de aluno; sem token | HTTP 403 com aluno; 401 sem token; em todas as rotas | ⏳ PENDENTE | Não executado. |
+| CT-HU006-API-008 | E-mail com espaços e maiúsculas | `" Carla.Mendes@Example.com "` | HTTP 201; salvo como `carla.mendes@example.com`; duplicado detectado sem diferenciar maiúsculas | ⏳ PENDENTE | Não executado. |
+| CT-HU006-API-009 | Sessão do administrador inativado | Token de B emitido antes do CT-005 | HTTP 401/403 nas rotas administrativas após a inativação | ⏳ PENDENTE | Não executado. |
 
 ## Detalhamento dos casos
 
@@ -207,6 +209,50 @@ Executar na ordem abaixo. São **7 casos essenciais**. Todas as chamadas usam o 
 - Com token de aluno: HTTP `403` em todas as rotas (AC-09, FA-003, RN-006).
 - Sem token: HTTP `401` em todas as rotas.
 - Nenhum dado de administrador na resposta e nenhuma alteração gravada.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+### CT-HU006-API-008 — E-mail com espaços e maiúsculas
+
+**Dados de entrada:** `POST /administradores` com `{"nome": "Carla Mendes", "email": " Carla.Mendes@Example.com "}`; depois outro `POST` com `{"nome": "Carla Mendes Filha", "email": "carla.mendes@example.com"}`.
+
+**Passos**
+
+1. Enviar a primeira criação e conferir o `data.email`.
+2. Enviar a segunda criação, com o mesmo e-mail em minúsculas.
+3. Ao final, inativar Carla Mendes.
+
+**Resultado esperado**
+
+- Primeira: HTTP `201` e `data.email: "carla.mendes@example.com"` (sem espaços, em minúsculas).
+- Segunda: HTTP `409` com a mensagem do AC-03 (a unicidade não diferencia maiúsculas nem espaços).
+- Regressão do padrão já encontrado em outras telas (#51, #97, #122).
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+### CT-HU006-API-009 — Sessão do administrador inativado
+
+**Dados de entrada:** token do administrador B obtido no CT-002, **antes** da inativação do CT-005.
+
+**Passos**
+
+1. Depois do CT-005, chamar `GET /administradores` com o token antigo de B.
+2. Chamar `PATCH /administradores/{id de A}` com o token antigo de B.
+
+**Resultado esperado**
+
+- HTTP `401` ou `403` nas duas chamadas: o administrador inativado perde o acesso imediatamente, mesmo com um token ainda dentro da validade (RN-006).
+- Nenhuma alteração gravada.
 
 **Resultado obtido**
 

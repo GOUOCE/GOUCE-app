@@ -10,7 +10,7 @@
 | Tipo de teste | Funcional manual — suíte essencial |
 | Endpoints | `POST /alunos/renovar-vinculo` — `multipart/form-data`, com token de aluno; apoio: `POST /auth/login`, `GET /usuarios/me` e `GET /usuarios/alunos?status=` (administrador) |
 | Ambiente | A preencher — URL e commit testado |
-| Total de casos | 6 |
+| Total de casos | 8 |
 | Última execução | Não realizada |
 | Testador | A definir |
 
@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 6 | 0 | 0 | 6 |
+| ⏳ Não executada | 8 | 0 | 0 | 8 |
 
 ## Pré-condições
 
@@ -33,7 +33,7 @@
 
 ## Resumo da execução
 
-Executar na ordem abaixo. São **6 casos essenciais**. O CT-001 muda o status do aluno A para `analise_renovacao`; os casos 002 e 003 usam um aluno aprovado que ainda não renovou (o aluno A antes do CT-001, ou outro).
+Executar na ordem abaixo. São **8 casos essenciais**. O CT-001 muda o status do aluno A para `analise_renovacao`; os casos 002 e 003 usam um aluno aprovado que ainda não renovou (o aluno A antes do CT-001, ou outro).
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
@@ -43,6 +43,8 @@ Executar na ordem abaixo. São **6 casos essenciais**. O CT-001 muda o status do
 | CT-HU028-API-004 | Aluno com vínculo vencido consegue renovar | Login do aluno V; renovação válida | Login permitido para renovar (AC-01); renovação aceita | ⏳ PENDENTE | Não executado. |
 | CT-HU028-API-005 | Acesso sem permissão | Sem token; token de administrador; aluno rejeitado | HTTP 401; 403; 403 | ⏳ PENDENTE | Não executado. |
 | CT-HU028-API-006 | Efeitos do status “Em análise” | Aluno A após o CT-001 | Login permitido; carteirinha bloqueada (403) | ⏳ PENDENTE | Não executado. |
+| CT-HU028-API-007 | Nova renovação estando em análise | Aluno A após o CT-001; corpo base + PDF | Bloquear (ex.: HTTP 409) sem substituir o comprovante em análise | ⏳ PENDENTE | Não executado. |
+| CT-HU028-API-008 | Dados inválidos no corpo | `telefone` `8599`; `semestre_atual` `0`; `nome` vazio | HTTP 422 com o campo e o motivo em português; status inalterado | ⏳ PENDENTE | Não executado. |
 
 ## Detalhamento dos casos
 
@@ -170,6 +172,50 @@ Executar na ordem abaixo. São **6 casos essenciais**. O CT-001 muda o status do
 - Login permitido (o aluno em análise continua acessando o app).
 - Carteirinha bloqueada: HTTP `403` com “Carteirinha indisponível. Seu cadastro está inativo ou em análise.” (relação com o AC-02 da HU-029).
 - O bloqueio do agendamento (AC-06) não é testável pela API nesta rodada: ainda não há rota de agendamento.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+### CT-HU028-API-007 — Nova renovação estando em análise
+
+**Dados de entrada:** aluno A com status `analise_renovacao` (após o CT-001); corpo base com outro arquivo `comprovante.pdf`.
+
+**Passos**
+
+1. Anotar o `id_comprovante_matricula` atual do aluno A (`GET /usuarios/me`).
+2. Enviar `POST /alunos/renovar-vinculo` de novo.
+3. Conferir se o comprovante mudou.
+
+**Resultado esperado**
+
+- O sistema bloqueia uma segunda renovação enquanto a primeira está em análise (ex.: HTTP `409` com mensagem explicando que já há renovação em análise).
+- O comprovante em análise não é substituído.
+- Se a API aceitar (HTTP `200`) e trocar o comprovante, registrar como falha.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+### CT-HU028-API-008 — Dados inválidos no corpo
+
+**Dados de entrada:** três tentativas com um aluno aprovado que ainda não renovou, cada uma alterando um campo do corpo base: `telefone = 8599`; `semestre_atual = 0`; `nome` vazio.
+
+**Passos**
+
+1. Enviar cada tentativa com `comprovante.pdf` válido.
+2. Conferir o status do aluno ao final.
+
+**Resultado esperado**
+
+- HTTP `422` em todas, com o campo e o motivo em português (mesmas regras do cadastro da HU-001).
+- Nenhum arquivo salvo e status inalterado. Nenhum `500`.
 
 **Resultado obtido**
 

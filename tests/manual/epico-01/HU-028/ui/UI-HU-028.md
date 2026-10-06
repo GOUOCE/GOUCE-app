@@ -10,7 +10,7 @@
 | Tipo de teste   | Funcional manual — suíte essencial                                                      |
 | Tela            | Início do aluno, Meu Perfil → Renovar vínculo (aviso e passos 1 a 4) e Agenda           |
 | Ambiente        | Desenvolvimento — app mobile no iPhone (Expo Go)                                        |
-| Total de casos  | 6 |
+| Total de casos  | 9 |
 | Última execução | Não realizada                                                                           |
 | Testador        | Cauan Ricardo                                                                           |
 
@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Não executada | 6 | 0 | 0 | 6 |
+| ⏳ Não executada | 9 | 0 | 0 | 9 |
 
 ## Pré-condições
 
@@ -32,7 +32,7 @@
 
 ## Resumo da execução
 
-Executar na ordem abaixo. São **6 casos essenciais**, em duas seções. Os IDs completos usam o prefixo `CT-HU028-UI-`, numerados de 001 a 006. O CT-004 muda o status do aluno para “Em análise”; os casos 002, 003 e 005 vêm antes dele.
+Executar na ordem abaixo. São **9 casos essenciais**, em três seções. Os IDs completos usam o prefixo `CT-HU028-UI-`, numerados de 001 a 009. O CT-004 muda o status do aluno para “Em análise”; os casos 002, 003 e 005 vêm antes dele.
 
 ### Seção A — Aviso e validação do comprovante
 
@@ -49,6 +49,16 @@ Executar na ordem abaixo. São **6 casos essenciais**, em duas seções. Os IDs 
 | CT-HU028-UI-004 | Renovação válida | `comprovante.pdf` (2 MB) | “Comprovante enviado com sucesso”; status “Em análise” | ⏳ PENDENTE | Não executado. |
 | CT-HU028-UI-005 | Falha de conexão no envio | Wi-Fi e dados móveis desligados no envio | Mensagem de falha; tela mantida para nova tentativa | ⏳ PENDENTE | Não executado. |
 | CT-HU028-UI-006 | Agendamento bloqueado em análise | Aluno “Em análise”; aba Agenda e atalhos | Agendamento bloqueado com informativo | ⏳ PENDENTE | Não executado. |
+
+### Seção C — Formulário da renovação e reenvio
+
+Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
+
+| ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
+| --- | --- | --- | --- | --- | --- |
+| CT-HU028-UI-007 | Dados atuais e validação nos passos | Passos 1 a 3; telefone `8599` no passo 3 | Campos preenchidos com os dados atuais; passo inválido não avança | ⏳ PENDENTE | Não executado. |
+| CT-HU028-UI-008 | Cancelar a renovação no meio | Passo 3 → X → Cancelar renovação? | Confirmação; nada enviado; status inalterado | ⏳ PENDENTE | Não executado. |
+| CT-HU028-UI-009 | Nova renovação estando em análise | Aluno “Em análise” abre Renovar vínculo | Informar que a renovação já está em análise e não permitir novo envio | ⏳ PENDENTE | Não executado.
 
 ## Detalhamento dos casos
 
@@ -182,6 +192,74 @@ Executar na ordem abaixo. São **6 casos essenciais**, em duas seções. Os IDs 
 
 - O acesso ao agendamento fica bloqueado, com um informativo de que a liberação depende da validação do documento (AC-06, RN-011).
 - Se a tela de agendamento ainda não existir no app, marcar o caso como bloqueado e registrar o motivo.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+### Seção C — Formulário da renovação e reenvio
+
+#### CT-HU028-UI-007 — Dados atuais e validação nos passos
+
+**Dados de entrada:** Aluno A antes de renovar; no passo 3, telefone `8599`.
+
+**Passos**
+
+1. Tocar em **Iniciar renovação** e conferir os campos dos passos 1 a 3.
+2. No passo 3, trocar o telefone por `8599` e tocar em avançar.
+3. Corrigir o telefone e avançar.
+
+**Resultado esperado**
+
+- Os passos 1 a 3 vêm preenchidos com os dados atuais do cadastro; o aluno só revisa.
+- Campos inválidos bloqueiam o avanço com alerta em português no próprio campo (mesmas regras do cadastro da HU-001).
+- Corrigido o campo, o passo avança.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+#### CT-HU028-UI-008 — Cancelar a renovação no meio
+
+**Dados de entrada:** Renovação aberta no passo 3.
+
+**Passos**
+
+1. Tocar no **X** do topo e conferir a confirmação **Cancelar renovação?**.
+2. Escolher continuar e conferir que o passo 3 é mantido.
+3. Tocar no **X** de novo e confirmar o cancelamento.
+4. Conferir o status em **Meu Perfil** e abrir **Renovar vínculo** de novo.
+
+**Resultado esperado**
+
+- O app pede confirmação antes de cancelar; continuar mantém os dados.
+- Ao confirmar, nada é enviado e o status do aluno não muda.
+- Ao abrir **Renovar vínculo** de novo, a renovação começa do início (tela de aviso), sem dados de um envio que não aconteceu.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+#### CT-HU028-UI-009 — Nova renovação estando em análise
+
+**Dados de entrada:** Aluno A com status **Em análise** (após o CT-004).
+
+**Passos**
+
+1. Abrir **Perfil → Renovar vínculo**.
+2. Se o app permitir, percorrer os passos e enviar de novo com `comprovante.pdf`.
+
+**Resultado esperado**
+
+- O app informa que a renovação já foi enviada e está em análise, sem oferecer um novo envio (AC-05, AC-06).
+- Se o app aceitar um segundo envio, registrar como falha: o aluno pode substituir o comprovante enquanto o administrador analisa.
 
 **Resultado obtido**
 

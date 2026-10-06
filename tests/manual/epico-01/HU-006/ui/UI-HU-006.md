@@ -10,7 +10,7 @@
 | Tipo de teste   | Funcional manual — suíte essencial                                                      |
 | Tela            | Painel do administrador → Gestão de administradores (listagem, Cadastrar Administrador e Editar Administrador) |
 | Ambiente        | Desenvolvimento — app mobile no iPhone (Expo Go)                                        |
-| Total de casos  | 7 |
+| Total de casos  | 10 |
 | Última execução | Não realizada                                                                           |
 | Testador        | Cauan Ricardo                                                                           |
 
@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Não executada | 7 | 0 | 0 | 7 |
+| ⏳ Não executada | 10 | 0 | 0 | 10 |
 
 ## Pré-condições
 
@@ -32,7 +32,7 @@
 
 ## Resumo da execução
 
-Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs completos usam o prefixo `CT-HU006-UI-`, numerados de 001 a 007.
+Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os IDs completos usam o prefixo `CT-HU006-UI-`, numerados de 001 a 010.
 
 ### Seção A — Listagem, cadastro e edição
 
@@ -50,6 +50,14 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 | CT-HU006-UI-005 | Inativar outro administrador | Administrador B | Confirmação, sucesso, B entre os inativos; B não entra | ⏳ PENDENTE | Não executado. |
 | CT-HU006-UI-006 | Auto-inativação bloqueada | Administrador A | Alerta “Não é possível inativar a conta atualmente em uso.” | ⏳ PENDENTE | Não executado. |
 | CT-HU006-UI-007 | Aluno tenta abrir a gestão por link | Aluno logado; link `administradores` | Acesso Negado, sem dados de administradores | ⏳ PENDENTE | Não executado. |
+
+### Seção C — Regressões e robustez
+
+| ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
+| --- | --- | --- | --- | --- | --- |
+| CT-HU006-UI-008 | E-mail com espaços e maiúsculas | `" Carla.Mendes@Example.com "` | Aceito e salvo como `carla.mendes@example.com` | ⏳ PENDENTE | Não executado. |
+| CT-HU006-UI-009 | Sair sem salvar | Alterar nome em Editar e tocar na seta | Pedir confirmação; nada salvo; ao reabrir, dados do banco | ⏳ PENDENTE | Não executado. |
+| CT-HU006-UI-010 | Falha de conexão ao salvar | Wi-Fi e dados desligados ao cadastrar e ao inativar | Mensagem de conexão, sem travar; dados mantidos para nova tentativa | ⏳ PENDENTE | Não executado.
 
 ## Detalhamento dos casos
 
@@ -210,6 +218,75 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 - Exibir **Acesso Negado** (“Erro 403 - Forbidden”), sem mostrar a listagem de administradores, nem por um instante (AC-09, FA-003, RN-006).
 - **Voltar** leva à área do aluno.
 - Se a lista aparecer por um instante antes do bloqueio, registrar e relacionar à #111.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+### Seção C — Regressões e robustez
+
+#### CT-HU006-UI-008 — E-mail com espaços e maiúsculas
+
+**Dados de entrada:** Nome `Carla Mendes`; e-mail `" Carla.Mendes@Example.com "` (com espaço no início e no fim e letras maiúsculas).
+
+**Passos**
+
+1. Tocar em **Novo**, preencher e salvar (confirmar).
+2. Conferir o e-mail exibido na listagem.
+
+**Resultado esperado**
+
+- O cadastro é aceito: os espaços das pontas são removidos e o e-mail é salvo e exibido como `carla.mendes@example.com`.
+- Regressão do defeito já encontrado em outras telas (cadastro #51, login #97, alterar e-mail #122). Se recusar por causa dos espaços, relacionar a essas issues.
+- Ao final, inativar Carla Mendes para não interferir em outras suítes.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+#### CT-HU006-UI-009 — Sair sem salvar
+
+**Dados de entrada:** Administrador B em **Editar Administrador**; nome alterado para `Carlos Teste`, sem salvar.
+
+**Passos**
+
+1. Abrir B em **Editar Administrador** e alterar o nome, sem salvar.
+2. Tocar na seta de voltar.
+3. Conferir a listagem e abrir B de novo.
+
+**Resultado esperado**
+
+- A seta pede confirmação antes de descartar as alterações (padrão do login e do cadastro).
+- Nada é salvo: a listagem mantém o nome anterior.
+- Ao reabrir **Editar Administrador**, os campos mostram os dados salvos, e não o texto digitado antes (mesmo padrão do defeito #125 da HU-005).
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+#### CT-HU006-UI-010 — Falha de conexão ao salvar
+
+**Dados de entrada:** Duas tentativas com Wi-Fi e dados móveis desligados: cadastrar um administrador (`Rita Souza`, `rita.souza@example.com`); inativar um administrador ativo.
+
+**Passos**
+
+1. Preencher o cadastro, desligar a conexão e confirmar o salvamento.
+2. Fechar o aviso e conferir a tela; religar a conexão e salvar de novo.
+3. Repetir a ideia com a inativação.
+
+**Resultado esperado**
+
+- Mensagem clara de falha de conexão, em português, sem travar o app.
+- No cadastro, os campos continuam preenchidos para nova tentativa; com a conexão de volta, o cadastro é concluído sem redigitar.
+- Na inativação, nada muda enquanto estiver sem conexão.
+- Ao final, inativar Rita Souza.
 
 **Resultado obtido**
 

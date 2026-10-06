@@ -10,7 +10,7 @@
 | Tipo de teste   | Funcional manual — suíte essencial                                                      |
 | Tela            | Início do aluno (atalho Carteirinha Digital), Meu Perfil → Ver carteirinha digital e Carteirinha Digital |
 | Ambiente        | Desenvolvimento — app mobile no iPhone (Expo Go)                                        |
-| Total de casos  | 5 |
+| Total de casos  | 7 |
 | Última execução | Não realizada                                                                           |
 | Testador        | Cauan Ricardo                                                                           |
 
@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Não executada | 5 | 0 | 0 | 5 |
+| ⏳ Não executada | 7 | 0 | 0 | 7 |
 
 ## Pré-condições
 
@@ -32,7 +32,7 @@
 
 ## Resumo da execução
 
-Executar na ordem abaixo. São **5 casos essenciais**, em duas seções. Os IDs completos usam o prefixo `CT-HU029-UI-`, numerados de 001 a 005.
+Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs completos usam o prefixo `CT-HU029-UI-`, numerados de 001 a 007.
 
 ### Seção A — Exibição da carteirinha
 
@@ -48,6 +48,13 @@ Executar na ordem abaixo. São **5 casos essenciais**, em duas seções. Os IDs 
 | --- | --- | --- | --- | --- | --- |
 | CT-HU029-UI-004 | Carteirinha offline | Aluno A sem internet, após abrir online | Versão em cache, sem erro de conexão | ⏳ PENDENTE | Não executado. |
 | CT-HU029-UI-005 | Leitura do QR Code | QR Code online e offline | Lido por outro celular, nas duas situações | ⏳ PENDENTE | Não executado. |
+
+### Seção C — Privacidade e revogação
+
+| ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
+| --- | --- | --- | --- | --- | --- |
+| CT-HU029-UI-006 | Carteirinha após sair da conta | Aluno A sai; app reaberto sem login | Nenhuma carteirinha acessível sem login | ⏳ PENDENTE | Não executado. |
+| CT-HU029-UI-007 | Carteirinha após perder a aprovação | Aluno A aprovado vira “em análise” durante a sessão | Com internet, o documento é ocultado, mesmo havendo cache | ⏳ PENDENTE | Não executado.
 
 ## Detalhamento dos casos
 
@@ -159,6 +166,51 @@ Executar na ordem abaixo. São **5 casos essenciais**, em duas seções. Os IDs 
 
 - O QR Code é lido em poucos segundos nas duas situações, com tamanho, nitidez e contraste adequados (AC-04).
 - O conteúdo identifica o aluno A. Se o conteúdo lido incluir o token de sessão ou outro dado sensível, registrar como observação de segurança.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+### Seção C — Privacidade e revogação
+
+#### CT-HU029-UI-006 — Carteirinha após sair da conta
+
+**Dados de entrada:** Aluno A que já abriu a carteirinha.
+
+**Passos**
+
+1. Sair da conta (**Perfil → Sair → Sim, sair**).
+2. Fechar e reabrir o app, com e sem conexão.
+3. Tentar chegar à carteirinha sem fazer login (inclusive pelo link `exp://<IP>:8081/--/carteirinha-digital`).
+
+**Resultado esperado**
+
+- Sem login, a carteirinha não aparece de nenhuma forma: o app leva à tela de login.
+- O cache da carteirinha não fica acessível para quem pegar o aparelho depois do Sair.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+#### CT-HU029-UI-007 — Carteirinha após perder a aprovação
+
+**Dados de entrada:** Aluno A aprovado e logado, que já abriu a carteirinha online. Durante a sessão, o administrador muda o status dele para em análise de renovação (pela API ou pelo banco local; registrar a preparação).
+
+**Passos**
+
+1. Com conexão, abrir a carteirinha e voltar.
+2. Mudar o status do aluno A (preparação).
+3. Ainda com conexão, abrir a carteirinha de novo.
+4. Ao final, voltar o aluno A para aprovado.
+
+**Resultado esperado**
+
+- Com conexão, o app consulta a situação atual e **oculta** o documento, exibindo “Carteirinha indisponível. Seu cadastro está inativo ou em análise.” (AC-02). O cache só vale quando não há conexão (AC-03).
+- Se a carteirinha continuar aparecendo com os dados antigos, registrar como falha: um aluno sem direito ao transporte poderia embarcar com ela.
 
 **Resultado obtido**
 
