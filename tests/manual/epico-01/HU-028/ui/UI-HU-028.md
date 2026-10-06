@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 9 | 1 | 1 | 7 |
+| ⏳ Em execução | 9 | 1 | 2 | 6 |
 
 ## Pré-condições
 
@@ -40,7 +40,7 @@ Executar na ordem abaixo. São **9 casos essenciais**, em três seções. Os IDs
 | --- | --- | --- | --- | --- | --- |
 | CT-HU028-UI-001 | Aviso de renovação após o login | Aluno com vínculo vencido | Login permitido e aviso destacado com a opção de renovar | ❌ REPROVADO | O login foi barrado com o pop-up “Falha na autenticação — A validade de acesso da sua conta expirou.” e o botão Tentar novamente; o aluno não chega à área do aluno nem à renovação. Mesmo defeito do CT-HU028-API-004 (BUG-HU028-API-002). Executado pelo testador em 06/10/2026. |
 | CT-HU028-UI-002 | Envio sem comprovante | Passo 4 sem arquivo | Bloquear e alertar que o comprovante é obrigatório | ✅ APROVADO | O envio foi bloqueado com “Envie PDF ou imagem (PNG, JPG ou WEBP) de até 10 MB”. Observações: o botão continua habilitado antes do toque, e o texto não diz que o comprovante é obrigatório e cita 10 MB (o AC-03 fala em 5 MB) — ver [MELHORIA-HU028-UI-002](issues/MELHORIA-HU028-UI-002-mensagem-e-limite-do-comprovante.md). Confirmado pelo testador em 06/10/2026. |
-| CT-HU028-UI-003 | Arquivo inválido | `comprovante.docx`; `comprovante-grande.pdf` (8 MB) | Bloquear com “Formato inválido” / “Arquivo excede o limite de tamanho” | ⏳ PENDENTE | Não executado. |
+| CT-HU028-UI-003 | Arquivo inválido | `comprovante.docx`; `comprovante-grande.pdf` (8 MB) | Bloquear com “Formato inválido” / “Arquivo excede o limite de tamanho” | ❌ REPROVADO | O DOCX aparece apagado no seletor e não pode ser escolhido. O PDF de 8,4 MB foi aceito: a renovação foi enviada e o status passou a “Pendente: vínculo em análise”. O app e a API aceitam até 10 MB, e não 5 MB. Ver [BUG-HU028-API-001](../api/issues/BUG-HU028-API-001-limite-de-5mb-nao-aplicado.md). Executado pelo testador em 06/10/2026. |
 
 ### Seção B — Envio e status “Em análise”
 
@@ -134,8 +134,13 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `comprovante.docx`: aparece apagado no seletor do app **Arquivos** e não pode ser escolhido. ✅
+- `comprovante-grande.pdf` (8,4 MB): o app aceitou o anexo. Na primeira tentativa, a API recusou por outro motivo: “O semestre atual não pode ser maior que 1, considerando o período de ingresso” (dados antigos da conta: ingresso 2026.2 com semestre 6). O passo 3 deixou avançar com os dados incoerentes; o erro só apareceu no envio final.
+- Com o semestre corrigido para 1 no passo 3, o envio com o PDF de 8,4 MB foi **aceito**: apareceu um aviso rápido de sucesso (Snackbar preto, sem o estilo do app) e **Meu Perfil** passou a mostrar “Pendente: vínculo em análise”. O arquivo de 8 MB ficou salvo como comprovante (conferido no banco). ❌
+- O app (`fileSchema`, 10 MB) e a API (BUG-HU028-API-001, 10 MB) não aplicam o limite de 5 MB do AC-03.
+- Após o caso, o aluno A voltou para aprovado pela API, para seguir os demais casos.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU028-API-001](../api/issues/BUG-HU028-API-001-limite-de-5mb-nao-aplicado.md).
 
 ### Seção B — Envio e status “Em análise”
 
@@ -278,6 +283,8 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
+| CT-HU028-UI-003 | Comprovante de 8,4 MB aceito pelo app e pela API (limite real de 10 MB, requisito de 5 MB). | [BUG-HU028-API-001](../api/issues/BUG-HU028-API-001-limite-de-5mb-nao-aplicado.md) |
+| CT-HU028-UI-003 | Melhoria: a confirmação de envio é um aviso rápido sem estilo (Snackbar); padronizar com o pop-up do app. | [MELHORIA-HU028-UI-003](issues/MELHORIA-HU028-UI-003-confirmacao-do-envio-sem-estilo.md) |
 | CT-HU028-UI-002 | Melhoria: a mensagem sem comprovante não diz que é obrigatório e cita 10 MB (requisito: 5 MB). | [MELHORIA-HU028-UI-002](issues/MELHORIA-HU028-UI-002-mensagem-e-limite-do-comprovante.md) |
 | CT-HU028-UI-001 | O aluno com vínculo vencido é barrado no login e não consegue renovar. | BUG-HU028-API-002 (mesma causa, suíte de API) |
 
