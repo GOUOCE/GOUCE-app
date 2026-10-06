@@ -161,7 +161,8 @@ def require_roles(*roles: str):
     async def dependency(
         current_user: Annotated[dict, Depends(get_current_user)],
     ) -> dict:
-        if not (_roles(current_user.get("current_roles")) & allowed_roles):
+        current_roles = current_user.get("current_roles") or current_user.get("current_role")
+        if not (_roles(current_roles) & allowed_roles):
             raise _forbidden()
         return current_user
 
