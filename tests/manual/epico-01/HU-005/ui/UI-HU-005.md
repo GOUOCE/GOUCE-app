@@ -218,6 +218,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 - E-mail de outra conta (`thebirl009@gmail.com`, aluno B): “Falha ao alterar e-mail — Este e-mail já está cadastrado na plataforma GOUCE.” ✅
 - `maria.souzaufc.br`: bloqueado como formato de e-mail inválido. ✅
 - O e-mail da conta continuou `qa.hu005@gmail.com` (conferido pela API).
+- **Teste adicional do testador:** um e-mail válido com espaços nas pontas (`" aaaa@gmail.com "`) é recusado como inválido — mesmo defeito já corrigido no cadastro (#51) e aberto no login (#97). Registrado no [BUG-HU005-UI-005-email-com-espacos-recusado-ao-alterar](issues/BUG-HU005-UI-005-email-com-espacos-recusado-ao-alterar.md).
 - Execução confirmada pelo testador em 06/10/2026.
 - Status: ✅ Aprovado.
 
@@ -250,6 +251,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
 | CT-HU005-UI-003 | Telefone com mais de 20 dígitos chega à API e o erro aparece em inglês; Editar perfil não valida o formato como o cadastro. | [BUG-HU005-UI-003-validacao-telefone-fraca-no-perfil](issues/BUG-HU005-UI-003-validacao-telefone-fraca-no-perfil.md) |
+| CT-HU005-UI-005, CT-HU005-UI-006 | Alterar e-mail recusa e-mail com espaços nas pontas e não normaliza para minúsculas. | [BUG-HU005-UI-005-email-com-espacos-recusado-ao-alterar](issues/BUG-HU005-UI-005-email-com-espacos-recusado-ao-alterar.md) |
 | CT-HU005-UI-005 | A sessão vence em 15 minutos e o app não renova o token: ações passam a falhar com “não autorizado”. | [BUG-HU005-UI-005-sessao-expira-em-15-minutos-sem-renovacao](issues/BUG-HU005-UI-005-sessao-expira-em-15-minutos-sem-renovacao.md) |
 | CT-HU005-UI-004 | Editar perfil mantém valores não salvos ao reabrir; a seta volta para Início sem confirmação. | [BUG-HU005-UI-004-editar-perfil-mantem-valores-nao-salvos](issues/BUG-HU005-UI-004-editar-perfil-mantem-valores-nao-salvos.md) |
 | CT-HU005-UI-001, CT-HU005-UI-002 | Melhoria: telefone sem máscara em Meu Perfil e em Editar perfil, diferente do cadastro. | [MELHORIA-HU005-UI-002-mascara-telefone-no-perfil](issues/MELHORIA-HU005-UI-002-mascara-telefone-no-perfil.md) |
