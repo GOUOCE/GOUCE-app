@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 7 | 1 | 1 | 5 |
+| ⏳ Em execução | 7 | 2 | 1 | 4 |
 
 ## Pré-condições
 
@@ -39,7 +39,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 | --- | --- | --- | --- | --- | --- |
 | CT-HU004-UI-001 | Acesso à tela Esqueci minha senha | Entrar → Esqueci minha senha | Abrir a tela com campo E-mail e botão de envio | ✅ APROVADO | A tela abriu com a orientação “Informe o e-mail cadastrado para receber o link de redefinição”, o campo E-mail e o botão de envio; a seta de voltar pediu confirmação e respeitou a escolha. Confirmado pelo testador em 06/10/2026. |
 | CT-HU004-UI-002 | Solicitação com e-mail cadastrado | E-mail da conta de teste | Mensagem genérica e e-mail com link recebido | ❌ REPROVADO | O e-mail chegou com o botão Redefinir minha senha (válido por 15 minutos). Porém a confirmação é só um aviso discreto no rodapé, escondido pelo teclado, que continua aberto: é preciso fechar o teclado para ler “E-mail enviado. Verifique sua caixa de entrada para continuar.” O texto também não é genérico. Ver [BUG-HU004-UI-002](issues/BUG-HU004-UI-002-confirmacao-escondida-pelo-teclado.md). Executado pelo testador em 06/10/2026. |
-| CT-HU004-UI-003 | E-mail não cadastrado ou inválido | naoexiste@example.com; maria@; vazio | Mesma mensagem do CT-002 para o inexistente; alerta no campo nos demais | ⏳ PENDENTE | Não executado. |
+| CT-HU004-UI-003 | E-mail não cadastrado ou inválido | naoexiste@example.com; maria@; vazio | Mesma mensagem do CT-002 para o inexistente; alerta no campo nos demais | ✅ APROVADO | `naoexiste@example.com` exibiu exatamente a mesma mensagem do CT-002, sem revelar se a conta existe, e nenhum e-mail foi enviado. `maria@` e campo vazio exibiram alerta em português no campo, sem enviar solicitação. Confirmado pelo testador em 06/10/2026. |
 
 ### Seção B — Redefinição pelo link
 
@@ -122,8 +122,12 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `naoexiste@example.com`: exibiu exatamente a mesma mensagem do CT-HU004-UI-002, sem revelar se a conta existe. Nenhum e-mail foi enviado (conferido na caixa de teste).
+- `maria@`: alerta de e-mail inválido em português no campo, sem enviar solicitação.
+- Campo vazio: alerta de campo obrigatório, sem enviar solicitação.
+- Observação: a mensagem igual atende ao AC-03, mas o texto “E-mail enviado” é enganoso para quem não tem conta; registrado no [BUG-HU004-UI-002](issues/BUG-HU004-UI-002-confirmacao-escondida-pelo-teclado.md).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ### Seção B — Redefinição pelo link
 

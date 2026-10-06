@@ -52,3 +52,5 @@ App sem sessão, na tela **Esqueci minha senha** no iPhone.
 - Reexecutar `CT-HU004-UI-002` e `CT-HU004-UI-003`.
 
 ### 📎 Evidência
+
+- Na execução do CT-002, a caixa de teste recebeu **3 e-mails de recuperação** para a mesma conta em menos de 1 minuto (03:57:19, 03:57:30 e 03:58:13 UTC), porque a confirmação não ficou visível e o envio foi repetido. Cada novo envio invalida o link anterior.
