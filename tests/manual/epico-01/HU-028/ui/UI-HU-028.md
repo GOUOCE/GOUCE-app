@@ -291,6 +291,7 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 ## Observações gerais
 
 - Referências: [HU-028, seção 7.2.8](../../../../../docs/requisitos.md), [cenários BDD](../../../../../bdd/features/epico-01/HU-028.feature), [tela Renovar vínculo](../../../../../frontend/src/app/%28aluno%29/renovar-vinculo.tsx) e [suíte de API](../api/API-HU-028.md).
+- Observação do testador (após o envio do CT-003): ao abrir **Renovar vínculo** logo depois do sucesso, a tela voltou direto no **passo 4**, com os arquivos já anexados; saindo pela seta e entrando de novo, voltou ao passo 1, mas o comprovante anterior continuou anexado. A tela guarda o estado de uma renovação já enviada (mesmo padrão da #125: telas ocultas dentro das abas não são desmontadas). Isso facilita reenviar o mesmo arquivo sem perceber — ver CT-HU028-UI-009.
 - Divergência de escopo: o requisito fala apenas em enviar o comprovante, mas o app pede para revisar todos os dados do cadastro em 4 passos. Registrar a percepção de uso e levar ao líder.
 - A aprovação da renovação pelo administrador pertence à HU-027 e fica fora desta suíte.
 - Restaurar o status e a validade do aluno A ao final (pelo administrador ou pelo banco local). Ocultar dados pessoais e documentos nas evidências.
