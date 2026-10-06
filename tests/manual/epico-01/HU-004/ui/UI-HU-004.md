@@ -11,14 +11,14 @@
 | Tela            | Entrar, Esqueci minha senha, e-mail de recuperação e Redefinir Senha                    |
 | Ambiente        | Desenvolvimento — app mobile no iPhone (Expo Go)                                        |
 | Total de casos  | 7 |
-| Última execução | Não realizada                                                                           |
+| Última execução | 06/10/2026                                                                              |
 | Testador        | Cauan Ricardo                                                                           |
 
 ## Resultado geral
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Não executada | 7 | 0 | 0 | 7 |
+| ✅ Executada | 7 | 4 | 3 | 0 |
 
 ## Pré-condições
 
@@ -37,18 +37,18 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU004-UI-001 | Acesso à tela Esqueci minha senha | Entrar → Esqueci minha senha | Abrir a tela com campo E-mail e botão de envio | ⏳ PENDENTE | Não executado. |
-| CT-HU004-UI-002 | Solicitação com e-mail cadastrado | E-mail da conta de teste | Mensagem genérica e e-mail com link recebido | ⏳ PENDENTE | Não executado. |
-| CT-HU004-UI-003 | E-mail não cadastrado ou inválido | naoexiste@example.com; maria@; vazio | Mesma mensagem do CT-002 para o inexistente; alerta no campo nos demais | ⏳ PENDENTE | Não executado. |
+| CT-HU004-UI-001 | Acesso à tela Esqueci minha senha | Entrar → Esqueci minha senha | Abrir a tela com campo E-mail e botão de envio | ✅ APROVADO | A tela abriu com a orientação “Informe o e-mail cadastrado para receber o link de redefinição”, o campo E-mail e o botão de envio; a seta de voltar pediu confirmação e respeitou a escolha. Confirmado pelo testador em 06/10/2026. |
+| CT-HU004-UI-002 | Solicitação com e-mail cadastrado | E-mail da conta de teste | Mensagem genérica e e-mail com link recebido | ❌ REPROVADO | O e-mail chegou com o botão Redefinir minha senha (válido por 15 minutos). Porém a confirmação é só um aviso discreto no rodapé, escondido pelo teclado, que continua aberto: é preciso fechar o teclado para ler “E-mail enviado. Verifique sua caixa de entrada para continuar.” O texto também não é genérico. Ver [BUG-HU004-UI-002](issues/BUG-HU004-UI-002-confirmacao-escondida-pelo-teclado.md). Executado pelo testador em 06/10/2026. |
+| CT-HU004-UI-003 | E-mail não cadastrado ou inválido | naoexiste@example.com; maria@; vazio | Mesma mensagem do CT-002 para o inexistente; alerta no campo nos demais | ✅ APROVADO | `naoexiste@example.com` exibiu exatamente a mesma mensagem do CT-002, sem revelar se a conta existe, e nenhum e-mail foi enviado. `maria@` e campo vazio exibiram alerta em português no campo, sem enviar solicitação. Confirmado pelo testador em 06/10/2026. |
 
 ### Seção B — Redefinição pelo link
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU004-UI-004 | Nova senha fora das regras | Abc123; abcdefgh1; ABCDEFGH1; Abcdefgh | Bloquear e indicar o critério não atendido | ⏳ PENDENTE | Não executado. |
-| CT-HU004-UI-005 | Senha e confirmação divergentes | NovaSenha@1 / NovaSenha@2 | Botão desabilitado e aviso de senhas diferentes | ⏳ PENDENTE | Não executado. |
-| CT-HU004-UI-006 | Redefinição válida e login | NovaSenha@1 nos dois campos | Confirmação, volta ao login; entra só com a nova senha | ⏳ PENDENTE | Não executado. |
-| CT-HU004-UI-007 | Link já utilizado ou expirado | Link do CT-006; link com mais de 15 min | Bloquear a tela de nova senha e orientar a solicitar novamente | ⏳ PENDENTE | Não executado. |
+| CT-HU004-UI-004 | Nova senha fora das regras | Abc123; abcdefgh1; ABCDEFGH1; Abcdefgh | Bloquear e indicar o critério não atendido | ✅ APROVADO | As quatro senhas foram bloqueadas, cada uma com a regra não atendida: mínimo de 8 caracteres, letra maiúscula, letra minúscula e número. Link aberto por `exp://<IP>:8081/--/redefinir-senha?token=...` (plano B do PC-03). Confirmado pelo testador em 06/10/2026. |
+| CT-HU004-UI-005 | Senha e confirmação divergentes | NovaSenha@1 / NovaSenha@2 | Botão desabilitado e aviso de senhas diferentes | ❌ REPROVADO | O botão Salvar nova senha ficou sempre habilitado; o aviso “As senhas não coincidem” só apareceu depois de tocar nele. Nada foi enviado, e ao corrigir a confirmação o aviso sumiu. Ver [BUG-HU004-UI-005](issues/BUG-HU004-UI-005-botao-salvar-nao-desabilita.md). Executado pelo testador em 06/10/2026. |
+| CT-HU004-UI-006 | Redefinição válida e login | NovaSenha@1 nos dois campos | Confirmação, volta ao login; entra só com a nova senha | ✅ APROVADO | Exibiu “Senha redefinida com sucesso” e levou à tela Entrar; a senha antiga foi recusada e a nova entrou na área do aluno. Observação de UX: a confirmação é o alerta nativo do iOS, sem o estilo dos pop-ups do app ([MELHORIA-HU004-UI-006](issues/MELHORIA-HU004-UI-006-padronizar-alertas-recuperacao.md)). Confirmado pelo testador em 06/10/2026. |
+| CT-HU004-UI-007 | Link já utilizado ou expirado | Link do CT-006; link com mais de 15 min | Bloquear a tela de nova senha e orientar a solicitar novamente | ❌ REPROVADO | Falha parcial: com o link já usado e com o link expirado, a senha não foi alterada, mas a tela de nova senha abriu normalmente e o erro (“Token de recuperação já utilizado” / “expirado”) só apareceu ao salvar, sem orientar a pedir um novo link. Ver [BUG-HU004-UI-007](issues/BUG-HU004-UI-007-link-invalido-so-avisa-ao-salvar.md). Executado pelo testador em 06/10/2026. |
 
 ## Detalhamento dos casos
 
@@ -71,8 +71,10 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- A tela **Esqueci minha senha** abriu com a orientação para informar o e-mail cadastrado e receber o link de redefinição, o campo **E-mail \*** e o botão **Enviar instruções**.
+- A seta de voltar pediu confirmação; continuar manteve a tela e sair voltou para **Entrar**.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -94,8 +96,12 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Funcional: o e-mail de recuperação chegou (caixa de teste Mailpit) com “Olá, <nome>”, o aviso da solicitação, o botão **Redefinir minha senha** e a validade de 15 minutos. ✅
+- UX: depois de tocar em **Enviar instruções**, o teclado continua aberto e a confirmação aparece só como um aviso discreto (Snackbar) no rodapé, escondido pelo teclado. É preciso fechar o teclado para ler “E-mail enviado. Verifique sua caixa de entrada para continuar.” As outras telas usam pop-up para esse tipo de retorno. ❌
+- O texto afirma que o e-mail foi enviado, em vez da mensagem genérica do AC-03 (“Se o e-mail estiver cadastrado, enviaremos as instruções de recuperação”). Como a API responde sucesso para qualquer e-mail, o mesmo texto aparece para e-mails não cadastrados (verificar no CT-HU004-UI-003).
+- Ao tocar em **Redefinir minha senha**, abriu a página intermediária do backend, que pediu para abrir o aplicativo. A página tenta abrir `exp://192.168.0.3:8081`, IP fixo no código ([BUG-HU004-UI-002-link-do-email-com-ip-fixo](issues/BUG-HU004-UI-002-link-do-email-com-ip-fixo.md)); o app não abriu e os casos seguintes usaram o plano B do PC-03.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU004-UI-002](issues/BUG-HU004-UI-002-confirmacao-escondida-pelo-teclado.md).
 
 ---
 
@@ -116,8 +122,12 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `naoexiste@example.com`: exibiu exatamente a mesma mensagem do CT-HU004-UI-002, sem revelar se a conta existe. Nenhum e-mail foi enviado (conferido na caixa de teste).
+- `maria@`: alerta de e-mail inválido em português no campo, sem enviar solicitação.
+- Campo vazio: alerta de campo obrigatório, sem enviar solicitação.
+- Observação: a mensagem igual atende ao AC-03, mas o texto “E-mail enviado” é enganoso para quem não tem conta; registrado no [BUG-HU004-UI-002](issues/BUG-HU004-UI-002-confirmacao-escondida-pelo-teclado.md).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ### Seção B — Redefinição pelo link
 
@@ -139,8 +149,14 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Link aberto pelo plano B do PC-03 (`exp://<IP>:8081/--/redefinir-senha?token=...` no Safari), porque o botão do e-mail aponta para um IP fixo no código.
+- `Abc123`: bloqueada — “A senha deve ter pelo menos 8 caracteres”.
+- `abcdefgh1`: bloqueada — deve conter uma letra maiúscula.
+- `ABCDEFGH1`: bloqueada — deve conter uma letra minúscula.
+- `Abcdefgh`: bloqueada — deve conter um número.
+- A senha da conta não foi alterada.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -161,8 +177,12 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Com `NovaSenha@1` / `NovaSenha@2`, o botão **Salvar nova senha** continuou habilitado (azul) o tempo todo; não há aviso antes de tocar nele. ❌
+- Ao tocar, apareceu “As senhas não coincidem” e nada foi enviado (a senha não mudou e o link continuou válido). ✅
+- Ao corrigir a confirmação para `NovaSenha@1`, o aviso sumiu.
+- Causa aparente: o formulário (`frontend/src/app/(autenticacao)/redefinir-senha.tsx`) valida só no envio (`useForm` sem `mode`) e o botão só fica desabilitado durante o carregamento (`disabled={isLoading}`).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU004-UI-005](issues/BUG-HU004-UI-005-botao-salvar-nao-desabilita.md).
 
 ---
 
@@ -185,8 +205,13 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Link novo aberto pelo plano B do PC-03. A tela **Redefinir Senha**, que já estava aberta, foi reaproveitada com os campos ainda preenchidos da tentativa anterior; a redefinição usou o link novo.
+- Ao tocar em **Salvar nova senha**, apareceu “Sucesso! Senha redefinida com sucesso. Você já pode realizar o login com sua nova senha.”; **OK** levou à tela **Entrar**. ✅
+- Senha antiga (`Teste@1234`): recusada com “Falha na autenticação — E-mail ou senha inválidos”. ✅ O texto difere do AC-09 (“E-mail ou senha incorretos. Tente novamente.”), mas é genérico, como no CT-HU002-UI-011.
+- Senha nova (`NovaSenha@1`): entrou na área do aluno. ✅
+- Observação de UX: as mensagens desta tela usam o alerta nativo do iOS (`Alert.alert`), sem o estilo dos pop-ups do app (`AppPopup`). Registrado como melhoria: [MELHORIA-HU004-UI-006](issues/MELHORIA-HU004-UI-006-padronizar-alertas-recuperacao.md).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -209,14 +234,23 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Link já utilizado** (o do CT-006): a tela **Redefinir Senha** abriu normalmente. Ao salvar `OutraSenha@1`, apareceu “Erro ao redefinir senha — Token de recuperação já utilizado.”
+- **Link expirado**: gerado pela API e com `expires_at` ajustado para o passado no banco local, para não esperar 15 minutos. A tela também abriu normalmente; ao salvar, apareceu “Erro ao redefinir senha — Token de recuperação expirado.”
+- Nas duas variações a senha **não** foi alterada (conferido pela API: `NovaSenha@1` continua válida e `OutraSenha@1` é recusada). ✅
+- **Falha parcial** (prevista neste caso): a tela de nova senha não é bloqueada ao abrir o link; o erro só aparece depois de preencher e salvar, e a mensagem não orienta a solicitar um novo link (AC-04, FA-002). ❌
+- As mensagens usam o alerta nativo do iOS (ver [MELHORIA-HU004-UI-006](issues/MELHORIA-HU004-UI-006-padronizar-alertas-recuperacao.md)).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU004-UI-007](issues/BUG-HU004-UI-007-link-invalido-so-avisa-ao-salvar.md).
 
 ## Defeitos encontrados
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-HU004-UI-005 | Com senha e confirmação diferentes, o botão Salvar nova senha continua habilitado e o aviso só aparece depois do toque. | [BUG-HU004-UI-005-botao-salvar-nao-desabilita](issues/BUG-HU004-UI-005-botao-salvar-nao-desabilita.md) |
+| CT-HU004-UI-007 | Link já usado ou expirado abre a tela de nova senha; o erro só aparece ao salvar e não orienta a pedir novo link. | [BUG-HU004-UI-007-link-invalido-so-avisa-ao-salvar](issues/BUG-HU004-UI-007-link-invalido-so-avisa-ao-salvar.md) |
+| CT-HU004-UI-006 | Melhoria: mensagens da redefinição usam o alerta nativo do iOS, fora do padrão visual dos pop-ups do app. | [MELHORIA-HU004-UI-006-padronizar-alertas-recuperacao](issues/MELHORIA-HU004-UI-006-padronizar-alertas-recuperacao.md) |
+| CT-HU004-UI-002 | O botão do e-mail tenta abrir o app em `exp://192.168.0.3:8081`, IP fixo no código; o link não abre o app. | [BUG-HU004-UI-002-link-do-email-com-ip-fixo](issues/BUG-HU004-UI-002-link-do-email-com-ip-fixo.md) |
+| CT-HU004-UI-002 | Confirmação do envio é um aviso discreto escondido pelo teclado, e o texto “E-mail enviado” não é genérico. | [BUG-HU004-UI-002-confirmacao-escondida-pelo-teclado](issues/BUG-HU004-UI-002-confirmacao-escondida-pelo-teclado.md) |
 
 ## Observações gerais
 
