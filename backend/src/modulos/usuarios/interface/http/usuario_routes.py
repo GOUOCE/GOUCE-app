@@ -327,6 +327,8 @@ async def cadastrar_usuario_com_arquivos(
     token_service=Depends(get_token_service),
     storage_service=Depends(get_storage_service),
 ):
+    cadastro_concluido = False
+    salvar_arquivo_uc = None
     try:
         senha_valida, mensagem_senha = SenhaValidator().validar_senha(senha)
         if not senha_valida:
@@ -411,7 +413,9 @@ async def cadastrar_usuario_com_arquivos(
             )
 
         use_case = CriarUsuarioUseCase(repository, hasher, token_service, arquivo_repository=arquivo_repository)
-        return use_case.execute(dto)
+        resposta = use_case.execute(dto)
+        cadastro_concluido = True
+        return resposta
     except EmailAlreadyRegisteredError:
         return _error_response(
             status_code=409,
@@ -457,6 +461,9 @@ async def cadastrar_usuario_com_arquivos(
         return _internal_error_response(error, context="cadastro")
     except Exception as error:
         return _internal_error_response(error, context="cadastro")
+    finally:
+        if salvar_arquivo_uc is not None and not cadastro_concluido:
+            salvar_arquivo_uc.limpar_arquivos_criados()
 
 
 @cadastro_router.post(

@@ -35,3 +35,11 @@ class SQLAlchemyArquivoRepository:
             )
             .first()
         )
+
+    def excluir(self, arquivo_id: str) -> None:
+        arquivo = self.buscar_por_id(arquivo_id)
+        if arquivo is None:
+            return
+
+        self.session.delete(arquivo)
+        self.session.commit()
