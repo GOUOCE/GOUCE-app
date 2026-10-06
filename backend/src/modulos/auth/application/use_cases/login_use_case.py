@@ -53,11 +53,12 @@ class LoginUseCase:
 
             raise UsuarioInativoError(motivo_contexto or "Sua conta não está ativa.")
 
-        cargo = contexto["role"]
+        cargos = contexto.get("roles") or [contexto["role"]]
+        cargo = cargos[0]
 
         # Gera os tokens
-        token_acesso = self.token_service.generate(usuario, cargo, login_data.lembrar_me)
-        token_atualizacao = self.token_service.generate_refresh_token(usuario, cargo, login_data.lembrar_me)
+        token_acesso = self.token_service.generate(usuario, cargos, login_data.lembrar_me)
+        token_atualizacao = self.token_service.generate_refresh_token(usuario, cargos, login_data.lembrar_me)
 
         # Monta os dados do usuário para o frontend
         dados_usuario = {
@@ -66,6 +67,7 @@ class LoginUseCase:
             "email": usuario.email,
             "telefone": usuario.telefone,
             "role": cargo,
+            "roles": cargos,
         }
 
         # Se for aluno, adiciona detalhes específicos
