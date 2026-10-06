@@ -285,7 +285,7 @@ Executar na ordem abaixo. São **9 casos essenciais**. Todas as chamadas usam o 
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| CT-HU006-API-003 | Erros de validação (nome curto, e-mail inválido) voltam no formato cru do framework e em inglês. | [BUG-HU006-API-001](issues/BUG-HU006-API-001-erros-de-validacao-em-ingles.md) — # |
+| CT-HU006-API-003 | Erros de validação (nome curto, e-mail inválido) voltam no formato cru do framework e em inglês. | [BUG-HU006-API-001](issues/BUG-HU006-API-001-erros-de-validacao-em-ingles.md) — #141 |
 
 ## Observações gerais
 
