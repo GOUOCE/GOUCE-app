@@ -11,14 +11,14 @@
 | Tela            | Meu Perfil, Editar Perfil e Alterar e-mail                                              |
 | Ambiente        | Desenvolvimento — app mobile no iPhone (Expo Go)                                        |
 | Total de casos  | 7 |
-| Última execução | Não realizada                                                                           |
+| Última execução | 06/10/2026                                                                              |
 | Testador        | Cauan Ricardo                                                                           |
 
 ## Resultado geral
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Não executada | 7 | 0 | 0 | 7 |
+| ⏳ Em execução | 7 | 1 | 0 | 6 |
 
 ## Pré-condições
 
@@ -37,7 +37,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU005-UI-001 | Visualizar o próprio perfil | Aluno A logado; aba Perfil | Exibir os dados cadastrais atuais do aluno A | ⏳ PENDENTE | Não executado. |
+| CT-HU005-UI-001 | Visualizar o próprio perfil | Aluno A logado; aba Perfil | Exibir os dados cadastrais atuais do aluno A | ✅ APROVADO | Meu Perfil exibiu foto, nome completo, status Aprovado, e-mail, telefone, instituição, curso, período de ingresso e turno do aluno A, sem valores de exemplo, e as ações Editar perfil, Alterar endereço de e-mail, Ver carteirinha digital e Renovar vínculo. Observação: telefone sem máscara (ex.: `31997814542`). Confirmado pelo testador em 06/10/2026. |
 | CT-HU005-UI-002 | Editar telefone e bairro | (85) 98888-1111; outro bairro | Mensagem de sucesso e dados atualizados no perfil | ⏳ PENDENTE | Não executado. |
 | CT-HU005-UI-003 | Telefone inválido | 8599; 85abc123456; vazio | Bloquear e alertar no campo Telefone | ⏳ PENDENTE | Não executado. |
 | CT-HU005-UI-004 | Campos acadêmicos somente leitura | Meu Perfil e Editar Perfil | Instituição, curso, período e turno não editáveis | ⏳ PENDENTE | Não executado. |
@@ -71,8 +71,12 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Meu Perfil** exibiu foto de perfil, nome completo, status **Aprovado** e as informações gerais do aluno A: e-mail, telefone, instituição, curso, período de ingresso e turno. Nenhum valor de exemplo no lugar dos dados reais.
+- Ações da conta: **Editar perfil**, **Alterar endereço de e-mail**, **Ver carteirinha digital** e **Renovar vínculo**.
+- Observação de UX: o telefone aparece sem máscara (ex.: `31997814542`), enquanto o cadastro formata como `(31) 99781-4542`.
+- Observação: o bairro não aparece em **Meu Perfil** (não faz parte do AC-01); será conferido na tela **Editar perfil** (CT-HU005-UI-002).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
