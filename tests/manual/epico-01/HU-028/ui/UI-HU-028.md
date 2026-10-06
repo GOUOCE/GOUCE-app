@@ -1,0 +1,202 @@
+# Testes manuais de UI — HU-028 — Renovação de Vínculo Institucional
+
+## Identificação da suíte
+
+| Campo           | Valor                                                                                   |
+| --------------- | --------------------------------------------------------------------------------------- |
+| Módulo          | Autenticação e Gestão de Conta                                                          |
+| Funcionalidade  | HU-028 — Renovação de Vínculo Institucional                                             |
+| Camada          | UI                                                                                      |
+| Tipo de teste   | Funcional manual — suíte essencial                                                      |
+| Tela            | Início do aluno, Meu Perfil → Renovar vínculo (aviso e passos 1 a 4) e Agenda           |
+| Ambiente        | Desenvolvimento — app mobile no iPhone (Expo Go)                                        |
+| Total de casos  | 6 |
+| Última execução | Não realizada                                                                           |
+| Testador        | Cauan Ricardo                                                                           |
+
+## Resultado geral
+
+| Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
+| --------------- | ----: | ----------: | ----------: | -----------: |
+| ⏳ Não executada | 6 | 0 | 0 | 6 |
+
+## Pré-condições
+
+| ID    | Descrição |
+| ----- | --------- |
+| PC-01 | Aplicativo aberto no iPhone pelo **Expo Go**, com a API e o armazenamento de arquivos disponíveis e conexão ativa (exceto no CT-005). |
+| PC-02 | **Aluno A** com cadastro **aprovado** e **vínculo vencido** (`validade_acesso` no passado). Em ambiente local, preparar pelo banco ou pela API e registrar a preparação. Se o login do aluno com vínculo vencido for recusado, executar os casos 002 a 006 com um aluno aprovado sem vínculo vencido e registrar a falha no CT-001. |
+| PC-03 | Arquivos no iPhone (app **Arquivos**) e na galeria: `comprovante.pdf` (~2 MB), `comprovante.docx` (~2 MB) e `comprovante-grande.pdf` (~8 MB). Documentos fictícios. |
+| PC-04 | Caminho: aba **Perfil** → **Renovar vínculo** → **Iniciar renovação** → passos 1 a 4 (dados básicos, perfil demográfico, contato e vínculo, documentação). |
+| PC-05 | O token de acesso dura 15 minutos e o app ainda não o renova (#123). Entrar de novo antes de cada caso que envia dados. |
+
+## Resumo da execução
+
+Executar na ordem abaixo. São **6 casos essenciais**, em duas seções. Os IDs completos usam o prefixo `CT-HU028-UI-`, numerados de 001 a 006. O CT-004 muda o status do aluno para “Em análise”; os casos 002, 003 e 005 vêm antes dele.
+
+### Seção A — Aviso e validação do comprovante
+
+| ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
+| --- | --- | --- | --- | --- | --- |
+| CT-HU028-UI-001 | Aviso de renovação após o login | Aluno com vínculo vencido | Login permitido e aviso destacado com a opção de renovar | ⏳ PENDENTE | Não executado. |
+| CT-HU028-UI-002 | Envio sem comprovante | Passo 4 sem arquivo | Bloquear e alertar que o comprovante é obrigatório | ⏳ PENDENTE | Não executado. |
+| CT-HU028-UI-003 | Arquivo inválido | `comprovante.docx`; `comprovante-grande.pdf` (8 MB) | Bloquear com “Formato inválido” / “Arquivo excede o limite de tamanho” | ⏳ PENDENTE | Não executado. |
+
+### Seção B — Envio e status “Em análise”
+
+| ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
+| --- | --- | --- | --- | --- | --- |
+| CT-HU028-UI-004 | Renovação válida | `comprovante.pdf` (2 MB) | “Comprovante enviado com sucesso”; status “Em análise” | ⏳ PENDENTE | Não executado. |
+| CT-HU028-UI-005 | Falha de conexão no envio | Wi-Fi e dados móveis desligados no envio | Mensagem de falha; tela mantida para nova tentativa | ⏳ PENDENTE | Não executado. |
+| CT-HU028-UI-006 | Agendamento bloqueado em análise | Aluno “Em análise”; aba Agenda e atalhos | Agendamento bloqueado com informativo | ⏳ PENDENTE | Não executado. |
+
+## Detalhamento dos casos
+
+### Seção A — Aviso e validação do comprovante
+
+#### CT-HU028-UI-001 — Aviso de renovação após o login
+
+**Dados de entrada:** Credenciais do aluno A com vínculo vencido (PC-02).
+
+**Passos**
+
+1. Entrar com o aluno A (**Sou aluno**).
+2. Observar a tela **Início**: há aviso de renovação?
+3. Abrir **Perfil → Renovar vínculo** e conferir a tela inicial.
+
+**Resultado esperado**
+
+- O login é permitido e o aluno vê, logo ao entrar, um **aviso destacado** de necessidade de renovação, com a opção de iniciar a revalidação (AC-01, RN-013).
+- A tela **Renovar Vínculo** mostra o aviso “Vínculo expirado — renovação necessária” e o botão **Iniciar renovação**.
+- Se o login for recusado, ou se o aviso só existir dentro de **Perfil → Renovar vínculo** (sem destaque ao entrar), registrar como falha.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+#### CT-HU028-UI-002 — Envio sem comprovante
+
+**Dados de entrada:** Passos 1 a 3 com os dados atuais; passo 4 sem selecionar o comprovante de matrícula.
+
+**Passos**
+
+1. Tocar em **Iniciar renovação** e avançar os passos 1 a 3 sem alterar os dados.
+2. No passo 4, não anexar o comprovante de matrícula.
+3. Observar o botão de envio e tocar nele.
+
+**Resultado esperado**
+
+- O envio fica bloqueado (botão desabilitado ou bloqueio ao tocar) e aparece um alerta de que o comprovante é obrigatório (AC-02).
+- Nada é enviado e o status do aluno não muda.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+#### CT-HU028-UI-003 — Arquivo inválido
+
+**Dados de entrada:** Duas tentativas no passo 4: `comprovante.docx` (2 MB); `comprovante-grande.pdf` (8 MB).
+
+**Passos**
+
+1. No passo 4, tocar para anexar o comprovante e tentar escolher o `.docx` no app **Arquivos**.
+2. Repetir com o PDF de 8 MB e tocar em enviar.
+
+**Resultado esperado**
+
+- DOCX: o seletor não permite escolher o arquivo **ou** o app bloqueia com “Formato inválido” (AC-03). Registrar qual dos dois aconteceu.
+- PDF de 8 MB: bloqueado com “Arquivo excede o limite de tamanho” (limite de 5 MB, AC-03), de preferência ainda no app, antes do envio.
+- Mensagens em português; status do aluno inalterado.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+### Seção B — Envio e status “Em análise”
+
+#### CT-HU028-UI-004 — Renovação válida
+
+**Dados de entrada:** Passos 1 a 3 com os dados atuais; passo 4 com `comprovante.pdf` (2 MB).
+
+**Passos**
+
+1. Percorrer os passos 1 a 3 e anexar o PDF no passo 4.
+2. Tocar em enviar e anotar a mensagem.
+3. Conferir para onde o app volta e o status exibido em **Meu Perfil**.
+4. Fechar e reabrir o app, entrar de novo e conferir o status.
+
+**Resultado esperado**
+
+- Exibir “Comprovante enviado com sucesso” (AC-05). Registrar o texto exato exibido.
+- O status do aluno passa a **Em análise** em **Meu Perfil**, e continua após entrar de novo.
+- O aluno entra na fila de análise do administrador (conferido na suíte de API, CT-HU028-API-001).
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+#### CT-HU028-UI-005 — Falha de conexão no envio
+
+**Dados de entrada:** Renovação preenchida até o passo 4 com `comprovante.pdf`; Wi-Fi e dados móveis desligados antes de enviar.
+
+**Passos**
+
+1. Preencher os passos 1 a 4 e anexar o PDF.
+2. Desligar Wi-Fi e dados móveis e tocar em enviar.
+3. Fechar o aviso e conferir a tela.
+4. Religar a conexão e tocar em enviar de novo (pode ser feito como o CT-004, se ele ainda não tiver sido executado).
+
+**Resultado esperado**
+
+- Exibir “Falha no envio. Verifique sua conexão e tente novamente” sem travar (AC-04, FA-001).
+- A tela de renovação continua aberta no passo 4, com os dados e o arquivo mantidos.
+- Com a conexão de volta, o envio é concluído sem redigitar.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+#### CT-HU028-UI-006 — Agendamento bloqueado em análise
+
+**Dados de entrada:** Aluno A com status **Em análise** (após o CT-004).
+
+**Passos**
+
+1. Abrir a aba **Agenda**.
+2. Na tela **Início**, tocar em **Agendar Transporte** e em **Meus Agendamentos**.
+
+**Resultado esperado**
+
+- O acesso ao agendamento fica bloqueado, com um informativo de que a liberação depende da validação do documento (AC-06, RN-011).
+- Se a tela de agendamento ainda não existir no app, marcar o caso como bloqueado e registrar o motivo.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+## Defeitos encontrados
+
+| Caso | Defeito | Issue |
+| --- | --- | --- |
+| — | Nenhuma execução realizada. | — |
+
+## Observações gerais
+
+- Referências: [HU-028, seção 7.2.8](../../../../../docs/requisitos.md), [cenários BDD](../../../../../bdd/features/epico-01/HU-028.feature), [tela Renovar vínculo](../../../../../frontend/src/app/%28aluno%29/renovar-vinculo.tsx) e [suíte de API](../api/API-HU-028.md).
+- Divergência de escopo: o requisito fala apenas em enviar o comprovante, mas o app pede para revisar todos os dados do cadastro em 4 passos. Registrar a percepção de uso e levar ao líder.
+- A aprovação da renovação pelo administrador pertence à HU-027 e fica fora desta suíte.
+- Restaurar o status e a validade do aluno A ao final (pelo administrador ou pelo banco local). Ocultar dados pessoais e documentos nas evidências.
