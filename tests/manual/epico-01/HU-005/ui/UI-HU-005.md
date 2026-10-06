@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 7 | 4 | 1 | 2 |
+| ⏳ Em execução | 7 | 5 | 1 | 1 |
 
 ## Pré-condições
 
@@ -47,7 +47,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU005-UI-005 | Alterar e-mail com senha correta | qa.hu005.novo@example.com; senha atual | Sucesso; login só com o novo e-mail | ✅ APROVADO | Exibiu “E-mail alterado — Endereço de e-mail alterado com sucesso. Utilize o novo e-mail no próximo login.” (pop-up do app); o perfil mostrou o novo e-mail; o login com o e-mail antigo falhou e com o novo entrou. A primeira tentativa falhou com “E-mail não autorizado” porque o token da sessão tinha vencido (15 min) — ver [BUG-HU005-UI-005](issues/BUG-HU005-UI-005-sessao-expira-em-15-minutos-sem-renovacao.md). Confirmado pelo testador em 06/10/2026. |
-| CT-HU005-UI-006 | Alteração de e-mail rejeitada | Sem senha; senha errada; e-mail do aluno B; maria.souzaufc.br | Bloquear com a mensagem de cada situação; e-mail inalterado | ⏳ PENDENTE | Não executado. |
+| CT-HU005-UI-006 | Alteração de e-mail rejeitada | Sem senha; senha errada; e-mail do aluno B; maria.souzaufc.br | Bloquear com a mensagem de cada situação; e-mail inalterado | ✅ APROVADO | Sem senha, senha errada, e-mail de outra conta e formato inválido foram bloqueados, cada um com mensagem própria em português; o e-mail da conta não mudou. Confirmado pelo testador em 06/10/2026. |
 | CT-HU005-UI-007 | Falha de conexão ao salvar | Telefone alterado; Wi-Fi e dados móveis desligados | Mensagem de conexão e dados mantidos na tela | ⏳ PENDENTE | Não executado. |
 
 ## Detalhamento dos casos
@@ -213,8 +213,13 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Sem senha: bloqueado ao confirmar — “Informe sua senha atual por segurança”. ✅
+- Senha errada: “Falha ao alterar e-mail — Senha incorreta. Não é possível alterar o e-mail.” ✅
+- E-mail de outra conta (`thebirl009@gmail.com`, aluno B): “Falha ao alterar e-mail — Este e-mail já está cadastrado na plataforma GOUCE.” ✅
+- `maria.souzaufc.br`: bloqueado como formato de e-mail inválido. ✅
+- O e-mail da conta continuou `qa.hu005@gmail.com` (conferido pela API).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
