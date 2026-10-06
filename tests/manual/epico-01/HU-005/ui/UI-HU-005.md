@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 7 | 3 | 1 | 3 |
+| ⏳ Em execução | 7 | 4 | 1 | 2 |
 
 ## Pré-condições
 
@@ -46,7 +46,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU005-UI-005 | Alterar e-mail com senha correta | qa.hu005.novo@example.com; senha atual | Sucesso; login só com o novo e-mail | ⏳ PENDENTE | Não executado. |
+| CT-HU005-UI-005 | Alterar e-mail com senha correta | qa.hu005.novo@example.com; senha atual | Sucesso; login só com o novo e-mail | ✅ APROVADO | Exibiu “E-mail alterado — Endereço de e-mail alterado com sucesso. Utilize o novo e-mail no próximo login.” (pop-up do app); o perfil mostrou o novo e-mail; o login com o e-mail antigo falhou e com o novo entrou. A primeira tentativa falhou com “E-mail não autorizado” porque o token da sessão tinha vencido (15 min) — ver [BUG-HU005-UI-005](issues/BUG-HU005-UI-005-sessao-expira-em-15-minutos-sem-renovacao.md). Confirmado pelo testador em 06/10/2026. |
 | CT-HU005-UI-006 | Alteração de e-mail rejeitada | Sem senha; senha errada; e-mail do aluno B; maria.souzaufc.br | Bloquear com a mensagem de cada situação; e-mail inalterado | ⏳ PENDENTE | Não executado. |
 | CT-HU005-UI-007 | Falha de conexão ao salvar | Telefone alterado; Wi-Fi e dados móveis desligados | Mensagem de conexão e dados mantidos na tela | ⏳ PENDENTE | Não executado. |
 
@@ -183,8 +183,12 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **1ª tentativa** (sessão aberta havia mais de 15 minutos): “Falha ao alterar — E-mail não autorizado”. O backend respondeu `401` porque o token de acesso tinha vencido; com um login novo, a mesma troca é aceita pela API. O app não renova o token. Registrado no [BUG-HU005-UI-005](issues/BUG-HU005-UI-005-sessao-expira-em-15-minutos-sem-renovacao.md).
+- **2ª tentativa** (logo após sair e entrar de novo): pop-up do app “E-mail alterado — Endereço de e-mail alterado com sucesso. Utilize o novo e-mail no próximo login.” ✅
+- **Meu Perfil** passou a exibir `qa.hu005.novo@example.com`. ✅
+- Login com o e-mail antigo (`cauanrricardo@gmail.com`): recusado. ✅ Login com o novo: entrou na área do aluno. ✅ (Também conferido pela API.)
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -240,6 +244,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
 | CT-HU005-UI-003 | Telefone com mais de 20 dígitos chega à API e o erro aparece em inglês; Editar perfil não valida o formato como o cadastro. | [BUG-HU005-UI-003-validacao-telefone-fraca-no-perfil](issues/BUG-HU005-UI-003-validacao-telefone-fraca-no-perfil.md) |
+| CT-HU005-UI-005 | A sessão vence em 15 minutos e o app não renova o token: ações passam a falhar com “não autorizado”. | [BUG-HU005-UI-005-sessao-expira-em-15-minutos-sem-renovacao](issues/BUG-HU005-UI-005-sessao-expira-em-15-minutos-sem-renovacao.md) |
 | CT-HU005-UI-004 | Editar perfil mantém valores não salvos ao reabrir; a seta volta para Início sem confirmação. | [BUG-HU005-UI-004-editar-perfil-mantem-valores-nao-salvos](issues/BUG-HU005-UI-004-editar-perfil-mantem-valores-nao-salvos.md) |
 | CT-HU005-UI-001, CT-HU005-UI-002 | Melhoria: telefone sem máscara em Meu Perfil e em Editar perfil, diferente do cadastro. | [MELHORIA-HU005-UI-002-mascara-telefone-no-perfil](issues/MELHORIA-HU005-UI-002-mascara-telefone-no-perfil.md) |
 
