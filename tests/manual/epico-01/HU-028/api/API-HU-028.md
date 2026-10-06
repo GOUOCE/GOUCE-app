@@ -244,10 +244,10 @@ Executar na ordem abaixo. São **8 casos essenciais**. O CT-001 muda o status do
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| CT-HU028-API-003 | A renovação aceita comprovante de 8 MB: o limite aplicado é 10 MB, não os 5 MB do AC-03. | [BUG-HU028-API-001](issues/BUG-HU028-API-001-limite-de-5mb-nao-aplicado.md) |
-| CT-HU028-API-004 | O aluno com vínculo vencido não consegue entrar (“A validade de acesso da sua conta expirou.”) e, portanto, não consegue renovar. | [BUG-HU028-API-002](issues/BUG-HU028-API-002-aluno-com-vinculo-vencido-nao-entra.md) |
-| CT-HU028-API-007 | Uma segunda renovação é aceita enquanto a primeira está em análise e substitui o comprovante. | [BUG-HU028-API-003](issues/BUG-HU028-API-003-renovacao-duplicada-substitui-comprovante.md) |
-| CT-HU028-API-002, CT-HU028-API-008 | Mensagens de validação de formulário em inglês (`Field required`, `String should have at least 3 characters`). | [BUG-HU028-API-004](issues/BUG-HU028-API-004-mensagens-de-validacao-em-ingles.md) |
+| CT-HU028-API-003 | A renovação aceita comprovante de 8 MB: o limite aplicado é 10 MB, não os 5 MB do AC-03. | [BUG-HU028-API-001](issues/BUG-HU028-API-001-limite-de-5mb-nao-aplicado.md) — #131 |
+| CT-HU028-API-004 | O aluno com vínculo vencido não consegue entrar (“A validade de acesso da sua conta expirou.”) e, portanto, não consegue renovar. | [BUG-HU028-API-002](issues/BUG-HU028-API-002-aluno-com-vinculo-vencido-nao-entra.md) — #132 |
+| CT-HU028-API-007 | Uma segunda renovação é aceita enquanto a primeira está em análise e substitui o comprovante. | [BUG-HU028-API-003](issues/BUG-HU028-API-003-renovacao-duplicada-substitui-comprovante.md) — #133 |
+| CT-HU028-API-002, CT-HU028-API-008 | Mensagens de validação de formulário em inglês (`Field required`, `String should have at least 3 characters`). | [BUG-HU028-API-004](issues/BUG-HU028-API-004-mensagens-de-validacao-em-ingles.md) — #134 |
 
 ## Observações gerais
 
