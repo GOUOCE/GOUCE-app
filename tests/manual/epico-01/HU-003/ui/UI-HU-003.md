@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Em execução | 11 | 5 | 2 | 3 | 1 |
+| ✅ Executada | 11 | 5 | 3 | 3 | 0 |
 
 ## Pré-condições
 
@@ -57,7 +57,7 @@ Executar na ordem abaixo. São **11 casos**, em três seções. Os IDs completos
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU003-UI-010 | Link de área protegida sem login | Sem sessão; link para `cadastros` e `carteirinha-digital` | Levar para a tela de login, sem exibir a área | ✅ APROVADO | Sem sessão, os dois links (`cadastros` e `carteirinha-digital`) levaram direto à tela de login, sem exibir a área protegida. Confirmado pelo testador em 05/10/2026. |
-| CT-HU003-UI-011 | Conta inativada durante a sessão | Aluno logado; administrador inativa a conta | Na próxima ação, encerrar o acesso e exigir novo login | ⏳ PENDENTE | Não executado. |
+| CT-HU003-UI-011 | Conta inativada durante a sessão | Aluno logado; administrador inativa a conta | Na próxima ação, encerrar o acesso e exigir novo login | ❌ REPROVADO | Após a inativação, o app continuou na área do aluno: o Perfil seguiu mostrando o cadastro como aprovado, a foto e a Carteirinha Digital ficaram em branco (azul claro), sem aviso e sem levar ao login. Só depois de fechar e reabrir o app o login foi recusado com “Sua conta está inativada”. Ver [BUG-HU003-UI-011](issues/BUG-HU003-UI-011-sessao-revogada-nao-encerrada.md). Executado pelo testador em 05/10/2026. |
 
 ## Detalhamento dos casos
 
@@ -337,13 +337,20 @@ Executar na ordem abaixo. São **11 casos**, em três seções. Os IDs completos
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Com o aluno logado no **Perfil**, a conta foi inativada pela API (`PATCH /usuarios/alunos/{id}/status` com `inativado`, como administrador).
+- O app **não encerrou a sessão**: continuou na área do aluno. O **Perfil** seguiu mostrando o cadastro como aprovado; a foto de perfil e a **Carteirinha Digital** ficaram em branco (azul claro), sem nenhuma mensagem e sem levar ao login.
+- A API bloqueia corretamente: com o token antigo, `GET /alunos/me/carteirinha` responde `401 Sessão inválida ou expirada`.
+- Só depois de sair, fechar e reabrir o app o novo login foi recusado com “Falha na autenticação — Sua conta está inativada. Entre em contato com a coordenação.” ✅
+- Causa aparente: o interceptador de 401 (`frontend/src/api/api.ts`) apaga o token e o usuário do AsyncStorage, mas não atualiza o `AuthContext` nem navega para o login, então a tela continua montada com os dados antigos.
+- Ao final, o aluno foi reativado pela API.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ❌ Reprovado — [BUG-HU003-UI-011](issues/BUG-HU003-UI-011-sessao-revogada-nao-encerrada.md).
 
 ## Defeitos encontrados
 
 | Caso | Defeito | Issue |
 | ---- | ------- | ----- |
+| CT-HU003-UI-011 | Conta inativada durante a sessão continua na área do aluno: o app recebe 401, apaga o token salvo, mas não encerra a sessão nem leva ao login. | [BUG-HU003-UI-011-sessao-revogada-nao-encerrada](issues/BUG-HU003-UI-011-sessao-revogada-nao-encerrada.md) |
 | CT-HU003-UI-007 | Tela de outro perfil aparece por um instante antes do Acesso Negado: o bloqueio só ocorre depois de a tela ser desenhada. | [BUG-HU003-UI-007-tela-protegida-aparece-antes-do-bloqueio](issues/BUG-HU003-UI-007-tela-protegida-aparece-antes-do-bloqueio.md) |
 | CT-HU003-UI-002 | Área do administrador sem os menus de gestão do requisito: painel provisório, atalhos sem ação e abas desativadas. | [GAP-HU003-UI-002-menus-de-gestao-do-admin-inexistentes](issues/GAP-HU003-UI-002-menus-de-gestao-do-admin-inexistentes.md) |
 
