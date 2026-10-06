@@ -11,14 +11,14 @@
 | Endpoints | `GET /usuarios/me` (somente aluno); `GET /usuarios/alunos`, `PATCH /usuarios/alunos/{id}/aprovar` e `PATCH /usuarios/alunos/{id}/status` (somente administrador) |
 | Ambiente | A preencher — URL e commit testado |
 | Total de casos | 6 |
-| Última execução | Não realizada |
+| Última execução | 2026-10-05 |
 | Testador | Radlei Doroth |
 
 ## Resultado geral
 
-| Situação | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
-| --- | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 6 | 0 | 0 | 6 |
+| Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| ✅ Execução concluída | 6 | 5 | 0 | 1 | 0 |
 
 ## Pré-condições
 
@@ -35,12 +35,12 @@ Executar na ordem abaixo. São **6 casos essenciais**; o CT-005 altera o estado 
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU003-API-001 | Cada perfil acessa o que lhe pertence | Token do aluno em `/usuarios/me`; token do administrador em `/usuarios/alunos` | HTTP 200 nos dois | ⏳ PENDENTE | Não executado. |
-| CT-HU003-API-002 | Aluno bloqueado em rotas administrativas | Token do aluno em `GET /usuarios/alunos` e `PATCH .../aprovar` | HTTP 403; sem dados; estado do alvo inalterado | ⏳ PENDENTE | Não executado. |
-| CT-HU003-API-003 | Administrador bloqueado em rota de aluno | Token do administrador em `GET /usuarios/me` | HTTP 403 | ⏳ PENDENTE | Não executado. |
-| CT-HU003-API-004 | Requisição sem token ou com token inválido | Sem token; token adulterado; `token_atualizacao` no lugar do acesso | HTTP 401 | ⏳ PENDENTE | Não executado. |
-| CT-HU003-API-005 | Conta inativada durante a sessão | Token do aluno A emitido antes de a conta ser inativada | HTTP 401 na requisição seguinte; novo login negado | ⏳ PENDENTE | Não executado. |
-| CT-HU003-API-006 | Representante bloqueado | Token do representante em rotas de aluno e de administrador | HTTP 403 nas duas | ⏳ PENDENTE | Não executado. |
+| CT-HU003-API-001 | Cada perfil acessa o que lhe pertence | Token do aluno em `/usuarios/me`; token do administrador em `/usuarios/alunos` | HTTP 200 nos dois | ✅ APROVADO | HTTP 200 em ambos; perfil próprio retornado; lista sem `senha`/`email_hash`. |
+| CT-HU003-API-002 | Aluno bloqueado em rotas administrativas | Token do aluno em `GET /usuarios/alunos` e `PATCH .../aprovar` | HTTP 403; sem dados; estado do alvo inalterado | ✅ APROVADO | As três tentativas responderam HTTP 403; o Aluno B permaneceu `ativado`. |
+| CT-HU003-API-003 | Administrador bloqueado em rota de aluno | Token do administrador em `GET /usuarios/me` | HTTP 403 | ✅ APROVADO | HTTP 403; `FORBIDDEN`; nenhum perfil de aluno retornado. |
+| CT-HU003-API-004 | Requisição sem token ou com token inválido | Sem token; token adulterado; `token_atualizacao` no lugar do acesso | HTTP 401 | ✅ APROVADO | Os três cenários responderam HTTP 401, sem cookies de sessão e sem dados protegidos. |
+| CT-HU003-API-005 | Conta inativada durante a sessão | Token do aluno A emitido antes de a conta ser inativada | HTTP 401 na requisição seguinte; novo login negado | ✅ APROVADO | Token prévio e novo login responderam HTTP 401; Aluno A restaurado ao final. |
+| CT-HU003-API-006 | Representante bloqueado | Token do representante em rotas de aluno e de administrador | HTTP 403 nas duas | 🚫 BLOQUEADO | Sem conta representante/supervisor disponível; não caracterizado como falha. |
 
 ## Detalhamento dos casos
 
@@ -60,8 +60,9 @@ Executar na ordem abaixo. São **6 casos essenciais**; o CT-005 altera o estado 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `GET /usuarios/me` com o token do Aluno A respondeu HTTP `200` e retornou o próprio perfil.
+- `GET /usuarios/alunos` com o token do administrador respondeu HTTP `200` e retornou a lista sem os campos `senha` e `email_hash`.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -83,8 +84,11 @@ Executar na ordem abaixo. São **6 casos essenciais**; o CT-005 altera o estado 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `GET /usuarios/alunos` com o token do Aluno A respondeu HTTP `403`, com indicação de acesso negado.
+- `PATCH /usuarios/alunos/{id_do_aluno_B}/aprovar` com o token do Aluno A respondeu HTTP `403`.
+- `PATCH /usuarios/alunos/{id_do_aluno_B}/status` com o token do Aluno A respondeu HTTP `403`.
+- A consulta posterior feita pelo administrador confirmou que o Aluno B permaneceu com status `ativado`.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -103,8 +107,10 @@ Executar na ordem abaixo. São **6 casos essenciais**; o CT-005 altera o estado 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `GET /usuarios/me` com o token do administrador respondeu HTTP `403`.
+- Corpo retornado: `success: false`, `error.code: "FORBIDDEN"` e `error.message: "Requisição inválida"`.
+- Nenhum perfil de aluno foi retornado.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -124,8 +130,11 @@ Executar na ordem abaixo. São **6 casos essenciais**; o CT-005 altera o estado 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Sem token de autenticação: HTTP `401`.
+- `token_acesso` adulterado: HTTP `401`.
+- `token_atualizacao` usado como Bearer de acesso: HTTP `401`.
+- Nenhum dos cenários retornou dados protegidos.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -149,8 +158,16 @@ Executar na ordem abaixo. São **6 casos essenciais**; o CT-005 altera o estado 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O Aluno A estava inicialmente com status `ativado`.
+- O login foi realizado enquanto a conta estava ativa e o token de acesso foi emitido.
+- `GET /usuarios/me` com esse token, antes da inativação, respondeu HTTP `200`.
+- O administrador enviou `PATCH /usuarios/alunos/{id_do_aluno_A}/status`; a alteração respondeu HTTP `200` e deixou o status como `inativado`.
+- O mesmo token de acesso, usado novamente em `GET /usuarios/me`, respondeu HTTP `401`.
+- Corpo retornado: `success: false`, `error.code: "UNAUTHORIZED"` e `error.message: "Não autorizado"`.
+- Uma nova tentativa de login enquanto o aluno estava inativado também respondeu HTTP `401`, com a mensagem: `Sua conta está inativada: Teste manual HU-003. Entre em contato com a coordenação.`
+- Após a conclusão do caso, o administrador restaurou o Aluno A para `ativado` usando `PATCH /usuarios/alunos/{aluno_id}/aprovar`.
+- A restauração foi apenas limpeza da massa de teste e não altera o resultado do caso.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -158,7 +175,7 @@ Executar na ordem abaixo. São **6 casos essenciais**; o CT-005 altera o estado 
 
 **Preparação específica**
 
-- Exige conta de representante. Sem ela, registrar o caso como pendente por falta de massa.
+- Exige conta de representante. Sem ela, registrar o caso como bloqueado por falta de massa.
 
 **Dados de entrada:** token do representante (`role: "supervisor"`).
 
@@ -173,19 +190,22 @@ Executar na ordem abaixo. São **6 casos essenciais**; o CT-005 altera o estado 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Não havia conta de representante/supervisor disponível para autenticação.
+- O comportamento esperado não pôde ser validado.
+- O caso foi bloqueado por indisponibilidade da massa de teste necessária, sem caracterização de falha da aplicação.
+- Status: 🚫 Bloqueado.
 
 ## Defeitos encontrados
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| — | Nenhuma falha registrada. O CT-HU003-API-006 foi bloqueado por indisponibilidade da massa de representante/supervisor e não foi classificado como defeito da aplicação. | — |
 
 ## Observações gerais
 
-- Referências: [HU-003, seção 7.2.3](../../../../../docs/requisitos.md) e [dependências de autorização](../../../../../backend/src/shared/auth/dependencies.py). Conferir a versão implantada; esta suíte não foi executada durante sua criação.
+- Referências: [HU-003, seção 7.2.3](../../../../../docs/requisitos.md) e [dependências de autorização](../../../../../backend/src/shared/auth/dependencies.py). Conferir a versão implantada; a execução registrada nesta rodada foi realizada manualmente.
 - A API só tem rotas protegidas para aluno e administrador; as rotas de lista de embarque e frequência do representante (AC-03) ainda não existem, então o bloqueio do representante é verificado apenas contra as rotas atuais.
 - Menus e telas por perfil (AC-01, AC-02, AC-04) e a mensagem "Acesso Negado" do app são de UI e ficam para a suíte de interface. Promoção de perfil durante a sessão e rotas de arquivos (`/arquivos/*`) ficam para outra rodada. Aprovar estes 6 casos não significa cobertura total da HU.
+- O CT-HU003-API-006 permaneceu bloqueado por falta de conta de representante/supervisor; isso não foi registrado como falha da aplicação.
 - Formato do erro: as rotas `/usuarios/alunos` e `/usuarios/alunos/{id}/...` respondem `{"detail": "..."}`; `/usuarios/me` responde o envelope `success/error` (`FORBIDDEN`, `UNAUTHORIZED`). O que vale é o status HTTP; registrar o corpo obtido.
 - Registrar status e resposta obtidos em cada CT; ocultar senhas, tokens e dados pessoais nas evidências.
