@@ -9,16 +9,16 @@
 | Camada | API |
 | Tipo de teste | Funcional manual — suíte essencial |
 | Endpoints | `GET /administradores`, `POST /administradores`, `PATCH /administradores/{id}` e `PATCH /administradores/{id}/inativar` — `application/json`, com token de administrador |
-| Ambiente | A preencher — URL e commit testado |
+| Ambiente | Docker local isolado — `http://localhost:8001` — branch `feature/testes-api-hu-006` — commit `a93d6e5d`; e-mails capturados pelo Mailpit |
 | Total de casos | 9 |
-| Última execução | Não realizada |
-| Testador | A definir |
+| Última execução | 2026-10-06 — execução dos CT-HU006-API-001 a 009 |
+| Testador | Cauan Ricardo — execução com apoio de IA (Claude Code) |
 
 ## Resultado geral
 
-| Situação | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
-| --- | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 9 | 0 | 0 | 9 |
+| Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | ⏳ Pendentes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| ⚠️ Execução parcial | 9 | 8 | 0 | 1 | 0 |
 
 ## Pré-condições
 
@@ -36,15 +36,15 @@ Executar na ordem abaixo. São **9 casos essenciais**. Todas as chamadas usam o 
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU006-API-001 | Listar administradores | Sem filtro; `ativo=true`; `ativo=false` | HTTP 200; lista com ativos e inativos; filtro respeitado | ⏳ PENDENTE | Não executado. |
-| CT-HU006-API-002 | Criar administrador válido | Nome e e-mail novos | HTTP 201; criado ativo; senha enviada por e-mail; login funciona | ⏳ PENDENTE | Não executado. |
-| CT-HU006-API-003 | Criação rejeitada | E-mail de aluno; e-mail de admin; nome `Ab`; e-mail `carlos@` | HTTP 409 com a mensagem do AC-03; 422 nos inválidos; nada criado | ⏳ PENDENTE | Não executado. |
-| CT-HU006-API-004 | Editar administrador | Nome novo; e-mail em uso; id inexistente | HTTP 200 “Operação realizada com sucesso”; 409; 404 | ⏳ PENDENTE | Não executado. |
-| CT-HU006-API-005 | Inativar outro administrador | `id` do administrador B | HTTP 200; `ativo: false`; registro mantido; auditoria gravada; B não entra | ⏳ PENDENTE | Não executado. |
-| CT-HU006-API-006 | Auto-inativação bloqueada | `id` do administrador A | HTTP 409 “Não é possível inativar a conta atualmente em uso.” | ⏳ PENDENTE | Não executado. |
-| CT-HU006-API-007 | Acesso sem privilégio | Token de aluno; sem token | HTTP 403 com aluno; 401 sem token; em todas as rotas | ⏳ PENDENTE | Não executado. |
-| CT-HU006-API-008 | E-mail com espaços e maiúsculas | `" Carla.Mendes@Example.com "` | HTTP 201; salvo como `carla.mendes@example.com`; duplicado detectado sem diferenciar maiúsculas | ⏳ PENDENTE | Não executado. |
-| CT-HU006-API-009 | Sessão do administrador inativado | Token de B emitido antes do CT-005 | HTTP 401/403 nas rotas administrativas após a inativação | ⏳ PENDENTE | Não executado. |
+| CT-HU006-API-001 | Listar administradores | Sem filtro; `ativo=true`; `ativo=false` | HTTP 200; lista com ativos e inativos; filtro respeitado | ✅ APROVADO | HTTP 200 nas três chamadas, com `id`, `nome`, `email`, `ativo` e `criado_em`, sem senha nem hash. Com um inativo cadastrado: sem filtro, ativos e inativos; `ativo=true`, só ativos; `ativo=false`, só inativos. |
+| CT-HU006-API-002 | Criar administrador válido | Nome e e-mail novos | HTTP 201; criado ativo; senha enviada por e-mail; login funciona | ✅ APROVADO | HTTP 201, administrador B criado ativo; e-mail “Acesso de administrador - GOUCE” recebido com a senha temporária; login de B com perfil `administrador`. A mensagem de sucesso fala do envio da senha, não “Operação realizada com sucesso”. |
+| CT-HU006-API-003 | Criação rejeitada | E-mail de aluno; e-mail de admin; nome `Ab`; e-mail `carlos@` | HTTP 409 com a mensagem do AC-03; 422 nos inválidos; nada criado | ⚠️ PARCIAL | E-mail de aluno e de administrador: HTTP 409 com a mensagem do AC-03. Nome `Ab` e e-mail `carlos@`: HTTP 422 bloqueado, mas com o erro cru do framework em inglês (`String should have at least 3 characters`, `value is not a valid email address…`). Nenhum administrador criado. |
+| CT-HU006-API-004 | Editar administrador | Nome novo; e-mail em uso; id inexistente | HTTP 200 “Operação realizada com sucesso”; 409; 404 | ✅ APROVADO | Nome: HTTP 200 “Operação realizada com sucesso” e nome atualizado; e-mail de aluno: HTTP 409 com a mensagem do AC-03, e-mail inalterado; id inexistente: HTTP 404 “Administrador não encontrado.” |
+| CT-HU006-API-005 | Inativar outro administrador | `id` do administrador B | HTTP 200; `ativo: false`; registro mantido; auditoria gravada; B não entra | ✅ APROVADO | HTTP 200 “Operação realizada com sucesso”, `ativo: false`; B continua listado entre os inativos; `log_auditoria` com `usuario_id` 1, ação `INATIVAR`, entidade `administrador` 3 e data/hora; login de B recusado (HTTP 401 “Usuário administrativo inativo.”). |
+| CT-HU006-API-006 | Auto-inativação bloqueada | `id` do administrador A | HTTP 409 “Não é possível inativar a conta atualmente em uso.” | ✅ APROVADO | HTTP 409 “Não é possível inativar a conta atualmente em uso.”; A continua ativo e nenhum registro de auditoria novo. |
+| CT-HU006-API-007 | Acesso sem privilégio | Token de aluno; sem token | HTTP 403 com aluno; 401 sem token; em todas as rotas | ✅ APROVADO | Token de aluno: HTTP 403 nas quatro rotas; sem token: HTTP 401 nas quatro; nenhuma alteração gravada. |
+| CT-HU006-API-008 | E-mail com espaços e maiúsculas | `" Carla.Mendes@Example.com "` | HTTP 201; salvo como `carla.mendes@example.com`; duplicado detectado sem diferenciar maiúsculas | ✅ APROVADO | HTTP 201 com `data.email: "carla.mendes@example.com"`; o mesmo e-mail em minúsculas e em maiúsculas foi recusado com HTTP 409. |
+| CT-HU006-API-009 | Sessão do administrador inativado | Token de B emitido antes do CT-005 | HTTP 401/403 nas rotas administrativas após a inativação | ✅ APROVADO | Após a inativação, o token de B (que respondia 200 antes) recebeu HTTP 401 “Sessão inválida ou expirada” em `GET /administradores` e em `PATCH /administradores/1`; nada foi alterado. |
 
 ## Detalhamento dos casos
 
@@ -65,8 +65,10 @@ Executar na ordem abaixo. São **9 casos essenciais**. Todas as chamadas usam o 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- No início (só o administrador A): sem filtro e `ativo=true` → `[A]`; `ativo=false` → `[]`. HTTP `200` nas três.
+- Depois do CT-005 (B inativo): sem filtro → `[A (ativo), B (inativo)]`; `ativo=true` → `[A]`; `ativo=false` → `[B]`. ✅
+- Campos de cada item: `id`, `nome`, `email`, `ativo` e `criado_em`; nenhum campo de senha ou hash. ✅
+- Status: ✅ Aprovado.
 
 ---
 
@@ -90,8 +92,12 @@ Executar na ordem abaixo. São **9 casos essenciais**. Todas as chamadas usam o 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `POST /administradores` com `Carlos Andrade` / `carlos.andrade@example.com`: HTTP `201`, `success: true`, `data.id: 3`, `data.ativo: true`. ✅
+- Mensagem: “Administrador criado com sucesso. A senha foi gerada automaticamente e enviada por e-mail.” O requisito pede “Operação realizada com sucesso” para as operações; aqui o texto é outro, mais informativo (registrado nas observações).
+- Mailpit: e-mail “Acesso de administrador - GOUCE” para `carlos.andrade@example.com`, com o e-mail de acesso, a senha temporária e a orientação “Altere sua senha após o primeiro acesso.” (senha não registrada). ✅
+- `POST /auth/login` de B com a senha temporária: HTTP `200`, `role: administrador`. ✅
+- B aparece em `GET /administradores`. ✅
+- Status: ✅ Aprovado.
 
 ---
 
@@ -117,8 +123,12 @@ Executar na ordem abaixo. São **9 casos essenciais**. Todas as chamadas usam o 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- E-mail de aluno (`qa.hu006.aluno@example.com`): HTTP `409`, “Este e-mail já está em uso por outro usuário no sistema.” ✅
+- E-mail do administrador B: HTTP `409`, mesma mensagem. ✅
+- Nome `Ab`: HTTP `422`, mas no formato cru do framework e em inglês: `{"detail":[{"type":"string_too_short","loc":["body","nome"],"msg":"String should have at least 3 characters",…}]}`. ⚠️
+- E-mail `carlos@`: HTTP `422`, também cru e em inglês: `value is not a valid email address: There must be something after the @-sign.` ⚠️
+- Nenhum administrador criado e nenhum e-mail enviado nas quatro tentativas. ✅
+- Status: ⚠️ Parcial — [BUG-HU006-API-001](issues/BUG-HU006-API-001-erros-de-validacao-em-ingles.md).
 
 ---
 
@@ -143,8 +153,10 @@ Executar na ordem abaixo. São **9 casos essenciais**. Todas as chamadas usam o 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `PATCH /administradores/3` com `{"nome": "Carlos Andrade Filho"}`: HTTP `200`, “Operação realizada com sucesso”, `data.nome` atualizado. ✅
+- `PATCH /administradores/3` com o e-mail de um aluno: HTTP `409`, mensagem do AC-03; o e-mail de B continuou `carlos.andrade@example.com`. ✅
+- `PATCH /administradores/999999`: HTTP `404`, “Administrador não encontrado.” ✅
+- Status: ✅ Aprovado.
 
 ---
 
@@ -168,8 +180,11 @@ Executar na ordem abaixo. São **9 casos essenciais**. Todas as chamadas usam o 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `PATCH /administradores/3/inativar` com o token de A: HTTP `200`, “Operação realizada com sucesso”, `data.ativo: false`. ✅
+- B continua em `GET /administradores?ativo=false`: soft delete, o registro não foi apagado. ✅
+- `log_auditoria`: novo registro com `usuario_id = 1` (administrador A), `acao = INATIVAR`, `entidade = administrador`, `entidade_id = 3`, `valor_anterior = ativo`, `valor_novo = inativo` e `criado_em` preenchido. ✅
+- Login de B: HTTP `401`, “Usuário administrativo inativo.” ✅
+- Status: ✅ Aprovado.
 
 ---
 
@@ -189,8 +204,9 @@ Executar na ordem abaixo. São **9 casos essenciais**. Todas as chamadas usam o 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `PATCH /administradores/1/inativar` com o token do próprio A: HTTP `409`, “Não é possível inativar a conta atualmente em uso.” ✅
+- A continuou `ativo: true`, e a tabela `log_auditoria` não ganhou registro novo. ✅
+- Status: ✅ Aprovado.
 
 ---
 
@@ -212,8 +228,10 @@ Executar na ordem abaixo. São **9 casos essenciais**. Todas as chamadas usam o 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Token do aluno ativo: `GET /administradores` → 403; `POST /administradores` → 403; `PATCH /administradores/3` → 403; `PATCH /administradores/3/inativar` → 403. ✅
+- Sem token: HTTP `401` nas mesmas quatro rotas. ✅
+- A listagem, conferida com o token de A, não mudou. ✅
+- Status: ✅ Aprovado.
 
 ---
 
@@ -235,8 +253,10 @@ Executar na ordem abaixo. São **9 casos essenciais**. Todas as chamadas usam o 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `POST /administradores` com `" Carla.Mendes@Example.com "`: HTTP `201`, `data.email: "carla.mendes@example.com"` (sem espaços e em minúsculas). ✅
+- `carla.mendes@example.com` e `CARLA.MENDES@EXAMPLE.COM`: HTTP `409` com a mensagem do AC-03. ✅
+- Carla Mendes foi inativada ao final.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -256,14 +276,16 @@ Executar na ordem abaixo. São **9 casos essenciais**. Todas as chamadas usam o 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Antes da inativação, o token de B respondia HTTP `200` em `GET /administradores`.
+- Após o CT-005, com o mesmo token: `GET /administradores` → HTTP `401` “Sessão inválida ou expirada”; `PATCH /administradores/1` → HTTP `401`. ✅
+- Nenhuma alteração gravada (o nome de A não mudou). ✅
+- Status: ✅ Aprovado.
 
 ## Defeitos encontrados
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-HU006-API-003 | Erros de validação (nome curto, e-mail inválido) voltam no formato cru do framework e em inglês. | [BUG-HU006-API-001](issues/BUG-HU006-API-001-erros-de-validacao-em-ingles.md) |
 
 ## Observações gerais
 
@@ -271,4 +293,7 @@ Executar na ordem abaixo. São **9 casos essenciais**. Todas as chamadas usam o 
 - A API também tem `POST /administradores/promover` (transformar um aluno aprovado em administrador). Essa rota não está no requisito da HU-006 e fica fora desta rodada; levar ao líder se deve ganhar casos próprios.
 - Divergência a observar: o requisito pede “Operação realizada com sucesso” para todas as operações, mas a criação responde uma mensagem sobre o envio da senha. Registrar o texto exato no CT-002.
 - A senha temporária é gerada pelo sistema e enviada por e-mail; nunca registrá-la nas evidências.
+- Execução em banco isolado e limpo, com Mailpit capturando os e-mails; massa criada pela API (aluno ativo `qa.hu006.aluno@example.com` e administradores B e Carla Mendes). Nenhum dado do ambiente de desenvolvimento foi alterado.
+- Formato dos erros: as rotas de administradores respondem `{"detail": …}` (409, 404, 422), enquanto outras rotas da API usam o envelope `{"success": false, "error": {…}}`. Registrado no BUG-HU006-API-001.
+- Fora do escopo: o e-mail orienta “Altere sua senha após o primeiro acesso”, mas não há troca obrigatória no primeiro login, e a senha temporária trafega em texto no e-mail. Levar ao líder.
 - Ao final, manter o administrador B inativo (ou removê-lo pelo líder) para não interferir em outras suítes.
