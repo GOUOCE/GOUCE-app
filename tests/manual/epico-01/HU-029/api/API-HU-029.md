@@ -187,7 +187,7 @@ Executar na ordem abaixo. São **6 casos essenciais**.
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| CT-HU029-API-001 | A rota da carteirinha devolve o perfil completo do aluno, incluindo dados sensíveis (raça, orientação sexual, gênero, data de nascimento) que a carteirinha não exibe. | [BUG-HU029-API-001](issues/BUG-HU029-API-001-carteirinha-expoe-dados-sensiveis.md) |
+| CT-HU029-API-001 | A rota da carteirinha devolve o perfil completo do aluno, incluindo dados sensíveis (raça, orientação sexual, gênero, data de nascimento) que a carteirinha não exibe. | [BUG-HU029-API-001](issues/BUG-HU029-API-001-carteirinha-expoe-dados-sensiveis.md) — #140 |
 
 ## Observações gerais
 
