@@ -160,7 +160,7 @@ export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: bool
           <Controller
             control={control}
             name="email"
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
                 label="E-mail *"
                 mode="outlined"
@@ -170,6 +170,12 @@ export function Passo1DadosBasicos({ isRenovacao = false }: { isRenovacao?: bool
                 maxLength={150}
                 value={value}
                 onChangeText={onChange}
+                onBlur={() => {
+                  onBlur();
+                  if (value) {
+                    onChange(value.trim().toLowerCase());
+                  }
+                }}
                 error={!!errors.email}
                 left={<TextInput.Icon icon={() => <Mail size={20} color="#666" />} />}
                 style={styles.input}

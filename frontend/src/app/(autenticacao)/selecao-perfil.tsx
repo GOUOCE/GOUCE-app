@@ -12,8 +12,11 @@ import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 export default function SelecaoPerfilScreen() {
   const router = useRouter();
   const theme = useTheme();
-  const { email, senha } = useLocalSearchParams<{ email: string; senha: string }>();
-  const { signIn, isLoading } = useAuth();
+  const { email: emailParam, senha: senhaParam } = useLocalSearchParams<{ email?: string; senha?: string }>();
+  const { signIn, pendingCredentials, clearPendingCredentials, isLoading } = useAuth();
+
+  const emailFinal = pendingCredentials?.email || emailParam || '';
+  const senhaFinal = pendingCredentials?.senha || senhaParam || '';
 
   // Estado do Pop-up
   const [popup, setPopup] = useState<{
@@ -53,6 +56,7 @@ export default function SelecaoPerfilScreen() {
 
   const confirmarSaida = () => {
     closePopup();
+    clearPendingCredentials();
     if (router.canGoBack()) {
       router.back();
     } else {
@@ -62,8 +66,18 @@ export default function SelecaoPerfilScreen() {
 
   const handleSelectProfile = async (perfil: 'ALUNO' | 'MOTORISTA' | 'ADMINISTRADOR') => {
     try {
-      await signIn(email, senha);
+      await signIn(emailFinal, senhaFinal, perfil);
     } catch (error: any) {
+      if (error.code === 'ROLE_MISMATCH' || error.message?.includes('Perfil')) {
+        showPopup({
+          type: 'warning',
+          title: 'Perfil Incompatível',
+          message: error.message || 'Sua conta pertence a outro perfil de acesso. Escolha a opção correspondente.',
+          confirmText: 'Entendido',
+        });
+        return;
+      }
+
       const status = error.response?.status;
       const detail = error.response?.data?.detail || "";
 

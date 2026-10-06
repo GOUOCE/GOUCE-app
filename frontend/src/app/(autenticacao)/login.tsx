@@ -13,8 +13,7 @@ import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 export default function LoginScreen() {
   const router = useRouter();
   const theme = useTheme();
-  const { perfil } = useLocalSearchParams();
-  const { signIn, isLoading } = useAuth();
+  const { signIn, setPendingCredentials, isLoading } = useAuth();
   const [verSenha, setVerSenha] = useState(false);
 
   // Estado do Pop-up
@@ -67,10 +66,8 @@ export default function LoginScreen() {
   });
 
   const onSubmit = async (dados: LoginFormData) => {
-    router.push({
-      pathname: '/(autenticacao)/selecao-perfil',
-      params: { email: dados.email, senha: dados.senha }
-    });
+    setPendingCredentials({ email: dados.email, senha: dados.senha });
+    router.push('/(autenticacao)/selecao-perfil');
   };
 
   return (
@@ -103,13 +100,20 @@ export default function LoginScreen() {
           <Controller
             control={control}
             name="email"
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
                 mode="outlined"
                 value={value}
                 onChangeText={onChange}
+                onBlur={() => {
+                  onBlur();
+                  if (value) {
+                    onChange(value.trim().toLowerCase());
+                  }
+                }}
                 error={!!errors.email}
                 autoCapitalize="none"
+                autoCorrect={false}
                 keyboardType="email-address"
                 left={<TextInput.Icon icon={() => <Mail size={20} color="#666" />} />}
                 style={styles.input}
