@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 9 | 1 | 2 | 6 |
+| ⏳ Em execução | 9 | 2 | 3 | 4 |
 
 ## Pré-condições
 
@@ -56,8 +56,8 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU028-UI-007 | Dados atuais e validação nos passos | Passos 1 a 3; telefone `8599` no passo 3 | Campos preenchidos com os dados atuais; passo inválido não avança | ⏳ PENDENTE | Não executado. |
-| CT-HU028-UI-008 | Cancelar a renovação no meio | Passo 3 → X → Cancelar renovação? | Confirmação; nada enviado; status inalterado | ⏳ PENDENTE | Não executado. |
+| CT-HU028-UI-007 | Dados atuais e validação nos passos | Passos 1 a 3; telefone `8599` no passo 3 | Campos preenchidos com os dados atuais; passo inválido não avança | ✅ APROVADO | Passos 1 a 3 vieram preenchidos com os dados atuais; telefone `8599` bloqueado com “Informe DDD e número com 9 dígitos” e máscara aplicada; com o número corrigido, avançou. Observação de UX: o teclado cobre o botão Próximo. Confirmado pelo testador em 06/10/2026. |
+| CT-HU028-UI-008 | Cancelar a renovação no meio | Passo 3 → X → Cancelar renovação? | Confirmação; nada enviado; status inalterado | ❌ REPROVADO | O X pediu confirmação e nada foi enviado (status continuou aprovado), mas ao abrir Renovar vínculo de novo a tela voltou exatamente no passo em que o aluno saiu, em vez de começar do zero. Ver [BUG-HU028-UI-008](issues/BUG-HU028-UI-008-renovacao-guarda-estado-anterior.md). Executado pelo testador em 06/10/2026. |
 | CT-HU028-UI-009 | Nova renovação estando em análise | Aluno “Em análise” abre Renovar vínculo | Informar que a renovação já está em análise e não permitir novo envio | ⏳ PENDENTE | Não executado.
 
 ## Detalhamento dos casos
@@ -231,8 +231,12 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Os passos 1 a 3 vieram preenchidos com os dados atuais do aluno. ✅
+- Passo 3 com telefone `8599`: o avanço foi bloqueado com “Informe DDD e número com 9 dígitos”, e a máscara foi aplicada corretamente. ✅
+- Com o telefone corrigido, o passo avançou. ✅
+- Observação de UX: o teclado aberto cobre o botão **Próximo**; é preciso tocar em outra parte da tela para fechar o teclado antes de avançar (mesmo padrão do BUG-HU001-UI-007, teclado cobrindo campos no cadastro).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -255,8 +259,12 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O **X** pediu confirmação (“Cancelar renovação?”); ao confirmar, o app voltou ao painel sem enviar nada, e o status continuou aprovado. ✅
+- Ao abrir **Renovar vínculo** de novo, a tela voltou **exatamente no passo em que o aluno tinha saído**, em vez de começar pela tela de aviso. ❌
+- Observação: a seta de voltar retorna um passo (do 3 para o 2, e assim por diante); no passo 1, ela faz o mesmo que o **X**.
+- Mesma causa da observação registrada após o CT-003 (tela que guarda o estado anterior). Uma nova sessão (sair e entrar de novo) limpa o estado: após um novo login, a tela abriu sem o comprovante anexado.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU028-UI-008](issues/BUG-HU028-UI-008-renovacao-guarda-estado-anterior.md).
 
 ---
 
@@ -283,6 +291,7 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
+| CT-HU028-UI-008 | A renovação guarda o estado anterior: após cancelar ou concluir, reabre no mesmo passo e com o comprovante já anexado. | [BUG-HU028-UI-008](issues/BUG-HU028-UI-008-renovacao-guarda-estado-anterior.md) |
 | CT-HU028-UI-003 | Comprovante de 8,4 MB aceito pelo app e pela API (limite real de 10 MB, requisito de 5 MB). | [BUG-HU028-API-001](../api/issues/BUG-HU028-API-001-limite-de-5mb-nao-aplicado.md) |
 | CT-HU028-UI-003 | Melhoria: a confirmação de envio é um aviso rápido sem estilo (Snackbar); padronizar com o pop-up do app. | [MELHORIA-HU028-UI-003](issues/MELHORIA-HU028-UI-003-confirmacao-do-envio-sem-estilo.md) |
 | CT-HU028-UI-002 | Melhoria: a mensagem sem comprovante não diz que é obrigatório e cita 10 MB (requisito: 5 MB). | [MELHORIA-HU028-UI-002](issues/MELHORIA-HU028-UI-002-mensagem-e-limite-do-comprovante.md) |
