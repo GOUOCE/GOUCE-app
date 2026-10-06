@@ -20,6 +20,7 @@ class SalvarArquivoUseCase:
     def __init__(self, repository, storage_service):
         self.repository = repository
         self.storage_service = storage_service
+        self._objetos_criados: dict[str, str] = {}
 
     def execute(
         self,
@@ -60,7 +61,16 @@ class SalvarArquivoUseCase:
             tamanho_bytes=len(conteudo_bytes),
         )
 
-        salvo = self.repository.salvar(arquivo_orm)
+        try:
+            salvo = self.repository.salvar(arquivo_orm)
+        except Exception:
+            if not self.storage_service.deletar_arquivo(nome_objeto_minio):
+                raise RuntimeError(
+                    "Falha ao reverter o objeto armazenado após erro no registro do arquivo"
+                )
+            raise
+
+        self._objetos_criados[salvo.id] = nome_objeto_minio
 
         return ArquivoResponseDTO(
             id=salvo.id,
@@ -69,3 +79,12 @@ class SalvarArquivoUseCase:
             content_type=salvo.content_type,
             tamanho_bytes=salvo.tamanho_bytes,
         )
+
+    def limpar_arquivos_criados(self) -> None:
+        for arquivo_id, nome_objeto in reversed(tuple(self._objetos_criados.items())):
+            if not self.storage_service.deletar_arquivo(nome_objeto):
+                raise RuntimeError(
+                    f"Falha ao remover o objeto do arquivo {arquivo_id} durante o rollback"
+                )
+            self.repository.excluir(arquivo_id)
+        self._objetos_criados.clear()

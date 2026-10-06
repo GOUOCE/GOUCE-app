@@ -49,6 +49,7 @@ class FakeRepository:
 class FakeArquivoRepository:
     def __init__(self):
         self.saved_files = []
+        self.deleted_files = []
 
     def buscar_por_id(self, arquivo_id):
         return object()
@@ -57,15 +58,28 @@ class FakeArquivoRepository:
         self.saved_files.append(arquivo)
         return arquivo
 
+    def excluir(self, arquivo_id):
+        self.deleted_files.append(arquivo_id)
+
 
 class FakeStorageService:
+    def __init__(self):
+        self.deleted_objects = []
+
     def salvar_arquivo(self, conteudo, nome_objeto, content_type=None):
         return f"http://storage.test/{nome_objeto}"
+
+    def deletar_arquivo(self, nome_objeto):
+        self.deleted_objects.append(nome_objeto)
+        return True
 
 
 class FailingStorageService:
     def salvar_arquivo(self, conteudo, nome_objeto, content_type=None):
         raise ValueError("SQL secret_table constraint senha=segredo")
+
+    def deletar_arquivo(self, nome_objeto):
+        return True
 
 
 class FakeHasher:
@@ -114,7 +128,8 @@ class CadastroApiResponsesTest(unittest.IsolatedAsyncioTestCase):
         self.app.dependency_overrides[get_arquivo_repository] = FakeArquivoRepository
         self.app.dependency_overrides[get_hasher] = FakeHasher
         self.app.dependency_overrides[get_token_service] = lambda: object()
-        self.app.dependency_overrides[get_storage_service] = FakeStorageService
+        self.storage_service = FakeStorageService()
+        self.app.dependency_overrides[get_storage_service] = lambda: self.storage_service
 
     @staticmethod
     def payload(**updates):
@@ -359,6 +374,7 @@ class CadastroApiResponsesTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(status, 400)
         self.assertEqual(body["error"]["details"][0]["field"], "nome")
         self.assertTrue(body["error"]["details"][0]["message"])
+        self.assertEqual(len(self.storage_service.deleted_objects), 2)
 
     async def test_cadastro_multipart_sem_telefone_retorna_422(self):
         payload = self.payload()

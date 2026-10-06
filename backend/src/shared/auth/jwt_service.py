@@ -15,7 +15,7 @@ if not SECRET or not ALGORITHM:
 
 class JWTService(TokenService):
 
-    def generate(self, user, cargo: str, lembrar_me: bool = False) -> str:
+    def generate(self, user, cargo: str | list[str], lembrar_me: bool = False) -> str:
         payload = {
             "sub": str(user.id),
             "role": cargo,
@@ -26,7 +26,7 @@ class JWTService(TokenService):
 
         return jwt.encode(payload, SECRET, algorithm=ALGORITHM)
 
-    def generate_refresh_token(self, user, cargo: str, lembrar_me: bool = False) -> str:
+    def generate_refresh_token(self, user, cargo: str | list[str], lembrar_me: bool = False) -> str:
         dias_expiracao = 30 if lembrar_me else 0
         horas_expiracao = 0 if lembrar_me else 8
         

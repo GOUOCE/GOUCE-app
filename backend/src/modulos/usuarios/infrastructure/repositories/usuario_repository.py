@@ -190,19 +190,48 @@ class SQLAlchemyUsuarioRepository:
                 "aluno": None,
             })
 
-        # Um usuário sem perfil, ou com mais de um perfil, não deve receber
-        # autorização por inferência arbitrária.
-        if len(candidatos) != 1:
+        candidatos_ativos = [candidato for candidato in candidatos if candidato["ativo"]]
+        if not candidatos_ativos:
+            contexto_inativo = next(
+                (
+                    candidato
+                    for candidato in candidatos
+                    if candidato["role"] == tipo_associado
+                ),
+                candidatos[0] if candidatos else None,
+            )
+            if contexto_inativo:
+                return {
+                    "usuario": usuario,
+                    **contexto_inativo,
+                    "roles": [candidato["role"] for candidato in candidatos],
+                }
             return {
                 "usuario": usuario,
                 "role": None,
+                "roles": [],
                 "ativo": False,
                 "status": None,
                 "motivo": "Perfil de usuário não identificado.",
                 "aluno": aluno,
             }
 
-        contexto = candidatos[0]
+        contexto = next(
+            (
+                candidato
+                for candidato in candidatos_ativos
+                if candidato["role"] == tipo_associado
+            ),
+            candidatos_ativos[0],
+        )
+        roles = [
+            contexto["role"],
+            *(
+                candidato["role"]
+                for candidato in candidatos_ativos
+                if candidato["role"] != contexto["role"]
+            ),
+        ]
 
         limite_de_bloqueio = usuario.limite_de_bloqueio
         if contexto["ativo"] and limite_de_bloqueio:
@@ -215,6 +244,7 @@ class SQLAlchemyUsuarioRepository:
         return {
             "usuario": usuario,
             **contexto,
+            "roles": roles,
         }
 
     def buscar_contexto_autenticacao_por_email(self, email: str) -> dict | None:
