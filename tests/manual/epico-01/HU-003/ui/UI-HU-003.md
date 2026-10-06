@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Em execução | 11 | 2 | 2 | 3 | 4 |
+| ⏳ Em execução | 11 | 3 | 2 | 3 | 3 |
 
 ## Pré-condições
 
@@ -49,7 +49,7 @@ Executar na ordem abaixo. São **11 casos**, em três seções. Os IDs completos
 | CT-HU003-UI-005 | Aluno abre tela administrativa por link | Aluno logado; link para `cadastros` | Exibir Acesso Negado, sem dados administrativos | ✅ APROVADO | O link abriu o app na tela Acesso Negado, com “Você não tem permissão para acessar esta área.” e “Erro 403 - Forbidden”, sem exibir a tela administrativa. O botão Voltar levou ao painel do aluno. Confirmado pelo testador em 05/10/2026. |
 | CT-HU003-UI-006 | Representante abre tela administrativa por link | Representante logado; link para `cadastros` | Exibir Acesso Negado | 🚫 BLOQUEADO | Exige representante logado, perfil que ainda não existe no backend (ver CT-003). Registrado em 05/10/2026. |
 | CT-HU003-UI-007 | Administrador abre tela do aluno por link | Administrador logado; link para `carteirinha-digital` | Exibir Acesso Negado, sem dados de aluno | ❌ REPROVADO | A tela da carteirinha chegou a carregar por um instante antes de o app trocar para Acesso Negado (“Erro 403 - Forbidden”). O bloqueio acontece só depois de a tela abrir. Ver [BUG-HU003-UI-007](issues/BUG-HU003-UI-007-tela-protegida-aparece-antes-do-bloqueio.md). Executado pelo testador em 05/10/2026. |
-| CT-HU003-UI-008 | Aluno abre tela do representante por link | Aluno logado; link para `rota` | Exibir Acesso Negado | ⏳ PENDENTE | Não executado. |
+| CT-HU003-UI-008 | Aluno abre tela do representante por link | Aluno logado; link para `rota` | Exibir Acesso Negado | ✅ APROVADO | O link abriu direto a tela Acesso Negado (“Erro 403 - Forbidden”), sem exibir a tela Minha Rota; o botão Voltar levou ao painel do aluno. Confirmado pelo testador em 05/10/2026. |
 | CT-HU003-UI-009 | Voltar da tela Acesso Negado | Tela Acesso Negado aberta pelo CT-005 e pelo CT-007 | Voltar para a tela inicial do próprio perfil | ⏳ PENDENTE | Não executado. |
 
 ### Seção C — Sessão e mudança de perfil
@@ -261,8 +261,11 @@ Executar na ordem abaixo. São **11 casos**, em três seções. Os IDs completos
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Com o aluno logado, o link `exp://<IP>:8081/--/rota` abriu o app direto na tela **Acesso Negado**, com “Você não tem permissão para acessar esta área.” e “Erro 403 - Forbidden”.
+- A tela **Minha Rota** não foi percebida antes do bloqueio. Ela só exibe um título, então um eventual instante de exibição, como o do CT-HU003-UI-007, é difícil de notar; a correção do [BUG-HU003-UI-007](issues/BUG-HU003-UI-007-tela-protegida-aparece-antes-do-bloqueio.md) também cobre este caso.
+- O botão **Voltar** levou ao painel do aluno.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
