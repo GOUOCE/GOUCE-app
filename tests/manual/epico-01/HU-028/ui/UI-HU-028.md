@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 9 | 4 | 3 | 2 |
+| ⏳ Em execução | 9 | 4 | 4 | 1 |
 
 ## Pré-condições
 
@@ -58,7 +58,7 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 | --- | --- | --- | --- | --- | --- |
 | CT-HU028-UI-007 | Dados atuais e validação nos passos | Passos 1 a 3; telefone `8599` no passo 3 | Campos preenchidos com os dados atuais; passo inválido não avança | ✅ APROVADO | Passos 1 a 3 vieram preenchidos com os dados atuais; telefone `8599` bloqueado com “Informe DDD e número com 9 dígitos” e máscara aplicada; com o número corrigido, avançou. Observação de UX: o teclado cobre o botão Próximo. Confirmado pelo testador em 06/10/2026. |
 | CT-HU028-UI-008 | Cancelar a renovação no meio | Passo 3 → X → Cancelar renovação? | Confirmação; nada enviado; status inalterado | ❌ REPROVADO | O X pediu confirmação e nada foi enviado (status continuou aprovado), mas ao abrir Renovar vínculo de novo a tela voltou exatamente no passo em que o aluno saiu, em vez de começar do zero. Ver [BUG-HU028-UI-008](issues/BUG-HU028-UI-008-renovacao-guarda-estado-anterior.md). Executado pelo testador em 06/10/2026. |
-| CT-HU028-UI-009 | Nova renovação estando em análise | Aluno “Em análise” abre Renovar vínculo | Informar que a renovação já está em análise e não permitir novo envio | ⏳ PENDENTE | Não executado.
+| CT-HU028-UI-009 | Nova renovação estando em análise | Aluno “Em análise” abre Renovar vínculo | Informar que a renovação já está em análise e não permitir novo envio | ❌ REPROVADO | Com status em análise, Renovar vínculo abriu direto no passo 4, sem aviso; o reenvio foi aceito (HTTP 200 no log do backend) e o comprovante em análise foi substituído por um novo. Ver [BUG-HU028-API-003](../api/issues/BUG-HU028-API-003-renovacao-duplicada-substitui-comprovante.md) e [BUG-HU028-UI-008](issues/BUG-HU028-UI-008-renovacao-guarda-estado-anterior.md). Executado pelo testador em 06/10/2026. |
 
 ## Detalhamento dos casos
 
@@ -290,13 +290,17 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Com o status em análise (após o CT-004), **Renovar vínculo** abriu direto no **passo 4**, com o comprovante anterior anexado, e sem aviso de que já existe renovação em análise. ❌
+- Ao tocar em enviar, apareceu de novo o aviso rápido de sucesso. O testador não viu a resposta no DevTools, mas o log do backend registra `PUT /alunos/renovar-vinculo` com HTTP 200, e o comprovante em análise foi **substituído** por um novo registro (conferido no banco). ❌
+- Mesmo defeito do CT-HU028-API-007 (a API aceita renovação duplicada) somado ao estado retido da tela (BUG-HU028-UI-008).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU028-API-003](../api/issues/BUG-HU028-API-003-renovacao-duplicada-substitui-comprovante.md).
 
 ## Defeitos encontrados
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
+| CT-HU028-UI-009 | Com status em análise, o app permite e a API aceita nova renovação, substituindo o comprovante em análise. | [BUG-HU028-API-003](../api/issues/BUG-HU028-API-003-renovacao-duplicada-substitui-comprovante.md) |
 | CT-HU028-UI-008 | A renovação guarda o estado anterior: após cancelar ou concluir, reabre no mesmo passo e com o comprovante já anexado. | [BUG-HU028-UI-008](issues/BUG-HU028-UI-008-renovacao-guarda-estado-anterior.md) |
 | CT-HU028-UI-003 | Comprovante de 8,4 MB aceito pelo app e pela API (limite real de 10 MB, requisito de 5 MB). | [BUG-HU028-API-001](../api/issues/BUG-HU028-API-001-limite-de-5mb-nao-aplicado.md) |
 | CT-HU028-UI-003 | Melhoria: a confirmação de envio é um aviso rápido sem estilo (Snackbar); padronizar com o pop-up do app. | [MELHORIA-HU028-UI-003](issues/MELHORIA-HU028-UI-003-confirmacao-do-envio-sem-estilo.md) |

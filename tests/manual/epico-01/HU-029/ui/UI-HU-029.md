@@ -54,7 +54,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU029-UI-006 | Carteirinha após sair da conta | Aluno A sai; app reaberto sem login | Nenhuma carteirinha acessível sem login | ⏳ PENDENTE | Não executado. |
-| CT-HU029-UI-007 | Carteirinha após perder a aprovação | Aluno A aprovado vira “em análise” durante a sessão | Com internet, o documento é ocultado, mesmo havendo cache | ⏳ PENDENTE | Não executado.
+| CT-HU029-UI-007 | Carteirinha após perder a aprovação | Aluno A aprovado vira “em análise” durante a sessão | Com internet, o documento é ocultado, mesmo havendo cache | ⏳ PENDENTE | Não executado. |
 
 ## Detalhamento dos casos
 
