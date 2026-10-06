@@ -303,12 +303,12 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| CT-HU028-UI-009 | Com status em análise, o app permite e a API aceita nova renovação, substituindo o comprovante em análise. | [BUG-HU028-API-003](../api/issues/BUG-HU028-API-003-renovacao-duplicada-substitui-comprovante.md) |
-| CT-HU028-UI-008 | A renovação guarda o estado anterior: após cancelar ou concluir, reabre no mesmo passo e com o comprovante já anexado. | [BUG-HU028-UI-008](issues/BUG-HU028-UI-008-renovacao-guarda-estado-anterior.md) |
-| CT-HU028-UI-003 | Comprovante de 8,4 MB aceito pelo app e pela API (limite real de 10 MB, requisito de 5 MB). | [BUG-HU028-API-001](../api/issues/BUG-HU028-API-001-limite-de-5mb-nao-aplicado.md) |
-| CT-HU028-UI-003 | Melhoria: a confirmação de envio é um aviso rápido sem estilo (Snackbar); padronizar com o pop-up do app. | [MELHORIA-HU028-UI-003](issues/MELHORIA-HU028-UI-003-confirmacao-do-envio-sem-estilo.md) |
-| CT-HU028-UI-002 | Melhoria: a mensagem sem comprovante não diz que é obrigatório e cita 10 MB (requisito: 5 MB). | [MELHORIA-HU028-UI-002](issues/MELHORIA-HU028-UI-002-mensagem-e-limite-do-comprovante.md) |
-| CT-HU028-UI-001 | O aluno com vínculo vencido é barrado no login e não consegue renovar. | BUG-HU028-API-002 (mesma causa, suíte de API) |
+| CT-HU028-UI-009 | Com status em análise, o app permite e a API aceita nova renovação, substituindo o comprovante em análise. | [BUG-HU028-API-003](../api/issues/BUG-HU028-API-003-renovacao-duplicada-substitui-comprovante.md) — #133 |
+| CT-HU028-UI-008 | A renovação guarda o estado anterior: após cancelar ou concluir, reabre no mesmo passo e com o comprovante já anexado. | [BUG-HU028-UI-008](issues/BUG-HU028-UI-008-renovacao-guarda-estado-anterior.md) — #135 |
+| CT-HU028-UI-003 | Comprovante de 8,4 MB aceito pelo app e pela API (limite real de 10 MB, requisito de 5 MB). | [BUG-HU028-API-001](../api/issues/BUG-HU028-API-001-limite-de-5mb-nao-aplicado.md) — #131 |
+| CT-HU028-UI-003 | Melhoria: a confirmação de envio é um aviso rápido sem estilo (Snackbar); padronizar com o pop-up do app. | [MELHORIA-HU028-UI-003](issues/MELHORIA-HU028-UI-003-confirmacao-do-envio-sem-estilo.md) — #137 |
+| CT-HU028-UI-002 | Melhoria: a mensagem sem comprovante não diz que é obrigatório e cita 10 MB (requisito: 5 MB). | [MELHORIA-HU028-UI-002](issues/MELHORIA-HU028-UI-002-mensagem-e-limite-do-comprovante.md) — #136 |
+| CT-HU028-UI-001 | O aluno com vínculo vencido é barrado no login e não consegue renovar. | BUG-HU028-API-002 (mesma causa, suíte de API) — #132 |
 
 ## Observações gerais
 
