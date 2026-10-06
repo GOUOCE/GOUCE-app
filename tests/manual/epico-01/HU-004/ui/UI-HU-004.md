@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 7 | 2 | 1 | 4 |
+| ⏳ Em execução | 7 | 3 | 1 | 3 |
 
 ## Pré-condições
 
@@ -45,7 +45,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU004-UI-004 | Nova senha fora das regras | Abc123; abcdefgh1; ABCDEFGH1; Abcdefgh | Bloquear e indicar o critério não atendido | ⏳ PENDENTE | Não executado. |
+| CT-HU004-UI-004 | Nova senha fora das regras | Abc123; abcdefgh1; ABCDEFGH1; Abcdefgh | Bloquear e indicar o critério não atendido | ✅ APROVADO | As quatro senhas foram bloqueadas, cada uma com a regra não atendida: mínimo de 8 caracteres, letra maiúscula, letra minúscula e número. Link aberto por `exp://<IP>:8081/--/redefinir-senha?token=...` (plano B do PC-03). Confirmado pelo testador em 06/10/2026. |
 | CT-HU004-UI-005 | Senha e confirmação divergentes | NovaSenha@1 / NovaSenha@2 | Botão desabilitado e aviso de senhas diferentes | ⏳ PENDENTE | Não executado. |
 | CT-HU004-UI-006 | Redefinição válida e login | NovaSenha@1 nos dois campos | Confirmação, volta ao login; entra só com a nova senha | ⏳ PENDENTE | Não executado. |
 | CT-HU004-UI-007 | Link já utilizado ou expirado | Link do CT-006; link com mais de 15 min | Bloquear a tela de nova senha e orientar a solicitar novamente | ⏳ PENDENTE | Não executado. |
@@ -149,8 +149,14 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Link aberto pelo plano B do PC-03 (`exp://<IP>:8081/--/redefinir-senha?token=...` no Safari), porque o botão do e-mail aponta para um IP fixo no código.
+- `Abc123`: bloqueada — “A senha deve ter pelo menos 8 caracteres”.
+- `abcdefgh1`: bloqueada — deve conter uma letra maiúscula.
+- `ABCDEFGH1`: bloqueada — deve conter uma letra minúscula.
+- `Abcdefgh`: bloqueada — deve conter um número.
+- A senha da conta não foi alterada.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
