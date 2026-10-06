@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Em execução | 11 | 3 | 2 | 3 | 3 |
+| ⏳ Em execução | 11 | 4 | 2 | 3 | 2 |
 
 ## Pré-condições
 
@@ -50,7 +50,7 @@ Executar na ordem abaixo. São **11 casos**, em três seções. Os IDs completos
 | CT-HU003-UI-006 | Representante abre tela administrativa por link | Representante logado; link para `cadastros` | Exibir Acesso Negado | 🚫 BLOQUEADO | Exige representante logado, perfil que ainda não existe no backend (ver CT-003). Registrado em 05/10/2026. |
 | CT-HU003-UI-007 | Administrador abre tela do aluno por link | Administrador logado; link para `carteirinha-digital` | Exibir Acesso Negado, sem dados de aluno | ❌ REPROVADO | A tela da carteirinha chegou a carregar por um instante antes de o app trocar para Acesso Negado (“Erro 403 - Forbidden”). O bloqueio acontece só depois de a tela abrir. Ver [BUG-HU003-UI-007](issues/BUG-HU003-UI-007-tela-protegida-aparece-antes-do-bloqueio.md). Executado pelo testador em 05/10/2026. |
 | CT-HU003-UI-008 | Aluno abre tela do representante por link | Aluno logado; link para `rota` | Exibir Acesso Negado | ✅ APROVADO | O link abriu direto a tela Acesso Negado (“Erro 403 - Forbidden”), sem exibir a tela Minha Rota; o botão Voltar levou ao painel do aluno. Confirmado pelo testador em 05/10/2026. |
-| CT-HU003-UI-009 | Voltar da tela Acesso Negado | Tela Acesso Negado aberta pelo CT-005 e pelo CT-007 | Voltar para a tela inicial do próprio perfil | ⏳ PENDENTE | Não executado. |
+| CT-HU003-UI-009 | Voltar da tela Acesso Negado | Tela Acesso Negado aberta pelo CT-005 e pelo CT-007 | Voltar para a tela inicial do próprio perfil | ✅ APROVADO | Aluno (CT-005 e CT-008): Voltar levou ao painel do aluno. Administrador (link para `carteirinha-digital`): Voltar levou ao Painel, sem pedir login. Confirmado pelo testador em 05/10/2026. |
 
 ### Seção C — Sessão e mudança de perfil
 
@@ -241,6 +241,7 @@ Executar na ordem abaixo. São **11 casos**, em três seções. Os IDs completos
 - Com o administrador logado, o link `exp://<IP>:8081/--/carteirinha-digital` abriu a tela da **carteirinha digital** por um instante; logo depois o app trocou para **Acesso Negado** (“Você não tem permissão para acessar esta área.” e “Erro 403 - Forbidden”).
 - A API bloqueia corretamente: `GET /alunos/me/carteirinha` com o token do administrador responde `403 Acesso negado`.
 - O problema está no app: o bloqueio por perfil (`AuthContext.tsx`) roda num `useEffect`, depois que a tela já foi desenhada. Enquanto isso, a carteirinha é montada com os dados da sessão (nome e e-mail do administrador) e valores de exemplo fixos no código (instituição, curso, foto), e o QR Code inclui o id, o e-mail e o início do token da sessão.
+- Na repetição feita no CT-HU003-UI-009, a carteirinha não chegou a ser percebida: o defeito é intermitente e depende do tempo de carregamento, mas basta uma ocorrência para reprovar o caso.
 - Execução confirmada pelo testador em 05/10/2026.
 - Status: ❌ Reprovado — [BUG-HU003-UI-007](issues/BUG-HU003-UI-007-tela-protegida-aparece-antes-do-bloqueio.md).
 
@@ -285,8 +286,12 @@ Executar na ordem abaixo. São **11 casos**, em três seções. Os IDs completos
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Aluno: nas telas Acesso Negado abertas pelo CT-HU003-UI-005 e pelo CT-HU003-UI-008, **Voltar** levou ao painel do aluno.
+- Administrador: na tela Acesso Negado aberta pelo link `carteirinha-digital`, **Voltar** levou ao **Painel** do administrador.
+- Nos dois perfis a sessão continuou ativa, sem pedir login de novo.
+- Nesta repetição do link `carteirinha-digital` com o administrador, a carteirinha não chegou a ser percebida antes do Acesso Negado. O defeito do CT-HU003-UI-007 é intermitente: depende do tempo de carregamento.
+- Execução confirmada pelo testador em 05/10/2026.
+- Status: ✅ Aprovado.
 
 ### Seção C — Sessão e mudança de perfil
 

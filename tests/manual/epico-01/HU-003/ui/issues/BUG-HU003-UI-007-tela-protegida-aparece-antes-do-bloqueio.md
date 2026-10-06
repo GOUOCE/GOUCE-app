@@ -27,6 +27,8 @@ Exibir direto a tela **Acesso Negado**, sem mostrar, nem por um instante, a tela
 
 A tela da **carteirinha digital** é desenhada por um instante e só então o app troca para **Acesso Negado** (“Erro 403 - Forbidden”).
 
+O defeito é **intermitente**: numa segunda tentativa, a carteirinha não chegou a ser percebida. A exibição depende do tempo que o app leva para rodar a checagem de perfil.
+
 ### ⚠️ Impacto
 
 - O controle de acesso da interface acontece depois que a tela já abriu: o usuário vê componentes de uma área a que não tem permissão.
