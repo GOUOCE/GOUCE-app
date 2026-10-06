@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 7 | 0 | 1 | 6 |
+| ⏳ Em execução | 7 | 0 | 2 | 5 |
 
 ## Pré-condições
 
@@ -39,7 +39,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU029-UI-001 | Abrir a carteirinha do aluno aprovado | Aluno A; Perfil e atalho do Início | Foto, nome, curso, instituição e QR Code; abre rápido | ❌ REPROVADO | Por Perfil → Ver carteirinha digital, abriu instantaneamente com a foto, nome, curso, instituição, e-mail, data de emissão, QR Code e logo da prefeitura; a seta voltou. Porém o atalho Carteirinha Digital do Início não abre nada, e textos longos (ex.: o curso) aparecem cortados com reticências. Ver [BUG-HU029-UI-001](issues/BUG-HU029-UI-001-atalho-do-inicio-sem-acao.md) e [BUG-HU029-UI-001-dados-cortados](issues/BUG-HU029-UI-001-dados-cortados-na-carteirinha.md). Executado pelo testador em 06/10/2026. |
-| CT-HU029-UI-002 | Aluno sem status aprovado | Aluno B (em análise ou pendente) | Documento oculto e “Carteirinha indisponível…” | ⏳ PENDENTE | Não executado. |
+| CT-HU029-UI-002 | Aluno sem status aprovado | Aluno B (em análise ou pendente) | Documento oculto e “Carteirinha indisponível…” | ❌ REPROVADO | O aluno B, em análise de renovação, conseguiu abrir a carteirinha. A API recusou (HTTP 403 no log do backend), mas o app ignorou a recusa e montou o documento com os dados da sessão, sem a mensagem de indisponibilidade. Ver [BUG-HU029-UI-002](issues/BUG-HU029-UI-002-app-exibe-carteirinha-recusada-pela-api.md). Executado pelo testador em 06/10/2026. |
 | CT-HU029-UI-003 | Dados reais, sem valores de exemplo | Aluno A após editar o perfil | Só dados do aluno A, atualizados | ⏳ PENDENTE | Não executado. |
 
 ### Seção B — Uso no embarque
@@ -107,8 +107,12 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Preparação: aluno B (`thebirl009@gmail.com`) colocado em `analise_renovacao` e com senha de teste definida no banco local; a API foi conferida antes (`GET /alunos/me/carteirinha` → 403).
+- Com o aluno B logado, **Perfil → Ver carteirinha digital** abriu a carteirinha. ❌
+- No log do backend, a chamada do app à carteirinha recebeu `403 Forbidden`: a API bloqueou corretamente (correção da #75), mas o app ignorou a recusa e exibiu o documento com os dados da sessão, sem a mensagem “Carteirinha indisponível. Seu cadastro está inativo ou em análise.” (AC-02).
+- Causa aparente: `frontend/src/app/(aluno)/carteirinha-digital.tsx` trata qualquer erro de `getCarteirinha()` como “offline” (`console.warn('Carteirinha offline ou em carregamento, usando cache do usuário')`) e monta a carteirinha com os dados do usuário logado e valores padrão.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU029-UI-002](issues/BUG-HU029-UI-002-app-exibe-carteirinha-recusada-pela-api.md).
 
 ---
 
@@ -226,6 +230,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
+| CT-HU029-UI-002 | Aluno sem status aprovado consegue abrir a carteirinha: o app ignora o 403 da API e monta o documento com os dados da sessão. | [BUG-HU029-UI-002](issues/BUG-HU029-UI-002-app-exibe-carteirinha-recusada-pela-api.md) |
 | CT-HU029-UI-001 | O atalho Carteirinha Digital da tela Início não abre nada. | [BUG-HU029-UI-001](issues/BUG-HU029-UI-001-atalho-do-inicio-sem-acao.md) |
 | CT-HU029-UI-001 | Nome, e-mail, instituição e curso são cortados em uma linha com reticências. | [BUG-HU029-UI-001-dados-cortados](issues/BUG-HU029-UI-001-dados-cortados-na-carteirinha.md) |
 
