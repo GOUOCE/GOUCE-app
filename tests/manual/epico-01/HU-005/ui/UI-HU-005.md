@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 7 | 5 | 1 | 1 |
+| ✅ Executada | 7 | 6 | 1 | 0 |
 
 ## Pré-condições
 
@@ -48,7 +48,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 | --- | --- | --- | --- | --- | --- |
 | CT-HU005-UI-005 | Alterar e-mail com senha correta | qa.hu005.novo@example.com; senha atual | Sucesso; login só com o novo e-mail | ✅ APROVADO | Exibiu “E-mail alterado — Endereço de e-mail alterado com sucesso. Utilize o novo e-mail no próximo login.” (pop-up do app); o perfil mostrou o novo e-mail; o login com o e-mail antigo falhou e com o novo entrou. A primeira tentativa falhou com “E-mail não autorizado” porque o token da sessão tinha vencido (15 min) — ver [BUG-HU005-UI-005](issues/BUG-HU005-UI-005-sessao-expira-em-15-minutos-sem-renovacao.md). Confirmado pelo testador em 06/10/2026. |
 | CT-HU005-UI-006 | Alteração de e-mail rejeitada | Sem senha; senha errada; e-mail do aluno B; maria.souzaufc.br | Bloquear com a mensagem de cada situação; e-mail inalterado | ✅ APROVADO | Sem senha, senha errada, e-mail de outra conta e formato inválido foram bloqueados, cada um com mensagem própria em português; o e-mail da conta não mudou. Confirmado pelo testador em 06/10/2026. |
-| CT-HU005-UI-007 | Falha de conexão ao salvar | Telefone alterado; Wi-Fi e dados móveis desligados | Mensagem de conexão e dados mantidos na tela | ⏳ PENDENTE | Não executado. |
+| CT-HU005-UI-007 | Falha de conexão ao salvar | Telefone alterado; Wi-Fi e dados móveis desligados | Mensagem de conexão e dados mantidos na tela | ✅ APROVADO | Sem conexão, o app exibiu erro de conexão sem travar e manteve o telefone no campo; com a conexão de volta, salvou sem redigitar (telefone `85997814542` confirmado pela API). Confirmado pelo testador em 06/10/2026. |
 
 ## Detalhamento dos casos
 
@@ -243,8 +243,11 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Sem Wi-Fi e dados móveis, **Salvar alterações** exibiu erro de conexão, sem travar o app, e o telefone digitado continuou no campo.
+- Com a conexão religada, **Salvar alterações** concluiu sem redigitar.
+- Persistência confirmada pela API (`GET /usuarios/me`): telefone `85997814542`.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ## Defeitos encontrados
 
