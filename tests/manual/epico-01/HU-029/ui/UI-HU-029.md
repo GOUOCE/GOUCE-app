@@ -11,14 +11,14 @@
 | Tela            | Início do aluno (atalho Carteirinha Digital), Meu Perfil → Ver carteirinha digital e Carteirinha Digital |
 | Ambiente        | Desenvolvimento — app mobile no iPhone (Expo Go)                                        |
 | Total de casos  | 7 |
-| Última execução | Não realizada                                                                           |
+| Última execução | 06/10/2026                                                                              |
 | Testador        | Cauan Ricardo                                                                           |
 
 ## Resultado geral
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Não executada | 7 | 0 | 0 | 7 |
+| ⏳ Em execução | 7 | 0 | 1 | 6 |
 
 ## Pré-condições
 
@@ -38,7 +38,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU029-UI-001 | Abrir a carteirinha do aluno aprovado | Aluno A; Perfil e atalho do Início | Foto, nome, curso, instituição e QR Code; abre rápido | ⏳ PENDENTE | Não executado. |
+| CT-HU029-UI-001 | Abrir a carteirinha do aluno aprovado | Aluno A; Perfil e atalho do Início | Foto, nome, curso, instituição e QR Code; abre rápido | ❌ REPROVADO | Por Perfil → Ver carteirinha digital, abriu instantaneamente com a foto, nome, curso, instituição, e-mail, data de emissão, QR Code e logo da prefeitura; a seta voltou. Porém o atalho Carteirinha Digital do Início não abre nada, e textos longos (ex.: o curso) aparecem cortados com reticências. Ver [BUG-HU029-UI-001](issues/BUG-HU029-UI-001-atalho-do-inicio-sem-acao.md) e [BUG-HU029-UI-001-dados-cortados](issues/BUG-HU029-UI-001-dados-cortados-na-carteirinha.md). Executado pelo testador em 06/10/2026. |
 | CT-HU029-UI-002 | Aluno sem status aprovado | Aluno B (em análise ou pendente) | Documento oculto e “Carteirinha indisponível…” | ⏳ PENDENTE | Não executado. |
 | CT-HU029-UI-003 | Dados reais, sem valores de exemplo | Aluno A após editar o perfil | Só dados do aluno A, atualizados | ⏳ PENDENTE | Não executado. |
 
@@ -80,8 +80,13 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Atalho **Carteirinha Digital** na tela **Início**: aparece, mas não faz nada ao ser tocado (`QuickAction` sem `onPress` em `frontend/src/app/(aluno)/home.tsx:47`). ❌
+- **Perfil → Ver carteirinha digital**: abriu instantaneamente (bem abaixo de 2 s), com a foto de perfil do aluno A, nome completo, curso, instituição, e-mail, data de emissão, QR Code e o logo da prefeitura. ✅
+- A seta de voltar retornou à tela anterior. ✅
+- Os textos ficam limitados a uma linha (`numberOfLines={1}` no nome, e-mail, instituição e curso): o curso “Engenharia de Software” já aparece cortado com reticências, e nomes ou cursos mais longos ficam incompletos num documento de identificação. ❌
+- A data de emissão exibida (“10/09/2026”) é fixa no código; avaliada no CT-HU029-UI-003.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU029-UI-001](issues/BUG-HU029-UI-001-atalho-do-inicio-sem-acao.md) e [BUG-HU029-UI-001-dados-cortados](issues/BUG-HU029-UI-001-dados-cortados-na-carteirinha.md).
 
 ---
 
@@ -221,7 +226,8 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-HU029-UI-001 | O atalho Carteirinha Digital da tela Início não abre nada. | [BUG-HU029-UI-001](issues/BUG-HU029-UI-001-atalho-do-inicio-sem-acao.md) |
+| CT-HU029-UI-001 | Nome, e-mail, instituição e curso são cortados em uma linha com reticências. | [BUG-HU029-UI-001-dados-cortados](issues/BUG-HU029-UI-001-dados-cortados-na-carteirinha.md) |
 
 ## Observações gerais
 
