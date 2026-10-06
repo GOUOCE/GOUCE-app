@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 7 | 1 | 0 | 6 |
+| ⏳ Em execução | 7 | 2 | 0 | 5 |
 
 ## Pré-condições
 
@@ -37,8 +37,8 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU005-UI-001 | Visualizar o próprio perfil | Aluno A logado; aba Perfil | Exibir os dados cadastrais atuais do aluno A | ✅ APROVADO | Meu Perfil exibiu foto, nome completo, status Aprovado, e-mail, telefone, instituição, curso, período de ingresso e turno do aluno A, sem valores de exemplo, e as ações Editar perfil, Alterar endereço de e-mail, Ver carteirinha digital e Renovar vínculo. Observação: telefone sem máscara (ex.: `31997814542`). Confirmado pelo testador em 06/10/2026. |
-| CT-HU005-UI-002 | Editar telefone e bairro | (85) 98888-1111; outro bairro | Mensagem de sucesso e dados atualizados no perfil | ⏳ PENDENTE | Não executado. |
+| CT-HU005-UI-001 | Visualizar o próprio perfil | Aluno A logado; aba Perfil | Exibir os dados cadastrais atuais do aluno A | ✅ APROVADO | Meu Perfil exibiu foto, nome completo, status Aprovado, e-mail, telefone, instituição, curso, período de ingresso e turno do aluno A, sem valores de exemplo, e as ações Editar perfil, Alterar endereço de e-mail, Ver carteirinha digital e Renovar vínculo. Observação: telefone sem máscara (ex.: `31997814542`), ver [MELHORIA-HU005-UI-002](issues/MELHORIA-HU005-UI-002-mascara-telefone-no-perfil.md). Confirmado pelo testador em 06/10/2026. |
+| CT-HU005-UI-002 | Editar telefone e bairro | (85) 98888-1111; outro bairro | Mensagem de sucesso e dados atualizados no perfil | ✅ APROVADO | Exibiu “Perfil atualizado — Suas informações de perfil foram atualizadas com sucesso!” e voltou a Meu Perfil com o telefone novo; telefone `85988881111` e bairro Serra confirmados no banco pela API. Observação: campo Telefone sem máscara ([MELHORIA-HU005-UI-002](issues/MELHORIA-HU005-UI-002-mascara-telefone-no-perfil.md)). Confirmado pelo testador em 06/10/2026. |
 | CT-HU005-UI-003 | Telefone inválido | 8599; 85abc123456; vazio | Bloquear e alertar no campo Telefone | ⏳ PENDENTE | Não executado. |
 | CT-HU005-UI-004 | Campos acadêmicos somente leitura | Meu Perfil e Editar Perfil | Instituição, curso, período e turno não editáveis | ⏳ PENDENTE | Não executado. |
 
@@ -98,8 +98,13 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Editar perfil** abriu com os campos preenchidos com os dados atuais.
+- Telefone alterado para `(85) 98888-1111` e bairro para **Serra**.
+- Ao tocar em **Salvar alterações**: “Perfil atualizado — Suas informações de perfil foram atualizadas com sucesso!”, e o app voltou a **Meu Perfil** com o telefone novo.
+- Persistência confirmada pela API (`GET /usuarios/me`): `telefone: 85988881111` e `bairro_id: Serra`.
+- Observação de UX: o campo **Telefone** de **Editar perfil** não tem máscara, assim como a exibição em **Meu Perfil**; no cadastro (HU-001) o telefone é formatado ao sair do campo. Registrado como melhoria: [MELHORIA-HU005-UI-002](issues/MELHORIA-HU005-UI-002-mascara-telefone-no-perfil.md).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -221,7 +226,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-HU005-UI-001, CT-HU005-UI-002 | Melhoria: telefone sem máscara em Meu Perfil e em Editar perfil, diferente do cadastro. | [MELHORIA-HU005-UI-002-mascara-telefone-no-perfil](issues/MELHORIA-HU005-UI-002-mascara-telefone-no-perfil.md) |
 
 ## Observações gerais
 
