@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 7 | 1 | 0 | 6 |
+| ⏳ Em execução | 7 | 1 | 1 | 5 |
 
 ## Pré-condições
 
@@ -38,7 +38,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU004-UI-001 | Acesso à tela Esqueci minha senha | Entrar → Esqueci minha senha | Abrir a tela com campo E-mail e botão de envio | ✅ APROVADO | A tela abriu com a orientação “Informe o e-mail cadastrado para receber o link de redefinição”, o campo E-mail e o botão de envio; a seta de voltar pediu confirmação e respeitou a escolha. Confirmado pelo testador em 06/10/2026. |
-| CT-HU004-UI-002 | Solicitação com e-mail cadastrado | E-mail da conta de teste | Mensagem genérica e e-mail com link recebido | ⏳ PENDENTE | Não executado. |
+| CT-HU004-UI-002 | Solicitação com e-mail cadastrado | E-mail da conta de teste | Mensagem genérica e e-mail com link recebido | ❌ REPROVADO | O e-mail chegou com o botão Redefinir minha senha (válido por 15 minutos). Porém a confirmação é só um aviso discreto no rodapé, escondido pelo teclado, que continua aberto: é preciso fechar o teclado para ler “E-mail enviado. Verifique sua caixa de entrada para continuar.” O texto também não é genérico. Ver [BUG-HU004-UI-002](issues/BUG-HU004-UI-002-confirmacao-escondida-pelo-teclado.md). Executado pelo testador em 06/10/2026. |
 | CT-HU004-UI-003 | E-mail não cadastrado ou inválido | naoexiste@example.com; maria@; vazio | Mesma mensagem do CT-002 para o inexistente; alerta no campo nos demais | ⏳ PENDENTE | Não executado. |
 
 ### Seção B — Redefinição pelo link
@@ -96,8 +96,12 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Funcional: o e-mail de recuperação chegou (caixa de teste Mailpit) com “Olá, <nome>”, o aviso da solicitação, o botão **Redefinir minha senha** e a validade de 15 minutos. ✅
+- UX: depois de tocar em **Enviar instruções**, o teclado continua aberto e a confirmação aparece só como um aviso discreto (Snackbar) no rodapé, escondido pelo teclado. É preciso fechar o teclado para ler “E-mail enviado. Verifique sua caixa de entrada para continuar.” As outras telas usam pop-up para esse tipo de retorno. ❌
+- O texto afirma que o e-mail foi enviado, em vez da mensagem genérica do AC-03 (“Se o e-mail estiver cadastrado, enviaremos as instruções de recuperação”). Como a API responde sucesso para qualquer e-mail, o mesmo texto aparece para e-mails não cadastrados (verificar no CT-HU004-UI-003).
+- Ao tocar em **Redefinir minha senha**, abriu a página intermediária do backend, que pediu para abrir o aplicativo. A página tenta abrir `exp://192.168.0.3:8081`, IP fixo no código; o fluxo do link segue no CT-HU004-UI-006.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU004-UI-002](issues/BUG-HU004-UI-002-confirmacao-escondida-pelo-teclado.md).
 
 ---
 
@@ -218,7 +222,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-HU004-UI-002 | Confirmação do envio é um aviso discreto escondido pelo teclado, e o texto “E-mail enviado” não é genérico. | [BUG-HU004-UI-002-confirmacao-escondida-pelo-teclado](issues/BUG-HU004-UI-002-confirmacao-escondida-pelo-teclado.md) |
 
 ## Observações gerais
 
