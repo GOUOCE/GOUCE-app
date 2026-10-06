@@ -11,14 +11,14 @@
 | Tela            | Início do aluno, Meu Perfil → Renovar vínculo (aviso e passos 1 a 4) e Agenda           |
 | Ambiente        | Desenvolvimento — app mobile no iPhone (Expo Go)                                        |
 | Total de casos  | 9 |
-| Última execução | Não realizada                                                                           |
+| Última execução | 06/10/2026                                                                              |
 | Testador        | Cauan Ricardo                                                                           |
 
 ## Resultado geral
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Não executada | 9 | 0 | 0 | 9 |
+| ⏳ Em execução | 9 | 0 | 1 | 8 |
 
 ## Pré-condições
 
@@ -38,7 +38,7 @@ Executar na ordem abaixo. São **9 casos essenciais**, em três seções. Os IDs
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU028-UI-001 | Aviso de renovação após o login | Aluno com vínculo vencido | Login permitido e aviso destacado com a opção de renovar | ⏳ PENDENTE | Não executado. |
+| CT-HU028-UI-001 | Aviso de renovação após o login | Aluno com vínculo vencido | Login permitido e aviso destacado com a opção de renovar | ❌ REPROVADO | O login foi barrado com o pop-up “Falha na autenticação — A validade de acesso da sua conta expirou.” e o botão Tentar novamente; o aluno não chega à área do aluno nem à renovação. Mesmo defeito do CT-HU028-API-004 (BUG-HU028-API-002). Executado pelo testador em 06/10/2026. |
 | CT-HU028-UI-002 | Envio sem comprovante | Passo 4 sem arquivo | Bloquear e alertar que o comprovante é obrigatório | ⏳ PENDENTE | Não executado. |
 | CT-HU028-UI-003 | Arquivo inválido | `comprovante.docx`; `comprovante-grande.pdf` (8 MB) | Bloquear com “Formato inválido” / “Arquivo excede o limite de tamanho” | ⏳ PENDENTE | Não executado. |
 
@@ -82,8 +82,12 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Preparação: `validade_acesso` do aluno A ajustada para o dia anterior no banco local (restaurada após o caso).
+- Ao tocar em **Sou aluno**, o app exibiu o pop-up do app “Falha na autenticação — A validade de acesso da sua conta expirou.”, com o botão **Tentar novamente**. A mensagem é clara, mas o aluno é barrado no login. ❌
+- O aluno não chega à tela **Início** nem a **Perfil → Renovar vínculo**: não há como iniciar a renovação (AC-01, RN-013).
+- Mesma causa do CT-HU028-API-004 ([BUG-HU028-API-002](../api/issues/BUG-HU028-API-002-aluno-com-vinculo-vencido-nao-entra.md)): o backend recusa o login quando a validade venceu.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado.
 
 ---
 
@@ -270,7 +274,7 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-HU028-UI-001 | O aluno com vínculo vencido é barrado no login e não consegue renovar. | BUG-HU028-API-002 (mesma causa, suíte de API) |
 
 ## Observações gerais
 
