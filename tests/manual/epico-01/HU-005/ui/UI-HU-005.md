@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 7 | 2 | 1 | 4 |
+| ⏳ Em execução | 7 | 3 | 1 | 3 |
 
 ## Pré-condições
 
@@ -40,7 +40,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 | CT-HU005-UI-001 | Visualizar o próprio perfil | Aluno A logado; aba Perfil | Exibir os dados cadastrais atuais do aluno A | ✅ APROVADO | Meu Perfil exibiu foto, nome completo, status Aprovado, e-mail, telefone, instituição, curso, período de ingresso e turno do aluno A, sem valores de exemplo, e as ações Editar perfil, Alterar endereço de e-mail, Ver carteirinha digital e Renovar vínculo. Observação: telefone sem máscara (ex.: `31997814542`), ver [MELHORIA-HU005-UI-002](issues/MELHORIA-HU005-UI-002-mascara-telefone-no-perfil.md). Confirmado pelo testador em 06/10/2026. |
 | CT-HU005-UI-002 | Editar telefone e bairro | (85) 98888-1111; outro bairro | Mensagem de sucesso e dados atualizados no perfil | ✅ APROVADO | Exibiu “Perfil atualizado — Suas informações de perfil foram atualizadas com sucesso!” e voltou a Meu Perfil com o telefone novo; telefone `85988881111` e bairro Serra confirmados no banco pela API. Observação: campo Telefone sem máscara ([MELHORIA-HU005-UI-002](issues/MELHORIA-HU005-UI-002-mascara-telefone-no-perfil.md)). Confirmado pelo testador em 06/10/2026. |
 | CT-HU005-UI-003 | Telefone inválido | 8599; 85abc123456; vazio | Bloquear e alertar no campo Telefone | ❌ REPROVADO | `8599` e vazio foram bloqueados com “O telefone deve ter pelo menos 10 dígitos com DDD”; o teclado não aceita letras. Porém, com mais de 20 dígitos o app enviou à API e exibiu o erro em inglês “String should have at most 20 characters”: a tela não limita nem valida o formato como o cadastro. Ver [BUG-HU005-UI-003](issues/BUG-HU005-UI-003-validacao-telefone-fraca-no-perfil.md). Executado pelo testador em 06/10/2026. |
-| CT-HU005-UI-004 | Campos acadêmicos somente leitura | Meu Perfil e Editar Perfil | Instituição, curso, período e turno não editáveis | ⏳ PENDENTE | Não executado. |
+| CT-HU005-UI-004 | Campos acadêmicos somente leitura | Meu Perfil e Editar Perfil | Instituição, curso, período e turno não editáveis | ✅ APROVADO | Em Meu Perfil os dados acadêmicos aparecem só para leitura, sem ícone de edição; em Editar perfil só Telefone e Bairro são editáveis. O e-mail é alterado em tela própria (CT-005). Confirmado pelo testador em 06/10/2026. |
 
 ### Seção B — Alteração de e-mail e conexão
 
@@ -154,8 +154,14 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Meu Perfil**: instituição, curso, período de ingresso e turno aparecem só para leitura; tocar neles não faz nada e não há ícone de edição.
+- **Editar perfil**: só **Telefone (WhatsApp)** e **Bairro / Localidade** são editáveis. Os dados acadêmicos não aparecem para edição.
+- O e-mail não é editado nessa tela: tem fluxo próprio, **Alterar endereço de e-mail**, com confirmação de senha (CT-HU005-UI-005).
+- Observações do testador nesta tela, registradas no [BUG-HU005-UI-004](issues/BUG-HU005-UI-004-editar-perfil-mantem-valores-nao-salvos.md):
+  - a seta de voltar de **Editar perfil** sai sem pedir confirmação e leva à aba **Início**, e não a **Meu Perfil**;
+  - depois da falha do CT-003 (mais de 20 dígitos), ao voltar e abrir **Editar perfil** de novo, o campo Telefone ainda mostra o número inválido não salvo, embora o banco tenha o telefone correto.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ### Seção B — Alteração de e-mail e conexão
 
@@ -234,6 +240,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
 | CT-HU005-UI-003 | Telefone com mais de 20 dígitos chega à API e o erro aparece em inglês; Editar perfil não valida o formato como o cadastro. | [BUG-HU005-UI-003-validacao-telefone-fraca-no-perfil](issues/BUG-HU005-UI-003-validacao-telefone-fraca-no-perfil.md) |
+| CT-HU005-UI-004 | Editar perfil mantém valores não salvos ao reabrir; a seta volta para Início sem confirmação. | [BUG-HU005-UI-004-editar-perfil-mantem-valores-nao-salvos](issues/BUG-HU005-UI-004-editar-perfil-mantem-valores-nao-salvos.md) |
 | CT-HU005-UI-001, CT-HU005-UI-002 | Melhoria: telefone sem máscara em Meu Perfil e em Editar perfil, diferente do cadastro. | [MELHORIA-HU005-UI-002-mascara-telefone-no-perfil](issues/MELHORIA-HU005-UI-002-mascara-telefone-no-perfil.md) |
 
 ## Observações gerais
