@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 7 | 3 | 2 | 2 |
+| ⏳ Em execução | 7 | 4 | 2 | 1 |
 
 ## Pré-condições
 
@@ -47,7 +47,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 | --- | --- | --- | --- | --- | --- |
 | CT-HU004-UI-004 | Nova senha fora das regras | Abc123; abcdefgh1; ABCDEFGH1; Abcdefgh | Bloquear e indicar o critério não atendido | ✅ APROVADO | As quatro senhas foram bloqueadas, cada uma com a regra não atendida: mínimo de 8 caracteres, letra maiúscula, letra minúscula e número. Link aberto por `exp://<IP>:8081/--/redefinir-senha?token=...` (plano B do PC-03). Confirmado pelo testador em 06/10/2026. |
 | CT-HU004-UI-005 | Senha e confirmação divergentes | NovaSenha@1 / NovaSenha@2 | Botão desabilitado e aviso de senhas diferentes | ❌ REPROVADO | O botão Salvar nova senha ficou sempre habilitado; o aviso “As senhas não coincidem” só apareceu depois de tocar nele. Nada foi enviado, e ao corrigir a confirmação o aviso sumiu. Ver [BUG-HU004-UI-005](issues/BUG-HU004-UI-005-botao-salvar-nao-desabilita.md). Executado pelo testador em 06/10/2026. |
-| CT-HU004-UI-006 | Redefinição válida e login | NovaSenha@1 nos dois campos | Confirmação, volta ao login; entra só com a nova senha | ⏳ PENDENTE | Não executado. |
+| CT-HU004-UI-006 | Redefinição válida e login | NovaSenha@1 nos dois campos | Confirmação, volta ao login; entra só com a nova senha | ✅ APROVADO | Exibiu “Senha redefinida com sucesso” e levou à tela Entrar; a senha antiga foi recusada e a nova entrou na área do aluno. Observação de UX: a confirmação é o alerta nativo do iOS, sem o estilo dos pop-ups do app ([MELHORIA-HU004-UI-006](issues/MELHORIA-HU004-UI-006-padronizar-alertas-recuperacao.md)). Confirmado pelo testador em 06/10/2026. |
 | CT-HU004-UI-007 | Link já utilizado ou expirado | Link do CT-006; link com mais de 15 min | Bloquear a tela de nova senha e orientar a solicitar novamente | ⏳ PENDENTE | Não executado. |
 
 ## Detalhamento dos casos
@@ -205,8 +205,13 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Link novo aberto pelo plano B do PC-03. A tela **Redefinir Senha**, que já estava aberta, foi reaproveitada com os campos ainda preenchidos da tentativa anterior; a redefinição usou o link novo.
+- Ao tocar em **Salvar nova senha**, apareceu “Sucesso! Senha redefinida com sucesso. Você já pode realizar o login com sua nova senha.”; **OK** levou à tela **Entrar**. ✅
+- Senha antiga (`Teste@1234`): recusada com “Falha na autenticação — E-mail ou senha inválidos”. ✅ O texto difere do AC-09 (“E-mail ou senha incorretos. Tente novamente.”), mas é genérico, como no CT-HU002-UI-011.
+- Senha nova (`NovaSenha@1`): entrou na área do aluno. ✅
+- Observação de UX: as mensagens desta tela usam o alerta nativo do iOS (`Alert.alert`), sem o estilo dos pop-ups do app (`AppPopup`). Registrado como melhoria: [MELHORIA-HU004-UI-006](issues/MELHORIA-HU004-UI-006-padronizar-alertas-recuperacao.md).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -237,6 +242,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
 | CT-HU004-UI-005 | Com senha e confirmação diferentes, o botão Salvar nova senha continua habilitado e o aviso só aparece depois do toque. | [BUG-HU004-UI-005-botao-salvar-nao-desabilita](issues/BUG-HU004-UI-005-botao-salvar-nao-desabilita.md) |
+| CT-HU004-UI-006 | Melhoria: mensagens da redefinição usam o alerta nativo do iOS, fora do padrão visual dos pop-ups do app. | [MELHORIA-HU004-UI-006-padronizar-alertas-recuperacao](issues/MELHORIA-HU004-UI-006-padronizar-alertas-recuperacao.md) |
 | CT-HU004-UI-002 | Confirmação do envio é um aviso discreto escondido pelo teclado, e o texto “E-mail enviado” não é genérico. | [BUG-HU004-UI-002-confirmacao-escondida-pelo-teclado](issues/BUG-HU004-UI-002-confirmacao-escondida-pelo-teclado.md) |
 
 ## Observações gerais
