@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 10 | 2 | 1 | 7 |
+| ⏳ Em execução | 10 | 2 | 2 | 6 |
 
 ## Pré-condições
 
@@ -41,7 +41,7 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 | CT-HU006-UI-001 | Acessar a gestão de administradores | Painel → Gestão de administradores | Listagem com busca, filtro de inativos e botão Novo | ✅ APROVADO | A tela Administradores exibiu a lista, o campo Buscar por nome, a chave Mostrar inativos e o botão Novo; a busca filtra e informa quando não há resultado; a seta voltou ao Painel. O filtro de inativos será conferido no CT-005, quando houver inativo. Confirmado pelo testador em 06/10/2026. |
 | CT-HU006-UI-002 | Cadastrar novo administrador | Nome e e-mail novos | Confirmação, sucesso e B na listagem; e-mail com senha | ❌ REPROVADO | O administrador foi criado (HTTP 201) após a confirmação “Finalizar cadastro?” e o e-mail com a senha temporária chegou. Porém a listagem não foi atualizada (B só apareceu depois de fechar e reabrir o app), o formulário manteve os dados ao abrir Novo de novo, e a confirmação foi um aviso rápido sem estilo (“Cadastro realizado com sucesso”). Ver [BUG-HU006-UI-002](issues/BUG-HU006-UI-002-lista-e-formulario-nao-atualizam.md) e [MELHORIA-HU006-UI-002](issues/MELHORIA-HU006-UI-002-confirmacao-sem-padrao.md). Executado pelo testador em 06/10/2026. |
 | CT-HU006-UI-003 | Cadastro rejeitado | E-mail de aluno; nome `Ab`; e-mail `carlos@`; campos vazios | Mensagem do AC-03 no duplicado; alerta no campo nos demais | ✅ APROVADO | E-mail de aluno: “Este e-mail já está em uso por outro usuário no sistema.” (409); nome `Ab`: “Informe seu nome completo”; e-mail `carlos@`: “E-mail inválido”; campos vazios: obrigatoriedade. Os três últimos foram barrados no app, sem chamar a API. Confirmado pelo testador em 06/10/2026. |
-| CT-HU006-UI-004 | Editar administrador | Nome novo; e-mail em uso | Sucesso e listagem atualizada; duplicado bloqueado | ⏳ PENDENTE | Não executado. |
+| CT-HU006-UI-004 | Editar administrador | Nome novo; e-mail em uso | Sucesso e listagem atualizada; duplicado bloqueado | ❌ REPROVADO | O nome foi salvo (HTTP 200) e o e-mail de aluno foi bloqueado com a mensagem do AC-03 (409), sem alterar o e-mail. Porém a listagem só mostrou o nome novo depois de fechar e reabrir o app, e a confirmação foi o aviso rápido sem estilo. Ver [BUG-HU006-UI-002](issues/BUG-HU006-UI-002-lista-e-formulario-nao-atualizam.md) e [MELHORIA-HU006-UI-002](issues/MELHORIA-HU006-UI-002-confirmacao-sem-padrao.md). Executado pelo testador em 06/10/2026. |
 
 ### Seção B — Inativação e controle de acesso
 
@@ -170,8 +170,12 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Após fechar e reabrir o app, **Carlos Andrade** abriu em **Editar Administrador**.
+- Nome alterado para `Carlos Andrade Filho`: salvo (backend `PATCH /administradores/5` → 200; nome confirmado pela API). A confirmação foi um aviso preto rápido de “salvo com sucesso”, sem o estilo do app. ✅ / ❌
+- A listagem **não** mostrou o nome novo; só depois de fechar e reabrir o app. ❌
+- E-mail trocado para o de um aluno (`qa.hu005@gmail.com`): bloqueado com “Este e-mail já está em uso por outro usuário no sistema.” (backend 409); o e-mail de B continuou `carlos@gmail.com`. ✅
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU006-UI-002](issues/BUG-HU006-UI-002-lista-e-formulario-nao-atualizam.md).
 
 ### Seção B — Inativação e controle de acesso
 

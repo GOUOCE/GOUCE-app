@@ -5,7 +5,7 @@
 | **Tipo** | Bug funcional |
 | **Severidade** | 🟡 Média |
 | **Ambiente** | Desenvolvimento — app mobile no iPhone (Expo Go) |
-| **Caso relacionado** | `CT-HU006-UI-002` |
+| **Caso relacionado** | `CT-HU006-UI-002`, `CT-HU006-UI-004` |
 | **Documentação** | HU-006 — Testes manuais de UI: [CT-HU006-UI-002](../UI-HU-006.md#ct-hu006-ui-002--cadastrar-novo-administrador) |
 | **Issue relacionada** | #125, #135 e #151 — telas que guardam o estado anterior (mesma causa) |
 
@@ -30,6 +30,7 @@ Administrador logado em **Painel → Gestão de administradores**.
 ### ❌ Resultado obtido
 
 - O administrador é criado (HTTP 201, e-mail enviado), mas não aparece na listagem, nem ao sair e entrar de novo na gestão; só aparece depois de fechar e reabrir o app.
+- O mesmo vale para a edição (`CT-HU006-UI-004`): o nome alterado é salvo (HTTP 200), mas a listagem só o mostra depois de reabrir o app.
 - O formulário de **Novo** continua com os dados do cadastro anterior até reabrir o app.
 
 ### ⚠️ Impacto

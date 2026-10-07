@@ -5,7 +5,7 @@
 | **Tipo** | Melhoria |
 | **Severidade** | 🟢 Baixa |
 | **Ambiente** | Desenvolvimento — app mobile no iPhone (Expo Go) |
-| **Caso relacionado** | `CT-HU006-UI-002` |
+| **Caso relacionado** | `CT-HU006-UI-002`, `CT-HU006-UI-004` |
 | **Documentação** | HU-006 — Testes manuais de UI: [CT-HU006-UI-002](../UI-HU-006.md#ct-hu006-ui-002--cadastrar-novo-administrador) |
 | **Issue relacionada** | #120 e #137 — mesmo padrão na recuperação de senha e na renovação de vínculo |
 
