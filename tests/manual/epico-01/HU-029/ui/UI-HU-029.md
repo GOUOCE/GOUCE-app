@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 7 | 0 | 3 | 4 |
+| ⏳ Em execução | 7 | 0 | 4 | 3 |
 
 ## Pré-condições
 
@@ -46,7 +46,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU029-UI-004 | Carteirinha offline | Aluno A sem internet, após abrir online | Versão em cache, sem erro de conexão | ⏳ PENDENTE | Não executado. |
+| CT-HU029-UI-004 | Carteirinha offline | Aluno A sem internet, após abrir online | Versão em cache, sem erro de conexão | ❌ REPROVADO | Sem internet, a carteirinha abriu sem erro, com os dados e o selo “Disponível offline”, mas sem a foto de perfil (área azul). Ao fechar e reabrir o app sem internet, não foi possível entrar (falha de conexão com o servidor), então a carteirinha fica inacessível offline. Ver [BUG-HU029-UI-004](issues/BUG-HU029-UI-004-carteirinha-offline-sem-foto-e-sem-acesso.md). Executado pelo testador em 06/10/2026. |
 | CT-HU029-UI-005 | Leitura do QR Code | QR Code online e offline | Lido por outro celular, nas duas situações | ⏳ PENDENTE | Não executado. |
 
 ### Seção C — Privacidade e revogação
@@ -163,8 +163,12 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Com o app aberto e sem internet, a carteirinha abriu na hora, sem mensagem de erro de conexão, com os dados do aluno e o selo **Disponível offline**. ✅
+- A **foto de perfil não carregou**: ficou uma área azul no lugar. A foto é baixada da API a cada abertura e não é guardada no aparelho. ❌
+- Ao fechar e reabrir o app ainda sem internet, não foi possível entrar (falha de conexão com o servidor): o app não restaura a sessão (#100) e o login exige a API. A carteirinha fica inacessível offline justamente no cenário do embarque (FA-001). ❌
+- Observações do código (`frontend/src/app/(aluno)/carteirinha-digital.tsx`): não existe cache próprio da carteirinha; em caso de erro, a tela usa os dados da sessão em memória. O selo **Disponível offline** é fixo e aparece sempre, com ou sem cache.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU029-UI-004](issues/BUG-HU029-UI-004-carteirinha-offline-sem-foto-e-sem-acesso.md).
 
 ---
 
@@ -237,6 +241,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
+| CT-HU029-UI-004 | Offline, a carteirinha aparece sem a foto, e depois de reabrir o app sem internet não há como acessá-la. | [BUG-HU029-UI-004](issues/BUG-HU029-UI-004-carteirinha-offline-sem-foto-e-sem-acesso.md) |
 | CT-HU029-UI-003 | Data de emissão fixa (“10/09/2026”) e valores padrão de exemplo no código da carteirinha. | [BUG-HU029-UI-003-emissao](issues/BUG-HU029-UI-003-data-de-emissao-e-valores-fixos.md) |
 | CT-HU029-UI-003 | A carteirinha e o perfil não refletem dados alterados até sair e entrar de novo. | [BUG-HU029-UI-003-atualizacao](issues/BUG-HU029-UI-003-carteirinha-nao-atualiza.md) |
 | CT-HU029-UI-002 | Aluno sem status aprovado consegue abrir a carteirinha: o app ignora o 403 da API e monta o documento com os dados da sessão. | [BUG-HU029-UI-002](issues/BUG-HU029-UI-002-app-exibe-carteirinha-recusada-pela-api.md) |
