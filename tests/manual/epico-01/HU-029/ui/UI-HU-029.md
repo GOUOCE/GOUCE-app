@@ -166,6 +166,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 - Com o app aberto e sem internet, a carteirinha abriu na hora, sem mensagem de erro de conexão, com os dados do aluno e o selo **Disponível offline**. ✅
 - A **foto de perfil não carregou**: ficou uma área azul no lugar. A foto é baixada da API a cada abertura e não é guardada no aparelho. ❌
 - Ao fechar e reabrir o app ainda sem internet, não foi possível entrar (falha de conexão com o servidor): o app não restaura a sessão (#100) e o login exige a API. A carteirinha fica inacessível offline justamente no cenário do embarque (FA-001). ❌
+- Com a internet religada, a foto **não voltou** sozinha: só reapareceu depois de sair da tela/da conta ou fechar o app (mesma causa do [BUG-HU029-UI-003-atualizacao](issues/BUG-HU029-UI-003-carteirinha-nao-atualiza.md)).
 - Observações do código (`frontend/src/app/(aluno)/carteirinha-digital.tsx`): não existe cache próprio da carteirinha; em caso de erro, a tela usa os dados da sessão em memória. O selo **Disponível offline** é fixo e aparece sempre, com ou sem cache.
 - Execução confirmada pelo testador em 06/10/2026.
 - Status: ❌ Reprovado — [BUG-HU029-UI-004](issues/BUG-HU029-UI-004-carteirinha-offline-sem-foto-e-sem-acesso.md).

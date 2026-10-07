@@ -27,6 +27,7 @@ Sem erro de conexão, a versão salva na última conexão válida aparece imedia
 ### ❌ Resultado obtido
 
 - Com o app aberto: a carteirinha aparece com os dados e o selo **Disponível offline**, mas **sem a foto** (área azul).
+- Com a internet de volta, a foto não reaparece até sair da tela ou reabrir o app.
 - Depois de reabrir o app sem internet: não é possível entrar (falha de conexão com o servidor), então a carteirinha não pode ser exibida.
 
 ### ⚠️ Impacto
