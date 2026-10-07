@@ -4,25 +4,20 @@ import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
 const getBaseUrl = () => {
-  // 1. Prioridade máxima: Extrai automaticamente o IP da máquina host via Metro (hostUri)
   const hostUri = Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost;
   if (hostUri) {
     const hostIp = hostUri.split(':')[0];
     if (hostIp && hostIp !== 'localhost' && hostIp !== '127.0.0.1') {
       const url = `http://${hostIp}:8000`;
-      console.log('[API] Conectando via Host IP dinâmico do Metro:', url);
       return url;
     }
   }
 
-  // 2. Se houver variável de ambiente explícita no .env
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
   if (envUrl && !envUrl.includes('ngrok')) {
-    console.log('[API] Conectando via EXPO_PUBLIC_API_URL:', envUrl);
     return envUrl;
   }
 
-  // 3. Fallbacks por plataforma
   if (Platform.OS === 'android') {
     return 'http://10.0.2.2:8000';
   }
@@ -35,31 +30,87 @@ export const api = axios.create({
   timeout: 10000,
 });
 
-// Interceptor para adicionar token e logar requisições
+// Interceptor para adicionar token
 api.interceptors.request.use(async (config) => {
   const token = await AsyncStorage.getItem('@GOUOCE:token');
-  console.log(`[API REQUEST] ${config.method?.toUpperCase()} ${config.url}`, { baseURL: config.baseURL, data: config.data });
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 }, (error) => {
-  console.log('[API REQUEST ERROR]', error);
   return Promise.reject(error);
 });
 
-// Interceptor para tratar respostas e erros
-api.interceptors.response.use(
-  (response) => {
-    console.log(`[API RESPONSE] ${response.status} ${response.config.url}`);
-    return response;
-  },
-  async (error) => {
-    console.log('[API ERROR RESPONSE]', error.message, error.response?.status, error.response?.data);
-    if (error.response?.status === 401) {
-      await AsyncStorage.removeItem('@GOUOCE:token');
-      await AsyncStorage.removeItem('@GOUOCE:user');
+// Interceptor para tratar respostas e renovação automática de token (Refresh Token)
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
     }
+  });
+  failedQueue = [];
+};
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          originalRequest.headers['Authorization'] = 'Bearer ' + token;
+          return api(originalRequest);
+        }).catch(err => {
+          return Promise.reject(err);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const refreshToken = await AsyncStorage.getItem('@GOUOCE:refreshToken');
+        if (!refreshToken) {
+          throw new Error('No refresh token available');
+        }
+
+        const response = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {
+          token_atualizacao: refreshToken,
+        });
+
+        const newToken = response.data.token_acesso;
+        const newRefreshToken = response.data.token_atualizacao;
+
+        await AsyncStorage.setItem('@GOUOCE:token', newToken);
+        if (newRefreshToken) {
+          await AsyncStorage.setItem('@GOUOCE:refreshToken', newRefreshToken);
+        }
+
+        api.defaults.headers.common['Authorization'] = 'Bearer ' + newToken;
+        originalRequest.headers['Authorization'] = 'Bearer ' + newToken;
+
+        processQueue(null, newToken);
+        isRefreshing = false;
+
+        return api(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        isRefreshing = false;
+        await AsyncStorage.removeItem('@GOUOCE:token');
+        await AsyncStorage.removeItem('@GOUOCE:refreshToken');
+        await AsyncStorage.removeItem('@GOUOCE:user');
+        return Promise.reject(refreshError);
+      }
+    }
+
     return Promise.reject(error);
   }
 );
