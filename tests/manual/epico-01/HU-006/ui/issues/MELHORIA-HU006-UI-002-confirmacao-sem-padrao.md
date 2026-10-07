@@ -5,7 +5,7 @@
 | **Tipo** | Melhoria |
 | **Severidade** | 🟢 Baixa |
 | **Ambiente** | Desenvolvimento — app mobile no iPhone (Expo Go) |
-| **Caso relacionado** | `CT-HU006-UI-002`, `CT-HU006-UI-004`, `CT-HU006-UI-005` |
+| **Caso relacionado** | `CT-HU006-UI-002`, `CT-HU006-UI-004`, `CT-HU006-UI-005`, `CT-HU006-UI-010` |
 | **Documentação** | HU-006 — Testes manuais de UI: [CT-HU006-UI-002](../UI-HU-006.md#ct-hu006-ui-002--cadastrar-novo-administrador) |
 | **Issue relacionada** | #120 e #137 — mesmo padrão na recuperação de senha e na renovação de vínculo |
 
@@ -29,7 +29,7 @@ Aviso preto no rodapé (Snackbar), sem o estilo do app, com “Cadastro realizad
 
 ### ⚠️ Impacto
 
-- Baixo: a operação é concluída, mas o administrador pode não perceber o resultado.
+- A operação é concluída, mas o administrador não percebe o resultado: tenta de novo e recebe uma mensagem de erro (“e-mail já em uso”) sobre um cadastro que deu certo.
 
 ### Causa aparente
 
@@ -41,3 +41,5 @@ Aviso preto no rodapé (Snackbar), sem o estilo do app, com “Cadastro realizad
 - Reexecutar `CT-HU006-UI-002`, `CT-HU006-UI-004` e `CT-HU006-UI-005`.
 
 ### 📎 Evidência
+
+- `CT-HU006-UI-010`: sem perceber o aviso de sucesso, o testador salvou o mesmo cadastro duas vezes; o backend registrou `POST /administradores` 201 seguido de 409, e o app exibiu “Este e-mail já está em uso…”, como se o cadastro tivesse falhado.

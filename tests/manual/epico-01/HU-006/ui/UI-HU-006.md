@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 10 | 6 | 3 | 1 |
+| ✅ Executada | 10 | 7 | 3 | 0 |
 
 ## Pré-condições
 
@@ -57,7 +57,7 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 | --- | --- | --- | --- | --- | --- |
 | CT-HU006-UI-008 | E-mail com espaços e maiúsculas | `" Carla.Mendes@Example.com "` | Aceito e salvo como `carla.mendes@example.com` | ✅ APROVADO | O e-mail `" Carla.Mendes@Example.com "` foi aceito e exibido na listagem como `carla.mendes@example.com` (confirmado pela API). Com o app recém-aberto, a listagem atualizou logo após o cadastro. Confirmado pelo testador em 06/10/2026. |
 | CT-HU006-UI-009 | Sair sem salvar | Alterar nome em Editar e tocar na seta | Pedir confirmação; nada salvo; ao reabrir, dados do banco | ❌ REPROVADO | A seta saiu sem confirmação e foi para o Painel, não para a listagem. Nada foi salvo (a API manteve “Carla mendes”), mas ao abrir Editar de novo o campo ainda mostrava o texto não salvo “Carla teste”. Ver [BUG-HU006-UI-009](issues/BUG-HU006-UI-009-editar-sai-sem-confirmar-e-guarda-texto.md). Executado pelo testador em 06/10/2026. |
-| CT-HU006-UI-010 | Falha de conexão ao salvar | Wi-Fi e dados desligados ao cadastrar e ao inativar | Mensagem de conexão, sem travar; dados mantidos para nova tentativa | ⏳ PENDENTE | Não executado. |
+| CT-HU006-UI-010 | Falha de conexão ao salvar | Wi-Fi e dados desligados ao cadastrar e ao inativar | Mensagem de conexão, sem travar; dados mantidos para nova tentativa | ✅ APROVADO | Sem internet, cadastro e inativação exibiram erro de conexão com o servidor, sem travar e sem alterar nada; os campos do cadastro foram mantidos e, com a internet de volta, o cadastro e a inativação foram concluídos. Observação: sem retorno visível do sucesso, o testador salvou duas vezes — a segunda recebeu “e-mail já em uso” (409), sem criar duplicata. Confirmado pelo testador em 06/10/2026. |
 
 ## Detalhamento dos casos
 
@@ -331,8 +331,13 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Cadastro sem internet** (nome `Rita sousa`, e-mail `tia@gmail.com`, usados pelo testador): aviso de erro de conexão com o servidor, sem travar; os campos continuaram preenchidos. ✅
+- **Com a internet de volta**: o cadastro foi concluído sem redigitar (backend 201; administrador id 8). ✅
+- Observação de UX: como o sucesso aparece só num aviso preto muito rápido, o testador achou que não tinha salvado e tocou de novo; a segunda tentativa recebeu “Este e-mail já está em uso por outro usuário no sistema.” (409). Não houve duplicata, mas a mensagem confunde. Evidência anexada à [MELHORIA-HU006-UI-002](issues/MELHORIA-HU006-UI-002-confirmacao-sem-padrao.md).
+- **Inativação sem internet** (Carla): aviso de erro de conexão com o servidor; nada mudou. Com a internet de volta, a inativação foi concluída (backend 200). ✅
+- Ao final, os administradores de teste ativos (Rita e pedro lima) foram inativados pela API.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ## Defeitos encontrados
 
