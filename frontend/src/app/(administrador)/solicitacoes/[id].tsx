@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
-import { Text, Surface, Avatar, Button, TextInput, Snackbar, useTheme, Portal } from 'react-native-paper';
+import { Text, Surface, Avatar, Button, TextInput, Snackbar, Portal } from 'react-native-paper';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, ExternalLink, X, CheckSquare, Square } from 'lucide-react-native';
 
@@ -10,7 +10,6 @@ import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 import { api } from '@/api/api';
 
 export default function AnalisarSolicitacaoScreen() {
-  const theme = useTheme();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
 
@@ -74,7 +73,7 @@ export default function AnalisarSolicitacaoScreen() {
       }
     }
     carregarDetalhes();
-  }, [id]);
+  }, [id, router]);
 
   const handleAprovar = async () => {
     setModalAprovarVisible(false);
@@ -107,7 +106,7 @@ export default function AnalisarSolicitacaoScreen() {
     setModalReprovarVisible(false);
     setIsLoading(true);
 
-    const documentosReenvio: Array<{ tipo: string; motivo: string }> = [];
+    const documentosReenvio: { tipo: string; motivo: string }[] = [];
     if (docMatriculaChecked) documentosReenvio.push({ tipo: 'comprovante_matricula', motivo: motivoRecusa });
     if (docResidenciaChecked) documentosReenvio.push({ tipo: 'comprovante_residencia', motivo: motivoRecusa });
     if (docFotoChecked) documentosReenvio.push({ tipo: 'foto_perfil', motivo: motivoRecusa });
@@ -135,7 +134,6 @@ export default function AnalisarSolicitacaoScreen() {
     }
   };
 
-  const token = null; // token recuperado pelo interceptor
   const baseUrl = api.defaults.baseURL || 'http://192.168.0.3:8000';
   const fotoUri = aluno?.id_foto_aluno
     ? `${baseUrl}/arquivos/${aluno.id_foto_aluno}/view`

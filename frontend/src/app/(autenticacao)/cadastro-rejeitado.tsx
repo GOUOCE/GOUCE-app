@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
-import { Text, Button, Surface, useTheme } from 'react-native-paper';
+import { Text, Button, Surface } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { AlertCircle } from 'lucide-react-native';
 
-import { useAuth } from '@contexts/AuthContext';
 import { userService } from '@/services/userService';
 
 export default function CadastroRejeitadoScreen() {
-  const theme = useTheme();
   const router = useRouter();
-  const { signOut } = useAuth();
-  const [documentosReenvio, setDocumentosReenvio] = useState<Array<{ tipo: string; motivo: string }>>([]);
+  const [documentosReenvio, setDocumentosReenvio] = useState<{ tipo: string; motivo: string }[]>([]);
 
   useEffect(() => {
     async function carregarPerfil() {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, Button, Surface, useTheme } from 'react-native-paper';
+import { Text, Button, Surface, Avatar } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Upload, CheckCircle2, User } from 'lucide-react-native';
 import * as DocumentPicker from 'expo-document-picker';
@@ -11,7 +11,6 @@ import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function ReenviarDocumentosScreen() {
-  const theme = useTheme();
   const router = useRouter();
 
   const [fotoPerfil, setFotoPerfil] = useState<any>(null);

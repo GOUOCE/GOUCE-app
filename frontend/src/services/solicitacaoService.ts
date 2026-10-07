@@ -71,7 +71,7 @@ export const solicitacaoService = {
   async reprovarSolicitacao(
     alunoId: number,
     motivo: string,
-    documentos: Array<{ tipo: string; motivo: string }>
+    documentos: { tipo: string; motivo: string }[]
   ): Promise<any> {
     const response = await api.patch(`/usuarios/alunos/${alunoId}/status`, {
       status_cadastro: 'rejeitado',
