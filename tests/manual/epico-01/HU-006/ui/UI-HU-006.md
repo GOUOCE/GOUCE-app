@@ -11,14 +11,14 @@
 | Tela            | Painel do administrador → Gestão de administradores (listagem, Cadastrar Administrador e Editar Administrador) |
 | Ambiente        | Desenvolvimento — app mobile no iPhone (Expo Go)                                        |
 | Total de casos  | 10 |
-| Última execução | Não realizada                                                                           |
+| Última execução | 06/10/2026                                                                              |
 | Testador        | Cauan Ricardo                                                                           |
 
 ## Resultado geral
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Não executada | 10 | 0 | 0 | 10 |
+| ⏳ Em execução | 10 | 1 | 0 | 9 |
 
 ## Pré-condições
 
@@ -38,7 +38,7 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU006-UI-001 | Acessar a gestão de administradores | Painel → Gestão de administradores | Listagem com busca, filtro de inativos e botão Novo | ⏳ PENDENTE | Não executado. |
+| CT-HU006-UI-001 | Acessar a gestão de administradores | Painel → Gestão de administradores | Listagem com busca, filtro de inativos e botão Novo | ✅ APROVADO | A tela Administradores exibiu a lista, o campo Buscar por nome, a chave Mostrar inativos e o botão Novo; a busca filtra e informa quando não há resultado; a seta voltou ao Painel. O filtro de inativos será conferido no CT-005, quando houver inativo. Confirmado pelo testador em 06/10/2026. |
 | CT-HU006-UI-002 | Cadastrar novo administrador | Nome e e-mail novos | Confirmação, sucesso e B na listagem; e-mail com senha | ⏳ PENDENTE | Não executado. |
 | CT-HU006-UI-003 | Cadastro rejeitado | E-mail de aluno; nome `Ab`; e-mail `carlos@`; campos vazios | Mensagem do AC-03 no duplicado; alerta no campo nos demais | ⏳ PENDENTE | Não executado. |
 | CT-HU006-UI-004 | Editar administrador | Nome novo; e-mail em uso | Sucesso e listagem atualizada; duplicado bloqueado | ⏳ PENDENTE | Não executado. |
@@ -82,8 +82,12 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Painel → Gestão de administradores** abriu a tela **Administradores**, com a lista (apenas o administrador padrão), o campo **Buscar por nome**, a chave **Mostrar inativos** e o botão **Novo**. ✅
+- A busca filtrou a lista pelo nome; com um termo sem correspondência, a tela informou que não há resultados. ✅
+- **Mostrar inativos** ligado e desligado não alterou a lista, pois ainda não havia administrador inativo; o efeito do filtro é conferido no CT-HU006-UI-005.
+- A seta de voltar retornou ao **Painel**. ✅
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
