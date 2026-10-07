@@ -311,7 +311,7 @@ async def validar_token(
     include_in_schema=False,
     responses=RECUPERACAO_ERROR_RESPONSES,
 )
-async def redirect_to_app(token: str):
+async def redirect_to_app(token: str, request: Request):
     """
     Rota 'ponte' para abrir o aplicativo móvel a partir do link do e-mail.
     """
@@ -323,7 +323,15 @@ async def redirect_to_app(token: str):
         )
 
     token_encoded = quote(token, safe="")
+<<<<<<< Updated upstream
     expo_link = f"{app_deep_link_url.rstrip('/')}/--/redefinir-senha?token={token_encoded}"
+=======
+    base_host = request.url.netloc
+    host_ip = base_host.split(":")[0] if ":" in base_host else base_host
+    default_deep_link = f"exp://{host_ip}:8081/--"
+    app_deep_link = os.getenv("APP_DEEP_LINK_URL", default_deep_link)
+    expo_link = f"{app_deep_link}/redefinir-senha?token={token_encoded}"
+>>>>>>> Stashed changes
     custom_scheme_link = f"gouoce-app://redefinir-senha?token={token_encoded}"
     expo_link_html = escape(expo_link, quote=True)
     custom_scheme_link_html = escape(custom_scheme_link, quote=True)
