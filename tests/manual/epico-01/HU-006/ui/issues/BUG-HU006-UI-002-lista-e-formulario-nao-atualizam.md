@@ -31,6 +31,7 @@ Administrador logado em **Painel → Gestão de administradores**.
 
 - O administrador é criado (HTTP 201, e-mail enviado), mas não aparece na listagem, nem ao sair e entrar de novo na gestão; só aparece depois de fechar e reabrir o app.
 - O mesmo vale para a edição (`CT-HU006-UI-004`): o nome alterado é salvo (HTTP 200), mas a listagem só o mostra depois de reabrir o app.
+- O defeito é **intermitente**: no `CT-HU006-UI-008`, com o app recém-aberto e a gestão aberta pela primeira vez na sessão, a listagem atualizou logo após o cadastro. Ele aparece quando a gestão já tinha sido aberta antes na mesma sessão (como no `CT-HU006-UI-002` e no `CT-HU006-UI-004`).
 - O formulário de **Novo** continua com os dados do cadastro anterior até reabrir o app.
 
 ### ⚠️ Impacto

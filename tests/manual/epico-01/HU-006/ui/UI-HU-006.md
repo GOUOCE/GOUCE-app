@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 10 | 5 | 2 | 3 |
+| ⏳ Em execução | 10 | 6 | 2 | 2 |
 
 ## Pré-condições
 
@@ -55,7 +55,7 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU006-UI-008 | E-mail com espaços e maiúsculas | `" Carla.Mendes@Example.com "` | Aceito e salvo como `carla.mendes@example.com` | ⏳ PENDENTE | Não executado. |
+| CT-HU006-UI-008 | E-mail com espaços e maiúsculas | `" Carla.Mendes@Example.com "` | Aceito e salvo como `carla.mendes@example.com` | ✅ APROVADO | O e-mail `" Carla.Mendes@Example.com "` foi aceito e exibido na listagem como `carla.mendes@example.com` (confirmado pela API). Com o app recém-aberto, a listagem atualizou logo após o cadastro. Confirmado pelo testador em 06/10/2026. |
 | CT-HU006-UI-009 | Sair sem salvar | Alterar nome em Editar e tocar na seta | Pedir confirmação; nada salvo; ao reabrir, dados do banco | ⏳ PENDENTE | Não executado. |
 | CT-HU006-UI-010 | Falha de conexão ao salvar | Wi-Fi e dados desligados ao cadastrar e ao inativar | Mensagem de conexão, sem travar; dados mantidos para nova tentativa | ⏳ PENDENTE | Não executado. |
 
@@ -275,8 +275,12 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Com o app recém-aberto, **Novo** com nome `Carla Mendes` e e-mail `" Carla.Mendes@Example.com "` (espaços nas pontas e maiúsculas): cadastro aceito. ✅
+- A listagem mostrou o e-mail como `carla.mendes@example.com`, em minúsculas e sem espaços; confirmado pela API (`GET /administradores`). ✅
+- Desta vez, a listagem atualizou logo após o cadastro, sem reabrir o app. Diferença em relação ao CT-HU006-UI-002: lá, a gestão já tinha sido aberta antes na mesma sessão; aqui, foi a primeira abertura. O defeito do [BUG-HU006-UI-002](issues/BUG-HU006-UI-002-lista-e-formulario-nao-atualizam.md) é intermitente e depende do caminho percorrido.
+- Ao final, Carla Mendes deve ser inativada para não interferir em outras suítes.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
