@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 10 | 1 | 0 | 9 |
+| ⏳ Em execução | 10 | 1 | 1 | 8 |
 
 ## Pré-condições
 
@@ -39,7 +39,7 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU006-UI-001 | Acessar a gestão de administradores | Painel → Gestão de administradores | Listagem com busca, filtro de inativos e botão Novo | ✅ APROVADO | A tela Administradores exibiu a lista, o campo Buscar por nome, a chave Mostrar inativos e o botão Novo; a busca filtra e informa quando não há resultado; a seta voltou ao Painel. O filtro de inativos será conferido no CT-005, quando houver inativo. Confirmado pelo testador em 06/10/2026. |
-| CT-HU006-UI-002 | Cadastrar novo administrador | Nome e e-mail novos | Confirmação, sucesso e B na listagem; e-mail com senha | ⏳ PENDENTE | Não executado. |
+| CT-HU006-UI-002 | Cadastrar novo administrador | Nome e e-mail novos | Confirmação, sucesso e B na listagem; e-mail com senha | ❌ REPROVADO | O administrador foi criado (HTTP 201) após a confirmação “Finalizar cadastro?” e o e-mail com a senha temporária chegou. Porém a listagem não foi atualizada (B só apareceu depois de fechar e reabrir o app), o formulário manteve os dados ao abrir Novo de novo, e a confirmação foi um aviso rápido sem estilo (“Cadastro realizado com sucesso”). Ver [BUG-HU006-UI-002](issues/BUG-HU006-UI-002-lista-e-formulario-nao-atualizam.md) e [MELHORIA-HU006-UI-002](issues/MELHORIA-HU006-UI-002-confirmacao-sem-padrao.md). Executado pelo testador em 06/10/2026. |
 | CT-HU006-UI-003 | Cadastro rejeitado | E-mail de aluno; nome `Ab`; e-mail `carlos@`; campos vazios | Mensagem do AC-03 no duplicado; alerta no campo nos demais | ⏳ PENDENTE | Não executado. |
 | CT-HU006-UI-004 | Editar administrador | Nome novo; e-mail em uso | Sucesso e listagem atualizada; duplicado bloqueado | ⏳ PENDENTE | Não executado. |
 
@@ -111,8 +111,16 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Dados usados pelo testador: nome `Carlos Andrade`, e-mail `carlos@gmail.com` (no lugar do sugerido `carlos.andrade@example.com`).
+- **Novo** → formulário preenchido → salvar: apareceu a confirmação **Finalizar cadastro?** (“Essa ação não poderá ser desfeita”). ✅
+- Ao confirmar, o administrador foi criado: o backend registrou `POST /administradores` → 201, e B (id 5) consta no banco como ativo. ✅
+- O e-mail **Acesso de administrador - GOUCE** chegou na caixa de teste para `carlos@gmail.com`, com a senha temporária. ✅
+- A confirmação foi um aviso preto rápido (Snackbar, cerca de 1,5 s), sem o estilo do app, com “Cadastro realizado com sucesso” — não “Operação realizada com sucesso” (AC-07). O testador não conseguiu ler a tempo. ❌
+- De volta à listagem, **Carlos Andrade não apareceu**. Voltando ao **Painel** e entrando de novo em **Gestão de administradores**, continuou sem aparecer; só apareceu depois de fechar e reabrir o app. ❌
+- Ao tocar em **Novo** de novo, o formulário ainda estava preenchido com os dados do cadastro anterior; após reabrir o app, veio limpo. ❌
+- Causa aparente: a listagem só é carregada na montagem da tela (`useEffect` em `frontend/src/app/(administrador)/administradores/index.tsx`) e só é recarregada após inativar/reativar; as telas da gestão ficam dentro de uma aba oculta (`href: null` em `(administrador)/_layout.tsx`) e não são desmontadas, então o formulário guarda o estado (mesmo padrão das #125 e #135).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU006-UI-002](issues/BUG-HU006-UI-002-lista-e-formulario-nao-atualizam.md).
 
 ---
 
@@ -301,7 +309,8 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-HU006-UI-002 | Após cadastrar, a listagem não mostra o novo administrador e o formulário mantém os dados até reabrir o app. | [BUG-HU006-UI-002](issues/BUG-HU006-UI-002-lista-e-formulario-nao-atualizam.md) |
+| CT-HU006-UI-002 | Melhoria: confirmação do cadastro é um aviso rápido sem estilo e com texto diferente do AC-07. | [MELHORIA-HU006-UI-002](issues/MELHORIA-HU006-UI-002-confirmacao-sem-padrao.md) |
 
 ## Observações gerais
 
