@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 7 | 0 | 4 | 3 |
+| ⏳ Em execução | 7 | 1 | 4 | 2 |
 
 ## Pré-condições
 
@@ -47,7 +47,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU029-UI-004 | Carteirinha offline | Aluno A sem internet, após abrir online | Versão em cache, sem erro de conexão | ❌ REPROVADO | Sem internet, a carteirinha abriu sem erro, com os dados e o selo “Disponível offline”, mas sem a foto de perfil (área azul). Ao fechar e reabrir o app sem internet, não foi possível entrar (falha de conexão com o servidor), então a carteirinha fica inacessível offline. Ver [BUG-HU029-UI-004](issues/BUG-HU029-UI-004-carteirinha-offline-sem-foto-e-sem-acesso.md). Executado pelo testador em 06/10/2026. |
-| CT-HU029-UI-005 | Leitura do QR Code | QR Code online e offline | Lido por outro celular, nas duas situações | ⏳ PENDENTE | Não executado. |
+| CT-HU029-UI-005 | Leitura do QR Code | QR Code online e offline | Lido por outro celular, nas duas situações | ✅ APROVADO | O QR Code foi lido pela câmera do iPhone online e offline, e identificou o e-mail do aluno A. Observação de segurança: o conteúdo é um JSON com id, e-mail e o cabeçalho fixo do JWT, sem nada que permita validar a autenticidade ([SEGURANCA-HU029-UI-005](issues/SEGURANCA-HU029-UI-005-qr-code-sem-validacao.md)). Confirmado pelo testador em 06/10/2026. |
 
 ### Seção C — Privacidade e revogação
 
@@ -190,8 +190,11 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Sem um segundo celular, o QR Code foi lido pela câmera do próprio iPhone (a partir da imagem da carteirinha), com conexão e sem conexão. Nas duas situações a leitura foi imediata e a câmera reconheceu o e-mail do aluno A (`qa.hu005@gmail.com`), oferecendo abrir o Mail. ✅
+- Conteúdo do QR, conforme o código (`carteirinha-digital.tsx`, linhas 68 a 72): `{"id": 2, "email": "qa.hu005@gmail.com", "token": "eyJhbGciOiJIUzI1NiIs"}`. O campo `token` são os 20 primeiros caracteres do JWT, que correspondem ao cabeçalho fixo `{"alg":"HS256",`: igual para todos os alunos e sem dado secreto.
+- Observação de segurança: o QR não tem assinatura nem código verificável; qualquer pessoa pode gerar um QR com o id e o e-mail de outro aluno. Registrado em [SEGURANCA-HU029-UI-005](issues/SEGURANCA-HU029-UI-005-qr-code-sem-validacao.md).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ### Seção C — Privacidade e revogação
 
@@ -242,6 +245,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
+| CT-HU029-UI-005 | Segurança: o QR Code não tem como ser validado (sem assinatura) e pode ser forjado com o id e o e-mail de outro aluno. | [SEGURANCA-HU029-UI-005](issues/SEGURANCA-HU029-UI-005-qr-code-sem-validacao.md) |
 | CT-HU029-UI-004 | Offline, a carteirinha aparece sem a foto, e depois de reabrir o app sem internet não há como acessá-la. | [BUG-HU029-UI-004](issues/BUG-HU029-UI-004-carteirinha-offline-sem-foto-e-sem-acesso.md) |
 | CT-HU029-UI-003 | Data de emissão fixa (“10/09/2026”) e valores padrão de exemplo no código da carteirinha. | [BUG-HU029-UI-003-emissao](issues/BUG-HU029-UI-003-data-de-emissao-e-valores-fixos.md) |
 | CT-HU029-UI-003 | A carteirinha e o perfil não refletem dados alterados até sair e entrar de novo. | [BUG-HU029-UI-003-atualizacao](issues/BUG-HU029-UI-003-carteirinha-nao-atualiza.md) |
