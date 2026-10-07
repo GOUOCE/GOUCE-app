@@ -11,14 +11,14 @@
 | Tela            | Meu Perfil, Editar Perfil e Alterar e-mail                                              |
 | Ambiente        | Desenvolvimento — app mobile no iPhone (Expo Go)                                        |
 | Total de casos  | 7 |
-| Última execução | Não realizada                                                                           |
+| Última execução | 06/10/2026                                                                              |
 | Testador        | Cauan Ricardo                                                                           |
 
 ## Resultado geral
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Não executada | 7 | 0 | 0 | 7 |
+| ✅ Executada | 7 | 6 | 1 | 0 |
 
 ## Pré-condições
 
@@ -37,18 +37,18 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU005-UI-001 | Visualizar o próprio perfil | Aluno A logado; aba Perfil | Exibir os dados cadastrais atuais do aluno A | ⏳ PENDENTE | Não executado. |
-| CT-HU005-UI-002 | Editar telefone e bairro | (85) 98888-1111; outro bairro | Mensagem de sucesso e dados atualizados no perfil | ⏳ PENDENTE | Não executado. |
-| CT-HU005-UI-003 | Telefone inválido | 8599; 85abc123456; vazio | Bloquear e alertar no campo Telefone | ⏳ PENDENTE | Não executado. |
-| CT-HU005-UI-004 | Campos acadêmicos somente leitura | Meu Perfil e Editar Perfil | Instituição, curso, período e turno não editáveis | ⏳ PENDENTE | Não executado. |
+| CT-HU005-UI-001 | Visualizar o próprio perfil | Aluno A logado; aba Perfil | Exibir os dados cadastrais atuais do aluno A | ✅ APROVADO | Meu Perfil exibiu foto, nome completo, status Aprovado, e-mail, telefone, instituição, curso, período de ingresso e turno do aluno A, sem valores de exemplo, e as ações Editar perfil, Alterar endereço de e-mail, Ver carteirinha digital e Renovar vínculo. Observação: telefone sem máscara (ex.: `31997814542`), ver [MELHORIA-HU005-UI-002](issues/MELHORIA-HU005-UI-002-mascara-telefone-no-perfil.md). Confirmado pelo testador em 06/10/2026. |
+| CT-HU005-UI-002 | Editar telefone e bairro | (85) 98888-1111; outro bairro | Mensagem de sucesso e dados atualizados no perfil | ✅ APROVADO | Exibiu “Perfil atualizado — Suas informações de perfil foram atualizadas com sucesso!” e voltou a Meu Perfil com o telefone novo; telefone `85988881111` e bairro Serra confirmados no banco pela API. Observação: campo Telefone sem máscara ([MELHORIA-HU005-UI-002](issues/MELHORIA-HU005-UI-002-mascara-telefone-no-perfil.md)). Confirmado pelo testador em 06/10/2026. |
+| CT-HU005-UI-003 | Telefone inválido | 8599; 85abc123456; vazio | Bloquear e alertar no campo Telefone | ❌ REPROVADO | `8599` e vazio foram bloqueados com “O telefone deve ter pelo menos 10 dígitos com DDD”; o teclado não aceita letras. Porém, com mais de 20 dígitos o app enviou à API e exibiu o erro em inglês “String should have at most 20 characters”: a tela não limita nem valida o formato como o cadastro. Ver [BUG-HU005-UI-003](issues/BUG-HU005-UI-003-validacao-telefone-fraca-no-perfil.md). Executado pelo testador em 06/10/2026. |
+| CT-HU005-UI-004 | Campos acadêmicos somente leitura | Meu Perfil e Editar Perfil | Instituição, curso, período e turno não editáveis | ✅ APROVADO | Em Meu Perfil os dados acadêmicos aparecem só para leitura, sem ícone de edição; em Editar perfil só Telefone e Bairro são editáveis. O e-mail é alterado em tela própria (CT-005). Confirmado pelo testador em 06/10/2026. |
 
 ### Seção B — Alteração de e-mail e conexão
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU005-UI-005 | Alterar e-mail com senha correta | qa.hu005.novo@example.com; senha atual | Sucesso; login só com o novo e-mail | ⏳ PENDENTE | Não executado. |
-| CT-HU005-UI-006 | Alteração de e-mail rejeitada | Sem senha; senha errada; e-mail do aluno B; maria.souzaufc.br | Bloquear com a mensagem de cada situação; e-mail inalterado | ⏳ PENDENTE | Não executado. |
-| CT-HU005-UI-007 | Falha de conexão ao salvar | Telefone alterado; Wi-Fi e dados móveis desligados | Mensagem de conexão e dados mantidos na tela | ⏳ PENDENTE | Não executado. |
+| CT-HU005-UI-005 | Alterar e-mail com senha correta | qa.hu005.novo@example.com; senha atual | Sucesso; login só com o novo e-mail | ✅ APROVADO | Exibiu “E-mail alterado — Endereço de e-mail alterado com sucesso. Utilize o novo e-mail no próximo login.” (pop-up do app); o perfil mostrou o novo e-mail; o login com o e-mail antigo falhou e com o novo entrou. A primeira tentativa falhou com “E-mail não autorizado” porque o token da sessão tinha vencido (15 min) — ver [BUG-HU005-UI-005](issues/BUG-HU005-UI-005-sessao-expira-em-15-minutos-sem-renovacao.md). Confirmado pelo testador em 06/10/2026. |
+| CT-HU005-UI-006 | Alteração de e-mail rejeitada | Sem senha; senha errada; e-mail do aluno B; maria.souzaufc.br | Bloquear com a mensagem de cada situação; e-mail inalterado | ✅ APROVADO | Sem senha, senha errada, e-mail de outra conta e formato inválido foram bloqueados, cada um com mensagem própria em português; o e-mail da conta não mudou. Confirmado pelo testador em 06/10/2026. |
+| CT-HU005-UI-007 | Falha de conexão ao salvar | Telefone alterado; Wi-Fi e dados móveis desligados | Mensagem de conexão e dados mantidos na tela | ✅ APROVADO | Sem conexão, o app exibiu erro de conexão sem travar e manteve o telefone no campo; com a conexão de volta, salvou sem redigitar (telefone `85997814542` confirmado pela API). Confirmado pelo testador em 06/10/2026. |
 
 ## Detalhamento dos casos
 
@@ -71,8 +71,12 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Meu Perfil** exibiu foto de perfil, nome completo, status **Aprovado** e as informações gerais do aluno A: e-mail, telefone, instituição, curso, período de ingresso e turno. Nenhum valor de exemplo no lugar dos dados reais.
+- Ações da conta: **Editar perfil**, **Alterar endereço de e-mail**, **Ver carteirinha digital** e **Renovar vínculo**.
+- Observação de UX: o telefone aparece sem máscara (ex.: `31997814542`), enquanto o cadastro formata como `(31) 99781-4542`.
+- Observação: o bairro não aparece em **Meu Perfil** (não faz parte do AC-01); será conferido na tela **Editar perfil** (CT-HU005-UI-002).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -94,8 +98,13 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Editar perfil** abriu com os campos preenchidos com os dados atuais.
+- Telefone alterado para `(85) 98888-1111` e bairro para **Serra**.
+- Ao tocar em **Salvar alterações**: “Perfil atualizado — Suas informações de perfil foram atualizadas com sucesso!”, e o app voltou a **Meu Perfil** com o telefone novo.
+- Persistência confirmada pela API (`GET /usuarios/me`): `telefone: 85988881111` e `bairro_id: Serra`.
+- Observação de UX: o campo **Telefone** de **Editar perfil** não tem máscara, assim como a exibição em **Meu Perfil**; no cadastro (HU-001) o telefone é formatado ao sair do campo. Registrado como melhoria: [MELHORIA-HU005-UI-002](issues/MELHORIA-HU005-UI-002-mascara-telefone-no-perfil.md).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -117,8 +126,15 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `8599`: bloqueado com “O telefone deve ter pelo menos 10 dígitos com DDD”. ✅
+- `85abc123456`: não foi possível digitar letras; o teclado do campo é numérico. ✅
+- Campo vazio: bloqueado com a mesma mensagem do `8599` (não há mensagem específica de campo obrigatório). ✅
+- **Teste adicional do testador**, mais de 20 dígitos: o app não bloqueou, enviou à API e exibiu o erro do backend em inglês, “String should have at most 20 characters”. ❌
+- Causa aparente: **Editar perfil** usa `perfilSchema` (`frontend/src/schemas/perfilSchema.ts`), que só exige mínimo de 10 caracteres. O cadastro usa `telefoneSchema` (`alunoSchema.ts:78`), que exige DDD válido + 9 dígitos começando com 9. O backend limita o campo a 20 caracteres e responde 422 com a mensagem padrão em inglês.
+- Ao final, o telefone salvo continuou `85988881111` (conferido pela API).
+- Sugestão do testador: usar no perfil a mesma máscara e as mesmas mensagens do cadastro ([MELHORIA-HU005-UI-002](issues/MELHORIA-HU005-UI-002-mascara-telefone-no-perfil.md)).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU005-UI-003](issues/BUG-HU005-UI-003-validacao-telefone-fraca-no-perfil.md).
 
 ---
 
@@ -138,8 +154,14 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Meu Perfil**: instituição, curso, período de ingresso e turno aparecem só para leitura; tocar neles não faz nada e não há ícone de edição.
+- **Editar perfil**: só **Telefone (WhatsApp)** e **Bairro / Localidade** são editáveis. Os dados acadêmicos não aparecem para edição.
+- O e-mail não é editado nessa tela: tem fluxo próprio, **Alterar endereço de e-mail**, com confirmação de senha (CT-HU005-UI-005).
+- Observações do testador nesta tela, registradas no [BUG-HU005-UI-004](issues/BUG-HU005-UI-004-editar-perfil-mantem-valores-nao-salvos.md):
+  - a seta de voltar de **Editar perfil** sai sem pedir confirmação e leva à aba **Início**, e não a **Meu Perfil**;
+  - depois da falha do CT-003 (mais de 20 dígitos), ao voltar e abrir **Editar perfil** de novo, o campo Telefone ainda mostra o número inválido não salvo, embora o banco tenha o telefone correto.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ### Seção B — Alteração de e-mail e conexão
 
@@ -161,8 +183,13 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **1ª tentativa** (sessão aberta havia mais de 15 minutos): “Falha ao alterar — E-mail não autorizado”. O backend respondeu `401` porque o token de acesso tinha vencido; com um login novo, a mesma troca é aceita pela API. O app não renova o token. Registrado no [BUG-HU005-UI-005](issues/BUG-HU005-UI-005-sessao-expira-em-15-minutos-sem-renovacao.md).
+- **2ª tentativa** (logo após sair e entrar de novo): pop-up do app “E-mail alterado — Endereço de e-mail alterado com sucesso. Utilize o novo e-mail no próximo login.” ✅
+- Novo e-mail usado pelo testador: `qa.hu005@gmail.com` (no lugar do sugerido `qa.hu005.novo@example.com`).
+- **Meu Perfil** passou a exibir `qa.hu005@gmail.com`. ✅
+- Login com o e-mail antigo (`cauanrricardo@gmail.com`): recusado. ✅ Login com o novo: entrou na área do aluno. ✅ (Também conferido pela API.)
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -186,8 +213,14 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Sem senha: bloqueado ao confirmar — “Informe sua senha atual por segurança”. ✅
+- Senha errada: “Falha ao alterar e-mail — Senha incorreta. Não é possível alterar o e-mail.” ✅
+- E-mail de outra conta (`thebirl009@gmail.com`, aluno B): “Falha ao alterar e-mail — Este e-mail já está cadastrado na plataforma GOUCE.” ✅
+- `maria.souzaufc.br`: bloqueado como formato de e-mail inválido. ✅
+- O e-mail da conta continuou `qa.hu005@gmail.com` (conferido pela API).
+- **Teste adicional do testador:** um e-mail válido com espaços nas pontas (`" aaaa@gmail.com "`) é recusado como inválido — mesmo defeito já corrigido no cadastro (#51) e aberto no login (#97). Registrado no [BUG-HU005-UI-005-email-com-espacos-recusado-ao-alterar](issues/BUG-HU005-UI-005-email-com-espacos-recusado-ao-alterar.md).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -210,14 +243,21 @@ Executar na ordem abaixo. São **7 casos essenciais**, em duas seções. Os IDs 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Sem Wi-Fi e dados móveis, **Salvar alterações** exibiu erro de conexão, sem travar o app, e o telefone digitado continuou no campo.
+- Com a conexão religada, **Salvar alterações** concluiu sem redigitar.
+- Persistência confirmada pela API (`GET /usuarios/me`): telefone `85997814542`.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ## Defeitos encontrados
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-HU005-UI-003 | Telefone com mais de 20 dígitos chega à API e o erro aparece em inglês; Editar perfil não valida o formato como o cadastro. | [BUG-HU005-UI-003-validacao-telefone-fraca-no-perfil](issues/BUG-HU005-UI-003-validacao-telefone-fraca-no-perfil.md) |
+| CT-HU005-UI-005, CT-HU005-UI-006 | Alterar e-mail recusa e-mail com espaços nas pontas e não normaliza para minúsculas. | [BUG-HU005-UI-005-email-com-espacos-recusado-ao-alterar](issues/BUG-HU005-UI-005-email-com-espacos-recusado-ao-alterar.md) |
+| CT-HU005-UI-005 | A sessão vence em 15 minutos e o app não renova o token: ações passam a falhar com “não autorizado”. | [BUG-HU005-UI-005-sessao-expira-em-15-minutos-sem-renovacao](issues/BUG-HU005-UI-005-sessao-expira-em-15-minutos-sem-renovacao.md) |
+| CT-HU005-UI-004 | Editar perfil mantém valores não salvos ao reabrir; a seta volta para Início sem confirmação. | [BUG-HU005-UI-004-editar-perfil-mantem-valores-nao-salvos](issues/BUG-HU005-UI-004-editar-perfil-mantem-valores-nao-salvos.md) |
+| CT-HU005-UI-001, CT-HU005-UI-002 | Melhoria: telefone sem máscara em Meu Perfil e em Editar perfil, diferente do cadastro. | [MELHORIA-HU005-UI-002-mascara-telefone-no-perfil](issues/MELHORIA-HU005-UI-002-mascara-telefone-no-perfil.md) |
 
 ## Observações gerais
 
