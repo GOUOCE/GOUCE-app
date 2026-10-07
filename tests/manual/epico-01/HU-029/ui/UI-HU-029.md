@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 7 | 1 | 5 | 1 |
+| ✅ Executada | 7 | 1 | 6 | 0 |
 
 ## Pré-condições
 
@@ -54,7 +54,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU029-UI-006 | Carteirinha após sair da conta | Aluno A sai; app reaberto sem login | Nenhuma carteirinha acessível sem login | ❌ REPROVADO | Com o app aberto e sem sessão, o link levou direto ao login. Com o app fechado, o link abriu o app e mostrou por um instante uma carteirinha completa do aluno de exemplo “João Neves” (foto de banco de imagens, curso, instituição, e-mail e QR Code) antes de ir para o login. Nenhum dado real apareceu. Ver [BUG-HU029-UI-006](issues/BUG-HU029-UI-006-carteirinha-de-exemplo-sem-login.md). Executado pelo testador em 06/10/2026. |
-| CT-HU029-UI-007 | Carteirinha após perder a aprovação | Aluno A aprovado vira “em análise” durante a sessão | Com internet, o documento é ocultado, mesmo havendo cache | ⏳ PENDENTE | Não executado. |
+| CT-HU029-UI-007 | Carteirinha após perder a aprovação | Aluno A aprovado vira “em análise” durante a sessão | Com internet, o documento é ocultado, mesmo havendo cache | ❌ REPROVADO | Com o aluno A passado para “em análise” durante a sessão (a API já recusava com 403), a carteirinha continuou aparecendo com foto, dados e QR Code, e o Meu Perfil seguiu mostrando “aprovado”, sem sair da conta. Ver [BUG-HU029-UI-002](issues/BUG-HU029-UI-002-app-exibe-carteirinha-recusada-pela-api.md) e [BUG-HU029-UI-003-atualizacao](issues/BUG-HU029-UI-003-carteirinha-nao-atualiza.md). Executado pelo testador em 06/10/2026. |
 
 ## Detalhamento dos casos
 
@@ -243,13 +243,19 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O aluno A, aprovado e logado, abriu a carteirinha com internet e voltou ao **Início**.
+- Preparação: status do aluno A alterado para `analise_renovacao` no banco local; conferido pela API (`GET /alunos/me/carteirinha` → 403 “Carteirinha indisponível…”).
+- Sem sair da conta e com internet, a carteirinha **continuou aparecendo** com foto, dados e QR Code, e o **Meu Perfil** seguiu mostrando o status aprovado. ❌
+- Duas causas combinadas: a tela não consulta a API de novo enquanto a sessão estiver aberta ([BUG-HU029-UI-003-atualizacao](issues/BUG-HU029-UI-003-carteirinha-nao-atualiza.md)) e, mesmo quando consulta, ignora o 403 ([BUG-HU029-UI-002](issues/BUG-HU029-UI-002-app-exibe-carteirinha-recusada-pela-api.md)). Um aluno que perde a aprovação continua com uma carteirinha válida na tela.
+- Ao final, o aluno A voltou para aprovado.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU029-UI-002](issues/BUG-HU029-UI-002-app-exibe-carteirinha-recusada-pela-api.md).
 
 ## Defeitos encontrados
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
+| CT-HU029-UI-007 | Aluno que perde a aprovação durante a sessão continua com a carteirinha válida na tela. | [BUG-HU029-UI-002](issues/BUG-HU029-UI-002-app-exibe-carteirinha-recusada-pela-api.md) e [BUG-HU029-UI-003-atualizacao](issues/BUG-HU029-UI-003-carteirinha-nao-atualiza.md) |
 | CT-HU029-UI-006 | Sem login, ao abrir o app pelo link, aparece por um instante uma carteirinha de exemplo (“João Neves”) antes do login. | [BUG-HU029-UI-006](issues/BUG-HU029-UI-006-carteirinha-de-exemplo-sem-login.md) |
 | CT-HU029-UI-005 | Segurança: o QR Code não tem como ser validado (sem assinatura) e pode ser forjado com o id e o e-mail de outro aluno. | [SEGURANCA-HU029-UI-005](issues/SEGURANCA-HU029-UI-005-qr-code-sem-validacao.md) |
 | CT-HU029-UI-004 | Offline, a carteirinha aparece sem a foto, e depois de reabrir o app sem internet não há como acessá-la. | [BUG-HU029-UI-004](issues/BUG-HU029-UI-004-carteirinha-offline-sem-foto-e-sem-acesso.md) |
