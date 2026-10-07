@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Switch, Avatar, Snackbar } from 'react-native-paper';
-import { useRouter } from 'expo-router';
-import { ChevronLeft, Plus, Search, Pencil, Trash2, RotateCcw, X } from 'lucide-react-native';
+import { Text, TextInput, Switch, Avatar, Surface } from 'react-native-paper';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { ChevronLeft, Plus, Search, Pencil, UserX, RotateCcw, X } from 'lucide-react-native';
 
 import { adminService, AdministradorItem } from '@/services/adminService';
 import { useAuth } from '@contexts/AuthContext';
@@ -16,8 +16,6 @@ export default function AdministradoresListScreen() {
   const [busca, setBusca] = useState('');
   const [mostrarInativos, setMostrarInativos] = useState(true);
   const [administradores, setAdministradores] = useState<AdministradorItem[]>([]);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
   // Pop-up estilizado
   const [popup, setPopup] = useState<{
@@ -48,6 +46,13 @@ export default function AdministradoresListScreen() {
       setAdministradores(lista);
     }).catch((err) => console.warn('Erro ao carregar administradores:', err));
   };
+
+  // Recarrega a listagem sempre que a tela ganha foco (BUG-HU006-UI-002)
+  useFocusEffect(
+    React.useCallback(() => {
+      carregarAdministradores();
+    }, [])
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -87,9 +92,14 @@ export default function AdministradoresListScreen() {
         closePopup();
         try {
           await adminService.inativarAdministrador(admin.id);
-          setSnackbarMessage('Administrador inativado');
-          setSnackbarVisivel(true);
           carregarAdministradores();
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: 'O administrador foi inativado.',
+            confirmText: 'OK',
+            onConfirm: closePopup,
+          });
         } catch (error: any) {
           const msg = getErrorMessage(error, 'Erro ao inativar administrador.');
           showPopup({
@@ -116,9 +126,14 @@ export default function AdministradoresListScreen() {
         closePopup();
         try {
           await adminService.reativarAdministrador(admin.id, admin.nome, admin.email);
-          setSnackbarMessage('Administrador reativado');
-          setSnackbarVisivel(true);
           carregarAdministradores();
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: 'O administrador foi reativado com sucesso.',
+            confirmText: 'OK',
+            onConfirm: closePopup,
+          });
         } catch (error: any) {
           const msg = getErrorMessage(error, 'Erro ao reativar administrador.');
           showPopup({
@@ -199,36 +214,50 @@ export default function AdministradoresListScreen() {
 
         {/* Lista de Ativos */}
         <View style={styles.listSection}>
-          {ativos.map((admin) => (
-            <View key={admin.id} style={styles.adminRow}>
-              <Avatar.Text
-                size={48}
-                label={getIniciais(admin.nome)}
-                style={styles.avatarCircle}
-                labelStyle={styles.avatarLabel}
-              />
-              <View style={styles.adminInfo}>
-                <Text variant="bodyLarge" style={styles.adminName}>{admin.nome}</Text>
-                <Text variant="bodySmall" style={styles.adminEmail}>{admin.email}</Text>
+          {ativos.map((admin) => {
+            const isMinhaConta = String(admin.id) === String(user?.id);
+
+            return (
+              <View key={admin.id} style={styles.adminRow}>
+                <Avatar.Text
+                  size={48}
+                  label={getIniciais(admin.nome)}
+                  style={styles.avatarCircle}
+                  labelStyle={styles.avatarLabel}
+                />
+                <View style={styles.adminInfo}>
+                  <View style={styles.nameRow}>
+                    <Text variant="bodyLarge" style={styles.adminName}>{admin.nome}</Text>
+                    {isMinhaConta && (
+                      <Surface style={styles.voceBadge} elevation={0}>
+                        <Text style={styles.voceText}>você</Text>
+                      </Surface>
+                    )}
+                  </View>
+                  <Text variant="bodySmall" style={styles.adminEmail}>{admin.email}</Text>
+                </View>
+                <View style={styles.actionButtons}>
+                  <TouchableOpacity
+                    onPress={() =>
+                      router.push({
+                        pathname: '/(administrador)/administradores/editar',
+                        params: { id: String(admin.id), nome: admin.nome, email: admin.email },
+                      })
+                    }
+                    style={styles.iconBtn}
+                  >
+                    <Pencil size={20} color="#333" />
+                  </TouchableOpacity>
+
+                  {!isMinhaConta && (
+                    <TouchableOpacity onPress={() => handleInativar(admin)} style={styles.iconBtn}>
+                      <UserX size={20} color="#333" />
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
-              <View style={styles.actionButtons}>
-                <TouchableOpacity
-                  onPress={() =>
-                    router.push({
-                      pathname: '/(administrador)/administradores/editar',
-                      params: { id: String(admin.id), nome: admin.nome, email: admin.email },
-                    })
-                  }
-                  style={styles.iconBtn}
-                >
-                  <Pencil size={20} color="#333" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleInativar(admin)} style={styles.iconBtn}>
-                  <Trash2 size={20} color="#333" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))}
+            );
+          })}
 
           {ativos.length === 0 && (
             <Text style={styles.emptyText}>Nenhum administrador ativo encontrado.</Text>
@@ -259,20 +288,6 @@ export default function AdministradoresListScreen() {
           </View>
         )}
       </ScrollView>
-
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
     </View>
   );
 }
@@ -350,9 +365,25 @@ const styles = StyleSheet.create({
   adminInfo: {
     flex: 1,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   adminName: {
     fontWeight: '500',
     color: '#333',
+  },
+  voceBadge: {
+    backgroundColor: '#E3EFFF',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  voceText: {
+    color: '#3E5F90',
+    fontSize: 11,
+    fontWeight: '600',
   },
   adminEmail: {
     color: '#666',
@@ -377,11 +408,5 @@ const styles = StyleSheet.create({
     color: '#888',
     textAlign: 'center',
     marginVertical: 16,
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });

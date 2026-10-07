@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
-import { Text, TextInput, Button, SegmentedButtons, Avatar, Snackbar, Checkbox } from 'react-native-paper';
-import { useRouter } from 'expo-router';
+import { Text, TextInput, Button, SegmentedButtons, Avatar, Checkbox } from 'react-native-paper';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft, Search, User, Mail, X } from 'lucide-react-native';
@@ -19,8 +19,6 @@ export default function CadastrarAdministradorScreen() {
   const [alunos, setAlunos] = useState<AlunoAprovadoItem[]>([]);
   const [alunoSelecionado, setAlunoSelecionado] = useState<AlunoAprovadoItem | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
   // Pop-up estilizado
   const [popup, setPopup] = useState<{
@@ -46,10 +44,23 @@ export default function CadastrarAdministradorScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const { control, handleSubmit, formState: { errors } } = useForm<CriarAdminFormData>({
+  const { control, handleSubmit, formState: { errors }, reset } = useForm<CriarAdminFormData>({
     resolver: zodResolver(criarAdminSchema),
     mode: 'onTouched',
+    defaultValues: {
+      nome: '',
+      email: '',
+    },
   });
+
+  // Limpa o formulário e reseta seleções sempre que a tela ganha foco (BUG-HU006-UI-002)
+  useFocusEffect(
+    React.useCallback(() => {
+      reset({ nome: '', email: '' });
+      setAlunoSelecionado(null);
+      setBuscaAluno('');
+    }, [reset])
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -82,12 +93,20 @@ export default function CadastrarAdministradorScreen() {
         setIsLoading(true);
         try {
           await adminService.promoverAluno(alunoSelecionado.aluno_id || alunoSelecionado.id);
-          setSnackbarMessage(`${alunoSelecionado.nome} agora é administrador`);
-          setSnackbarVisivel(true);
-          setTimeout(() => {
-            router.back();
-          }, 1500);
+          setIsLoading(false);
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: `${alunoSelecionado.nome} agora é administrador.`,
+            confirmText: 'OK',
+            onConfirm: () => {
+              closePopup();
+              reset({ nome: '', email: '' });
+              router.replace('/(administrador)/administradores');
+            },
+          });
         } catch (error: any) {
+          setIsLoading(false);
           const msg = getErrorMessage(error, 'Erro ao promover aluno a administrador.');
           showPopup({
             type: 'error',
@@ -95,8 +114,6 @@ export default function CadastrarAdministradorScreen() {
             message: msg,
             confirmText: 'Entendido',
           });
-        } finally {
-          setIsLoading(false);
         }
       },
     });
@@ -114,12 +131,20 @@ export default function CadastrarAdministradorScreen() {
         setIsLoading(true);
         try {
           await adminService.criarAdministrador(dados.nome, dados.email);
-          setSnackbarMessage('Cadastro realizado com sucesso');
-          setSnackbarVisivel(true);
-          setTimeout(() => {
-            router.back();
-          }, 1500);
+          setIsLoading(false);
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: 'O novo administrador foi cadastrado com sucesso.',
+            confirmText: 'OK',
+            onConfirm: () => {
+              closePopup();
+              reset({ nome: '', email: '' });
+              router.replace('/(administrador)/administradores');
+            },
+          });
         } catch (error: any) {
+          setIsLoading(false);
           const status = error.response?.status;
           const msg = status === 409
             ? 'Este e-mail já está em uso por outro usuário no sistema.'
@@ -131,8 +156,6 @@ export default function CadastrarAdministradorScreen() {
             message: msg,
             confirmText: 'Entendido',
           });
-        } finally {
-          setIsLoading(false);
         }
       },
     });
@@ -151,7 +174,7 @@ export default function CadastrarAdministradorScreen() {
         <Text variant="headlineSmall" style={styles.headerTitle}>Cadastrar Administrador</Text>
       </View>
 
-      {/* Pop-up Estilizado */}
+      {/* Pop-up Estilizado (Confirmação AC-07 / Erro) */}
       <AppPopup
         visible={popup.visible}
         type={popup.type}
@@ -308,20 +331,6 @@ export default function CadastrarAdministradorScreen() {
           </Button>
         )}
       </View>
-
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
     </KeyboardAvoidingView>
   );
 }
@@ -422,11 +431,5 @@ const styles = StyleSheet.create({
   },
   buttonContent: {
     height: 55,
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });

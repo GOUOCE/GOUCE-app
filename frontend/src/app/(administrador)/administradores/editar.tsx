@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
-import { Text, TextInput, Button, Snackbar } from 'react-native-paper';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Text, TextInput, Button } from 'react-native-paper';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, User, Mail, X } from 'lucide-react-native';
+import { ChevronLeft, User, Mail } from 'lucide-react-native';
 
 import { editarAdminSchema, EditarAdminFormData } from '@/schemas/adminSchema';
 import { adminService } from '@/services/adminService';
@@ -16,7 +16,6 @@ export default function EditarAdministradorScreen() {
   const { id, nome: nomeParam, email: emailParam } = useLocalSearchParams<{ id: string; nome: string; email: string }>();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
   // Pop-up estilizado
   const [popup, setPopup] = useState<{
@@ -25,6 +24,8 @@ export default function EditarAdministradorScreen() {
     title: string;
     message: string;
     confirmText?: string;
+    cancelText?: string;
+    confirmColor?: string;
     onConfirm?: () => void;
   }>({
     visible: false,
@@ -40,7 +41,7 @@ export default function EditarAdministradorScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const { control, handleSubmit, formState: { errors }, reset } = useForm<EditarAdminFormData>({
+  const { control, handleSubmit, formState: { errors, isDirty }, reset } = useForm<EditarAdminFormData>({
     resolver: zodResolver(editarAdminSchema),
     mode: 'onTouched',
     defaultValues: {
@@ -49,14 +50,55 @@ export default function EditarAdministradorScreen() {
     },
   });
 
-  useEffect(() => {
-    if (nomeParam || emailParam) {
-      reset({
-        nome: nomeParam || '',
-        email: emailParam || '',
+  // Recarrega os dados do servidor ou reseta os campos ao ganhar foco (BUG-HU006-UI-009)
+  useFocusEffect(
+    React.useCallback(() => {
+      async function carregarDadosOficiais() {
+        if (!id) return;
+        try {
+          const lista = await adminService.listarAdministradores();
+          const adminAtual = lista.find((a) => String(a.id) === String(id));
+          if (adminAtual) {
+            reset({
+              nome: adminAtual.nome,
+              email: adminAtual.email,
+            });
+          } else if (nomeParam || emailParam) {
+            reset({
+              nome: nomeParam || '',
+              email: emailParam || '',
+            });
+          }
+        } catch (err) {
+          console.warn('Erro ao carregar dados do administrador:', err);
+        }
+      }
+      carregarDadosOficiais();
+    }, [id, nomeParam, emailParam, reset])
+  );
+
+  const voltarParaListagem = () => {
+    router.replace('/(administrador)/administradores');
+  };
+
+  const handleBack = () => {
+    if (isDirty) {
+      showPopup({
+        type: 'warning',
+        title: 'Sair desta tela?',
+        message: 'As alterações não salvas serão perdidas.',
+        confirmText: 'Sim, sair',
+        cancelText: 'Continuar aqui',
+        confirmColor: '#B00020',
+        onConfirm: () => {
+          closePopup();
+          voltarParaListagem();
+        },
       });
+    } else {
+      voltarParaListagem();
     }
-  }, [nomeParam, emailParam, reset]);
+  };
 
   const onSubmit = async (dados: EditarAdminFormData) => {
     if (!id) return;
@@ -64,11 +106,19 @@ export default function EditarAdministradorScreen() {
     setIsLoading(true);
     try {
       await adminService.atualizarAdministrador(Number(id), dados.nome, dados.email);
-      setSnackbarVisivel(true);
-      setTimeout(() => {
-        router.back();
-      }, 1500);
+      setIsLoading(false);
+      showPopup({
+        type: 'success',
+        title: 'Operação realizada com sucesso',
+        message: 'As alterações do administrador foram salvas.',
+        confirmText: 'OK',
+        onConfirm: () => {
+          closePopup();
+          voltarParaListagem();
+        },
+      });
     } catch (error: any) {
+      setIsLoading(false);
       const status = error.response?.status;
       const msg = status === 409
         ? 'Este e-mail já está em uso por outro usuário no sistema.'
@@ -80,8 +130,6 @@ export default function EditarAdministradorScreen() {
         message: msg,
         confirmText: 'Entendido',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -92,19 +140,21 @@ export default function EditarAdministradorScreen() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={handleBack}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Editar Administrador</Text>
       </View>
 
-      {/* Pop-up Estilizado */}
+      {/* Pop-up Estilizado (Sucesso AC-07 / Erro) */}
       <AppPopup
         visible={popup.visible}
         type={popup.type}
         title={popup.title}
         message={popup.message}
         confirmText={popup.confirmText}
+        cancelText={popup.cancelText}
+        confirmColor={popup.confirmColor}
         onConfirm={popup.onConfirm}
         onDismiss={closePopup}
       />
@@ -163,20 +213,6 @@ export default function EditarAdministradorScreen() {
           Salvar alterações
         </Button>
       </ScrollView>
-
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        Alterações realizadas com sucesso
-      </Snackbar>
     </KeyboardAvoidingView>
   );
 }
@@ -219,11 +255,5 @@ const styles = StyleSheet.create({
   },
   buttonContent: {
     height: 55,
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });
