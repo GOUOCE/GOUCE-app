@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 10 | 2 | 2 | 6 |
+| ⏳ Em execução | 10 | 3 | 2 | 5 |
 
 ## Pré-condições
 
@@ -47,7 +47,7 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU006-UI-005 | Inativar outro administrador | Administrador B | Confirmação, sucesso, B entre os inativos; B não entra | ⏳ PENDENTE | Não executado. |
+| CT-HU006-UI-005 | Inativar outro administrador | Administrador B | Confirmação, sucesso, B entre os inativos; B não entra | ✅ APROVADO | Pediu confirmação (cancelar manteve B ativo); ao confirmar, a listagem atualizou na hora e B passou a inativo, só com a ação Reativar; o filtro Mostrar inativos funcionou; auditoria gravada e login de B recusado. A confirmação foi o aviso rápido “Administrador inativado” ([MELHORIA-HU006-UI-002](issues/MELHORIA-HU006-UI-002-confirmacao-sem-padrao.md)). Confirmado pelo testador em 06/10/2026. |
 | CT-HU006-UI-006 | Auto-inativação bloqueada | Administrador A | Alerta “Não é possível inativar a conta atualmente em uso.” | ⏳ PENDENTE | Não executado. |
 | CT-HU006-UI-007 | Aluno tenta abrir a gestão por link | Aluno logado; link `administradores` | Acesso Negado, sem dados de administradores | ⏳ PENDENTE | Não executado. |
 
@@ -199,8 +199,12 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- A ação de inativar pediu a confirmação **Inativar administrador?**; cancelar manteve B ativo. ✅
+- Ao confirmar, apareceu o aviso preto rápido “Administrador inativado” (sem o estilo do app; ver [MELHORIA-HU006-UI-002](issues/MELHORIA-HU006-UI-002-confirmacao-sem-padrao.md)) e a listagem **atualizou na hora**: B passou a inativo, sem as ações de editar e excluir, apenas com **Reativar** (“Reativar Carlos?”, usando o primeiro nome). ✅
+- **Mostrar inativos**: desligado, só os ativos; ligado, B aparece entre os inativos — o registro não foi apagado (soft delete). ✅ (completa a verificação do CT-HU006-UI-001)
+- Conferências pela API e pelo banco: `GET /administradores?ativo=false` → B; `log_auditoria` com `usuario_id` 1, ação `INATIVAR`, `administrador` 5, `ativo` → `inativo` e data/hora; login de B com a senha temporária → HTTP 401 “Usuário administrativo inativo.” ✅
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
