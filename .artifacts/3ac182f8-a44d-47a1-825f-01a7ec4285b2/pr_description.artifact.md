@@ -1,36 +1,33 @@
 ## 📋 Descrição
 
-Implementação e integração completas do frontend para a **HU-027 (Avaliação de Solicitação de Cadastro)**, incluindo a **Fila de Solicitações** do administrador, a tela de **Análise e Avaliação de Cadastro** (com aprovação e recusa detalhada) e o fluxo do aluno para **Reenvio de Documentação**, em conformidade com o `requisitos.md`, os protótipos visuais e a suíte BDD.
+Resolução de todas as **issues e divergências da HU-028 (Renovação de Vínculo Institucional)**, incluindo o reset automático de estado ao cancelar/reabrir, validação com limite estrito de 5 MB para comprovantes, padronização da confirmação de envio via `AppPopup` e testes unitários com 100% de aprovação.
 
 ## 🎯 História de Usuário / Épico
 
-- HU/EP: **HU-027** (Avaliação de Solicitação de Cadastro)
+- HU/EP: **HU-028** (Renovação de Vínculo Institucional)
 
-## 🔨 Alterações Realizadas (`HU-027`)
+## 锤 Correções e Melhorias Realizadas (`HU-028`)
 
-- **Fila de Solicitações (`solicitacoes/index.tsx`):**
-  - Listagem de alunos pendentes obtida dinamicamente do banco de dados via `GET /usuarios/alunos?status=pendente`.
-  - Campo de busca por aluno e filtros por chips (*"Todos"*, *"Novos"*, *"Renovações"*).
-  - Ícones e badges alinhados com o protótipo.
-- **Análise e Avaliação de Solicitação (`solicitacoes/[id].tsx`):**
-  - Visualização detalhada de dados pessoais, acadêmicos e documentos anexados.
-  - **Aprovação:** Botão *"Aprovar cadastro"* com modal de confirmação (*"Aprovar cadastro?"* / *"Essa ação não poderá ser desfeita"*) integrado à API `PATCH /usuarios/alunos/{aluno_id}/aprovar` e toast de confirmação.
-  - **Reprovação:** Botão *"Reprovar cadastro"* com o modal *"Detalhar Recusa"* (seleção de documentos e campo de motivo obrigatório com no mínimo 5 caracteres) integrado à API `PATCH /usuarios/alunos/{aluno_id}/status`.
-- **Fluxo de Aluno Rejeitado e Reenvio (`cadastro-rejeitado.tsx` e `reenviar-documentos.tsx`):**
-  - Exibição das observações de recusa deixadas pelo administrador (*"Opa! Precisamos que você ajuste algumas coisas"*) quando o aluno loga com status `rejeitado`.
-  - Formulário para seleção e reenvio de nova foto de perfil, comprovante de matrícula e comprovante de residência.
-- **Validação e Testes Unitários (`solicitacaoSchema.ts` e `solicitacaoSchema.test.ts`):**
-  - Validação Zod para o motivo de reprovação e seleção de documentos.
-  - Testes unitários no Jest aprovados com 100% de cobertura.
+- **Reset Automático de Estado ao Reabrir ou Cancelar (`BUG-HU028-UI-008`):**
+  - Implementação do `useFocusEffect` na tela `renovar-vinculo.tsx` para reiniciar os passos (`passo = 0`) e limpar o formulário sempre que a tela ganha foco ou ao confirmar o cancelamento.
+- **Validação de Obrigatoriedade e Limite de 5 MB (`MELHORIA-HU028-UI-002`):**
+  - Criação do `fileSchema5MB` em `alunoSchema.ts` para impor o limite estrito de **5 MB** exigido pelo AC-03 e pela BDD (`HU-028.feature`), exibindo mensagens claras para arquivo ausente, formato inválido e tamanho excedido.
+- **Confirmação Estilizada de Envio (`MELHORIA-HU028-UI-003`):**
+  - Substituição do aviso preto de rodapé (*Snackbar*) pelo componente **`AppPopup`**:
+    - **Título:** `"Comprovante enviado com sucesso"`
+    - **Mensagem:** `"Sua solicitação de renovação foi enviada para análise da coordenação."`
+    - **Ação:** A tela só fecha e retorna para o perfil após o aluno tocar em **Entendido**.
+- **Logins de Alunos com Vínculo Expirado (`BUG-HU028-API-002`):**
+  - Liberação do login de alunos com vínculo expirado para visualizarem o badge no perfil e abrirem a tela de renovação sem bloqueios de API.
 
 ## 🧪 Como testar
 
-1. **Testar Fila e Aprovação (Como Administrador):**
-   - Faça login como Administrador (`maria.barros@alu.ufc.br` / `Aluno123!`).
-   - Acesse **Fila de solicitações** no Painel, selecione o aluno pendente e teste a aprovação com confirmação no modal.
-2. **Testar Reprovação e Reenvio:**
-   - Na análise de solicitação de um aluno, toque em *Reprovar cadastro*, selecione os documentos incorretos e digite a justificativa.
-   - Faça login com o e-mail do aluno reprovado e confirme a exibição da tela de ajustes necessários com as observações do administrador.
+1. **Testar Reset de Estado ao Cancelar:**
+   - Acesse **Meu Perfil** ➔ **Renovar vínculo institucional**, avance para o passo 2 ou 3 e toque no ícone `X`. Confirme o cancelamento e abra a renovação novamente: a tela iniciará do zero (passo 0).
+2. **Testar Validação de Comprovante de 5 MB:**
+   - No passo 4 da renovação, tente enviar sem anexar o comprovante (mensagem de obrigatoriedade) ou anexe um arquivo maior que 5 MB (mensagem de limite de tamanho).
+3. **Testar Confirmação de Sucesso:**
+   - Conclua o envio da renovação com um arquivo válido e confirme a exibição do `AppPopup` estilizado com o título de sucesso.
 
 ## 🔗 Comunicação App ↔ API
 
@@ -40,7 +37,7 @@ Implementação e integração completas do frontend para a **HU-027 (Avaliaçã
 - [x] Contrato de dados alterado
 
 *Descrição das alterações:*
-- Integração com `GET /usuarios/alunos?status=pendente`, `GET /alunos/{id}`, `PATCH /usuarios/alunos/{aluno_id}/aprovar` e `PATCH /usuarios/alunos/{aluno_id}/status`.
+- Ajustes na validação de arquivo e estado do aluno para `PATCH /alunos/me/renovar`.
 
 ## ✅ Checklist
 

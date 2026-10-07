@@ -114,6 +114,57 @@ const fileSchema = z.any().refine((file) => {
   return isValidType && isValidSize;
 }, 'Envie PDF ou imagem (PNG, JPG ou WEBP) de até 10 MB');
 
+export const fileSchema5MB = z.any().superRefine((file, ctx) => {
+  if (!file) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'O comprovante de matrícula é obrigatório',
+    });
+    return;
+  }
+  const target = Array.isArray(file) ? file[0] : (file && file.assets && file.assets[0]) ? file.assets[0] : file;
+  if (!target) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'O comprovante de matrícula é obrigatório',
+    });
+    return;
+  }
+  if (target === 'existente' || target?.uri === 'existente') return;
+
+  const size = target.size || target.fileSize || 0;
+  const mime = (target.mimeType || target.type || '').toLowerCase();
+  const name = (target.name || target.fileName || '').toLowerCase();
+
+  const isValidType =
+    mime.includes('pdf') ||
+    mime.includes('image') ||
+    mime.includes('png') ||
+    mime.includes('jpg') ||
+    mime.includes('jpeg') ||
+    mime.includes('webp') ||
+    name.endsWith('.pdf') ||
+    name.endsWith('.png') ||
+    name.endsWith('.jpg') ||
+    name.endsWith('.jpeg') ||
+    name.endsWith('.webp');
+
+  if (!isValidType) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Formato de arquivo inválido. Envie PDF ou imagem (PNG, JPG ou WEBP)',
+    });
+    return;
+  }
+
+  if (size > 5 * 1024 * 1024) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'O arquivo excede o limite de tamanho de 5 MB',
+    });
+  }
+});
+
 // Schema do Passo 1 com superRefine de senhas iguais
 export const etapa1Schema = z
   .object({
@@ -256,7 +307,7 @@ export const renovacaoSchema = z.object({
   periodoIngresso: z.string().min(1, 'Selecione o período de ingresso'),
   turno: z.string().min(1, 'Selecione o turno'),
   semestreAtual: z.string().min(1, 'Selecione o semestre atual'),
-  comprovanteMatricula: fileSchema,
+  comprovanteMatricula: fileSchema5MB,
   comprovanteResidencia: z.any().optional(),
   aceitouTermos: z.boolean().optional(),
 });
