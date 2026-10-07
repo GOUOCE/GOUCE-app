@@ -343,10 +343,10 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| CT-HU006-UI-002 | Após cadastrar, a listagem não mostra o novo administrador e o formulário mantém os dados até reabrir o app. | [BUG-HU006-UI-002](issues/BUG-HU006-UI-002-lista-e-formulario-nao-atualizam.md) |
-| CT-HU006-UI-009 | Editar administrador: a seta sai sem confirmação, vai para o Painel e, ao reabrir, mostra o texto não salvo. | [BUG-HU006-UI-009](issues/BUG-HU006-UI-009-editar-sai-sem-confirmar-e-guarda-texto.md) |
-| CT-HU006-UI-006 | Melhoria: a ação de inativar aparece na própria conta (e usa ícone de lixeira para uma inativação). | [MELHORIA-HU006-UI-006](issues/MELHORIA-HU006-UI-006-acao-de-inativar-na-propria-conta.md) |
-| CT-HU006-UI-002 | Melhoria: confirmação do cadastro é um aviso rápido sem estilo e com texto diferente do AC-07. | [MELHORIA-HU006-UI-002](issues/MELHORIA-HU006-UI-002-confirmacao-sem-padrao.md) |
+| CT-HU006-UI-002 | Após cadastrar, a listagem não mostra o novo administrador e o formulário mantém os dados até reabrir o app. | [BUG-HU006-UI-002](issues/BUG-HU006-UI-002-lista-e-formulario-nao-atualizam.md) — #155 |
+| CT-HU006-UI-009 | Editar administrador: a seta sai sem confirmação, vai para o Painel e, ao reabrir, mostra o texto não salvo. | [BUG-HU006-UI-009](issues/BUG-HU006-UI-009-editar-sai-sem-confirmar-e-guarda-texto.md) — #156 |
+| CT-HU006-UI-006 | Melhoria: a ação de inativar aparece na própria conta (e usa ícone de lixeira para uma inativação). | [MELHORIA-HU006-UI-006](issues/MELHORIA-HU006-UI-006-acao-de-inativar-na-propria-conta.md) — #158 |
+| CT-HU006-UI-002 | Melhoria: confirmação do cadastro é um aviso rápido sem estilo e com texto diferente do AC-07. | [MELHORIA-HU006-UI-002](issues/MELHORIA-HU006-UI-002-confirmacao-sem-padrao.md) — #157 |
 
 ## Observações gerais
 
