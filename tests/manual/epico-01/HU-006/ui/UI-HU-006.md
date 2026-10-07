@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 10 | 6 | 2 | 2 |
+| ⏳ Em execução | 10 | 6 | 3 | 1 |
 
 ## Pré-condições
 
@@ -56,7 +56,7 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU006-UI-008 | E-mail com espaços e maiúsculas | `" Carla.Mendes@Example.com "` | Aceito e salvo como `carla.mendes@example.com` | ✅ APROVADO | O e-mail `" Carla.Mendes@Example.com "` foi aceito e exibido na listagem como `carla.mendes@example.com` (confirmado pela API). Com o app recém-aberto, a listagem atualizou logo após o cadastro. Confirmado pelo testador em 06/10/2026. |
-| CT-HU006-UI-009 | Sair sem salvar | Alterar nome em Editar e tocar na seta | Pedir confirmação; nada salvo; ao reabrir, dados do banco | ⏳ PENDENTE | Não executado. |
+| CT-HU006-UI-009 | Sair sem salvar | Alterar nome em Editar e tocar na seta | Pedir confirmação; nada salvo; ao reabrir, dados do banco | ❌ REPROVADO | A seta saiu sem confirmação e foi para o Painel, não para a listagem. Nada foi salvo (a API manteve “Carla mendes”), mas ao abrir Editar de novo o campo ainda mostrava o texto não salvo “Carla teste”. Ver [BUG-HU006-UI-009](issues/BUG-HU006-UI-009-editar-sai-sem-confirmar-e-guarda-texto.md). Executado pelo testador em 06/10/2026. |
 | CT-HU006-UI-010 | Falha de conexão ao salvar | Wi-Fi e dados desligados ao cadastrar e ao inativar | Mensagem de conexão, sem travar; dados mantidos para nova tentativa | ⏳ PENDENTE | Não executado. |
 
 ## Detalhamento dos casos
@@ -302,8 +302,13 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Em **Editar Administrador** da Carla, o nome foi alterado para `Carla teste`, sem salvar.
+- A seta de voltar saiu **sem pedir confirmação** e levou ao **Painel**, e não à listagem de administradores. ❌
+- Nada foi salvo: a listagem e a API continuaram com “Carla mendes”. ✅
+- Ao abrir a Carla em **Editar** de novo, o campo ainda mostrava o texto não salvo **“Carla teste”**; um toque em salvar gravaria o valor descartado. ❌
+- Causa aparente: `editar.tsx` chama `router.back()` direto na seta, sem confirmação; e as telas da gestão não são desmontadas (aba oculta), então o formulário guarda o que foi digitado — mesmo padrão da #125 (Editar perfil do aluno).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU006-UI-009](issues/BUG-HU006-UI-009-editar-sai-sem-confirmar-e-guarda-texto.md).
 
 ---
 
@@ -334,6 +339,7 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 | Caso | Defeito | Issue |
 | --- | --- | --- |
 | CT-HU006-UI-002 | Após cadastrar, a listagem não mostra o novo administrador e o formulário mantém os dados até reabrir o app. | [BUG-HU006-UI-002](issues/BUG-HU006-UI-002-lista-e-formulario-nao-atualizam.md) |
+| CT-HU006-UI-009 | Editar administrador: a seta sai sem confirmação, vai para o Painel e, ao reabrir, mostra o texto não salvo. | [BUG-HU006-UI-009](issues/BUG-HU006-UI-009-editar-sai-sem-confirmar-e-guarda-texto.md) |
 | CT-HU006-UI-006 | Melhoria: a ação de inativar aparece na própria conta (e usa ícone de lixeira para uma inativação). | [MELHORIA-HU006-UI-006](issues/MELHORIA-HU006-UI-006-acao-de-inativar-na-propria-conta.md) |
 | CT-HU006-UI-002 | Melhoria: confirmação do cadastro é um aviso rápido sem estilo e com texto diferente do AC-07. | [MELHORIA-HU006-UI-002](issues/MELHORIA-HU006-UI-002-confirmacao-sem-padrao.md) |
 
