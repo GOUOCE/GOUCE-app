@@ -255,15 +255,15 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| CT-HU029-UI-007 | Aluno que perde a aprovação durante a sessão continua com a carteirinha válida na tela. | [BUG-HU029-UI-002](issues/BUG-HU029-UI-002-app-exibe-carteirinha-recusada-pela-api.md) e [BUG-HU029-UI-003-atualizacao](issues/BUG-HU029-UI-003-carteirinha-nao-atualiza.md) |
-| CT-HU029-UI-006 | Sem login, ao abrir o app pelo link, aparece por um instante uma carteirinha de exemplo (“João Neves”) antes do login. | [BUG-HU029-UI-006](issues/BUG-HU029-UI-006-carteirinha-de-exemplo-sem-login.md) |
-| CT-HU029-UI-005 | Segurança: o QR Code não tem como ser validado (sem assinatura) e pode ser forjado com o id e o e-mail de outro aluno. | [SEGURANCA-HU029-UI-005](issues/SEGURANCA-HU029-UI-005-qr-code-sem-validacao.md) |
-| CT-HU029-UI-004 | Offline, a carteirinha aparece sem a foto, e depois de reabrir o app sem internet não há como acessá-la. | [BUG-HU029-UI-004](issues/BUG-HU029-UI-004-carteirinha-offline-sem-foto-e-sem-acesso.md) |
-| CT-HU029-UI-003 | Data de emissão fixa (“10/09/2026”) e valores padrão de exemplo no código da carteirinha. | [BUG-HU029-UI-003-emissao](issues/BUG-HU029-UI-003-data-de-emissao-e-valores-fixos.md) |
-| CT-HU029-UI-003 | A carteirinha e o perfil não refletem dados alterados até sair e entrar de novo. | [BUG-HU029-UI-003-atualizacao](issues/BUG-HU029-UI-003-carteirinha-nao-atualiza.md) |
-| CT-HU029-UI-002 | Aluno sem status aprovado consegue abrir a carteirinha: o app ignora o 403 da API e monta o documento com os dados da sessão. | [BUG-HU029-UI-002](issues/BUG-HU029-UI-002-app-exibe-carteirinha-recusada-pela-api.md) |
-| CT-HU029-UI-001 | O atalho Carteirinha Digital da tela Início não abre nada. | [BUG-HU029-UI-001](issues/BUG-HU029-UI-001-atalho-do-inicio-sem-acao.md) |
-| CT-HU029-UI-001 | Nome, e-mail, instituição e curso são cortados em uma linha com reticências. | [BUG-HU029-UI-001-dados-cortados](issues/BUG-HU029-UI-001-dados-cortados-na-carteirinha.md) |
+| CT-HU029-UI-007 | Aluno que perde a aprovação durante a sessão continua com a carteirinha válida na tela. | [BUG-HU029-UI-002](issues/BUG-HU029-UI-002-app-exibe-carteirinha-recusada-pela-api.md) e [BUG-HU029-UI-003-atualizacao](issues/BUG-HU029-UI-003-carteirinha-nao-atualiza.md) — #146, #151 |
+| CT-HU029-UI-006 | Sem login, ao abrir o app pelo link, aparece por um instante uma carteirinha de exemplo (“João Neves”) antes do login. | [BUG-HU029-UI-006](issues/BUG-HU029-UI-006-carteirinha-de-exemplo-sem-login.md) — #152 |
+| CT-HU029-UI-005 | Segurança: o QR Code não tem como ser validado (sem assinatura) e pode ser forjado com o id e o e-mail de outro aluno. | [SEGURANCA-HU029-UI-005](issues/SEGURANCA-HU029-UI-005-qr-code-sem-validacao.md) — #153 |
+| CT-HU029-UI-004 | Offline, a carteirinha aparece sem a foto, e depois de reabrir o app sem internet não há como acessá-la. | [BUG-HU029-UI-004](issues/BUG-HU029-UI-004-carteirinha-offline-sem-foto-e-sem-acesso.md) — #148 |
+| CT-HU029-UI-003 | Data de emissão fixa (“10/09/2026”) e valores padrão de exemplo no código da carteirinha. | [BUG-HU029-UI-003-emissao](issues/BUG-HU029-UI-003-data-de-emissao-e-valores-fixos.md) — #147 |
+| CT-HU029-UI-003 | A carteirinha e o perfil não refletem dados alterados até sair e entrar de novo. | [BUG-HU029-UI-003-atualizacao](issues/BUG-HU029-UI-003-carteirinha-nao-atualiza.md) — #151 |
+| CT-HU029-UI-002 | Aluno sem status aprovado consegue abrir a carteirinha: o app ignora o 403 da API e monta o documento com os dados da sessão. | [BUG-HU029-UI-002](issues/BUG-HU029-UI-002-app-exibe-carteirinha-recusada-pela-api.md) — #146 |
+| CT-HU029-UI-001 | O atalho Carteirinha Digital da tela Início não abre nada. | [BUG-HU029-UI-001](issues/BUG-HU029-UI-001-atalho-do-inicio-sem-acao.md) — #149 |
+| CT-HU029-UI-001 | Nome, e-mail, instituição e curso são cortados em uma linha com reticências. | [BUG-HU029-UI-001-dados-cortados](issues/BUG-HU029-UI-001-dados-cortados-na-carteirinha.md) — #150 |
 
 ## Observações gerais
 
