@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 10 | 1 | 1 | 8 |
+| ⏳ Em execução | 10 | 2 | 1 | 7 |
 
 ## Pré-condições
 
@@ -40,7 +40,7 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 | --- | --- | --- | --- | --- | --- |
 | CT-HU006-UI-001 | Acessar a gestão de administradores | Painel → Gestão de administradores | Listagem com busca, filtro de inativos e botão Novo | ✅ APROVADO | A tela Administradores exibiu a lista, o campo Buscar por nome, a chave Mostrar inativos e o botão Novo; a busca filtra e informa quando não há resultado; a seta voltou ao Painel. O filtro de inativos será conferido no CT-005, quando houver inativo. Confirmado pelo testador em 06/10/2026. |
 | CT-HU006-UI-002 | Cadastrar novo administrador | Nome e e-mail novos | Confirmação, sucesso e B na listagem; e-mail com senha | ❌ REPROVADO | O administrador foi criado (HTTP 201) após a confirmação “Finalizar cadastro?” e o e-mail com a senha temporária chegou. Porém a listagem não foi atualizada (B só apareceu depois de fechar e reabrir o app), o formulário manteve os dados ao abrir Novo de novo, e a confirmação foi um aviso rápido sem estilo (“Cadastro realizado com sucesso”). Ver [BUG-HU006-UI-002](issues/BUG-HU006-UI-002-lista-e-formulario-nao-atualizam.md) e [MELHORIA-HU006-UI-002](issues/MELHORIA-HU006-UI-002-confirmacao-sem-padrao.md). Executado pelo testador em 06/10/2026. |
-| CT-HU006-UI-003 | Cadastro rejeitado | E-mail de aluno; nome `Ab`; e-mail `carlos@`; campos vazios | Mensagem do AC-03 no duplicado; alerta no campo nos demais | ⏳ PENDENTE | Não executado. |
+| CT-HU006-UI-003 | Cadastro rejeitado | E-mail de aluno; nome `Ab`; e-mail `carlos@`; campos vazios | Mensagem do AC-03 no duplicado; alerta no campo nos demais | ✅ APROVADO | E-mail de aluno: “Este e-mail já está em uso por outro usuário no sistema.” (409); nome `Ab`: “Informe seu nome completo”; e-mail `carlos@`: “E-mail inválido”; campos vazios: obrigatoriedade. Os três últimos foram barrados no app, sem chamar a API. Confirmado pelo testador em 06/10/2026. |
 | CT-HU006-UI-004 | Editar administrador | Nome novo; e-mail em uso | Sucesso e listagem atualizada; duplicado bloqueado | ⏳ PENDENTE | Não executado. |
 
 ### Seção B — Inativação e controle de acesso
@@ -142,8 +142,14 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- E-mail de aluno (`qa.hu005@gmail.com`): “Este e-mail já está em uso por outro usuário no sistema.” — o backend respondeu 409. ✅
+- Nome `Ab`: alerta no campo, “Informe seu nome completo”. ✅
+- E-mail `carlos@`: alerta no campo, “E-mail inválido”. ✅
+- Campos vazios: o app pediu o preenchimento dos campos obrigatórios. ✅
+- As tentativas 2 a 4 foram barradas no próprio app (nenhum `POST /administradores` no log do backend); conferido pela API que nenhuma delas criou administrador.
+- Teste adicional do testador: e-mail com espaços nas pontas e nome `pedro lima` — aceito e salvo sem espaços (`c@gmail.xom`, com erro de digitação no domínio, mas formato válido). Relaciona-se ao CT-HU006-UI-008.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
