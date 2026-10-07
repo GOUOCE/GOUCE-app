@@ -77,6 +77,22 @@ class RenovarVinculoFalhasTest(unittest.TestCase):
         self.salvar_arquivo.execute.assert_not_called()
         self.repository.atualizar_dados_renovacao.assert_not_called()
 
+    def test_rejeita_comprovante_acima_de_cinco_mb(self):
+        with self.assertRaises(ValidacaoMultiplaError) as contexto:
+            self.use_case.execute(
+                7,
+                renovacao_dto(),
+                ("matricula.pdf", "application/pdf", b"x" * (5 * 1024 * 1024 + 1)),
+                ("residencia.pdf", "application/pdf", b"arquivo"),
+            )
+
+        self.assertEqual(
+            contexto.exception.erros,
+            [{"field": "comprovante_matricula", "message": "Arquivo excede o limite de tamanho"}],
+        )
+        self.salvar_arquivo.execute.assert_not_called()
+        self.repository.atualizar_dados_renovacao.assert_not_called()
+
     def test_falha_de_armazenamento_nao_atualiza_aluno(self):
         self.salvar_arquivo.execute.side_effect = ConnectionError("storage indisponivel")
 
