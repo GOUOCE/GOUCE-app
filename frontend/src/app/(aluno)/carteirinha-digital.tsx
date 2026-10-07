@@ -1,42 +1,96 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { Text, Surface, Avatar, useTheme } from 'react-native-paper';
+import { Text, Surface, Avatar } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft, AlertCircle } from 'lucide-react-native';
 import QRCode from 'react-native-qrcode-svg';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { useAuth } from '@contexts/AuthContext';
 import { PrefeituraLogo } from '@/components/ui/Logos';
 import { userService } from '@/services/userService';
 import { api } from '../../api/api';
 
 export default function CarteirinhaDigitalScreen() {
-  const theme = useTheme();
   const router = useRouter();
   const { user, token } = useAuth();
 
   const [carteirinhaData, setCarteirinhaData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isIndisponivel, setIsIndisponivel] = useState(false);
+  const [mensagemIndisponivel, setMensagemIndisponivel] = useState('');
+  const [isOffline, setIsOffline] = useState(false);
 
   useEffect(() => {
     async function carregarCarteirinha() {
-      setIsLoading(true);
       try {
         const data = await userService.getCarteirinha();
         if (data) {
           setCarteirinhaData(data);
+          setIsIndisponivel(false);
+          await AsyncStorage.setItem('@GOUOCE:carteirinha_cache', JSON.stringify(data));
         }
-      } catch (err) {
-        console.warn('Carteirinha offline ou em carregamento, usando cache do usuário:', err);
-      } finally {
-        setIsLoading(false);
+      } catch (err: any) {
+        if (err.response?.status === 403 || err.response?.status === 401) {
+          setIsIndisponivel(true);
+          setMensagemIndisponivel(
+            err.response?.data?.detail || 'Carteirinha indisponível. Seu cadastro está inativo ou em análise.'
+          );
+          return;
+        }
+
+        // Tenta carregar cache offline do AsyncStorage
+        try {
+          const cached = await AsyncStorage.getItem('@GOUOCE:carteirinha_cache');
+          if (cached) {
+            setCarteirinhaData(JSON.parse(cached));
+            setIsOffline(true);
+          } else if (user?.status === 'ativado') {
+            setCarteirinhaData({
+              nome: user.name,
+              email: user.email,
+              faculdade_id: user.faculdade,
+              curso: user.curso,
+              periodo_ingresso: user.periodo_ingresso,
+              id_foto_aluno: user.foto_perfil,
+            });
+            setIsOffline(true);
+          } else {
+            setIsIndisponivel(true);
+            setMensagemIndisponivel('Carteirinha indisponível. Seu cadastro está inativo ou em análise.');
+          }
+        } catch {
+          setIsIndisponivel(true);
+          setMensagemIndisponivel('Carteirinha indisponível no momento.');
+        }
       }
     }
     carregarCarteirinha();
-  }, []);
+  }, [user]);
+
+  if (isIndisponivel) {
+    return (
+      <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()}>
+            <ChevronLeft size={32} color="#333" />
+          </TouchableOpacity>
+          <Text variant="headlineSmall" style={styles.headerTitle}>Carteirinha Digital</Text>
+        </View>
+
+        <View style={styles.indisponivelContent}>
+          <AlertCircle size={64} color="#E65100" />
+          <Text variant="titleMedium" style={styles.indisponivelTitle}>Carteirinha Indisponível</Text>
+          <Text variant="bodyMedium" style={styles.indisponivelText}>
+            {mensagemIndisponivel || 'Carteirinha indisponível. Seu cadastro está inativo ou em análise.'}
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   // Dados reais combinados (API / Cache)
   const idFoto = carteirinhaData?.id_foto_aluno || user?.foto_perfil;
-  const baseUrl = api.defaults.baseURL || 'http://192.168.0.3:8000';
+  const baseUrl = api.defaults.baseURL || 'http://192.168.0.4:8000';
   const fotoUri = idFoto
     ? (idFoto.startsWith('http')
         ? idFoto
@@ -51,24 +105,23 @@ export default function CarteirinhaDigitalScreen() {
           'ngrok-skip-browser-warning': 'true',
         },
       }
-    : { uri: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=200&auto=format&fit=crop' };
+    : undefined;
 
-  const nomeAluno = carteirinhaData?.nome || user?.name || 'João Neves';
-  const emailAluno = carteirinhaData?.email || user?.email || 'joao@email.com';
+  const nomeAluno = carteirinhaData?.nome || user?.name || '';
+  const emailAluno = carteirinhaData?.email || user?.email || '';
 
   const inst = carteirinhaData?.faculdade_id || user?.faculdade || 'UFC';
-  const campus = carteirinhaData?.campus || 'Campus Quixadá';
-  const instituicaoTexto = inst.includes('Campus') ? inst : `${inst} - ${campus.includes('Campus') ? campus : `Campus ${campus}`}`;
+  const campus = carteirinhaData?.campus || 'Quixadá';
+  const instituicaoTexto = inst.includes('Campus') ? inst : `${inst} - Campus ${campus}`;
 
-  const cursoAluno = carteirinhaData?.curso || user?.curso || 'Engenharia de Software';
-  const ingressoAluno = carteirinhaData?.periodo_ingresso || user?.periodo_ingresso || '2024.1';
-  const cursoIngressoTexto = `${cursoAluno} - ${ingressoAluno}`;
+  const cursoAluno = carteirinhaData?.curso || user?.curso || '';
+  const ingressoAluno = carteirinhaData?.periodo_ingresso || user?.periodo_ingresso || '';
+  const cursoIngressoTexto = cursoAluno ? `${cursoAluno}${ingressoAluno ? ` - ${ingressoAluno}` : ''}` : '';
 
-  const emissao = '10/09/2026';
   const qrcodeValue = JSON.stringify({
     id: carteirinhaData?.id || user?.id,
     email: emailAluno,
-    token: token ? token.slice(0, 20) : 'gouoce_token',
+    status: 'Aprovado',
   });
 
   return (
@@ -90,27 +143,33 @@ export default function CarteirinhaDigitalScreen() {
         <Surface style={styles.card} elevation={1}>
           {/* Parte Superior: Foto + Dados */}
           <View style={styles.cardTopRow}>
-            <Avatar.Image
-              size={95}
-              source={imageSource}
-              style={styles.avatar}
-            />
+            {imageSource ? (
+              <Avatar.Image
+                size={95}
+                source={imageSource}
+                style={styles.avatar}
+              />
+            ) : (
+              <Avatar.Text
+                size={95}
+                label={nomeAluno ? nomeAluno.substring(0, 2).toUpperCase() : 'AL'}
+                style={[styles.avatar, { backgroundColor: '#3E5F90' }]}
+                labelStyle={{ color: '#FFF' }}
+              />
+            )}
 
             <View style={styles.infoWrapper}>
-              <Text variant="titleLarge" style={styles.userName} numberOfLines={1}>
+              <Text variant="titleLarge" style={styles.userName}>
                 {nomeAluno}
               </Text>
-              <Text variant="bodySmall" style={styles.infoText} numberOfLines={1}>
+              <Text variant="bodySmall" style={styles.infoText}>
                 {instituicaoTexto}
               </Text>
-              <Text variant="bodySmall" style={styles.infoText} numberOfLines={1}>
+              <Text variant="bodySmall" style={styles.infoText}>
                 {cursoIngressoTexto}
               </Text>
-              <Text variant="bodySmall" style={styles.infoText} numberOfLines={1}>
+              <Text variant="bodySmall" style={styles.infoText}>
                 {emailAluno}
-              </Text>
-              <Text variant="labelSmall" style={styles.emissionText}>
-                Data de Emissão: {emissao}
               </Text>
             </View>
           </View>
@@ -133,9 +192,11 @@ export default function CarteirinhaDigitalScreen() {
         </Surface>
 
         {/* Badge Disponível Offline */}
-        <View style={styles.offlineBadge}>
-          <Text style={styles.offlineText}>Disponível offline</Text>
-        </View>
+        {isOffline && (
+          <View style={styles.offlineBadge}>
+            <Text style={styles.offlineText}>Disponível offline</Text>
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -185,7 +246,7 @@ const styles = StyleSheet.create({
   },
   infoWrapper: {
     flex: 1,
-    gap: 2,
+    gap: 4,
   },
   userName: {
     fontWeight: 'bold',
@@ -197,11 +258,6 @@ const styles = StyleSheet.create({
     color: '#555',
     fontSize: 13,
     lineHeight: 18,
-  },
-  emissionText: {
-    color: '#777',
-    fontSize: 11,
-    marginTop: 6,
   },
   cardBottomRow: {
     flexDirection: 'row',
@@ -231,5 +287,21 @@ const styles = StyleSheet.create({
     color: '#3E5F90',
     fontWeight: '500',
     fontSize: 14,
+  },
+  indisponivelContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    gap: 16,
+  },
+  indisponivelTitle: {
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  indisponivelText: {
+    textAlign: 'center',
+    color: '#666',
+    lineHeight: 22,
   },
 });

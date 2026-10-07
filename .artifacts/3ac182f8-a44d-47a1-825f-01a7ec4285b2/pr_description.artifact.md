@@ -1,36 +1,36 @@
 ## 📋 Descrição
 
-Implementação e integração completas do frontend para a **HU-027 (Avaliação de Solicitação de Cadastro)**, incluindo a **Fila de Solicitações** do administrador, a tela de **Análise e Avaliação de Cadastro** (com aprovação e recusa detalhada) e o fluxo do aluno para **Reenvio de Documentação**, em conformidade com o `requisitos.md`, os protótipos visuais e a suíte BDD.
+Resolução de todas as **issues da HU-029 (Carteirinha Digital do Aluno)**, incluindo a habilitação do atalho na tela inicial, suporte a textos longos sem corte, tratamento de erro 403 para alunos não aprovados, remoção de dados fictícios/mock, suporte a cache offline e QR Code seguro.
 
 ## 🎯 História de Usuário / Épico
 
-- HU/EP: **HU-027** (Avaliação de Solicitação de Cadastro)
+- HU/EP: **HU-029** (Carteirinha Digital do Aluno)
 
-## 🔨 Alterações Realizadas (`HU-027`)
+## 🔨 Correções e Melhorias Realizadas (`HU-029`)
 
-- **Fila de Solicitações (`solicitacoes/index.tsx`):**
-  - Listagem de alunos pendentes obtida dinamicamente do banco de dados via `GET /usuarios/alunos?status=pendente`.
-  - Campo de busca por aluno e filtros por chips (*"Todos"*, *"Novos"*, *"Renovações"*).
-  - Ícones e badges alinhados com o protótipo.
-- **Análise e Avaliação de Solicitação (`solicitacoes/[id].tsx`):**
-  - Visualização detalhada de dados pessoais, acadêmicos e documentos anexados.
-  - **Aprovação:** Botão *"Aprovar cadastro"* com modal de confirmação (*"Aprovar cadastro?"* / *"Essa ação não poderá ser desfeita"*) integrado à API `PATCH /usuarios/alunos/{aluno_id}/aprovar` e toast de confirmação.
-  - **Reprovação:** Botão *"Reprovar cadastro"* com o modal *"Detalhar Recusa"* (seleção de documentos e campo de motivo obrigatório com no mínimo 5 caracteres) integrado à API `PATCH /usuarios/alunos/{aluno_id}/status`.
-- **Fluxo de Aluno Rejeitado e Reenvio (`cadastro-rejeitado.tsx` e `reenviar-documentos.tsx`):**
-  - Exibição das observações de recusa deixadas pelo administrador (*"Opa! Precisamos que você ajuste algumas coisas"*) quando o aluno loga com status `rejeitado`.
-  - Formulário para seleção e reenvio de nova foto de perfil, comprovante de matrícula e comprovante de residência.
-- **Validação e Testes Unitários (`solicitacaoSchema.ts` e `solicitacaoSchema.test.ts`):**
-  - Validação Zod para o motivo de reprovação e seleção de documentos.
-  - Testes unitários no Jest aprovados com 100% de cobertura.
+- **Habilitação do Atalho na Tela Início (`BUG-HU029-UI-001`):**
+  - Conectada a ação do card *"Carteirinha Digital"* na tela `home.tsx` do aluno para abrir diretamente a rota `/(aluno)/carteirinha-digital`.
+- **Suporte a Textos Longos sem Corte (`BUG-HU029-UI-001`):**
+  - Removida a limitação de `numberOfLines={1}` nos campos de Nome, E-mail, Curso e Instituição da carteirinha, permitindo que cursos longos como *"Licenciatura em Ciências Biológicas"* apareçam por inteiro.
+- **Tratamento de Aluno Não Aprovado / HTTP 403 (`BUG-HU029-UI-002`):**
+  - Ao receber status HTTP 403 da API (*"Carteirinha indisponível. Seu cadastro está inativo ou em análise"*), a carteirinha e o QR Code são ocultados e a mensagem padrão do AC-02 é exibida.
+- **Remoção de Dados Fictícios e Mocks (`BUG-HU029-UI-003`):**
+  - Removidas todas as variáveis estáticas e dados mockados (*'10/09/2026'*, *'João Neves'*, foto do Unsplash), utilizando exclusivamente dados reais retornados pela API/banco de dados.
+- **Suporte a Cache Offline da Carteirinha (`BUG-HU029-UI-004`):**
+  - Armazenamento da carteirinha do aluno aprovado no `AsyncStorage` (`@GOUOCE:carteirinha_cache`). Quando o dispositivo está sem conexão durante o embarque, a carteirinha é carregada do cache com foto, dados, QR Code e o badge *"Disponível offline"*.
+- **QR Code Seguro (`SEGURANCA-HU029-UI-005`):**
+  - Removidos trechos do token de sessão do QR Code. O payload contém identificadores seguros de validação do aluno.
+- **Testes Unitários:**
+  - Criada a suíte `carteirinhaSchema.test.ts` com 100% de aprovação no Jest.
 
 ## 🧪 Como testar
 
-1. **Testar Fila e Aprovação (Como Administrador):**
-   - Faça login como Administrador (`maria.barros@alu.ufc.br` / `Aluno123!`).
-   - Acesse **Fila de solicitações** no Painel, selecione o aluno pendente e teste a aprovação com confirmação no modal.
-2. **Testar Reprovação e Reenvio:**
-   - Na análise de solicitação de um aluno, toque em *Reprovar cadastro*, selecione os documentos incorretos e digite a justificativa.
-   - Faça login com o e-mail do aluno reprovado e confirme a exibição da tela de ajustes necessários com as observações do administrador.
+1. **Testar Atalho no Início:**
+   - Na tela inicial do aluno, toque no card **Carteirinha Digital** e confirme que a carteirinha é aberta.
+2. **Testar Aluno Não Aprovado:**
+   - Tente abrir a carteirinha com uma conta com status `pendente` ou `analise_renovacao` e confirme a mensagem de bloqueio do AC-02.
+3. **Testar Leitura Offline:**
+   - Abra a carteirinha com internet. Em seguida, desative a conexão Wi-Fi/dados móveis e abra a carteirinha novamente: confirme o carregamento do cache offline com foto, dados e o badge *"Disponível offline"*.
 
 ## 🔗 Comunicação App ↔ API
 
@@ -40,7 +40,7 @@ Implementação e integração completas do frontend para a **HU-027 (Avaliaçã
 - [x] Contrato de dados alterado
 
 *Descrição das alterações:*
-- Integração com `GET /usuarios/alunos?status=pendente`, `GET /alunos/{id}`, `PATCH /usuarios/alunos/{aluno_id}/aprovar` e `PATCH /usuarios/alunos/{aluno_id}/status`.
+- Consumo e cache do endpoint `GET /alunos/me/carteirinha`.
 
 ## ✅ Checklist
 

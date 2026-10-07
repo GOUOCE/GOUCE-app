@@ -2,11 +2,13 @@ import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, Surface, useTheme, Button } from 'react-native-paper';
 import { CalendarPlus, ClipboardList, Megaphone, Contact } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import { useAuth } from '@contexts/AuthContext';
 import { QuickAction } from '@/components/dashboard/QuickAction';
 
 export default function StudentHomeScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const { user } = useAuth();
 
   return (
@@ -44,7 +46,11 @@ export default function StudentHomeScreen() {
           <QuickAction title="Agendar Transporte" Icone={CalendarPlus} />
           <QuickAction title="Meus Agendamentos" Icone={ClipboardList} />
           <QuickAction title="Mural de Avisos" Icone={Megaphone} />
-          <QuickAction title="Carteirinha Digital" Icone={Contact} />
+          <QuickAction
+            title="Carteirinha Digital"
+            Icone={Contact}
+            onPress={() => router.push('/(aluno)/carteirinha-digital')}
+          />
         </View>
       </View>
     </ScrollView>
