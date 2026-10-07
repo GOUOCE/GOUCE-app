@@ -171,7 +171,7 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 **Resultado obtido**
 
 - Após fechar e reabrir o app, **Carlos Andrade** abriu em **Editar Administrador**.
-- Nome alterado para `Carlos Andrade Filho`: salvo (backend `PATCH /administradores/5` → 200; nome confirmado pela API). A confirmação foi um aviso preto rápido de “salvo com sucesso”, sem o estilo do app. ✅ / ❌
+- Nome alterado para `Carlos Andrade Filho`: salvo (backend `PATCH /administradores/5` → 200; nome confirmado pela API). A confirmação foi um aviso preto rápido, sem o estilo do app, com “Alterações realizadas com sucesso” (texto do código, `editar.tsx`). ✅ / ❌
 - A listagem **não** mostrou o nome novo; só depois de fechar e reabrir o app. ❌
 - E-mail trocado para o de um aluno (`qa.hu005@gmail.com`): bloqueado com “Este e-mail já está em uso por outro usuário no sistema.” (backend 409); o e-mail de B continuou `carlos@gmail.com`. ✅
 - Execução confirmada pelo testador em 06/10/2026.
