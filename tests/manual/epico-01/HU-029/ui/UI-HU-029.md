@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 7 | 1 | 4 | 2 |
+| ⏳ Em execução | 7 | 1 | 5 | 1 |
 
 ## Pré-condições
 
@@ -53,7 +53,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU029-UI-006 | Carteirinha após sair da conta | Aluno A sai; app reaberto sem login | Nenhuma carteirinha acessível sem login | ⏳ PENDENTE | Não executado. |
+| CT-HU029-UI-006 | Carteirinha após sair da conta | Aluno A sai; app reaberto sem login | Nenhuma carteirinha acessível sem login | ❌ REPROVADO | Com o app aberto e sem sessão, o link levou direto ao login. Com o app fechado, o link abriu o app e mostrou por um instante uma carteirinha completa do aluno de exemplo “João Neves” (foto de banco de imagens, curso, instituição, e-mail e QR Code) antes de ir para o login. Nenhum dado real apareceu. Ver [BUG-HU029-UI-006](issues/BUG-HU029-UI-006-carteirinha-de-exemplo-sem-login.md). Executado pelo testador em 06/10/2026. |
 | CT-HU029-UI-007 | Carteirinha após perder a aprovação | Aluno A aprovado vira “em análise” durante a sessão | Com internet, o documento é ocultado, mesmo havendo cache | ⏳ PENDENTE | Não executado. |
 
 ## Detalhamento dos casos
@@ -215,8 +215,13 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O aluno A saiu da conta (**Perfil → Sair → Sim, sair**).
+- **App aberto, sem sessão**, link `exp://<IP>:8081/--/carteirinha-digital`: o app foi direto para a tela de login. ✅
+- **App fechado**, mesmo link (o app abre do zero pelo link): por um instante, apareceu uma carteirinha completa do aluno de exemplo **“João Neves”**, com foto de banco de imagens, curso, instituição, e-mail de exemplo e QR Code, e em seguida o app foi para o login. O testador gravou a tela para confirmar. ❌
+- Nenhum dado real de aluno apareceu: são os valores padrão fixos do código (ver [BUG-HU029-UI-003-emissao](issues/BUG-HU029-UI-003-data-de-emissao-e-valores-fixos.md)). Mas uma carteirinha com aparência válida é exibida sem login, e uma captura de tela nesse instante produz um documento falso.
+- Causa aparente: ao abrir o app pelo link, a tela da carteirinha é desenhada antes de o `AuthContext` terminar de carregar a sessão e redirecionar (mesmo mecanismo da #111, agora sem usuário logado).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU029-UI-006](issues/BUG-HU029-UI-006-carteirinha-de-exemplo-sem-login.md).
 
 ---
 
@@ -245,6 +250,7 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
+| CT-HU029-UI-006 | Sem login, ao abrir o app pelo link, aparece por um instante uma carteirinha de exemplo (“João Neves”) antes do login. | [BUG-HU029-UI-006](issues/BUG-HU029-UI-006-carteirinha-de-exemplo-sem-login.md) |
 | CT-HU029-UI-005 | Segurança: o QR Code não tem como ser validado (sem assinatura) e pode ser forjado com o id e o e-mail de outro aluno. | [SEGURANCA-HU029-UI-005](issues/SEGURANCA-HU029-UI-005-qr-code-sem-validacao.md) |
 | CT-HU029-UI-004 | Offline, a carteirinha aparece sem a foto, e depois de reabrir o app sem internet não há como acessá-la. | [BUG-HU029-UI-004](issues/BUG-HU029-UI-004-carteirinha-offline-sem-foto-e-sem-acesso.md) |
 | CT-HU029-UI-003 | Data de emissão fixa (“10/09/2026”) e valores padrão de exemplo no código da carteirinha. | [BUG-HU029-UI-003-emissao](issues/BUG-HU029-UI-003-data-de-emissao-e-valores-fixos.md) |
