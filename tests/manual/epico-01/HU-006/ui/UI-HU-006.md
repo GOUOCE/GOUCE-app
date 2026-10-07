@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 10 | 4 | 2 | 4 |
+| ⏳ Em execução | 10 | 5 | 2 | 3 |
 
 ## Pré-condições
 
@@ -49,7 +49,7 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 | --- | --- | --- | --- | --- | --- |
 | CT-HU006-UI-005 | Inativar outro administrador | Administrador B | Confirmação, sucesso, B entre os inativos; B não entra | ✅ APROVADO | Pediu confirmação (cancelar manteve B ativo); ao confirmar, a listagem atualizou na hora e B passou a inativo, só com a ação Reativar; o filtro Mostrar inativos funcionou; auditoria gravada e login de B recusado. A confirmação foi o aviso rápido “Administrador inativado” ([MELHORIA-HU006-UI-002](issues/MELHORIA-HU006-UI-002-confirmacao-sem-padrao.md)). Confirmado pelo testador em 06/10/2026. |
 | CT-HU006-UI-006 | Auto-inativação bloqueada | Administrador A | Alerta “Não é possível inativar a conta atualmente em uso.” | ✅ APROVADO | Ao tocar na lixeira do próprio administrador, o app mostrou direto “Ação Bloqueada — Não é possível inativar a conta atualmente em uso.”, sem pedir confirmação; a conta continuou ativa. Sugestão do testador: esconder ou desabilitar a ação na própria conta ([MELHORIA-HU006-UI-006](issues/MELHORIA-HU006-UI-006-acao-de-inativar-na-propria-conta.md)). Confirmado pelo testador em 06/10/2026. |
-| CT-HU006-UI-007 | Aluno tenta abrir a gestão por link | Aluno logado; link `administradores` | Acesso Negado, sem dados de administradores | ⏳ PENDENTE | Não executado. |
+| CT-HU006-UI-007 | Aluno tenta abrir a gestão por link | Aluno logado; link `administradores` | Acesso Negado, sem dados de administradores | ✅ APROVADO | Com o aluno logado, o link `administradores` abriu Acesso Negado (“Erro 403 - Forbidden”), sem exibir a listagem; Voltar levou ao Início do aluno. Confirmado pelo testador em 06/10/2026. |
 
 ### Seção C — Regressões e robustez
 
@@ -250,8 +250,11 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Aluno `qa.hu005@gmail.com` logado; link `exp://<IP>:8081/--/administradores` aberto pelo Safari.
+- O app exibiu **Acesso Negado** com “Erro 403 - Forbidden”, sem mostrar a listagem de administradores (o testador não percebeu a lista antes do bloqueio). ✅
+- **Voltar** levou ao **Início** do aluno. ✅
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ### Seção C — Regressões e robustez
 
