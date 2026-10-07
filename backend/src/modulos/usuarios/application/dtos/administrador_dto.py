@@ -3,7 +3,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class CriarAdministradorDTO(BaseModel):
-    nome: str = Field(min_length=3, max_length=150)
+    nome: str = Field(max_length=150)
     email: EmailStr
 
 
@@ -13,7 +13,7 @@ class PromoverAdministradorDTO(BaseModel):
 
 
 class AtualizarAdministradorDTO(BaseModel):
-    nome: str | None = Field(default=None, min_length=3, max_length=150)
+    nome: str | None = Field(default=None, max_length=150)
     email: EmailStr | None = None
 
 

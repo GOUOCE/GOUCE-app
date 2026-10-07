@@ -19,6 +19,7 @@ from src.shared.auth.jwt_service import JWTService
 from src.shared.security.argon2_hasher import Argon2PasswordHasher
 from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
+from src.shared.http.validation import validation_details
 
 from src.modulos.usuarios.application.dtos.usuario_dto import (
     ValidarEtapa1CadastroUsuarioDTO,
@@ -75,21 +76,6 @@ EDICAO_ERROR_RESPONSES = {
 
 
 
-def _validation_details(errors: list[dict]) -> list[dict]:
-    details = []
-    for error in errors:
-        location = [
-            str(part)
-            for part in error.get("loc", ())
-            if part not in {"body", "path", "query", "form"}
-        ]
-        details.append({
-            "field": ".".join(location) or None,
-            "message": error.get("msg", "Valor inválido"),
-        })
-    return details
-
-
 def _error_response(
     status_code: int,
     code: str,
@@ -129,7 +115,7 @@ class CadastroValidationRoute(APIRoute):
                     status_code=422,
                     code="REQUEST_VALIDATION_ERROR",
                     message="Requisição inválida",
-                    details=_validation_details(error.errors()),
+                    details=validation_details(error.errors()),
                 )
             except HTTPException:
                 raise
@@ -231,7 +217,7 @@ async def validar_etapa_1_cadastro_usuario(
             status_code=422,
             code="REQUEST_VALIDATION_ERROR",
             message="Requisição inválida",
-            details=_validation_details(error.errors()),
+            details=validation_details(error.errors()),
         )
 
     try:
@@ -400,7 +386,7 @@ async def renovar_vinculo(
             status_code=422,
             code="REQUEST_VALIDATION_ERROR",
             message="Requisição inválida",
-            details=_validation_details(error.errors()),
+            details=validation_details(error.errors()),
         )
     except ValidacaoMultiplaError as error:
         return _error_response(
