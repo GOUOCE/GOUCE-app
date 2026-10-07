@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Em execução | 10 | 3 | 2 | 5 |
+| ⏳ Em execução | 10 | 4 | 2 | 4 |
 
 ## Pré-condições
 
@@ -48,7 +48,7 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU006-UI-005 | Inativar outro administrador | Administrador B | Confirmação, sucesso, B entre os inativos; B não entra | ✅ APROVADO | Pediu confirmação (cancelar manteve B ativo); ao confirmar, a listagem atualizou na hora e B passou a inativo, só com a ação Reativar; o filtro Mostrar inativos funcionou; auditoria gravada e login de B recusado. A confirmação foi o aviso rápido “Administrador inativado” ([MELHORIA-HU006-UI-002](issues/MELHORIA-HU006-UI-002-confirmacao-sem-padrao.md)). Confirmado pelo testador em 06/10/2026. |
-| CT-HU006-UI-006 | Auto-inativação bloqueada | Administrador A | Alerta “Não é possível inativar a conta atualmente em uso.” | ⏳ PENDENTE | Não executado. |
+| CT-HU006-UI-006 | Auto-inativação bloqueada | Administrador A | Alerta “Não é possível inativar a conta atualmente em uso.” | ✅ APROVADO | Ao tocar na lixeira do próprio administrador, o app mostrou direto “Ação Bloqueada — Não é possível inativar a conta atualmente em uso.”, sem pedir confirmação; a conta continuou ativa. Sugestão do testador: esconder ou desabilitar a ação na própria conta ([MELHORIA-HU006-UI-006](issues/MELHORIA-HU006-UI-006-acao-de-inativar-na-propria-conta.md)). Confirmado pelo testador em 06/10/2026. |
 | CT-HU006-UI-007 | Aluno tenta abrir a gestão por link | Aluno logado; link `administradores` | Acesso Negado, sem dados de administradores | ⏳ PENDENTE | Não executado. |
 
 ### Seção C — Regressões e robustez
@@ -224,8 +224,11 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Na linha do **Administrador Padrao** (o próprio usuário logado), tocar na ação de inativar (ícone de lixeira) mostrou direto o pop-up **Ação Bloqueada** — “Não é possível inativar a conta atualmente em uso.” —, sem a pergunta de confirmação. ✅
+- A conta continuou ativa e logada. ✅
+- Sugestão de UX do testador: a ação não deveria ser oferecida na própria conta; e o ícone de lixeira sugere exclusão, embora a ação seja inativar (soft delete). Registrado em [MELHORIA-HU006-UI-006](issues/MELHORIA-HU006-UI-006-acao-de-inativar-na-propria-conta.md).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ---
 
@@ -324,6 +327,7 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 | Caso | Defeito | Issue |
 | --- | --- | --- |
 | CT-HU006-UI-002 | Após cadastrar, a listagem não mostra o novo administrador e o formulário mantém os dados até reabrir o app. | [BUG-HU006-UI-002](issues/BUG-HU006-UI-002-lista-e-formulario-nao-atualizam.md) |
+| CT-HU006-UI-006 | Melhoria: a ação de inativar aparece na própria conta (e usa ícone de lixeira para uma inativação). | [MELHORIA-HU006-UI-006](issues/MELHORIA-HU006-UI-006-acao-de-inativar-na-propria-conta.md) |
 | CT-HU006-UI-002 | Melhoria: confirmação do cadastro é um aviso rápido sem estilo e com texto diferente do AC-07. | [MELHORIA-HU006-UI-002](issues/MELHORIA-HU006-UI-002-confirmacao-sem-padrao.md) |
 
 ## Observações gerais
