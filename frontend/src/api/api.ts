@@ -3,11 +3,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const getBaseUrl = () => {
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
-  // Se o env contiver o túnel antigo do ngrok ou for inválido, força o IP local da Wi-Fi
-  if (envUrl && !envUrl.includes('ngrok')) {
+  if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
     return envUrl;
   }
-  return 'http://192.168.0.3:8000';
+  throw new Error(
+    'EXPO_PUBLIC_API_URL deve apontar para o IP da máquina na rede local, por exemplo http://192.168.100.29:8000',
+  );
 };
 
 export const api = axios.create({
