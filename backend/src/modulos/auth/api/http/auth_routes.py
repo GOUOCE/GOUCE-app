@@ -323,8 +323,8 @@ async def redirect_to_app(token: str, request: Request = None):
     else:
         default_deep_link = "exp://192.168.0.3:8081/--"
 
-    app_deep_link = os.getenv("APP_DEEP_LINK_URL", default_deep_link)
-    expo_link = f"{app_deep_link}/redefinir-senha?token={token_encoded}"
+    app_deep_link = os.getenv("APP_DEEP_LINK_URL", default_deep_link).rstrip("/")
+    expo_link = f"{app_deep_link}/--/redefinir-senha?token={token_encoded}"
     custom_scheme_link = f"gouoce-app://redefinir-senha?token={token_encoded}"
     expo_link_html = escape(expo_link, quote=True)
     custom_scheme_link_html = escape(custom_scheme_link, quote=True)
