@@ -17,14 +17,6 @@ const getBaseUrl = () => {
 
   // 2. Se houver variável de ambiente explícita no .env
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
-<<<<<<< Updated upstream
-  if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
-    return envUrl;
-  }
-  throw new Error(
-    'EXPO_PUBLIC_API_URL deve apontar para o IP da máquina na rede local, por exemplo http://192.168.100.29:8000',
-  );
-=======
   if (envUrl && !envUrl.includes('ngrok')) {
     console.log('[API] Conectando via EXPO_PUBLIC_API_URL:', envUrl);
     return envUrl;
@@ -36,7 +28,6 @@ const getBaseUrl = () => {
   }
 
   return 'http://localhost:8000';
->>>>>>> Stashed changes
 };
 
 export const api = axios.create({
