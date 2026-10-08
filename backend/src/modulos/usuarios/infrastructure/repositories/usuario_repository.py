@@ -142,16 +142,18 @@ class SQLAlchemyUsuarioRepository:
                 motivo = f"Sua conta está inativada{complemento}."
 
             validade_acesso = aluno.validade_acesso
+            acesso_expirado = False
             if ativo and validade_acesso:
                 if validade_acesso.tzinfo is None:
                     validade_acesso = validade_acesso.replace(tzinfo=timezone.utc)
                 if agora >= validade_acesso:
-                    ativo = False
+                    acesso_expirado = True
                     motivo = "A validade de acesso da sua conta expirou."
 
             candidatos.append({
                 "role": CargoEnum.ALUNO.value,
                 "ativo": ativo,
+                "acesso_expirado": acesso_expirado,
                 "status": status_cadastro,
                 "motivo": motivo,
                 "aluno": aluno,

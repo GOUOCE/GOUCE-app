@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, ExternalLink, X, CheckSquare, Square } from 'lucide-react-native';
 
 import { solicitacaoService, DetalhesSolicitacaoItem } from '@/services/solicitacaoService';
+import { useAuth } from '@contexts/AuthContext';
 import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 import { api } from '@/api/api';
@@ -12,6 +13,7 @@ import { api } from '@/api/api';
 export default function AnalisarSolicitacaoScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { token } = useAuth();
 
   const [aluno, setAluno] = useState<DetalhesSolicitacaoItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,6 +54,13 @@ export default function AnalisarSolicitacaoScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
+  const getIniciais = (nome?: string) => {
+    if (!nome) return 'AL';
+    const partes = nome.trim().split(/\s+/);
+    if (partes.length === 1) return partes[0].substring(0, 2).toUpperCase();
+    return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
+  };
+
   useEffect(() => {
     async function carregarDetalhes() {
       if (!id) return;
@@ -80,11 +89,17 @@ export default function AnalisarSolicitacaoScreen() {
     setIsLoading(true);
     try {
       await solicitacaoService.aprovarSolicitacao(Number(id));
-      setToastMessage('Solicitação aprovada com sucesso');
-      setToastVisible(true);
-      setTimeout(() => {
-        router.replace('/(administrador)/cadastros');
-      }, 1500);
+      setIsLoading(false);
+      showPopup({
+        type: 'success',
+        title: 'Solicitação Aprovada',
+        message: 'O cadastro do aluno foi aprovado com sucesso!',
+        confirmText: 'Voltar à Fila',
+        onConfirm: () => {
+          closePopup();
+          router.replace('/(administrador)/solicitacoes');
+        },
+      });
     } catch (error: any) {
       setIsLoading(false);
       const msg = getErrorMessage(error, 'Erro ao aprovar cadastro.');
@@ -117,11 +132,17 @@ export default function AnalisarSolicitacaoScreen() {
 
     try {
       await solicitacaoService.reprovarSolicitacao(Number(id), motivoRecusa, documentosReenvio);
-      setToastMessage('Solicitação recusada com sucesso');
-      setToastVisible(true);
-      setTimeout(() => {
-        router.replace('/(administrador)/cadastros');
-      }, 1500);
+      setIsLoading(false);
+      showPopup({
+        type: 'success',
+        title: 'Solicitação Recusada',
+        message: 'A solicitação foi recusada com sucesso e o aluno foi notificado para ajuste.',
+        confirmText: 'Voltar à Fila',
+        onConfirm: () => {
+          closePopup();
+          router.replace('/(administrador)/solicitacoes');
+        },
+      });
     } catch (error: any) {
       setIsLoading(false);
       const msg = getErrorMessage(error, 'Erro ao reprovar cadastro.');
@@ -134,10 +155,23 @@ export default function AnalisarSolicitacaoScreen() {
     }
   };
 
-  const baseUrl = api.defaults.baseURL || 'http://192.168.0.3:8000';
-  const fotoUri = aluno?.id_foto_aluno
-    ? `${baseUrl}/arquivos/${aluno.id_foto_aluno}/view`
-    : 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=200&auto=format&fit=crop';
+  const baseUrl = api.defaults.baseURL || 'http://192.168.0.4:8000';
+  const idFoto = aluno?.id_foto_aluno;
+  const fotoUri = idFoto
+    ? (idFoto.startsWith('http')
+        ? idFoto
+        : `${baseUrl}/arquivos/${idFoto}/view?token=${token || ''}`)
+    : null;
+
+  const imageSource = fotoUri
+    ? {
+        uri: fotoUri,
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          'ngrok-skip-browser-warning': 'true',
+        },
+      }
+    : null;
 
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
@@ -163,7 +197,16 @@ export default function AnalisarSolicitacaoScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Foto e Status */}
         <View style={styles.profileSection}>
-          <Avatar.Image size={110} source={{ uri: fotoUri }} style={styles.avatar} />
+          {imageSource ? (
+            <Avatar.Image size={110} source={imageSource} style={styles.avatar} />
+          ) : (
+            <Avatar.Text
+              size={110}
+              label={getIniciais(aluno?.nome)}
+              style={[styles.avatar, { backgroundColor: '#3E5F90' }]}
+              labelStyle={{ color: '#FFF', fontSize: 32, fontWeight: 'bold' }}
+            />
+          )}
           <Text variant="titleLarge" style={styles.userName}>{aluno?.nome || 'Carregando...'}</Text>
           <Surface style={styles.statusBadge} elevation={0}>
             <Text style={styles.statusText}>Pendente: vínculo em análise</Text>
