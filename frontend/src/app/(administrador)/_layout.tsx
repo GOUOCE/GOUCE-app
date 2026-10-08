@@ -1,37 +1,22 @@
 import React from 'react';
 import { Tabs, Redirect } from 'expo-router';
-<<<<<<< Updated upstream
-import { View, StyleSheet } from 'react-native';
-import { LayoutDashboard, Archive, Bus, MoreHorizontal } from 'lucide-react-native';
-import { useAuth } from '@contexts/AuthContext';
-=======
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Text } from 'react-native-paper';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { LayoutGrid, Archive, Bus, MoreHorizontal } from 'lucide-react-native';
 import { useAuth } from '@contexts/AuthContext';
 
-// Únicas abas exibidas na barra (na ordem do protótipo).
-// Qualquer outra rota dentro de (administrador) continua navegável, mas NUNCA vira botão.
-const ABAS = [
-  { name: 'home', title: 'Painel', Icon: LayoutGrid },
-  { name: 'cadastros', title: 'Cadastros', Icon: Archive },
-  { name: 'logistica', title: 'Logística', Icon: Bus },
-  { name: 'mais', title: 'Mais', Icon: MoreHorizontal },
-] as const;
+const TABS_EXIBIDAS = ['home', 'cadastros', 'logistica', 'mais'];
 
-function AdminTabBar({ state, navigation }: BottomTabBarProps) {
-  const insets = useSafeAreaInsets();
-  const focusedKey = state.routes[state.index]?.key;
-
+function AdminTabBar({ state, navigation, descriptors }: any) {
   return (
-    <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-      {ABAS.map(({ name, title, Icon }) => {
-        const route = state.routes.find((r) => r.name === name);
-        if (!route) return null;
+    <View style={styles.tabBar}>
+      {state.routes.map((route: any, index: number) => {
+        if (!TABS_EXIBIDAS.includes(route.name)) {
+          return null;
+        }
 
-        const focused = route.key === focusedKey;
+        const isFocused = state.index === index;
+        const { options } = descriptors[route.key] || {};
+        const label = options?.title || route.name;
 
         const onPress = () => {
           const event = navigation.emit({
@@ -39,32 +24,39 @@ function AdminTabBar({ state, navigation }: BottomTabBarProps) {
             target: route.key,
             canPreventDefault: true,
           });
-          if (!focused && !event.defaultPrevented) {
-            navigation.navigate(route.name as never);
+
+          if (!isFocused && !event.defaultPrevented) {
+            navigation.navigate(route.name);
           }
+        };
+
+        const renderIcon = () => {
+          if (route.name === 'home') return <LayoutGrid size={22} color={isFocused ? '#191C20' : '#44474E'} />;
+          if (route.name === 'cadastros') return <Archive size={22} color={isFocused ? '#191C20' : '#44474E'} />;
+          if (route.name === 'logistica') return <Bus size={22} color={isFocused ? '#191C20' : '#44474E'} />;
+          if (route.name === 'mais') return <MoreHorizontal size={22} color={isFocused ? '#191C20' : '#44474E'} />;
+          return null;
         };
 
         return (
           <TouchableOpacity
-            key={name}
-            style={styles.item}
-            activeOpacity={0.7}
+            key={route.key}
             onPress={onPress}
-            accessibilityRole="button"
-            accessibilityState={focused ? { selected: true } : {}}
-            accessibilityLabel={title}
+            style={styles.tabItem}
+            activeOpacity={0.7}
           >
-            <View style={[styles.iconPill, focused && styles.iconPillActive]}>
-              <Icon size={24} color={focused ? '#191C20' : '#44474E'} />
+            <View style={[styles.iconContainer, isFocused && styles.activeIconContainer]}>
+              {renderIcon()}
             </View>
-            <Text style={[styles.label, focused && styles.labelActive]}>{title}</Text>
+            <Text style={[styles.tabLabel, isFocused && styles.activeTabLabel]}>
+              {label}
+            </Text>
           </TouchableOpacity>
         );
       })}
     </View>
   );
 }
->>>>>>> Stashed changes
 
 export default function AdminLayout() {
   const { user, isLoading } = useAuth();
@@ -73,122 +65,61 @@ export default function AdminLayout() {
     return null;
   }
 
-<<<<<<< Updated upstream
-  // Proteção síncrona no nível do Layout: bloqueia renderização de telas não autorizadas
-=======
-  // Proteção de acesso no nível do Layout
->>>>>>> Stashed changes
+  // Proteção síncrona no nível do Layout
   if (!user || user.role !== 'ADMINISTRADOR') {
     return <Redirect href="/acesso-negado" />;
   }
 
   return (
-<<<<<<< Updated upstream
-    <Tabs screenOptions={{
-      headerShown: false,
-      tabBarActiveTintColor: '#000',
-      tabBarInactiveTintColor: '#666',
-      tabBarStyle: {
-        height: 80,
-        paddingBottom: 12,
-        backgroundColor: '#F8F9FF',
-        borderTopWidth: 1,
-        borderTopColor: '#E0E2EC',
-      }
-    }}>
-      <Tabs.Screen
-        name="home"
-        options={{
-          title: 'Painel',
-          tabBarIcon: ({ focused }) => (
-            <View style={[styles.iconContainer, focused && styles.activeIconContainer]}>
-              <LayoutDashboard size={24} color={focused ? '#000' : '#666'} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="cadastros"
-        options={{
-          title: 'Cadastros',
-          tabBarIcon: ({ focused }) => (
-            <View style={[styles.iconContainer, focused && styles.activeIconContainer]}>
-              <Archive size={24} color={focused ? '#000' : '#666'} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="logistica"
-        options={{
-          title: 'Logística',
-          tabBarIcon: ({ focused }) => (
-            <View style={[styles.iconContainer, focused && styles.activeIconContainer]}>
-              <Bus size={24} color={focused ? '#000' : '#666'} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="mais"
-        options={{
-          title: 'Mais',
-          tabBarIcon: ({ focused }) => (
-            <View style={[styles.iconContainer, focused && styles.activeIconContainer]}>
-              <MoreHorizontal size={24} color={focused ? '#000' : '#666'} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="administradores"
-        options={{
-          href: null,
-        }}
-      />
-=======
     <Tabs
-      screenOptions={{ headerShown: false }}
       tabBar={(props) => <AdminTabBar {...props} />}
+      screenOptions={{
+        headerShown: false,
+      }}
     >
-      {ABAS.map(({ name, title }) => (
-        <Tabs.Screen key={name} name={name} options={{ title }} />
-      ))}
->>>>>>> Stashed changes
+      <Tabs.Screen name="home" options={{ title: 'Painel' }} />
+      <Tabs.Screen name="cadastros" options={{ title: 'Cadastros' }} />
+      <Tabs.Screen name="logistica" options={{ title: 'Logística' }} />
+      <Tabs.Screen name="mais" options={{ title: 'Mais' }} />
+      <Tabs.Screen name="administradores" options={{ href: null }} />
+      <Tabs.Screen name="solicitacoes" options={{ href: null }} />
+      <Tabs.Screen name="cadastrar-administrador" options={{ href: null }} />
     </Tabs>
   );
 }
 
 const styles = StyleSheet.create({
-  // Protótipo: barra de 80px, pílula 64x32 no topo (12px), rótulo 12px logo abaixo
-  bar: {
+  tabBar: {
     flexDirection: 'row',
+    height: 80,
     paddingTop: 12,
-    backgroundColor: '#ECEDF4',
+    paddingBottom: 12,
+    backgroundColor: '#F8F9FF',
+    borderTopWidth: 1,
+    borderTopColor: '#E0E2EC',
   },
-  item: {
+  tabItem: {
     flex: 1,
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'center',
   },
-  iconPill: {
+  iconContainer: {
     width: 64,
     height: 32,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  iconPillActive: {
+  activeIconContainer: {
     backgroundColor: '#C2E7FF',
   },
-  label: {
+  tabLabel: {
     fontSize: 12,
-    lineHeight: 16,
     fontWeight: '500',
-    letterSpacing: 0.5,
+    marginTop: 4,
     color: '#44474E',
   },
-  labelActive: {
+  activeTabLabel: {
     fontWeight: '700',
     color: '#191C20',
   },
