@@ -4,25 +4,33 @@ import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
 const getBaseUrl = () => {
+  // 1. Se houver variável de ambiente explícita no .env (ideal para celular físico)
+  const envUrl = process.env.EXPO_PUBLIC_API_URL;
+  if (envUrl && envUrl.trim() !== '' && !envUrl.includes('ngrok')) {
+    return envUrl;
+  }
+
+  // 2. Extrai automaticamente o IP da máquina host via Metro (hostUri) para o Expo Go no celular físico
   const hostUri = Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost;
   if (hostUri) {
     const hostIp = hostUri.split(':')[0];
     if (hostIp && hostIp !== 'localhost' && hostIp !== '127.0.0.1') {
-      const url = `http://${hostIp}:8000`;
-      return url;
+      return `http://${hostIp}:8000`;
     }
   }
 
-  const envUrl = process.env.EXPO_PUBLIC_API_URL;
-  if (envUrl && !envUrl.includes('ngrok')) {
-    return envUrl;
+  // 3. Se for Web
+  if (Platform.OS === 'web') {
+    return 'http://localhost:8000';
   }
 
-  if (Platform.OS === 'android') {
+  // 4. Se for Emulador Android
+  if (Platform.OS === 'android' && !Constants.isDevice) {
     return 'http://10.0.2.2:8000';
   }
 
-  return 'http://localhost:8000';
+  // 5. Fallback padrão para celular físico na mesma rede (ajuste caso necessário no .env)
+  return 'http://192.168.0.4:8000';
 };
 
 export const api = axios.create({
