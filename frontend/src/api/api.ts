@@ -60,16 +60,24 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const requestUrl = originalRequest?.url || '';
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // NÃO tenta refresh em rotas públicas/autenticação (/auth/login, /auth/refresh, etc.)
+    const isAuthRoute = requestUrl.includes('/auth/login') ||
+                        requestUrl.includes('/auth/refresh') ||
+                        requestUrl.includes('/auth/solicitar-recuperacao') ||
+                        requestUrl.includes('/auth/redefinir-senha') ||
+                        requestUrl.includes('/auth/validar-token');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRoute) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         }).then(token => {
           originalRequest.headers['Authorization'] = 'Bearer ' + token;
           return api(originalRequest);
-        }).catch(err => {
-          return Promise.reject(err);
+        }).catch(() => {
+          return Promise.reject(error);
         });
       }
 
@@ -79,12 +87,14 @@ api.interceptors.response.use(
       try {
         const refreshToken = await AsyncStorage.getItem('@GOUOCE:refreshToken');
         if (!refreshToken) {
-          throw new Error('No refresh token available');
+          isRefreshing = false;
+          processQueue(error, null);
+          return Promise.reject(error);
         }
 
         const response = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {
           token_atualizacao: refreshToken,
-        });
+        }, { timeout: 10000 });
 
         const newToken = response.data.token_acesso;
         const newRefreshToken = response.data.token_atualizacao;
@@ -101,13 +111,17 @@ api.interceptors.response.use(
         isRefreshing = false;
 
         return api(originalRequest);
-      } catch (refreshError) {
+      } catch (refreshError: any) {
         processQueue(refreshError, null);
         isRefreshing = false;
-        await AsyncStorage.removeItem('@GOUOCE:token');
-        await AsyncStorage.removeItem('@GOUOCE:refreshToken');
-        await AsyncStorage.removeItem('@GOUOCE:user');
-        return Promise.reject(refreshError);
+
+        if (refreshError.response?.status === 401 || refreshError.response?.status === 403) {
+          await AsyncStorage.removeItem('@GOUOCE:token');
+          await AsyncStorage.removeItem('@GOUOCE:refreshToken');
+          await AsyncStorage.removeItem('@GOUOCE:user');
+        }
+
+        return Promise.reject(error);
       }
     }
 
