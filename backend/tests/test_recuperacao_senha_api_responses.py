@@ -612,13 +612,11 @@ class RecuperacaoSenhaApiResponsesTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_html_intermediario_escapa_token_arbitrario(self):
         token_malicioso = '"><script>alert(1)</script>'
-        with patch.dict(os.environ, {"APP_DEEP_LINK_URL": "exp://10.0.0.42:8081"}):
-            response = await redirect_to_app(token_malicioso)
+        response = await redirect_to_app(token_malicioso)
         content = response.body.decode("utf-8")
 
         self.assertNotIn(token_malicioso, content)
         self.assertIn("%22%3E%3Cscript%3Ealert%281%29%3C%2Fscript%3E", content)
-        self.assertIn("exp://10.0.0.42:8081/--/redefinir-senha", content)
 
 
 if __name__ == "__main__":

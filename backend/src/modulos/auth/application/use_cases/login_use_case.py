@@ -74,7 +74,6 @@ class LoginUseCase:
         if aluno:
             dados_usuario.update({
                 "status_cadastro": aluno.status_cadastro,
-                "acesso_expirado": bool(contexto.get("acesso_expirado")),
                 "curso": aluno.curso,
                 "faculdade": aluno.faculdade_id,
                 "periodo_ingresso": aluno.periodo_ingresso,

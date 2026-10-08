@@ -53,12 +53,12 @@ export default function CarteirinhaDigitalScreen() {
       }
     : { uri: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=200&auto=format&fit=crop' };
 
-  const nomeAluno = carteirinhaData?.nome || user?.name || 'João Neves';
-  const emailAluno = carteirinhaData?.email || user?.email || 'joao@email.com';
+  const nomeAluno = carteirinhaData?.nome || user?.name || 'Aluno GOUOCE';
+  const emailAluno = carteirinhaData?.email || user?.email || '';
 
   const inst = carteirinhaData?.faculdade_id || user?.faculdade || 'UFC';
-  const campus = carteirinhaData?.campus || 'Campus Quixadá';
-  const instituicaoTexto = inst.includes('Campus') ? inst : `${inst} - ${campus.includes('Campus') ? campus : `Campus ${campus}`}`;
+  const campus = carteirinhaData?.campus || 'Quixadá';
+  const instituicaoTexto = inst.includes('Campus') ? inst : `${inst} - Campus ${campus}`;
 
   const cursoAluno = carteirinhaData?.curso || user?.curso || 'Engenharia de Software';
   const ingressoAluno = carteirinhaData?.periodo_ingresso || user?.periodo_ingresso || '2024.1';
@@ -68,7 +68,6 @@ export default function CarteirinhaDigitalScreen() {
   const qrcodeValue = JSON.stringify({
     id: carteirinhaData?.id || user?.id,
     email: emailAluno,
-    token: token ? token.slice(0, 20) : 'gouoce_token',
   });
 
   return (

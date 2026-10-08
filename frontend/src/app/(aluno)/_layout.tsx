@@ -1,9 +1,21 @@
 import React from 'react';
-import { Tabs } from 'expo-router';
+import { Tabs, Redirect } from 'expo-router';
 import { View, StyleSheet } from 'react-native';
 import { Home, ClipboardList, Megaphone, UserCircle } from 'lucide-react-native';
+import { useAuth } from '@contexts/AuthContext';
 
 export default function StudentLayout() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return null;
+  }
+
+  // Proteção síncrona no nível do Layout: bloqueia renderização de telas não autorizadas
+  if (!user || user.role !== 'ALUNO') {
+    return <Redirect href="/acesso-negado" />;
+  }
+
   return (
     <Tabs screenOptions={{
       headerShown: false,

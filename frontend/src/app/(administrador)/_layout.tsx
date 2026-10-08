@@ -10,7 +10,6 @@ function AdminTabBar({ state, navigation, descriptors }: any) {
   return (
     <View style={styles.tabBar}>
       {state.routes.map((route: any, index: number) => {
-        // Filtra strictamente apenas as 4 abas oficiais do protótipo
         if (!TABS_EXIBIDAS.includes(route.name)) {
           return null;
         }
@@ -66,7 +65,7 @@ export default function AdminLayout() {
     return null;
   }
 
-  // Proteção de acesso no nível do Layout
+  // Proteção síncrona no nível do Layout
   if (!user || user.role !== 'ADMINISTRADOR') {
     return <Redirect href="/acesso-negado" />;
   }

@@ -31,9 +31,9 @@ class SalvarArquivoUseCase:
         if not conteudo_bytes:
             raise ArquivoValidacaoError("O arquivo enviado está vazio")
 
-        tamanho_maximo = 5 * 1024 * 1024  # 5MB
+        tamanho_maximo = 10 * 1024 * 1024  # 10MB
         if len(conteudo_bytes) > tamanho_maximo:
-            raise ArquivoValidacaoError(f"O arquivo '{nome_original}' excede o tamanho máximo permitido de 5MB")
+            raise ArquivoValidacaoError(f"O arquivo '{nome_original}' excede o tamanho máximo permitido de 10MB")
 
         ct = (content_type or "application/octet-stream").lower().strip()
         

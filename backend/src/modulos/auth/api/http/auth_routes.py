@@ -11,7 +11,6 @@ from fastapi.routing import APIRoute
 from sqlalchemy.orm import Session
 from fastapi.responses import HTMLResponse, JSONResponse
 from jose import JWTError
-from dotenv import load_dotenv
 
 from src.shared.infrastructure.db import get_session
 from src.shared.auth.jwt_service import JWTService
@@ -45,9 +44,6 @@ from src.modulos.auth.application.use_cases.validar_token_recuperacao_use_case i
 from src.modulos.auth.application.use_cases.redefinir_senha_use_case import (
     RedefinirSenhaUseCase,
 )
-
-load_dotenv()
-
 from src.modulos.usuarios.infrastructure.repositories.usuario_repository import (
     SQLAlchemyUsuarioRepository,
 )
@@ -321,10 +317,10 @@ async def redirect_to_app(token: str, request: Request = None):
         host_ip = base_host.split(":")[0] if ":" in base_host else base_host
         default_deep_link = f"exp://{host_ip}:8081/--"
     else:
-        default_deep_link = "exp://192.168.0.3:8081/--"
+        default_deep_link = "exp://192.168.0.4:8081/--"
 
-    app_deep_link = os.getenv("APP_DEEP_LINK_URL", default_deep_link).rstrip("/")
-    expo_link = f"{app_deep_link}/--/redefinir-senha?token={token_encoded}"
+    app_deep_link = os.getenv("APP_DEEP_LINK_URL", default_deep_link)
+    expo_link = f"{app_deep_link}/redefinir-senha?token={token_encoded}"
     custom_scheme_link = f"gouoce-app://redefinir-senha?token={token_encoded}"
     expo_link_html = escape(expo_link, quote=True)
     custom_scheme_link_html = escape(custom_scheme_link, quote=True)
