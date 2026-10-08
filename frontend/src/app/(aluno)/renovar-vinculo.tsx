@@ -210,6 +210,41 @@ export default function RenovarVinculoScreen() {
     }
   };
 
+  const renderCardAviso = () => {
+    const status = (user?.status || '').toLowerCase();
+
+    if (status === 'analise_renovacao') {
+      return (
+        <Surface style={[styles.alertCard, { backgroundColor: '#FFF3E0' }]} elevation={0}>
+          <RefreshCw size={24} color="#E65100" />
+          <Text style={[styles.alertText, { color: '#E65100' }]}>
+            Pendente: vínculo em análise
+          </Text>
+        </Surface>
+      );
+    }
+
+    if (status === 'expirado' || status === 'vencido') {
+      return (
+        <Surface style={[styles.alertCard, { backgroundColor: '#FFEBEE' }]} elevation={0}>
+          <RefreshCw size={24} color="#904a45" />
+          <Text style={[styles.alertText, { color: '#904a45' }]}>
+            Vínculo expirado - renovação necessária
+          </Text>
+        </Surface>
+      );
+    }
+
+    return (
+      <Surface style={[styles.alertCard, { backgroundColor: '#E1F5FE' }]} elevation={0}>
+        <RefreshCw size={24} color="#0288D1" />
+        <Text style={[styles.alertText, { color: '#0288D1' }]}>
+          Vínculo institucional ativo
+        </Text>
+      </Surface>
+    );
+  };
+
   return (
     <FormProvider {...metodos}>
       <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
@@ -239,15 +274,10 @@ export default function RenovarVinculoScreen() {
           onDismiss={closePopup}
         />
 
-        {/* TELA INICIAL (Aviso de Vínculo Expirado) */}
+        {/* TELA INICIAL (Aviso de Vínculo) */}
         {passo === 0 && (
           <View style={styles.content}>
-            <Surface style={styles.alertCard} elevation={0}>
-              <RefreshCw size={24} color="#904a45" />
-              <Text style={styles.alertText}>
-                Vínculo expirado - renovação necessária
-              </Text>
-            </Surface>
+            {renderCardAviso()}
 
             <Text variant="bodyLarge" style={styles.instruction}>
               Para revalidar seu vínculo institucional, você precisa revisar seus dados cadastrais e enviar um comprovante de matrícula atualizado.
@@ -335,13 +365,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: '#FFEBEE',
     padding: 16,
     borderRadius: 12,
     marginBottom: 24,
   },
   alertText: {
-    color: '#904a45',
     fontWeight: '500',
     flex: 1,
   },
