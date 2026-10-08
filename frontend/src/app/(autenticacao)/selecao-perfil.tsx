@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TouchableOpacity } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Text, useTheme } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import { ChevronLeft, IdCard, Contact, Shield } from 'lucide-react-native';
 
 import { CardPerfil } from '@/components/auth/CardPerfil';
@@ -42,7 +47,17 @@ export default function SelecaoPerfilScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
+  const confirmarSaida = () => {
+    closePopup();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
+  };
+
   const handleBack = () => {
+    if (isLoadingLocal) return;
     showPopup({
       type: 'warning',
       title: 'Sair desta tela?',
@@ -65,6 +80,9 @@ export default function SelecaoPerfilScreen() {
   };
 
   const handleSelectProfile = async (perfil: 'ALUNO' | 'MOTORISTA' | 'ADMINISTRADOR') => {
+    if (isLoadingLocal) return;
+    setIsLoadingLocal(true);
+
     try {
       await signIn(emailFinal, senhaFinal, perfil);
     } catch (error: any) {
@@ -79,10 +97,14 @@ export default function SelecaoPerfilScreen() {
       }
 
       const status = error.response?.status;
-      const detail = error.response?.data?.detail || "";
+      const detail = error.response?.data?.detail || '';
 
       // Caso a conta esteja pendente (HU-001/HU-002)
-      if ((status === 401 || status === 403) && typeof detail === 'string' && detail.toLowerCase().includes('pendente')) {
+      if (
+        (status === 401 || status === 403) &&
+        typeof detail === 'string' &&
+        detail.toLowerCase().includes('pendente')
+      ) {
         router.replace('/(autenticacao)/cadastro-pendente');
         return;
       }
@@ -98,10 +120,53 @@ export default function SelecaoPerfilScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-        <ChevronLeft size={32} color="#333" />
-      </TouchableOpacity>
+    <View style={styles.container}>
+      <View style={styles.content}>
+        <TouchableOpacity
+          onPress={handleBack}
+          style={styles.backButton}
+          disabled={isLoadingLocal}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        >
+          <ChevronLeft size={32} color="#333" />
+        </TouchableOpacity>
+
+        <Text variant="headlineMedium" style={styles.title}>Como você quer entrar?</Text>
+
+        <View style={styles.cardList}>
+          <CardPerfil
+            titulo="Sou aluno"
+            descricao="Agendamento, mural e carteirinha digital"
+            Icone={IdCard}
+            disabled={isLoadingLocal}
+            onPress={() => handleSelectProfile('ALUNO')}
+          />
+
+          <CardPerfil
+            titulo="Sou representante"
+            descricao="Chamada e lista de embarque da sua universidade"
+            Icone={Contact}
+            disabled={isLoadingLocal}
+            onPress={() => handleSelectProfile('MOTORISTA')}
+          />
+
+          <CardPerfil
+            titulo="Sou administrador"
+            descricao="Gestão completa do transporte"
+            Icone={Shield}
+            disabled={isLoadingLocal}
+            onPress={() => handleSelectProfile('ADMINISTRADOR')}
+          />
+        </View>
+      </View>
+
+      {/* Indicador de autenticação: embaixo, centralizado */}
+      {isLoadingLocal && (
+        <View style={styles.loadingFooter}>
+          <ActivityIndicator size="small" color="#3e5f90" />
+          <Text style={styles.loadingText}>Autenticando...</Text>
+        </View>
+      )}
 
       {/* Pop-up Estilizado Personalizado */}
       <AppPopup
@@ -115,37 +180,6 @@ export default function SelecaoPerfilScreen() {
         onConfirm={popup.onConfirm}
         onDismiss={closePopup}
       />
-
-      <Text variant="headlineMedium" style={styles.title}>Como você quer entrar?</Text>
-
-      <View style={styles.cardList}>
-        <CardPerfil
-          titulo="Sou aluno"
-          descricao="Agendamento, mural e carteirinha digital"
-          Icone={IdCard}
-          onPress={() => handleSelectProfile('ALUNO')}
-        />
-
-        <CardPerfil
-          titulo="Sou representante"
-          descricao="Chamada e lista de embarque da sua universidade"
-          Icone={Contact}
-          onPress={() => handleSelectProfile('MOTORISTA')}
-        />
-
-        <CardPerfil
-          titulo="Sou administrador"
-          descricao="Gestão completa do transporte"
-          Icone={Shield}
-          onPress={() => handleSelectProfile('ADMINISTRADOR')}
-        />
-      </View>
-
-      {isLoading && (
-        <View style={styles.loadingOverlay}>
-          <Text>Autenticando...</Text>
-        </View>
-      )}
     </View>
   );
 }
@@ -153,25 +187,36 @@ export default function SelecaoPerfilScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
     paddingTop: 60,
+    backgroundColor: '#F8F9FF',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
   },
   backButton: {
-    marginBottom: 40,
-    marginLeft: -8,
+    alignSelf: 'flex-start',
+    marginBottom: 20,
+    marginLeft: -4,
   },
   title: {
     fontWeight: 'bold',
-    marginBottom: 40,
     color: '#333',
+    marginBottom: 28,
   },
   cardList: {
+    gap: 16,
+  },
+  loadingFooter: {
+    position: 'absolute',
+    bottom: 48,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
     gap: 8,
   },
-  loadingOverlay: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  }
+  loadingText: {
+    color: '#666',
+    fontSize: 16,
+  },
 });

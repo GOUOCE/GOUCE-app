@@ -12,6 +12,11 @@ export const emailLoginSchema = z
   .transform((v) => (v || '').trim().toLowerCase())
   .pipe(z.string().min(1, 'O e-mail é obrigatório').email('Informe um e-mail válido'));
 
+export const emailLoginSchema = z
+  .string()
+  .transform((v) => (v || '').trim().toLowerCase())
+  .pipe(z.string().min(1, 'O e-mail é obrigatório').email('Informe um e-mail válido'));
+
 export const loginSchema = z.object({
   email: emailLoginSchema,
   senha: z.string().min(1, 'A senha é obrigatória'),

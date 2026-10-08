@@ -1,9 +1,12 @@
 import React from 'react';
-import { Tabs } from 'expo-router';
-import { View, StyleSheet } from 'react-native';
-import { LayoutDashboard, Archive, Bus, MoreHorizontal } from 'lucide-react-native';
+import { Tabs, Redirect } from 'expo-router';
+import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { LayoutGrid, Archive, Bus, MoreHorizontal } from 'lucide-react-native';
+import { useAuth } from '@contexts/AuthContext';
 
-export default function AdminLayout() {
+const TABS_EXIBIDAS = ['home', 'cadastros', 'logistica', 'mais'];
+
+function AdminTabBar({ state, navigation, descriptors }: any) {
   return (
     <Tabs screenOptions={{
       headerShown: false,
@@ -82,15 +85,38 @@ export default function AdminLayout() {
 }
 
 const styles = StyleSheet.create({
+  tabBar: {
+    flexDirection: 'row',
+    height: 80,
+    paddingTop: 12,
+    paddingBottom: 12,
+    backgroundColor: '#F8F9FF',
+    borderTopWidth: 1,
+    borderTopColor: '#E0E2EC',
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   iconContainer: {
     width: 64,
     height: 32,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 4,
   },
   activeIconContainer: {
     backgroundColor: '#C2E7FF',
+  },
+  tabLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 4,
+    color: '#44474E',
+  },
+  activeTabLabel: {
+    fontWeight: '700',
+    color: '#191C20',
   },
 });

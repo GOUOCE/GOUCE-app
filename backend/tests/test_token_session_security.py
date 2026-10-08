@@ -206,7 +206,7 @@ class TokenSessionSecurityTests(unittest.IsolatedAsyncioTestCase):
             401,
         )
 
-    async def test_expired_access_validity_is_rejected(self):
+    async def test_expired_access_validity_allows_authentication_with_limited_access(self):
         usuario = SimpleNamespace(id=1, senha="hash", limite_de_bloqueio=None)
         aluno = SimpleNamespace(
             status_cadastro="ativado",
@@ -216,17 +216,16 @@ class TokenSessionSecurityTests(unittest.IsolatedAsyncioTestCase):
         repository = StudentRepository(usuario, aluno)
         contexto = repository.buscar_contexto_autenticacao_por_id(1)
 
-        self.assertFalse(contexto["ativo"])
+        self.assertTrue(contexto["ativo"])
+        self.assertTrue(contexto["acesso_expirado"])
         self.assertEqual(contexto["role"], CargoEnum.ALUNO.value)
 
-        await self.assert_http_status(
-            get_current_user(
-                "access",
-                FakeTokenService(payload=access_payload()),
-                repository,
-            ),
-            401,
+        current_user = await get_current_user(
+            "access",
+            FakeTokenService(payload=access_payload()),
+            repository,
         )
+        self.assertTrue(current_user["access_expired"])
 
     async def test_pending_student_is_rejected(self):
         usuario = SimpleNamespace(id=1, senha="hash", limite_de_bloqueio=None)

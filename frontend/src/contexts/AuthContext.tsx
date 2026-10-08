@@ -20,6 +20,12 @@ interface AuthContextData {
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
+function getHomeByRole(role?: string) {
+  if (role === 'ADMINISTRADOR') return '/(administrador)/home';
+  if (role === 'MOTORISTA') return '/(representante)/home';
+  return '/(aluno)/home';
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -54,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loadStorageData();
   }, []);
 
+  // ÚNICO responsável pelo redirecionamento (login, restauração de sessão e proteção de rotas)
   useEffect(() => {
     if (isLoading) return;
 
@@ -67,10 +74,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (user) {
-      // Se o cadastro está pendente, força a tela de análise (HU-001)
-      const isAtPendingScreen = segments.includes('cadastro-pendente');
-      if (user.status === 'pendente' && !isAtPendingScreen) {
-        router.replace('/(autenticacao)/cadastro-pendente');
+      const status = (user.status || '').toLowerCase();
+      const isAtPendingScreen = segments.includes('cadastro-pendente' as never);
+
+      if (status === 'pendente') {
+        if (!isAtPendingScreen) {
+          router.replace('/(autenticacao)/cadastro-pendente');
+        }
         return;
       }
 
@@ -142,9 +152,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       router.replace(root);
     } catch (error) {
       throw error;
-    } finally {
-      setIsLoading(false);
     }
+
+    const userData: User = {
+      id: String(response.usuario.id),
+      name: response.usuario.nome || response.usuario.nome_completo || 'Usuário',
+      email: response.usuario.email,
+      role: actualRole,
+      status: String(response.usuario.status_cadastro || 'ativado').toLowerCase() as User['status'],
+      telefone: response.usuario.telefone,
+      curso: response.usuario.curso,
+      faculdade: response.usuario.faculdade,
+      periodo_ingresso: response.usuario.periodo_ingresso,
+      turno: response.usuario.turno,
+      foto_perfil: response.usuario.foto_perfil,
+    };
+
+    // Ao atualizar o user, o useEffect acima faz o redirecionamento (home ou cadastro pendente)
+    await setUserAndToken(userData, response.token_acesso);
+    setPendingCredentials(null);
+    console.log('[AUTH] Sessão salva. Redirecionamento delegado ao guard.');
   }
 
   async function signOut() {

@@ -62,7 +62,11 @@ export default function LoginScreen() {
   };
 
   const { control, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema)
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      senha: '',
+    }
   });
 
   const onSubmit = async (dados: LoginFormData) => {
@@ -136,12 +140,8 @@ export default function LoginScreen() {
                 onChangeText={onChange}
                 error={!!errors.senha}
                 secureTextEntry={!verSenha}
-                right={
-                  <TextInput.Icon
-                    icon={() => verSenha ? <EyeOff size={20} /> : <Eye size={20} />}
-                    onPress={() => setVerSenha(!verSenha)}
-                  />
-                }
+                maxLength={128}
+                right={<TextInput.Icon icon={() => verSenha ? <EyeOff size={20} /> : <Eye size={20} />} onPress={() => setVerSenha(!verSenha)} />}
                 style={styles.input}
               />
             )}
@@ -149,37 +149,22 @@ export default function LoginScreen() {
           {errors.senha && <Text style={styles.errorText}>{errors.senha.message}</Text>}
         </View>
 
-        <TouchableOpacity
-          onPress={() => router.push('/(autenticacao)/esqueci-senha')}
-          style={styles.forgotLink}
-        >
-          <Text variant="bodyMedium" style={{ color: theme.colors.primary }}>Esqueci minha senha</Text>
+        <TouchableOpacity onPress={() => router.push('/(autenticacao)/esqueci-senha')} style={styles.forgotBox}>
+          <Text variant="bodyMedium" style={[styles.forgotText, { color: theme.colors.primary }]}>
+            Esqueci minha senha
+          </Text>
         </TouchableOpacity>
 
+        {/* Botão Entrar */}
         <Button
           mode="contained"
           onPress={handleSubmit(onSubmit)}
           loading={isLoading}
-          style={styles.btnEntrar}
+          disabled={isLoading}
+          style={styles.button}
           contentStyle={styles.btnContent}
         >
-          Entrar
-        </Button>
-
-        <View style={styles.dividerBox}>
-          <View style={styles.line} />
-          <Text variant="bodySmall" style={styles.dividerText}>ou</Text>
-          <View style={styles.line} />
-        </View>
-
-        <Button
-          mode="outlined"
-          onPress={() => router.push('/(autenticacao)/register')}
-          style={styles.btnRegister}
-          contentStyle={styles.btnContent}
-          labelStyle={{ color: theme.colors.primary }}
-        >
-          Criar conta de aluno
+          Próximo
         </Button>
       </View>
     </View>
@@ -190,23 +175,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 60,
+    paddingHorizontal: 24,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingHorizontal: 20,
     marginBottom: 40,
     gap: 12,
   },
   headerTitle: {
     fontWeight: 'bold',
+    color: '#333',
   },
   formContainer: {
-    paddingHorizontal: 24,
+    flex: 1,
   },
   inputBox: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   label: {
     marginBottom: 4,
@@ -220,34 +205,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
-  forgotLink: {
+  forgotBox: {
     alignSelf: 'flex-end',
-    marginBottom: 40,
+    marginBottom: 32,
   },
-  btnEntrar: {
+  forgotText: {
+    fontWeight: '600',
+  },
+  button: {
     borderRadius: 8,
-    marginBottom: 24,
+    backgroundColor: '#3e5f90',
   },
   btnContent: {
     height: 55,
-  },
-  dividerBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  line: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E0E0E0',
-  },
-  dividerText: {
-    marginHorizontal: 16,
-    color: '#999',
-  },
-  btnRegister: {
-    borderRadius: 8,
-    borderColor: '#3e5f90',
-    borderWidth: 1.5,
   },
 });
