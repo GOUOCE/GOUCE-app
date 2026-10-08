@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
 import {
   Text,
   Button,
   Surface,
   useTheme,
+  Snackbar,
+  Portal,
 } from 'react-native-paper';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, X, RefreshCw } from 'lucide-react-native';
+import { ChevronLeft, X, RefreshCw, FileText, Upload, Pencil, CheckCircle2 } from 'lucide-react-native';
 
 import { renovacaoSchema, RenovacaoFormData, AlunoFormData } from '@/schemas/alunoSchema';
 import { Passo1DadosBasicos } from '@/components/cadastro/Passo1DadosBasicos';
@@ -28,6 +30,7 @@ export default function RenovarVinculoScreen() {
 
   const [passo, setPasso] = useState<number>(0); // 0 = Tela Inicial de Aviso, 1..4 = Passos do formulário
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [snackbarVisivel, setSnackbarVisivel] = useState<boolean>(false);
 
   // Pop-up estilizado para erro/confirmação
   const [popup, setPopup] = useState<{
@@ -62,16 +65,7 @@ export default function RenovarVinculoScreen() {
     },
   });
 
-  const { handleSubmit, trigger, reset, clearErrors } = metodos;
-
-  // Reseta o estado e volta para a tela inicial de aviso sempre que a tela ganha foco (BUG-HU028-UI-008)
-  useFocusEffect(
-    React.useCallback(() => {
-      setPasso(0);
-      reset();
-      clearErrors();
-    }, [])
-  );
+  const { handleSubmit, trigger, reset, setValue, clearErrors } = metodos;
 
   // Pré-preenchimento dos dados do aluno autenticado
   const carregarEPreencherDados = async () => {
@@ -79,6 +73,7 @@ export default function RenovarVinculoScreen() {
     try {
       const perfilApi = await userService.getProfile();
       if (perfilApi) {
+        // Converte data de nascimento de YYYYMMDD ou ISO para DD/MM/AAAA
         const formatarDataNascimento = (valor: any) => {
           if (!valor) return '';
           const str = String(valor).replace(/\D/g, '');
@@ -110,7 +105,9 @@ export default function RenovarVinculoScreen() {
             : `${perfilApi.semestre_atual || 8}º`,
           aceitouTermos: true,
           comprovanteMatricula: null,
-          comprovanteResidencia: null,
+          comprovanteResidencia: perfilApi.nome_comprovante_residencia || perfilApi.id_comprovante_residencia
+            ? { uri: 'existente', name: perfilApi.nome_comprovante_residencia || 'Comprovante_Residencia.pdf' }
+            : null,
         });
       }
     } catch (err) {
@@ -168,8 +165,6 @@ export default function RenovarVinculoScreen() {
       confirmColor: '#B00020',
       onConfirm: () => {
         closePopup();
-        setPasso(0);
-        reset();
         router.back();
       },
     });
@@ -179,27 +174,19 @@ export default function RenovarVinculoScreen() {
     setIsLoading(true);
     try {
       await userService.renovarVinculo(dados as AlunoFormData);
+      setSnackbarVisivel(true);
+
+      // Atualiza o estado do usuário logado
       await updateUser({ status: 'analise_renovacao' });
 
-      setIsLoading(false);
-      showPopup({
-        type: 'success',
-        title: 'Comprovante enviado com sucesso',
-        message: 'Sua solicitação de renovação foi enviada para análise da coordenação.',
-        confirmText: 'Entendido',
-        onConfirm: () => {
-          closePopup();
-          setPasso(0);
-          reset();
-          router.replace('/(aluno)/perfil');
-        },
-      });
+      setTimeout(() => {
+        router.back();
+      }, 2000);
     } catch (error: any) {
-      setIsLoading(false);
       console.error('Erro na renovação de vínculo:', error);
       const msgError = getErrorMessage(
         error,
-        'Falha no envio. Verifique sua conexão e tente novamente.'
+        'Falha no envio. Verifique sua conexão e tente novamente'
       );
       showPopup({
         type: 'error',
@@ -207,42 +194,9 @@ export default function RenovarVinculoScreen() {
         message: msgError,
         confirmText: 'Tentar novamente',
       });
+    } finally {
+      setIsLoading(false);
     }
-  };
-
-  const renderCardAviso = () => {
-    const status = (user?.status || '').toLowerCase();
-
-    if (status === 'analise_renovacao') {
-      return (
-        <Surface style={[styles.alertCard, { backgroundColor: '#FFF3E0' }]} elevation={0}>
-          <RefreshCw size={24} color="#E65100" />
-          <Text style={[styles.alertText, { color: '#E65100' }]}>
-            Pendente: vínculo em análise
-          </Text>
-        </Surface>
-      );
-    }
-
-    if (status === 'expirado' || status === 'vencido') {
-      return (
-        <Surface style={[styles.alertCard, { backgroundColor: '#FFEBEE' }]} elevation={0}>
-          <RefreshCw size={24} color="#904a45" />
-          <Text style={[styles.alertText, { color: '#904a45' }]}>
-            Vínculo expirado - renovação necessária
-          </Text>
-        </Surface>
-      );
-    }
-
-    return (
-      <Surface style={[styles.alertCard, { backgroundColor: '#E1F5FE' }]} elevation={0}>
-        <RefreshCw size={24} color="#0288D1" />
-        <Text style={[styles.alertText, { color: '#0288D1' }]}>
-          Vínculo institucional ativo
-        </Text>
-      </Surface>
-    );
   };
 
   return (
@@ -261,7 +215,7 @@ export default function RenovarVinculoScreen() {
           )}
         </View>
 
-        {/* Pop-up Estilizado (Erros / Confirmação de Saída / Sucesso) */}
+        {/* Pop-up Estilizado (Erros / Confirmação de Saída) */}
         <AppPopup
           visible={popup.visible}
           type={popup.type}
@@ -274,10 +228,15 @@ export default function RenovarVinculoScreen() {
           onDismiss={closePopup}
         />
 
-        {/* TELA INICIAL (Aviso de Vínculo) */}
+        {/* TELA INICIAL (Aviso de Vínculo Expirado) */}
         {passo === 0 && (
           <View style={styles.content}>
-            {renderCardAviso()}
+            <Surface style={styles.alertCard} elevation={0}>
+              <RefreshCw size={24} color="#904a45" />
+              <Text style={styles.alertText}>
+                Vínculo expirado - renovação necessária
+              </Text>
+            </Surface>
 
             <Text variant="bodyLarge" style={styles.instruction}>
               Para revalidar seu vínculo institucional, você precisa revisar seus dados cadastrais e enviar um comprovante de matrícula atualizado.
@@ -333,6 +292,20 @@ export default function RenovarVinculoScreen() {
             </View>
           </View>
         )}
+
+        {/* Toast Snackbar de Sucesso */}
+        <Snackbar
+          visible={snackbarVisivel}
+          onDismiss={() => setSnackbarVisivel(false)}
+          action={{
+            label: '',
+            icon: () => <X size={20} color="#fff" />,
+            onPress: () => setSnackbarVisivel(false),
+          }}
+          style={styles.snackbar}
+        >
+          Renovação de vínculo solicitada com sucesso
+        </Snackbar>
       </View>
     </FormProvider>
   );
@@ -365,11 +338,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    backgroundColor: '#FFEBEE',
     padding: 16,
     borderRadius: 12,
     marginBottom: 24,
   },
   alertText: {
+    color: '#904a45',
     fontWeight: '500',
     flex: 1,
   },
@@ -405,5 +380,11 @@ const styles = StyleSheet.create({
   },
   buttonContent: {
     height: 55,
+  },
+  snackbar: {
+    backgroundColor: '#333',
+    borderRadius: 8,
+    marginBottom: 20,
+    marginHorizontal: 16,
   },
 });

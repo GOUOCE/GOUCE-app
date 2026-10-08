@@ -119,7 +119,6 @@ async def get_current_user(
     usuario_validado["current_roles"] = perfis_atuais
     usuario_validado["current_user_id"] = user_id
     usuario_validado["current_status"] = contexto.get("status")
-    usuario_validado["access_expired"] = bool(contexto.get("acesso_expirado"))
     return usuario_validado
 
 
@@ -182,16 +181,7 @@ async def verify_active_student(
 async def verify_student_standard_access(
     current_user: Annotated[dict, Depends(require_roles("aluno"))],
 ) -> dict:
-    """Restringe recursos normais a alunos sem pendências de acesso."""
-    if current_user.get("current_status") == "rejeitado" or current_user.get("access_expired"):
-        raise _forbidden()
-    return current_user
-
-
-async def verify_student_renewal_access(
-    current_user: Annotated[dict, Depends(require_roles("aluno"))],
-) -> dict:
-    """Permite a renovação para alunos com vínculo expirado."""
+    """Bloqueia o aluno rejeitado fora do fluxo de reenvio de documentos."""
     if current_user.get("current_status") == "rejeitado":
         raise _forbidden()
     return current_user

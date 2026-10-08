@@ -3,9 +3,9 @@ import { z } from 'zod';
 const passwordRules = z.string()
   .min(8, 'A senha deve ter pelo menos 8 caracteres')
   .max(128, 'A senha deve ter no máximo 128 caracteres')
-  .regex(/[A-Z]/, 'A senha deve conter pelo menos uma letra maiúscula')
-  .regex(/[a-z]/, 'A senha deve conter pelo menos uma letra minúscula')
-  .regex(/[0-9]/, 'A senha deve conter pelo menos um número');
+  .regex(/[A-Z]/, 'Inclua pelo menos uma letra maiúscula')
+  .regex(/[a-z]/, 'Inclua pelo menos uma letra minúscula')
+  .regex(/[0-9]/, 'Inclua pelo menos um número');
 
 export const emailLoginSchema = z
   .string()

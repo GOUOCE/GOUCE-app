@@ -44,8 +44,7 @@ const mapRole = (role: string): UserRole => {
     case 'administrador':
       return 'ADMINISTRADOR';
     case 'supervisor':
-    case 'representante':
-      return 'MOTORISTA';
+      return 'MOTORISTA'; // Mapeando supervisor para motorista/representante por enquanto
     default:
       return 'ALUNO';
   }
@@ -72,11 +71,6 @@ export const authService = {
       token: token,
       nova_senha: data.novaSenha,
     });
-  },
-
-  async validateToken(token: string): Promise<any> {
-    const response = await api.post('/auth/validar-token', { token });
-    return response.data;
   },
 
   mapRole,

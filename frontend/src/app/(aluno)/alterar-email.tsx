@@ -136,14 +136,21 @@ export default function AlterarEmailScreen() {
           <Controller
             control={control}
             name="novoEmail"
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
                 label="Novo E-mail *"
                 mode="outlined"
                 value={value}
                 onChangeText={onChange}
+                onBlur={() => {
+                  onBlur();
+                  if (value) {
+                    onChange(value.trim().toLowerCase());
+                  }
+                }}
                 error={!!errors.novoEmail}
                 autoCapitalize="none"
+                autoCorrect={false}
                 keyboardType="email-address"
                 left={<TextInput.Icon icon={() => <Mail size={20} color="#666" />} />}
                 style={styles.input}

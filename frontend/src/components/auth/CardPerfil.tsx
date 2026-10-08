@@ -1,89 +1,65 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet, View, ActivityIndicator } from 'react-native';
-import { Text } from 'react-native-paper';
+import { TouchableOpacity, StyleSheet, View } from 'react-native';
+import { Text, Surface, useTheme } from 'react-native-paper';
+import { ChevronRight } from 'lucide-react-native';
 
 interface CardPerfilProps {
   titulo: string;
   descricao: string;
   Icone: React.ElementType;
   onPress: () => void;
-  disabled?: boolean;
-  loading?: boolean;
 }
 
-export function CardPerfil({ titulo, descricao, Icone, onPress, disabled, loading }: CardPerfilProps) {
+export function CardPerfil({ titulo, descricao, Icone, onPress }: CardPerfilProps) {
+  const theme = useTheme();
+
   return (
-    <TouchableOpacity
-      activeOpacity={0.7}
-      onPress={onPress}
-      disabled={disabled}
-      style={[styles.card, disabled && styles.disabled]}
-    >
-      <View style={styles.iconBox}>
-        <Icone size={32} color="#44474E" strokeWidth={1.75} />
-      </View>
+    <Surface style={styles.card} elevation={1}>
+      <TouchableOpacity onPress={onPress} style={styles.container}>
+        <View style={[styles.iconBox, { backgroundColor: '#F0F4F8' }]}>
+          <Icone size={32} color={theme.colors.primary} strokeWidth={1.5} />
+        </View>
 
-      <View style={styles.content}>
-        <Text style={styles.titulo}>{titulo}</Text>
-        <Text style={styles.descricao}>{descricao}</Text>
-      </View>
+        <View style={styles.content}>
+          <Text variant="titleMedium" style={styles.titulo}>{titulo}</Text>
+          <Text variant="bodySmall" style={styles.descricao}>{descricao}</Text>
+        </View>
 
-      {loading ? (
-        <ActivityIndicator size="small" color="#44474E" />
-      ) : (
-        <View style={styles.arrow} />
-      )}
-    </TouchableOpacity>
+        <ChevronRight size={20} color="#666" />
+      </TouchableOpacity>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
+    borderRadius: 16,
+    marginBottom: 16,
+    backgroundColor: '#fff',
+  },
+  container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 18,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#C4C6D0',
-    backgroundColor: 'transparent',
-  },
-  disabled: {
-    opacity: 0.6,
+    padding: 16,
   },
   iconBox: {
-    width: 32,
-    height: 32,
+    width: 56,
+    height: 56,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 18,
+    marginRight: 16,
   },
   content: {
     flex: 1,
-    paddingRight: 12,
   },
   titulo: {
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: '500',
-    color: '#191C20',
+    fontWeight: 'bold',
+    color: '#333',
     marginBottom: 2,
   },
   descricao: {
-    fontSize: 12,
+    color: '#666',
     lineHeight: 16,
-    letterSpacing: 0.3,
-    color: '#44474E',
-  },
-  // Seta triangular preenchida (▸) como no protótipo
-  arrow: {
-    width: 0,
-    height: 0,
-    borderTopWidth: 4,
-    borderBottomWidth: 4,
-    borderLeftWidth: 5,
-    borderTopColor: 'transparent',
-    borderBottomColor: 'transparent',
-    borderLeftColor: '#44474E',
-  },
+  }
 });

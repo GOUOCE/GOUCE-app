@@ -9,16 +9,16 @@
 | Camada | API |
 | Tipo de teste | Funcional manual — suíte essencial |
 | Endpoints | `GET /alunos/me/carteirinha` e `GET /arquivos/{id}/view` (foto) — com token de aluno |
-| Ambiente | Docker local isolado — `http://localhost:8001` — branch `feature/testes-api-hu-029` — commit `46a79355` |
+| Ambiente | A preencher — URL e commit testado |
 | Total de casos | 6 |
-| Última execução | 2026-10-06 — execução dos CT-HU029-API-001 a 006 |
-| Testador | Cauan Ricardo — execução com apoio de IA (Claude Code) |
+| Última execução | Não realizada |
+| Testador | A definir |
 
 ## Resultado geral
 
-| Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | ⏳ Pendentes |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| ⚠️ Execução parcial | 6 | 5 | 0 | 1 | 0 |
+| Situação | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
+| --- | ---: | ---: | ---: | ---: |
+| ⏳ Não executada | 6 | 0 | 0 | 6 |
 
 ## Pré-condições
 
@@ -35,12 +35,12 @@ Executar na ordem abaixo. São **6 casos essenciais**.
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU029-API-001 | Carteirinha do aluno aprovado | Token do aluno A | HTTP 200 com nome, curso, instituição e foto; só dados necessários | ⚠️ PARCIAL | HTTP 200 com nome, curso, instituição/campus e `id_foto_aluno` do próprio aluno A, em 0,012 s. Porém a resposta devolve o perfil completo, com dados sensíveis que a carteirinha não exibe (data de nascimento, gênero, raça, orientação sexual, filhos, telefone, bairro e IDs dos comprovantes). |
-| CT-HU029-API-002 | Aluno sem status aprovado | Pendente; em análise; inativado | HTTP 403 “Carteirinha indisponível…”; nenhum dado do documento | ✅ APROVADO | Em análise: HTTP 403 “Carteirinha indisponível. Seu cadastro está inativo ou em análise.” Pendente e inativado não obtêm sessão (login HTTP 401), e o token emitido antes da inativação passa a ser recusado (HTTP 401). Nenhum dado da carteirinha. |
-| CT-HU029-API-003 | Acesso sem permissão | Sem token; token de administrador | HTTP 401; HTTP 403 | ✅ APROVADO | Sem token: HTTP 401 “Não autenticado”; token de administrador: HTTP 403 “Acesso negado”. |
-| CT-HU029-API-004 | Foto da carteirinha | Foto do aluno A com o token de A e com o de B | Imagem para A; bloqueada para B | ✅ APROVADO | Token de A: HTTP 200, `image/png`, idêntica à foto enviada. Token de B: HTTP 404 “Arquivo não encontrado”, sem a imagem; sem token: HTTP 401. |
-| CT-HU029-API-005 | Tempo de resposta | 5 chamadas do CT-001 | Cada resposta em até 1 s em rede local | ✅ APROVADO | Cinco chamadas com HTTP 200; média de 0,012 s e maior tempo de 0,013 s. |
-| CT-HU029-API-006 | Status muda durante a sessão | Token do aluno A emitido quando aprovado; status muda para em análise | HTTP 403 na carteirinha com o token antigo | ✅ APROVADO | Com o mesmo token: HTTP 200 enquanto aprovado e HTTP 403 “Carteirinha indisponível…” logo após o aluno passar para `analise_renovacao`; volta a 200 após nova aprovação. |
+| CT-HU029-API-001 | Carteirinha do aluno aprovado | Token do aluno A | HTTP 200 com nome, curso, instituição e foto; só dados necessários | ⏳ PENDENTE | Não executado. |
+| CT-HU029-API-002 | Aluno sem status aprovado | Pendente; em análise; inativado | HTTP 403 “Carteirinha indisponível…”; nenhum dado do documento | ⏳ PENDENTE | Não executado. |
+| CT-HU029-API-003 | Acesso sem permissão | Sem token; token de administrador | HTTP 401; HTTP 403 | ⏳ PENDENTE | Não executado. |
+| CT-HU029-API-004 | Foto da carteirinha | Foto do aluno A com o token de A e com o de B | Imagem para A; bloqueada para B | ⏳ PENDENTE | Não executado. |
+| CT-HU029-API-005 | Tempo de resposta | 5 chamadas do CT-001 | Cada resposta em até 1 s em rede local | ⏳ PENDENTE | Não executado. |
+| CT-HU029-API-006 | Status muda durante a sessão | Token do aluno A emitido quando aprovado; status muda para em análise | HTTP 403 na carteirinha com o token antigo | ⏳ PENDENTE | Não executado. |
 
 ## Detalhamento dos casos
 
@@ -62,10 +62,8 @@ Executar na ordem abaixo. São **6 casos essenciais**.
 
 **Resultado obtido**
 
-- `GET /alunos/me/carteirinha` com o token do aluno A: HTTP `200` em 0,012 s. ✅
-- Dados de identificação corretos e do próprio aluno A: `nome`, `curso`, `faculdade_id`, `campus` e `id_foto_aluno`. ✅
-- A resposta é o perfil completo do aluno (`PerfilAlunoResponseDTO`), e não só o necessário para a carteirinha. Campos retornados que a carteirinha não usa: `data_nascimento`, `identificacao_genero`, `raca`, `identificacao_sexual`, `tem_filhos`, `transgenero`, `telefone`, `bairro_id`, `semestre_atual`, `id_comprovante_matricula`, `id_comprovante_residencia`, `motivo_reprovacao`, `validade_acesso` e `data_criacao`. ⚠️ Dados pessoais sensíveis (LGPD, art. 5º, II: origem racial, vida sexual) expostos sem necessidade, contrariando o princípio da necessidade (RNF-010).
-- Status: ⚠️ Parcial — [BUG-HU029-API-001](issues/BUG-HU029-API-001-carteirinha-expoe-dados-sensiveis.md).
+- Não executado.
+- Status: ⏳ Pendente.
 
 ---
 
@@ -86,11 +84,8 @@ Executar na ordem abaixo. São **6 casos essenciais**.
 
 **Resultado obtido**
 
-- **Em análise** (aluno N, que enviou renovação): `GET /alunos/me/carteirinha` → HTTP `403`, “Carteirinha indisponível. Seu cadastro está inativo ou em análise.” ✅
-- **Pendente** (aluno P): o login é recusado (HTTP `401`, “Sua conta está pendente de aprovação pela coordenação.”), então não há sessão para consultar a carteirinha. ✅
-- **Inativado** (aluno I): o login é recusado (HTTP `401`, “Sua conta está inativada. Entre em contato com a coordenação.”); com o token obtido antes da inativação, a carteirinha responde HTTP `401` “Sessão inválida ou expirada”. ✅
-- Nenhuma resposta trouxe dados da carteirinha.
-- Status: ✅ Aprovado.
+- Não executado.
+- Status: ⏳ Pendente.
 
 ---
 
@@ -110,9 +105,8 @@ Executar na ordem abaixo. São **6 casos essenciais**.
 
 **Resultado obtido**
 
-- Sem `Authorization`: HTTP `401`, “Não autenticado”. ✅
-- Token do administrador padrão: HTTP `403`, “Acesso negado”. ✅
-- Status: ✅ Aprovado.
+- Não executado.
+- Status: ⏳ Pendente.
 
 ---
 
@@ -132,10 +126,8 @@ Executar na ordem abaixo. São **6 casos essenciais**.
 
 **Resultado obtido**
 
-- `GET /arquivos/{id_foto_aluno de A}/view` com o token de A: HTTP `200`, `image/png`, 179 bytes, conteúdo idêntico ao arquivo enviado no cadastro. ✅
-- Mesma rota com o token de B: HTTP `404`, “Arquivo não encontrado”, sem a imagem (também com o token no parâmetro `?token=`). ✅
-- Sem token: HTTP `401`. ✅
-- Status: ✅ Aprovado.
+- Não executado.
+- Status: ⏳ Pendente.
 
 ---
 
@@ -153,9 +145,8 @@ Executar na ordem abaixo. São **6 casos essenciais**.
 
 **Resultado obtido**
 
-- Cinco chamadas seguidas, todas HTTP `200`: 0,0114 s; 0,0119 s; 0,0108 s; 0,0105 s; 0,0128 s.
-- Média de 0,0115 s e maior tempo de 0,0128 s, bem abaixo do limite de 1 s. ✅
-- Status: ✅ Aprovado.
+- Não executado.
+- Status: ⏳ Pendente.
 
 ---
 
@@ -177,23 +168,18 @@ Executar na ordem abaixo. São **6 casos essenciais**.
 
 **Resultado obtido**
 
-- Com o token do aluno A emitido enquanto aprovado: HTTP `200`. ✅
-- O aluno A passou para `analise_renovacao` enviando uma renovação (`PUT /alunos/renovar-vinculo`), que é o caminho real para esse status; a rota de status do administrador não oferece `analise_renovacao` diretamente.
-- Com o **mesmo** token: HTTP `403`, “Carteirinha indisponível. Seu cadastro está inativo ou em análise.” A situação é lida do banco, não do token. ✅
-- Após nova aprovação pelo administrador, o mesmo token voltou a receber HTTP `200`.
-- Status: ✅ Aprovado.
+- Não executado.
+- Status: ⏳ Pendente.
 
 ## Defeitos encontrados
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| CT-HU029-API-001 | A rota da carteirinha devolve o perfil completo do aluno, incluindo dados sensíveis (raça, orientação sexual, gênero, data de nascimento) que a carteirinha não exibe. | [BUG-HU029-API-001](issues/BUG-HU029-API-001-carteirinha-expoe-dados-sensiveis.md) |
+| — | Nenhuma execução realizada. | — |
 
 ## Observações gerais
 
 - Referências: [HU-029, seção 7.2.9](../../../../../docs/requisitos.md), [cenários BDD](../../../../../bdd/features/epico-01/HU-029.feature) e [suíte de UI](../ui/UI-HU-029.md).
 - O limite de 1 segundo do CT-005 é a referência desta suíte para “carregamento rápido” (AC-05), que o requisito não quantifica. Ajustar se o líder definir outro valor.
 - O cache offline (AC-03) e a leitura do QR Code (AC-04) são do app e ficam na suíte de UI.
-- Execução em banco isolado e limpo, com massa criada pela API (`POST /usuarios/cadastrar` com foto + aprovação pelo administrador padrão): alunos A e B aprovados com foto, P pendente, N em análise (renovação enviada pela API) e I inativado pelo administrador. Nenhum dado do ambiente de desenvolvimento foi alterado.
-- Observação fora do escopo: no aluno A, `transgenero` volta `null`, embora o cadastro tenha enviado “Não”; e `validade_acesso` fica `null` após a aprovação, então a validade do vínculo (RN-013) não é definida na aprovação. Levar ao líder.
 - Restaurar o status dos alunos da PC-03 ao final. Ocultar tokens, fotos e dados pessoais nas evidências.

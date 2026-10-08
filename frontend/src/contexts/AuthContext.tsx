@@ -14,17 +14,11 @@ interface AuthContextData {
   clearPendingCredentials: () => void;
   signIn: (email: string, senha: string, role?: UserRole) => Promise<void>;
   signOut: () => Promise<void>;
-  setUserAndToken: (user: User, token: string) => Promise<void>;
+  setUserAndToken: (user: User, token: string, refreshToken?: string) => Promise<void>;
   updateUser: (data: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
-
-function getHomeByRole(role?: string) {
-  if (role === 'ADMINISTRADOR') return '/(administrador)/home';
-  if (role === 'MOTORISTA') return '/(representante)/home';
-  return '/(aluno)/home';
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -39,7 +33,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPendingCredentials(null);
   };
 
-  // Restaura a sessão salva
   useEffect(() => {
     async function loadStorageData() {
       try {
@@ -47,7 +40,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const storageToken = await AsyncStorage.getItem('@GOUOCE:token');
 
         if (storageUser && storageToken) {
-          setUser(JSON.parse(storageUser));
+          const parsedUser = JSON.parse(storageUser);
+          setUser(parsedUser);
           setToken(storageToken);
         }
       } catch (err) {
@@ -60,15 +54,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loadStorageData();
   }, []);
 
-  // ÚNICO responsável pelo redirecionamento (login, restauração de sessão e proteção de rotas)
   useEffect(() => {
     if (isLoading) return;
 
-    const firstSegment = segments[0] as string | undefined;
-    const isProtected = ['(aluno)', '(representante)', '(administrador)'].includes(firstSegment ?? '');
+    const firstSegment = segments[0];
+    const isProtected = ['(aluno)', '(representante)', '(administrador)'].includes(firstSegment);
     const isRootOrAuth = !firstSegment || firstSegment === '(autenticacao)' || firstSegment === 'index';
-
-    console.log('[GUARD]', { segments, status: user?.status, role: user?.role });
 
     if (!user && isProtected) {
       router.replace('/(autenticacao)/login');
@@ -76,74 +67,93 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (user) {
-      const status = (user.status || '').toLowerCase();
-      const isAtPendingScreen = segments.includes('cadastro-pendente' as never);
-
-      if (status === 'pendente') {
-        if (!isAtPendingScreen) {
-          router.replace('/(autenticacao)/cadastro-pendente');
-        }
+      const isAtPendingScreen = segments.includes('cadastro-pendente');
+      if (user.status === 'pendente' && !isAtPendingScreen) {
+        router.replace('/(autenticacao)/cadastro-pendente');
         return;
       }
 
-      // Qualquer status diferente de "pendente" entra na home do perfil
-      if (isRootOrAuth) {
-        router.replace(getHomeByRole(user.role) as any);
+      const isUserActive = ['ativado', 'analise_renovacao', 'expirado', 'vencido'].includes(user.status || '');
+
+      // Restauração transparente da sessão ao abrir o app nas telas de boas-vindas / login (CT-HU002-UI-015)
+      if (isRootOrAuth && isUserActive) {
+        const root = user.role === 'ADMINISTRADOR' ? '/(administrador)/home' :
+                     user.role === 'MOTORISTA' ? '/(representante)/home' : '/(aluno)/home';
+        router.replace(root);
+        return;
+      }
+
+      const roleMatches = (user.role === 'ADMINISTRADOR' && firstSegment === '(administrador)') ||
+                          (user.role === 'MOTORISTA' && firstSegment === '(representante)') ||
+                          (user.role === 'ALUNO' && firstSegment === '(aluno)');
+
+      if (isProtected && !roleMatches && isUserActive) {
+        router.replace('/acesso-negado');
       }
     }
   }, [user, segments, isLoading]);
 
-  async function setUserAndToken(userData: User, userToken: string) {
+  async function setUserAndToken(userData: User, userToken: string, refreshToken?: string) {
     await AsyncStorage.setItem('@GOUOCE:token', userToken);
+    if (refreshToken) {
+      await AsyncStorage.setItem('@GOUOCE:refreshToken', refreshToken);
+    }
     await AsyncStorage.setItem('@GOUOCE:user', JSON.stringify(userData));
     setUser(userData);
     setToken(userToken);
   }
 
   async function signIn(email: string, senha: string, selectedRole?: UserRole) {
-    console.log('[AUTH] Iniciando login para:', email, 'com perfil selecionado:', selectedRole);
-    const response = await authService.login({ email, senha });
-    console.log('[AUTH] Resposta do login recebida com sucesso');
+    setIsLoading(true);
+    try {
+      const response = await authService.login({ email, senha });
+      const actualRole = authService.mapRole(response.usuario.role);
 
-    const actualRole = authService.mapRole(response.usuario.role);
+      // Validação do perfil selecionado x perfil real da conta (AC-08 / CT-HU002-UI-009)
+      if (selectedRole && selectedRole !== actualRole) {
+        const nomePerfilReal =
+          actualRole === 'ALUNO' ? 'Aluno' :
+          actualRole === 'MOTORISTA' ? 'Representante' : 'Administrador';
 
-    // Validação do perfil selecionado x perfil real da conta (AC-08 / CT-HU002-UI-009)
-    if (selectedRole && selectedRole !== actualRole) {
-      const nomePerfilReal =
-        actualRole === 'ALUNO' ? 'Aluno' :
-        actualRole === 'MOTORISTA' ? 'Representante' : 'Administrador';
+        const error: any = new Error(
+          `Perfil incompatível. Sua conta é do perfil ${nomePerfilReal}. Por favor, escolha "Sou ${nomePerfilReal.toLowerCase()}" para continuar.`
+        );
+        error.code = 'ROLE_MISMATCH';
+        error.actualRole = actualRole;
+        error.selectedRole = selectedRole;
+        throw error;
+      }
 
-      const error: any = new Error(
-        `Perfil incompatível. Sua conta é do perfil ${nomePerfilReal}. Por favor, escolha "Sou ${nomePerfilReal.toLowerCase()}" para continuar.`
-      );
-      error.code = 'ROLE_MISMATCH';
-      error.actualRole = actualRole;
-      error.selectedRole = selectedRole;
+      const userData: User = {
+        id: String(response.usuario.id),
+        name: response.usuario.nome || response.usuario.nome_completo || 'Usuário',
+        email: response.usuario.email,
+        role: actualRole,
+        status: response.usuario.status_cadastro || 'ativado',
+        telefone: response.usuario.telefone,
+        curso: response.usuario.curso,
+        faculdade: response.usuario.faculdade,
+        periodo_ingresso: response.usuario.periodo_ingresso,
+        turno: response.usuario.turno,
+        foto_perfil: response.usuario.foto_perfil,
+      };
+
+      await setUserAndToken(userData, response.token_acesso, response.token_atualizacao);
+      setPendingCredentials(null);
+
+      const root = userData.role === 'ADMINISTRADOR' ? '/(administrador)/home' :
+                   userData.role === 'MOTORISTA' ? '/(representante)/home' : '/(aluno)/home';
+      router.replace(root);
+    } catch (error) {
       throw error;
+    } finally {
+      setIsLoading(false);
     }
-
-    const userData: User = {
-      id: String(response.usuario.id),
-      name: response.usuario.nome || response.usuario.nome_completo || 'Usuário',
-      email: response.usuario.email,
-      role: actualRole,
-      status: String(response.usuario.status_cadastro || 'ativado').toLowerCase() as User['status'],
-      telefone: response.usuario.telefone,
-      curso: response.usuario.curso,
-      faculdade: response.usuario.faculdade,
-      periodo_ingresso: response.usuario.periodo_ingresso,
-      turno: response.usuario.turno,
-      foto_perfil: response.usuario.foto_perfil,
-    };
-
-    // Ao atualizar o user, o useEffect acima faz o redirecionamento (home ou cadastro pendente)
-    await setUserAndToken(userData, response.token_acesso);
-    setPendingCredentials(null);
-    console.log('[AUTH] Sessão salva. Redirecionamento delegado ao guard.');
   }
 
   async function signOut() {
     await AsyncStorage.removeItem('@GOUOCE:token');
+    await AsyncStorage.removeItem('@GOUOCE:refreshToken');
     await AsyncStorage.removeItem('@GOUOCE:user');
     setPendingCredentials(null);
     setUser(null);

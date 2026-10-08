@@ -13,8 +13,7 @@ import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 export default function LoginScreen() {
   const router = useRouter();
   const theme = useTheme();
-  const { perfil } = useLocalSearchParams();
-  const { signIn, isLoading } = useAuth();
+  const { signIn, setPendingCredentials, isLoading } = useAuth();
   const [verSenha, setVerSenha] = useState(false);
 
   // Estado do Pop-up
@@ -63,18 +62,12 @@ export default function LoginScreen() {
   };
 
   const { control, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      senha: '',
-    }
+    resolver: zodResolver(loginSchema)
   });
 
   const onSubmit = async (dados: LoginFormData) => {
-    router.push({
-      pathname: '/(autenticacao)/selecao-perfil',
-      params: { email: dados.email, senha: dados.senha }
-    });
+    setPendingCredentials({ email: dados.email, senha: dados.senha });
+    router.push('/(autenticacao)/selecao-perfil');
   };
 
   return (
@@ -143,8 +136,12 @@ export default function LoginScreen() {
                 onChangeText={onChange}
                 error={!!errors.senha}
                 secureTextEntry={!verSenha}
-                maxLength={128}
-                right={<TextInput.Icon icon={() => verSenha ? <EyeOff size={20} /> : <Eye size={20} />} onPress={() => setVerSenha(!verSenha)} />}
+                right={
+                  <TextInput.Icon
+                    icon={() => verSenha ? <EyeOff size={20} /> : <Eye size={20} />}
+                    onPress={() => setVerSenha(!verSenha)}
+                  />
+                }
                 style={styles.input}
               />
             )}
@@ -152,22 +149,37 @@ export default function LoginScreen() {
           {errors.senha && <Text style={styles.errorText}>{errors.senha.message}</Text>}
         </View>
 
-        <TouchableOpacity onPress={() => router.push('/(autenticacao)/esqueci-senha')} style={styles.forgotBox}>
-          <Text variant="bodyMedium" style={[styles.forgotText, { color: theme.colors.primary }]}>
-            Esqueci minha senha
-          </Text>
+        <TouchableOpacity
+          onPress={() => router.push('/(autenticacao)/esqueci-senha')}
+          style={styles.forgotLink}
+        >
+          <Text variant="bodyMedium" style={{ color: theme.colors.primary }}>Esqueci minha senha</Text>
         </TouchableOpacity>
 
-        {/* Botão Entrar */}
         <Button
           mode="contained"
           onPress={handleSubmit(onSubmit)}
           loading={isLoading}
-          disabled={isLoading}
-          style={styles.button}
+          style={styles.btnEntrar}
           contentStyle={styles.btnContent}
         >
-          Próximo
+          Entrar
+        </Button>
+
+        <View style={styles.dividerBox}>
+          <View style={styles.line} />
+          <Text variant="bodySmall" style={styles.dividerText}>ou</Text>
+          <View style={styles.line} />
+        </View>
+
+        <Button
+          mode="outlined"
+          onPress={() => router.push('/(autenticacao)/register')}
+          style={styles.btnRegister}
+          contentStyle={styles.btnContent}
+          labelStyle={{ color: theme.colors.primary }}
+        >
+          Criar conta de aluno
         </Button>
       </View>
     </View>
@@ -178,23 +190,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 60,
-    paddingHorizontal: 24,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingHorizontal: 20,
     marginBottom: 40,
     gap: 12,
   },
   headerTitle: {
     fontWeight: 'bold',
-    color: '#333',
   },
   formContainer: {
-    flex: 1,
+    paddingHorizontal: 24,
   },
   inputBox: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   label: {
     marginBottom: 4,
@@ -208,18 +220,34 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
-  forgotBox: {
+  forgotLink: {
     alignSelf: 'flex-end',
-    marginBottom: 32,
+    marginBottom: 40,
   },
-  forgotText: {
-    fontWeight: '600',
-  },
-  button: {
+  btnEntrar: {
     borderRadius: 8,
-    backgroundColor: '#3e5f90',
+    marginBottom: 24,
   },
   btnContent: {
     height: 55,
+  },
+  dividerBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E0E0E0',
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    color: '#999',
+  },
+  btnRegister: {
+    borderRadius: 8,
+    borderColor: '#3e5f90',
+    borderWidth: 1.5,
   },
 });

@@ -11,14 +11,14 @@
 | Tela            | Início do aluno, Meu Perfil → Renovar vínculo (aviso e passos 1 a 4) e Agenda           |
 | Ambiente        | Desenvolvimento — app mobile no iPhone (Expo Go)                                        |
 | Total de casos  | 9 |
-| Última execução | 06/10/2026                                                                              |
+| Última execução | Não realizada                                                                           |
 | Testador        | Cauan Ricardo                                                                           |
 
 ## Resultado geral
 
-| Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
-| --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ✅ Executada | 9 | 4 | 4 | 1 | 0 |
+| Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
+| --------------- | ----: | ----------: | ----------: | -----------: |
+| ⏳ Não executada | 9 | 0 | 0 | 9 |
 
 ## Pré-condições
 
@@ -38,17 +38,17 @@ Executar na ordem abaixo. São **9 casos essenciais**, em três seções. Os IDs
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU028-UI-001 | Aviso de renovação após o login | Aluno com vínculo vencido | Login permitido e aviso destacado com a opção de renovar | ❌ REPROVADO | O login foi barrado com o pop-up “Falha na autenticação — A validade de acesso da sua conta expirou.” e o botão Tentar novamente; o aluno não chega à área do aluno nem à renovação. Mesmo defeito do CT-HU028-API-004 (BUG-HU028-API-002). Executado pelo testador em 06/10/2026. |
-| CT-HU028-UI-002 | Envio sem comprovante | Passo 4 sem arquivo | Bloquear e alertar que o comprovante é obrigatório | ✅ APROVADO | O envio foi bloqueado com “Envie PDF ou imagem (PNG, JPG ou WEBP) de até 10 MB”. Observações: o botão continua habilitado antes do toque, e o texto não diz que o comprovante é obrigatório e cita 10 MB (o AC-03 fala em 5 MB) — ver [MELHORIA-HU028-UI-002](issues/MELHORIA-HU028-UI-002-mensagem-e-limite-do-comprovante.md). Confirmado pelo testador em 06/10/2026. |
-| CT-HU028-UI-003 | Arquivo inválido | `comprovante.docx`; `comprovante-grande.pdf` (8 MB) | Bloquear com “Formato inválido” / “Arquivo excede o limite de tamanho” | ❌ REPROVADO | O DOCX aparece apagado no seletor e não pode ser escolhido. O PDF de 8,4 MB foi aceito: a renovação foi enviada e o status passou a “Pendente: vínculo em análise”. O app e a API aceitam até 10 MB, e não 5 MB. Ver [BUG-HU028-API-001](../api/issues/BUG-HU028-API-001-limite-de-5mb-nao-aplicado.md). Executado pelo testador em 06/10/2026. |
+| CT-HU028-UI-001 | Aviso de renovação após o login | Aluno com vínculo vencido | Login permitido e aviso destacado com a opção de renovar | ⏳ PENDENTE | Não executado. |
+| CT-HU028-UI-002 | Envio sem comprovante | Passo 4 sem arquivo | Bloquear e alertar que o comprovante é obrigatório | ⏳ PENDENTE | Não executado. |
+| CT-HU028-UI-003 | Arquivo inválido | `comprovante.docx`; `comprovante-grande.pdf` (8 MB) | Bloquear com “Formato inválido” / “Arquivo excede o limite de tamanho” | ⏳ PENDENTE | Não executado. |
 
 ### Seção B — Envio e status “Em análise”
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU028-UI-004 | Renovação válida | `comprovante.pdf` (2 MB) | “Comprovante enviado com sucesso”; status “Em análise” | ✅ APROVADO | Executado junto com o CT-005, após religar a conexão: a renovação foi enviada com o PDF de 2 MB, o status passou a “em análise” e o aluno entrou na fila do administrador (conferido no banco e na API). A confirmação foi o aviso rápido sem estilo, com texto diferente do AC-05 ([MELHORIA-HU028-UI-003](issues/MELHORIA-HU028-UI-003-confirmacao-do-envio-sem-estilo.md)). Confirmado pelo testador em 06/10/2026. |
-| CT-HU028-UI-005 | Falha de conexão no envio | Wi-Fi e dados móveis desligados no envio | Mensagem de falha; tela mantida para nova tentativa | ✅ APROVADO | Sem conexão, exibiu falha no envio por erro de conexão com o servidor, orientando verificar a internet; com a conexão de volta, o envio foi concluído sem refazer os passos. Confirmado pelo testador em 06/10/2026. |
-| CT-HU028-UI-006 | Agendamento bloqueado em análise | Aluno “Em análise”; aba Agenda e atalhos | Agendamento bloqueado com informativo | 🚫 BLOQUEADO | A funcionalidade de agendamento ainda não existe: a aba Agenda é uma tela provisória e os atalhos Agendar Transporte e Meus Agendamentos não abrem nada. Não há o que bloquear. Registrado em 06/10/2026. |
+| CT-HU028-UI-004 | Renovação válida | `comprovante.pdf` (2 MB) | “Comprovante enviado com sucesso”; status “Em análise” | ⏳ PENDENTE | Não executado. |
+| CT-HU028-UI-005 | Falha de conexão no envio | Wi-Fi e dados móveis desligados no envio | Mensagem de falha; tela mantida para nova tentativa | ⏳ PENDENTE | Não executado. |
+| CT-HU028-UI-006 | Agendamento bloqueado em análise | Aluno “Em análise”; aba Agenda e atalhos | Agendamento bloqueado com informativo | ⏳ PENDENTE | Não executado. |
 
 ### Seção C — Formulário da renovação e reenvio
 
@@ -56,9 +56,9 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU028-UI-007 | Dados atuais e validação nos passos | Passos 1 a 3; telefone `8599` no passo 3 | Campos preenchidos com os dados atuais; passo inválido não avança | ✅ APROVADO | Passos 1 a 3 vieram preenchidos com os dados atuais; telefone `8599` bloqueado com “Informe DDD e número com 9 dígitos” e máscara aplicada; com o número corrigido, avançou. Observação de UX: o teclado cobre o botão Próximo. Confirmado pelo testador em 06/10/2026. |
-| CT-HU028-UI-008 | Cancelar a renovação no meio | Passo 3 → X → Cancelar renovação? | Confirmação; nada enviado; status inalterado | ❌ REPROVADO | O X pediu confirmação e nada foi enviado (status continuou aprovado), mas ao abrir Renovar vínculo de novo a tela voltou exatamente no passo em que o aluno saiu, em vez de começar do zero. Ver [BUG-HU028-UI-008](issues/BUG-HU028-UI-008-renovacao-guarda-estado-anterior.md). Executado pelo testador em 06/10/2026. |
-| CT-HU028-UI-009 | Nova renovação estando em análise | Aluno “Em análise” abre Renovar vínculo | Informar que a renovação já está em análise e não permitir novo envio | ❌ REPROVADO | Com status em análise, Renovar vínculo abriu direto no passo 4, sem aviso; o reenvio foi aceito (HTTP 200 no log do backend) e o comprovante em análise foi substituído por um novo. Ver [BUG-HU028-API-003](../api/issues/BUG-HU028-API-003-renovacao-duplicada-substitui-comprovante.md) e [BUG-HU028-UI-008](issues/BUG-HU028-UI-008-renovacao-guarda-estado-anterior.md). Executado pelo testador em 06/10/2026. |
+| CT-HU028-UI-007 | Dados atuais e validação nos passos | Passos 1 a 3; telefone `8599` no passo 3 | Campos preenchidos com os dados atuais; passo inválido não avança | ⏳ PENDENTE | Não executado. |
+| CT-HU028-UI-008 | Cancelar a renovação no meio | Passo 3 → X → Cancelar renovação? | Confirmação; nada enviado; status inalterado | ⏳ PENDENTE | Não executado. |
+| CT-HU028-UI-009 | Nova renovação estando em análise | Aluno “Em análise” abre Renovar vínculo | Informar que a renovação já está em análise e não permitir novo envio | ⏳ PENDENTE | Não executado.
 
 ## Detalhamento dos casos
 
@@ -82,12 +82,8 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 **Resultado obtido**
 
-- Preparação: `validade_acesso` do aluno A ajustada para o dia anterior no banco local (restaurada após o caso).
-- Ao tocar em **Sou aluno**, o app exibiu o pop-up do app “Falha na autenticação — A validade de acesso da sua conta expirou.”, com o botão **Tentar novamente**. A mensagem é clara, mas o aluno é barrado no login. ❌
-- O aluno não chega à tela **Início** nem a **Perfil → Renovar vínculo**: não há como iniciar a renovação (AC-01, RN-013).
-- Mesma causa do CT-HU028-API-004 ([BUG-HU028-API-002](../api/issues/BUG-HU028-API-002-aluno-com-vinculo-vencido-nao-entra.md)): o backend recusa o login quando a validade venceu.
-- Execução confirmada pelo testador em 06/10/2026.
-- Status: ❌ Reprovado.
+- Não executado.
+- Status: ⏳ Pendente.
 
 ---
 
@@ -108,12 +104,8 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 **Resultado obtido**
 
-- No passo 4, sem anexar o comprovante de matrícula, o botão de envio continuou habilitado (azul).
-- Ao tocar, o envio foi bloqueado e o campo exibiu “Envie PDF ou imagem (PNG, JPG ou WEBP) de até 10 MB”. Nada foi enviado. ✅
-- Observações: o texto não diz que o comprovante é **obrigatório** (só orienta formato e tamanho) e informa limite de **10 MB**, enquanto o AC-03 define 5 MB — mesma divergência do CT-HU028-API-003 ([BUG-HU028-API-001](../api/issues/BUG-HU028-API-001-limite-de-5mb-nao-aplicado.md)), agora também no app (`fileSchema` em `frontend/src/schemas/alunoSchema.ts`). Registrado como melhoria: [MELHORIA-HU028-UI-002](issues/MELHORIA-HU028-UI-002-mensagem-e-limite-do-comprovante.md).
-- Passos 1 a 3 vieram preenchidos com os dados atuais do aluno (registrado também no CT-HU028-UI-007).
-- Execução confirmada pelo testador em 06/10/2026.
-- Status: ✅ Aprovado.
+- Não executado.
+- Status: ⏳ Pendente.
 
 ---
 
@@ -134,13 +126,8 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 **Resultado obtido**
 
-- `comprovante.docx`: aparece apagado no seletor do app **Arquivos** e não pode ser escolhido. ✅
-- `comprovante-grande.pdf` (8,4 MB): o app aceitou o anexo. Na primeira tentativa, a API recusou por outro motivo: “O semestre atual não pode ser maior que 1, considerando o período de ingresso” (dados antigos da conta: ingresso 2026.2 com semestre 6). O passo 3 deixou avançar com os dados incoerentes; o erro só apareceu no envio final.
-- Com o semestre corrigido para 1 no passo 3, o envio com o PDF de 8,4 MB foi **aceito**: apareceu um aviso rápido de sucesso (Snackbar preto, sem o estilo do app) e **Meu Perfil** passou a mostrar “Pendente: vínculo em análise”. O arquivo de 8 MB ficou salvo como comprovante (conferido no banco). ❌
-- O app (`fileSchema`, 10 MB) e a API (BUG-HU028-API-001, 10 MB) não aplicam o limite de 5 MB do AC-03.
-- Após o caso, o aluno A voltou para aprovado pela API, para seguir os demais casos.
-- Execução confirmada pelo testador em 06/10/2026.
-- Status: ❌ Reprovado — [BUG-HU028-API-001](../api/issues/BUG-HU028-API-001-limite-de-5mb-nao-aplicado.md).
+- Não executado.
+- Status: ⏳ Pendente.
 
 ### Seção B — Envio e status “Em análise”
 
@@ -163,11 +150,8 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 **Resultado obtido**
 
-- Executado na sequência do CT-HU028-UI-005, após religar a conexão, com `comprovante.pdf` (2 MB).
-- A renovação foi enviada: o comprovante salvo tem 2 MB, o status passou a `analise_renovacao` e o aluno aparece em `GET /usuarios/alunos?status=analise_renovacao` (fila do administrador). ✅
-- A confirmação foi um aviso rápido no rodapé, sem o estilo do app, que o testador não conseguiu ler; o texto do app é “Renovação de vínculo solicitada com sucesso”, diferente do AC-05 (“Comprovante enviado com sucesso”). Registrado na [MELHORIA-HU028-UI-003](issues/MELHORIA-HU028-UI-003-confirmacao-do-envio-sem-estilo.md).
-- Execução confirmada pelo testador em 06/10/2026.
-- Status: ✅ Aprovado.
+- Não executado.
+- Status: ⏳ Pendente.
 
 ---
 
@@ -190,11 +174,8 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 **Resultado obtido**
 
-- Passos 1 a 4 preenchidos, com `comprovante.pdf` anexado; Wi-Fi e dados móveis desligados antes de **Concluir**.
-- O app exibiu falha no envio por erro de conexão com o servidor, orientando verificar a internet, sem travar. ✅
-- A tela continuou no passo 4 com os dados e o arquivo; com a conexão religada, **Concluir** enviou a renovação sem refazer os passos (ver CT-HU028-UI-004). ✅
-- Execução confirmada pelo testador em 06/10/2026.
-- Status: ✅ Aprovado.
+- Não executado.
+- Status: ⏳ Pendente.
 
 ---
 
@@ -214,11 +195,8 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 **Resultado obtido**
 
-- Com o aluno em análise, a aba **Agenda** não exibe nenhuma função de agendamento, e os atalhos **Agendar Transporte** e **Meus Agendamentos** do **Início** não abrem nada.
-- No código, `frontend/src/app/(aluno)/agenda.tsx` é uma tela provisória (só o título) e os atalhos não têm ação.
-- Sem a funcionalidade de agendamento, não é possível verificar o bloqueio do AC-06 (RN-011). Reexecutar quando o agendamento existir.
-- Registrado em 06/10/2026.
-- Status: 🚫 Bloqueado.
+- Não executado.
+- Status: ⏳ Pendente.
 
 ### Seção C — Formulário da renovação e reenvio
 
@@ -240,12 +218,8 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 **Resultado obtido**
 
-- Os passos 1 a 3 vieram preenchidos com os dados atuais do aluno. ✅
-- Passo 3 com telefone `8599`: o avanço foi bloqueado com “Informe DDD e número com 9 dígitos”, e a máscara foi aplicada corretamente. ✅
-- Com o telefone corrigido, o passo avançou. ✅
-- Observação de UX: o teclado aberto cobre o botão **Próximo**; é preciso tocar em outra parte da tela para fechar o teclado antes de avançar (mesmo padrão do BUG-HU001-UI-007, teclado cobrindo campos no cadastro).
-- Execução confirmada pelo testador em 06/10/2026.
-- Status: ✅ Aprovado.
+- Não executado.
+- Status: ⏳ Pendente.
 
 ---
 
@@ -268,12 +242,8 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 **Resultado obtido**
 
-- O **X** pediu confirmação (“Cancelar renovação?”); ao confirmar, o app voltou ao painel sem enviar nada, e o status continuou aprovado. ✅
-- Ao abrir **Renovar vínculo** de novo, a tela voltou **exatamente no passo em que o aluno tinha saído**, em vez de começar pela tela de aviso. ❌
-- Observação: a seta de voltar retorna um passo (do 3 para o 2, e assim por diante); no passo 1, ela faz o mesmo que o **X**.
-- Mesma causa da observação registrada após o CT-003 (tela que guarda o estado anterior). Uma nova sessão (sair e entrar de novo) limpa o estado: após um novo login, a tela abriu sem o comprovante anexado.
-- Execução confirmada pelo testador em 06/10/2026.
-- Status: ❌ Reprovado — [BUG-HU028-UI-008](issues/BUG-HU028-UI-008-renovacao-guarda-estado-anterior.md).
+- Não executado.
+- Status: ⏳ Pendente.
 
 ---
 
@@ -293,27 +263,18 @@ Executar o CT-007 e o CT-008 **antes** do CT-004, e o CT-009 **depois** dele.
 
 **Resultado obtido**
 
-- Com o status em análise (após o CT-004), **Renovar vínculo** abriu direto no **passo 4**, com o comprovante anterior anexado, e sem aviso de que já existe renovação em análise. ❌
-- Ao tocar em enviar, apareceu de novo o aviso rápido de sucesso. O testador não viu a resposta no DevTools, mas o log do backend registra `PUT /alunos/renovar-vinculo` com HTTP 200, e o comprovante em análise foi **substituído** por um novo registro (conferido no banco). ❌
-- Mesmo defeito do CT-HU028-API-007 (a API aceita renovação duplicada) somado ao estado retido da tela (BUG-HU028-UI-008).
-- Execução confirmada pelo testador em 06/10/2026.
-- Status: ❌ Reprovado — [BUG-HU028-API-003](../api/issues/BUG-HU028-API-003-renovacao-duplicada-substitui-comprovante.md).
+- Não executado.
+- Status: ⏳ Pendente.
 
 ## Defeitos encontrados
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| CT-HU028-UI-009 | Com status em análise, o app permite e a API aceita nova renovação, substituindo o comprovante em análise. | [BUG-HU028-API-003](../api/issues/BUG-HU028-API-003-renovacao-duplicada-substitui-comprovante.md) — #133 |
-| CT-HU028-UI-008 | A renovação guarda o estado anterior: após cancelar ou concluir, reabre no mesmo passo e com o comprovante já anexado. | [BUG-HU028-UI-008](issues/BUG-HU028-UI-008-renovacao-guarda-estado-anterior.md) — #135 |
-| CT-HU028-UI-003 | Comprovante de 8,4 MB aceito pelo app e pela API (limite real de 10 MB, requisito de 5 MB). | [BUG-HU028-API-001](../api/issues/BUG-HU028-API-001-limite-de-5mb-nao-aplicado.md) — #131 |
-| CT-HU028-UI-003 | Melhoria: a confirmação de envio é um aviso rápido sem estilo (Snackbar); padronizar com o pop-up do app. | [MELHORIA-HU028-UI-003](issues/MELHORIA-HU028-UI-003-confirmacao-do-envio-sem-estilo.md) — #137 |
-| CT-HU028-UI-002 | Melhoria: a mensagem sem comprovante não diz que é obrigatório e cita 10 MB (requisito: 5 MB). | [MELHORIA-HU028-UI-002](issues/MELHORIA-HU028-UI-002-mensagem-e-limite-do-comprovante.md) — #136 |
-| CT-HU028-UI-001 | O aluno com vínculo vencido é barrado no login e não consegue renovar. | BUG-HU028-API-002 (mesma causa, suíte de API) — #132 |
+| — | Nenhuma execução realizada. | — |
 
 ## Observações gerais
 
 - Referências: [HU-028, seção 7.2.8](../../../../../docs/requisitos.md), [cenários BDD](../../../../../bdd/features/epico-01/HU-028.feature), [tela Renovar vínculo](../../../../../frontend/src/app/%28aluno%29/renovar-vinculo.tsx) e [suíte de API](../api/API-HU-028.md).
-- Observação do testador (após o envio do CT-003): ao abrir **Renovar vínculo** logo depois do sucesso, a tela voltou direto no **passo 4**, com os arquivos já anexados; saindo pela seta e entrando de novo, voltou ao passo 1, mas o comprovante anterior continuou anexado. A tela guarda o estado de uma renovação já enviada (mesmo padrão da #125: telas ocultas dentro das abas não são desmontadas). Isso facilita reenviar o mesmo arquivo sem perceber — ver CT-HU028-UI-009.
 - Divergência de escopo: o requisito fala apenas em enviar o comprovante, mas o app pede para revisar todos os dados do cadastro em 4 passos. Registrar a percepção de uso e levar ao líder.
 - A aprovação da renovação pelo administrador pertence à HU-027 e fica fora desta suíte.
 - Restaurar o status e a validade do aluno A ao final (pelo administrador ou pelo banco local). Ocultar dados pessoais e documentos nas evidências.
