@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView, Modal as RNModal } from 'react-native';
-import { Text, TextInput, Button, useTheme, Portal } from 'react-native-paper';
-import { useRouter } from 'expo-router';
+import { Text, TextInput, Button, Portal } from 'react-native-paper';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft, Phone, ChevronDown } from 'lucide-react-native';
@@ -12,6 +12,7 @@ import { userService } from '@/services/userService';
 import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 import { abreviarParaLargura } from '../../utils/abreviarTexto';
+import { formatarTelefone } from '../../utils/formatarTelefone';
 
 interface SelectInputProps {
   label: string;
@@ -25,7 +26,6 @@ function CustomSelect({ label, value, options, onSelect, error }: SelectInputPro
   const [visible, setVisible] = useState(false);
   const [largura, setLargura] = useState(0);
   const texto = value || 'Selecionar';
-  const theme = useTheme();
 
   return (
     <View style={styles.selectContainer}>
@@ -68,7 +68,7 @@ function CustomSelect({ label, value, options, onSelect, error }: SelectInputPro
                   >
                     <Text variant="bodyLarge" style={[
                       styles.optionText,
-                      value === opt && { color: theme.colors.primary, fontWeight: 'bold' }
+                      value === opt && { color: '#3E5F90', fontWeight: 'bold' }
                     ]}>
                       {opt}
                     </Text>
@@ -84,7 +84,6 @@ function CustomSelect({ label, value, options, onSelect, error }: SelectInputPro
 }
 
 export default function EditarPerfilScreen() {
-  const theme = useTheme();
   const router = useRouter();
   const { user, updateUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -96,6 +95,8 @@ export default function EditarPerfilScreen() {
     title: string;
     message: string;
     confirmText?: string;
+    cancelText?: string;
+    confirmColor?: string;
     onConfirm?: () => void;
   }>({
     visible: false,
@@ -111,33 +112,54 @@ export default function EditarPerfilScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const { control, handleSubmit, formState: { errors }, reset } = useForm<EditarPerfilFormData>({
+  const { control, handleSubmit, formState: { errors, isDirty }, reset } = useForm<EditarPerfilFormData>({
     resolver: zodResolver(editarPerfilSchema),
     defaultValues: {
-      telefone: user?.telefone || '',
+      telefone: formatarTelefone(user?.telefone) || '',
       bairro: user?.bairro || 'Croatá',
     }
   });
 
-  // Carrega dados atualizados do perfil ao entrar
-  useEffect(() => {
-    async function loadProfile() {
-      if (!user) return;
-      setIsLoading(true);
-      try {
-        const profile = await userService.getProfile();
-        reset({
-          telefone: profile.telefone || user.telefone || '',
-          bairro: profile.bairro_id || user.bairro || 'Croatá',
-        });
-      } catch (error) {
-        console.error('Erro ao carregar perfil:', error);
-      } finally {
-        setIsLoading(false);
+  // Carrega dados atualizados do perfil ao focar na tela (#125)
+  useFocusEffect(
+    React.useCallback(() => {
+      async function loadProfile() {
+        if (!user) return;
+        setIsLoading(true);
+        try {
+          const profile = await userService.getProfile();
+          reset({
+            telefone: formatarTelefone(profile.telefone || user.telefone) || '',
+            bairro: profile.bairro_id || user.bairro || 'Croatá',
+          });
+        } catch (error) {
+          console.error('Erro ao carregar perfil:', error);
+        } finally {
+          setIsLoading(false);
+        }
       }
+      loadProfile();
+    }, [user, reset])
+  );
+
+  const handleBack = () => {
+    if (isDirty) {
+      showPopup({
+        type: 'warning',
+        title: 'Sair desta tela?',
+        message: 'As alterações não salvas serão perdidas.',
+        confirmText: 'Sim, sair',
+        cancelText: 'Continuar aqui',
+        confirmColor: '#B00020',
+        onConfirm: () => {
+          closePopup();
+          router.replace('/(aluno)/perfil');
+        },
+      });
+    } else {
+      router.replace('/(aluno)/perfil');
     }
-    loadProfile();
-  }, []);
+  };
 
   const onSubmit = async (data: EditarPerfilFormData) => {
     setIsLoading(true);
@@ -159,7 +181,7 @@ export default function EditarPerfilScreen() {
         confirmText: 'OK',
         onConfirm: () => {
           closePopup();
-          router.back();
+          router.replace('/(aluno)/perfil');
         },
       });
     } catch (error: any) {
@@ -179,7 +201,7 @@ export default function EditarPerfilScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={handleBack}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Editar Perfil</Text>
@@ -192,6 +214,8 @@ export default function EditarPerfilScreen() {
         title={popup.title}
         message={popup.message}
         confirmText={popup.confirmText}
+        cancelText={popup.cancelText}
+        confirmColor={popup.confirmColor}
         onConfirm={popup.onConfirm}
         onDismiss={closePopup}
       />
@@ -202,12 +226,19 @@ export default function EditarPerfilScreen() {
           <Controller
             control={control}
             name="telefone"
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
                 label="Telefone (WhatsApp) *"
                 mode="outlined"
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(text) => onChange(formatarTelefone(text))}
+                onBlur={() => {
+                  onBlur();
+                  if (value) {
+                    onChange(formatarTelefone(value));
+                  }
+                }}
+                maxLength={15}
                 error={!!errors.telefone}
                 keyboardType="phone-pad"
                 left={<TextInput.Icon icon={() => <Phone size={20} color="#666" />} />}
