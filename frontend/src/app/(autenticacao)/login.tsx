@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, TouchableOpacity } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { TextInput, Button, Text, useTheme } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,8 +13,7 @@ import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 export default function LoginScreen() {
   const router = useRouter();
   const theme = useTheme();
-  const { perfil } = useLocalSearchParams();
-  const { signIn, isLoading } = useAuth();
+  const { setPendingCredentials, isLoading } = useAuth();
   const [verSenha, setVerSenha] = useState(false);
 
   // Estado do Pop-up
@@ -71,10 +70,9 @@ export default function LoginScreen() {
   });
 
   const onSubmit = async (dados: LoginFormData) => {
-    router.push({
-      pathname: '/(autenticacao)/selecao-perfil',
-      params: { email: dados.email, senha: dados.senha }
-    });
+    const emailLimpo = (dados.email || '').trim().toLowerCase();
+    setPendingCredentials({ email: emailLimpo, senha: dados.senha });
+    router.push('/(autenticacao)/selecao-perfil');
   };
 
   return (
