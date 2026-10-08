@@ -79,6 +79,12 @@ export default function CadastrarAdministradorScreen() {
     return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
   };
 
+  const concluirEVoltar = () => {
+    closePopup();
+    reset({ nome: '', email: '' });
+    router.replace('/(administrador)/administradores');
+  };
+
   const handlePromoverSubmit = () => {
     if (!alunoSelecionado) return;
 
@@ -99,11 +105,7 @@ export default function CadastrarAdministradorScreen() {
             title: 'Operação realizada com sucesso',
             message: `${alunoSelecionado.nome} agora é administrador.`,
             confirmText: 'OK',
-            onConfirm: () => {
-              closePopup();
-              reset({ nome: '', email: '' });
-              router.replace('/(administrador)/administradores');
-            },
+            onConfirm: concluirEVoltar,
           });
         } catch (error: any) {
           setIsLoading(false);
@@ -137,11 +139,7 @@ export default function CadastrarAdministradorScreen() {
             title: 'Operação realizada com sucesso',
             message: 'O novo administrador foi cadastrado com sucesso.',
             confirmText: 'OK',
-            onConfirm: () => {
-              closePopup();
-              reset({ nome: '', email: '' });
-              router.replace('/(administrador)/administradores');
-            },
+            onConfirm: concluirEVoltar,
           });
         } catch (error: any) {
           setIsLoading(false);
@@ -184,7 +182,7 @@ export default function CadastrarAdministradorScreen() {
         cancelText={popup.cancelText}
         confirmColor={popup.confirmColor}
         onConfirm={popup.onConfirm}
-        onDismiss={closePopup}
+        onDismiss={popup.type === 'success' ? concluirEVoltar : closePopup}
       />
 
       {/* Abas */}

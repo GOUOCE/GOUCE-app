@@ -113,37 +113,13 @@ export default function AdministradoresListScreen() {
     });
   };
 
-  const handleReativar = (admin: AdministradorItem) => {
-    const primeiroNome = admin.nome ? admin.nome.split(' ')[0] : 'o administrador';
-
+  const handleReativar = (_admin: AdministradorItem) => {
     showPopup({
       type: 'info',
-      title: `Reativar ${primeiroNome}?`,
-      message: 'O administrador voltará a ter acesso ao sistema.',
-      confirmText: 'Reativar',
-      cancelText: 'Cancelar',
-      onConfirm: async () => {
-        closePopup();
-        try {
-          await adminService.reativarAdministrador(admin.id, admin.nome, admin.email);
-          carregarAdministradores();
-          showPopup({
-            type: 'success',
-            title: 'Operação realizada com sucesso',
-            message: 'O administrador foi reativado com sucesso.',
-            confirmText: 'OK',
-            onConfirm: closePopup,
-          });
-        } catch (error: any) {
-          const msg = getErrorMessage(error, 'Erro ao reativar administrador.');
-          showPopup({
-            type: 'error',
-            title: 'Erro',
-            message: msg,
-            confirmText: 'Entendido',
-          });
-        }
-      },
+      title: 'Função indisponível',
+      message: 'A reativação de administradores estará disponível em breve.',
+      confirmText: 'Entendido',
+      onConfirm: closePopup,
     });
   };
 

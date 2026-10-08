@@ -78,6 +78,7 @@ export default function EditarAdministradorScreen() {
   );
 
   const voltarParaListagem = () => {
+    closePopup();
     router.replace('/(administrador)/administradores');
   };
 
@@ -90,10 +91,7 @@ export default function EditarAdministradorScreen() {
         confirmText: 'Sim, sair',
         cancelText: 'Continuar aqui',
         confirmColor: '#B00020',
-        onConfirm: () => {
-          closePopup();
-          voltarParaListagem();
-        },
+        onConfirm: voltarParaListagem,
       });
     } else {
       voltarParaListagem();
@@ -112,10 +110,7 @@ export default function EditarAdministradorScreen() {
         title: 'Operação realizada com sucesso',
         message: 'As alterações do administrador foram salvas.',
         confirmText: 'OK',
-        onConfirm: () => {
-          closePopup();
-          voltarParaListagem();
-        },
+        onConfirm: voltarParaListagem,
       });
     } catch (error: any) {
       setIsLoading(false);
@@ -156,7 +151,7 @@ export default function EditarAdministradorScreen() {
         cancelText={popup.cancelText}
         confirmColor={popup.confirmColor}
         onConfirm={popup.onConfirm}
-        onDismiss={closePopup}
+        onDismiss={popup.type === 'success' ? voltarParaListagem : closePopup}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
