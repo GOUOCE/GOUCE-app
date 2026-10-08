@@ -54,13 +54,6 @@ export default function AnalisarSolicitacaoScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const getIniciais = (nome?: string) => {
-    if (!nome) return 'AL';
-    const partes = nome.trim().split(/\s+/);
-    if (partes.length === 1) return partes[0].substring(0, 2).toUpperCase();
-    return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
-  };
-
   useEffect(() => {
     async function carregarDetalhes() {
       if (!id) return;
@@ -171,7 +164,7 @@ export default function AnalisarSolicitacaoScreen() {
           'ngrok-skip-browser-warning': 'true',
         },
       }
-    : null;
+    : { uri: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=200&auto=format&fit=crop' };
 
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
@@ -197,16 +190,7 @@ export default function AnalisarSolicitacaoScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Foto e Status */}
         <View style={styles.profileSection}>
-          {imageSource ? (
-            <Avatar.Image size={110} source={imageSource} style={styles.avatar} />
-          ) : (
-            <Avatar.Text
-              size={110}
-              label={getIniciais(aluno?.nome)}
-              style={[styles.avatar, { backgroundColor: '#3E5F90' }]}
-              labelStyle={{ color: '#FFF', fontSize: 32, fontWeight: 'bold' }}
-            />
-          )}
+          <Avatar.Image size={110} source={imageSource} style={styles.avatar} />
           <Text variant="titleLarge" style={styles.userName}>{aluno?.nome || 'Carregando...'}</Text>
           <Surface style={styles.statusBadge} elevation={0}>
             <Text style={styles.statusText}>Pendente: vínculo em análise</Text>

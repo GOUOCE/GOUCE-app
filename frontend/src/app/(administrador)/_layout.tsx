@@ -10,7 +10,7 @@ function AdminTabBar({ state, navigation, descriptors }: any) {
   return (
     <View style={styles.tabBar}>
       {state.routes.map((route: any, index: number) => {
-        // Filtra strictamente apenas as 4 abas oficiais do protótipo
+        // Se a rota não for uma das 4 abas oficiais, ignora totalmente na renderização do menu
         if (!TABS_EXIBIDAS.includes(route.name)) {
           return null;
         }
