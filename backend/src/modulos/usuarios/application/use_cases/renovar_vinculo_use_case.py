@@ -16,9 +16,10 @@ from src.modulos.usuarios.application.use_cases.validar_etapa_3_use_case import 
 )
 from src.modulos.usuarios.application.use_cases.validar_etapa_4_use_case import (
     ValidarEtapa4UsuarioUseCase,
+    validar_regras_arquivo as validar_regras_comprovante,
 )
 from src.modulos.usuarios.application.use_cases.validar_etapa_1_use_case import (
-    validar_regras_arquivo,
+    validar_regras_arquivo as validar_regras_foto,
 )
 from src.modulos.usuarios.application.dtos.usuario_dto import (
     ValidarEtapa2CadastroUsuarioDTO,
@@ -60,7 +61,7 @@ class RenovarVinculoUseCase:
             erros.append({"field": "nome", "message": erro_nome})
 
         if arquivo_foto:
-            erro_foto = validar_regras_arquivo(
+            erro_foto = validar_regras_foto(
                 arquivo_foto[0], arquivo_foto[1], arquivo_foto[2]
             )
             if erro_foto:
@@ -95,12 +96,20 @@ class RenovarVinculoUseCase:
         if not arquivo_matricula:
             erros.append({"field": "comprovante_matricula", "message": "Comprovante de matrícula é obrigatório"})
         else:
-            erro_mat = validar_regras_arquivo(arquivo_matricula[0], arquivo_matricula[1], arquivo_matricula[2])
+            erro_mat = validar_regras_comprovante(
+                arquivo_matricula[0],
+                arquivo_matricula[1],
+                arquivo_matricula[2],
+            )
             if erro_mat:
                 erros.append({"field": "comprovante_matricula", "message": erro_mat})
 
         if arquivo_residencia:
-            erro_res = validar_regras_arquivo(arquivo_residencia[0], arquivo_residencia[1], arquivo_residencia[2])
+            erro_res = validar_regras_comprovante(
+                arquivo_residencia[0],
+                arquivo_residencia[1],
+                arquivo_residencia[2],
+            )
             if erro_res:
                 erros.append({"field": "comprovante_residencia", "message": erro_res})
 
