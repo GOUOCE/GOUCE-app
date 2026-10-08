@@ -14,7 +14,7 @@ interface AuthContextData {
   clearPendingCredentials: () => void;
   signIn: (email: string, senha: string, role?: UserRole) => Promise<void>;
   signOut: () => Promise<void>;
-  setUserAndToken: (user: User, token: string) => Promise<void>;
+  setUserAndToken: (user: User, token: string, refreshToken?: string) => Promise<void>;
   updateUser: (data: Partial<User>) => Promise<void>;
 }
 
@@ -67,15 +67,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (user) {
-      // Se o cadastro está pendente, força a tela de análise (HU-001)
       const isAtPendingScreen = segments.includes('cadastro-pendente');
       if (user.status === 'pendente' && !isAtPendingScreen) {
         router.replace('/(autenticacao)/cadastro-pendente');
         return;
       }
 
+      const isUserActive = ['ativado', 'analise_renovacao', 'expirado', 'vencido'].includes(user.status || '');
+
       // Restauração transparente da sessão ao abrir o app nas telas de boas-vindas / login (CT-HU002-UI-015)
-      if (isRootOrAuth && user.status === 'ativado') {
+      if (isRootOrAuth && isUserActive) {
         const root = user.role === 'ADMINISTRADOR' ? '/(administrador)/home' :
                      user.role === 'MOTORISTA' ? '/(representante)/home' : '/(aluno)/home';
         router.replace(root);
@@ -86,14 +87,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                           (user.role === 'MOTORISTA' && firstSegment === '(representante)') ||
                           (user.role === 'ALUNO' && firstSegment === '(aluno)');
 
-      if (isProtected && !roleMatches && user.status === 'ativado') {
+      if (isProtected && !roleMatches && isUserActive) {
         router.replace('/acesso-negado');
       }
     }
   }, [user, segments, isLoading]);
 
-  async function setUserAndToken(userData: User, userToken: string) {
+  async function setUserAndToken(userData: User, userToken: string, refreshToken?: string) {
     await AsyncStorage.setItem('@GOUOCE:token', userToken);
+    if (refreshToken) {
+      await AsyncStorage.setItem('@GOUOCE:refreshToken', refreshToken);
+    }
     await AsyncStorage.setItem('@GOUOCE:user', JSON.stringify(userData));
     setUser(userData);
     setToken(userToken);
@@ -134,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         foto_perfil: response.usuario.foto_perfil,
       };
 
-      await setUserAndToken(userData, response.token_acesso);
+      await setUserAndToken(userData, response.token_acesso, response.token_atualizacao);
       setPendingCredentials(null);
 
       const root = userData.role === 'ADMINISTRADOR' ? '/(administrador)/home' :
@@ -149,6 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signOut() {
     await AsyncStorage.removeItem('@GOUOCE:token');
+    await AsyncStorage.removeItem('@GOUOCE:refreshToken');
     await AsyncStorage.removeItem('@GOUOCE:user');
     setPendingCredentials(null);
     setUser(null);
