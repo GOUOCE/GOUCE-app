@@ -24,11 +24,15 @@ export interface DetalhesSolicitacaoItem extends SolicitacaoItem {
 }
 
 export const solicitacaoService = {
-  async listarSolicitacoes(status = 'pendente'): Promise<SolicitacaoItem[]> {
-    const response = await api.get<any[]>('/usuarios/alunos', {
-      params: { status },
-    });
-    return response.data.map((item) => ({
+  async listarSolicitacoes(): Promise<SolicitacaoItem[]> {
+    const [resPendentes, resRenovacoes] = await Promise.all([
+      api.get<any[]>('/usuarios/alunos', { params: { status: 'pendente' } }),
+      api.get<any[]>('/usuarios/alunos', { params: { status: 'analise_renovacao' } }),
+    ]);
+
+    const lista = [...(resPendentes.data || []), ...(resRenovacoes.data || [])];
+
+    return lista.map((item) => ({
       id: item.id || item.aluno_id,
       aluno_id: item.aluno_id || item.id,
       nome: item.nome || item.nome_completo,

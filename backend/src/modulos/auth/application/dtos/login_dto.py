@@ -4,7 +4,7 @@ from pydantic import BaseModel, EmailStr, Field, ConfigDict
 class LoginDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    email: EmailStr
+    email: str
     senha: str
     lembrar_me: bool = False
 
