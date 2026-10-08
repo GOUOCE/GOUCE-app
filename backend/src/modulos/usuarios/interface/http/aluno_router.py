@@ -14,6 +14,7 @@ from src.shared.auth.dependencies import (
     require_roles,
     verify_any_user,
     verify_student_standard_access,
+    verify_student_renewal_access,
 )
 from src.shared.auth.jwt_service import JWTService
 from src.shared.security.argon2_hasher import Argon2PasswordHasher
@@ -333,7 +334,7 @@ async def renovar_vinculo(
     comprovante_matricula: UploadFile = File(...),
     comprovante_residencia: UploadFile | str | None = File(None),
     foto_perfil: UploadFile | str | None = File(None),
-    current_user: Annotated[dict, Depends(verify_student_standard_access)] = None,
+    current_user: Annotated[dict, Depends(verify_student_renewal_access)] = None,
     repository=Depends(get_repository),
     arquivo_repository=Depends(get_arquivo_repository),
     storage_service=Depends(get_storage_service),
