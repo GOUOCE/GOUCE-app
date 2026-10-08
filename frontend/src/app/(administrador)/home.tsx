@@ -1,21 +1,48 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, useTheme } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import { Contact, UserCog } from 'lucide-react-native';
-import { useAuth } from '@contexts/AuthContext';
 import { SummaryCard } from '@/components/dashboard/SummaryCard';
 import { ActionItem } from '@/components/dashboard/ActionItem';
+import { useRouter } from 'expo-router';
+import { useAuth } from '@contexts/AuthContext';
+import { api } from '@/api/api';
 
 export default function AdminHomeScreen() {
-  const theme = useTheme();
+  const router = useRouter();
   const { user } = useAuth();
+
+  const [qtdPendentes, setQtdPendentes] = useState<number>(0);
+  const [qtdAtivos, setQtdAtivos] = useState<number>(0);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function carregarResumoReal() {
+      try {
+        const [resPendentes, resAtivos] = await Promise.all([
+          api.get<any[]>('/usuarios/alunos', { params: { status: 'pendente' } }),
+          api.get<any[]>('/usuarios/alunos', { params: { status: 'ativado' } }),
+        ]);
+        if (isMounted) {
+          setQtdPendentes(resPendentes.data?.length || 0);
+          setQtdAtivos(resAtivos.data?.length || 0);
+        }
+      } catch (err) {
+        console.warn('Erro ao carregar resumo do painel:', err);
+      }
+    }
+    carregarResumoReal();
+    return () => { isMounted = false; };
+  }, []);
+
+  const primeiroNome = user?.name ? user.name.split(' ')[0] : 'Administrador';
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Saudação */}
       <View style={styles.header}>
         <Text variant="displaySmall" style={styles.greeting}>
-          Olá, Clidenor!
+          Olá, {primeiroNome}!
         </Text>
       </View>
 
@@ -23,8 +50,8 @@ export default function AdminHomeScreen() {
       <View style={styles.section}>
         <Text variant="titleMedium" style={styles.sectionTitle}>Resumo de hoje</Text>
         <View style={styles.summaryGrid}>
-          <SummaryCard value={3} label="Solicitações pendentes" />
-          <SummaryCard value={42} label="Alunos ativos" />
+          <SummaryCard value={qtdPendentes} label="Solicitações pendentes" />
+          <SummaryCard value={qtdAtivos} label="Alunos ativos" />
         </View>
       </View>
 
@@ -36,7 +63,8 @@ export default function AdminHomeScreen() {
           title="Fila de solicitações"
           subtitle="aprovar/reprovar cadastros"
           Icone={Contact}
-          badgeCount={3}
+          badgeCount={qtdPendentes > 0 ? qtdPendentes : undefined}
+          onPress={() => router.push('/(administrador)/solicitacoes')}
         />
 
         <View style={styles.divider} />
@@ -44,6 +72,7 @@ export default function AdminHomeScreen() {
         <ActionItem
           title="Gestão de administradores"
           Icone={UserCog}
+          onPress={() => router.push('/(administrador)/administradores')}
         />
       </View>
     </ScrollView>
