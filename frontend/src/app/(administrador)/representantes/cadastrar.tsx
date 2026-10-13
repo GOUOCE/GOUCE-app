@@ -13,7 +13,6 @@ export default function CadastrarRepresentanteScreen() {
   const [instituicao, setInstituicao] = useState('UFC - Campus Quixadá');
   const [modalInstVisible, setModalInstVisible] = useState(false);
   const [busca, setBusca] = useState('');
-  const [alunosElegiveis, setAlunosElegiveis] = useState<AlunoElegivelItem[]>([]);
   const [alunoSelecionado, setAlunoSelecionado] = useState<AlunoElegivelItem | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -44,20 +43,19 @@ export default function CadastrarRepresentanteScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const carregarAlunos = async () => {
-    try {
-      const lista = await representanteService.listarAlunosElegiveis(instituicao, busca);
-      setAlunosElegiveis(lista);
-      if (!alunoSelecionado && lista.length > 0) {
-        setAlunoSelecionado(lista[0]);
-      }
-    } catch (err) {
-      console.warn('Erro ao carregar alunos elegíveis:', err);
-    }
-  };
-
   useEffect(() => {
-    carregarAlunos();
+    let isMounted = true;
+    representanteService.listarAlunosElegiveis(instituicao, busca).then((lista) => {
+      if (isMounted) {
+        if (lista.length > 0) {
+          setAlunoSelecionado(lista[0]);
+        } else {
+          setAlunoSelecionado(null);
+        }
+      }
+    }).catch((err) => console.warn('Erro ao carregar alunos elegíveis:', err));
+
+    return () => { isMounted = false; };
   }, [instituicao, busca]);
 
   const handleTornarRepresentante = () => {

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, TextInput, Snackbar } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { ChevronLeft, Plus, Search, UserX, ChevronRight, X, ChevronRight as ChevronRightIcon } from 'lucide-react-native';
+import { ChevronLeft, Plus, Search, UserX, X, ChevronRight as ChevronRightIcon } from 'lucide-react-native';
 
 import { representanteService, RepresentanteItem } from '@/services/representanteService';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
@@ -39,24 +39,20 @@ export default function RepresentantesListScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const carregarRepresentantes = async () => {
+  const carregarRepresentantes = React.useCallback(async () => {
     try {
       const lista = await representanteService.listarRepresentantes(busca);
       setRepresentantes(lista.filter((r) => r.ativo));
     } catch (err) {
       console.warn('Erro ao carregar representantes:', err);
     }
-  };
+  }, [busca]);
 
   useFocusEffect(
     React.useCallback(() => {
       carregarRepresentantes();
-    }, [busca])
+    }, [carregarRepresentantes])
   );
-
-  useEffect(() => {
-    carregarRepresentantes();
-  }, [busca]);
 
   const handleRevogar = (rep: RepresentanteItem) => {
     showPopup({
