@@ -42,7 +42,7 @@ export default function GestaoCadastrosScreen() {
             icon={MapPin}
             title="Bairros e pontos de parada"
             subtitle="Locais de embarque"
-            onPress={() => router.push('/(administrador)/cadastros/pontos' as any)}
+            onPress={() => router.push('/(administrador)/bairros' as any)}
           />
           <View style={styles.divider} />
           <SectionItem

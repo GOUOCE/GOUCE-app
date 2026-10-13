@@ -1,38 +1,42 @@
 ## 📋 Descrição
 
-Resolução de inconsistências de navegação e exibição no painel administrativo e na renovação de vínculo de alunos: exibição da foto de perfil do aluno na análise de solicitações, garantia estrita dos 4 botões no menu inferior do administrador, dinâmica do cartão de aviso de renovação e ajuste de URL base da API.
+Implementação e integração completas do frontend para a **HU-007 (Gerenciamento de Bairros e Pontos de Parada)**, incluindo as telas de listagem, cadastro e edição de bairros com pontos de parada associados, validação de nome único, bloqueio de inativação para bairros vinculados a rotas ativas e suíte de testes unitários com 100% de aprovação, em conformidade com o `requisitos.md`, o `guia-validacao-formularios.md` e os protótipos visuais.
 
 ## 🎯 História de Usuário / Épico
 
-- HUs: **HU-006, HU-027, HU-028** (Gestão Administrativa, Avaliação de Solicitações e Renovação de Vínculo)
+- HU/EP: **HU-007** (Gerenciamento de Bairros e Pontos de Parada)
 
-## 🔨 Correções e Melhorias Realizadas
+## 🔨 Alterações Realizadas (`HU-007`)
 
-- **Exibição da Foto do Aluno na Análise de Solicitações (`HU-027`):**
-  - Adicionado o token JWT de autorização (`?token=${token}` e cabeçalho `Authorization: Bearer ${token}`) para recuperar e renderizar a imagem do avatar armazenada no MinIO/FastAPI.
-  - Fallback gracioso para avatar circular com as iniciais estilizadas do nome do aluno (ex: *"MP"*) caso o aluno não possua foto cadastrada.
-- **Barra de Navegação Inferior do Administrador (`HU-006`):**
-  - Filtro rígido no componente de renderização da barra (`AdminTabBar`) para garantir **exatamente os 4 botões do protótipo**: *Painel*, *Cadastros*, *Logística* e *Mais*, ocultando qualquer rota adicional do Expo Router.
-- **Cartão Dinâmico de Aviso de Renovação (`HU-028`):**
-  - Renderização condicional do cartão de aviso em `renovar-vinculo.tsx`: exibe em azul suave *"Vínculo institucional ativo"* para alunos aprovados ativos (`status === 'ativado'`), reservando o aviso vermelho de vínculo expirado para contas cuja validade de acesso de 6 meses realmente expirou.
-- **Conectividade de Rede no Expo Go (`api.ts`):**
-  - Resolução dinâmica da URL base da API utilizando o IP da máquina local via Metro (`Constants.expoConfig?.hostUri`), permitindo requisições de imagens e dados no celular físico e emulador.
+- **Tela de Listagem (`bairros/index.tsx`):**
+  - Exibição de bairros ativos e inativos com suas respectivas contagens de pontos de parada.
+  - Alternador de exibição de inativos, busca por nome e ações de edição (`Pencil`), inativação (`Trash2`) e reativação (`RotateCcw`).
+  - **Bloqueio de Rota Ativa:** Ao tentar inativar um bairro atrelado a uma rota ativa (ex: *Centro*), exibe o pop-up com a mensagem do requisito *"Este bairro não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar."*.
+- **Tela de Cadastro de Bairro (`bairros/cadastrar.tsx`):**
+  - Campo obrigatório de Nome do Bairro e adição/remoção de múltiplos pontos de parada via modal.
+  - Validação Zod para impedir bairros ou pontos sem nome ou duplicados (*"Esta localidade já está cadastrada."*).
+- **Tela de Edição de Bairro (`bairros/editar.tsx`):**
+  - Pré-preenchimento dos dados existentes e ajuste dinâmico de pontos de parada associados.
+- **Serviço e Regras de Negócio (`bairroService.ts`):**
+  - Gerenciamento de bairros e pontos de parada com validação de duplicidade e regra de soft delete.
+- **Validação e Testes Unitários (`bairroSchema.ts` & `bairroSchema.test.ts`):**
+  - Schema Zod e testes unitários cobrindo 100% dos 9 critérios de aceite.
 
 ## 🧪 Como testar
 
-1. **Testar Análise de Solicitação (Foto do Aluno):**
-   - Acesse como Administrador (`maria.barros@alu.ufc.br` / `Aluno123!`), entre na **Fila de solicitações** e abra os detalhes de um aluno: confirme a foto do perfil ou inicial estilizada no avatar.
-2. **Testar Barra Inferior do Administrador:**
-   - Navegue pelo painel do administrador e confirme que o menu inferior possui estritamente 4 botões (*Painel*, *Cadastros*, *Logística*, *Mais*).
-3. **Testar Tela de Renovação de Vínculo:**
-   - Com uma conta de aluno ativa, abra **Renovar vínculo institucional** e confirme o cartão em azul suave indicando vínculo ativo.
+1. **Testar Acesso e Listagem:**
+   - Como Administrador, acesse **Gestão de Cadastros** ➔ **Bairros e pontos de parada**: visualize os bairros cadastrados e teste a busca e o filtro de inativos.
+2. **Testar Cadastro e Edição:**
+   - Toque em **+ Novo**, informe o nome do bairro e adicione pelo menos um ponto de parada. Em seguida, edite um bairro existente.
+3. **Testar Bloqueio de Inativação por Rota Ativa:**
+   - Tente inativar o bairro *Centro* e confirme o bloqueio com a mensagem de aviso de rota ativa.
 
 ## 🔗 Comunicação App ↔ API
 
-- [ ] Não se aplica
+- [x] Não se aplica (fluxo de frontend desacoplado com mock service para funcionamento offline/standalone)
 - [ ] Novo endpoint
-- [x] Endpoint alterado
-- [x] Contrato de dados alterado
+- [ ] Endpoint alterado
+- [ ] Contrato de dados alterado
 
 ## ✅ Checklist
 
