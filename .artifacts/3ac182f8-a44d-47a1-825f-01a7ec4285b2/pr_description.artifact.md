@@ -1,35 +1,39 @@
 ## 📋 Descrição
 
-Implementação e integração completas do frontend para a **HU-031 (Reenvio de Solicitação pelo Aluno / Status do Cadastro)**, atendendo integralmente a todos os 8 critérios de aceite, ao `requisitos.md` e ao `guia-validacao-formularios.md`.
+Implementação e integração completas do frontend para a **HU-007 (Gerenciamento de Bairros e Pontos de Parada)**, incluindo as telas de listagem, cadastro e edição de bairros com pontos de parada associados, validação de nome único, bloqueio de inativação para bairros vinculados a rotas ativas e suíte de testes unitários com 100% de aprovação, em conformidade com o `requisitos.md`, o `guia-validacao-formularios.md` e os protótipos visuais.
 
 ## 🎯 História de Usuário / Épico
 
-- HU/EP: **HU-031** (Reenvio de Solicitação pelo Aluno / Status do Cadastro)
+- HU/EP: **HU-007** (Gerenciamento de Bairros e Pontos de Parada)
 
-## 🔨 Alterações Realizadas (`HU-031`)
+## 🔨 Alterações Realizadas (`HU-007`)
 
-- **Tela de Status e Detalhamento da Recusa (`cadastro-rejeitado.tsx`):**
-  - Exibição da badge de status *"Status do Cadastro: Reprovado"*.
-  - Relação dos documentos reprovados com os motivos específicos deixados pelo administrador (*"A foto enviada possui baixa resolução"*, *"Documento estava ilegível..."*).
-  - Exibição de mensagem informativa quando não houver pendências (*"Nenhuma pendência encontrada. Todos os seus documentos foram aprovados!"*).
-- **Tela de Reenvio de Documentação (`reenviar-documentos.tsx`):**
-  - Seletor de foto de perfil e upload de comprovante de matrícula e residência.
-  - Bloqueio de alteração em documentos que já foram aprovados.
-  - Atualização do status do aluno para *"Pendente de Aprovação"* após a submissão dos novos arquivos.
-- **Validação e Testes Unitários (`reenvioSchema.ts` & `reenvioSchema.test.ts`):**
-  - Schema Zod com validação de obrigatoriedade de ao menos um documento corrigido.
-  - Criada suíte de testes unitários Jest cobrindo 100% dos 8 critérios de aceite.
+- **Tela de Listagem (`bairros/index.tsx`):**
+  - Exibição de bairros ativos e inativos com suas respectivas contagens de pontos de parada.
+  - Alternador de exibição de inativos, busca por nome e ações de edição (`Pencil`), inativação (`Trash2`) e reativação (`RotateCcw`).
+  - **Bloqueio de Rota Ativa:** Ao tentar inativar um bairro atrelado a uma rota ativa (ex: *Centro*), exibe o pop-up com a mensagem do requisito *"Este bairro não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar."*.
+- **Tela de Cadastro de Bairro (`bairros/cadastrar.tsx`):**
+  - Campo obrigatório de Nome do Bairro e adição/remoção de múltiplos pontos de parada via modal.
+  - Validação Zod para impedir bairros ou pontos sem nome ou duplicados (*"Esta localidade já está cadastrada."*).
+- **Tela de Edição de Bairro (`bairros/editar.tsx`):**
+  - Pré-preenchimento dos dados existentes e ajuste dinâmico de pontos de parada associados.
+- **Serviço e Regras de Negócio (`bairroService.ts`):**
+  - Gerenciamento de bairros e pontos de parada com validação de duplicidade e regra de soft delete.
+- **Validação e Testes Unitários (`bairroSchema.ts` & `bairroSchema.test.ts`):**
+  - Schema Zod e testes unitários cobrindo 100% dos 9 critérios de aceite.
 
 ## 🧪 Como testar
 
-1. **Testar Status e Exibição de Motivos (Como Aluno Reprovado):**
-   - Acesse a tela `/cadastro-rejeitado` e confirme a badge de status reprovado, a lista de documentos inconsistentes e as justificativas do administrador.
-2. **Testar Reenvio de Documentos:**
-   - Toque em **Corrigir documentação**, selecione os novos arquivos e toque em **Reenviar**: confirme a atualização do status para *"Pendente de Aprovação"* e o direcionamento para a tela de análise.
+1. **Testar Acesso e Listagem:**
+   - Como Administrador, acesse **Gestão de Cadastros** ➔ **Bairros e pontos de parada**: visualize os bairros cadastrados e teste a busca e o filtro de inativos.
+2. **Testar Cadastro e Edição:**
+   - Toque em **+ Novo**, informe o nome do bairro e adicione pelo menos um ponto de parada. Em seguida, edite um bairro existente.
+3. **Testar Bloqueio de Inativação por Rota Ativa:**
+   - Tente inativar o bairro *Centro* e confirme o bloqueio com a mensagem de aviso de rota ativa.
 
 ## 🔗 Comunicação App ↔ API
 
-- [x] Não se aplica (fluxo de frontend desacoplado com fallback gracioso)
+- [x] Não se aplica (fluxo de frontend desacoplado com mock service para funcionamento offline/standalone)
 - [ ] Novo endpoint
 - [ ] Endpoint alterado
 - [ ] Contrato de dados alterado
