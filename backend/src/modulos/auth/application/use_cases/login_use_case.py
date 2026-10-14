@@ -47,7 +47,7 @@ class LoginUseCase:
             if aluno and status_atual == StatusCadastroEnum.PENDENTE.value:
                 raise UsuarioInativoError("Sua conta está pendente de aprovação pela coordenação.")
 
-            if aluno and status_atual != StatusCadastroEnum.ATIVADO.value:
+            if aluno and status_atual not in {StatusCadastroEnum.ATIVADO.value, "expirado", "vencido"}:
                 motivo = f": {aluno.motivo_reprovacao}" if aluno.motivo_reprovacao else ""
                 raise UsuarioInativoError(f"Sua conta está inativada{motivo}. Entre em contato com a coordenação.")
 

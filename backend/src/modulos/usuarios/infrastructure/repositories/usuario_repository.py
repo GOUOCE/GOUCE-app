@@ -126,8 +126,8 @@ class SQLAlchemyUsuarioRepository:
 
         if aluno:
             status_cadastro = self._normalizar_valor(aluno.status_cadastro)
-            # O aluno rejeitado ainda pode logar para reenviar documentos.
-            ativo = status_cadastro in {"ativado", "analise_renovacao", "rejeitado"}
+            # O aluno rejeitado ou com vínculo expirado ainda pode logar para reenviar documentos ou renovar vínculo.
+            ativo = status_cadastro in {"ativado", "analise_renovacao", "rejeitado", "expirado", "vencido"}
             motivo = None
 
             if status_cadastro == "pendente":
@@ -136,6 +136,8 @@ class SQLAlchemyUsuarioRepository:
                 motivo = "Sua renovação de vínculo está em análise."
             elif status_cadastro == "rejeitado":
                 motivo = "Existem documentos pendentes de reenvio. Consulte o motivo na área de cadastro."
+            elif status_cadastro in {"expirado", "vencido"}:
+                motivo = "Sua conta está com o vínculo expirado. Realize a renovação semestral."
             elif status_cadastro != "ativado":
                 motivo_reprovacao = aluno.motivo_reprovacao or ""
                 complemento = f": {motivo_reprovacao}" if motivo_reprovacao else ""

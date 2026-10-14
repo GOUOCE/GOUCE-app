@@ -71,7 +71,6 @@ export default function SelecaoPerfilScreen() {
     setIsLoadingLocal(true);
 
     try {
-      // Em caso de sucesso, o redirecionamento ocorre para a home.
       await signIn(email, senha, perfil);
     } catch (error: any) {
       setIsLoadingLocal(false);
@@ -89,13 +88,15 @@ export default function SelecaoPerfilScreen() {
       }
 
       const status = error.response?.status;
-      const detail = error.response?.data?.detail || '';
+      const detail = (error.response?.data?.detail || error.message || '').toLowerCase();
 
-      // Caso a conta esteja pendente (HU-001/HU-002)
+      // Caso a conta esteja pendente ou inativada (HU-001/HU-002)
       if (
         (status === 401 || status === 403) &&
-        typeof detail === 'string' &&
-        detail.toLowerCase().includes('pendente')
+        (detail.includes('pendente') ||
+         detail.includes('coordenação') ||
+         detail.includes('aprovação') ||
+         detail.includes('inativada'))
       ) {
         router.replace('/(autenticacao)/cadastro-pendente');
         return;
