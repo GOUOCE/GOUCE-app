@@ -70,7 +70,7 @@ export default function GestaoCadastrosScreen() {
             icon={UserCheck}
             title="Representantes"
             subtitle="Alunos representantes de faculdades"
-            onPress={() => router.push('/(administrador)/cadastros/representantes' as any)}
+            onPress={() => router.push('/(administrador)/representantes' as any)}
           />
         </View>
       </View>

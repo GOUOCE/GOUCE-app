@@ -86,8 +86,10 @@ export const representanteService = {
 
   async listarAlunosElegiveis(instituicao = '', busca = ''): Promise<AlunoElegivelItem[]> {
     return ALUNOS_ELEGIVEIS_MOCK.filter((aluno) => {
+      // Regra de Negócio: Somente alunos com cadastro Aprovado e Ativo
       if (aluno.status_cadastro !== 'ativado') return false;
 
+      // Regra de Negócio: Aluno que já possui a função não pode ser selecionado novamente
       const jaEhRepresentante = REPRESENTANTES_MOCK.some((r) => r.aluno_id === aluno.aluno_id && r.ativo);
       if (jaEhRepresentante) return false;
 
@@ -133,12 +135,13 @@ export const representanteService = {
     };
 
     REPRESENTANTES_MOCK.unshift(novoRepresentante);
-    return JSON.parse(JSON.stringify(novoRepresentante));
+    return novoRepresentante;
   },
 
   async revogarRepresentante(id: number): Promise<void> {
     const index = REPRESENTANTES_MOCK.findIndex((r) => r.id === id || r.aluno_id === id);
     if (index !== -1) {
+      // Revoga a função mantendo o aluno ativo no sistema
       REPRESENTANTES_MOCK[index].ativo = false;
     }
   },

@@ -42,7 +42,7 @@ export default function RepresentantesListScreen() {
   const carregarRepresentantes = React.useCallback(async () => {
     try {
       const lista = await representanteService.listarRepresentantes(busca);
-      setRepresentantes(lista.filter((r: RepresentanteItem) => r.ativo));
+      setRepresentantes(lista.filter((r) => r.ativo));
     } catch (err) {
       console.warn('Erro ao carregar representantes:', err);
     }
