@@ -49,7 +49,7 @@ export default function GestaoCadastrosScreen() {
             icon={Building2}
             title="Faculdades"
             subtitle="Instituições de destino"
-            onPress={() => router.push('/(administrador)/cadastros/faculdades' as any)}
+            onPress={() => router.push('/(administrador)/faculdades' as any)}
           />
           <View style={styles.divider} />
           <SectionItem
