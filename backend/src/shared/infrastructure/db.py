@@ -32,6 +32,7 @@ def create_tables():
     from src.modulos.usuarios.model.entities.aluno import AlunoORM
     from src.modulos.usuarios.model.entities.administrador import AdministradorORM
     from src.modulos.usuarios.model.entities.representante import RepresentanteORM
+    from src.modulos.motoristas.model.entities.motorista import MotoristaORM
     from src.modulos.auth.domain.entities.password_reset_token import PasswordResetTokenORM
     from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
     from src.shared.infrastructure.audit_model import LogAuditoriaORM
