@@ -118,6 +118,32 @@ class FaculdadeRepository:
             self.session.rollback()
             raise FaculdadeJaCadastradaError("Esta faculdade já está cadastrada.")
 
+    def ativar(
+        self,
+        faculdade_id: int,
+        usuario_executor_id: Optional[int] = None,
+    ) -> FaculdadeORM:
+        faculdade = self.buscar_por_id(faculdade_id)
+        if not faculdade:
+            raise FaculdadeNaoEncontradaError("Faculdade não encontrada.")
+
+        valor_anterior = "ativo" if faculdade.ativo else "inativo"
+        faculdade.ativo = True
+
+        log = LogAuditoriaORM(
+            usuario_id=usuario_executor_id,
+            acao="ATIVAR",
+            entidade="faculdade",
+            entidade_id=faculdade_id,
+            valor_anterior=valor_anterior,
+            valor_novo="ativo",
+            criado_em=datetime.now(timezone.utc),
+        )
+        self.session.add(log)
+        self.session.commit()
+        self.session.refresh(faculdade)
+        return faculdade
+
     def inativar(
         self,
         faculdade_id: int,

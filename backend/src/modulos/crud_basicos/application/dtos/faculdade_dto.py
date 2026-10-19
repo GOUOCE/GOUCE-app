@@ -38,36 +38,15 @@ class AtualizarFaculdadeDTO(BaseModel):
 
 
 class FaculdadeResponseDTO(BaseModel):
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+    model_config = ConfigDict(from_attributes=True)
 
     id_faculdade: int
     nome_faculdade: str
     campus_faculdade: str
     ativo: bool
 
-    @computed_field
-    @property
-    def id(self) -> int:
-        return self.id_faculdade
-
-    @computed_field
-    @property
-    def nome(self) -> str:
-        return self.nome_faculdade
-
-    @computed_field
-    @property
-    def campus(self) -> str:
-        return self.campus_faculdade
-
 
 class OperacaoFaculdadeResponseDTO(BaseModel):
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
-
     success: bool = True
     message: str = "Operação realizada com sucesso"
     data: Optional[FaculdadeResponseDTO] = None
-    id_faculdade: Optional[int] = None
-    nome_faculdade: Optional[str] = None
-    campus_faculdade: Optional[str] = None
-    ativo: Optional[bool] = None

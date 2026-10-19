@@ -162,6 +162,33 @@ class FaculdadesCrudUnitTest(unittest.TestCase):
         with self.assertRaises(FaculdadeNaoEncontradaError):
             self.service.inativar(9999, usuario_executor_id=1)
 
+    def test_ativar_com_auditoria_registra_dados(self):
+        faculdade = self.service.criar("UECE", "Itaperi")
+        faculdade_id = faculdade.id_faculdade
+        self.service.inativar(faculdade_id, usuario_executor_id=1)
+
+        self.service.ativar(faculdade_id, usuario_executor_id=77)
+
+        faculdade_db = self.repository.buscar_por_id(faculdade_id)
+        self.assertTrue(faculdade_db.ativo)
+
+        log = self.session.query(LogAuditoriaORM).filter(
+            LogAuditoriaORM.entidade == "faculdade",
+            LogAuditoriaORM.entidade_id == faculdade_id,
+            LogAuditoriaORM.acao == "ATIVAR",
+        ).first()
+
+        self.assertIsNotNone(log)
+        self.assertEqual(log.usuario_id, 77)
+        self.assertEqual(log.acao, "ATIVAR")
+        self.assertEqual(log.valor_anterior, "inativo")
+        self.assertEqual(log.valor_novo, "ativo")
+        self.assertIsInstance(log.criado_em, datetime)
+
+    def test_ativar_faculdade_inexistente_lanca_erro(self):
+        with self.assertRaises(FaculdadeNaoEncontradaError):
+            self.service.ativar(9999, usuario_executor_id=1)
+
     def test_listagem_com_e_sem_filtro_na_query_sql(self):
         f1 = self.service.criar("UFC", "Russas")
         f2 = self.service.criar("UFC", "Sobral")
@@ -340,7 +367,7 @@ class FaculdadesApiHttpTest(unittest.IsolatedAsyncioTestCase):
         status, body = await self.asgi_request(
             f"/faculdades/{faculdade_id}",
             payload={"nome": "UFC", "campus": "Sobral Sul"},
-            method="PUT",
+            method="PATCH",
         )
         self.assertEqual(status, 200)
         self.assertEqual(body["data"]["campus_faculdade"], "Sobral Sul")
@@ -354,7 +381,7 @@ class FaculdadesApiHttpTest(unittest.IsolatedAsyncioTestCase):
         status_conflito, body_conflito = await self.asgi_request(
             f"/faculdades/{faculdade_id}",
             payload={"nome": "UFC", "campus": "Russas"},
-            method="PUT",
+            method="PATCH",
         )
         self.assertEqual(status_conflito, 409)
         self.assertIn("Esta faculdade já está cadastrada.", str(body_conflito))
@@ -383,6 +410,34 @@ class FaculdadesApiHttpTest(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(log)
         self.assertEqual(log.usuario_id, 1)
         self.assertEqual(log.acao, "INATIVAR")
+
+    async def test_ativar_faculdade_http_retorna_sucesso_e_auditoria(self):
+        _, res = await self.asgi_request(
+            "/faculdades",
+            payload={"nome": "UNILAB", "campus": "Redenção"},
+            method="POST",
+        )
+        faculdade_id = res["data"]["id_faculdade"]
+        await self.asgi_request(f"/faculdades/{faculdade_id}/inativar", method="PATCH")
+
+        status, body = await self.asgi_request(
+            f"/faculdades/{faculdade_id}/ativar",
+            method="PATCH",
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(body["message"], "Operação realizada com sucesso")
+        self.assertTrue(body["data"]["ativo"])
+
+        log = self.session.query(LogAuditoriaORM).filter(
+            LogAuditoriaORM.entidade == "faculdade",
+            LogAuditoriaORM.entidade_id == faculdade_id,
+            LogAuditoriaORM.acao == "ATIVAR",
+        ).first()
+        self.assertIsNotNone(log)
+        self.assertEqual(log.usuario_id, 1)
+        self.assertEqual(log.acao, "ATIVAR")
+        self.assertEqual(log.valor_anterior, "inativo")
+        self.assertEqual(log.valor_novo, "ativo")
 
     async def test_listar_faculdades_com_e_sem_filtro(self):
         await self.asgi_request("/faculdades", payload={"nome": "F1", "campus": "C1"}, method="POST")

@@ -63,6 +63,20 @@ class FaculdadeService:
             ativo=ativo,
         )
 
+    def ativar(
+        self,
+        faculdade_id: int,
+        usuario_executor_id: Optional[int] = None,
+    ) -> FaculdadeORM:
+        self._validar_id(faculdade_id, "faculdade_id")
+        if usuario_executor_id is not None:
+            self._validar_id(usuario_executor_id, "usuario_executor_id")
+
+        return self.repository.ativar(
+            faculdade_id=faculdade_id,
+            usuario_executor_id=usuario_executor_id,
+        )
+
     def inativar(
         self,
         faculdade_id: int,

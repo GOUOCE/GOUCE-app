@@ -104,15 +104,10 @@ admin_required = require_roles(CargoEnum.ADMINISTRADOR.value)
 def _montar_resposta_operacao(
     faculdade, message: str = "Operação realizada com sucesso"
 ) -> OperacaoFaculdadeResponseDTO:
-    dto = FaculdadeResponseDTO.model_validate(faculdade)
     return OperacaoFaculdadeResponseDTO(
         success=True,
         message=message,
-        data=dto,
-        id_faculdade=dto.id_faculdade,
-        nome_faculdade=dto.nome_faculdade,
-        campus_faculdade=dto.campus_faculdade,
-        ativo=dto.ativo,
+        data=FaculdadeResponseDTO.model_validate(faculdade),
     )
 
 
@@ -175,7 +170,6 @@ async def criar_faculdade(
 
 
 @router.patch("/{faculdade_id}", response_model=OperacaoFaculdadeResponseDTO)
-@router.put("/{faculdade_id}", response_model=OperacaoFaculdadeResponseDTO)
 async def atualizar_faculdade(
     faculdade_id: int,
     dados: AtualizarFaculdadeDTO,
@@ -210,11 +204,36 @@ async def atualizar_faculdade(
 
 
 @router.patch(
-    "/{faculdade_id}/inativar",
+    "/{faculdade_id}/ativar",
     response_model=OperacaoFaculdadeResponseDTO,
 )
-@router.delete(
-    "/{faculdade_id}",
+async def ativar_faculdade(
+    faculdade_id: int,
+    current_user: dict = Depends(admin_required),
+    service: FaculdadeService = Depends(get_service),
+):
+    try:
+        user_id = current_user.get("current_user_id") or current_user.get("sub")
+        usuario_executor_id = int(user_id) if user_id is not None else None
+        faculdade = service.ativar(
+            faculdade_id=faculdade_id,
+            usuario_executor_id=usuario_executor_id,
+        )
+        return _montar_resposta_operacao(faculdade, "Operação realizada com sucesso")
+    except FaculdadeNaoEncontradaError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Faculdade não encontrada.",
+        )
+    except FaculdadeValidationError as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(error),
+        )
+
+
+@router.patch(
+    "/{faculdade_id}/inativar",
     response_model=OperacaoFaculdadeResponseDTO,
 )
 async def inativar_faculdade(
