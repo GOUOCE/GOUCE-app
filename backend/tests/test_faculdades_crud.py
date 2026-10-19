@@ -479,6 +479,77 @@ class FaculdadesApiHttpTest(unittest.IsolatedAsyncioTestCase):
         status, _ = await self.asgi_request("/faculdades", payload={"nome": "UFC", "campus": "   "}, method="POST")
         self.assertEqual(status, 422)
 
+    async def test_publico_e_nao_admin_ve_apenas_ativas(self):
+        from src.shared.auth.dependencies import get_current_user, get_optional_current_user
+
+        # 1. Cria 2 faculdades como admin e inativa a segunda
+        _, res1 = await self.asgi_request("/faculdades", payload={"nome": "Ativa", "campus": "C1"}, method="POST")
+        f1_id = res1["data"]["id_faculdade"]
+        _, res2 = await self.asgi_request("/faculdades", payload={"nome": "Inativa", "campus": "C2"}, method="POST")
+        f2_id = res2["data"]["id_faculdade"]
+        await self.asgi_request(f"/faculdades/{f2_id}/inativar", method="PATCH")
+
+        # 2. Usuário anônimo / público
+        self.app.dependency_overrides[get_optional_current_user] = lambda: None
+        self.app.dependency_overrides.pop(get_current_user, None)
+
+        status_list, body_list = await self.asgi_request("/faculdades", method="GET")
+        self.assertEqual(status_list, 200)
+        self.assertEqual(len(body_list), 1)
+        self.assertEqual(body_list[0]["id_faculdade"], f1_id)
+
+        # Mesmo se anônimo passar ativo=false, não-admin só pode ver ativas
+        status_inativas, body_inativas = await self.asgi_request(
+            "/faculdades", method="GET", query_string=b"ativo=false"
+        )
+        self.assertEqual(status_inativas, 200)
+        self.assertEqual(len(body_inativas), 1)
+        self.assertEqual(body_inativas[0]["id_faculdade"], f1_id)
+
+        # GET por ID ativo -> 200
+        status_f1, body_f1 = await self.asgi_request(f"/faculdades/{f1_id}", method="GET")
+        self.assertEqual(status_f1, 200)
+        self.assertEqual(body_f1["id_faculdade"], f1_id)
+
+        # GET por ID inativo -> 404
+        status_f2, _ = await self.asgi_request(f"/faculdades/{f2_id}", method="GET")
+        self.assertEqual(status_f2, 404)
+
+        # 3. Usuário autenticado como aluno (não administrador)
+        fake_aluno = {
+            "sub": "2",
+            "current_user_id": 2,
+            "role": "aluno",
+            "current_roles": ["aluno"],
+        }
+        self.app.dependency_overrides[get_optional_current_user] = lambda: fake_aluno
+
+        status_aluno_list, body_aluno_list = await self.asgi_request("/faculdades", method="GET")
+        self.assertEqual(status_aluno_list, 200)
+        self.assertEqual(len(body_aluno_list), 1)
+        self.assertEqual(body_aluno_list[0]["id_faculdade"], f1_id)
+
+        status_aluno_f2, _ = await self.asgi_request(f"/faculdades/{f2_id}", method="GET")
+        self.assertEqual(status_aluno_f2, 404)
+
+        # 4. Usuário administrador -> pode ver inativas
+        fake_admin = {
+            "sub": "1",
+            "current_user_id": 1,
+            "role": "administrador",
+            "current_roles": ["administrador"],
+        }
+        self.app.dependency_overrides[get_optional_current_user] = lambda: fake_admin
+
+        status_admin_list, body_admin_list = await self.asgi_request("/faculdades", method="GET")
+        self.assertEqual(status_admin_list, 200)
+        self.assertEqual(len(body_admin_list), 2)
+
+        status_admin_f2, body_admin_f2 = await self.asgi_request(f"/faculdades/{f2_id}", method="GET")
+        self.assertEqual(status_admin_f2, 200)
+        self.assertEqual(body_admin_f2["id_faculdade"], f2_id)
+        self.assertFalse(body_admin_f2["ativo"])
+
 
 if __name__ == "__main__":
     unittest.main()

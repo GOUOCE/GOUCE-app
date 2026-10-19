@@ -23,7 +23,7 @@ from src.modulos.crud_basicos.infrastructure.repositories.faculdade_repository i
     FaculdadeNaoEncontradaError,
     FaculdadeRepository,
 )
-from src.shared.auth.dependencies import require_roles
+from src.shared.auth.dependencies import get_optional_current_user, require_roles
 from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.http.validation import validation_details
 from src.shared.infrastructure.db import get_session
@@ -101,6 +101,18 @@ def get_service(
 admin_required = require_roles(CargoEnum.ADMINISTRADOR.value)
 
 
+def is_admin_user(user: Optional[dict]) -> bool:
+    if not user:
+        return False
+    roles = user.get("current_roles") or []
+    if isinstance(roles, str):
+        roles = [roles]
+    role = user.get("current_role") or user.get("role")
+    if role and role not in roles:
+        roles = list(roles) + [role]
+    return CargoEnum.ADMINISTRADOR.value in roles
+
+
 def _montar_resposta_operacao(
     faculdade, message: str = "Operação realizada com sucesso"
 ) -> OperacaoFaculdadeResponseDTO:
@@ -117,8 +129,10 @@ async def listar_faculdades(
     limite: Optional[int] = Query(default=None, ge=1),
     offset: Optional[int] = Query(default=None, ge=0),
     service: FaculdadeService = Depends(get_service),
-    _: dict = Depends(admin_required),
+    current_user: Optional[dict] = Depends(get_optional_current_user),
 ):
+    if not is_admin_user(current_user):
+        ativo = True
     return service.listar(ativo=ativo, limite=limite, offset=offset)
 
 
@@ -126,10 +140,16 @@ async def listar_faculdades(
 async def buscar_faculdade(
     faculdade_id: int,
     service: FaculdadeService = Depends(get_service),
-    _: dict = Depends(admin_required),
+    current_user: Optional[dict] = Depends(get_optional_current_user),
 ):
     try:
-        return service.buscar_por_id(faculdade_id)
+        faculdade = service.buscar_por_id(faculdade_id)
+        if not is_admin_user(current_user) and not faculdade.ativo:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Faculdade não encontrada.",
+            )
+        return faculdade
     except FaculdadeNaoEncontradaError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
