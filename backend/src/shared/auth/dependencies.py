@@ -1,3 +1,4 @@
+import inspect
 from typing import Annotated, Optional
 from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -42,6 +43,25 @@ def get_token_from_request(
         detail="Não autenticado",
         headers={"WWW-Authenticate": "Bearer"}
     )
+
+
+def get_optional_token_from_request(
+    request: Request,
+    credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(security)] = None
+) -> Optional[str]:
+    """Extrai token do cookie HttpOnly, header Authorization ou query params, sem erro se ausente."""
+    token = request.cookies.get("access_token")
+    if token:
+        return token
+
+    if credentials:
+        return credentials.credentials
+
+    token_param = request.query_params.get("token") or request.query_params.get("access_token")
+    if token_param:
+        return token_param
+
+    return None
 
 
 def _unauthorized() -> HTTPException:
@@ -114,6 +134,67 @@ async def get_current_user(
 
     # Mantém os claims originais e adiciona o perfil consultado no banco para
     # que as dependências de autorização nunca precisem confiar só no JWT.
+    usuario_validado = dict(payload)
+    usuario_validado["current_role"] = contexto.get("role")
+    usuario_validado["current_roles"] = perfis_atuais
+    usuario_validado["current_user_id"] = user_id
+    usuario_validado["current_status"] = contexto.get("status")
+    usuario_validado["access_expired"] = bool(contexto.get("acesso_expirado"))
+    return usuario_validado
+
+
+async def get_optional_current_user(
+    request: Request,
+    jwt_service: Annotated[JWTService, Depends(get_jwt_service)],
+    repository: Annotated[SQLAlchemyUsuarioRepository, Depends(get_usuario_repository)],
+    credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(security)] = None,
+) -> Optional[dict]:
+    """Retorna o usuário autenticado ou None se não autenticado / token inválido."""
+    if get_optional_current_user in request.app.dependency_overrides:
+        override = request.app.dependency_overrides[get_optional_current_user]
+        res = override() if callable(override) else override
+        if inspect.iscoroutine(res):
+            res = await res
+        return res
+
+    if get_current_user in request.app.dependency_overrides:
+        override = request.app.dependency_overrides[get_current_user]
+        try:
+            res = override() if callable(override) else override
+            if inspect.iscoroutine(res):
+                res = await res
+            return res
+        except HTTPException:
+            return None
+
+    token = get_optional_token_from_request(request, credentials)
+    if not token:
+        return None
+
+    try:
+        payload = jwt_service.decode(token)
+    except JWTError:
+        return None
+
+    if payload.get("type") != "access":
+        return None
+
+    user_id = _parse_user_id(payload)
+    if user_id is None:
+        return None
+
+    try:
+        contexto = repository.buscar_contexto_autenticacao_por_id(user_id)
+    except Exception:
+        return None
+
+    if not contexto or not contexto.get("ativo"):
+        return None
+
+    perfis_atuais = contexto.get("roles") or [contexto.get("role")]
+    if not perfis_atuais or not _role_matches(payload.get("role"), perfis_atuais):
+        return None
+
     usuario_validado = dict(payload)
     usuario_validado["current_role"] = contexto.get("role")
     usuario_validado["current_roles"] = perfis_atuais

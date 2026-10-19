@@ -78,7 +78,6 @@ class RenovarVinculoUseCase:
             telefone=dto.telefone,
             faculdade_id=dto.faculdade_id,
             curso=dto.curso,
-            campus=dto.campus,
             periodo_ingresso=dto.periodo_ingresso,
             turno_curso=getattr(dto.turno_curso, "value", dto.turno_curso),
             semestre_atual=dto.semestre_atual,
