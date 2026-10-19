@@ -31,9 +31,8 @@ class ValidarEtapa3UseCaseTest(unittest.TestCase):
         data = {
             "bairro_id": "Centro",
             "telefone": "85999990000",
-            "faculdade_id": "UFC",
+            "faculdade_id": 1,
             "curso": "Direito",
-            "campus": "Quixadá",
             "periodo_ingresso": self.periodo_ingresso,
             "turno_curso": "Noturno",
             "semestre_atual": self.maximo_semestre,

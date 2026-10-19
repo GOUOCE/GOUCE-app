@@ -45,9 +45,9 @@ class RenovacaoVinculoUseCaseTest(unittest.TestCase):
             tem_filhos=False,
             telefone="85999990000",
             bairro_id="Centro",
-            faculdade_id="UFC",
+            faculdade_id=1,
             curso="Engenharia de Software",
-            campus="Quixadá",
+
             periodo_ingresso="2024.1",
             turno_curso="Noturno",
             semestre_atual=4,
@@ -64,7 +64,7 @@ class RenovacaoVinculoUseCaseTest(unittest.TestCase):
         self.assertEqual(resposta.aluno_id, 7)
         self.assertEqual(resposta.status_cadastro, StatusCadastroEnum.ANALISE_RENOVACAO)
         self.assertEqual(repository.update_call["aluno_id"], 7)
-        self.assertEqual(repository.update_call["dados"].campus, "Quixadá")
+        self.assertEqual(repository.update_call["dados"].faculdade_id, 1)
         self.assertEqual(repository.update_call["dados"].nome, "Maria da Silva")
         self.assertEqual(repository.update_call["id_foto_aluno"], "id-foto.png")
         self.assertEqual(repository.update_call["novo_status"], "analise_renovacao")
