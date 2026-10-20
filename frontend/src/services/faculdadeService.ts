@@ -105,38 +105,38 @@ export const faculdadeService = {
   },
 
   async criarFaculdade(nome: string, sigla: string, campus: string): Promise<FaculdadeItem> {
+    const nomeLimpo = nome.trim();
+    const siglaLimpa = sigla.trim();
+    const campusLimpo = campus.trim();
+
+    // Validação da Combinação Única (nome + campus) ou (sigla + campus) (Ativa ou Inativa)
+    const jaExiste = FACULDADES_MOCK.some(
+      (f) =>
+        (f.nome.toLowerCase() === nomeLimpo.toLowerCase() &&
+         f.campus.toLowerCase() === campusLimpo.toLowerCase()) ||
+        (f.sigla.toLowerCase() === siglaLimpa.toLowerCase() &&
+         f.campus.toLowerCase() === campusLimpo.toLowerCase())
+    );
+
+    if (jaExiste) {
+      throw new Error('Esta faculdade já está cadastrada.');
+    }
+
     try {
       const response = await api.post<any>('/faculdades', {
-        nome_faculdade: nome,
-        campus_faculdade: campus,
+        nome_faculdade: nomeLimpo,
+        campus_faculdade: campusLimpo,
       });
       const f = response.data?.data || response.data;
       return {
         id: f.id_faculdade || f.id || Date.now(),
-        nome: f.nome_faculdade || nome,
-        sigla: sigla || f.nome_faculdade || 'UNI',
-        campus: f.campus_faculdade || campus,
+        nome: f.nome_faculdade || nomeLimpo,
+        sigla: siglaLimpa || 'UNI',
+        campus: f.campus_faculdade || campusLimpo,
         ativo: true,
       };
     } catch (error: any) {
-      // Fallback local se backend não estiver respondendo
       if (!error.response) {
-        const nomeLimpo = nome.trim();
-        const siglaLimpa = sigla.trim();
-        const campusLimpo = campus.trim();
-
-        const jaExiste = FACULDADES_MOCK.some(
-          (f) =>
-            (f.nome.toLowerCase() === nomeLimpo.toLowerCase() &&
-             f.campus.toLowerCase() === campusLimpo.toLowerCase()) ||
-            (f.sigla.toLowerCase() === siglaLimpa.toLowerCase() &&
-             f.campus.toLowerCase() === campusLimpo.toLowerCase())
-        );
-
-        if (jaExiste) {
-          throw new Error('Esta faculdade já está cadastrada.');
-        }
-
         const novaFaculdade: FaculdadeItem = {
           id: Date.now(),
           nome: nomeLimpo,
@@ -183,16 +183,18 @@ export const faculdadeService = {
   },
 
   async inativarFaculdade(id: number): Promise<void> {
+    const facLocal = FACULDADES_MOCK.find((f) => f.id === id);
+    if (facLocal && facLocal.viagens_programadas_pendentes) {
+      throw new Error('Esta instituição possui viagens programadas pendentes. Não é possível inativar no momento.');
+    }
+
     try {
       await api.patch(`/faculdades/${id}/inativar`);
+      if (facLocal) facLocal.ativo = false;
     } catch (error: any) {
       if (!error.response) {
-        const faculdade = FACULDADES_MOCK.find((f) => f.id === id);
-        if (faculdade) {
-          if (faculdade.viagens_programadas_pendentes) {
-            throw new Error('Esta instituição possui viagens programadas pendentes. Não é possível inativar no momento.');
-          }
-          faculdade.ativo = false;
+        if (facLocal) {
+          facLocal.ativo = false;
           return;
         }
       }
@@ -201,13 +203,14 @@ export const faculdadeService = {
   },
 
   async reativarFaculdade(id: number): Promise<void> {
+    const facLocal = FACULDADES_MOCK.find((f) => f.id === id);
     try {
       await api.patch(`/faculdades/${id}/ativar`);
+      if (facLocal) facLocal.ativo = true;
     } catch (error: any) {
       if (!error.response) {
-        const faculdade = FACULDADES_MOCK.find((f) => f.id === id);
-        if (faculdade) {
-          faculdade.ativo = true;
+        if (facLocal) {
+          facLocal.ativo = true;
           return;
         }
       }
