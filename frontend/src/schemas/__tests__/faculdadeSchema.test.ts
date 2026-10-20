@@ -1,4 +1,9 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, jest } from '@jest/globals';
+
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+);
+
 import { faculdadeSchema } from '../faculdadeSchema';
 import { faculdadeService } from '../../services/faculdadeService';
 
@@ -62,21 +67,18 @@ describe('Suíte de Testes Unitários - HU-008 (Gerenciamento de Faculdades)', (
     });
 
     it('deve bloquear a inativação se a faculdade tiver viagens programadas pendentes', async () => {
-      // UFC Quixadá (ID 1) possui viagens programadas no MOCK
       await expect(
         faculdadeService.inativarFaculdade(1)
       ).rejects.toThrow('Esta instituição possui viagens programadas pendentes. Não é possível inativar no momento.');
     });
 
     it('deve permitir inativar uma faculdade sem viagens pendentes', async () => {
-      // IFCE Quixadá (ID 2) não possui viagens pendentes
       await faculdadeService.inativarFaculdade(2);
       const fac = await faculdadeService.obterFaculdadePorId(2);
       expect(fac?.ativo).toBe(false);
     });
 
     it('deve permitir reativar uma faculdade inativa', async () => {
-      // Uniateneu Ocara (ID 3) está inativa
       await faculdadeService.reativarFaculdade(3);
       const fac = await faculdadeService.obterFaculdadePorId(3);
       expect(fac?.ativo).toBe(true);
