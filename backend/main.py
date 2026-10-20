@@ -4,8 +4,10 @@ from src.modulos.auth.api.http.auth_routes import router as auth_router
 from src.modulos.usuarios.interface.http.usuario_routes import router as usuario_router
 from src.modulos.usuarios.interface.http.aluno_router import router as aluno_router
 from src.modulos.usuarios.interface.http.administrador_routes import router as administrador_router
+from src.modulos.motoristas.interface.http.motorista_routes import router as motorista_router
 from src.modulos.arquivos.api.http.arquivo_routes import router as arquivo_router
 from src.modulos.arquivos.infrastructure.services.minio_client import ensure_bucket_exists
+from src.modulos.crud_basicos.interface.http.faculdade_routes import router as faculdade_router
 
 app = FastAPI(
     title="API GOUCE",
@@ -34,6 +36,8 @@ app.include_router(usuario_router)
 app.include_router(arquivo_router)
 app.include_router(aluno_router)
 app.include_router(administrador_router)
+app.include_router(faculdade_router)
+app.include_router(motorista_router)
 
 
 @app.get("/health", include_in_schema=False)

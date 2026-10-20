@@ -1,13 +1,10 @@
-from sqlalchemy import Column, String, Enum
-from src.shared.enums.uf_enum import UFEnum
-from sqlalchemy import Column, Integer, Boolean
-from sqlalchemy import ForeignKey
-from sqlalchemy import DateTime
+from sqlalchemy import Column, Integer, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from src.shared.infrastructure.db import Base
+from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
 from pydantic import BaseModel
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime
 
 
 class RepresentanteORM(Base):
@@ -20,8 +17,12 @@ class RepresentanteORM(Base):
         primary_key=True
     )
     is_representante_ativo = Column(Boolean, default=True, nullable=False)
-    id_faculdade_responsavel 
-    
+    id_faculdade_responsavel = Column(
+        Integer,
+        ForeignKey("faculdade.id_faculdade"),
+        nullable=True,
+    )
+    faculdade = relationship("FaculdadeORM", foreign_keys=[id_faculdade_responsavel], lazy="joined")
 
 
 class Representante(BaseModel):
