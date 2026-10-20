@@ -85,6 +85,7 @@ export default function AdminLayout() {
       <Tabs.Screen name="administradores" options={{ href: null }} />
       <Tabs.Screen name="solicitacoes" options={{ href: null }} />
       <Tabs.Screen name="bairros" options={{ href: null }} />
+      <Tabs.Screen name="faculdades" options={{ href: null }} />
       <Tabs.Screen name="representantes" options={{ href: null }} />
       <Tabs.Screen name="cadastrar-administrador" options={{ href: null }} />
     </Tabs>
