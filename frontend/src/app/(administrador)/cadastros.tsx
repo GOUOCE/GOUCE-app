@@ -63,7 +63,7 @@ export default function GestaoCadastrosScreen() {
             icon={Contact}
             title="Motoristas"
             subtitle="Condutores autorizados"
-            onPress={() => router.push('/(administrador)/cadastros/motoristas' as any)}
+            onPress={() => router.push('/(administrador)/motoristas' as any)}
           />
           <View style={styles.divider} />
           <SectionItem
