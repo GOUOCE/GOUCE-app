@@ -1,3 +1,5 @@
+import { api } from '../api/api';
+
 export interface FaculdadeItem {
   id: number;
   nome: string;
@@ -37,102 +39,179 @@ let FACULDADES_MOCK: FaculdadeItem[] = [
 
 export const faculdadeService = {
   async listarFaculdades(busca = ''): Promise<FaculdadeItem[]> {
-    const q = busca.toLowerCase().trim();
-    if (!q) return JSON.parse(JSON.stringify(FACULDADES_MOCK));
+    try {
+      const response = await api.get<any[]>('/faculdades');
+      const lista = response.data || [];
+      const mapeados: FaculdadeItem[] = lista.map((f) => {
+        const nomeCompleto = f.nome_faculdade || f.nome || '';
+        const siglaExtraida = f.sigla || (nomeCompleto.length <= 10 ? nomeCompleto : nomeCompleto.split(' ')[0]);
 
-    return JSON.parse(JSON.stringify(FACULDADES_MOCK)).filter(
-      (f: FaculdadeItem) =>
-        f.nome.toLowerCase().includes(q) ||
-        f.sigla.toLowerCase().includes(q) ||
-        f.campus.toLowerCase().includes(q)
-    );
+        return {
+          id: f.id_faculdade || f.id,
+          nome: nomeCompleto,
+          sigla: siglaExtraida,
+          campus: f.campus_faculdade || f.campus,
+          ativo: f.ativo ?? true,
+          viagens_programadas_pendentes: Boolean(f.viagens_programadas_pendentes),
+        };
+      });
+
+      const q = busca.toLowerCase().trim();
+      if (!q) return mapeados;
+
+      return mapeados.filter(
+        (f) =>
+          f.nome.toLowerCase().includes(q) ||
+          f.sigla.toLowerCase().includes(q) ||
+          f.campus.toLowerCase().includes(q)
+      );
+    } catch (error) {
+      console.warn('Backend /faculdades indisponível, utilizando MOCK:', error);
+      const q = busca.toLowerCase().trim();
+      if (!q) return JSON.parse(JSON.stringify(FACULDADES_MOCK));
+
+      return JSON.parse(JSON.stringify(FACULDADES_MOCK)).filter(
+        (f: FaculdadeItem) =>
+          f.nome.toLowerCase().includes(q) ||
+          f.sigla.toLowerCase().includes(q) ||
+          f.campus.toLowerCase().includes(q)
+      );
+    }
   },
 
   async obterFaculdadePorId(id: number): Promise<FaculdadeItem | undefined> {
-    const faculdade = FACULDADES_MOCK.find((f) => f.id === id);
-    return faculdade ? JSON.parse(JSON.stringify(faculdade)) : undefined;
+    try {
+      const response = await api.get<any>(`/faculdades/${id}`);
+      const f = response.data;
+      if (f) {
+        const nomeCompleto = f.nome_faculdade || f.nome || '';
+        const siglaExtraida = f.sigla || (nomeCompleto.length <= 10 ? nomeCompleto : nomeCompleto.split(' ')[0]);
+
+        return {
+          id: f.id_faculdade || f.id,
+          nome: nomeCompleto,
+          sigla: siglaExtraida,
+          campus: f.campus_faculdade || f.campus,
+          ativo: f.ativo ?? true,
+          viagens_programadas_pendentes: Boolean(f.viagens_programadas_pendentes),
+        };
+      }
+    } catch (err) {
+      console.warn('Erro ao obter faculdade por ID no backend, usando mock:', err);
+    }
+
+    const fac = FACULDADES_MOCK.find((f) => f.id === id);
+    return fac ? JSON.parse(JSON.stringify(fac)) : undefined;
   },
 
   async criarFaculdade(nome: string, sigla: string, campus: string): Promise<FaculdadeItem> {
-    const nomeLimpo = nome.trim();
-    const siglaLimpa = sigla.trim();
-    const campusLimpo = campus.trim();
+    try {
+      const response = await api.post<any>('/faculdades', {
+        nome_faculdade: nome,
+        campus_faculdade: campus,
+      });
+      const f = response.data?.data || response.data;
+      return {
+        id: f.id_faculdade || f.id || Date.now(),
+        nome: f.nome_faculdade || nome,
+        sigla: sigla || f.nome_faculdade || 'UNI',
+        campus: f.campus_faculdade || campus,
+        ativo: true,
+      };
+    } catch (error: any) {
+      // Fallback local se backend não estiver respondendo
+      if (!error.response) {
+        const nomeLimpo = nome.trim();
+        const siglaLimpa = sigla.trim();
+        const campusLimpo = campus.trim();
 
-    // Validação da Combinação Única (nome + campus) ou (sigla + campus) (Ativa ou Inativa)
-    const jaExiste = FACULDADES_MOCK.some(
-      (f) =>
-        (f.nome.toLowerCase() === nomeLimpo.toLowerCase() &&
-         f.campus.toLowerCase() === campusLimpo.toLowerCase()) ||
-        (f.sigla.toLowerCase() === siglaLimpa.toLowerCase() &&
-         f.campus.toLowerCase() === campusLimpo.toLowerCase())
-    );
+        const jaExiste = FACULDADES_MOCK.some(
+          (f) =>
+            (f.nome.toLowerCase() === nomeLimpo.toLowerCase() &&
+             f.campus.toLowerCase() === campusLimpo.toLowerCase()) ||
+            (f.sigla.toLowerCase() === siglaLimpa.toLowerCase() &&
+             f.campus.toLowerCase() === campusLimpo.toLowerCase())
+        );
 
-    if (jaExiste) {
-      throw new Error('Esta faculdade já está cadastrada.');
+        if (jaExiste) {
+          throw new Error('Esta faculdade já está cadastrada.');
+        }
+
+        const novaFaculdade: FaculdadeItem = {
+          id: Date.now(),
+          nome: nomeLimpo,
+          sigla: siglaLimpa,
+          campus: campusLimpo,
+          ativo: true,
+          viagens_programadas_pendentes: false,
+        };
+
+        FACULDADES_MOCK.unshift(novaFaculdade);
+        return JSON.parse(JSON.stringify(novaFaculdade));
+      }
+
+      throw error;
     }
-
-    const novaFaculdade: FaculdadeItem = {
-      id: Date.now(),
-      nome: nomeLimpo,
-      sigla: siglaLimpa,
-      campus: campusLimpo,
-      ativo: true,
-      viagens_programadas_pendentes: false,
-    };
-
-    FACULDADES_MOCK.unshift(novaFaculdade);
-    return JSON.parse(JSON.stringify(novaFaculdade));
   },
 
   async atualizarFaculdade(id: number, nome: string, sigla: string, campus: string): Promise<FaculdadeItem> {
-    const nomeLimpo = nome.trim();
-    const siglaLimpa = sigla.trim();
-    const campusLimpo = campus.trim();
-
-    const index = FACULDADES_MOCK.findIndex((f) => f.id === id);
-    if (index === -1) {
-      throw new Error('Faculdade não encontrada.');
+    try {
+      const response = await api.patch<any>(`/faculdades/${id}`, {
+        nome_faculdade: nome,
+        campus_faculdade: campus,
+      });
+      const f = response.data?.data || response.data;
+      return {
+        id: f.id_faculdade || id,
+        nome: f.nome_faculdade || nome,
+        sigla: sigla || f.nome_faculdade || 'UNI',
+        campus: f.campus_faculdade || campus,
+        ativo: true,
+      };
+    } catch (error: any) {
+      if (!error.response) {
+        const index = FACULDADES_MOCK.findIndex((f) => f.id === id);
+        if (index !== -1) {
+          FACULDADES_MOCK[index].nome = nome.trim();
+          FACULDADES_MOCK[index].sigla = sigla.trim();
+          FACULDADES_MOCK[index].campus = campus.trim();
+          return JSON.parse(JSON.stringify(FACULDADES_MOCK[index]));
+        }
+      }
+      throw error;
     }
-
-    // Validação de Duplicidade ao Editar
-    const duplicado = FACULDADES_MOCK.some(
-      (f) =>
-        f.id !== id &&
-        ((f.nome.toLowerCase() === nomeLimpo.toLowerCase() &&
-          f.campus.toLowerCase() === campusLimpo.toLowerCase()) ||
-         (f.sigla.toLowerCase() === siglaLimpa.toLowerCase() &&
-          f.campus.toLowerCase() === campusLimpo.toLowerCase()))
-    );
-
-    if (duplicado) {
-      throw new Error('Esta faculdade já está cadastrada.');
-    }
-
-    FACULDADES_MOCK[index].nome = nomeLimpo;
-    FACULDADES_MOCK[index].sigla = siglaLimpa;
-    FACULDADES_MOCK[index].campus = campusLimpo;
-
-    return JSON.parse(JSON.stringify(FACULDADES_MOCK[index]));
   },
 
   async inativarFaculdade(id: number): Promise<void> {
-    const faculdade = FACULDADES_MOCK.find((f) => f.id === id);
-    if (!faculdade) {
-      throw new Error('Faculdade não encontrada.');
+    try {
+      await api.patch(`/faculdades/${id}/inativar`);
+    } catch (error: any) {
+      if (!error.response) {
+        const faculdade = FACULDADES_MOCK.find((f) => f.id === id);
+        if (faculdade) {
+          if (faculdade.viagens_programadas_pendentes) {
+            throw new Error('Esta instituição possui viagens programadas pendentes. Não é possível inativar no momento.');
+          }
+          faculdade.ativo = false;
+          return;
+        }
+      }
+      throw error;
     }
-
-    // Bloqueio de Inativação se possuir viagens programadas pendentes
-    if (faculdade.viagens_programadas_pendentes) {
-      throw new Error('Esta instituição possui viagens programadas pendentes. Não é possível inativar no momento.');
-    }
-
-    faculdade.ativo = false;
   },
 
   async reativarFaculdade(id: number): Promise<void> {
-    const faculdade = FACULDADES_MOCK.find((f) => f.id === id);
-    if (faculdade) {
-      faculdade.ativo = true;
+    try {
+      await api.patch(`/faculdades/${id}/ativar`);
+    } catch (error: any) {
+      if (!error.response) {
+        const faculdade = FACULDADES_MOCK.find((f) => f.id === id);
+        if (faculdade) {
+          faculdade.ativo = true;
+          return;
+        }
+      }
+      throw error;
     }
   },
 };
