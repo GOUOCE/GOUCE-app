@@ -26,7 +26,7 @@ export interface AlunoElegivelItem {
   id_foto_aluno?: string;
 }
 
-let REPRESENTANTES_MOCK: RepresentanteItem[] = [
+const DADOS_INICIAIS_REPRESENTANTES: RepresentanteItem[] = [
   {
     id: 1,
     aluno_id: 101,
@@ -51,7 +51,7 @@ let REPRESENTANTES_MOCK: RepresentanteItem[] = [
   },
 ];
 
-let ALUNOS_ELEGIVEIS_MOCK: AlunoElegivelItem[] = [
+const DADOS_INICIAIS_ELEGIVEIS: AlunoElegivelItem[] = [
   {
     id: 103,
     aluno_id: 103,
@@ -76,7 +76,15 @@ let ALUNOS_ELEGIVEIS_MOCK: AlunoElegivelItem[] = [
   },
 ];
 
+let REPRESENTANTES_MOCK: RepresentanteItem[] = JSON.parse(JSON.stringify(DADOS_INICIAIS_REPRESENTANTES));
+let ALUNOS_ELEGIVEIS_MOCK: AlunoElegivelItem[] = JSON.parse(JSON.stringify(DADOS_INICIAIS_ELEGIVEIS));
+
 export const representanteService = {
+  resetMocks() {
+    REPRESENTANTES_MOCK = JSON.parse(JSON.stringify(DADOS_INICIAIS_REPRESENTANTES));
+    ALUNOS_ELEGIVEIS_MOCK = JSON.parse(JSON.stringify(DADOS_INICIAIS_ELEGIVEIS));
+  },
+
   async listarRepresentantes(busca = ''): Promise<RepresentanteItem[]> {
     try {
       const response = await api.get<any[]>('/representantes');
