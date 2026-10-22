@@ -13,6 +13,7 @@ from src.shared.infrastructure.db import Base
 from src.modulos.usuarios.model.entities.usuario import UsuarioORM
 from src.modulos.usuarios.model.entities.aluno import AlunoORM
 from src.modulos.arquivos.model.entities.arquivo import ArquivoORM
+from src.modulos.motoristas.model.entities.motorista import MotoristaORM
 
 config = context.config
 

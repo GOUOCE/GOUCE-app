@@ -5,6 +5,7 @@ from src.modulos.usuarios.interface.http.usuario_routes import router as usuario
 from src.modulos.usuarios.interface.http.aluno_router import router as aluno_router
 from src.modulos.usuarios.interface.http.administrador_routes import router as administrador_router
 from src.modulos.usuarios.interface.http.representante_routes import router as representante_router
+from src.modulos.motoristas.interface.http.motorista_routes import router as motorista_router
 from src.modulos.arquivos.api.http.arquivo_routes import router as arquivo_router
 from src.modulos.arquivos.infrastructure.services.minio_client import ensure_bucket_exists
 from src.modulos.crud_basicos.interface.http.faculdade_routes import router as faculdade_router
@@ -38,6 +39,7 @@ app.include_router(aluno_router)
 app.include_router(administrador_router)
 app.include_router(representante_router)
 app.include_router(faculdade_router)
+app.include_router(motorista_router)
 
 
 @app.get("/health", include_in_schema=False)

@@ -1,4 +1,9 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, jest } from '@jest/globals';
+
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+);
+
 import { bairroSchema } from '../bairroSchema';
 import { bairroService } from '../../services/bairroService';
 
@@ -43,21 +48,18 @@ describe('Suíte de Testes Unitários - HU-007 (Gerenciamento de Bairros e Ponto
     });
 
     it('deve bloquear a inativação de um bairro que pertence a uma rota ativa', async () => {
-      // O bairro Centro (ID 1) está vinculado a uma rota ativa no MOCK
       await expect(
         bairroService.inativarBairro(1)
       ).rejects.toThrow('Este bairro não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar.');
     });
 
     it('deve permitir inativar um bairro não vinculado a rotas ativas', async () => {
-      // O bairro Bairro Novo (ID 2) não está vinculado a rotas ativas
       await bairroService.inativarBairro(2);
       const bairro = await bairroService.obterBairroPorId(2);
       expect(bairro?.ativo).toBe(false);
     });
 
     it('deve permitir reativar um bairro inativo', async () => {
-      // O bairro Vila Antiga (ID 3) está inativo
       await bairroService.reativarBairro(3);
       const bairro = await bairroService.obterBairroPorId(3);
       expect(bairro?.ativo).toBe(true);

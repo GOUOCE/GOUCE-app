@@ -2,6 +2,7 @@ import os
 import base64
 import hashlib
 import hmac
+import re
 from typing import Optional
 from dotenv import load_dotenv
 from cryptography.fernet import Fernet, InvalidToken
@@ -65,6 +66,31 @@ def hash_email(email: Optional[str]) -> Optional[str]:
     email_normalizado = email.strip().lower()
     chave = _obter_chave_fernet()
     return hmac.new(chave, email_normalizado.encode("utf-8"), hashlib.sha256).hexdigest()
+
+
+def normalizar_telefone(telefone: Optional[str]) -> Optional[str]:
+    """Retorna somente os dígitos de um telefone para comparação segura."""
+    if telefone is None:
+        return None
+    return re.sub(r"\D", "", telefone)
+
+
+def hash_telefone(telefone: Optional[str]) -> Optional[str]:
+    """Gera um blind index HMAC-SHA256 para o telefone normalizado.
+
+    O telefone permanece armazenado com ``EncryptedString``. Este valor é
+    apenas um índice cego para aplicar unicidade sem manter o telefone em
+    texto puro nem depender de comparações sobre o ciphertext Fernet.
+    """
+    telefone_normalizado = normalizar_telefone(telefone)
+    if not telefone_normalizado:
+        return None
+    chave = _obter_chave_fernet()
+    return hmac.new(
+        chave,
+        telefone_normalizado.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
 
 
 def encrypt_bytes(data: Optional[bytes]) -> Optional[bytes]:
