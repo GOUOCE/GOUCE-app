@@ -88,7 +88,9 @@ export const representanteService = {
   async listarRepresentantes(busca = ''): Promise<RepresentanteItem[]> {
     try {
       const response = await api.get<any[]>('/representantes');
-      const lista = response.data || [];
+      const listaApi = response.data || [];
+      const lista = listaApi.length > 0 ? listaApi : REPRESENTANTES_MOCK;
+
       const mapeados: RepresentanteItem[] = lista.map((r) => ({
         id: r.id || r.representante_id || r.aluno_id,
         aluno_id: r.aluno_id || r.id,
@@ -122,7 +124,9 @@ export const representanteService = {
   async listarAlunosElegiveis(instituicao = '', busca = ''): Promise<AlunoElegivelItem[]> {
     try {
       const response = await api.get<any[]>('/usuarios/alunos', { params: { status: 'ativado' } });
-      const lista = response.data || [];
+      const listaApi = response.data || [];
+      const lista = listaApi.length > 0 ? listaApi : ALUNOS_ELEGIVEIS_MOCK;
+
       const mapeados: AlunoElegivelItem[] = lista.map((aluno) => ({
         id: aluno.id || aluno.aluno_id,
         aluno_id: aluno.aluno_id || aluno.id,
