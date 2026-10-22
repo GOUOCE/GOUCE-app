@@ -1,28 +1,50 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TouchableOpacity, Modal, Alert } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Keyboard } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   TextInput,
   Button,
   Text,
   useTheme,
-  Snackbar,
-  Portal
 } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, Mail, X } from 'lucide-react-native';
+import { ChevronLeft, Mail } from 'lucide-react-native';
 
 import { forgotPasswordSchema, ForgotPasswordFormData } from '@/schemas/loginSchema';
 import { authService } from '@services/authService';
 import { getErrorMessage } from '@/utils/errorUtils';
+import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function EsqueciSenhaScreen() {
   const router = useRouter();
   const theme = useTheme();
-  const [visivel, setVisivel] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [modalSairVisivel, setModalSairVisivel] = useState(false);
+
+  // Pop-up estilizado
+  const [popup, setPopup] = useState<{
+    visible: boolean;
+    type?: PopupType;
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    confirmColor?: string;
+    onConfirm?: () => void;
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+  });
+
+  const showPopup = (config: Omit<typeof popup, 'visible'>) => {
+    setPopup({ ...config, visible: true });
+  };
+
+  const closePopup = () => {
+    setPopup((prev) => ({ ...prev, visible: false }));
+  };
 
   const handleBack = () => {
     setModalSairVisivel(true);
@@ -38,17 +60,36 @@ export default function EsqueciSenhaScreen() {
   };
 
   const { control, handleSubmit, formState: { errors } } = useForm<ForgotPasswordFormData>({
-    resolver: zodResolver(forgotPasswordSchema)
+    resolver: zodResolver(forgotPasswordSchema),
+    mode: 'onTouched',
+    defaultValues: {
+      email: '',
+    }
   });
 
   const onSubmit = async (dados: ForgotPasswordFormData) => {
+    Keyboard.dismiss();
     setIsLoading(true);
     try {
       await authService.forgotPassword(dados);
-      setVisivel(true);
+      showPopup({
+        type: 'success',
+        title: 'E-mail enviado',
+        message: 'Se o e-mail estiver cadastrado, enviaremos as instruções de recuperação.',
+        confirmText: 'Entendido',
+        onConfirm: () => {
+          closePopup();
+          router.replace('/(autenticacao)/login');
+        },
+      });
     } catch (error: any) {
       const message = getErrorMessage(error, 'Erro ao solicitar recuperação. Tente novamente.');
-      Alert.alert('Recuperação de Senha', message);
+      showPopup({
+        type: 'error',
+        title: 'Aviso',
+        message,
+        confirmText: 'Tentar novamente',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -63,36 +104,31 @@ export default function EsqueciSenhaScreen() {
         <Text variant="headlineSmall" style={styles.headerTitle}>Esqueci minha senha</Text>
       </View>
 
-      {/* Modal de Confirmação de Saída */}
-      <Portal>
-        <Modal
-          visible={modalSairVisivel}
-          onDismiss={() => setModalSairVisivel(false)}
-        >
-          <View style={styles.modalContent}>
-            <Text variant="headlineSmall" style={styles.modalTitle}>Sair desta tela?</Text>
-            <Text variant="bodyLarge" style={styles.modalText}>
-              As informações inseridas serão perdidas.
-            </Text>
-            <View style={styles.modalButtons}>
-              <Button
-                mode="text"
-                onPress={() => setModalSairVisivel(false)}
-                style={styles.modalBtn}
-              >
-                Continuar aqui
-              </Button>
-              <Button
-                mode="contained"
-                onPress={confirmarSaida}
-                style={[styles.modalBtn, { backgroundColor: '#B00020' }]}
-              >
-                Sim, sair
-              </Button>
-            </View>
-          </View>
-        </Modal>
-      </Portal>
+      {/* Pop-up de Confirmação de Saída */}
+      <AppPopup
+        visible={modalSairVisivel}
+        type="warning"
+        title="Sair desta tela?"
+        message="As informações inseridas serão perdidas."
+        confirmText="Sim, sair"
+        cancelText="Continuar aqui"
+        confirmColor="#B00020"
+        onConfirm={confirmarSaida}
+        onDismiss={() => setModalSairVisivel(false)}
+      />
+
+      {/* Pop-up de Sucesso / Aviso */}
+      <AppPopup
+        visible={popup.visible}
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        confirmText={popup.confirmText}
+        cancelText={popup.cancelText}
+        confirmColor={popup.confirmColor}
+        onConfirm={popup.onConfirm}
+        onDismiss={closePopup}
+      />
 
       <View style={styles.content}>
         <Text variant="bodyMedium" style={styles.description}>
@@ -154,19 +190,6 @@ export default function EsqueciSenhaScreen() {
           Criar conta de aluno
         </Button>
       </View>
-
-      <Snackbar
-        visible={visivel}
-        onDismiss={() => setVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        E-mail enviado. Verifique sua caixa de entrada para continuar.
-      </Snackbar>
     </View>
   );
 }
@@ -213,6 +236,7 @@ const styles = StyleSheet.create({
   button: {
     borderRadius: 8,
     marginBottom: 24,
+    backgroundColor: '#3e5f90',
   },
   btnContent: {
     height: 55,
@@ -236,32 +260,4 @@ const styles = StyleSheet.create({
     borderColor: '#3e5f90',
     borderWidth: 1.5,
   },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 24,
-    margin: 24,
-    gap: 16,
-  },
-  modalTitle: {
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  modalText: {
-    color: '#666',
-    lineHeight: 24,
-  },
-  modalButtons: {
-    flexDirection: 'column',
-    gap: 8,
-    marginTop: 8,
-  },
-  modalBtn: {
-    borderRadius: 8,
-  }
 });

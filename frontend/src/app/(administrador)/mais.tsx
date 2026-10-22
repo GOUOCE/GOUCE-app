@@ -1,157 +1,253 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, Avatar, Surface, Divider } from 'react-native-paper';
-import { LogOut, ChevronRight, UserCog, Shield } from 'lucide-react-native';
-
+import { Text, Avatar } from 'react-native-paper';
+import { useRouter } from 'expo-router';
+import { User, ShieldAlert, FileText, Bell, LogOut, ChevronRight } from 'lucide-react-native';
 import { useAuth } from '@contexts/AuthContext';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
-export default function AdminMaisScreen() {
-  const { user, signOut } = useAuth();
-  const [modalSairVisivel, setModalSairVisivel] = useState(false);
+interface ItemProps {
+  icon: React.ElementType;
+  title: string;
+  subtitle: string;
+  danger?: boolean;
+  onPress?: () => void;
+}
 
-  const getIniciais = (nome: string) => {
-    if (!nome) return 'AD';
-    const partes = nome.trim().split(/\s+/);
-    if (partes.length === 1) return partes[0].substring(0, 2).toUpperCase();
-    return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
+function SectionItem({ icon: Icon, title, subtitle, danger, onPress }: ItemProps) {
+  return (
+    <TouchableOpacity style={styles.itemContainer} activeOpacity={0.7} onPress={onPress}>
+      <View style={styles.iconBox}>
+        <Icon size={24} color={danger ? '#BA1A1A' : '#191C20'} />
+      </View>
+      <View style={styles.textBox}>
+        <Text variant="titleMedium" style={[styles.itemTitle, danger && styles.dangerText]}>
+          {title}
+        </Text>
+        <Text variant="bodySmall" style={styles.itemSubtitle}>{subtitle}</Text>
+      </View>
+      <ChevronRight size={18} color={danger ? '#BA1A1A' : '#44474E'} />
+    </TouchableOpacity>
+  );
+}
+
+export default function MaisMenuScreen() {
+  const router = useRouter();
+  const { user, signOut } = useAuth();
+
+  const [popup, setPopup] = useState<{
+    visible: boolean;
+    type?: PopupType;
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    confirmColor?: string;
+    onConfirm?: () => void;
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+  });
+
+  const handleLogoutConfirmation = () => {
+    setPopup({
+      visible: true,
+      type: 'warning',
+      title: 'Sair da conta',
+      message: 'Deseja realmente encerrar sua sessão no sistema?',
+      confirmText: 'Sair',
+      cancelText: 'Cancelar',
+      confirmColor: '#BA1A1A',
+      onConfirm: async () => {
+        setPopup((prev) => ({ ...prev, visible: false }));
+        await signOut();
+      },
+    });
   };
 
-  const handleSignOut = async () => {
-    setModalSairVisivel(false);
-    await signOut();
+  const getInicial = (nome?: string) => {
+    if (!nome) return 'A';
+    return nome.charAt(0).toUpperCase();
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text variant="headlineMedium" style={styles.headerTitle}>Mais Opções</Text>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <AppPopup
+        visible={popup.visible}
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        confirmText={popup.confirmText}
+        cancelText={popup.cancelText}
+        confirmColor={popup.confirmColor}
+        onConfirm={popup.onConfirm}
+        onDismiss={() => setPopup((prev) => ({ ...prev, visible: false }))}
+      />
+
+      {/* Cabeçalho de Perfil */}
+      <Text variant="headlineMedium" style={styles.pageTitle}>Mais</Text>
+
+      <View style={styles.profileCard}>
+        <Avatar.Text
+          size={56}
+          label={getInicial(user?.name)}
+          style={styles.avatar}
+          labelStyle={styles.avatarLabel}
+        />
+        <View style={styles.profileInfo}>
+          <Text variant="titleMedium" style={styles.profileName}>
+            {user?.name || 'Administrador'}
+          </Text>
+          <Text variant="bodySmall" style={styles.profileEmail}>
+            {user?.email || 'admin@sistema.com'}
+          </Text>
+        </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Perfil do Administrador */}
-        <Surface style={styles.profileCard} elevation={1}>
-          <Avatar.Text
-            size={64}
-            label={getIniciais(user?.name || 'Administrador')}
-            style={styles.avatar}
-            labelStyle={styles.avatarLabel}
+      {/* Seção Conta e Preferências */}
+      <View style={styles.section}>
+        <Text variant="titleSmall" style={styles.sectionHeader}>Conta e Configurações</Text>
+        <View style={styles.cardGroup}>
+          <SectionItem
+            icon={User}
+            title="Meu Perfil"
+            subtitle="Alterar dados cadastrais e senha"
+            onPress={() => router.push('/(administrador)/perfil' as any)}
           />
-          <View style={styles.userInfo}>
-            <Text variant="titleMedium" style={styles.userName}>{user?.name || 'Administrador'}</Text>
-            <Text variant="bodySmall" style={styles.userEmail}>{user?.email || 'admin@gouce.app'}</Text>
-            <Surface style={styles.badge} elevation={0}>
-              <Shield size={12} color="#0288D1" />
-              <Text style={styles.badgeText}>Administrador</Text>
-            </Surface>
-          </View>
-        </Surface>
-
-        {/* Opções */}
-        <View style={styles.section}>
-          <Text variant="titleMedium" style={styles.sectionTitle}>Conta</Text>
-
-          <TouchableOpacity style={styles.actionItem} onPress={() => setModalSairVisivel(true)}>
-            <LogOut size={24} color="#904a45" />
-            <Text variant="bodyLarge" style={[styles.actionText, { color: '#904a45' }]}>Sair do aplicativo</Text>
-            <ChevronRight size={20} color="#999" />
-          </TouchableOpacity>
+          <View style={styles.divider} />
+          <SectionItem
+            icon={Bell}
+            title="Notificações"
+            subtitle="Gerenciar avisos e comunicados globais"
+            onPress={() => router.push('/(administrador)/notificacoes' as any)}
+          />
         </View>
-      </ScrollView>
+      </View>
 
-      {/* Modal Sair do Aplicativo */}
-      <AppPopup
-        visible={modalSairVisivel}
-        type="warning"
-        title="Sair do aplicativo?"
-        message="Você precisará fazer login novamente para acessar o painel administrativo."
-        confirmText="Sim, sair"
-        cancelText="Continuar no app"
-        confirmColor="#904a45"
-        onConfirm={handleSignOut}
-        onDismiss={() => setModalSairVisivel(false)}
-      />
-    </View>
+      {/* Seção Relatórios e Auditoria */}
+      <View style={styles.section}>
+        <Text variant="titleSmall" style={styles.sectionHeader}>Relatórios & Sistema</Text>
+        <View style={styles.cardGroup}>
+          <SectionItem
+            icon={FileText}
+            title="Relatórios operacionais"
+            subtitle="Exportar histórico de embarques e presença"
+            onPress={() => router.push('/(administrador)/relatorios' as any)}
+          />
+          <View style={styles.divider} />
+          <SectionItem
+            icon={ShieldAlert}
+            title="Logs do sistema"
+            subtitle="Histórico de ações e alterações de dados"
+            onPress={() => router.push('/(administrador)/logs' as any)}
+          />
+        </View>
+      </View>
+
+      {/* Encerramento */}
+      <View style={styles.section}>
+        <Text variant="titleSmall" style={styles.sectionHeader}>Sessão</Text>
+        <View style={styles.cardGroup}>
+          <SectionItem
+            icon={LogOut}
+            title="Sair do aplicativo"
+            subtitle="Encerrar sua sessão com segurança"
+            danger
+            onPress={handleLogoutConfirmation}
+          />
+        </View>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F8F9FF',
+  },
+  content: {
     paddingTop: 60,
-  },
-  header: {
-    paddingHorizontal: 24,
-    marginBottom: 20,
-  },
-  headerTitle: {
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingBottom: 40,
+  },
+  pageTitle: {
+    fontWeight: '400',
+    color: '#191C20',
+    fontSize: 28,
+    marginBottom: 24,
   },
   profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#EEF0FF',
+    padding: 16,
     borderRadius: 16,
-    padding: 20,
-    gap: 16,
-    marginBottom: 32,
+    marginBottom: 28,
   },
   avatar: {
     backgroundColor: '#3E5F90',
   },
   avatarLabel: {
-    color: '#FFF',
+    color: '#FFFFFF',
     fontWeight: 'bold',
   },
-  userInfo: {
+  profileInfo: {
+    marginLeft: 16,
     flex: 1,
-    gap: 4,
   },
-  userName: {
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  userEmail: {
-    color: '#666',
-  },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#E0F2FE',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginTop: 4,
-  },
-  badgeText: {
-    color: '#0288D1',
+  profileName: {
+    fontSize: 18,
     fontWeight: '600',
-    fontSize: 12,
+    color: '#191C20',
+  },
+  profileEmail: {
+    fontSize: 14,
+    color: '#44474E',
+    marginTop: 2,
   },
   section: {
-    marginTop: 8,
+    marginBottom: 28,
   },
-  sectionTitle: {
-    marginBottom: 16,
-    fontWeight: 'bold',
-    color: '#333',
+  sectionHeader: {
+    fontWeight: '600',
+    color: '#191C20',
+    fontSize: 16,
+    marginBottom: 12,
   },
-  actionItem: {
+  cardGroup: {
+    backgroundColor: '#F8F9FF',
+  },
+  itemContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
-    gap: 16,
+    paddingVertical: 14,
   },
-  actionText: {
+  iconBox: {
+    width: 40,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+  },
+  textBox: {
     flex: 1,
+  },
+  itemTitle: {
+    fontSize: 16,
     fontWeight: '500',
+    color: '#191C20',
+  },
+  dangerText: {
+    color: '#BA1A1A',
+  },
+  itemSubtitle: {
+    fontSize: 13,
+    color: '#74777F',
+    marginTop: 2,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E0E2EC',
+    marginLeft: 40,
   },
 });

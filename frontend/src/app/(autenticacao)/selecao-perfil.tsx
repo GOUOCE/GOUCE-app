@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TouchableOpacity } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { Text } from 'react-native-paper';
 import { ChevronLeft, IdCard, Contact, Shield } from 'lucide-react-native';
@@ -11,10 +16,8 @@ import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function SelecaoPerfilScreen() {
   const router = useRouter();
-  const { signIn, pendingCredentials, clearPendingCredentials, isLoading } = useAuth();
-
-  const emailFinal = pendingCredentials?.email || '';
-  const senhaFinal = pendingCredentials?.senha || '';
+  const { signIn, pendingCredentials, clearPendingCredentials } = useAuth();
+  const [isLoadingLocal, setIsLoadingLocal] = useState(false);
 
   // Estado do Pop-up
   const [popup, setPopup] = useState<{
@@ -40,7 +43,18 @@ export default function SelecaoPerfilScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
+  const confirmarSaida = () => {
+    closePopup();
+    clearPendingCredentials();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
+  };
+
   const handleBack = () => {
+    if (isLoadingLocal) return;
     showPopup({
       type: 'warning',
       title: 'Sair desta tela?',
@@ -52,25 +66,23 @@ export default function SelecaoPerfilScreen() {
     });
   };
 
-  const confirmarSaida = () => {
-    closePopup();
-    clearPendingCredentials();
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/');
-    }
-  };
-
   const handleSelectProfile = async (perfil: 'ALUNO' | 'MOTORISTA' | 'ADMINISTRADOR') => {
+    if (isLoadingLocal) return;
+    setIsLoadingLocal(true);
+
     try {
-      await signIn(emailFinal, senhaFinal, perfil);
+      // Em caso de sucesso, o redirecionamento ocorre para a home.
+      await signIn(pendingCredentials?.email || '', pendingCredentials?.senha || '', perfil);
     } catch (error: any) {
+      setIsLoadingLocal(false);
+
       if (error.code === 'ROLE_MISMATCH' || error.message?.includes('Perfil')) {
         showPopup({
           type: 'warning',
           title: 'Perfil Incompatível',
-          message: error.message || 'Sua conta pertence a outro perfil de acesso. Escolha a opção correspondente.',
+          message:
+            error.message ||
+            'Sua conta pertence a outro perfil de acesso. Escolha a opção correspondente.',
           confirmText: 'Entendido',
         });
         return;
@@ -80,7 +92,11 @@ export default function SelecaoPerfilScreen() {
       const detail = error.response?.data?.detail || '';
 
       // Caso a conta esteja pendente (HU-001/HU-002)
-      if ((status === 401 || status === 403) && typeof detail === 'string' && detail.toLowerCase().includes('pendente')) {
+      if (
+        (status === 401 || status === 403) &&
+        typeof detail === 'string' &&
+        detail.toLowerCase().includes('pendente')
+      ) {
         router.replace('/(autenticacao)/cadastro-pendente');
         return;
       }
@@ -98,7 +114,12 @@ export default function SelecaoPerfilScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={handleBack}
+          style={styles.backButton}
+          disabled={isLoadingLocal}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        >
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
 
@@ -109,6 +130,7 @@ export default function SelecaoPerfilScreen() {
             titulo="Sou aluno"
             descricao="Agendamento, mural e carteirinha digital"
             Icone={IdCard}
+            disabled={isLoadingLocal}
             onPress={() => handleSelectProfile('ALUNO')}
           />
 
@@ -116,6 +138,7 @@ export default function SelecaoPerfilScreen() {
             titulo="Sou representante"
             descricao="Chamada e lista de embarque da sua universidade"
             Icone={Contact}
+            disabled={isLoadingLocal}
             onPress={() => handleSelectProfile('MOTORISTA')}
           />
 
@@ -123,10 +146,19 @@ export default function SelecaoPerfilScreen() {
             titulo="Sou administrador"
             descricao="Gestão completa do transporte"
             Icone={Shield}
+            disabled={isLoadingLocal}
             onPress={() => handleSelectProfile('ADMINISTRADOR')}
           />
         </View>
       </View>
+
+      {/* Indicador de autenticação: embaixo, centralizado */}
+      {isLoadingLocal && (
+        <View style={styles.loadingFooter}>
+          <ActivityIndicator size="small" color="#3e5f90" />
+          <Text style={styles.loadingText}>Autenticando...</Text>
+        </View>
+      )}
 
       {/* Pop-up Estilizado Personalizado */}
       <AppPopup
@@ -166,5 +198,17 @@ const styles = StyleSheet.create({
   },
   cardList: {
     gap: 16,
+  },
+  loadingFooter: {
+    position: 'absolute',
+    bottom: 48,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    gap: 8,
+  },
+  loadingText: {
+    color: '#666',
+    fontSize: 16,
   },
 });

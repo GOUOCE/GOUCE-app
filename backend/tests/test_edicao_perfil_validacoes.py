@@ -39,7 +39,8 @@ class FakeEditRepository:
         self.aluno = SimpleNamespace(
             aluno_id=1,
             status_cadastro="ativado",
-            faculdade_id="faculdade-1",
+            faculdade_id=1,
+            faculdade_rel=SimpleNamespace(nome_faculdade="faculdade-1", campus_faculdade="Campus Central"),
             bairro_id="Centro",
             curso="Direito",
             semestre_atual=3,

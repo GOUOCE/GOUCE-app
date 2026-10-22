@@ -1,4 +1,9 @@
+from functools import wraps
 from typing import Annotated
+from fastapi import Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from fastapi.routing import APIRoute
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.exc import IntegrityError
@@ -9,6 +14,7 @@ from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.infrastructure.db import get_session
 from src.shared.security.argon2_hasher import Argon2PasswordHasher
 from src.shared.infrastructure.services.email_service import SMTPEmailService
+from src.shared.http.validation import validation_details
 from src.modulos.usuarios.application.dtos.administrador_dto import (
     AdministradorResponseDTO,
     AtualizarAdministradorDTO,
@@ -30,7 +36,58 @@ from src.modulos.usuarios.infrastructure.repositories.administrador_repository i
     TipoAdministradorNaoInicializadoError,
 )
 
-router = APIRouter(prefix="/administradores", tags=["Administradores"])
+def _error_response(status_code: int, code: str, message: str, details=None):
+    error = {"code": code, "message": message}
+    if details is not None:
+        error["details"] = details
+    return JSONResponse(
+        status_code=status_code,
+        content={"success": False, "error": error},
+    )
+
+
+class AdministradorValidationRoute(APIRoute):
+    def get_route_handler(self):
+        original_route_handler = super().get_route_handler()
+
+        @wraps(original_route_handler)
+        async def custom_route_handler(request: Request):
+            try:
+                return await original_route_handler(request)
+            except RequestValidationError as error:
+                return _error_response(
+                    422,
+                    "REQUEST_VALIDATION_ERROR",
+                    "Requisição inválida",
+                    validation_details(error.errors()),
+                )
+            except HTTPException as error:
+                code_by_status = {
+                    400: "VALIDATION_ERROR",
+                    401: "UNAUTHORIZED",
+                    403: "FORBIDDEN",
+                    404: "RESOURCE_NOT_FOUND",
+                    409: "CONFLICT",
+                    422: "REQUEST_VALIDATION_ERROR",
+                    500: "INTERNAL_ERROR",
+                    503: "SERVICE_UNAVAILABLE",
+                }
+                detail = error.detail
+                message = str(detail) if detail else "Requisição inválida"
+                return _error_response(
+                    error.status_code,
+                    code_by_status.get(error.status_code, "REQUEST_ERROR"),
+                    message,
+                )
+
+        return custom_route_handler
+
+
+router = APIRouter(
+    prefix="/administradores",
+    tags=["Administradores"],
+    route_class=AdministradorValidationRoute,
+)
 
 
 def get_repository(session: Annotated[Session, Depends(get_session)]):

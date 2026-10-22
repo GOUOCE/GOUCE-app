@@ -11,14 +11,14 @@
 | Tela            | Início do aluno (atalho Carteirinha Digital), Meu Perfil → Ver carteirinha digital e Carteirinha Digital |
 | Ambiente        | Desenvolvimento — app mobile no iPhone (Expo Go)                                        |
 | Total de casos  | 7 |
-| Última execução | Não realizada                                                                           |
+| Última execução | 06/10/2026                                                                              |
 | Testador        | Cauan Ricardo                                                                           |
 
 ## Resultado geral
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | -----------: |
-| ⏳ Não executada | 7 | 0 | 0 | 7 |
+| ✅ Executada | 7 | 1 | 6 | 0 |
 
 ## Pré-condições
 
@@ -38,23 +38,23 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU029-UI-001 | Abrir a carteirinha do aluno aprovado | Aluno A; Perfil e atalho do Início | Foto, nome, curso, instituição e QR Code; abre rápido | ⏳ PENDENTE | Não executado. |
-| CT-HU029-UI-002 | Aluno sem status aprovado | Aluno B (em análise ou pendente) | Documento oculto e “Carteirinha indisponível…” | ⏳ PENDENTE | Não executado. |
-| CT-HU029-UI-003 | Dados reais, sem valores de exemplo | Aluno A após editar o perfil | Só dados do aluno A, atualizados | ⏳ PENDENTE | Não executado. |
+| CT-HU029-UI-001 | Abrir a carteirinha do aluno aprovado | Aluno A; Perfil e atalho do Início | Foto, nome, curso, instituição e QR Code; abre rápido | ❌ REPROVADO | Por Perfil → Ver carteirinha digital, abriu instantaneamente com a foto, nome, curso, instituição, e-mail, data de emissão, QR Code e logo da prefeitura; a seta voltou. Porém o atalho Carteirinha Digital do Início não abre nada, e textos longos (ex.: o curso) aparecem cortados com reticências. Ver [BUG-HU029-UI-001](issues/BUG-HU029-UI-001-atalho-do-inicio-sem-acao.md) e [BUG-HU029-UI-001-dados-cortados](issues/BUG-HU029-UI-001-dados-cortados-na-carteirinha.md). Executado pelo testador em 06/10/2026. |
+| CT-HU029-UI-002 | Aluno sem status aprovado | Aluno B (em análise ou pendente) | Documento oculto e “Carteirinha indisponível…” | ❌ REPROVADO | O aluno B, em análise de renovação, conseguiu abrir a carteirinha. A API recusou (HTTP 403 no log do backend), mas o app ignorou a recusa e montou o documento com os dados da sessão, sem a mensagem de indisponibilidade. Ver [BUG-HU029-UI-002](issues/BUG-HU029-UI-002-app-exibe-carteirinha-recusada-pela-api.md). Executado pelo testador em 06/10/2026. |
+| CT-HU029-UI-003 | Dados reais, sem valores de exemplo | Aluno A após editar o perfil | Só dados do aluno A, atualizados | ❌ REPROVADO | Nome, e-mail, instituição e curso eram do aluno A, mas a data de emissão “10/09/2026” é fixa no código. Com o curso alterado no cadastro, a carteirinha e o perfil só mostraram o curso novo depois de sair e entrar de novo; e o curso longo apareceu cortado (“Licenciatura em Ciências Bio…”). Ver [BUG-HU029-UI-003-emissao](issues/BUG-HU029-UI-003-data-de-emissao-e-valores-fixos.md) e [BUG-HU029-UI-003-atualizacao](issues/BUG-HU029-UI-003-carteirinha-nao-atualiza.md). Executado pelo testador em 06/10/2026. |
 
 ### Seção B — Uso no embarque
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU029-UI-004 | Carteirinha offline | Aluno A sem internet, após abrir online | Versão em cache, sem erro de conexão | ⏳ PENDENTE | Não executado. |
-| CT-HU029-UI-005 | Leitura do QR Code | QR Code online e offline | Lido por outro celular, nas duas situações | ⏳ PENDENTE | Não executado. |
+| CT-HU029-UI-004 | Carteirinha offline | Aluno A sem internet, após abrir online | Versão em cache, sem erro de conexão | ❌ REPROVADO | Sem internet, a carteirinha abriu sem erro, com os dados e o selo “Disponível offline”, mas sem a foto de perfil (área azul). Ao fechar e reabrir o app sem internet, não foi possível entrar (falha de conexão com o servidor), então a carteirinha fica inacessível offline. Ver [BUG-HU029-UI-004](issues/BUG-HU029-UI-004-carteirinha-offline-sem-foto-e-sem-acesso.md). Executado pelo testador em 06/10/2026. |
+| CT-HU029-UI-005 | Leitura do QR Code | QR Code online e offline | Lido por outro celular, nas duas situações | ✅ APROVADO | O QR Code foi lido pela câmera do iPhone online e offline, e identificou o e-mail do aluno A. Observação de segurança: o conteúdo é um JSON com id, e-mail e o cabeçalho fixo do JWT, sem nada que permita validar a autenticidade ([SEGURANCA-HU029-UI-005](issues/SEGURANCA-HU029-UI-005-qr-code-sem-validacao.md)). Confirmado pelo testador em 06/10/2026. |
 
 ### Seção C — Privacidade e revogação
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU029-UI-006 | Carteirinha após sair da conta | Aluno A sai; app reaberto sem login | Nenhuma carteirinha acessível sem login | ⏳ PENDENTE | Não executado. |
-| CT-HU029-UI-007 | Carteirinha após perder a aprovação | Aluno A aprovado vira “em análise” durante a sessão | Com internet, o documento é ocultado, mesmo havendo cache | ⏳ PENDENTE | Não executado.
+| CT-HU029-UI-006 | Carteirinha após sair da conta | Aluno A sai; app reaberto sem login | Nenhuma carteirinha acessível sem login | ❌ REPROVADO | Com o app aberto e sem sessão, o link levou direto ao login. Com o app fechado, o link abriu o app e mostrou por um instante uma carteirinha completa do aluno de exemplo “João Neves” (foto de banco de imagens, curso, instituição, e-mail e QR Code) antes de ir para o login. Nenhum dado real apareceu. Ver [BUG-HU029-UI-006](issues/BUG-HU029-UI-006-carteirinha-de-exemplo-sem-login.md). Executado pelo testador em 06/10/2026. |
+| CT-HU029-UI-007 | Carteirinha após perder a aprovação | Aluno A aprovado vira “em análise” durante a sessão | Com internet, o documento é ocultado, mesmo havendo cache | ❌ REPROVADO | Com o aluno A passado para “em análise” durante a sessão (a API já recusava com 403), a carteirinha continuou aparecendo com foto, dados e QR Code, e o Meu Perfil seguiu mostrando “aprovado”, sem sair da conta. Ver [BUG-HU029-UI-002](issues/BUG-HU029-UI-002-app-exibe-carteirinha-recusada-pela-api.md) e [BUG-HU029-UI-003-atualizacao](issues/BUG-HU029-UI-003-carteirinha-nao-atualiza.md). Executado pelo testador em 06/10/2026. |
 
 ## Detalhamento dos casos
 
@@ -80,8 +80,13 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Atalho **Carteirinha Digital** na tela **Início**: aparece, mas não faz nada ao ser tocado (`QuickAction` sem `onPress` em `frontend/src/app/(aluno)/home.tsx:47`). ❌
+- **Perfil → Ver carteirinha digital**: abriu instantaneamente (bem abaixo de 2 s), com a foto de perfil do aluno A, nome completo, curso, instituição, e-mail, data de emissão, QR Code e o logo da prefeitura. ✅
+- A seta de voltar retornou à tela anterior. ✅
+- Os textos ficam limitados a uma linha (`numberOfLines={1}` no nome, e-mail, instituição e curso): o curso “Engenharia de Software” já aparece cortado com reticências, e nomes ou cursos mais longos ficam incompletos num documento de identificação. ❌
+- A data de emissão exibida (“10/09/2026”) é fixa no código; avaliada no CT-HU029-UI-003.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU029-UI-001](issues/BUG-HU029-UI-001-atalho-do-inicio-sem-acao.md) e [BUG-HU029-UI-001-dados-cortados](issues/BUG-HU029-UI-001-dados-cortados-na-carteirinha.md).
 
 ---
 
@@ -102,8 +107,12 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Preparação: aluno B (`thebirl009@gmail.com`) colocado em `analise_renovacao` e com senha de teste definida no banco local; a API foi conferida antes (`GET /alunos/me/carteirinha` → 403).
+- Com o aluno B logado, **Perfil → Ver carteirinha digital** abriu a carteirinha. ❌
+- No log do backend, a chamada do app à carteirinha recebeu `403 Forbidden`: a API bloqueou corretamente (correção da #75), mas o app ignorou a recusa e exibiu o documento com os dados da sessão, sem a mensagem “Carteirinha indisponível. Seu cadastro está inativo ou em análise.” (AC-02).
+- Causa aparente: `frontend/src/app/(aluno)/carteirinha-digital.tsx` trata qualquer erro de `getCarteirinha()` como “offline” (`console.warn('Carteirinha offline ou em carregamento, usando cache do usuário')`) e monta a carteirinha com os dados do usuário logado e valores padrão.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU029-UI-002](issues/BUG-HU029-UI-002-app-exibe-carteirinha-recusada-pela-api.md).
 
 ---
 
@@ -123,8 +132,15 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Nome, e-mail, instituição e curso exibidos eram os do aluno A. ✅
+- A data de emissão exibida é “10/09/2026”, fixa no código (`const emissao = '10/09/2026'`); a conta foi criada em 04/10/2026. Todo aluno vê a mesma data. ❌
+- A tela também tem valores padrão fixos para quando faltar dado: “João Neves”, “joao@email.com”, “UFC”, “Campus Quixadá”, “Engenharia de Software”, “2024.1” e uma foto de banco de imagens (`carteirinha-digital.tsx`, linhas 54 a 67). Para o aluno A eles não apareceram, porque a API devolveu os dados reais, mas são usados quando a API falha (ver CT-HU029-UI-002).
+- Alteração de bairro em **Editar perfil**: a carteirinha continuou correta (o bairro não aparece na carteirinha). ✅
+- Alteração do curso (preparação: curso do aluno A trocado no banco local para “Licenciatura em Ciências Biológicas”, já confirmado pela API): a carteirinha e o **Meu Perfil** continuaram mostrando o curso antigo até o aluno sair e entrar de novo. ❌
+- Depois do novo login, o curso novo apareceu, mas cortado: “Licenciatura em Ciências Bio…” (registrado no [BUG-HU029-UI-001-dados-cortados](issues/BUG-HU029-UI-001-dados-cortados-na-carteirinha.md)).
+- Ao final, o curso do aluno A voltou para “Engenharia de Software”.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU029-UI-003-emissao](issues/BUG-HU029-UI-003-data-de-emissao-e-valores-fixos.md) e [BUG-HU029-UI-003-atualizacao](issues/BUG-HU029-UI-003-carteirinha-nao-atualiza.md).
 
 ### Seção B — Uso no embarque
 
@@ -147,8 +163,13 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Com o app aberto e sem internet, a carteirinha abriu na hora, sem mensagem de erro de conexão, com os dados do aluno e o selo **Disponível offline**. ✅
+- A **foto de perfil não carregou**: ficou uma área azul no lugar. A foto é baixada da API a cada abertura e não é guardada no aparelho. ❌
+- Ao fechar e reabrir o app ainda sem internet, não foi possível entrar (falha de conexão com o servidor): o app não restaura a sessão (#100) e o login exige a API. A carteirinha fica inacessível offline justamente no cenário do embarque (FA-001). ❌
+- Com a internet religada, a foto **não voltou** sozinha: só reapareceu depois de sair da tela/da conta ou fechar o app (mesma causa do [BUG-HU029-UI-003-atualizacao](issues/BUG-HU029-UI-003-carteirinha-nao-atualiza.md)).
+- Observações do código (`frontend/src/app/(aluno)/carteirinha-digital.tsx`): não existe cache próprio da carteirinha; em caso de erro, a tela usa os dados da sessão em memória. O selo **Disponível offline** é fixo e aparece sempre, com ou sem cache.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU029-UI-004](issues/BUG-HU029-UI-004-carteirinha-offline-sem-foto-e-sem-acesso.md).
 
 ---
 
@@ -169,8 +190,11 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Sem um segundo celular, o QR Code foi lido pela câmera do próprio iPhone (a partir da imagem da carteirinha), com conexão e sem conexão. Nas duas situações a leitura foi imediata e a câmera reconheceu o e-mail do aluno A (`qa.hu005@gmail.com`), oferecendo abrir o Mail. ✅
+- Conteúdo do QR, conforme o código (`carteirinha-digital.tsx`, linhas 68 a 72): `{"id": 2, "email": "qa.hu005@gmail.com", "token": "eyJhbGciOiJIUzI1NiIs"}`. O campo `token` são os 20 primeiros caracteres do JWT, que correspondem ao cabeçalho fixo `{"alg":"HS256",`: igual para todos os alunos e sem dado secreto.
+- Observação de segurança: o QR não tem assinatura nem código verificável; qualquer pessoa pode gerar um QR com o id e o e-mail de outro aluno. Registrado em [SEGURANCA-HU029-UI-005](issues/SEGURANCA-HU029-UI-005-qr-code-sem-validacao.md).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ✅ Aprovado.
 
 ### Seção C — Privacidade e revogação
 
@@ -191,8 +215,13 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O aluno A saiu da conta (**Perfil → Sair → Sim, sair**).
+- **App aberto, sem sessão**, link `exp://<IP>:8081/--/carteirinha-digital`: o app foi direto para a tela de login. ✅
+- **App fechado**, mesmo link (o app abre do zero pelo link): por um instante, apareceu uma carteirinha completa do aluno de exemplo **“João Neves”**, com foto de banco de imagens, curso, instituição, e-mail de exemplo e QR Code, e em seguida o app foi para o login. O testador gravou a tela para confirmar. ❌
+- Nenhum dado real de aluno apareceu: são os valores padrão fixos do código (ver [BUG-HU029-UI-003-emissao](issues/BUG-HU029-UI-003-data-de-emissao-e-valores-fixos.md)). Mas uma carteirinha com aparência válida é exibida sem login, e uma captura de tela nesse instante produz um documento falso.
+- Causa aparente: ao abrir o app pelo link, a tela da carteirinha é desenhada antes de o `AuthContext` terminar de carregar a sessão e redirecionar (mesmo mecanismo da #111, agora sem usuário logado).
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU029-UI-006](issues/BUG-HU029-UI-006-carteirinha-de-exemplo-sem-login.md).
 
 ---
 
@@ -214,14 +243,27 @@ Executar na ordem abaixo. São **7 casos essenciais**, em três seções. Os IDs
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O aluno A, aprovado e logado, abriu a carteirinha com internet e voltou ao **Início**.
+- Preparação: status do aluno A alterado para `analise_renovacao` no banco local; conferido pela API (`GET /alunos/me/carteirinha` → 403 “Carteirinha indisponível…”).
+- Sem sair da conta e com internet, a carteirinha **continuou aparecendo** com foto, dados e QR Code, e o **Meu Perfil** seguiu mostrando o status aprovado. ❌
+- Duas causas combinadas: a tela não consulta a API de novo enquanto a sessão estiver aberta ([BUG-HU029-UI-003-atualizacao](issues/BUG-HU029-UI-003-carteirinha-nao-atualiza.md)) e, mesmo quando consulta, ignora o 403 ([BUG-HU029-UI-002](issues/BUG-HU029-UI-002-app-exibe-carteirinha-recusada-pela-api.md)). Um aluno que perde a aprovação continua com uma carteirinha válida na tela.
+- Ao final, o aluno A voltou para aprovado.
+- Execução confirmada pelo testador em 06/10/2026.
+- Status: ❌ Reprovado — [BUG-HU029-UI-002](issues/BUG-HU029-UI-002-app-exibe-carteirinha-recusada-pela-api.md).
 
 ## Defeitos encontrados
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-HU029-UI-007 | Aluno que perde a aprovação durante a sessão continua com a carteirinha válida na tela. | [BUG-HU029-UI-002](issues/BUG-HU029-UI-002-app-exibe-carteirinha-recusada-pela-api.md) e [BUG-HU029-UI-003-atualizacao](issues/BUG-HU029-UI-003-carteirinha-nao-atualiza.md) — #146, #151 |
+| CT-HU029-UI-006 | Sem login, ao abrir o app pelo link, aparece por um instante uma carteirinha de exemplo (“João Neves”) antes do login. | [BUG-HU029-UI-006](issues/BUG-HU029-UI-006-carteirinha-de-exemplo-sem-login.md) — #152 |
+| CT-HU029-UI-005 | Segurança: o QR Code não tem como ser validado (sem assinatura) e pode ser forjado com o id e o e-mail de outro aluno. | [SEGURANCA-HU029-UI-005](issues/SEGURANCA-HU029-UI-005-qr-code-sem-validacao.md) — #153 |
+| CT-HU029-UI-004 | Offline, a carteirinha aparece sem a foto, e depois de reabrir o app sem internet não há como acessá-la. | [BUG-HU029-UI-004](issues/BUG-HU029-UI-004-carteirinha-offline-sem-foto-e-sem-acesso.md) — #148 |
+| CT-HU029-UI-003 | Data de emissão fixa (“10/09/2026”) e valores padrão de exemplo no código da carteirinha. | [BUG-HU029-UI-003-emissao](issues/BUG-HU029-UI-003-data-de-emissao-e-valores-fixos.md) — #147 |
+| CT-HU029-UI-003 | A carteirinha e o perfil não refletem dados alterados até sair e entrar de novo. | [BUG-HU029-UI-003-atualizacao](issues/BUG-HU029-UI-003-carteirinha-nao-atualiza.md) — #151 |
+| CT-HU029-UI-002 | Aluno sem status aprovado consegue abrir a carteirinha: o app ignora o 403 da API e monta o documento com os dados da sessão. | [BUG-HU029-UI-002](issues/BUG-HU029-UI-002-app-exibe-carteirinha-recusada-pela-api.md) — #146 |
+| CT-HU029-UI-001 | O atalho Carteirinha Digital da tela Início não abre nada. | [BUG-HU029-UI-001](issues/BUG-HU029-UI-001-atalho-do-inicio-sem-acao.md) — #149 |
+| CT-HU029-UI-001 | Nome, e-mail, instituição e curso são cortados em uma linha com reticências. | [BUG-HU029-UI-001-dados-cortados](issues/BUG-HU029-UI-001-dados-cortados-na-carteirinha.md) — #150 |
 
 ## Observações gerais
 
