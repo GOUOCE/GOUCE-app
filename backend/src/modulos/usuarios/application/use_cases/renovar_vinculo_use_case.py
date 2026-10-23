@@ -30,6 +30,10 @@ from src.shared.validators.string_sem_numero_validator import StringSemNumeroVal
 from src.shared.validators.nome_completo_validator import validar_nome_completo
 
 
+class RenovacaoJaEmAnaliseError(Exception):
+    """O aluno já tem uma solicitação aguardando a coordenação (cadastro ou renovação)."""
+
+
 class RenovarVinculoUseCase:
     def __init__(
         self,
@@ -54,6 +58,17 @@ class RenovarVinculoUseCase:
         usuario, aluno = self.repository.buscar_com_detalhes_por_id(aluno_id)
         if not usuario or not aluno:
             raise ValueError("Aluno autenticado não encontrado")
+
+        status_atual = getattr(aluno, "status_cadastro", None)
+        status_atual = getattr(status_atual, "value", status_atual)
+        if status_atual == StatusCadastroEnum.ANALISE_RENOVACAO.value:
+            raise RenovacaoJaEmAnaliseError(
+                "Sua renovação de vínculo já está em análise. Aguarde a resposta da coordenação."
+            )
+        if status_atual == StatusCadastroEnum.PENDENTE.value:
+            raise RenovacaoJaEmAnaliseError(
+                "Seu cadastro ainda está em análise. Aguarde a resposta da coordenação."
+            )
 
         erros = []
         erro_nome = validar_nome_completo(dto.nome)
