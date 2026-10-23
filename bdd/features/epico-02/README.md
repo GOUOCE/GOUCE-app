@@ -34,10 +34,11 @@ bdd/features/epico-02/
 
 **HU-008: Gerenciamento de Faculdades**
 
-- Fluxo: admin cadastra, edita, inativa e reativa faculdades (nome + campus)
-- Unicidade: combinação nome + campus (mesmo nome em outro campus é permitido)
+- Fluxo: admin cadastra, edita, inativa e reativa faculdades (nome + campus); a listagem mostra só as ativas, com a chave "Mostrar inativos"
+- Unicidade: combinação nome + campus, no cadastro e na edição, ativa ou inativa, sem diferenciar maiúsculas/minúsculas (mesmo nome em outro campus é permitido)
 - Bloqueio: faculdade com alunos agendados para datas futuras não pode ser inativada (depende da HU-013)
-- Cenários: 1 listagem + 1 sucesso + 1 mesmo nome em outro campus + 1 duplicidade + 1 campos obrigatórios + 1 edição + 1 inativação + 1 reativação + 1 bloqueio por agendamento + 1 inativos + 1 histórico + 1 acesso restrito
+- Organizado em blocos `Regra:` (gestão pelo admin, soft delete e auditoria, indisponibilidade de inativas, acesso restrito)
+- Cenários: 1 listagem + 1 sucesso + 1 mesmo nome em outro campus + 2 duplicidade (cadastro e edição) + 2 obrigatórios (cadastro e edição) + 1 edição + 1 inativação + 1 reativação + 1 bloqueio por agendamento + 1 inativos + 1 soft delete + 1 auditoria + 1 faculdade inativa fora da seleção + 1 histórico (RN-004) + 2 acesso restrito (menu e API)
 
 **HU-009: Gerenciamento de Frota (Ônibus)**
 
@@ -65,11 +66,11 @@ bdd/features/epico-02/
 | HU     | Cenários | Esquemas | Execuções |
 | ------ | -------- | -------- | --------- |
 | HU-007 | 20       | 8        | 32        |
-| HU-008 | 12       | 3        | 15        |
+| HU-008 | 18       | 6        | 28        |
 | HU-009 | 12       | 3        | 16        |
 | HU-010 | 13       | 3        | 16        |
 | HU-030 | 10       | 1        | 13        |
-| Total  | 67       | 18       | 92        |
+| Total  | 73       | 21       | 105       |
 
 - Todos os critérios de aceite e fluxos alternativos de `docs/requisitos.md` (seção 7.3) têm ao menos um cenário.
 - Cenários de RN-004 (preservação de histórico) dependem de consulta ao banco ou à API e estão marcados com `@teste_api @nao_automatizavel_via_appium`.
@@ -81,6 +82,7 @@ bdd/features/epico-02/
 **Resolvidas em `docs/requisitos.md`:**
 
 - HU-007: duplicidade vale para ativo ou inativo; ponto único dentro do bairro; listagem só de ativos com a chave "Mostrar inativos"; auditoria de todas as operações de escrita; bloqueio de remover o último ponto; comparação de nomes sem diferenciar maiúsculas/minúsculas; inativação de ponto individual; bairros inativos fora da seleção; referência RNF-011 corrigida para RF-011.
+- HU-008: mesmas decisões da HU-007 (listagem só de ativas com "Mostrar inativos", duplicidade também na edição e sem diferenciar maiúsculas/minúsculas, auditoria de todas as escritas, inativas fora da seleção).
 
 **Pendentes:**
 

@@ -1047,23 +1047,25 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar, 
 
 Fonte: Elaborado pelo autor (2026).  
 **História de Usuário:**  
-Como administrador, quero acessar um painel para cadastrar, visualizar, editar e inativar as faculdades de destino, para organizar as instituições de ensino que são atendidas pelas rotas de transporte.  
+Como administrador, quero acessar um painel para cadastrar, visualizar, editar, inativar e reativar as faculdades de destino, para organizar as instituições de ensino que são atendidas pelas rotas de transporte.  
 **Critérios de Aceite:**
 
-1. Administrador acessa o menu "Faculdades" e visualiza a listagem das faculdades cadastradas (ativas e inativas).
-2. Administrador consegue criar uma nova faculdade preenchendo nome e campus no formulário; o sistema valida se a combinação (nome \+ campus) é única.
-3. Faculdade com mesmo nome e campus já existente no sistema (ativa ou inativa) bloqueia o cadastro: "Esta faculdade já está cadastrada."
-4. Administrador consegue editar dados de uma faculdade existente (nome, campus e demais informações).
-5. Administrador consegue inativar (soft delete) um registro ativo ou reativar um registro previamente inativado, sem apagar o registro do banco de dados; tanto a operação de inativação quanto a de reativação são registradas no log de auditoria (usuário, ação, timestamp).
+1. Administrador acessa o menu "Faculdades" e visualiza a listagem das faculdades ativas cadastradas.
+2. Administrador consegue criar uma nova faculdade preenchendo nome e campus no formulário; o sistema valida se a combinação (nome \+ campus) é única; o mesmo nome pode existir em campus diferentes.
+3. No cadastro ou na edição, faculdade com mesmo nome e campus já existente no sistema (ativa ou inativa) bloqueia o salvamento: "Esta faculdade já está cadastrada." A comparação desconsidera diferenças entre letras maiúsculas e minúsculas e espaços no início e no fim.
+4. Administrador consegue editar dados de uma faculdade existente (nome e campus).
+5. Administrador consegue inativar (soft delete) um registro ativo ou reativar um registro previamente inativado, sem apagar o registro do banco de dados.
 6. Tentativa de inativar uma faculdade que possui alunos agendados para datas futuras é bloqueada com mensagem: "Esta instituição possui viagens programadas pendentes. Não é possível inativar no momento."
-7. Inativação bem-sucedida exibe mensagem de confirmação ("Operação realizada com sucesso") e atualiza a listagem.
-8. Campos obrigatórios (nome e campus da instituição) são destacados se vazios; sistema bloqueia salvamento até preenchimento.
-9. Administrador consegue visualizar faculdades inativas na listagem quando necessário.
+7. Toda operação bem-sucedida (cadastro, edição, inativação ou reativação) exibe mensagem de confirmação ("Operação realizada com sucesso") e atualiza a listagem.
+8. Campos obrigatórios (nome e campus da instituição) são destacados se vazios; sistema bloqueia salvamento até preenchimento, inclusive na edição.
+9. Administrador consegue visualizar as faculdades inativas ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.
+10. Todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
+11. Faculdades inativas não são exibidas para seleção em novos cadastros (ex.: cadastro de aluno); alunos já vinculados a elas mantêm o vínculo (RN-004).
 
 **Fluxo Principal:**
 
 1. O administrador acessa o menu de "Faculdades".
-2. O sistema exibe a listagem das faculdades já cadastradas (ativas e inativas).
+2. O sistema exibe a listagem das faculdades ativas cadastradas.
 3. O administrador seleciona a ação: "Novo Cadastro", "Editar", ou "Inativar" ou “Reativar” em um registro existente.
 4. O administrador preenche as informações da faculdade (nome, campus, etc.) ou confirma a inativação do registro.
 5. O sistema valida os dados e aplica a operação no banco de dados (executando o soft delete em caso de inativação).
@@ -1074,9 +1076,9 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar e
 
 1. FA-001 \- Inativação de faculdade com agendamentos futuros.
    1. O administrador tenta inativar uma faculdade que possui alunos agendados para datas futuras.
-   2. O sistema bloqueia a inativação temporariamente e exibe um alerta informando que a instituição possui viagens programadas pendentes.
+   2. O sistema bloqueia a inativação e exibe um alerta informando que a instituição possui viagens programadas pendentes.
 2. FA-002 \- Cadastro duplicado.
-   1. O administrador tenta salvar uma faculdade com o mesmo nome e campus de uma instituição já ativa no sistema.
+   1. O administrador tenta salvar uma faculdade , no cadastro ou na edição, com o mesmo nome e campus de uma instituição já existente (ativa ou inativa).
    2. O sistema bloqueia o cadastro e informa que a faculdade já existe.
 3. FA-003 \- Campos obrigatórios ausentes.
    1. O administrador tenta salvar o formulário sem preencher os dados principais da instituição.
