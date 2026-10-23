@@ -5,6 +5,7 @@ from sqlalchemy import inspect, or_, text
 
 from src.modulos.usuarios.model.entities.aluno import AlunoORM
 from src.modulos.usuarios.model.entities.usuario import UsuarioORM
+from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
 from src.modulos.usuarios.model.entities.tipo import TipoORM
 from src.modulos.usuarios.model.entities.usuario_tipo import UsuarioTipoORM
 from src.shared.enums.cargo_enum import CargoEnum
@@ -142,16 +143,18 @@ class SQLAlchemyUsuarioRepository:
                 motivo = f"Sua conta está inativada{complemento}."
 
             validade_acesso = aluno.validade_acesso
+            acesso_expirado = False
             if ativo and validade_acesso:
                 if validade_acesso.tzinfo is None:
                     validade_acesso = validade_acesso.replace(tzinfo=timezone.utc)
                 if agora >= validade_acesso:
-                    ativo = False
+                    acesso_expirado = True
                     motivo = "A validade de acesso da sua conta expirou."
 
             candidatos.append({
                 "role": CargoEnum.ALUNO.value,
                 "ativo": ativo,
+                "acesso_expirado": acesso_expirado,
                 "status": status_cadastro,
                 "motivo": motivo,
                 "aluno": aluno,
@@ -376,8 +379,8 @@ class SQLAlchemyUsuarioRepository:
                 AlunoORM.aluno_id.label("id"),
                 UsuarioORM.nome_completo.label("nome"),
                 UsuarioORM.email,
-                AlunoORM.faculdade_id.label("faculdade"),
-                AlunoORM.campus,
+                FaculdadeORM.nome_faculdade.label("faculdade"),
+                FaculdadeORM.campus_faculdade.label("campus"),
                 AlunoORM.status_cadastro,
                 AlunoORM.data_hora_envio_analise,
                 AlunoORM.data_hora_ultima_renovacao_matricula,
@@ -385,6 +388,7 @@ class SQLAlchemyUsuarioRepository:
                 AlunoORM.documentos_reenvio,
             )
             .join(AlunoORM, AlunoORM.aluno_id == UsuarioORM.id)
+            .outerjoin(FaculdadeORM, AlunoORM.faculdade_id == FaculdadeORM.id_faculdade)
             .order_by(UsuarioORM.nome_completo)
             .all()
         )
@@ -470,7 +474,6 @@ class SQLAlchemyUsuarioRepository:
                 aluno_id=usuario.id,
                 status_cadastro=status_str,
                 faculdade_id=comando.faculdade_id,
-                campus=comando.campus,
                 bairro_id=comando.bairro_id,
                 id_comprovante_matricula=comando.id_comprovante_matricula,
                 id_comprovante_residencia=comando.id_comprovante_residencia,
@@ -670,7 +673,6 @@ class SQLAlchemyUsuarioRepository:
             aluno.tem_filhos = dados.tem_filhos
             aluno.bairro_id = dados.bairro_id
             aluno.faculdade_id = dados.faculdade_id
-            aluno.campus = dados.campus
             aluno.curso = dados.curso
             aluno.periodo_ingresso = dados.periodo_ingresso
             aluno.turno_curso = getattr(dados.turno_curso, "value", dados.turno_curso)

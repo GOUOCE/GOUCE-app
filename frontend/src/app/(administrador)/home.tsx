@@ -64,7 +64,7 @@ export default function AdminHomeScreen() {
           subtitle="aprovar/reprovar cadastros"
           Icone={Contact}
           badgeCount={qtdPendentes > 0 ? qtdPendentes : undefined}
-          onPress={() => router.push('/(administrador)/cadastros')}
+          onPress={() => router.push('/(administrador)/solicitacoes')}
         />
 
         <View style={styles.divider} />

@@ -74,8 +74,8 @@ services:
       - "19002:19002"
     environment:
       - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
-      - REACT_NATIVE_PACKAGER_HOSTNAME=127.0.0.1
-      - EXPO_PUBLIC_API_URL=http://localhost:8000
+      - REACT_NATIVE_PACKAGER_HOSTNAME=${REACT_NATIVE_PACKAGER_HOSTNAME:-192.168.100.29}
+      - EXPO_PUBLIC_API_URL=${EXPO_PUBLIC_API_URL:-http://localhost:8000}
     stdin_open: true
     tty: true
     networks:

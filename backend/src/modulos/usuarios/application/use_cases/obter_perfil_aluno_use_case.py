@@ -42,7 +42,7 @@ class ObterPerfilAlunoUseCase:
             data_criacao=usuario.data_criacao,
             status_cadastro=status_cadastro,
             faculdade_id=aluno.faculdade_id if aluno else None,
-            campus=getattr(aluno, "campus", None) if aluno else None,
+            campus=getattr(aluno, "faculdade_rel", None) and aluno.faculdade_rel.campus_faculdade if aluno else None,
             bairro_id=aluno.bairro_id if aluno else None,
             curso=aluno.curso if aluno else None,
             semestre_atual=aluno.semestre_atual if aluno else None,

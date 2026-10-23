@@ -270,4 +270,11 @@ export const userService = {
     const response = await api.get('/alunos/me/carteirinha');
     return response.data;
   },
+
+  async reenviarDocumentos(data: FormData): Promise<any> {
+    const response = await api.patch('/usuarios/me/reenviar', data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
 };
