@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView, Modal as RNModal } from 'react-native';
 import { Text, TextInput, Button, Portal } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -114,26 +114,37 @@ export default function EditarPerfilScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
+  // Últimos dados vindos da API (ou salvos), usados para limpar o formulário ao voltar
+  const ultimosDadosSalvos = useRef<EditarPerfilFormData>({
+    telefone: (user?.telefone || '').replace(/\D/g, ''),
+    bairro: user?.bairro || 'Croatá',
+  });
+
   const { control, handleSubmit, formState: { errors, isDirty }, reset } = useForm<EditarPerfilFormData>({
     resolver: zodResolver(editarPerfilSchema),
-    defaultValues: {
-      telefone: (user?.telefone || '').replace(/\D/g, ''),
-      bairro: user?.bairro || 'Croatá',
-    }
+    defaultValues: ultimosDadosSalvos.current,
   });
 
   // Carrega dados atualizados do perfil ao focar na tela (#125)
   useFocusEffect(
     React.useCallback(() => {
+      let ativo = true;
+
+      // A tela fica montada dentro das abas: descarta na hora o que foi digitado
+      // e não salvo, sem esperar a resposta da API
+      reset(ultimosDadosSalvos.current);
+
       async function loadProfile() {
         if (!user) return;
         setIsLoading(true);
         try {
           const profile = await userService.getProfile();
-          reset({
+          if (!ativo) return;
+          ultimosDadosSalvos.current = {
             telefone: (profile.telefone || user.telefone || '').replace(/\D/g, ''),
             bairro: profile.bairro_id || user.bairro || 'Croatá',
-          });
+          };
+          reset(ultimosDadosSalvos.current);
         } catch (error) {
           console.error('Erro ao carregar perfil:', error);
         } finally {
@@ -141,6 +152,10 @@ export default function EditarPerfilScreen() {
         }
       }
       loadProfile();
+
+      return () => {
+        ativo = false;
+      };
     }, [user, reset])
   );
 
@@ -175,6 +190,7 @@ export default function EditarPerfilScreen() {
         telefone: data.telefone,
         bairro: data.bairro,
       });
+      ultimosDadosSalvos.current = { telefone: data.telefone, bairro: data.bairro };
 
       showPopup({
         type: 'success',
