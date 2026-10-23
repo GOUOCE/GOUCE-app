@@ -1246,7 +1246,9 @@ Como administrador, quero atribuir ou revogar a função de representante de um 
 8. O representante somente poderá visualizar a lista de embarque e registrar a presença dos alunos vinculados ao transporte da universidade sob sua responsabilidade.
 9. O representante não poderá acessar funcionalidades administrativas exclusivas do administrador.
 10. O sistema deve registrar as alterações de atribuição e revogação da função no log de auditoria, identificando o administrador responsável e o momento da operação.
-11. Um aluno que já possua a função de representante não poderá receber a mesma função novamente.  
+11. Um aluno que já possua a função de representante ativa não poderá receber a mesma função novamente.
+12. Ao atribuir a função, o administrador deve selecionar a instituição de ensino sob responsabilidade do representante; o campo é obrigatório e a atribuição é bloqueada enquanto estiver vazio.
+13. Um aluno que teve a função de representante revogada pode receber a função novamente, voltando a constar como representante ativo na listagem.  
     **Fluxo Principal:**
 12. O administrador acessa o menu **"Representantes"**.
 13. O sistema exibe os alunos que possuem a função de representante.

@@ -60,10 +60,11 @@ bdd/features/epico-02/
 
 **HU-030: Gerenciamento de Representantes**
 
-- Fluxo: admin atribui ou revoga a função de representante de um aluno aprovado e ativo
-- Regra: revogar a função mantém o cadastro de aluno ativo
+- Fluxo: admin atribui ou revoga a função de representante de um aluno aprovado e ativo, escolhendo a instituição de ensino responsável (obrigatória); a listagem mostra representantes ativos e revogados
+- Regra: revogar a função mantém o cadastro de aluno ativo; aluno com função revogada pode receber a função novamente
 - Escopo: representante vê apenas a lista de embarque da sua universidade (RN-015, depende das HU-018 e HU-021)
-- Cenários: 1 listagem + 1 atribuição + 1 revogação + 1 aluno não aprovado (4 status) + 1 já representante + 1 aluno não encontrado + 1 escopo do representante + 1 representante sem acesso administrativo + 1 perda de permissões após revogação + 1 acesso restrito
+- Organizado em blocos `Regra:` (atribuição e revogação, auditoria, escopo do representante, acesso restrito)
+- Cenários: 1 listagem + 1 atribuição + 1 instituição obrigatória + 1 revogação + 1 reatribuição + 1 aluno não aprovado (4 status) + 1 já representante + 1 aluno não encontrado + 1 auditoria + 1 escopo do representante + 1 perda de permissões após revogação + 2 acesso restrito (menu e API)
 
 ## Resumo de Cobertura
 
@@ -73,8 +74,8 @@ bdd/features/epico-02/
 | HU-008 | 18       | 6        | 28        |
 | HU-009 | 20       | 9        | 45        |
 | HU-010 | 23       | 8        | 35        |
-| HU-030 | 10       | 1        | 13        |
-| Total  | 91       | 32       | 153       |
+| HU-030 | 13       | 4        | 19        |
+| Total  | 94       | 35       | 159       |
 
 - Todos os critérios de aceite e fluxos alternativos de `docs/requisitos.md` (seção 7.3) têm ao menos um cenário.
 - Cenários de RN-004 (preservação de histórico) dependem de consulta ao banco ou à API e estão marcados com `@teste_api @nao_automatizavel_via_appium`.
@@ -89,6 +90,7 @@ bdd/features/epico-02/
 - HU-008: mesmas decisões da HU-007 (listagem só de ativas com "Mostrar inativos", duplicidade também na edição e sem diferenciar maiúsculas/minúsculas, auditoria de todas as escritas, inativas fora da seleção).
 - HU-009: mesmas decisões, mais critérios novos de formato da placa (Mercosul ou antigo, mensagem "Placa inválida.") e de quantidade (assentos ≥ 1, em pé ≥ 0, só inteiros), e normalização da placa na duplicidade.
 - HU-010: mesmas decisões, mais critério novo de formato do telefone (DDD + 8 dígitos de fixo ou 9 de celular, mensagem "Informe um telefone válido com DDD"), duplicidade comparando só os dígitos do telefone e homônimos permitidos.
+- HU-030: mesmas decisões, mais critérios novos de instituição de ensino obrigatória na atribuição (já exigida pela tela) e de reatribuição após revogação.
 
 **Pendentes:**
 
