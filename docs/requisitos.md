@@ -1175,14 +1175,17 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, buscar, 
 **Critérios de Aceite:**
 
 1. Administrador acessa a tela "Motoristas" e visualiza a listagem dos motoristas ativos cadastrados (exibindo nome e telefone), podendo filtrá-los através da barra de pesquisa "Buscar por nome".
-2. Administrador consegue criar um novo motorista clicando em "+ Novo" e preenchendo os campos obrigatórios **Nome Completo** e **Telefone** na tela "Cadastrar Motorista"; o sistema valida se o número de telefone informado é único.
-3. Tentativa de cadastro com um número de telefone já existente no sistema (ativo ou inativo) bloqueia o cadastro e exibe a mensagem: _"Este profissional já está registrado."_
+2. Administrador consegue criar um novo motorista clicando em "+ Novo" e preenchendo os campos obrigatórios **Nome Completo** e **Telefone** na tela "Cadastrar Motorista"; o sistema valida se o número de telefone informado é único e se está em formato válido. Motoristas com o mesmo nome são permitidos, desde que tenham telefones diferentes.
+3. No cadastro ou na edição, número de telefone já existente no sistema (ativo ou inativo) bloqueia o salvamento e exibe a mensagem: _"Este profissional já está registrado."_ A comparação considera apenas os dígitos, desconsiderando a máscara (ex.: "(88) 99811-2233" e "88998112233" são o mesmo telefone).
 4. Administrador consegue editar os dados de um motorista existente clicando no ícone de edição (lápis), alterando o **Nome Completo** ou **Telefone** na tela "Editar Motorista" e clicando em "Salvar alterações".
-5. Administrador consegue inativar (_soft delete_) um registro ativo clicando no ícone de lixeira (mediante modal de confirmação) ou reativar um registro previamente inativado clicando no ícone de restauração (seta de retorno), sem apagar o registro do banco de dados; tanto a operação de inativação quanto a de reativação são registradas no log de auditoria (usuário, ação, _timestamp_).
+5. Administrador consegue inativar (_soft delete_) um registro ativo clicando no ícone de lixeira (mediante modal de confirmação) ou reativar um registro previamente inativado clicando no ícone de restauração (seta de retorno), sem apagar o registro do banco de dados. Cancelar a inativação no modal mantém o motorista ativo e não gera registro de auditoria.
 6. Tentativa de inativar um motorista que está escalado para realizar rotas em dias futuros é bloqueada com a mensagem: _"Este profissional possui alocações pendentes e não pode ser inativado no momento."_
 7. Operações bem-sucedidas (cadastro, edição, inativação ou reativação) exibem uma notificação de confirmação (ex: _"Motorista alterado com sucesso"_) e atualizam a listagem.
-8. Os campos obrigatórios (**Nome Completo** e **Telefone**) são destacados se estiverem vazios; o sistema bloqueia o salvamento até o devido preenchimento.
-9. O administrador consegue visualizar a seção de motoristas "Inativos" na listagem ao ativar a chave seletora (_switch_) "Mostrar inativos".  
+8. Os campos obrigatórios (**Nome Completo** e **Telefone**) são destacados se estiverem vazios; o sistema bloqueia o salvamento até o devido preenchimento, inclusive na edição.
+9. O administrador consegue visualizar a seção de motoristas "Inativos" na listagem ao ativar a chave seletora (_switch_) "Mostrar inativos"; os registros inativos são identificados como inativos.
+10. O telefone deve ter DDD seguido de 8 dígitos (fixo) ou 9 dígitos (celular), pois o motorista pode ter apenas telefone fixo; o formulário aplica a máscara automaticamente. Telefone incompleto (sem DDD ou com poucos dígitos) bloqueia o salvamento com a mensagem _"Informe um telefone válido com DDD"_.
+11. Todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, _timestamp_).
+12. Motoristas inativos não são exibidos para seleção na escalação de rotas; rotas, alocações e relatórios anteriores mantêm o vínculo (RN-004).  
    **Fluxo Principal:**
 10. O administrador acessa a tela de "Motoristas".
 11. O sistema exibe a listagem dos motoristas ativos (e os inativos, caso a opção "Mostrar inativos" esteja habilitada).
@@ -1196,8 +1199,8 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, buscar, 
     1. O administrador tenta inativar um motorista que já está escalado para realizar rotas em dias futuros.
     2. O sistema bloqueia a inativação e exibe um alerta informando que o profissional possui alocações pendentes.
 18. FA-002 \- Cadastro duplicado.
-    1. O administrador tenta cadastrar um motorista inserindo um documento (ex: CNH ou CPF) que já existe e está ativo no sistema.
-    2. O sistema bloqueia o cadastro e informa que o profissional já está registrado.
+    1. O administrador tenta cadastrar um motorista , no cadastro ou na edição, com um telefone que já existe (ativo ou inativo) no sistema.
+    2. O sistema bloqueia o salvamento e informa que o profissional já está registrado.
 19. FA-003 \- Campos obrigatórios ausentes.
     1. O administrador tenta salvar o formulário sem preencher os dados principais do motorista.
     2. O sistema sinaliza os campos vazios e impede o salvamento.
