@@ -26,10 +26,11 @@ bdd/features/epico-02/
 
 **HU-007: Gerenciamento de Bairros e Pontos de Parada**
 
-- Fluxo: admin cadastra, edita, inativa e reativa bairros com ao menos um ponto de parada
-- Unicidade: nome do bairro e do ponto de parada (ativo ou inativo)
-- Bloqueio: bairro vinculado a rota ativa não pode ser inativado (depende da HU-011)
-- Cenários: 1 listagem + 1 sucesso + 2 duplicidade + 1 campos obrigatórios + 1 edição + 1 inativação + 1 reativação + 1 bloqueio por rota + 1 inativos + 1 histórico (RN-004) + 1 acesso restrito
+- Fluxo: admin cadastra, edita, inativa e reativa bairros com ao menos um ponto de parada ativo; pontos podem ser inativados individualmente
+- Unicidade: nome do bairro no sistema e nome do ponto dentro do bairro (ativo ou inativo, sem diferenciar maiúsculas/minúsculas)
+- Bloqueio: bairro ou ponto vinculado a rota ativa não pode ser inativado (depende da HU-011)
+- Organizado em blocos `Regra:` (gestão pelo admin, soft delete e auditoria, indisponibilidade de inativos, acesso restrito)
+- Cenários: 1 listagem + 1 sucesso + 1 ponto com mesmo nome em outro bairro + 3 duplicidade (bairro no cadastro, bairro na edição, ponto no bairro) + 2 obrigatórios (cadastro e último ponto na edição) + 1 edição + 2 inativação (bairro e ponto) + 1 reativação + 1 bloqueio por rota + 1 inativos + 1 soft delete + 1 auditoria + 1 bairro inativo fora da seleção + 1 histórico (RN-004) + 2 acesso restrito (menu e API)
 
 **HU-008: Gerenciamento de Faculdades**
 
@@ -63,12 +64,12 @@ bdd/features/epico-02/
 
 | HU     | Cenários | Esquemas | Execuções |
 | ------ | -------- | -------- | --------- |
-| HU-007 | 12       | 3        | 15        |
+| HU-007 | 20       | 8        | 32        |
 | HU-008 | 12       | 3        | 15        |
 | HU-009 | 12       | 3        | 16        |
 | HU-010 | 13       | 3        | 16        |
 | HU-030 | 10       | 1        | 13        |
-| Total  | 59       | 13       | 75        |
+| Total  | 67       | 18       | 92        |
 
 - Todos os critérios de aceite e fluxos alternativos de `docs/requisitos.md` (seção 7.3) têm ao menos um cenário.
 - Cenários de RN-004 (preservação de histórico) dependem de consulta ao banco ou à API e estão marcados com `@teste_api @nao_automatizavel_via_appium`.
@@ -77,13 +78,18 @@ bdd/features/epico-02/
 
 ## Divergências encontradas nos requisitos
 
+**Resolvidas em `docs/requisitos.md`:**
+
+- HU-007: duplicidade vale para ativo ou inativo; ponto único dentro do bairro; listagem só de ativos com a chave "Mostrar inativos"; auditoria de todas as operações de escrita; bloqueio de remover o último ponto; comparação de nomes sem diferenciar maiúsculas/minúsculas; inativação de ponto individual; bairros inativos fora da seleção; referência RNF-011 corrigida para RF-011.
+
+**Pendentes:**
+
 Pontos de `docs/requisitos.md` que precisam de alinhamento com o time. Os cenários seguem a opção indicada e trazem um comentário `# Observação` no arquivo.
 
 | HU             | Divergência                                                                                                                   | Opção seguida nos cenários          |
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| HU-007 a 010   | O AC-03 bloqueia duplicidade com registro **ativo ou inativo**; o FA-002 cita apenas registros **ativos**                     | AC-03 (ativo ou inativo)            |
+| HU-008 a 010   | O AC-03 bloqueia duplicidade com registro **ativo ou inativo**; o FA-002 cita apenas registros **ativos**                     | AC-03 (ativo ou inativo)            |
 | HU-010         | AC-02/AC-03 usam o **telefone** como identificador único; o FA-002 cita **CNH ou CPF**; o RF-009 cita **número e categoria da CNH** | ACs (telefone)                      |
-| HU-007         | Em "Requisitos Funcionais" aparece **RNF-011** (Backup); o requisito de bairros é o **RF-011**                                 | RF-011                              |
 | HU-030         | O documento cita **RF-034**, mas a tabela de requisitos registra o item como **RF-34**                                        | RF-034                              |
 | HU-009         | A mensagem do AC-03 está sem fechamento de aspas: `'Este veículo já está registrado`                                          | "Este veículo já está registrado."  |
 | HU-030         | As mensagens de bloqueio (FA-002, FA-003 e FA-004) não têm texto definido                                                     | Cenários verificam o sentido da mensagem, não o texto exato |

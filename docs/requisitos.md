@@ -980,57 +980,59 @@ Este épico reúne todas as funcionalidades relacionadas ao cadastro e manutenç
 Fonte: Elaborado pelo Clidenor(2026).
 
 **História de Usuário:**  
-Como administrador, quero acessar um painel para cadastrar, visualizar, editar e inativar bairros e seus respectivos pontos de parada, para estruturar a base geográfica de embarque e desembarque dos estudantes.
+Como administrador, quero acessar um painel para cadastrar, visualizar, editar, inativar e reativar bairros e seus respectivos pontos de parada, para estruturar a base geográfica de embarque e desembarque dos estudantes.
 
 **Critérios de Aceite:**
 
-1.  Administrador acessa o menu "Bairros e Pontos de Parada" e visualiza a listagem de bairros cadastrados com seus respectivos pontos de parada associados (ativos e inativos).
-2.  Administrador consegue criar um novo bairro preenchendo o nome e adicionando ao menos um ponto de parada; o sistema valida se o nome do bairro é único.
-3.  Bairro ou ponto de parada com nome já existente no sistema (ativo ou inativo) bloqueia o salvamento e exibe mensagem: "Esta localidade já está cadastrada."
-4.  Administrador consegue editar dados de um bairro existente (nome, pontos de parada associados).
-5.  Administrador consegue inativar (soft delete) um registro ativo ou reativar um registro previamente inativado, sem apagar o registro do banco de dados; tanto a operação de inativação quanto a de reativação são registradas no log de auditoria (usuário, ação, timestamp).
-6.  Tentativa de inativar um bairro que está vinculado a uma rota ativa é bloqueada com mensagem: "Este bairro não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar."
-7.  Inativação bem-sucedida exibe mensagem de confirmação ("Operação realizada com sucesso") e atualiza a listagem.
-8.  Campos obrigatórios (nome do bairro e ao menos um ponto de parada) são destacados se vazios; sistema bloqueia salvamento até preenchimento.
-9.  Administrador consegue visualizar bairros e pontos inativos na listagem quando necessário.
+1.  Administrador acessa o menu "Bairros e Pontos de Parada" e visualiza a listagem dos bairros ativos com seus respectivos pontos de parada ativos.
+2.  Administrador consegue criar um novo bairro preenchendo o nome e adicionando ao menos um ponto de parada; o nome do bairro deve ser único no sistema e o nome do ponto de parada deve ser único dentro do mesmo bairro (o mesmo nome de ponto pode existir em bairros diferentes).
+3.  No cadastro ou na edição, bairro com nome já existente no sistema, ou ponto de parada com nome já existente no mesmo bairro (ativo ou inativo), bloqueia o salvamento e exibe a mensagem: "Esta localidade já está cadastrada." A comparação de nomes desconsidera diferenças entre letras maiúsculas e minúsculas e espaços no início e no fim.
+4.  Administrador consegue editar os dados de um bairro existente (nome do bairro; adicionar, renomear ou inativar pontos de parada associados).
+5.  Administrador consegue inativar (soft delete) um bairro ou um ponto de parada ativo, ou reativar um registro previamente inativado, sem apagar o registro do banco de dados. Enquanto um bairro estiver inativo, seus pontos de parada também ficam indisponíveis para uso.
+6.  Tentativa de inativar um bairro ou ponto de parada vinculado a uma rota ativa é bloqueada com a mensagem: "Este bairro não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar." (para bairro) ou "Este ponto de parada não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar." (para ponto de parada).
+7.  Toda operação bem-sucedida (cadastro, edição, inativação ou reativação) exibe a mensagem de confirmação "Operação realizada com sucesso" e atualiza a listagem.
+8.  Campos obrigatórios (nome do bairro e ao menos um ponto de parada ativo) são destacados se vazios; o sistema bloqueia o salvamento até o preenchimento, inclusive na edição, quando o administrador tenta remover ou inativar o último ponto de parada ativo do bairro.
+9.  Administrador consegue visualizar os bairros e pontos de parada inativos ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.
+10. Todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
+11. Bairros e pontos de parada inativos não são exibidos para seleção em novos cadastros (ex.: cadastro de aluno e montagem de rotas); alunos e rotas já vinculados a eles mantêm o vínculo (RN-004).
 
     **Fluxo Principal:**
 
-10. O administrador acessa o menu de "Bairros e Pontos de Parada".
-11. O sistema exibe a listagem dos bairros já cadastrados e seus respectivos pontos associados (ativos e inativos).
-12. O administrador seleciona a ação: "Novo Cadastro", "Editar", "Inativar" ou “Reativar” em um registro existente.
-13. O administrador preenche as informações (nome do bairro, nome/referência do ponto de parada) ou confirma a inativação.
-14. O sistema valida os dados e aplica a operação no banco de dados (em caso de inativação, executando o _soft delete_ para ocultar o registro sem apagá-lo definitivamente).
-15. O sistema registra a operação no log de auditoria.
-16. O sistema exibe uma mensagem de sucesso e recarrega a listagem atualizada.
+12. O administrador acessa o menu de "Bairros e Pontos de Parada".
+13. O sistema exibe a listagem dos bairros ativos e seus respectivos pontos de parada ativos.
+14. O administrador seleciona a ação: "Novo Cadastro", "Editar", "Inativar" ou "Reativar" em um registro existente.
+15. O administrador preenche as informações (nome do bairro, nome/referência do ponto de parada) ou confirma a inativação/reativação.
+16. O sistema valida os dados e aplica a operação no banco de dados (em caso de inativação, executando o _soft delete_ para ocultar o registro sem apagá-lo definitivamente).
+17. O sistema registra a operação no log de auditoria.
+18. O sistema exibe uma mensagem de sucesso e recarrega a listagem atualizada.
 
     **Fluxos Alternativos:**
 
-17. **FA-001 \- Inativação de bairro/ponto vinculado a uma rota ativa.**
-    1. O administrador tenta inativar um bairro que está atualmente associado a uma rota estruturada.
-    2. O sistema bloqueia a inativação temporariamente e exibe um alerta: "Este bairro não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar."
-18. **FA-002 \- Cadastro duplicado.**
-    1. O administrador tenta salvar um bairro ou ponto de parada com um nome idêntico a um registro já existente e ativo.
+19. **FA-001 \- Inativação de bairro/ponto vinculado a uma rota ativa.**
+    1. O administrador tenta inativar um bairro ou um ponto de parada que está atualmente associado a uma rota ativa.
+    2. O sistema bloqueia a inativação e exibe o alerta correspondente definido no critério de aceite 6.
+20. **FA-002 \- Cadastro duplicado.**
+    1. O administrador tenta salvar, no cadastro ou na edição, um bairro com nome idêntico ao de outro bairro, ou um ponto de parada com nome idêntico ao de outro ponto do mesmo bairro, já existente (ativo ou inativo).
     2. O sistema bloqueia o salvamento e informa que a localidade já está cadastrada.
-19. **FA-003 \- Campos obrigatórios ausentes.**
-    1. O administrador tenta salvar o formulário sem inserir o nome do bairro ou sem definir ao menos um ponto de parada.
+21. **FA-003 \- Campos obrigatórios ausentes.**
+    1. O administrador tenta salvar o formulário sem inserir o nome do bairro, sem definir ao menos um ponto de parada ou removendo/inativando o último ponto de parada ativo do bairro.
     2. O sistema destaca os campos pendentes e impede a conclusão.
 
     **Regras de Negócio Relacionadas:**
 
-20. RN-004
-21. RN-006
+22. RN-004
+23. RN-006
 
     **Requisitos Relacionados:**  
      **FUNCIONAIS:**
 
-22. RNF-011
-23. RF-014
+24. RF-011
+25. RF-014
 
-        **NÃO FUNCIONAS:**
+        **NÃO FUNCIONAIS:**
 
-24. RNF-012
-25. RNF-013
+26. RNF-012
+27. RNF-013
 
 **Protótipo da Interface:**  
 **\[A inserir\]**
