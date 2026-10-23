@@ -42,10 +42,12 @@ bdd/features/epico-02/
 
 **HU-009: Gerenciamento de Frota (Ônibus)**
 
-- Fluxo: admin cadastra, edita, inativa e reativa ônibus (placa, assentos e capacidade em pé)
-- Unicidade: placa, no cadastro e na edição
+- Fluxo: admin cadastra, edita, inativa e reativa ônibus (placa, assentos e capacidade em pé); a listagem mostra só os ativos, com a chave "Mostrar inativos"
+- Unicidade: placa, no cadastro e na edição, ativa ou inativa, sem diferenciar maiúsculas/minúsculas nem hífen (a placa é guardada em maiúsculas e sem hífen)
+- Validações: formato da placa (Mercosul ou antigo) e assentos inteiro ≥ 1 / em pé inteiro ≥ 0 (critérios novos, mensagens a alinhar com o time)
 - Bloqueio: ônibus escalado para rota futura não pode ser inativado (depende das HU-016 e HU-017)
-- Cenários: 1 listagem + 1 sucesso + 1 duplicidade no cadastro + 1 duplicidade na edição + 1 campos obrigatórios + 1 edição + 1 inativação + 1 reativação + 1 bloqueio por alocação + 1 inativos + 1 histórico + 1 acesso restrito
+- Organizado em blocos `Regra:` (gestão pelo admin, soft delete e auditoria, indisponibilidade de inativos, acesso restrito)
+- Cenários: 1 listagem + 1 sucesso + 1 normalização da placa + 2 duplicidade (cadastro e edição) + 2 obrigatórios (cadastro e edição) + 1 formato da placa + 1 quantidade inválida + 1 edição + 1 inativação + 1 reativação + 1 bloqueio por alocação + 1 inativos + 1 soft delete + 1 auditoria + 1 ônibus inativo fora da escalação + 1 histórico (RN-004) + 2 acesso restrito (menu e API)
 
 **HU-010: Gerenciamento de Motoristas**
 
@@ -67,10 +69,10 @@ bdd/features/epico-02/
 | ------ | -------- | -------- | --------- |
 | HU-007 | 20       | 8        | 32        |
 | HU-008 | 18       | 6        | 28        |
-| HU-009 | 12       | 3        | 16        |
+| HU-009 | 20       | 9        | 45        |
 | HU-010 | 13       | 3        | 16        |
 | HU-030 | 10       | 1        | 13        |
-| Total  | 73       | 21       | 105       |
+| Total  | 81       | 27       | 134       |
 
 - Todos os critérios de aceite e fluxos alternativos de `docs/requisitos.md` (seção 7.3) têm ao menos um cenário.
 - Cenários de RN-004 (preservação de histórico) dependem de consulta ao banco ou à API e estão marcados com `@teste_api @nao_automatizavel_via_appium`.
@@ -83,6 +85,7 @@ bdd/features/epico-02/
 
 - HU-007: duplicidade vale para ativo ou inativo; ponto único dentro do bairro; listagem só de ativos com a chave "Mostrar inativos"; auditoria de todas as operações de escrita; bloqueio de remover o último ponto; comparação de nomes sem diferenciar maiúsculas/minúsculas; inativação de ponto individual; bairros inativos fora da seleção; referência RNF-011 corrigida para RF-011.
 - HU-008: mesmas decisões da HU-007 (listagem só de ativas com "Mostrar inativos", duplicidade também na edição e sem diferenciar maiúsculas/minúsculas, auditoria de todas as escritas, inativas fora da seleção).
+- HU-009: mesmas decisões, mais critérios novos de formato da placa (Mercosul ou antigo, mensagem "Placa inválida.") e de quantidade (assentos ≥ 1, em pé ≥ 0, só inteiros), e normalização da placa na duplicidade.
 
 **Pendentes:**
 
@@ -93,5 +96,5 @@ Pontos de `docs/requisitos.md` que precisam de alinhamento com o time. Os cenár
 | HU-008 a 010   | O AC-03 bloqueia duplicidade com registro **ativo ou inativo**; o FA-002 cita apenas registros **ativos**                     | AC-03 (ativo ou inativo)            |
 | HU-010         | AC-02/AC-03 usam o **telefone** como identificador único; o FA-002 cita **CNH ou CPF**; o RF-009 cita **número e categoria da CNH** | ACs (telefone)                      |
 | HU-030         | O documento cita **RF-034**, mas a tabela de requisitos registra o item como **RF-34**                                        | RF-034                              |
-| HU-009         | A mensagem do AC-03 está sem fechamento de aspas: `'Este veículo já está registrado`                                          | "Este veículo já está registrado."  |
+| HU-009         | A mensagem do AC-03 estava sem fechamento de aspas (corrigida em `docs/requisitos.md`)                                        | "Este veículo já está registrado."  |
 | HU-030         | As mensagens de bloqueio (FA-002, FA-003 e FA-004) não têm texto definido                                                     | Cenários verificam o sentido da mensagem, não o texto exato |

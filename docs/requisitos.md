@@ -1110,21 +1110,25 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar, 
 
 Fonte: Elaborado pelo Clidenor(2026).  
 **História de Usuário:**  
-Como administrador, quero acessar um painel para cadastrar, visualizar, editar e inativar os ônibus, informando sua placa, quantidade de assentos e capacidade máxima de alunos em pé, para gerenciar os veículos disponíveis para o transporte universitário e seus limites de ocupação.  
+Como administrador, quero acessar um painel para cadastrar, visualizar, editar, inativar e reativar os ônibus, informando sua placa, quantidade de assentos e capacidade máxima de alunos em pé, para gerenciar os veículos disponíveis para o transporte universitário e seus limites de ocupação.  
 **Critérios de Aceite:**
 
-1. Administrador acessa o menu "Frota" ou "Ônibus" e visualiza a listagem dos veículos cadastrados com informações de placa, quantidade de assentos e capacidade máxima de alunos em pé.
-2. Administrador consegue criar um novo ônibus preenchendo placa, quantidade de assentos e capacidade máxima de alunos em pé no formulário; o sistema valida se a placa é única.
-3. Placa de veículo já existente no sistema (ativa ou inativa) bloqueia o cadastro e exibe mensagem: 'Este veículo já está registrado
-4. Administrador consegue editar dados de um ônibus existente (placa, capacidade, demais informações).
-5. Administrador consegue inativar (soft delete) um registro ativo ou reativar um registro previamente inativado, sem apagar o registro do banco de dados; tanto a operação de inativação quanto a de reativação são registradas no log de auditoria (usuário, ação, timestamp).
+1. Administrador acessa o menu "Frota" ou "Ônibus" e visualiza a listagem dos veículos ativos cadastrados com informações de placa, quantidade de assentos e capacidade máxima de alunos em pé.
+2. Administrador consegue criar um novo ônibus preenchendo placa, quantidade de assentos e capacidade máxima de alunos em pé no formulário; o sistema valida se a placa é única e se está em formato válido.
+3. No cadastro ou na edição, placa de veículo já existente no sistema (ativa ou inativa) bloqueia o salvamento e exibe a mensagem: "Este veículo já está registrado." A comparação desconsidera letras maiúsculas/minúsculas e hífen; o sistema guarda a placa em maiúsculas e sem hífen.
+4. Administrador consegue editar dados de um ônibus existente (placa, quantidade de assentos e capacidade de alunos em pé).
+5. Administrador consegue inativar (soft delete) um registro ativo ou reativar um registro previamente inativado, sem apagar o registro do banco de dados.
 6. Tentativa de inativar um ônibus que está escalado para realizar rotas em dias futuros é bloqueada com mensagem: "Este veículo possui alocações pendentes e não pode ser inativado no momento."
-7. Inativação bem-sucedida exibe mensagem de confirmação ("Operação realizada com sucesso") e atualiza a listagem.
-8. Campos obrigatórios (placa e capacidade máxima(de assentos e em pé)) são destacados se vazios; sistema bloqueia salvamento até preenchimento.
-9. Administrador consegue visualizar ônibus inativos na listagem quando necessário.  
+7. Toda operação bem-sucedida (cadastro, edição, inativação ou reativação) exibe mensagem de confirmação ("Operação realizada com sucesso") e atualiza a listagem.
+8. Campos obrigatórios (placa e capacidade máxima(de assentos e em pé)) são destacados se vazios; sistema bloqueia salvamento até preenchimento, inclusive na edição.
+9. A placa deve estar em formato Mercosul (ABC1D23) ou antigo (ABC1234); placa em outro formato bloqueia o salvamento com a mensagem "Placa inválida."
+10. A quantidade de assentos deve ser um número inteiro maior ou igual a 1 e a capacidade de alunos em pé um número inteiro maior ou igual a 0; valores fora dessa regra (zero ou negativo nos assentos, negativo, decimal ou texto) bloqueiam o salvamento e o campo é destacado como inválido.
+11. Administrador consegue visualizar os ônibus inativos ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.
+12. Todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
+13. Ônibus inativos não são exibidos para seleção na escalação de rotas; rotas, alocações e relatórios anteriores mantêm o vínculo (RN-004).  
    **Fluxo Principal:**
 10. O administrador acessa o menu de "Frota" ou "Ônibus".
-11. O sistema exibe a listagem dos veículos cadastrados, detalhando informações como placa e capacidade (ativos e inativos).
+11. O sistema exibe a listagem dos veículos cadastrados, detalhando informações como placa e capacidade (apenas ativos).
 12. O administrador seleciona a ação: "Novo Cadastro", "Editar", ou "Inativar" ou “Reativar” em um registro existente.
 13. O administrador preenche as informações do veículo (placa, capacidade máxima de assentos e em pé, etc.) ou confirma a inativação do registro.
 14. O sistema valida os dados e aplica a operação no banco de dados (executando o soft delete em caso de inativação).
@@ -1135,10 +1139,10 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar e
     1. O administrador tenta inativar um veículo que já está escalado para realizar uma rota em um dia futuro.
     2. O sistema bloqueia a inativação e exibe um alerta informando que o veículo possui alocações pendentes.
 18. FA-002 \- Placa de veículo duplicada.
-    1. O administrador tenta cadastrar ou editar um ônibus inserindo uma placa que já existe e está ativa no sistema.
-    2. O sistema bloqueia o cadastro e informa que o veículo já está registrado.
+    1. O administrador tenta cadastrar ou editar um ônibus inserindo uma placa que já existe (ativa ou inativa) no sistema.
+    2. O sistema bloqueia o salvamento e informa que o veículo já está registrado.
 19. FA-003 \- Campos obrigatórios ausentes.
-    1. O administrador tenta salvar o formulário sem preencher a capacidade máxima ou a placa do ônibus.
+    1. O administrador tenta salvar o formulário sem preencher a placa, a quantidade de assentos ou a capacidade de alunos em pé do ônibus.
     2. O sistema sinaliza os campos vazios e impede o salvamento.
 
     **Regras de Negócio Relacionadas:**
