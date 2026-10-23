@@ -344,16 +344,32 @@ class OnibusApiHttpTest(unittest.IsolatedAsyncioTestCase):
         await self.asgi_request("/onibus", payload={"placa": "INA-0002", "assentos": 30, "capacidade_em_pe": 10}, method="POST")
         await self.asgi_request("/onibus/INA-0002/inativar", method="PATCH")
 
-        # Padrão: só ativos
-        status, body_ativos = await self.asgi_request("/onibus", method="GET")
+        # Sem filtro (admin vê todos por padrão): 2 registros
+        status, body_todos = await self.asgi_request("/onibus", method="GET")
+        self.assertEqual(status, 200)
+        self.assertEqual(len(body_todos), 2)
+
+        # Com filtro ativo=true: 1 registro
+        status, body_ativos = await self.asgi_request("/onibus", method="GET", query_string=b"ativo=true")
         self.assertEqual(status, 200)
         self.assertEqual(len(body_ativos), 1)
         self.assertEqual(body_ativos[0]["placa"], "ATV-0001")
 
-        # Com ?incluirInativos=true
-        status, body_todos = await self.asgi_request("/onibus", method="GET", query_string=b"incluirInativos=true")
+        # Com filtro ativo=false: 1 registro
+        status, body_inativos = await self.asgi_request("/onibus", method="GET", query_string=b"ativo=false")
         self.assertEqual(status, 200)
-        self.assertEqual(len(body_todos), 2)
+        self.assertEqual(len(body_inativos), 1)
+        self.assertEqual(body_inativos[0]["placa"], "INA-0002")
+
+        # Usuário não-admin (público) vê apenas ativos
+        self.app.dependency_overrides[get_optional_current_user] = lambda: None
+        status_pub, body_pub = await self.asgi_request("/onibus", method="GET")
+        self.assertEqual(status_pub, 200)
+        self.assertEqual(len(body_pub), 1)
+        self.assertEqual(body_pub[0]["placa"], "ATV-0001")
+
+        # Restaura override para os demais testes
+        self.app.dependency_overrides[get_optional_current_user] = lambda: self.fake_admin
 
     async def test_inativar_e_reativar_api(self):
         await self.asgi_request("/onibus", payload={"placa": "FLT-9999", "assentos": 50, "capacidade_em_pe": 20}, method="POST")
