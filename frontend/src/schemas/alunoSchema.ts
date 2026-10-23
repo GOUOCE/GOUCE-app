@@ -114,15 +114,15 @@ const fileSchema = z.any().refine((file) => {
   return isValidType && isValidSize;
 }, 'Envie PDF ou imagem (PNG, JPG ou WEBP) de até 10 MB');
 
+// Comprovante da renovação (HU-028): obrigatório, PDF/PNG/JPG/WEBP e até 5 MB (AC-03).
+// Mesmas regras do backend: aceita pelo MIME ou pela extensão, nada além disso.
+const MIMES_COMPROVANTE = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+const EXTENSOES_COMPROVANTE = ['.pdf', '.png', '.jpg', '.jpeg', '.webp'];
+const LIMITE_COMPROVANTE_BYTES = 5 * 1024 * 1024;
+
 export const fileSchema5MB = z.any().superRefine((file, ctx) => {
-  if (!file) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'O comprovante de matrícula é obrigatório',
-    });
-    return;
-  }
-  const target = Array.isArray(file) ? file[0] : (file && file.assets && file.assets[0]) ? file.assets[0] : file;
+  // Aceita o arquivo direto, uma lista ou o resultado do seletor ({ assets: [...] }).
+  const target = Array.isArray(file) ? file[0] : Array.isArray(file?.assets) ? file.assets[0] : file;
   if (!target) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -130,24 +130,11 @@ export const fileSchema5MB = z.any().superRefine((file, ctx) => {
     });
     return;
   }
-  if (target === 'existente' || target?.uri === 'existente') return;
 
-  const size = target.size || target.fileSize || 0;
   const mime = (target.mimeType || target.type || '').toLowerCase();
   const name = (target.name || target.fileName || '').toLowerCase();
-
   const isValidType =
-    mime.includes('pdf') ||
-    mime.includes('image') ||
-    mime.includes('png') ||
-    mime.includes('jpg') ||
-    mime.includes('jpeg') ||
-    mime.includes('webp') ||
-    name.endsWith('.pdf') ||
-    name.endsWith('.png') ||
-    name.endsWith('.jpg') ||
-    name.endsWith('.jpeg') ||
-    name.endsWith('.webp');
+    MIMES_COMPROVANTE.includes(mime) || EXTENSOES_COMPROVANTE.some((ext) => name.endsWith(ext));
 
   if (!isValidType) {
     ctx.addIssue({
@@ -157,7 +144,9 @@ export const fileSchema5MB = z.any().superRefine((file, ctx) => {
     return;
   }
 
-  if (size > 5 * 1024 * 1024) {
+  // O seletor nem sempre informa o tamanho; nesse caso quem decide é o backend.
+  const size = target.size ?? target.fileSize;
+  if (typeof size === 'number' && size > LIMITE_COMPROVANTE_BYTES) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: 'O arquivo excede o limite de tamanho de 5 MB',
