@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { TextInput, Text, useTheme, Portal } from 'react-native-paper';
 import { useFormContext, Controller } from 'react-hook-form';
 import { ChevronDown, Phone, School, GraduationCap, Search, X } from 'lucide-react-native';
 import { formatarCelular } from '../../utils/formatarTelefone';
 import { abreviarParaLargura } from '../../utils/abreviarTexto';
+import { faculdadeService } from '../../services/faculdadeService';
 
 interface SelectInputProps {
   label: string;
@@ -154,6 +155,21 @@ export function Passo3ContatoVinculo() {
   // em qualquer posição); a máscara é aplicada ao sair do campo. Reformatar a cada
   // tecla impedia apagar no meio do número e fazia o cursor pular para o final.
   const [editandoTelefone, setEditandoTelefone] = useState(false);
+  // As instituições vêm do cadastro de faculdades: a API exige o id de uma delas (#192)
+  const [opcoesInstituicao, setOpcoesInstituicao] = useState<string[]>([]);
+
+  useEffect(() => {
+    let ativo = true;
+    faculdadeService
+      .listarFaculdades()
+      .then((lista) => {
+        if (ativo) setOpcoesInstituicao(lista.filter((f) => f.ativo).map((f) => f.nome));
+      })
+      .catch((err) => console.warn('Erro ao carregar instituições:', err));
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
   const cursoSelecionado = watch('curso');
   const instituicaoSelecionada = watch('instituicao');
@@ -239,7 +255,7 @@ export function Passo3ContatoVinculo() {
           <CustomSelect
             label="Instituição de Ensino *"
             value={value}
-            options={['UFC - Universidade Federal do Ceará', 'IFCE', 'UNILAB', 'Estácio', 'Outra']}
+            options={opcoesInstituicao}
             onSelect={(val) => {
               onChange(val);
               if (val !== 'Outra') setValue('instituicaoEspecifica', '');

@@ -1,4 +1,5 @@
 import { api } from '../api/api';
+import { faculdadeService } from './faculdadeService';
 import { AlunoFormData } from '@/schemas/alunoSchema';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -119,6 +120,26 @@ function sendFormDataViaXHR(url: string, method: 'POST' | 'PUT', formData: FormD
   });
 }
 
+/**
+ * O backend espera o id numérico da faculdade (faculdade_id), mas o seletor do formulário
+ * guarda o nome exibido. Resolve o nome pelo cadastro de faculdades (#192).
+ */
+export async function resolverFaculdadeId(valor: any): Promise<string> {
+  const texto = String(valor ?? '').trim();
+  if (/^\d+$/.test(texto)) return texto;
+
+  const alvo = texto.toLowerCase();
+  const faculdades = await faculdadeService.listarFaculdades();
+  const encontrada =
+    faculdades.find((f) => f.nome.toLowerCase() === alvo) ||
+    faculdades.find((f) => f.sigla.toLowerCase() === alvo) ||
+    faculdades.find((f) => alvo.startsWith(f.sigla.toLowerCase()));
+  if (!encontrada) {
+    throw new Error('Instituição de ensino não encontrada. Selecione uma instituição da lista.');
+  }
+  return String(encontrada.id);
+}
+
 export const userService = {
   async register(data: AlunoFormData): Promise<CadastroResponse> {
     const formData = new FormData();
@@ -148,7 +169,7 @@ export const userService = {
     const cursoFinal = data.curso === 'Outro' && data.cursoEspecifico ? data.cursoEspecifico : data.curso;
 
     formData.append('bairro_id', String(bairroFinal || ''));
-    formData.append('faculdade_id', String(instFinal || ''));
+    formData.append('faculdade_id', await resolverFaculdadeId(instFinal));
     formData.append('curso', String(cursoFinal || ''));
     formData.append('campus', String(data.campus || 'Quixadá'));
 
@@ -201,7 +222,7 @@ export const userService = {
 
     formData.append('telefone', String(data.whatsapp || ''));
     formData.append('bairro_id', String(bairroFinal || ''));
-    formData.append('faculdade_id', String(instFinal || ''));
+    formData.append('faculdade_id', await resolverFaculdadeId(instFinal));
     formData.append('curso', String(cursoFinal || ''));
     formData.append('campus', String(data.campus || 'Quixadá'));
 
@@ -226,8 +247,9 @@ export const userService = {
       formData.append('comprovante_residencia', '');
     }
 
+    // A foto atual vem como URL do servidor; só envia quando o aluno escolheu uma nova
     const fotoPart = buildFilePart(data.fotoPerfil, 'foto_perfil.jpg', 'image/jpeg');
-    if (fotoPart) {
+    if (fotoPart && !/^https?:/i.test(fotoPart.uri)) {
       formData.append('foto_perfil', fotoPart as any);
     }
 
