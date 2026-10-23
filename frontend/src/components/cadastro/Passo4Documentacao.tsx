@@ -12,9 +12,10 @@ interface FileUploadProps {
   error?: boolean;
   isRequired?: boolean;
   hintText?: string;
+  errorMessage?: string;
 }
 
-function FileUpload({ label, value, onSelect, error, isRequired = true, hintText }: FileUploadProps) {
+function FileUpload({ label, value, onSelect, error, isRequired = true, hintText, errorMessage }: FileUploadProps) {
   const theme = useTheme();
 
   const selecionarDocumento = async () => {
@@ -62,6 +63,9 @@ function FileUpload({ label, value, onSelect, error, isRequired = true, hintText
         )}
       </TouchableOpacity>
 
+      {/* O erro fica junto da caixa do arquivo, como nos outros passos */}
+      {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+
       {hintText ? (
         <Text variant="bodySmall" style={styles.hintText}>
           {hintText}
@@ -85,11 +89,12 @@ export function Passo4Documentacao({ isRenovacao = false }: { isRenovacao?: bool
             value={value}
             onSelect={onChange}
             error={!!errors.comprovanteMatricula}
+            errorMessage={errors.comprovanteMatricula?.message as string | undefined}
             isRequired={true}
+            hintText={isRenovacao ? 'PDF, PNG, JPG ou WEBP de até 5 MB' : undefined}
           />
         )}
       />
-      {errors.comprovanteMatricula && <Text style={styles.errorText}>{errors.comprovanteMatricula.message as string}</Text>}
 
       <Controller
         control={control}
@@ -100,12 +105,12 @@ export function Passo4Documentacao({ isRenovacao = false }: { isRenovacao?: bool
             value={value}
             onSelect={onChange}
             error={!!errors.comprovanteResidencia}
+            errorMessage={errors.comprovanteResidencia?.message as string | undefined}
             isRequired={!isRenovacao}
             hintText={isRenovacao ? "Envie um novo comprovante apenas se o seu endereço mudou" : undefined}
           />
         )}
       />
-      {errors.comprovanteResidencia && <Text style={styles.errorText}>{errors.comprovanteResidencia.message as string}</Text>}
     </View>
   );
 }
