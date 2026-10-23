@@ -6,7 +6,8 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 
 jest.mock('../../api/api', () => ({
   api: {
-    get: jest.fn().mockImplementation((url: string) => {
+    get: jest.fn((...args: any[]) => {
+      const url = args[0];
       if (url === '/representantes') {
         return Promise.resolve({
           data: [
@@ -39,7 +40,8 @@ jest.mock('../../api/api', () => ({
       }
       return Promise.resolve({ data: [] });
     }),
-    post: jest.fn().mockImplementation((url: string) => {
+    post: jest.fn((...args: any[]) => {
+      const url = args[0];
       if (url === '/representantes/promover') {
         const error: any = new Error('Este aluno já possui a função de representante.');
         error.response = { status: 409 };
@@ -47,7 +49,7 @@ jest.mock('../../api/api', () => ({
       }
       return Promise.resolve({ data: { success: true } });
     }),
-    patch: jest.fn().mockResolvedValue({ data: { success: true } }),
+    patch: jest.fn((...args: any[]) => Promise.resolve({ data: { success: true } })),
   },
 }));
 
