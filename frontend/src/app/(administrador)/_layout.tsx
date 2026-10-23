@@ -90,8 +90,11 @@ export default function AdminLayout() {
       <Tabs.Screen name="solicitacoes" options={{ href: null }} />
       <Tabs.Screen name="bairros" options={{ href: null }} />
       <Tabs.Screen name="faculdades" options={{ href: null }} />
+      <Tabs.Screen name="frota" options={{ href: null }} />
       <Tabs.Screen name="motoristas" options={{ href: null }} />
       <Tabs.Screen name="representantes" options={{ href: null }} />
+      <Tabs.Screen name="rotas-principais" options={{ href: null }} />
+      <Tabs.Screen name="rotas-complementares" options={{ href: null }} />
       <Tabs.Screen name="cadastrar-administrador" options={{ href: null }} />
     </Tabs>
   );

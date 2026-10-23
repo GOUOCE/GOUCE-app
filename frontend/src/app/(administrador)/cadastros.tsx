@@ -83,7 +83,7 @@ export default function GestaoCadastrosScreen() {
             icon={GitCommit}
             title="Rotas principais"
             subtitle="Trajetos oficiais"
-            onPress={() => router.push('/(administrador)/cadastros/rotas-principais' as any)}
+            onPress={() => router.push('/(administrador)/rotas-principais' as any)}
           />
           <View style={styles.divider} />
           <SectionItem
