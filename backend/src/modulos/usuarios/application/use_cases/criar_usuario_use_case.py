@@ -189,16 +189,12 @@ class CriarUsuarioUseCase:
             })
 
         # 10. Validação de Instituição / Faculdade
-        if not dto.faculdade_id or len(str(dto.faculdade_id).strip()) < 2:
-            erros.append(CadastroValidationError("faculdade_id", "Instituição/Faculdade é obrigatória"))
+        if not dto.faculdade_id or not isinstance(dto.faculdade_id, int) or dto.faculdade_id <= 0:
+            erros.append(CadastroValidationError("faculdade_id", "Instituição/Faculdade é obrigatória (informe o ID da faculdade)"))
 
         # 11. Validação de Curso
         if not dto.curso or len(str(dto.curso).strip()) < 2:
             erros.append(CadastroValidationError("curso", "O nome do curso é obrigatório"))
-
-        # 11.1 Validação de Campus
-        if not dto.campus or not str(dto.campus).strip():
-            erros.append(CadastroValidationError("campus", "O campus é obrigatório"))
 
         # 12. Validação de Comprovante de Matrícula
         if not dto.id_comprovante_matricula or not str(dto.id_comprovante_matricula).strip():

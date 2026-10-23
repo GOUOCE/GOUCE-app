@@ -1,0 +1,304 @@
+import os
+import unittest
+
+os.environ.setdefault(
+    "DATABASE_URL",
+    "postgresql://test:test@localhost:5432/test",
+)
+
+from src.modulos.motoristas.infrastructure.repositories.motorista_repository import (
+    AlocacoesFuturasNaoVerificadasError,
+    MotoristaRepository,
+    MotoristaTelefoneEmUsoError,
+)
+from src.modulos.motoristas.model.entities.motorista import MotoristaORM
+from src.modulos.usuarios.model.entities.usuario import UsuarioORM
+from src.shared.infrastructure.audit_model import LogAuditoriaORM
+from src.shared.security.lgpd_encryption import hash_telefone
+
+
+class FakeQuery:
+    def __init__(self, session):
+        self.items = list(session.motoristas)
+
+    def filter(self, *criterios):
+        for criterio in criterios:
+            coluna = getattr(getattr(criterio, "left", None), "key", None)
+            lado_direito = getattr(criterio, "right", None)
+            valor = getattr(lado_direito, "value", None)
+            if valor is None:
+                valor_sql = str(lado_direito).strip().lower()
+                if valor_sql == "true":
+                    valor = True
+                elif valor_sql == "false":
+                    valor = False
+            if coluna is None:
+                continue
+            operador = getattr(getattr(criterio, "operator", None), "__name__", "eq")
+            self.items = [
+                motorista
+                for motorista in self.items
+                if (
+                    getattr(motorista, coluna) != valor
+                    if operador == "ne"
+                    else getattr(motorista, coluna) == valor
+                )
+            ]
+        return self
+
+    def order_by(self, *args):
+        self.items.sort(key=lambda motorista: motorista.id)
+        return self
+
+    def all(self):
+        return list(self.items)
+
+    def first(self):
+        return self.items[0] if self.items else None
+
+
+class FakeSession:
+    def __init__(self, motoristas=None, *, fail_commit=False):
+        self.motoristas = list(motoristas or [])
+        self.fail_commit = fail_commit
+        self.added = []
+        self.commit_count = 0
+        self.rollback_count = 0
+        self._original_motoristas = list(self.motoristas)
+        self._original_states = {
+            id(motorista): {
+                "nome_completo": motorista.nome_completo,
+                "telefone": motorista.telefone,
+                "telefone_hash": motorista.telefone_hash,
+                "ativo": motorista.ativo,
+            }
+            for motorista in self.motoristas
+        }
+
+    def query(self, model):
+        return FakeQuery(self)
+
+    def add(self, entity):
+        self.added.append(entity)
+        if isinstance(entity, MotoristaORM):
+            if entity.id is None:
+                next_id = max(
+                    (motorista.id or 0 for motorista in self.motoristas),
+                    default=0,
+                ) + 1
+                entity.id = next_id
+            if entity not in self.motoristas:
+                self.motoristas.append(entity)
+
+    def commit(self):
+        self.commit_count += 1
+        if self.fail_commit:
+            raise RuntimeError("falha de persistência")
+
+    def refresh(self, instance):
+        return None
+
+    def rollback(self):
+        self.rollback_count += 1
+        self.motoristas[:] = self._original_motoristas
+        for motorista in self.motoristas:
+            estado = self._original_states[id(motorista)]
+            motorista.nome_completo = estado["nome_completo"]
+            motorista.telefone = estado["telefone"]
+            motorista.telefone_hash = estado["telefone_hash"]
+            motorista.ativo = estado["ativo"]
+
+
+def motorista(
+    motorista_id: int,
+    nome: str,
+    telefone: str,
+    ativo: bool,
+) -> MotoristaORM:
+    return MotoristaORM(
+        id=motorista_id,
+        nome_completo=nome,
+        telefone=telefone,
+        telefone_hash=hash_telefone(telefone),
+        ativo=ativo,
+    )
+
+
+class MotoristaRepositoryTest(unittest.TestCase):
+    def setUp(self):
+        self.ativo = motorista(1, "Maria da Silva", "85999990000", True)
+        self.inativo = motorista(2, "João de Souza", "85888880000", False)
+        self.session = FakeSession([self.ativo, self.inativo])
+        self.repository = MotoristaRepository(self.session)
+
+    def test_criar_persiste_motorista_sem_criar_usuario(self):
+        resultado = self.repository.criar("  Ana Lima  ", " 85977770000 ")
+
+        self.assertEqual(resultado["id"], 3)
+        self.assertEqual(resultado["nome"], "Ana Lima")
+        self.assertEqual(resultado["telefone"], "85977770000")
+        self.assertTrue(resultado["ativo"])
+        self.assertEqual(self.session.commit_count, 1)
+        self.assertEqual(self.session.rollback_count, 0)
+        self.assertFalse(
+            any(isinstance(item, UsuarioORM) for item in self.session.added)
+        )
+
+    def test_criar_faz_rollback_e_propaga_falha_de_commit(self):
+        self.session.fail_commit = True
+
+        with self.assertRaisesRegex(RuntimeError, "falha de persistência"):
+            self.repository.criar("Ana Lima", "85977770000")
+
+        self.assertEqual(self.session.rollback_count, 1)
+        self.assertEqual(len(self.session.motoristas), 2)
+
+    def test_criar_rejeita_telefone_de_motorista_ativo(self):
+        with self.assertRaisesRegex(
+            MotoristaTelefoneEmUsoError,
+            "Este profissional já está registrado\\.",
+        ):
+            self.repository.criar("Ana Lima", "85 99999-0000")
+
+        self.assertEqual(self.session.commit_count, 0)
+        self.assertEqual(self.session.rollback_count, 1)
+        self.assertEqual(len(self.session.motoristas), 2)
+
+    def test_criar_rejeita_telefone_de_motorista_inativo(self):
+        with self.assertRaises(MotoristaTelefoneEmUsoError):
+            self.repository.criar("Ana Lima", "(85) 88888-0000")
+
+        self.assertEqual(self.session.commit_count, 0)
+        self.assertEqual(self.session.rollback_count, 1)
+
+    def test_atualizar_permite_manter_o_proprio_telefone_formatado(self):
+        resultado = self.repository.atualizar(1, telefone="(85) 99999-0000")
+
+        self.assertEqual(resultado["telefone"], "(85) 99999-0000")
+        self.assertEqual(self.ativo.telefone_hash, hash_telefone("85999990000"))
+        self.assertEqual(self.session.commit_count, 1)
+
+    def test_atualizar_rejeita_telefone_de_outro_motorista_inativo(self):
+        with self.assertRaises(MotoristaTelefoneEmUsoError):
+            self.repository.atualizar(1, telefone="85 88888-0000")
+
+        self.assertEqual(self.ativo.telefone, "85999990000")
+        self.assertEqual(self.session.commit_count, 0)
+        self.assertEqual(self.session.rollback_count, 1)
+
+    def test_listar_aplica_filtro_de_ativo_e_busca_de_nome_sem_case(self):
+        resultados = self.repository.listar(ativo=True, nome="SILVA")
+
+        self.assertEqual(resultados, [
+            {
+                "id": 1,
+                "nome": "Maria da Silva",
+                "telefone": "85999990000",
+                "ativo": True,
+            }
+        ])
+
+    def test_listar_permite_consultar_inativos(self):
+        resultados = self.repository.listar(ativo=False)
+
+        self.assertEqual([item["id"] for item in resultados], [2])
+        self.assertFalse(resultados[0]["ativo"])
+
+    def test_buscar_retorna_contrato_publico_e_none_quando_inexistente(self):
+        resultado = self.repository.buscar(1)
+
+        self.assertEqual(set(resultado), {"id", "nome", "telefone", "ativo"})
+        self.assertEqual(resultado["nome"], "Maria da Silva")
+        self.assertNotIn("telefone_hash", resultado)
+        self.assertIsNone(self.repository.buscar(99))
+
+    def test_atualizar_altera_apenas_campos_informados(self):
+        resultado = self.repository.atualizar(1, telefone=" 85911112222 ")
+
+        self.assertEqual(resultado["nome"], "Maria da Silva")
+        self.assertEqual(resultado["telefone"], "85911112222")
+        self.assertEqual(self.ativo.nome_completo, "Maria da Silva")
+        self.assertEqual(self.session.commit_count, 1)
+
+    def test_atualizar_motorista_inexistente_nao_persiste(self):
+        resultado = self.repository.atualizar(99, nome="Novo Nome")
+
+        self.assertIsNone(resultado)
+        self.assertEqual(self.session.commit_count, 0)
+        self.assertEqual(self.session.rollback_count, 0)
+
+    def test_atualizar_faz_rollback_e_propaga_falha_de_commit(self):
+        self.session.fail_commit = True
+
+        with self.assertRaisesRegex(RuntimeError, "falha de persistência"):
+            self.repository.atualizar(1, nome="Novo Nome")
+
+        self.assertEqual(self.session.rollback_count, 1)
+        self.assertEqual(self.ativo.nome_completo, "Maria da Silva")
+
+    def test_inativar_bloqueia_sem_verificacao_de_alocacoes_futuras(self):
+        with self.assertRaises(AlocacoesFuturasNaoVerificadasError):
+            self.repository.inativar(1, usuario_executor_id=10)
+
+        self.assertTrue(self.ativo.ativo)
+        self.assertEqual(self.session.commit_count, 0)
+        self.assertEqual(self.session.added, [])
+
+    def test_inativar_persiste_estado_e_log_sem_dados_pessoais(self):
+        resultado = self.repository.inativar(
+            1,
+            usuario_executor_id=10,
+            alocacoes_futuras_verificadas=True,
+        )
+
+        self.assertFalse(resultado["ativo"])
+        self.assertFalse(self.ativo.ativo)
+        self.assertEqual(self.session.commit_count, 1)
+
+        logs = [item for item in self.session.added if isinstance(item, LogAuditoriaORM)]
+        self.assertEqual(len(logs), 1)
+        self.assertEqual(logs[0].usuario_id, 10)
+        self.assertEqual(logs[0].acao, "INATIVAR")
+        self.assertEqual(logs[0].entidade, "motorista")
+        self.assertEqual(logs[0].entidade_id, 1)
+        self.assertEqual(logs[0].valor_anterior, "ativo")
+        self.assertEqual(logs[0].valor_novo, "inativo")
+        self.assertNotIn("Maria da Silva", str(logs[0].__dict__))
+        self.assertNotIn("85999990000", str(logs[0].__dict__))
+
+    def test_reativar_persiste_estado_e_log(self):
+        resultado = self.repository.reativar(2, usuario_executor_id=10)
+
+        self.assertTrue(resultado["ativo"])
+        self.assertTrue(self.inativo.ativo)
+        self.assertEqual(self.session.commit_count, 1)
+
+        logs = [item for item in self.session.added if isinstance(item, LogAuditoriaORM)]
+        self.assertEqual(len(logs), 1)
+        self.assertEqual(logs[0].acao, "REATIVAR")
+        self.assertEqual(logs[0].valor_anterior, "inativo")
+        self.assertEqual(logs[0].valor_novo, "ativo")
+
+    def test_reativar_motorista_ja_ativo_nao_cria_log(self):
+        resultado = self.repository.reativar(1, usuario_executor_id=10)
+
+        self.assertTrue(resultado["ativo"])
+        self.assertEqual(self.session.commit_count, 0)
+        self.assertEqual(self.session.added, [])
+
+    def test_inativar_faz_rollback_se_auditoria_falhar_no_commit(self):
+        self.session.fail_commit = True
+
+        with self.assertRaisesRegex(RuntimeError, "falha de persistência"):
+            self.repository.inativar(
+                1,
+                usuario_executor_id=10,
+                alocacoes_futuras_verificadas=True,
+            )
+
+        self.assertTrue(self.ativo.ativo)
+        self.assertEqual(self.session.rollback_count, 1)
+
+
+if __name__ == "__main__":
+    unittest.main()

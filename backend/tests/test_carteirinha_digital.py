@@ -28,11 +28,11 @@ class CarteirinhaDigitalTest(unittest.IsolatedAsyncioTestCase):
             ),
             SimpleNamespace(
                 status_cadastro=StatusCadastroEnum.ATIVADO.value,
-                faculdade_id="Universidade Federal",
+                faculdade_id=1,
                 curso="Engenharia de Software",
                 bairro_id="Centro",
                 id_foto_aluno="foto-maria",
-                campus="Quixadá",
+                faculdade_rel=SimpleNamespace(nome_faculdade="Universidade Federal", campus_faculdade="Quixadá"),
                 semestre_atual=4,
                 periodo_ingresso="2024.1",
                 turno_curso="Noturno",
@@ -57,7 +57,7 @@ class CarteirinhaDigitalTest(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(resposta.id, 1)
         self.assertEqual(resposta.nome, "Maria Souza")
-        self.assertEqual(resposta.faculdade_id, "Universidade Federal")
+        self.assertEqual(resposta.faculdade_id, 1)
         self.assertEqual(resposta.curso, "Engenharia de Software")
         self.assertEqual(resposta.id_foto_aluno, "foto-maria")
         self.assertEqual(
