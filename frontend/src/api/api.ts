@@ -4,23 +4,25 @@ import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
 const getBaseUrl = () => {
-  // 1. Extrai o IP da máquina host via Metro (hostUri) para funcionar em qualquer celular ou emulador
   const hostUri = Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost;
   if (hostUri) {
     const hostIp = hostUri.split(':')[0];
     if (hostIp && hostIp !== 'localhost' && hostIp !== '127.0.0.1') {
-      return `http://${hostIp}:8000`;
+      const url = `http://${hostIp}:8000`;
+      return url;
     }
   }
 
-  // 2. Se houver variável de ambiente no .env
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
   if (envUrl && !envUrl.includes('ngrok')) {
     return envUrl;
   }
 
-  // 3. Fallback para o IP da máquina local (192.168.0.4)
-  return Platform.OS === 'web' ? 'http://localhost:8000' : 'http://192.168.0.4:8000';
+  if (Platform.OS === 'android') {
+    return 'http://10.0.2.2:8000';
+  }
+
+  return 'http://localhost:8000';
 };
 
 export const api = axios.create({
@@ -94,12 +96,14 @@ api.interceptors.response.use(
       try {
         const refreshToken = await AsyncStorage.getItem('@GOUOCE:refreshToken');
         if (!refreshToken) {
-          throw new Error('No refresh token available');
+          isRefreshing = false;
+          processQueue(error, null);
+          return Promise.reject(error);
         }
 
         const response = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {
           token_atualizacao: refreshToken,
-        });
+        }, { timeout: 10000 });
 
         const newToken = response.data.token_acesso;
         const newRefreshToken = response.data.token_atualizacao;
@@ -109,19 +113,21 @@ api.interceptors.response.use(
           await AsyncStorage.setItem('@GOUOCE:refreshToken', newRefreshToken);
         }
 
-        api.defaults.headers.common['Authorization'] = 'Bearer ' + newToken;
         originalRequest.headers['Authorization'] = 'Bearer ' + newToken;
 
         processQueue(null, newToken);
         isRefreshing = false;
 
         return api(originalRequest);
-      } catch (refreshError) {
+      } catch (refreshError: any) {
         processQueue(refreshError, null);
         isRefreshing = false;
-        await AsyncStorage.removeItem('@GOUOCE:token');
-        await AsyncStorage.removeItem('@GOUOCE:refreshToken');
-        await AsyncStorage.removeItem('@GOUOCE:user');
+        if (refreshError.response?.status === 401 || refreshError.response?.status === 403) {
+          await AsyncStorage.removeItem('@GOUOCE:token');
+          await AsyncStorage.removeItem('@GOUOCE:refreshToken');
+          await AsyncStorage.removeItem('@GOUOCE:user');
+        }
+
         // Devolve o erro original para a tela mostrar a mensagem da API
         return Promise.reject(error);
       }

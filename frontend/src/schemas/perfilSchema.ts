@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import { telefoneSchema } from './alunoSchema';
 
 export const editarPerfilSchema = z.object({
-  telefone: z.string().min(10, 'O telefone deve ter pelo menos 10 dígitos com DDD'),
+  telefone: telefoneSchema,
   bairro: z.string().min(1, 'Selecione o bairro'),
 });
 
