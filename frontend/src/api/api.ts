@@ -113,7 +113,6 @@ api.interceptors.response.use(
           await AsyncStorage.setItem('@GOUOCE:refreshToken', newRefreshToken);
         }
 
-        api.defaults.headers.common['Authorization'] = 'Bearer ' + newToken;
         originalRequest.headers['Authorization'] = 'Bearer ' + newToken;
 
         processQueue(null, newToken);
