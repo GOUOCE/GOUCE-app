@@ -980,57 +980,59 @@ Este épico reúne todas as funcionalidades relacionadas ao cadastro e manutenç
 Fonte: Elaborado pelo Clidenor(2026).
 
 **História de Usuário:**  
-Como administrador, quero acessar um painel para cadastrar, visualizar, editar e inativar bairros e seus respectivos pontos de parada, para estruturar a base geográfica de embarque e desembarque dos estudantes.
+Como administrador, quero acessar um painel para cadastrar, visualizar, editar, inativar e reativar bairros e seus respectivos pontos de parada, para estruturar a base geográfica de embarque e desembarque dos estudantes.
 
 **Critérios de Aceite:**
 
-1.  Administrador acessa o menu "Bairros e Pontos de Parada" e visualiza a listagem de bairros cadastrados com seus respectivos pontos de parada associados (ativos e inativos).
-2.  Administrador consegue criar um novo bairro preenchendo o nome e adicionando ao menos um ponto de parada; o sistema valida se o nome do bairro é único.
-3.  Bairro ou ponto de parada com nome já existente no sistema (ativo ou inativo) bloqueia o salvamento e exibe mensagem: "Esta localidade já está cadastrada."
-4.  Administrador consegue editar dados de um bairro existente (nome, pontos de parada associados).
-5.  Administrador consegue inativar (soft delete) um registro ativo ou reativar um registro previamente inativado, sem apagar o registro do banco de dados; tanto a operação de inativação quanto a de reativação são registradas no log de auditoria (usuário, ação, timestamp).
-6.  Tentativa de inativar um bairro que está vinculado a uma rota ativa é bloqueada com mensagem: "Este bairro não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar."
-7.  Inativação bem-sucedida exibe mensagem de confirmação ("Operação realizada com sucesso") e atualiza a listagem.
-8.  Campos obrigatórios (nome do bairro e ao menos um ponto de parada) são destacados se vazios; sistema bloqueia salvamento até preenchimento.
-9.  Administrador consegue visualizar bairros e pontos inativos na listagem quando necessário.
+1.  Administrador acessa o menu "Bairros e Pontos de Parada" e visualiza a listagem dos bairros ativos com seus respectivos pontos de parada ativos.
+2.  Administrador consegue criar um novo bairro preenchendo o nome e adicionando ao menos um ponto de parada; o nome do bairro deve ser único no sistema e o nome do ponto de parada deve ser único dentro do mesmo bairro (o mesmo nome de ponto pode existir em bairros diferentes).
+3.  No cadastro ou na edição, bairro com nome já existente no sistema, ou ponto de parada com nome já existente no mesmo bairro (ativo ou inativo), bloqueia o salvamento e exibe a mensagem: "Esta localidade já está cadastrada." A comparação de nomes desconsidera diferenças entre letras maiúsculas e minúsculas e espaços no início e no fim.
+4.  Administrador consegue editar os dados de um bairro existente (nome do bairro; adicionar, renomear ou inativar pontos de parada associados).
+5.  Administrador consegue inativar (soft delete) um bairro ou um ponto de parada ativo, ou reativar um registro previamente inativado, sem apagar o registro do banco de dados. Enquanto um bairro estiver inativo, seus pontos de parada também ficam indisponíveis para uso.
+6.  Tentativa de inativar um bairro ou ponto de parada vinculado a uma rota ativa é bloqueada com a mensagem: "Este bairro não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar." (para bairro) ou "Este ponto de parada não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar." (para ponto de parada).
+7.  Toda operação bem-sucedida (cadastro, edição, inativação ou reativação) exibe a mensagem de confirmação "Operação realizada com sucesso" e atualiza a listagem.
+8.  Campos obrigatórios (nome do bairro e ao menos um ponto de parada ativo) são destacados se vazios; o sistema bloqueia o salvamento até o preenchimento, inclusive na edição, quando o administrador tenta remover ou inativar o último ponto de parada ativo do bairro.
+9.  Administrador consegue visualizar os bairros e pontos de parada inativos ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.
+10. Todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
+11. Bairros e pontos de parada inativos não são exibidos para seleção em novos cadastros (ex.: cadastro de aluno e montagem de rotas); alunos e rotas já vinculados a eles mantêm o vínculo (RN-004).
 
     **Fluxo Principal:**
 
-10. O administrador acessa o menu de "Bairros e Pontos de Parada".
-11. O sistema exibe a listagem dos bairros já cadastrados e seus respectivos pontos associados (ativos e inativos).
-12. O administrador seleciona a ação: "Novo Cadastro", "Editar", "Inativar" ou “Reativar” em um registro existente.
-13. O administrador preenche as informações (nome do bairro, nome/referência do ponto de parada) ou confirma a inativação.
-14. O sistema valida os dados e aplica a operação no banco de dados (em caso de inativação, executando o _soft delete_ para ocultar o registro sem apagá-lo definitivamente).
-15. O sistema registra a operação no log de auditoria.
-16. O sistema exibe uma mensagem de sucesso e recarrega a listagem atualizada.
+12. O administrador acessa o menu de "Bairros e Pontos de Parada".
+13. O sistema exibe a listagem dos bairros ativos e seus respectivos pontos de parada ativos.
+14. O administrador seleciona a ação: "Novo Cadastro", "Editar", "Inativar" ou "Reativar" em um registro existente.
+15. O administrador preenche as informações (nome do bairro, nome/referência do ponto de parada) ou confirma a inativação/reativação.
+16. O sistema valida os dados e aplica a operação no banco de dados (em caso de inativação, executando o _soft delete_ para ocultar o registro sem apagá-lo definitivamente).
+17. O sistema registra a operação no log de auditoria.
+18. O sistema exibe uma mensagem de sucesso e recarrega a listagem atualizada.
 
     **Fluxos Alternativos:**
 
-17. **FA-001 \- Inativação de bairro/ponto vinculado a uma rota ativa.**
-    1. O administrador tenta inativar um bairro que está atualmente associado a uma rota estruturada.
-    2. O sistema bloqueia a inativação temporariamente e exibe um alerta: "Este bairro não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar."
-18. **FA-002 \- Cadastro duplicado.**
-    1. O administrador tenta salvar um bairro ou ponto de parada com um nome idêntico a um registro já existente e ativo.
+19. **FA-001 \- Inativação de bairro/ponto vinculado a uma rota ativa.**
+    1. O administrador tenta inativar um bairro ou um ponto de parada que está atualmente associado a uma rota ativa.
+    2. O sistema bloqueia a inativação e exibe o alerta correspondente definido no critério de aceite 6.
+20. **FA-002 \- Cadastro duplicado.**
+    1. O administrador tenta salvar, no cadastro ou na edição, um bairro com nome idêntico ao de outro bairro, ou um ponto de parada com nome idêntico ao de outro ponto do mesmo bairro, já existente (ativo ou inativo).
     2. O sistema bloqueia o salvamento e informa que a localidade já está cadastrada.
-19. **FA-003 \- Campos obrigatórios ausentes.**
-    1. O administrador tenta salvar o formulário sem inserir o nome do bairro ou sem definir ao menos um ponto de parada.
+21. **FA-003 \- Campos obrigatórios ausentes.**
+    1. O administrador tenta salvar o formulário sem inserir o nome do bairro, sem definir ao menos um ponto de parada ou removendo/inativando o último ponto de parada ativo do bairro.
     2. O sistema destaca os campos pendentes e impede a conclusão.
 
     **Regras de Negócio Relacionadas:**
 
-20. RN-004
-21. RN-006
+22. RN-004
+23. RN-006
 
     **Requisitos Relacionados:**  
      **FUNCIONAIS:**
 
-22. RNF-011
-23. RF-014
+24. RF-011
+25. RF-014
 
-        **NÃO FUNCIONAS:**
+        **NÃO FUNCIONAIS:**
 
-24. RNF-012
-25. RNF-013
+26. RNF-012
+27. RNF-013
 
 **Protótipo da Interface:**  
 **\[A inserir\]**
@@ -1045,23 +1047,25 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar e
 
 Fonte: Elaborado pelo autor (2026).  
 **História de Usuário:**  
-Como administrador, quero acessar um painel para cadastrar, visualizar, editar e inativar as faculdades de destino, para organizar as instituições de ensino que são atendidas pelas rotas de transporte.  
+Como administrador, quero acessar um painel para cadastrar, visualizar, editar, inativar e reativar as faculdades de destino, para organizar as instituições de ensino que são atendidas pelas rotas de transporte.  
 **Critérios de Aceite:**
 
-1. Administrador acessa o menu "Faculdades" e visualiza a listagem das faculdades cadastradas (ativas e inativas).
-2. Administrador consegue criar uma nova faculdade preenchendo nome e campus no formulário; o sistema valida se a combinação (nome \+ campus) é única.
-3. Faculdade com mesmo nome e campus já existente no sistema (ativa ou inativa) bloqueia o cadastro: "Esta faculdade já está cadastrada."
-4. Administrador consegue editar dados de uma faculdade existente (nome, campus e demais informações).
-5. Administrador consegue inativar (soft delete) um registro ativo ou reativar um registro previamente inativado, sem apagar o registro do banco de dados; tanto a operação de inativação quanto a de reativação são registradas no log de auditoria (usuário, ação, timestamp).
+1. Administrador acessa o menu "Faculdades" e visualiza a listagem das faculdades ativas cadastradas.
+2. Administrador consegue criar uma nova faculdade preenchendo nome e campus no formulário; o sistema valida se a combinação (nome \+ campus) é única; o mesmo nome pode existir em campus diferentes.
+3. No cadastro ou na edição, faculdade com mesmo nome e campus já existente no sistema (ativa ou inativa) bloqueia o salvamento: "Esta faculdade já está cadastrada." A comparação desconsidera diferenças entre letras maiúsculas e minúsculas e espaços no início e no fim.
+4. Administrador consegue editar dados de uma faculdade existente (nome e campus).
+5. Administrador consegue inativar (soft delete) um registro ativo ou reativar um registro previamente inativado, sem apagar o registro do banco de dados.
 6. Tentativa de inativar uma faculdade que possui alunos agendados para datas futuras é bloqueada com mensagem: "Esta instituição possui viagens programadas pendentes. Não é possível inativar no momento."
-7. Inativação bem-sucedida exibe mensagem de confirmação ("Operação realizada com sucesso") e atualiza a listagem.
-8. Campos obrigatórios (nome e campus da instituição) são destacados se vazios; sistema bloqueia salvamento até preenchimento.
-9. Administrador consegue visualizar faculdades inativas na listagem quando necessário.
+7. Toda operação bem-sucedida (cadastro, edição, inativação ou reativação) exibe mensagem de confirmação ("Operação realizada com sucesso") e atualiza a listagem.
+8. Campos obrigatórios (nome e campus da instituição) são destacados se vazios; sistema bloqueia salvamento até preenchimento, inclusive na edição.
+9. Administrador consegue visualizar as faculdades inativas ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.
+10. Todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
+11. Faculdades inativas não são exibidas para seleção em novos cadastros (ex.: cadastro de aluno); alunos já vinculados a elas mantêm o vínculo (RN-004).
 
 **Fluxo Principal:**
 
 1. O administrador acessa o menu de "Faculdades".
-2. O sistema exibe a listagem das faculdades já cadastradas (ativas e inativas).
+2. O sistema exibe a listagem das faculdades ativas cadastradas.
 3. O administrador seleciona a ação: "Novo Cadastro", "Editar", ou "Inativar" ou “Reativar” em um registro existente.
 4. O administrador preenche as informações da faculdade (nome, campus, etc.) ou confirma a inativação do registro.
 5. O sistema valida os dados e aplica a operação no banco de dados (executando o soft delete em caso de inativação).
@@ -1072,9 +1076,9 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar e
 
 1. FA-001 \- Inativação de faculdade com agendamentos futuros.
    1. O administrador tenta inativar uma faculdade que possui alunos agendados para datas futuras.
-   2. O sistema bloqueia a inativação temporariamente e exibe um alerta informando que a instituição possui viagens programadas pendentes.
+   2. O sistema bloqueia a inativação e exibe um alerta informando que a instituição possui viagens programadas pendentes.
 2. FA-002 \- Cadastro duplicado.
-   1. O administrador tenta salvar uma faculdade com o mesmo nome e campus de uma instituição já ativa no sistema.
+   1. O administrador tenta salvar uma faculdade , no cadastro ou na edição, com o mesmo nome e campus de uma instituição já existente (ativa ou inativa).
    2. O sistema bloqueia o cadastro e informa que a faculdade já existe.
 3. FA-003 \- Campos obrigatórios ausentes.
    1. O administrador tenta salvar o formulário sem preencher os dados principais da instituição.
@@ -1106,21 +1110,25 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar e
 
 Fonte: Elaborado pelo Clidenor(2026).  
 **História de Usuário:**  
-Como administrador, quero acessar um painel para cadastrar, visualizar, editar e inativar os ônibus, informando sua placa, quantidade de assentos e capacidade máxima de alunos em pé, para gerenciar os veículos disponíveis para o transporte universitário e seus limites de ocupação.  
+Como administrador, quero acessar um painel para cadastrar, visualizar, editar, inativar e reativar os ônibus, informando sua placa, quantidade de assentos e capacidade máxima de alunos em pé, para gerenciar os veículos disponíveis para o transporte universitário e seus limites de ocupação.  
 **Critérios de Aceite:**
 
-1. Administrador acessa o menu "Frota" ou "Ônibus" e visualiza a listagem dos veículos cadastrados com informações de placa, quantidade de assentos e capacidade máxima de alunos em pé.
-2. Administrador consegue criar um novo ônibus preenchendo placa, quantidade de assentos e capacidade máxima de alunos em pé no formulário; o sistema valida se a placa é única.
-3. Placa de veículo já existente no sistema (ativa ou inativa) bloqueia o cadastro e exibe mensagem: 'Este veículo já está registrado
-4. Administrador consegue editar dados de um ônibus existente (placa, capacidade, demais informações).
-5. Administrador consegue inativar (soft delete) um registro ativo ou reativar um registro previamente inativado, sem apagar o registro do banco de dados; tanto a operação de inativação quanto a de reativação são registradas no log de auditoria (usuário, ação, timestamp).
+1. Administrador acessa o menu "Frota" ou "Ônibus" e visualiza a listagem dos veículos ativos cadastrados com informações de placa, quantidade de assentos e capacidade máxima de alunos em pé.
+2. Administrador consegue criar um novo ônibus preenchendo placa, quantidade de assentos e capacidade máxima de alunos em pé no formulário; o sistema valida se a placa é única e se está em formato válido.
+3. No cadastro ou na edição, placa de veículo já existente no sistema (ativa ou inativa) bloqueia o salvamento e exibe a mensagem: "Este veículo já está registrado." A comparação desconsidera letras maiúsculas/minúsculas e hífen; o sistema guarda a placa em maiúsculas e sem hífen.
+4. Administrador consegue editar dados de um ônibus existente (placa, quantidade de assentos e capacidade de alunos em pé).
+5. Administrador consegue inativar (soft delete) um registro ativo ou reativar um registro previamente inativado, sem apagar o registro do banco de dados.
 6. Tentativa de inativar um ônibus que está escalado para realizar rotas em dias futuros é bloqueada com mensagem: "Este veículo possui alocações pendentes e não pode ser inativado no momento."
-7. Inativação bem-sucedida exibe mensagem de confirmação ("Operação realizada com sucesso") e atualiza a listagem.
-8. Campos obrigatórios (placa e capacidade máxima(de assentos e em pé)) são destacados se vazios; sistema bloqueia salvamento até preenchimento.
-9. Administrador consegue visualizar ônibus inativos na listagem quando necessário.  
+7. Toda operação bem-sucedida (cadastro, edição, inativação ou reativação) exibe mensagem de confirmação ("Operação realizada com sucesso") e atualiza a listagem.
+8. Campos obrigatórios (placa e capacidade máxima(de assentos e em pé)) são destacados se vazios; sistema bloqueia salvamento até preenchimento, inclusive na edição.
+9. A placa deve estar em formato Mercosul (ABC1D23) ou antigo (ABC1234); placa em outro formato bloqueia o salvamento com a mensagem "Placa inválida."
+10. A quantidade de assentos deve ser um número inteiro maior ou igual a 1 e a capacidade de alunos em pé um número inteiro maior ou igual a 0; valores fora dessa regra (zero ou negativo nos assentos, negativo, decimal ou texto) bloqueiam o salvamento e o campo é destacado como inválido.
+11. Administrador consegue visualizar os ônibus inativos ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.
+12. Todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
+13. Ônibus inativos não são exibidos para seleção na escalação de rotas; rotas, alocações e relatórios anteriores mantêm o vínculo (RN-004).  
    **Fluxo Principal:**
 10. O administrador acessa o menu de "Frota" ou "Ônibus".
-11. O sistema exibe a listagem dos veículos cadastrados, detalhando informações como placa e capacidade (ativos e inativos).
+11. O sistema exibe a listagem dos veículos cadastrados, detalhando informações como placa e capacidade (apenas ativos).
 12. O administrador seleciona a ação: "Novo Cadastro", "Editar", ou "Inativar" ou “Reativar” em um registro existente.
 13. O administrador preenche as informações do veículo (placa, capacidade máxima de assentos e em pé, etc.) ou confirma a inativação do registro.
 14. O sistema valida os dados e aplica a operação no banco de dados (executando o soft delete em caso de inativação).
@@ -1131,10 +1139,10 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar e
     1. O administrador tenta inativar um veículo que já está escalado para realizar uma rota em um dia futuro.
     2. O sistema bloqueia a inativação e exibe um alerta informando que o veículo possui alocações pendentes.
 18. FA-002 \- Placa de veículo duplicada.
-    1. O administrador tenta cadastrar ou editar um ônibus inserindo uma placa que já existe e está ativa no sistema.
-    2. O sistema bloqueia o cadastro e informa que o veículo já está registrado.
+    1. O administrador tenta cadastrar ou editar um ônibus inserindo uma placa que já existe (ativa ou inativa) no sistema.
+    2. O sistema bloqueia o salvamento e informa que o veículo já está registrado.
 19. FA-003 \- Campos obrigatórios ausentes.
-    1. O administrador tenta salvar o formulário sem preencher a capacidade máxima ou a placa do ônibus.
+    1. O administrador tenta salvar o formulário sem preencher a placa, a quantidade de assentos ou a capacidade de alunos em pé do ônibus.
     2. O sistema sinaliza os campos vazios e impede o salvamento.
 
     **Regras de Negócio Relacionadas:**
@@ -1167,14 +1175,17 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, buscar, 
 **Critérios de Aceite:**
 
 1. Administrador acessa a tela "Motoristas" e visualiza a listagem dos motoristas ativos cadastrados (exibindo nome e telefone), podendo filtrá-los através da barra de pesquisa "Buscar por nome".
-2. Administrador consegue criar um novo motorista clicando em "+ Novo" e preenchendo os campos obrigatórios **Nome Completo** e **Telefone** na tela "Cadastrar Motorista"; o sistema valida se o número de telefone informado é único.
-3. Tentativa de cadastro com um número de telefone já existente no sistema (ativo ou inativo) bloqueia o cadastro e exibe a mensagem: _"Este profissional já está registrado."_
+2. Administrador consegue criar um novo motorista clicando em "+ Novo" e preenchendo os campos obrigatórios **Nome Completo** e **Telefone** na tela "Cadastrar Motorista"; o sistema valida se o número de telefone informado é único e se está em formato válido. Motoristas com o mesmo nome são permitidos, desde que tenham telefones diferentes.
+3. No cadastro ou na edição, número de telefone já existente no sistema (ativo ou inativo) bloqueia o salvamento e exibe a mensagem: _"Este profissional já está registrado."_ A comparação considera apenas os dígitos, desconsiderando a máscara (ex.: "(88) 99811-2233" e "88998112233" são o mesmo telefone).
 4. Administrador consegue editar os dados de um motorista existente clicando no ícone de edição (lápis), alterando o **Nome Completo** ou **Telefone** na tela "Editar Motorista" e clicando em "Salvar alterações".
-5. Administrador consegue inativar (_soft delete_) um registro ativo clicando no ícone de lixeira (mediante modal de confirmação) ou reativar um registro previamente inativado clicando no ícone de restauração (seta de retorno), sem apagar o registro do banco de dados; tanto a operação de inativação quanto a de reativação são registradas no log de auditoria (usuário, ação, _timestamp_).
+5. Administrador consegue inativar (_soft delete_) um registro ativo clicando no ícone de lixeira (mediante modal de confirmação) ou reativar um registro previamente inativado clicando no ícone de restauração (seta de retorno), sem apagar o registro do banco de dados. Cancelar a inativação no modal mantém o motorista ativo e não gera registro de auditoria.
 6. Tentativa de inativar um motorista que está escalado para realizar rotas em dias futuros é bloqueada com a mensagem: _"Este profissional possui alocações pendentes e não pode ser inativado no momento."_
 7. Operações bem-sucedidas (cadastro, edição, inativação ou reativação) exibem uma notificação de confirmação (ex: _"Motorista alterado com sucesso"_) e atualizam a listagem.
-8. Os campos obrigatórios (**Nome Completo** e **Telefone**) são destacados se estiverem vazios; o sistema bloqueia o salvamento até o devido preenchimento.
-9. O administrador consegue visualizar a seção de motoristas "Inativos" na listagem ao ativar a chave seletora (_switch_) "Mostrar inativos".  
+8. Os campos obrigatórios (**Nome Completo** e **Telefone**) são destacados se estiverem vazios; o sistema bloqueia o salvamento até o devido preenchimento, inclusive na edição.
+9. O administrador consegue visualizar a seção de motoristas "Inativos" na listagem ao ativar a chave seletora (_switch_) "Mostrar inativos"; os registros inativos são identificados como inativos.
+10. O telefone deve ter DDD seguido de 8 dígitos (fixo) ou 9 dígitos (celular), pois o motorista pode ter apenas telefone fixo; o formulário aplica a máscara automaticamente. Telefone incompleto (sem DDD ou com poucos dígitos) bloqueia o salvamento com a mensagem _"Informe um telefone válido com DDD"_.
+11. Todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, _timestamp_).
+12. Motoristas inativos não são exibidos para seleção na escalação de rotas; rotas, alocações e relatórios anteriores mantêm o vínculo (RN-004).  
    **Fluxo Principal:**
 10. O administrador acessa a tela de "Motoristas".
 11. O sistema exibe a listagem dos motoristas ativos (e os inativos, caso a opção "Mostrar inativos" esteja habilitada).
@@ -1188,8 +1199,8 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, buscar, 
     1. O administrador tenta inativar um motorista que já está escalado para realizar rotas em dias futuros.
     2. O sistema bloqueia a inativação e exibe um alerta informando que o profissional possui alocações pendentes.
 18. FA-002 \- Cadastro duplicado.
-    1. O administrador tenta cadastrar um motorista inserindo um documento (ex: CNH ou CPF) que já existe e está ativo no sistema.
-    2. O sistema bloqueia o cadastro e informa que o profissional já está registrado.
+    1. O administrador tenta cadastrar um motorista , no cadastro ou na edição, com um telefone que já existe (ativo ou inativo) no sistema.
+    2. O sistema bloqueia o salvamento e informa que o profissional já está registrado.
 19. FA-003 \- Campos obrigatórios ausentes.
     1. O administrador tenta salvar o formulário sem preencher os dados principais do motorista.
     2. O sistema sinaliza os campos vazios e impede o salvamento.
@@ -1235,7 +1246,9 @@ Como administrador, quero atribuir ou revogar a função de representante de um 
 8. O representante somente poderá visualizar a lista de embarque e registrar a presença dos alunos vinculados ao transporte da universidade sob sua responsabilidade.
 9. O representante não poderá acessar funcionalidades administrativas exclusivas do administrador.
 10. O sistema deve registrar as alterações de atribuição e revogação da função no log de auditoria, identificando o administrador responsável e o momento da operação.
-11. Um aluno que já possua a função de representante não poderá receber a mesma função novamente.  
+11. Um aluno que já possua a função de representante ativa não poderá receber a mesma função novamente.
+12. Ao atribuir a função, o administrador deve selecionar a instituição de ensino sob responsabilidade do representante; o campo é obrigatório e a atribuição é bloqueada enquanto estiver vazio.
+13. Um aluno que teve a função de representante revogada pode receber a função novamente, voltando a constar como representante ativo na listagem.  
     **Fluxo Principal:**
 12. O administrador acessa o menu **"Representantes"**.
 13. O sistema exibe os alunos que possuem a função de representante.
