@@ -70,7 +70,12 @@ export default function CadastrarOnibusScreen() {
           }, 1200);
         } catch (error: any) {
           setIsLoading(false);
-          const msg = getErrorMessage(error, 'Erro ao cadastrar ônibus.');
+          const status = error.response?.status;
+          const msg =
+            status === 409 || error.message?.includes('registrado')
+              ? 'Este veículo já está registrado.'
+              : getErrorMessage(error, 'Erro ao cadastrar ônibus.');
+
           showPopup({
             type: 'error',
             title: 'Aviso',
