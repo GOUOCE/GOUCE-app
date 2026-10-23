@@ -18,7 +18,6 @@ import { Passo3ContatoVinculo } from '@/components/cadastro/Passo3ContatoVinculo
 import { Passo4Documentacao } from '@/components/cadastro/Passo4Documentacao';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 import { userService } from '@services/userService';
-import { faculdadeService } from '@services/faculdadeService';
 import { api } from '../../api/api';
 import { getErrorMessage } from '@/utils/errorUtils';
 import { useAuth } from '@contexts/AuthContext';
@@ -93,10 +92,6 @@ export default function RenovarVinculoScreen() {
           return String(valor);
         };
 
-        // O seletor de instituição trabalha com o nome; a API devolve o id (#192)
-        const faculdades = await faculdadeService.listarFaculdades().catch(() => []);
-        const nomeInstituicao =
-          faculdades.find((f) => String(f.id) === String(perfilApi.faculdade_id))?.nome || '';
         // A API devolve "Campus Quixadá"; as opções do seletor são só o nome da cidade
         const campus = String(perfilApi.campus || '').replace(/^campus\s+/i, '');
         // A foto é um id de arquivo; para exibir no passo 1 precisa da URL autenticada
@@ -106,27 +101,27 @@ export default function RenovarVinculoScreen() {
             ? idFoto
             : `${api.defaults.baseURL}/arquivos/${idFoto}/view?token=${token || ''}`
           : '';
-        const semestre = perfilApi.semestre_atual ? String(perfilApi.semestre_atual) : '';
 
-        // Campos sem valor ficam vazios para o aluno preencher (antes eram preenchidos com dados fictícios)
         reset({
           fotoPerfil,
           nomeCompleto: perfilApi.nome || perfilApi.nome_completo || user?.name || '',
           email: perfilApi.email || user?.email || '',
           dataNascimento: formatarDataNascimento(perfilApi.data_nascimento),
-          raca: perfilApi.raca || '',
-          identificacaoSexual: perfilApi.identificacao_sexual || '',
-          genero: perfilApi.identificacao_genero || '',
-          transgenero: perfilApi.transgenero || '',
+          raca: perfilApi.raca || 'Preto',
+          identificacaoSexual: perfilApi.identificacao_sexual || 'Bissexual',
+          genero: perfilApi.identificacao_genero || 'Homem',
+          transgenero: perfilApi.transgenero || 'Não',
           temFilhos: Boolean(perfilApi.tem_filhos),
-          bairro: perfilApi.bairro_id || '',
+          bairro: perfilApi.bairro_id || 'Centro',
           whatsapp: perfilApi.telefone || '',
-          instituicao: nomeInstituicao,
-          curso: perfilApi.curso || '',
-          campus,
-          periodoIngresso: perfilApi.periodo_ingresso || '',
-          turno: perfilApi.turno_curso || '',
-          semestreAtual: semestre ? (semestre.includes('º') ? semestre : `${semestre}º`) : '',
+          instituicao: perfilApi.faculdade_id || 'UFC - Universidade Federal do Ceará',
+          curso: perfilApi.curso || 'Engenharia de Software',
+          campus: campus || 'Quixadá',
+          periodoIngresso: perfilApi.periodo_ingresso || '2024.1',
+          turno: perfilApi.turno_curso || 'Noturno',
+          semestreAtual: String(perfilApi.semestre_atual || '8º').includes('º')
+            ? String(perfilApi.semestre_atual)
+            : `${perfilApi.semestre_atual || 8}º`,
           aceitouTermos: true,
           comprovanteMatricula: null,
           comprovanteResidencia: null,
