@@ -1,8 +1,17 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+);
+
 import { atribuirRepresentanteSchema } from '../representanteSchema';
 import { representanteService } from '../../services/representanteService';
 
 describe('Suíte de Testes Unitários - HU-030 (Gerenciamento de Representantes)', () => {
+  beforeEach(() => {
+    representanteService.resetMocks();
+  });
+
   describe('Validação do Formulário de Atribuição (atribuirRepresentanteSchema)', () => {
     it('deve aprovar quando a instituição for selecionada e o aluno for informado', () => {
       const res = atribuirRepresentanteSchema.safeParse({
