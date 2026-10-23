@@ -7,7 +7,7 @@ import { useAuth } from '@contexts/AuthContext';
 import { userService } from '@services/userService';
 import { api } from '../../api/api';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
-import { formatarTelefone } from '../../utils/formatarTelefone';
+import { formatarCelular } from '../../utils/formatarTelefone';
 
 export default function PerfilScreen() {
   const theme = useTheme();
@@ -127,7 +127,7 @@ export default function PerfilScreen() {
             </View>
             <View style={styles.infoItem}>
               <Text variant="labelSmall" style={styles.infoLabel}>Telefone (WhatsApp)</Text>
-              <Text variant="bodyMedium" style={styles.infoValue}>{formatarTelefone(user?.telefone) || ''}</Text>
+              <Text variant="bodyMedium" style={styles.infoValue}>{formatarCelular(user?.telefone)}</Text>
             </View>
             <View style={styles.infoItem}>
               <Text variant="labelSmall" style={styles.infoLabel}>Instituição - Campus</Text>

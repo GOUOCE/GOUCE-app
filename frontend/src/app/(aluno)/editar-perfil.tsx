@@ -12,7 +12,7 @@ import { userService } from '@/services/userService';
 import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 import { abreviarParaLargura } from '../../utils/abreviarTexto';
-import { formatarTelefone } from '../../utils/formatarTelefone';
+import { formatarCelular } from '../../utils/formatarTelefone';
 
 interface SelectInputProps {
   label: string;
@@ -87,6 +87,8 @@ export default function EditarPerfilScreen() {
   const router = useRouter();
   const { user, updateUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  // Como no cadastro: só dígitos enquanto edita, máscara ao sair do campo
+  const [editandoTelefone, setEditandoTelefone] = useState(false);
 
   // Pop-up estilizado
   const [popup, setPopup] = useState<{
@@ -115,7 +117,7 @@ export default function EditarPerfilScreen() {
   const { control, handleSubmit, formState: { errors, isDirty }, reset } = useForm<EditarPerfilFormData>({
     resolver: zodResolver(editarPerfilSchema),
     defaultValues: {
-      telefone: formatarTelefone(user?.telefone) || '',
+      telefone: (user?.telefone || '').replace(/\D/g, ''),
       bairro: user?.bairro || 'Croatá',
     }
   });
@@ -129,7 +131,7 @@ export default function EditarPerfilScreen() {
         try {
           const profile = await userService.getProfile();
           reset({
-            telefone: formatarTelefone(profile.telefone || user.telefone) || '',
+            telefone: (profile.telefone || user.telefone || '').replace(/\D/g, ''),
             bairro: profile.bairro_id || user.bairro || 'Croatá',
           });
         } catch (error) {
@@ -230,17 +232,14 @@ export default function EditarPerfilScreen() {
               <TextInput
                 label="Telefone (WhatsApp) *"
                 mode="outlined"
-                value={value}
-                onChangeText={(text) => onChange(formatarTelefone(text))}
-                onBlur={() => {
-                  onBlur();
-                  if (value) {
-                    onChange(formatarTelefone(value));
-                  }
-                }}
-                maxLength={15}
+                placeholder="(88) 9 9999-9999"
+                keyboardType="number-pad"
+                maxLength={editandoTelefone ? 11 : 16}
+                value={editandoTelefone ? (value || '') : formatarCelular(value)}
+                onFocus={() => setEditandoTelefone(true)}
+                onBlur={() => { setEditandoTelefone(false); onBlur(); }}
+                onChangeText={(text) => onChange(text.replace(/\D/g, '').slice(0, 11))}
                 error={!!errors.telefone}
-                keyboardType="phone-pad"
                 left={<TextInput.Icon icon={() => <Phone size={20} color="#666" />} />}
                 style={styles.input}
               />
