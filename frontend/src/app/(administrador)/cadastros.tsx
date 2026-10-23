@@ -90,7 +90,7 @@ export default function GestaoCadastrosScreen() {
             icon={GitFork}
             title="Rotas complementares"
             subtitle="Trajetos de transferência"
-            onPress={() => router.push('/(administrador)/cadastros/rotas-complementares' as any)}
+            onPress={() => router.push('/(administrador)/rotas-complementares' as any)}
           />
         </View>
       </View>
