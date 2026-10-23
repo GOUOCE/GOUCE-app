@@ -64,5 +64,26 @@ describe('Suíte de Testes Unitários - HU-005 e HU-028 (Edição de Perfil e Al
       });
       expect(res.success).toBe(false);
     });
+
+    it('deve normalizar o novo e-mail removendo espaços e maiúsculas', () => {
+      const res = alterarEmailSchema.safeParse({
+        emailAtual: 'joao@email.com',
+        novoEmail: '  Joao.Novo@Email.COM ',
+        senhaAtual: 'Senha123',
+      });
+      expect(res.success).toBe(true);
+      if (res.success) {
+        expect(res.data.novoEmail).toBe('joao.novo@email.com');
+      }
+    });
+
+    it('deve recusar novo e-mail igual ao atual mesmo com espaços e maiúsculas', () => {
+      const res = alterarEmailSchema.safeParse({
+        emailAtual: 'joao@email.com',
+        novoEmail: ' JOAO@Email.com ',
+        senhaAtual: 'Senha123',
+      });
+      expect(res.success).toBe(false);
+    });
   });
 });

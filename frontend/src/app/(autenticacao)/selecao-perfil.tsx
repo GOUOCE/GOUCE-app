@@ -5,7 +5,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Text } from 'react-native-paper';
 import { ChevronLeft, IdCard, Contact, Shield } from 'lucide-react-native';
 
@@ -16,8 +16,7 @@ import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function SelecaoPerfilScreen() {
   const router = useRouter();
-  const { email, senha } = useLocalSearchParams<{ email: string; senha: string }>();
-  const { signIn } = useAuth();
+  const { signIn, pendingCredentials, clearPendingCredentials } = useAuth();
   const [isLoadingLocal, setIsLoadingLocal] = useState(false);
 
   // Estado do Pop-up
@@ -46,6 +45,7 @@ export default function SelecaoPerfilScreen() {
 
   const confirmarSaida = () => {
     closePopup();
+    clearPendingCredentials();
     if (router.canGoBack()) {
       router.back();
     } else {
@@ -72,7 +72,7 @@ export default function SelecaoPerfilScreen() {
 
     try {
       // Em caso de sucesso, o redirecionamento ocorre para a home.
-      await signIn(email, senha, perfil);
+      await signIn(pendingCredentials?.email || '', pendingCredentials?.senha || '', perfil);
     } catch (error: any) {
       setIsLoadingLocal(false);
 

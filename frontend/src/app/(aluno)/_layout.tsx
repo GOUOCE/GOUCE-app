@@ -1,9 +1,29 @@
 import React from 'react';
-import { Tabs } from 'expo-router';
+import { Tabs, Redirect } from 'expo-router';
 import { View, StyleSheet } from 'react-native';
 import { Home, ClipboardList, Megaphone, UserCircle } from 'lucide-react-native';
+import { useAuth } from '@contexts/AuthContext';
 
 export default function StudentLayout() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return null;
+  }
+
+  // Proteção no nível do layout: decide antes de desenhar qualquer tela do grupo
+  if (!user) {
+    return <Redirect href="/(autenticacao)/login" />;
+  }
+
+  if (user.role !== 'ALUNO') {
+    return <Redirect href="/acesso-negado" />;
+  }
+
+  if ((user.status || '').toLowerCase() === 'pendente') {
+    return <Redirect href="/(autenticacao)/cadastro-pendente" />;
+  }
+
   return (
     <Tabs screenOptions={{
       headerShown: false,

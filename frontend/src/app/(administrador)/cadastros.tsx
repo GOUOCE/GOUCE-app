@@ -42,14 +42,14 @@ export default function GestaoCadastrosScreen() {
             icon={MapPin}
             title="Bairros e pontos de parada"
             subtitle="Locais de embarque"
-            onPress={() => router.push('/(administrador)/cadastros/pontos' as any)}
+            onPress={() => router.push('/(administrador)/bairros' as any)}
           />
           <View style={styles.divider} />
           <SectionItem
             icon={Building2}
             title="Faculdades"
             subtitle="Instituições de destino"
-            onPress={() => router.push('/(administrador)/cadastros/faculdades' as any)}
+            onPress={() => router.push('/(administrador)/faculdades' as any)}
           />
           <View style={styles.divider} />
           <SectionItem
@@ -63,14 +63,14 @@ export default function GestaoCadastrosScreen() {
             icon={Contact}
             title="Motoristas"
             subtitle="Condutores autorizados"
-            onPress={() => router.push('/(administrador)/cadastros/motoristas' as any)}
+            onPress={() => router.push('/(administrador)/motoristas' as any)}
           />
           <View style={styles.divider} />
           <SectionItem
             icon={UserCheck}
             title="Representantes"
             subtitle="Alunos representantes de faculdades"
-            onPress={() => router.push('/(administrador)/cadastros/representantes' as any)}
+            onPress={() => router.push('/(administrador)/representantes' as any)}
           />
         </View>
       </View>
