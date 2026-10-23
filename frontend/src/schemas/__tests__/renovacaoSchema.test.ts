@@ -7,9 +7,10 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 import { renovacaoSchema } from '../alunoSchema';
 
 describe('Suíte de Testes Unitários - HU-028 (Renovação de Vínculo Institucional)', () => {
-  const arquivoValido = { uri: 'file://matricula.pdf', name: 'matricula.pdf', size: 1024 * 1024, mimeType: 'application/pdf' };
+  const arquivoValido = { uri: 'file://matricula.pdf', name: 'matricula.pdf', size: 1024 * 1024, type: 'application/pdf' };
 
   const baseValida = {
+    email: 'maria@alu.ufc.br',
     nomeCompleto: 'Maria da Silva',
     dataNascimento: '15/05/2000',
     raca: 'Preto' as const,
