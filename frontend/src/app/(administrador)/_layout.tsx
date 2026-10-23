@@ -67,7 +67,11 @@ export default function AdminLayout() {
   }
 
   // Proteção de acesso no nível do Layout
-  if (!user || user.role !== 'ADMINISTRADOR') {
+  if (!user) {
+    return <Redirect href="/(autenticacao)/login" />;
+  }
+
+  if (user.role !== 'ADMINISTRADOR') {
     return <Redirect href="/acesso-negado" />;
   }
 
