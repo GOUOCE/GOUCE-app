@@ -6,7 +6,7 @@ describe('Suíte de Testes Unitários - HU-005 e HU-028 (Edição de Perfil e Al
   describe('Edição de Perfil (editarPerfilSchema) - HU-005', () => {
     it('deve aprovar telefone e bairro válidos', () => {
       const res = editarPerfilSchema.safeParse({
-        telefone: '(88) 9 9999-9999',
+        telefone: '(88) 9 8123-4567',
         bairro: 'Croatá',
       });
       expect(res.success).toBe(true);
@@ -19,13 +19,13 @@ describe('Suíte de Testes Unitários - HU-005 e HU-028 (Edição de Perfil e Al
       });
       expect(res.success).toBe(false);
       if (!res.success) {
-        expect(res.error.issues[0].message).toContain('telefone');
+        expect(res.error.issues[0].message).toBe('Informe DDD e número com 9 dígitos');
       }
     });
 
     it('deve recusar bairro em branco', () => {
       const res = editarPerfilSchema.safeParse({
-        telefone: '(88) 9 9999-9999',
+        telefone: '(88) 9 8123-4567',
         bairro: '',
       });
       expect(res.success).toBe(false);
@@ -61,6 +61,27 @@ describe('Suíte de Testes Unitários - HU-005 e HU-028 (Edição de Perfil e Al
         emailAtual: 'joao@email.com',
         novoEmail: 'joao.novo@email.com',
         senhaAtual: '',
+      });
+      expect(res.success).toBe(false);
+    });
+
+    it('deve normalizar o novo e-mail removendo espaços e maiúsculas', () => {
+      const res = alterarEmailSchema.safeParse({
+        emailAtual: 'joao@email.com',
+        novoEmail: '  Joao.Novo@Email.COM ',
+        senhaAtual: 'Senha123',
+      });
+      expect(res.success).toBe(true);
+      if (res.success) {
+        expect(res.data.novoEmail).toBe('joao.novo@email.com');
+      }
+    });
+
+    it('deve recusar novo e-mail igual ao atual mesmo com espaços e maiúsculas', () => {
+      const res = alterarEmailSchema.safeParse({
+        emailAtual: 'joao@email.com',
+        novoEmail: ' JOAO@Email.com ',
+        senhaAtual: 'Senha123',
       });
       expect(res.success).toBe(false);
     });

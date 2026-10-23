@@ -3,6 +3,7 @@ import { View, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-nat
 import { TextInput, Text, useTheme, Portal } from 'react-native-paper';
 import { useFormContext, Controller } from 'react-hook-form';
 import { ChevronDown, Phone, School, GraduationCap, Search, X } from 'lucide-react-native';
+import { formatarCelular } from '../../utils/formatarTelefone';
 import { abreviarParaLargura } from '../../utils/abreviarTexto';
 
 interface SelectInputProps {
@@ -168,14 +169,6 @@ export function Passo3ContatoVinculo() {
     return periodos;
   };
 
-  const formatarTelefone = (texto: string) => {
-    let limpo = texto.replace(/\D/g, '');
-    if (limpo.length > 11) limpo = limpo.slice(0, 11);
-    if (limpo.length <= 2) return limpo ? `(${limpo}` : '';
-    if (limpo.length <= 7) return `(${limpo.slice(0, 2)}) ${limpo.slice(2)}`;
-    return `(${limpo.slice(0, 2)}) ${limpo.slice(2, 3)} ${limpo.slice(3, 7)}-${limpo.slice(7)}`;
-  };
-
   return (
     <View style={styles.container}>
       <Controller
@@ -227,7 +220,7 @@ export function Passo3ContatoVinculo() {
             placeholder="(88) 9 9999-9999"
             keyboardType="number-pad"
             maxLength={editandoTelefone ? 11 : 16}
-            value={editandoTelefone ? (value || '').replace(/\D/g, '') : formatarTelefone(value || '')}
+            value={editandoTelefone ? (value || '').replace(/\D/g, '') : formatarCelular(value)}
             onFocus={() => setEditandoTelefone(true)}
             onBlur={() => { setEditandoTelefone(false); onBlur(); }}
             onChangeText={(text) => onChange(text.replace(/\D/g, '').slice(0, 11))}
