@@ -34,6 +34,7 @@ def create_tables():
     from src.modulos.usuarios.model.entities.representante import RepresentanteORM
     from src.modulos.auth.domain.entities.password_reset_token import PasswordResetTokenORM
     from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
+    from src.modulos.crud_basicos.domain.entities.onibus import OnibusORM
     from src.shared.infrastructure.audit_model import LogAuditoriaORM
 
     Base.metadata.create_all(bind=engine)
