@@ -130,6 +130,7 @@ class AlunoResumoResponseDTO(BaseModel):
     nome: str
     email: str
     faculdade: str
+    sigla: str | None = None
     campus: str | None = None
     status_cadastro: str
     data_hora_envio_analise: datetime | None = None
@@ -260,6 +261,10 @@ class PerfilAlunoResponseDTO(BaseModel):
     data_criacao: datetime
     status_cadastro: str
     faculdade_id: int | None = None
+    faculdade: str | None = None
+    nome_faculdade: str | None = None
+    sigla: str | None = None
+    sigla_faculdade: str | None = None
     campus: str | None = None
     bairro: str | None = Field(default=None, validation_alias="bairro_id")
     curso: str | None = None
