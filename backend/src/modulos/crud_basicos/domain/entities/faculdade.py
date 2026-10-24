@@ -23,6 +23,7 @@ class FaculdadeORM(Base):
         nullable=False,
     )
     nome_faculdade = Column(String(255), nullable=False)
+    sigla = Column(String(50), nullable=True)
     campus_faculdade = Column(String(255), nullable=False)
     ativo = Column(Boolean, default=True, nullable=False)
 
@@ -44,6 +45,7 @@ class Faculdade(BaseModel):
 
     id_faculdade: Optional[int] = None
     nome_faculdade: str
+    sigla: Optional[str] = None
     campus_faculdade: str
     ativo: bool = True
 
