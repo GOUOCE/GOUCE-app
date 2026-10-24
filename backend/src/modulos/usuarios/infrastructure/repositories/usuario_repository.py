@@ -127,8 +127,8 @@ class SQLAlchemyUsuarioRepository:
 
         if aluno:
             status_cadastro = self._normalizar_valor(aluno.status_cadastro)
-            # O aluno rejeitado ou com vínculo expirado ainda pode logar para reenviar documentos ou renovar vínculo.
-            ativo = status_cadastro in {"ativado", "analise_renovacao", "rejeitado", "expirado", "vencido"}
+            # O aluno rejeitado ainda pode logar para reenviar documentos.
+            ativo = status_cadastro in {"ativado", "analise_renovacao", "rejeitado"}
             motivo = None
 
             if status_cadastro == "pendente":
