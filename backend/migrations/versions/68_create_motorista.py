@@ -1,7 +1,7 @@
 """create motorista table
 
 Revision ID: 68_create_motorista
-Revises: 67_add_password_reset_token
+Revises: 72_create_onibus_table
 """
 
 from typing import Sequence, Union
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 
 revision: str = "68_create_motorista"
-down_revision: Union[str, None] = "67_add_password_reset_token"
+down_revision: Union[str, None] = "72_create_onibus_table"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

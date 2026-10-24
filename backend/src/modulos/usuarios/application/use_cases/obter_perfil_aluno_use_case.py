@@ -34,6 +34,13 @@ class ObterPerfilAlunoUseCase:
                 if arq_res:
                     nome_res = arq_res.nome
 
+        nome_bairro = None
+        if aluno:
+            if getattr(aluno, "bairro_rel", None) and getattr(aluno.bairro_rel, "nome", None):
+                nome_bairro = aluno.bairro_rel.nome
+            elif aluno.bairro_id is not None:
+                nome_bairro = str(aluno.bairro_id)
+
         return PerfilAlunoResponseDTO(
             id=usuario.id,
             nome=usuario.nome_completo,
@@ -43,7 +50,7 @@ class ObterPerfilAlunoUseCase:
             status_cadastro=status_cadastro,
             faculdade_id=aluno.faculdade_id if aluno else None,
             campus=getattr(aluno, "faculdade_rel", None) and aluno.faculdade_rel.campus_faculdade if aluno else None,
-            bairro_id=aluno.bairro_id if aluno else None,
+            bairro=nome_bairro,
             curso=aluno.curso if aluno else None,
             semestre_atual=aluno.semestre_atual if aluno else None,
             periodo_ingresso=aluno.periodo_ingresso if aluno else None,
