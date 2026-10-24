@@ -67,7 +67,11 @@ export default function AdminLayout() {
   }
 
   // Proteção de acesso no nível do Layout
-  if (!user || user.role !== 'ADMINISTRADOR') {
+  if (!user) {
+    return <Redirect href="/(autenticacao)/login" />;
+  }
+
+  if (user.role !== 'ADMINISTRADOR') {
     return <Redirect href="/acesso-negado" />;
   }
 
@@ -84,6 +88,10 @@ export default function AdminLayout() {
       <Tabs.Screen name="mais" options={{ title: 'Mais' }} />
       <Tabs.Screen name="administradores" options={{ href: null }} />
       <Tabs.Screen name="solicitacoes" options={{ href: null }} />
+      <Tabs.Screen name="bairros" options={{ href: null }} />
+      <Tabs.Screen name="faculdades" options={{ href: null }} />
+      <Tabs.Screen name="motoristas" options={{ href: null }} />
+      <Tabs.Screen name="representantes" options={{ href: null }} />
       <Tabs.Screen name="cadastrar-administrador" options={{ href: null }} />
     </Tabs>
   );

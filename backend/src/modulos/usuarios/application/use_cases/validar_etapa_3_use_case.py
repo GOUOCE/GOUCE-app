@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 from src.modulos.usuarios.application.dtos.usuario_dto import (
     ValidacaoSucessoDTO,
     CadastroSucessoDTO,
@@ -38,19 +38,13 @@ class ValidarEtapa3UsuarioUseCase:
             erros.append({"field": "telefone", "message": "Telefone celular inválido. Informe um número celular válido com DDD (ex: 11987654321)"})
 
         # Validação de Instituição / Faculdade
-        faculdade_id = str(dto.faculdade_id).strip() if dto.faculdade_id else ""
-        if not faculdade_id or len(faculdade_id) < 2:
-            erros.append({"field": "faculdade_id", "message": "Instituição/Faculdade é obrigatória"})
+        if not dto.faculdade_id or not isinstance(dto.faculdade_id, int) or dto.faculdade_id <= 0:
+            erros.append({"field": "faculdade_id", "message": "Instituição/Faculdade é obrigatória (informe o ID da faculdade)"})
 
         # Validação de Curso
         curso = str(dto.curso).strip() if dto.curso else ""
         if not curso or len(curso) < 2:
             erros.append({"field": "curso", "message": "O nome do curso é obrigatório"})
-
-        # Validação de Campus
-        campus = str(dto.campus).strip() if dto.campus else ""
-        if not campus:
-            erros.append({"field": "campus", "message": "O campus é obrigatório"})
 
         # Validação do Período de Ingresso
         if not dto.periodo_ingresso or not str(dto.periodo_ingresso).strip():

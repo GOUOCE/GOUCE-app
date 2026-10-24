@@ -29,16 +29,24 @@ class AtualizarAlunoUseCase:
                     "Telefone celular inválido. Informe um número celular válido com DDD (ex: 11987654321)",
                 )
 
-        if dto.bairro_id is not None and not dto.bairro_id.strip():
-            raise AtualizarAlunoValidationError(
-                "bairro_id",
-                "Bairro inválido. Informe um bairro não vazio.",
-            )
+        if dto.bairro_id is not None:
+            if isinstance(dto.bairro_id, str) and not dto.bairro_id.strip():
+                raise AtualizarAlunoValidationError(
+                    "bairro_id",
+                    "Bairro inválido. Informe um bairro não vazio.",
+                )
+
+        bairro_id_val = None
+        if dto.bairro_id is not None:
+            try:
+                bairro_id_val = int(dto.bairro_id)
+            except (ValueError, TypeError):
+                bairro_id_val = dto.bairro_id
 
         usuario, aluno = self.repository.atualizar_dados_parciais(
             user_id=user_id,
             telefone=dto.telefone,
-            bairro_id=dto.bairro_id
+            bairro_id=bairro_id_val
         )
 
         if not usuario:

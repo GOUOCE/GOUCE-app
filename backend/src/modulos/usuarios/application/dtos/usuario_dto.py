@@ -35,11 +35,10 @@ class ValidarEtapa2CadastroUsuarioDTO(BaseModel):
 class ValidarEtapa3CadastroUsuarioDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    bairro_id: str = Field(min_length=1, max_length=20)
+    bairro_id: int | str = Field(min_length=1, max_length=20)
     telefone: str = Field(min_length=1, max_length=20)
-    faculdade_id: str = Field(min_length=1, max_length=150)
+    faculdade_id: int
     curso: str = Field(min_length=1, max_length=150)
-    campus: str | None = Field(default=None, max_length=150)
     periodo_ingresso: str = Field(min_length=1, max_length=20)
     turno_curso: TurnoCursoEnum | str | None = None
     semestre_atual: int
@@ -57,9 +56,8 @@ class CadastroUsuarioDTO(BaseModel):
     email: EmailStr
     senha: str = Field(min_length=8, max_length=128)
     telefone: str = Field(min_length=1, max_length=20)
-    faculdade_id: str = Field(min_length=1, max_length=150)
-    campus: str = Field(min_length=1, max_length=150)
-    bairro_id: str = Field(min_length=1, max_length=20)
+    faculdade_id: int
+    bairro_id: int | str = Field(min_length=1, max_length=20)
     id_comprovante_matricula: str = Field(default="", max_length=255)
     id_comprovante_residencia: str = Field(default="", max_length=255)
     data_nascimento: str | int | float | date | datetime | None = None
@@ -132,6 +130,7 @@ class AlunoResumoResponseDTO(BaseModel):
     nome: str
     email: str
     faculdade: str
+    sigla: str | None = None
     campus: str | None = None
     status_cadastro: str
     data_hora_envio_analise: datetime | None = None
@@ -261,9 +260,13 @@ class PerfilAlunoResponseDTO(BaseModel):
     telefone: str | None = None
     data_criacao: datetime
     status_cadastro: str
-    faculdade_id: str | None = None
+    faculdade_id: int | None = None
+    faculdade: str | None = None
+    nome_faculdade: str | None = None
+    sigla: str | None = None
+    sigla_faculdade: str | None = None
     campus: str | None = None
-    bairro_id: str | None = None
+    bairro: str | None = Field(default=None, validation_alias="bairro_id")
     curso: str | None = None
     semestre_atual: int | None = None
     periodo_ingresso: str | None = None
@@ -279,6 +282,7 @@ class PerfilAlunoResponseDTO(BaseModel):
     tem_filhos: str | bool | None = None
     id_foto_aluno: str | None = None
     validade_acesso: datetime | None = None
+    acesso_expirado: bool = False
     motivo_reprovacao: str | None = None
     id_comprovante_matricula: str | None = None
     id_comprovante_residencia: str | None = None
@@ -309,4 +313,4 @@ class AtualizarAlunoDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
 
     telefone: str | None = Field(default=None, max_length=20, description="Novo telefone do aluno")
-    bairro_id: str | None = Field(default=None, max_length=20, description="Novo ID do bairro")
+    bairro_id: int | str | None = Field(default=None, max_length=20, description="Novo ID do bairro")

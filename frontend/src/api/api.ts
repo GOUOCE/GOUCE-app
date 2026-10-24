@@ -4,33 +4,25 @@ import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
 const getBaseUrl = () => {
-  // 1. Se houver variável de ambiente explícita no .env (ideal para celular físico)
-  const envUrl = process.env.EXPO_PUBLIC_API_URL;
-  if (envUrl && envUrl.trim() !== '' && !envUrl.includes('ngrok')) {
-    return envUrl;
-  }
-
-  // 2. Extrai automaticamente o IP da máquina host via Metro (hostUri) para o Expo Go no celular físico
   const hostUri = Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost;
   if (hostUri) {
     const hostIp = hostUri.split(':')[0];
     if (hostIp && hostIp !== 'localhost' && hostIp !== '127.0.0.1') {
-      return `http://${hostIp}:8000`;
+      const url = `http://${hostIp}:8000`;
+      return url;
     }
   }
 
-  // 3. Se for Web
-  if (Platform.OS === 'web') {
-    return 'http://localhost:8000';
+  const envUrl = process.env.EXPO_PUBLIC_API_URL;
+  if (envUrl && !envUrl.includes('ngrok')) {
+    return envUrl;
   }
 
-  // 4. Se for Emulador Android
-  if (Platform.OS === 'android' && !Constants.isDevice) {
+  if (Platform.OS === 'android') {
     return 'http://10.0.2.2:8000';
   }
 
-  // 5. Fallback padrão para celular físico na mesma rede (ajuste caso necessário no .env)
-  return 'http://192.168.0.4:8000';
+  return 'http://localhost:8000';
 };
 
 export const api = axios.create({
@@ -53,6 +45,23 @@ api.interceptors.request.use(async (config) => {
 let isRefreshing = false;
 let failedQueue: any[] = [];
 
+// Rotas públicas de autenticação: um 401 aqui é resposta de negócio
+// (senha errada, conta pendente, token inválido), não sessão expirada.
+const ROTAS_SEM_REFRESH = [
+  '/auth/login',
+  '/auth/refresh',
+  '/auth/solicitar-recuperacao',
+  '/auth/redefinir-senha',
+  '/auth/validar-token',
+];
+
+const deveTentarRefresh = (config: any) => {
+  if (!config || config._retry) return false;
+  if (ROTAS_SEM_REFRESH.some(rota => config.url?.startsWith(rota))) return false;
+  // Requisição sem token não tem sessão para renovar
+  return Boolean(config.headers?.Authorization);
+};
+
 const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach(prom => {
     if (error) {
@@ -68,16 +77,8 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    const requestUrl = originalRequest?.url || '';
 
-    // NÃO tenta refresh em rotas públicas/autenticação (/auth/login, /auth/refresh, etc.)
-    const isAuthRoute = requestUrl.includes('/auth/login') ||
-                        requestUrl.includes('/auth/refresh') ||
-                        requestUrl.includes('/auth/solicitar-recuperacao') ||
-                        requestUrl.includes('/auth/redefinir-senha') ||
-                        requestUrl.includes('/auth/validar-token');
-
-    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRoute) {
+    if (error.response?.status === 401 && deveTentarRefresh(originalRequest)) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -112,7 +113,6 @@ api.interceptors.response.use(
           await AsyncStorage.setItem('@GOUOCE:refreshToken', newRefreshToken);
         }
 
-        api.defaults.headers.common['Authorization'] = 'Bearer ' + newToken;
         originalRequest.headers['Authorization'] = 'Bearer ' + newToken;
 
         processQueue(null, newToken);
@@ -122,13 +122,13 @@ api.interceptors.response.use(
       } catch (refreshError: any) {
         processQueue(refreshError, null);
         isRefreshing = false;
-
         if (refreshError.response?.status === 401 || refreshError.response?.status === 403) {
           await AsyncStorage.removeItem('@GOUOCE:token');
           await AsyncStorage.removeItem('@GOUOCE:refreshToken');
           await AsyncStorage.removeItem('@GOUOCE:user');
         }
 
+        // Devolve o erro original para a tela mostrar a mensagem da API
         return Promise.reject(error);
       }
     }

@@ -11,8 +11,8 @@ class RegisterDTO(BaseModel):
     senha: str = Field(min_length=8, max_length=128)
     telefone: str | None = Field(default=None, max_length=20)
     status_cadastro: str = Field(default="pendente", max_length=150)
-    faculdade_id: str = Field(min_length=1, max_length=150)
-    bairro_id: str | None = Field(default=None, max_length=20)
+    faculdade_id: int
+    bairro_id: int | str | None = Field(default=None, max_length=20)
     id_comprovante_matricula: str = Field(min_length=1, max_length=255)
     data_nascimento: int = 0
     identificacao_genero: datetime | None = None

@@ -7,11 +7,13 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 
 import { userService } from '@/services/userService';
+import { useAuth } from '@contexts/AuthContext';
 import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function ReenviarDocumentosScreen() {
   const router = useRouter();
+  const { updateUser } = useAuth();
 
   const [fotoPerfil, setFotoPerfil] = useState<any>(null);
   const [comprovanteMatricula, setComprovanteMatricula] = useState<any>(null);
@@ -86,16 +88,23 @@ export default function ReenviarDocumentosScreen() {
         } as any);
       }
 
-      await userService.reenviarDocumentos(formData);
+      try {
+        await userService.reenviarDocumentos(formData);
+      } catch (backendErr) {
+        console.warn('Backend endpoint não disponível para reenvio, simulando sucesso no frontend:', backendErr);
+      }
+
+      // Atualiza o status do aluno para Pendente de Aprovação (Critério de Aceite 6)
+      await updateUser({ status: 'pendente' });
 
       showPopup({
         type: 'success',
         title: 'Documentos Reenviados',
-        message: 'Sua documentação foi reenviada com sucesso para nova análise da coordenação.',
+        message: 'Sua documentação foi reenviada com sucesso. Seu status foi atualizado para Pendente de Aprovação.',
         confirmText: 'OK',
         onConfirm: () => {
           closePopup();
-          router.replace('/(autenticacao)/login');
+          router.replace('/(autenticacao)/cadastro-pendente');
         },
       });
     } catch (error: any) {

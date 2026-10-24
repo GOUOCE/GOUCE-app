@@ -11,7 +11,11 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from src.shared.infrastructure.db import get_session
-from src.shared.auth.dependencies import require_roles, verify_student_standard_access
+from src.shared.auth.dependencies import (
+    require_roles,
+    verify_student_renewal_access,
+    verify_student_standard_access,
+)
 from src.shared.auth.jwt_service import JWTService
 from src.shared.security.argon2_hasher import Argon2PasswordHasher
 from src.shared.enums.cargo_enum import CargoEnum
@@ -303,9 +307,8 @@ async def cadastrar_usuario_com_arquivos(
     nome: str = Form(...),
     email: str = Form(...),
     senha: str = Form(...),
-    faculdade_id: str = Form(...),
+    faculdade_id: int = Form(...),
     curso: str = Form(...),
-    campus: str = Form(...),
     data_nascimento: str = Form(...),
     termos_de_uso: bool = Form(...),
     comprovante_matricula: UploadFile = File(..., description="Arquivo PDF ou Imagem do comprovante de matrícula"),
@@ -349,7 +352,6 @@ async def cadastrar_usuario_com_arquivos(
         identificacao_sexual = identificacao_sexual.strip() if isinstance(identificacao_sexual, str) and identificacao_sexual.strip() else None
         periodo_ingresso = periodo_ingresso.strip() if isinstance(periodo_ingresso, str) and periodo_ingresso.strip() else None
         turno_curso = turno_curso.strip() if isinstance(turno_curso, str) and turno_curso.strip() else None
-        campus = campus.strip() if isinstance(campus, str) else campus
 
         # 1. Upload do comprovante de matrícula
         conteudo_mat = await comprovante_matricula.read()
@@ -387,7 +389,6 @@ async def cadastrar_usuario_com_arquivos(
                 telefone=telefone,
                 status_cadastro=StatusCadastroEnum.PENDENTE,
                 faculdade_id=faculdade_id,
-                campus=campus,
                 bairro_id=bairro_id,
                 id_comprovante_matricula=res_mat.id,
                 id_comprovante_residencia=res_res.id,
@@ -652,7 +653,8 @@ async def verificar_email(
     responses=EDICAO_ERROR_RESPONSES,
 )
 async def obter_meu_perfil(
-    current_user: Annotated[dict, Depends(verify_student_standard_access)],
+    # O aluno com vínculo vencido precisa ver o perfil para renovar (HU-028).
+    current_user: Annotated[dict, Depends(verify_student_renewal_access)],
     repository=Depends(get_repository),
     arquivo_repository=Depends(get_arquivo_repository),
 ):
@@ -662,7 +664,8 @@ async def obter_meu_perfil(
             raise HTTPException(status_code=401, detail="Sessão inválida")
 
         use_case = ObterPerfilAlunoUseCase(repository, arquivo_repository)
-        return use_case.execute(user_id)
+        perfil = use_case.execute(user_id)
+        return perfil.model_copy(update={"acesso_expirado": bool(current_user.get("access_expired"))})
     except HTTPException:
         raise
     except ValueError as error:

@@ -24,15 +24,21 @@ export interface DetalhesSolicitacaoItem extends SolicitacaoItem {
 }
 
 export const solicitacaoService = {
-  async listarSolicitacoes(): Promise<SolicitacaoItem[]> {
-    const [resPendentes, resRenovacoes] = await Promise.all([
-      api.get<any[]>('/usuarios/alunos', { params: { status: 'pendente' } }),
-      api.get<any[]>('/usuarios/alunos', { params: { status: 'analise_renovacao' } }),
-    ]);
-
-    const lista = [...(resPendentes.data || []), ...(resRenovacoes.data || [])];
-
-    return lista.map((item) => ({
+  // A fila reúne cadastros novos (pendente) e renovações de vínculo (analise_renovacao);
+  // a API filtra por um status de cada vez.
+  async listarSolicitacoes(
+    status: string | string[] = ['pendente', 'analise_renovacao']
+  ): Promise<SolicitacaoItem[]> {
+    const statusLista = Array.isArray(status) ? status : [status];
+    const respostas = await Promise.all(
+      statusLista.map((s) => api.get<any[]>('/usuarios/alunos', { params: { status: s } }))
+    );
+    const itens = respostas.flatMap((response) => response.data || []);
+    // Mais antigas primeiro; sem data de envio vão para o fim
+    const dataEnvio = (item: any) =>
+      item.data_hora_envio_analise ? new Date(item.data_hora_envio_analise).getTime() : Number.MAX_SAFE_INTEGER;
+    itens.sort((a, b) => dataEnvio(a) - dataEnvio(b));
+    return itens.map((item) => ({
       id: item.id || item.aluno_id,
       aluno_id: item.aluno_id || item.id,
       nome: item.nome || item.nome_completo,

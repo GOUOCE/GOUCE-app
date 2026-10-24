@@ -27,6 +27,7 @@ export interface LoginResponse {
     email: string;
     role: string;
     status_cadastro?: string;
+    acesso_expirado?: boolean;
     nome_completo?: string;
     telefone?: string;
     curso?: string;

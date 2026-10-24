@@ -39,7 +39,8 @@ class FakeEditRepository:
         self.aluno = SimpleNamespace(
             aluno_id=1,
             status_cadastro="ativado",
-            faculdade_id="faculdade-1",
+            faculdade_id=1,
+            faculdade_rel=SimpleNamespace(nome_faculdade="faculdade-1", campus_faculdade="Campus Central"),
             bairro_id="Centro",
             curso="Direito",
             semestre_atual=3,
@@ -198,7 +199,7 @@ class EdicaoPerfilValidacoesTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(status, 200)
         self.assertEqual(body["id"], 1)
         self.assertEqual(body["email"], "atual@example.com")
-        self.assertEqual(body["bairro_id"], "Centro")
+        self.assertEqual(body["bairro"], "Centro")
         self.assertEqual(body["data_criacao"], "2026-09-30T12:00:00Z")
         self.assertEqual(self.repository.profile_calls, [1])
         for campo in ("senha", "senha_hash", "password", "email_hash", "token", "token_acesso"):
@@ -227,6 +228,30 @@ class EdicaoPerfilValidacoesTest(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(status, 401)
         self.assert_error_response(self, body, "UNAUTHORIZED")
+
+    async def test_get_me_permite_aluno_com_vinculo_vencido_e_informa_acesso_expirado(self):
+        # HU-028: o aluno vencido precisa ver o próprio perfil para renovar o vínculo.
+        self.app.dependency_overrides[get_current_user] = lambda: {
+            "sub": "1",
+            "type": "access",
+            "role": CargoEnum.ALUNO.value,
+            "current_role": CargoEnum.ALUNO.value,
+            "current_roles": [CargoEnum.ALUNO.value],
+            "current_user_id": 1,
+            "current_status": "ativado",
+            "access_expired": True,
+        }
+
+        status, body = await self.asgi_request("/usuarios/me", {}, method="GET")
+
+        self.assertEqual(status, 200)
+        self.assertIs(body["acesso_expirado"], True)
+
+    async def test_get_me_aluno_em_dia_retorna_acesso_expirado_falso(self):
+        status, body = await self.asgi_request("/usuarios/me", {}, method="GET")
+
+        self.assertEqual(status, 200)
+        self.assertIs(body["acesso_expirado"], False)
 
     async def test_get_me_role_incorreta_retorna_403_padronizado(self):
         self.app.dependency_overrides[get_current_user] = lambda: {
