@@ -199,7 +199,7 @@ class EdicaoPerfilValidacoesTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(status, 200)
         self.assertEqual(body["id"], 1)
         self.assertEqual(body["email"], "atual@example.com")
-        self.assertEqual(body["bairro_id"], "Centro")
+        self.assertEqual(body["bairro"], "Centro")
         self.assertEqual(body["data_criacao"], "2026-09-30T12:00:00Z")
         self.assertEqual(self.repository.profile_calls, [1])
         for campo in ("senha", "senha_hash", "password", "email_hash", "token", "token_acesso"):

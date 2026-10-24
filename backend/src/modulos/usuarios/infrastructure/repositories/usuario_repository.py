@@ -626,7 +626,7 @@ class SQLAlchemyUsuarioRepository:
             self.session.rollback()
             raise
 
-    def atualizar_dados_parciais(self, user_id: int, telefone: str | None = None, bairro_id: str | None = None):
+    def atualizar_dados_parciais(self, user_id: int, telefone: str | None = None, bairro_id: int | str | None = None):
         try:
             usuario, aluno = self.buscar_com_detalhes_por_id(user_id)
             if not usuario:

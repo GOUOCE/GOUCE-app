@@ -20,7 +20,7 @@ class RenovacaoVinculoDTO(BaseModel):
     transgenero: SimNaoPrefiroEnum
     tem_filhos: bool
     telefone: str = Field(min_length=1, max_length=20)
-    bairro_id: str = Field(min_length=1, max_length=20)
+    bairro_id: int | str = Field(min_length=1, max_length=20)
     faculdade_id: int
     curso: str = Field(min_length=1, max_length=150)
     periodo_ingresso: str = Field(min_length=1, max_length=20)
