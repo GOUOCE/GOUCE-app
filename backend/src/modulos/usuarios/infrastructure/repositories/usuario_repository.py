@@ -532,12 +532,15 @@ class SQLAlchemyUsuarioRepository:
         novo_status: str,
         motivo_reprovacao: str | None = None,
         documentos_reenvio: list[dict] | None = None,
+        validade_acesso: datetime | None = None,
     ) -> AlunoORM | None:
         aluno = self.buscar_aluno_por_id(aluno_id)
         if not aluno:
             return None
 
         aluno.status_cadastro = novo_status
+        if validade_acesso is not None:
+            aluno.validade_acesso = validade_acesso
         if motivo_reprovacao is not None:
             aluno.motivo_reprovacao = motivo_reprovacao
         elif novo_status == StatusCadastroEnum.REJEITADO.value:
