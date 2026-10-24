@@ -50,9 +50,12 @@ export default function EditarAdministradorScreen() {
     },
   });
 
-  // Recarrega os dados do servidor ou reseta os campos ao ganhar foco (BUG-HU006-UI-009)
+  // Recarrega os dados do servidor ao ganhar foco e descarta o que não foi salvo ao sair (BUG-HU006-UI-009)
   useFocusEffect(
     React.useCallback(() => {
+      const valoresIniciais = { nome: nomeParam || '', email: emailParam || '' };
+      reset(valoresIniciais);
+
       async function carregarDadosOficiais() {
         if (!id) return;
         try {
@@ -74,6 +77,7 @@ export default function EditarAdministradorScreen() {
         }
       }
       carregarDadosOficiais();
+      return () => reset(valoresIniciais);
     }, [id, nomeParam, emailParam, reset])
   );
 

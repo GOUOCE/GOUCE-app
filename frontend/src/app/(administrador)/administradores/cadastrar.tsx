@@ -53,12 +53,17 @@ export default function CadastrarAdministradorScreen() {
     },
   });
 
-  // Limpa o formulário e reseta seleções sempre que a tela ganha foco (BUG-HU006-UI-002)
+  // Limpa o formulário e as seleções ao entrar e ao sair da tela (BUG-HU006-UI-002).
+  // Limpar também na saída evita que a seleção anterior apareça por um instante ao voltar.
   useFocusEffect(
     React.useCallback(() => {
-      reset({ nome: '', email: '' });
-      setAlunoSelecionado(null);
-      setBuscaAluno('');
+      const limpar = () => {
+        reset({ nome: '', email: '' });
+        setAlunoSelecionado(null);
+        setBuscaAluno('');
+      };
+      limpar();
+      return limpar;
     }, [reset])
   );
 
@@ -225,7 +230,7 @@ export default function CadastrarAdministradorScreen() {
                   <TouchableOpacity
                     key={aluno.id}
                     style={styles.alunoRow}
-                    onPress={() => setAlunoSelecionado(aluno)}
+                    onPress={() => setAlunoSelecionado(isSelected ? null : aluno)}
                   >
                     <Avatar.Text
                       size={44}
@@ -242,7 +247,7 @@ export default function CadastrarAdministradorScreen() {
                     <Checkbox
                       status={isSelected ? 'checked' : 'unchecked'}
                       color="#3e5f90"
-                      onPress={() => setAlunoSelecionado(aluno)}
+                      onPress={() => setAlunoSelecionado(isSelected ? null : aluno)}
                     />
                   </TouchableOpacity>
                 );
