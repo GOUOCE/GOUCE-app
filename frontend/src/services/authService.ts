@@ -27,6 +27,7 @@ export interface LoginResponse {
     email: string;
     role: string;
     status_cadastro?: string;
+    acesso_expirado?: boolean;
     nome_completo?: string;
     telefone?: string;
     curso?: string;
@@ -54,7 +55,7 @@ const mapRole = (role: string): UserRole => {
 export const authService = {
   async login(data: LoginFormData & { lembrar_me?: boolean }): Promise<LoginResponse> {
     const response = await api.post<LoginResponse>('/auth/login', {
-      email: data.email,
+      email: (data.email || '').trim().toLowerCase(),
       senha: data.senha,
       lembrar_me: data.lembrar_me || false,
     });
@@ -63,7 +64,7 @@ export const authService = {
 
   async forgotPassword(data: ForgotPasswordFormData): Promise<void> {
     await api.post('/auth/solicitar-recuperacao', {
-      email: data.email
+      email: (data.email || '').trim().toLowerCase(),
     }, { timeout: 10000 }); // 10 segundos de limite
   },
 

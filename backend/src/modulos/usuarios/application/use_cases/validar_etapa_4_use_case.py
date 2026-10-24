@@ -10,7 +10,7 @@ def validar_regras_arquivo(nome_original: str, content_type: str, conteudo_bytes
     if not conteudo_bytes:
         return "Arquivo obrigatório"
     if len(conteudo_bytes) > 5 * 1024 * 1024:
-        return "Arquivo excede o limite de tamanho"
+        return "Arquivo excede o limite de tamanho de 5 MB"
     ct = (content_type or "application/octet-stream").lower().strip()
     extensao = nome_original.split(".")[-1].lower() if "." in nome_original else ""
     if ct not in MIME_TYPES_PERMITIDOS and extensao not in ["pdf", "png", "jpg", "jpeg", "webp"]:

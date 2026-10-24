@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { TextInput, Button, Text, useTheme } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, User, Eye, EyeOff } from 'lucide-react-native';
+import { ChevronLeft, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 
 import { loginSchema, LoginFormData } from '@/schemas/loginSchema';
 import { useAuth } from '@contexts/AuthContext';
@@ -70,7 +70,8 @@ export default function LoginScreen() {
   });
 
   const onSubmit = async (dados: LoginFormData) => {
-    setPendingCredentials({ email: dados.email, senha: dados.senha });
+    const emailLimpo = (dados.email || '').trim().toLowerCase();
+    setPendingCredentials({ email: emailLimpo, senha: dados.senha });
     router.push('/(autenticacao)/selecao-perfil');
   };
 
@@ -119,7 +120,7 @@ export default function LoginScreen() {
                 autoCapitalize="none"
                 autoCorrect={false}
                 keyboardType="email-address"
-                left={<TextInput.Icon icon={() => <User size={20} color="#333" />} />}
+                left={<TextInput.Icon icon={() => <Mail size={20} color="#333" />} />}
                 style={styles.input}
               />
             )}
@@ -141,6 +142,7 @@ export default function LoginScreen() {
                 error={!!errors.senha}
                 secureTextEntry={!verSenha}
                 maxLength={128}
+                left={<TextInput.Icon icon={() => <Lock size={20} color="#333" />} />}
                 right={<TextInput.Icon icon={() => verSenha ? <EyeOff size={20} color="#333" /> : <Eye size={20} color="#333" />} onPress={() => setVerSenha(!verSenha)} />}
                 style={styles.input}
               />

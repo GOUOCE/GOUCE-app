@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text } from 'react-native-paper';
 import { Contact, UserCog } from 'lucide-react-native';
 import { SummaryCard } from '@/components/dashboard/SummaryCard';
 import { ActionItem } from '@/components/dashboard/ActionItem';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '@contexts/AuthContext';
 import { api } from '@/api/api';
 
@@ -15,25 +15,30 @@ export default function AdminHomeScreen() {
   const [qtdPendentes, setQtdPendentes] = useState<number>(0);
   const [qtdAtivos, setQtdAtivos] = useState<number>(0);
 
-  useEffect(() => {
-    let isMounted = true;
-    async function carregarResumoReal() {
-      try {
-        const [resPendentes, resAtivos] = await Promise.all([
-          api.get<any[]>('/usuarios/alunos', { params: { status: 'pendente' } }),
-          api.get<any[]>('/usuarios/alunos', { params: { status: 'ativado' } }),
-        ]);
-        if (isMounted) {
-          setQtdPendentes(resPendentes.data?.length || 0);
-          setQtdAtivos(resAtivos.data?.length || 0);
+  // Recarrega o resumo dinâmico do banco de dados sempre que o painel ganha foco
+  useFocusEffect(
+    React.useCallback(() => {
+      let isMounted = true;
+      async function carregarResumoReal() {
+        try {
+          const [resPendentes, resRenovacoes, resAtivos] = await Promise.all([
+            api.get<any[]>('/usuarios/alunos', { params: { status: 'pendente' } }),
+            api.get<any[]>('/usuarios/alunos', { params: { status: 'analise_renovacao' } }),
+            api.get<any[]>('/usuarios/alunos', { params: { status: 'ativado' } }),
+          ]);
+          if (isMounted) {
+            const totalPendentes = (resPendentes.data?.length || 0) + (resRenovacoes.data?.length || 0);
+            setQtdPendentes(totalPendentes);
+            setQtdAtivos(resAtivos.data?.length || 0);
+          }
+        } catch (err) {
+          console.warn('Erro ao carregar resumo do painel:', err);
         }
-      } catch (err) {
-        console.warn('Erro ao carregar resumo do painel:', err);
       }
-    }
-    carregarResumoReal();
-    return () => { isMounted = false; };
-  }, []);
+      carregarResumoReal();
+      return () => { isMounted = false; };
+    }, [])
+  );
 
   const primeiroNome = user?.name ? user.name.split(' ')[0] : 'Administrador';
 

@@ -50,10 +50,11 @@ class FaculdadesCrudUnitTest(unittest.TestCase):
         )
 
     def test_criar_faculdade_com_sucesso(self):
-        faculdade = self.service.criar(nome="UFC", campus="Quixadá")
+        faculdade = self.service.criar(nome="UFC", campus="Quixadá", sigla="UFC")
 
         self.assertIsNotNone(faculdade.id_faculdade)
         self.assertEqual(faculdade.nome_faculdade, "UFC")
+        self.assertEqual(faculdade.sigla, "UFC")
         self.assertEqual(faculdade.campus_faculdade, "Quixadá")
         self.assertTrue(faculdade.ativo)
 
