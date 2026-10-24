@@ -1,0 +1,415 @@
+# Testes manuais de UI — HU-007 — Gerenciamento de Bairros e Pontos de Parada
+
+## Identificação da suíte
+
+| Campo           | Valor |
+| --------------- | ----- |
+| Módulo          | Gestão de Cadastros Base (EP-002) |
+| Funcionalidade  | HU-007 — Gerenciamento de Bairros e Pontos de Parada |
+| Camada          | UI |
+| Tipo de teste   | Funcional manual — suíte essencial (baseada em risco) |
+| Tela            | Painel do administrador → aba **Cadastros** → **Bairros e pontos de parada** (listagem **Bairros e Pontos**, **Novo Bairro** e **Editar Bairro**) |
+| Ambiente        | Desenvolvimento — app no celular (Expo Go) ou versão web (`http://localhost:3000`) |
+| Total de casos  | 13 |
+| Última execução | Não realizada |
+| Testador        | Cauan Ricardo |
+
+## Resultado geral
+
+| Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
+| --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
+| ⏳ Não executada | 13 | 0 | 0 | 0 | 13 |
+
+## Pré-condições
+
+| ID    | Descrição |
+| ----- | --------- |
+| PC-01 | Aplicativo aberto com a API e o banco disponíveis. |
+| PC-02 | **Administrador A** logado: aba **Cadastros** → **Bairros e pontos de parada**. |
+| PC-03 | Credenciais de um **aluno ativo** e de um **representante**, para o CT-011. |
+| PC-04 | Massa criada pela própria suíte: **Campo Velho** (CT-002), **Centro** (CT-002) e **Planalto Universitário** (CT-003). Se algum nome já existir no banco de desenvolvimento, acrescentar um sufixo (ex.: `Campo Velho QA`) e usar o mesmo nome em todos os casos. |
+| PC-05 | Apoio da IA (Claude Code) para conferir na API ou no banco, quando o caso pedir, se o que a tela mostra foi mesmo gravado. |
+| PC-06 | Se uma ação falhar com “não autorizado” por sessão vencida, sair, entrar de novo e repetir o caso. |
+
+## Resumo da execução
+
+Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os IDs completos usam o prefixo `CT-HU007-UI-`, numerados de 001 a 013.
+
+### Seção A — Listagem e cadastro
+
+| ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
+| --- | --- | --- | --- | --- | --- |
+| CT-HU007-UI-001 | Acessar a gestão de bairros | Cadastros → Bairros e pontos de parada | Listagem só de ativos com seus pontos; busca; chave “Mostrar inativos” desligada; botão Novo | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-002 | Cadastrar bairro com pontos de parada | `Campo Velho` + 1 ponto; `Centro` + 3 pontos | “Operação realizada com sucesso”; bairro na listagem; dado continua após reabrir o app e existe na API | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-003 | Mesmo nome de ponto em outro bairro | `Planalto Universitário` + `Posto de Saúde` | Cadastro aceito | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-004 | Cadastro duplicado | `Centro`, `centro`, `CENTRO`, `" Centro "`; ponto repetido no formulário | “Esta localidade já está cadastrada.”; nada criado | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-005 | Campos obrigatórios e limites | Nome vazio; sem ponto; nome `Ab`; ponto com 1 letra | Campos destacados com mensagem; nada salvo | ⏳ PENDENTE | Não executado. |
+
+### Seção B — Edição, inativação e reativação
+
+| ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
+| --- | --- | --- | --- | --- | --- |
+| CT-HU007-UI-006 | Editar bairro | Renomear `Campo Velho` e adicionar ponto; renomear para `Centro` | Sucesso e listagem atualizada; nome em uso bloqueado | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-007 | Inativar ponto e último ponto | Retirar `Mercado Público` do Centro; retirar o único ponto de outro bairro | Ponto vira inativo (não some); último ponto bloqueado | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-008 | Inativar bairro | Cancelar e depois confirmar a inativação do `Campo Velho II` | Cancelar não muda nada; confirmar mostra sucesso e tira o bairro dos ativos | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-009 | Mostrar inativos e reativar | Ligar a chave; reativar `Campo Velho II` | Inativos identificados; reativação com sucesso | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-010 | Sair sem salvar | Alterar nome em Editar Bairro e tocar na seta | Pedir confirmação; nada salvo; ao reabrir, dados salvos | ⏳ PENDENTE | Não executado. |
+
+### Seção C — Integração, acesso e robustez
+
+| ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
+| --- | --- | --- | --- | --- | --- |
+| CT-HU007-UI-011 | Aluno e representante sem acesso | Menu do aluno e do representante; link `bairros` | Menu não exibido; link mostra Acesso Negado | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-012 | Bairros no cadastro de aluno | Bairro novo e bairro inativo na etapa 3 do cadastro | Bairro ativo novo aparece; bairro inativo não aparece | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-013 | Falha de conexão ao salvar | Wi-Fi e dados desligados ao cadastrar e ao inativar | Mensagem de conexão; nada “salvo” só na tela; dados mantidos para nova tentativa | ⏳ PENDENTE | Não executado. |
+
+## Detalhamento dos casos
+
+### Seção A — Listagem e cadastro
+
+#### CT-HU007-UI-001 — Acessar a gestão de bairros
+
+**Dados de entrada:** Administrador A logado no Painel.
+
+**Passos**
+
+1. Tocar na aba **Cadastros** e em **Bairros e pontos de parada**.
+2. Conferir os elementos da tela e a posição inicial da chave **Mostrar inativos**.
+3. Digitar parte do nome de um bairro em **Buscar por bairro** e depois um nome que não existe.
+4. Tocar na seta de voltar.
+
+**Resultado esperado**
+
+- Abrir a listagem com os **bairros ativos e seus pontos de parada ativos** (AC-01), o campo de busca, a chave **Mostrar inativos** e o botão **Novo**.
+- A chave **Mostrar inativos** começa **desligada**: inativos só aparecem quando ela é ligada (AC-01, AC-09).
+- A busca filtra pelo nome; sem resultado, aparece uma mensagem de lista vazia.
+- A seta volta para **Cadastros**.
+- Registrar se a listagem mostra os nomes dos pontos ou só a quantidade.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+#### CT-HU007-UI-002 — Cadastrar bairro com pontos de parada
+
+**Dados de entrada:** Bairro `Campo Velho` com o ponto `Escola Coronel Virgílio Távora`. Bairro `Centro` com os pontos `Praça José de Barros`, `Mercado Público` e `Posto de Saúde`.
+
+**Passos**
+
+1. Tocar em **Novo**, preencher **Nome do Bairro** e tocar em **Adicionar ponto de parada**; no modal, preencher **Nome do Ponto** e confirmar.
+2. Tocar em **Finalizar cadastro** e conferir a confirmação; confirmar.
+3. Anotar a mensagem exibida e conferir a listagem.
+4. Repetir para o Centro (três pontos).
+5. **Fechar o app por completo e abrir de novo** (na web, recarregar a página); voltar à listagem.
+6. Pedir à IA para conferir na API (`GET /bairros`) se os dois bairros foram gravados com os pontos.
+
+**Resultado esperado**
+
+- Pedir confirmação antes de salvar, com um texto coerente (o cadastro pode ser editado e inativado depois).
+- Exibir a confirmação de sucesso e voltar à listagem com o bairro entre os ativos (AC-02, AC-07). Registrar o texto exato (o requisito pede “Operação realizada com sucesso”).
+- Depois de reabrir o app, os bairros continuam na listagem.
+- Os bairros e seus pontos existem na API: o cadastro foi gravado no banco, e não só na tela.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+#### CT-HU007-UI-003 — Mesmo nome de ponto em outro bairro
+
+**Dados de entrada:** Bairro `Planalto Universitário` com o ponto `Posto de Saúde` (nome já usado no Centro).
+
+**Passos**
+
+1. Tocar em **Novo**, preencher o bairro e o ponto e finalizar o cadastro.
+2. Conferir a listagem e abrir o Centro em **Editar** para ver se o ponto dele continua igual.
+
+**Resultado esperado**
+
+- Cadastro aceito com a mensagem de sucesso: o nome do ponto só precisa ser único **dentro do mesmo bairro** (AC-02).
+- O ponto `Posto de Saúde` do Centro não muda.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+#### CT-HU007-UI-004 — Cadastro duplicado
+
+**Dados de entrada:**
+
+1. Novo bairro com o nome `Centro`, depois `centro`, `CENTRO` e `" Centro "` (com espaços), sempre com o ponto `Rodoviária`.
+2. Novo bairro `Bairro Novo`: adicionar o ponto `Rodoviária` e depois `rodoviária` no mesmo formulário.
+
+**Passos**
+
+1. Preencher cada tentativa e finalizar o cadastro.
+2. Anotar a mensagem de cada uma.
+3. Voltar e conferir que nenhum bairro novo apareceu.
+
+**Resultado esperado**
+
+- Bloquear com “Esta localidade já está cadastrada.” (AC-03, FA-002), sem diferenciar maiúsculas, minúsculas e espaços nas pontas.
+- No item 2, o segundo ponto não é adicionado e a mesma mensagem aparece.
+- Nenhum bairro criado.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+#### CT-HU007-UI-005 — Campos obrigatórios e limites
+
+**Dados de entrada:** Quatro tentativas em **Novo**: nome vazio com um ponto; nome `Bairro Teste` sem ponto; nome `Ab` com um ponto; no modal de ponto, o nome `A`.
+
+**Passos**
+
+1. Preencher a tentativa e tocar em **Finalizar cadastro** (ou confirmar o modal, no último item).
+2. Anotar o que aparece em cada campo.
+
+**Resultado esperado**
+
+- Nome vazio e sem ponto: os campos ficam destacados com mensagem em português e o cadastro não é enviado (AC-08, FA-003).
+- Nome `Ab`: alerta de tamanho mínimo no campo.
+- Ponto `A`: o modal não aceita e mostra a orientação no campo.
+- Nenhum bairro criado.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+### Seção B — Edição, inativação e reativação
+
+#### CT-HU007-UI-006 — Editar bairro
+
+**Dados de entrada:** Bairro `Campo Velho`. Primeira edição: nome `Campo Velho II` e novo ponto `Posto de Saúde`. Segunda edição: nome `Centro`.
+
+**Passos**
+
+1. Na listagem, tocar no lápis do Campo Velho e conferir que os campos vêm preenchidos.
+2. Alterar o nome, adicionar o ponto e tocar em **Salvar alterações**; conferir a mensagem e a listagem.
+3. Abrir de novo, trocar o nome para `Centro` e salvar.
+
+**Resultado esperado**
+
+- Primeira edição: mensagem de sucesso e listagem com `Campo Velho II` e os dois pontos (AC-04, AC-07). Registrar o texto exato.
+- Segunda edição: bloqueada com “Esta localidade já está cadastrada.”; o nome continua `Campo Velho II` (AC-03).
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+#### CT-HU007-UI-007 — Inativar ponto e último ponto
+
+**Dados de entrada:** Bairro `Centro` (três pontos); bairro `Planalto Universitário` (um ponto).
+
+**Passos**
+
+1. Abrir o Centro em **Editar**, inativar ou retirar o ponto `Mercado Público` e salvar.
+2. Ligar **Mostrar inativos** na listagem e localizar o ponto.
+3. Abrir o Centro de novo e tentar adicionar outra vez o ponto `Mercado Público`.
+4. Abrir o Planalto Universitário, retirar o único ponto e salvar.
+
+**Resultado esperado**
+
+- O ponto `Mercado Público` fica **inativo**, e não apagado: com **Mostrar inativos** ligado, ele aparece identificado como inativo (AC-04, AC-05, AC-09). O Centro continua ativo com os outros dois pontos.
+- Readicionar `Mercado Público` no Centro: bloqueado com “Esta localidade já está cadastrada.” (o ponto inativo conta, AC-03), ou o app oferece reativá-lo. Registrar o comportamento.
+- Retirar o último ponto: o campo de pontos fica destacado e o salvamento é bloqueado (AC-08).
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+#### CT-HU007-UI-008 — Inativar bairro
+
+**Dados de entrada:** Bairro `Campo Velho II` ativo.
+
+**Passos**
+
+1. Na listagem, tocar na lixeira do Campo Velho II e ler a confirmação.
+2. Tocar em **Cancelar** e conferir que nada mudou.
+3. Repetir e tocar em **Inativar**.
+4. Conferir a mensagem e a listagem de ativos.
+
+**Resultado esperado**
+
+- Pedir confirmação; **Cancelar** mantém o bairro ativo.
+- Ao confirmar, exibir a mensagem de sucesso e tirar o bairro da lista de ativos (AC-05, AC-07). Registrar o texto exato.
+- O bairro não é apagado: aparece entre os inativos no CT-009.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+#### CT-HU007-UI-009 — Mostrar inativos e reativar
+
+**Dados de entrada:** Bairro `Campo Velho II` inativo (CT-008).
+
+**Passos**
+
+1. Ligar **Mostrar inativos** e localizar o Campo Velho II.
+2. Tocar na ação de reativar (seta circular), ler a confirmação e confirmar.
+3. Desligar a chave e conferir a listagem de ativos.
+4. Fechar e abrir o app de novo e conferir o status.
+
+**Resultado esperado**
+
+- Com a chave ligada, bairros e pontos inativos aparecem **identificados como inativos** (AC-09).
+- A reativação pede confirmação, exibe a mensagem de sucesso e devolve o bairro aos ativos (AC-05, AC-07).
+- Se a reativação falhar, o app mostra uma mensagem (não pode falhar em silêncio).
+- O status continua igual depois de reabrir o app.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+#### CT-HU007-UI-010 — Sair sem salvar
+
+**Dados de entrada:** Bairro `Centro` em **Editar Bairro**; nome alterado para `Centro Teste`, sem salvar.
+
+**Passos**
+
+1. Abrir o Centro em **Editar**, alterar o nome e não salvar.
+2. Tocar na seta de voltar.
+3. Conferir a listagem e abrir o Centro de novo.
+
+**Resultado esperado**
+
+- A seta pede confirmação antes de descartar as alterações (mesmo padrão cobrado em #156).
+- Nada é salvo: a listagem mantém `Centro`.
+- Ao reabrir, os campos mostram os dados salvos, e não o texto digitado antes.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+### Seção C — Integração, acesso e robustez
+
+#### CT-HU007-UI-011 — Aluno e representante sem acesso
+
+**Dados de entrada:** Aluno ativo e representante (PC-03); link direto da tela: na web, `http://localhost:3000/bairros`; no Expo Go, `exp://<IP do computador>:8081/--/bairros`.
+
+**Passos**
+
+1. Entrar como aluno e conferir os menus disponíveis.
+2. Abrir o link direto da tela de bairros.
+3. Repetir com o representante.
+
+**Resultado esperado**
+
+- O menu de bairros não aparece para aluno nem para representante (RN-006).
+- O link direto mostra **Acesso Negado**, sem exibir a listagem nem por um instante.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+#### CT-HU007-UI-012 — Bairros no cadastro de aluno
+
+**Dados de entrada:** Bairro ativo `Planalto Universitário` (CT-003); bairro inativo `Campo Velho II` (inativar de novo, se foi reativado no CT-009).
+
+**Passos**
+
+1. Sair da conta (ou fechar o app) e, no login, tocar em **Criar conta de aluno**.
+2. Avançar até a etapa de contato e vínculo e abrir a seleção de **Bairro**.
+3. Procurar os dois bairros na lista.
+4. Ao final, reativar o Campo Velho II.
+
+**Resultado esperado**
+
+- A lista de bairros vem do cadastro feito pelo administrador: `Planalto Universitário` aparece (AC-11).
+- `Campo Velho II`, inativo, não aparece (AC-11).
+- Se a lista for fixa no app (não reflete o cadastro), registrar como falha e relacionar à #192.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+#### CT-HU007-UI-013 — Falha de conexão ao salvar
+
+**Dados de entrada:** Duas tentativas com Wi-Fi e dados móveis desligados: cadastrar o bairro `Serra do Estêvão` com o ponto `Igreja Matriz`; inativar o `Planalto Universitário`.
+
+**Passos**
+
+1. Preencher o cadastro, desligar a conexão e finalizar.
+2. Anotar a mensagem e conferir a listagem.
+3. Religar a conexão, fechar e abrir o app e conferir a listagem de novo.
+4. Repetir a ideia com a inativação.
+
+**Resultado esperado**
+
+- Mensagem clara de falha de conexão, em português, sem travar o app.
+- O app **não mostra sucesso** nem coloca o bairro na listagem enquanto não houver gravação na API.
+- No cadastro, os campos continuam preenchidos para nova tentativa.
+- Na inativação, o bairro continua ativo.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+## Rastreabilidade
+
+| Critério | Cenário BDD | Casos |
+| --- | --- | --- |
+| AC-01 — listagem de ativos com pontos | Administrador visualiza os bairros ativos | CT-001 |
+| AC-02 — cadastro e ponto repetido em outro bairro | Cadastra novo bairro; ponto com nome usado em outro bairro | CT-002, CT-003 |
+| AC-03 / FA-002 — duplicidade | Bloqueia bairro duplicado; ponto duplicado no bairro; edição duplicada | CT-004, CT-006, CT-007 |
+| AC-04 — edição | Edita nome e pontos | CT-006, CT-007 |
+| AC-05 — inativar e reativar | Inativa bairro; inativa ponto; reativa | CT-007, CT-008, CT-009 |
+| AC-06 / FA-001 — rota ativa | Bloqueia inativação vinculada a rota ativa | Não coberto na UI nesta rodada (depende da HU-011); ver CT-HU007-API-012 |
+| AC-07 — mensagem de sucesso | Todos os cenários de sucesso | CT-002, 006, 008, 009 |
+| AC-08 / FA-003 — obrigatórios | Campo obrigatório; bairro sem ponto ativo | CT-005, CT-007 |
+| AC-09 — Mostrar inativos | Visualiza inativos | CT-001, CT-007, CT-009 |
+| AC-10 — auditoria | Log de auditoria | Conferido na API (CT-HU007-API-009) |
+| AC-11 — inativos fora da seleção | Bairro inativo fora do cadastro de aluno | CT-012 |
+| RN-006 — exclusividade administrativa | Menu não exibido para outros perfis | CT-011 |
+
+## Defeitos encontrados
+
+| Caso | Defeito | Issue |
+| --- | --- | --- |
+| — | Nenhuma execução realizada. | — |
+
+## Observações gerais
+
+- Referências: [HU-007, seção 7.3.1](../../../../../docs/requisitos.md), [cenários BDD](../../../../../bdd/features/epico-02/HU-007.feature), [telas de bairros](../../../../../frontend/src/app/%28administrador%29/bairros/) e [suíte de API](../api/API-HU-007.md).
+- **Riscos mapeados no código**, que orientaram a escolha dos casos:
+  - `frontend/src/services/bairroService.ts` **não chama a API**: lista, cadastro, edição e inativação usam dados de exemplo em memória. O CT-002 confere a gravação reabrindo o app e consultando a API;
+  - a chave **Mostrar inativos** começa ligada e a listagem mostra só a quantidade de pontos (CT-001);
+  - as mensagens de sucesso são “Bairro cadastrado com sucesso”, “Bairro alterado com sucesso” etc., e não “Operação realizada com sucesso” (CT-002, 006, 008);
+  - a confirmação do cadastro diz “Essa ação não poderá ser desfeita.”, o que não é verdade para um cadastro editável (CT-002);
+  - na edição, a lixeira do ponto só o retira da lista; não há inativação nem reativação de ponto individual (CT-007);
+  - o erro da reativação só vai para o console (CT-009);
+  - a lista de bairros do cadastro de aluno é fixa no app (#192) (CT-012).
+- O bloqueio por rota ativa (AC-06) depende da HU-011 e fica para quando as rotas estiverem na develop.
+- Ocultar senhas e dados pessoais nas evidências.
