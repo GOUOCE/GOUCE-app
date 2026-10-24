@@ -57,6 +57,7 @@ class ObterPerfilAlunoUseCase:
             turno_curso=aluno.turno_curso if aluno else None,
             data_nascimento=aluno.data_nascimento if aluno else None,
             identificacao_genero=aluno.identificacao_genero if aluno else None,
+            transgenero=getattr(aluno, "transgenero", None) if aluno else None,
             raca=aluno.raca if aluno else None,
             identificacao_sexual=aluno.identificacao_sexual if aluno else None,
             tem_filhos=aluno.tem_filhos if aluno else None,

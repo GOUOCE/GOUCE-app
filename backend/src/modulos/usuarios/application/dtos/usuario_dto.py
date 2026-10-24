@@ -277,6 +277,7 @@ class PerfilAlunoResponseDTO(BaseModel):
     tem_filhos: str | bool | None = None
     id_foto_aluno: str | None = None
     validade_acesso: datetime | None = None
+    acesso_expirado: bool = False
     motivo_reprovacao: str | None = None
     id_comprovante_matricula: str | None = None
     id_comprovante_residencia: str | None = None

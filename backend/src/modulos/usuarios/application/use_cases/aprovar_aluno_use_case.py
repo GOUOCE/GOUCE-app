@@ -1,5 +1,21 @@
+import calendar
+from datetime import datetime, timezone
+
 from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
 from src.modulos.usuarios.application.dtos.usuario_dto import AprovacaoAlunoResponseDTO
+
+# RN-013: o vínculo aprovado vale por um período; enquanto a administração não puder
+# configurá-lo, a validade é de 6 meses a partir da aprovação.
+MESES_VALIDADE_VINCULO = 6
+
+
+def somar_meses(data: datetime, meses: int) -> datetime:
+    """Soma meses de calendário, ajustando o dia ao último do mês quando ele não existe (ex.: 31/08 + 6 = 28/02)."""
+    total = data.month - 1 + meses
+    ano = data.year + total // 12
+    mes = total % 12 + 1
+    dia = min(data.day, calendar.monthrange(ano, mes)[1])
+    return data.replace(year=ano, month=mes, day=dia)
 
 
 class AprovarAlunoUseCase:
@@ -52,11 +68,18 @@ class AprovarAlunoUseCase:
         else:
             documentos = None
 
+        # Aprovar o cadastro ou a renovação abre um novo período de validade (HU-028);
+        # sem isso o aluno renovado continuava com o vínculo vencido.
+        validade_acesso = None
+        if status_str == StatusCadastroEnum.ATIVADO.value:
+            validade_acesso = somar_meses(datetime.now(timezone.utc), MESES_VALIDADE_VINCULO)
+
         aluno_atualizado = self.repository.atualizar_status_aluno(
             aluno_id=aluno_id,
             novo_status=status_str,
             motivo_reprovacao=motivo_reprovacao,
             documentos_reenvio=documentos,
+            validade_acesso=validade_acesso,
         )
 
         mensagens = {

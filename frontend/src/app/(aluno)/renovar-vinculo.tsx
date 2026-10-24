@@ -18,13 +18,17 @@ import { Passo3ContatoVinculo } from '@/components/cadastro/Passo3ContatoVinculo
 import { Passo4Documentacao } from '@/components/cadastro/Passo4Documentacao';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 import { userService } from '@services/userService';
+import { api } from '../../api/api';
 import { getErrorMessage } from '@/utils/errorUtils';
 import { useAuth } from '@contexts/AuthContext';
 
 export default function RenovarVinculoScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { user, updateUser } = useAuth();
+  const { user, token, updateUser } = useAuth();
+  const statusAtual = (user?.status || '').toLowerCase();
+  // Já existe uma solicitação aguardando a coordenação (#133)
+  const emAnalise = statusAtual === 'analise_renovacao' || statusAtual === 'pendente';
 
   const [passo, setPasso] = useState<number>(0); // 0 = Tela Inicial de Aviso, 1..4 = Passos do formulário
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -88,8 +92,18 @@ export default function RenovarVinculoScreen() {
           return String(valor);
         };
 
+        // A API devolve "Campus Quixadá"; as opções do seletor são só o nome da cidade
+        const campus = String(perfilApi.campus || '').replace(/^campus\s+/i, '');
+        // A foto é um id de arquivo; para exibir no passo 1 precisa da URL autenticada
+        const idFoto = perfilApi.id_foto_aluno || perfilApi.foto_perfil || '';
+        const fotoPerfil = idFoto
+          ? String(idFoto).startsWith('http')
+            ? idFoto
+            : `${api.defaults.baseURL}/arquivos/${idFoto}/view?token=${token || ''}`
+          : '';
+
         reset({
-          fotoPerfil: perfilApi.id_foto_aluno || perfilApi.foto_perfil || '',
+          fotoPerfil,
           nomeCompleto: perfilApi.nome || perfilApi.nome_completo || user?.name || '',
           email: perfilApi.email || user?.email || '',
           dataNascimento: formatarDataNascimento(perfilApi.data_nascimento),
@@ -102,7 +116,7 @@ export default function RenovarVinculoScreen() {
           whatsapp: perfilApi.telefone || '',
           instituicao: perfilApi.faculdade_id || 'UFC - Universidade Federal do Ceará',
           curso: perfilApi.curso || 'Engenharia de Software',
-          campus: perfilApi.campus || 'Quixadá',
+          campus: campus || 'Quixadá',
           periodoIngresso: perfilApi.periodo_ingresso || '2024.1',
           turno: perfilApi.turno_curso || 'Noturno',
           semestreAtual: String(perfilApi.semestre_atual || '8º').includes('º')
@@ -283,11 +297,19 @@ export default function RenovarVinculoScreen() {
               Para revalidar seu vínculo institucional, você precisa revisar seus dados cadastrais e enviar um comprovante de matrícula atualizado.
             </Text>
 
+            {emAnalise && (
+              <Text variant="bodyMedium" style={styles.avisoEmAnalise}>
+                {statusAtual === 'pendente'
+                  ? 'Seu cadastro ainda está em análise. Aguarde a resposta da coordenação.'
+                  : 'Sua renovação de vínculo já está em análise. Aguarde a resposta da coordenação.'}
+              </Text>
+            )}
+
             <Button
               mode="contained"
               onPress={iniciarRenovacao}
               loading={isLoading}
-              disabled={isLoading}
+              disabled={isLoading || emAnalise}
               style={styles.primaryButton}
               contentStyle={styles.buttonContent}
             >
@@ -377,6 +399,11 @@ const styles = StyleSheet.create({
     color: '#666',
     lineHeight: 22,
     marginBottom: 40,
+  },
+  avisoEmAnalise: {
+    color: '#E65100',
+    marginTop: -24,
+    marginBottom: 24,
   },
   formWrapper: {
     flex: 1,

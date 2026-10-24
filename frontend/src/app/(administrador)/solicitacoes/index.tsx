@@ -44,7 +44,7 @@ export default function FilaSolicitacoesScreen() {
   const carregarSolicitacoes = async () => {
     setIsLoading(true);
     try {
-      const lista = await solicitacaoService.listarSolicitacoes('pendente');
+      const lista = await solicitacaoService.listarSolicitacoes();
       setSolicitacoes(lista);
     } catch (error: any) {
       const msg = getErrorMessage(error, 'Erro ao carregar fila de solicitações.');
@@ -61,7 +61,7 @@ export default function FilaSolicitacoesScreen() {
 
   useEffect(() => {
     let isMounted = true;
-    solicitacaoService.listarSolicitacoes('pendente').then((lista) => {
+    solicitacaoService.listarSolicitacoes().then((lista) => {
       if (isMounted) setSolicitacoes(lista);
     }).catch((err) => console.warn('Erro ao carregar solicitações:', err));
     return () => { isMounted = false; };
