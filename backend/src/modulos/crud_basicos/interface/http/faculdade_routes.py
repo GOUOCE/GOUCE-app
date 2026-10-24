@@ -173,7 +173,7 @@ async def criar_faculdade(
     _: dict = Depends(admin_required),
 ):
     try:
-        faculdade = service.criar(nome=dados.nome, campus=dados.campus)
+        faculdade = service.criar(nome=dados.nome, campus=dados.campus, sigla=dados.sigla)
         return _montar_resposta_operacao(faculdade, "Operação realizada com sucesso")
     except FaculdadeJaCadastradaError as error:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error))
@@ -201,6 +201,7 @@ async def atualizar_faculdade(
             faculdade_id=faculdade_id,
             nome=dados.nome,
             campus=dados.campus,
+            sigla=dados.sigla,
             ativo=dados.ativo,
         )
         return _montar_resposta_operacao(faculdade, "Operação realizada com sucesso")

@@ -148,6 +148,41 @@ class RecuperacaoValidationRoute(APIRoute):
         return custom_route_handler
 
 
+def _login_validation_details(errors: list[dict]) -> list[dict]:
+    mensagens = {
+        "email": "Informe um e-mail válido.",
+        "senha": "Informe a senha.",
+    }
+    details = []
+    for error in errors:
+        campo = next(
+            (str(parte) for parte in reversed(error.get("loc", ())) if parte not in {"body", "path", "query"}),
+            None,
+        )
+        details.append({"field": campo, "message": mensagens.get(campo, "Valor inválido.")})
+    return details
+
+
+class LoginValidationRoute(APIRoute):
+    """Devolve em português os erros de validação do login; os demais erros seguem como estão."""
+
+    def get_route_handler(self):
+        original_route_handler = super().get_route_handler()
+
+        async def custom_route_handler(request: Request):
+            try:
+                return await original_route_handler(request)
+            except RequestValidationError as error:
+                return _error_response(
+                    status_code=422,
+                    code="REQUEST_VALIDATION_ERROR",
+                    message="Requisição inválida.",
+                    details=_login_validation_details(error.errors()),
+                )
+
+        return custom_route_handler
+
+
 RECUPERACAO_ERROR_RESPONSES = {
     400: {"model": RecuperacaoErroResponseDTO},
     422: {"model": RecuperacaoErroResponseDTO},
@@ -155,6 +190,7 @@ RECUPERACAO_ERROR_RESPONSES = {
 }
 
 recovery_router = APIRouter(route_class=RecuperacaoValidationRoute)
+login_router = APIRouter(route_class=LoginValidationRoute)
 
 
 def get_repository(session: Annotated[Session, Depends(get_session)]):
@@ -173,7 +209,7 @@ def get_token_service():
     return JWTService()
 
 
-@router.post(
+@login_router.post(
     "/login",
     response_model=LoginResponseDTO,
     status_code=200,
@@ -382,3 +418,4 @@ async def redefinir_senha(
 
 
 router.include_router(recovery_router)
+router.include_router(login_router)

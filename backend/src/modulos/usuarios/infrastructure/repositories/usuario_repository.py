@@ -386,6 +386,7 @@ class SQLAlchemyUsuarioRepository:
                 UsuarioORM.nome_completo.label("nome"),
                 UsuarioORM.email,
                 FaculdadeORM.nome_faculdade.label("faculdade"),
+                FaculdadeORM.sigla.label("sigla"),
                 FaculdadeORM.campus_faculdade.label("campus"),
                 AlunoORM.status_cadastro,
                 AlunoORM.data_hora_envio_analise,
@@ -405,6 +406,7 @@ class SQLAlchemyUsuarioRepository:
                 "nome": nome_aluno,
                 "email": email,
                 "faculdade": faculdade,
+                "sigla": sigla,
                 "campus": campus,
                 "status_cadastro": status_cadastro,
                 "data_hora_envio_analise": data_envio_analise,
@@ -417,6 +419,7 @@ class SQLAlchemyUsuarioRepository:
                 nome_aluno,
                 email,
                 faculdade,
+                sigla,
                 campus,
                 status_cadastro,
                 data_envio_analise,
@@ -444,6 +447,7 @@ class SQLAlchemyUsuarioRepository:
                 "nome": item["nome"],
                 "email": item["email"],
                 "faculdade": item["faculdade"],
+                "sigla": item.get("sigla"),
                 "campus": item["campus"],
                 "status_cadastro": item["status_cadastro"],
                 "data_hora_envio_analise": item["data_hora_envio_analise"],
@@ -632,7 +636,7 @@ class SQLAlchemyUsuarioRepository:
             self.session.rollback()
             raise
 
-    def atualizar_dados_parciais(self, user_id: int, telefone: str | None = None, bairro_id: str | None = None):
+    def atualizar_dados_parciais(self, user_id: int, telefone: str | None = None, bairro_id: int | str | None = None):
         try:
             usuario, aluno = self.buscar_com_detalhes_por_id(user_id)
             if not usuario:

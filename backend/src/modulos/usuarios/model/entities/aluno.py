@@ -4,6 +4,7 @@ from src.shared.infrastructure.db import Base
 from src.shared.security.lgpd_encryption import EncryptedString
 from src.shared.enums.turno_curso_enum import TurnoCursoEnum
 from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
+from src.modulos.crud_basicos.domain.entities.bairro import BairroORM
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
@@ -21,7 +22,7 @@ class AlunoORM(Base):
     )
     status_cadastro = Column(String(150), nullable=False)
     faculdade_id = Column(Integer, ForeignKey("faculdade.id_faculdade"), nullable=False)
-    bairro_id = Column(String(20), nullable=True)
+    bairro_id = Column(Integer, ForeignKey("bairro.bairro_id"), nullable=True)
     id_comprovante_matricula = Column(String(36), ForeignKey("arquivos.id"), nullable=False)
     id_comprovante_residencia = Column(String(36), ForeignKey("arquivos.id"), nullable=False)
     data_nascimento = Column(Integer, default=0, nullable=False)
@@ -44,6 +45,7 @@ class AlunoORM(Base):
     consentimento_lgpd_em = Column(DateTime(timezone=True), nullable=True)
     versao_termos = Column(String(20), default="1.0", nullable=True)
     faculdade_rel = relationship("FaculdadeORM", foreign_keys=[faculdade_id], lazy="joined")
+    bairro_rel = relationship("BairroORM", foreign_keys=[bairro_id], lazy="joined")
 
 class Aluno(BaseModel):
     """DTO para usuário"""

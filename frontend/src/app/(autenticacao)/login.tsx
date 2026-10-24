@@ -70,7 +70,8 @@ export default function LoginScreen() {
   });
 
   const onSubmit = async (dados: LoginFormData) => {
-    setPendingCredentials({ email: dados.email, senha: dados.senha });
+    const emailLimpo = (dados.email || '').trim().toLowerCase();
+    setPendingCredentials({ email: emailLimpo, senha: dados.senha });
     router.push('/(autenticacao)/selecao-perfil');
   };
 

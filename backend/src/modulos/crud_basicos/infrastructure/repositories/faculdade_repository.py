@@ -65,15 +65,17 @@ class FaculdadeRepository:
             query = query.filter(FaculdadeORM.id_faculdade != ignorar_id)
         return query.first() is not None
 
-    def criar(self, nome: str, campus: str) -> FaculdadeORM:
+    def criar(self, nome: str, campus: str, sigla: Optional[str] = None) -> FaculdadeORM:
         nome_limpo = nome.strip()
         campus_limpo = campus.strip()
+        sigla_limpa = sigla.strip() if sigla is not None else None
 
         if self.existe_por_nome_e_campus(nome_limpo, campus_limpo):
             raise FaculdadeJaCadastradaError("Esta faculdade já está cadastrada.")
 
         faculdade = FaculdadeORM(
             nome_faculdade=nome_limpo,
+            sigla=sigla_limpa,
             campus_faculdade=campus_limpo,
             ativo=True,
         )
@@ -91,6 +93,7 @@ class FaculdadeRepository:
         faculdade_id: int,
         nome: Optional[str] = None,
         campus: Optional[str] = None,
+        sigla: Optional[str] = None,
         ativo: Optional[bool] = None,
     ) -> FaculdadeORM:
         faculdade = self.buscar_por_id(faculdade_id)
@@ -99,6 +102,7 @@ class FaculdadeRepository:
 
         nome_final = nome.strip() if nome is not None else faculdade.nome_faculdade
         campus_final = campus.strip() if campus is not None else faculdade.campus_faculdade
+        sigla_final = sigla.strip() if sigla is not None else faculdade.sigla
 
         if self.existe_por_nome_e_campus(nome_final, campus_final, ignorar_id=faculdade_id):
             raise FaculdadeJaCadastradaError("Esta faculdade já está cadastrada.")
@@ -107,6 +111,8 @@ class FaculdadeRepository:
             faculdade.nome_faculdade = nome_final
         if campus is not None:
             faculdade.campus_faculdade = campus_final
+        if sigla is not None:
+            faculdade.sigla = sigla_final
         if ativo is not None:
             faculdade.ativo = ativo
 

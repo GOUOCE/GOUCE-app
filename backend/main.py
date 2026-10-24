@@ -10,6 +10,7 @@ from src.modulos.arquivos.api.http.arquivo_routes import router as arquivo_route
 from src.modulos.arquivos.infrastructure.services.minio_client import ensure_bucket_exists
 from src.modulos.crud_basicos.interface.http.faculdade_routes import router as faculdade_router
 from src.modulos.crud_basicos.interface.http.onibus_routes import router as onibus_router
+from src.modulos.crud_basicos.interface.http.bairro_routes import router as bairro_router
 
 app = FastAPI(
     title="API GOUCE",
@@ -42,6 +43,7 @@ app.include_router(representante_router)
 app.include_router(faculdade_router)
 app.include_router(onibus_router)
 app.include_router(motorista_router)
+app.include_router(bairro_router)
 
 
 @app.get("/health", include_in_schema=False)
