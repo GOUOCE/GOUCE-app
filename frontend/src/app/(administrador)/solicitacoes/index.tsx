@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, TextInput, Avatar, Chip, Snackbar, useTheme } from 'react-native-paper';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, Search, ChevronRight, X } from 'lucide-react-native';
 
 import { solicitacaoService, SolicitacaoItem } from '@/services/solicitacaoService';
@@ -58,6 +58,13 @@ export default function FilaSolicitacoesScreen() {
       setIsLoading(false);
     }
   };
+
+  // Recarrega a fila sempre que a tela ganha foco
+  useFocusEffect(
+    React.useCallback(() => {
+      carregarSolicitacoes();
+    }, [])
+  );
 
   useEffect(() => {
     let isMounted = true;
