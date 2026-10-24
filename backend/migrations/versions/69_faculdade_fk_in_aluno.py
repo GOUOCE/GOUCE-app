@@ -42,18 +42,36 @@ def upgrade() -> None:
         """
     )
 
-    # Try to map existing aluno records by matching nome_faculdade
+    # Try to map existing aluno records by matching nome_faculdade or sigla or substring
     op.execute(
         """
         UPDATE aluno a
         SET faculdade_id = f.id_faculdade::varchar
         FROM faculdade f
         WHERE a.faculdade_id !~ '^[0-9]+$'
-          AND LOWER(TRIM(a.faculdade_id)) = LOWER(TRIM(f.nome_faculdade));
+          AND (
+            LOWER(TRIM(a.faculdade_id)) = LOWER(TRIM(f.nome_faculdade))
+            OR (f.sigla IS NOT NULL AND LOWER(TRIM(a.faculdade_id)) = LOWER(TRIM(f.sigla)))
+            OR LOWER(TRIM(f.nome_faculdade)) LIKE '%' || LOWER(TRIM(a.faculdade_id)) || '%'
+          );
         """
     )
 
-    # For any remaining non-numeric faculdade_id, assign the first available faculdade id
+    # Log/notice before assigning default fallback for any remaining non-numeric faculdade_id
+    op.execute(
+        """
+        DO $$
+        DECLARE
+            r RECORD;
+        BEGIN
+            FOR r IN SELECT aluno_id, faculdade_id FROM aluno WHERE faculdade_id !~ '^[0-9]+$' OR faculdade_id IS NULL LOOP
+                RAISE NOTICE 'Aviso: Aluno id % com faculdade_id texto "%" não coincidiu com faculdade cadastrada e foi mapeado para a faculdade padrão.', r.aluno_id, r.faculdade_id;
+            END LOOP;
+        END $$;
+        """
+    )
+
+    # For any remaining non-numeric faculdade_id, assign the first available faculdade id as fallback
     op.execute(
         """
         UPDATE aluno

@@ -12,6 +12,7 @@ class FaculdadeResumoDTO(BaseModel):
 
     id_faculdade: int
     nome_faculdade: str
+    sigla: str | None = None
     campus_faculdade: str
     ativo: bool
 
