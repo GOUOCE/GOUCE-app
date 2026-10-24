@@ -7,7 +7,7 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 import { renovacaoSchema } from '../alunoSchema';
 
 describe('Suíte de Testes Unitários - HU-028 (Renovação de Vínculo Institucional)', () => {
-  const arquivoValido = { uri: 'file://matricula.pdf', name: 'matricula.pdf', size: 1024 * 1024, type: 'application/pdf' };
+  const arquivoValido = { uri: 'file://matricula.pdf', name: 'matricula.pdf', size: 1024 * 1024, mimeType: 'application/pdf' };
 
   const baseValida = {
     email: 'maria@alu.ufc.br',
@@ -19,7 +19,7 @@ describe('Suíte de Testes Unitários - HU-028 (Renovação de Vínculo Instituc
     transgenero: 'Não' as const,
     temFilhos: false,
     bairro: 'Centro',
-    whatsapp: '(88) 9 9999-9999',
+    whatsapp: '(88) 99999-9999',
     instituicao: 'UFC',
     curso: 'Engenharia de Software',
     campus: 'Quixadá',
