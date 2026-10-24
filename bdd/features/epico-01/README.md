@@ -163,7 +163,7 @@ cucumber --tags "@EP001"
 
 ## Próximos Passos
 
-- [ ] Épico 02 (HU-007 a HU-010, HU-030) — Gestão de Cadastros Base
+- [x] Épico 02 (HU-007 a HU-010, HU-030) — Gestão de Cadastros Base ([`../epico-02/`](../epico-02/README.md))
 - [ ] Épico 03+ — Demais histórias
 - [ ] Step definitions em Cucumber.js
 - [ ] Integração com CI/CD

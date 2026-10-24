@@ -9,6 +9,8 @@ import { useAuth } from '@contexts/AuthContext';
 import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 import { api } from '@/api/api';
+import { formatarCelular } from '@/utils/formatarTelefone';
+import { formatarDataNascimento } from '@/utils/formatarData';
 
 export default function AnalisarSolicitacaoScreen() {
   const router = useRouter();
@@ -223,7 +225,7 @@ export default function AnalisarSolicitacaoScreen() {
             </View>
             <View style={styles.infoItem}>
               <Text variant="labelSmall" style={styles.infoLabel}>Telefone (WhatsApp)</Text>
-              <Text variant="bodyMedium" style={styles.infoValue}>{aluno?.telefone || '-'}</Text>
+              <Text variant="bodyMedium" style={styles.infoValue}>{formatarCelular(aluno?.telefone) || '-'}</Text>
             </View>
             <View style={styles.infoItem}>
               <Text variant="labelSmall" style={styles.infoLabel}>Instituição - Campus</Text>
@@ -245,7 +247,7 @@ export default function AnalisarSolicitacaoScreen() {
             </View>
             <View style={styles.infoItem}>
               <Text variant="labelSmall" style={styles.infoLabel}>Data de Nascimento</Text>
-              <Text variant="bodyMedium" style={styles.infoValue}>{aluno?.data_nascimento || '-'}</Text>
+              <Text variant="bodyMedium" style={styles.infoValue}>{formatarDataNascimento(aluno?.data_nascimento) || '-'}</Text>
             </View>
             <View style={styles.infoItem}>
               <Text variant="labelSmall" style={styles.infoLabel}>Bairro</Text>

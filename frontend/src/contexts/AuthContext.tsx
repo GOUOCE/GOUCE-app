@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect, ReactNode } from
 import { useRouter, useSegments } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService, User } from '../services/authService';
+import { calcularStatusAluno } from '../utils/statusAluno';
 
 export type UserRole = 'ALUNO' | 'MOTORISTA' | 'ADMINISTRADOR';
 
@@ -14,7 +15,7 @@ interface AuthContextData {
   clearPendingCredentials: () => void;
   signIn: (email: string, senha: string, role?: UserRole) => Promise<void>;
   signOut: () => Promise<void>;
-  setUserAndToken: (user: User, token: string) => Promise<void>;
+  setUserAndToken: (user: User, token: string, refreshToken?: string) => Promise<void>;
   updateUser: (data: Partial<User>) => Promise<void>;
 }
 
@@ -93,8 +94,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, segments, isLoading]);
 
-  async function setUserAndToken(userData: User, userToken: string) {
+  async function setUserAndToken(userData: User, userToken: string, refreshToken?: string) {
     await AsyncStorage.setItem('@GOUOCE:token', userToken);
+    if (refreshToken) {
+      await AsyncStorage.setItem('@GOUOCE:refreshToken', refreshToken);
+    }
     await AsyncStorage.setItem('@GOUOCE:user', JSON.stringify(userData));
     setUser(userData);
     setToken(userToken);
@@ -127,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name: response.usuario.nome || response.usuario.nome_completo || 'Usuário',
       email: response.usuario.email,
       role: actualRole,
-      status: String(response.usuario.status_cadastro || 'ativado').toLowerCase() as User['status'],
+      status: calcularStatusAluno(response.usuario.status_cadastro, response.usuario.acesso_expirado),
       telefone: response.usuario.telefone,
       curso: response.usuario.curso,
       faculdade: response.usuario.faculdade,
@@ -137,13 +141,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     // Ao atualizar o user, o useEffect acima faz o redirecionamento (home ou cadastro pendente)
-    await setUserAndToken(userData, response.token_acesso);
+    await setUserAndToken(userData, response.token_acesso, response.token_atualizacao);
     setPendingCredentials(null);
     console.log('[AUTH] Sessão salva. Redirecionamento delegado ao guard.');
   }
 
   async function signOut() {
     await AsyncStorage.removeItem('@GOUOCE:token');
+    await AsyncStorage.removeItem('@GOUOCE:refreshToken');
     await AsyncStorage.removeItem('@GOUOCE:user');
     setPendingCredentials(null);
     setUser(null);

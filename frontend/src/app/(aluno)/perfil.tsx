@@ -7,6 +7,8 @@ import { useAuth } from '@contexts/AuthContext';
 import { userService } from '@services/userService';
 import { api } from '../../api/api';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
+import { formatarCelular } from '../../utils/formatarTelefone';
+import { calcularStatusAluno } from '../../utils/statusAluno';
 
 export default function PerfilScreen() {
   const theme = useTheme();
@@ -29,7 +31,7 @@ export default function PerfilScreen() {
             periodo_ingresso: perfilApi.periodo_ingresso,
             turno: perfilApi.turno_curso,
             foto_perfil: perfilApi.id_foto_aluno || perfilApi.foto_perfil,
-            status: perfilApi.status_cadastro,
+            status: calcularStatusAluno(perfilApi.status_cadastro, perfilApi.acesso_expirado),
           });
         }
       } catch (err) {
@@ -59,7 +61,15 @@ export default function PerfilScreen() {
           'ngrok-skip-browser-warning': 'true',
         },
       }
-    : { uri: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=200&auto=format&fit=crop' };
+    : null;
+
+  // Sem foto cadastrada, mostra as iniciais (antes exibia uma foto de banco de imagens)
+  const getIniciais = (nome?: string) => {
+    if (!nome) return 'AL';
+    const partes = nome.trim().split(/\s+/);
+    if (partes.length === 1) return partes[0].substring(0, 2).toUpperCase();
+    return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
+  };
 
   // Mapeamento dos badges de status
   const renderStatusBadge = () => {
@@ -108,10 +118,16 @@ export default function PerfilScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Foto e Nome */}
         <View style={styles.profileSection}>
-          <Avatar.Image
-            size={120}
-            source={imageSource}
-          />
+          {imageSource ? (
+            <Avatar.Image size={120} source={imageSource} />
+          ) : (
+            <Avatar.Text
+              size={120}
+              label={getIniciais(user?.name)}
+              style={{ backgroundColor: '#3E5F90' }}
+              labelStyle={{ color: '#FFF', fontSize: 36, fontWeight: 'bold' }}
+            />
+          )}
           <Text variant="headlineSmall" style={styles.userName}>{user?.name || 'João Neves'}</Text>
           {renderStatusBadge()}
         </View>
@@ -126,7 +142,7 @@ export default function PerfilScreen() {
             </View>
             <View style={styles.infoItem}>
               <Text variant="labelSmall" style={styles.infoLabel}>Telefone (WhatsApp)</Text>
-              <Text variant="bodyMedium" style={styles.infoValue}>{user?.telefone || '(88) 9 9999-9999'}</Text>
+              <Text variant="bodyMedium" style={styles.infoValue}>{formatarCelular(user?.telefone)}</Text>
             </View>
             <View style={styles.infoItem}>
               <Text variant="labelSmall" style={styles.infoLabel}>Instituição - Campus</Text>

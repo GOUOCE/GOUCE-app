@@ -48,7 +48,10 @@ from src.modulos.usuarios.application.use_cases.validar_etapa_1_use_case import 
 from src.modulos.usuarios.application.use_cases.validar_etapa_2_use_case import ValidarEtapa2UsuarioUseCase
 from src.modulos.usuarios.application.use_cases.validar_etapa_3_use_case import ValidarEtapa3UsuarioUseCase
 from src.modulos.usuarios.application.use_cases.validar_etapa_4_use_case import ValidarEtapa4UsuarioUseCase
-from src.modulos.usuarios.application.use_cases.renovar_vinculo_use_case import RenovarVinculoUseCase
+from src.modulos.usuarios.application.use_cases.renovar_vinculo_use_case import (
+    RenovacaoJaEmAnaliseError,
+    RenovarVinculoUseCase,
+)
 from src.modulos.usuarios.application.use_cases.obter_perfil_aluno_use_case import ObterPerfilAlunoUseCase
 from src.modulos.usuarios.infrastructure.repositories.usuario_repository import (
     SQLAlchemyUsuarioRepository,
@@ -387,6 +390,8 @@ async def renovar_vinculo(
             message="Requisição inválida",
             details=validation_details(error.errors()),
         )
+    except RenovacaoJaEmAnaliseError as error:
+        return _error_response(409, "RENOVACAO_EM_ANALISE", str(error))
     except ValidacaoMultiplaError as error:
         return _error_response(
             status_code=422,

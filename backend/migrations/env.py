@@ -14,6 +14,8 @@ from src.modulos.usuarios.model.entities.usuario import UsuarioORM
 from src.modulos.usuarios.model.entities.aluno import AlunoORM
 from src.modulos.arquivos.model.entities.arquivo import ArquivoORM
 from src.modulos.motoristas.model.entities.motorista import MotoristaORM
+from src.modulos.crud_basicos.domain.entities.bairro import BairroORM
+from src.modulos.crud_basicos.domain.entities.ponto_de_parada import PontoDeParadaORM
 
 config = context.config
 
@@ -43,9 +45,8 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Executa migrações no modo 'online'."""
-    configuration = config.get_section(config.config_ini_section, {})
+    configuration = config.get_section(config.config_ini_section)
     configuration["sqlalchemy.url"] = get_database_url()
-
     connectable = engine_from_config(
         configuration,
         prefix="sqlalchemy.",

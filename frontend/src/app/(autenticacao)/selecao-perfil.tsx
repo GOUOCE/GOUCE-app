@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Text } from 'react-native-paper';
 import { ChevronLeft, IdCard, Contact, Shield } from 'lucide-react-native';
 
@@ -16,9 +16,18 @@ import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function SelecaoPerfilScreen() {
   const router = useRouter();
-  const { email, senha } = useLocalSearchParams<{ email: string; senha: string }>();
-  const { signIn } = useAuth();
+  const { signIn, pendingCredentials, clearPendingCredentials } = useAuth();
   const [isLoadingLocal, setIsLoadingLocal] = useState(false);
+
+  const emailFinal = (pendingCredentials?.email || '').trim().toLowerCase();
+  const senhaFinal = pendingCredentials?.senha || '';
+
+  // Se não houver credenciais pendentes, redireciona ao login
+  useEffect(() => {
+    if (!pendingCredentials || !pendingCredentials.email || !pendingCredentials.senha) {
+      router.replace('/(autenticacao)/login');
+    }
+  }, [pendingCredentials, router]);
 
   // Estado do Pop-up
   const [popup, setPopup] = useState<{
@@ -46,6 +55,7 @@ export default function SelecaoPerfilScreen() {
 
   const confirmarSaida = () => {
     closePopup();
+    clearPendingCredentials();
     if (router.canGoBack()) {
       router.back();
     } else {
@@ -67,12 +77,16 @@ export default function SelecaoPerfilScreen() {
   };
 
   const handleSelectProfile = async (perfil: 'ALUNO' | 'MOTORISTA' | 'ADMINISTRADOR') => {
+    if (!emailFinal || !senhaFinal) {
+      router.replace('/(autenticacao)/login');
+      return;
+    }
+
     if (isLoadingLocal) return;
     setIsLoadingLocal(true);
 
     try {
-      // Em caso de sucesso, o redirecionamento ocorre para a home.
-      await signIn(email, senha, perfil);
+      await signIn(emailFinal, senhaFinal, perfil);
     } catch (error: any) {
       setIsLoadingLocal(false);
 
@@ -95,7 +109,9 @@ export default function SelecaoPerfilScreen() {
       if (
         (status === 401 || status === 403) &&
         typeof detail === 'string' &&
-        detail.toLowerCase().includes('pendente')
+        (detail.toLowerCase().includes('pendente') ||
+         detail.toLowerCase().includes('coordenação') ||
+         detail.toLowerCase().includes('aprovação'))
       ) {
         router.replace('/(autenticacao)/cadastro-pendente');
         return;
@@ -130,7 +146,6 @@ export default function SelecaoPerfilScreen() {
             titulo="Sou aluno"
             descricao="Agendamento, mural e carteirinha digital"
             Icone={IdCard}
-            disabled={isLoadingLocal}
             onPress={() => handleSelectProfile('ALUNO')}
           />
 
@@ -138,7 +153,6 @@ export default function SelecaoPerfilScreen() {
             titulo="Sou representante"
             descricao="Chamada e lista de embarque da sua universidade"
             Icone={Contact}
-            disabled={isLoadingLocal}
             onPress={() => handleSelectProfile('MOTORISTA')}
           />
 
@@ -146,7 +160,6 @@ export default function SelecaoPerfilScreen() {
             titulo="Sou administrador"
             descricao="Gestão completa do transporte"
             Icone={Shield}
-            disabled={isLoadingLocal}
             onPress={() => handleSelectProfile('ADMINISTRADOR')}
           />
         </View>
