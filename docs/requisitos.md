@@ -1271,10 +1271,10 @@ Como administrador, quero atribuir ou revogar a função de representante de um 
     8. O sistema atualiza a listagem e exibe uma mensagem de sucesso.
 22. FA-002 \- Aluno não aprovado ou com cadastro desatualizado.
     1. O administrador tenta atribuir a função de representante a um aluno cujo cadastro não esteja aprovado ou atualizado.
-    2. O sistema bloqueia a operação e exibe a mensagem: "Somente alunos aprovados podem ser representantes."
+    2. O sistema bloqueia a operação e exibe a mensagem: "Aluno não aprovado ou inativo."
 23. FA-003 \- Aluno já é representante
     1. O administrador seleciona um aluno que já possui a função de representante.
-    2. O sistema impede uma nova atribuição e exibe a mensagem: "Este aluno já é representante."
+    2. O sistema impede uma nova atribuição e exibe a mensagem: "Este aluno já é um representante ativo."
 24. FA-004 \- Aluno não encontrado.
     1. O administrador realiza uma pesquisa pelo aluno.
     2. O sistema não encontra nenhum aluno correspondente.
