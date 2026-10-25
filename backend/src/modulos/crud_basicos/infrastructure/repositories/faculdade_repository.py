@@ -18,6 +18,14 @@ class FaculdadeNaoEncontradaError(ValueError):
     """Lançada quando a faculdade não é encontrada."""
     pass
 
+class FaculdadeJaAtivadaError(ValueError):
+    """Lançada quando a faculdade não é encontrada."""
+    pass
+
+class FaculdadeJaDesativadaError(ValueError):
+    """Lançada quando a faculdade não é encontrada."""
+    pass
+
 
 class FaculdadeRepository:
     def __init__(self, session: Session):
@@ -133,7 +141,9 @@ class FaculdadeRepository:
         if not faculdade:
             raise FaculdadeNaoEncontradaError("Faculdade não encontrada.")
 
-        valor_anterior = "ativo" if faculdade.ativo else "inativo"
+        if faculdade.ativo:
+            raise FaculdadeJaAtivadaError("Faculdade já ativada.")
+
         faculdade.ativo = True
 
         log = LogAuditoriaORM(
@@ -141,7 +151,7 @@ class FaculdadeRepository:
             acao="ATIVAR",
             entidade="faculdade",
             entidade_id=faculdade_id,
-            valor_anterior=valor_anterior,
+            valor_anterior="inativo",
             valor_novo="ativo",
             criado_em=datetime.now(timezone.utc),
         )
@@ -159,7 +169,9 @@ class FaculdadeRepository:
         if not faculdade:
             raise FaculdadeNaoEncontradaError("Faculdade não encontrada.")
 
-        valor_anterior = "ativo" if faculdade.ativo else "inativo"
+        if not faculdade.ativo:
+            raise FaculdadeJaDesativadaError("Faculdade já desativada.")
+
         faculdade.ativo = False
 
         log = LogAuditoriaORM(
@@ -167,7 +179,7 @@ class FaculdadeRepository:
             acao="INATIVAR",
             entidade="faculdade",
             entidade_id=faculdade_id,
-            valor_anterior=valor_anterior,
+            valor_anterior="ativo",
             valor_novo="inativo",
             criado_em=datetime.now(timezone.utc),
         )
