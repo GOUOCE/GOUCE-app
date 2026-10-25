@@ -100,6 +100,4 @@ Pontos de `docs/requisitos.md` que precisam de alinhamento com o time. Os cenár
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
 | HU-008 a 010   | O AC-03 bloqueia duplicidade com registro **ativo ou inativo**; o FA-002 cita apenas registros **ativos**                     | AC-03 (ativo ou inativo)            |
 | HU-010         | O RF-009 cita **número e categoria da CNH**, mas os ACs e o código (front e backend) usam o **telefone** como identificador único e não têm CNH. O FA-002 foi corrigido para telefone em `docs/requisitos.md` | ACs (telefone)                      |
-| HU-030         | O documento cita **RF-034**, mas a tabela de requisitos registra o item como **RF-34**                                        | RF-034                              |
 | HU-009         | A mensagem do AC-03 estava sem fechamento de aspas (corrigida em `docs/requisitos.md`)                                        | "Este veículo já está registrado."  |
-| HU-030         | As mensagens de bloqueio (FA-002, FA-003 e FA-004) não têm texto definido                                                     | Cenários verificam o sentido da mensagem, não o texto exato |

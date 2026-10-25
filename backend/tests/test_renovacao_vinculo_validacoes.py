@@ -51,7 +51,7 @@ class ValidarRenovacaoArquivosTest(unittest.TestCase):
     def test_rejeita_arquivo_de_oito_mb(self):
         erro = validar_regras_arquivo("comprovante.pdf", "application/pdf", b"x" * (8 * 1024 * 1024))
 
-        self.assertEqual(erro, "Arquivo excede o limite de tamanho")
+        self.assertEqual(erro, "Arquivo excede o limite de tamanho de 5 MB")
 
 
 class RenovarVinculoFalhasTest(unittest.TestCase):
@@ -87,7 +87,7 @@ class RenovarVinculoFalhasTest(unittest.TestCase):
 
         self.assertEqual(
             contexto.exception.erros,
-            [{"field": "comprovante_matricula", "message": "Arquivo excede o limite de tamanho"}],
+            [{"field": "comprovante_matricula", "message": "Arquivo excede o limite de tamanho de 5 MB"}],
         )
         self.salvar_arquivo.execute.assert_not_called()
         self.repository.atualizar_dados_renovacao.assert_not_called()

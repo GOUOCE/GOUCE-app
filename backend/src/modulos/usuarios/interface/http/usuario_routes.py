@@ -11,7 +11,11 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from src.shared.infrastructure.db import get_session
-from src.shared.auth.dependencies import require_roles, verify_student_standard_access
+from src.shared.auth.dependencies import (
+    require_roles,
+    verify_student_renewal_access,
+    verify_student_standard_access,
+)
 from src.shared.auth.jwt_service import JWTService
 from src.shared.security.argon2_hasher import Argon2PasswordHasher
 from src.shared.enums.cargo_enum import CargoEnum
@@ -649,7 +653,8 @@ async def verificar_email(
     responses=EDICAO_ERROR_RESPONSES,
 )
 async def obter_meu_perfil(
-    current_user: Annotated[dict, Depends(verify_student_standard_access)],
+    # O aluno com vínculo vencido precisa ver o perfil para renovar (HU-028).
+    current_user: Annotated[dict, Depends(verify_student_renewal_access)],
     repository=Depends(get_repository),
     arquivo_repository=Depends(get_arquivo_repository),
 ):
@@ -659,7 +664,8 @@ async def obter_meu_perfil(
             raise HTTPException(status_code=401, detail="Sessão inválida")
 
         use_case = ObterPerfilAlunoUseCase(repository, arquivo_repository)
-        return use_case.execute(user_id)
+        perfil = use_case.execute(user_id)
+        return perfil.model_copy(update={"acesso_expirado": bool(current_user.get("access_expired"))})
     except HTTPException:
         raise
     except ValueError as error:
