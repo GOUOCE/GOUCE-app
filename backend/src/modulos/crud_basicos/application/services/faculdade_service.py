@@ -33,17 +33,19 @@ class FaculdadeService:
             raise FaculdadeNaoEncontradaError("Faculdade não encontrada.")
         return faculdade
 
-    def criar(self, nome: str, campus: str) -> FaculdadeORM:
+    def criar(self, nome: str, campus: str, sigla: Optional[str] = None) -> FaculdadeORM:
         nome_normalizado = self._validar_campo_obrigatorio(nome, "nome", "O nome da faculdade é obrigatório.")
         campus_normalizado = self._validar_campo_obrigatorio(campus, "campus", "O campus da faculdade é obrigatório.")
+        sigla_normalizada = sigla.strip() if sigla is not None and str(sigla).strip() else None
 
-        return self.repository.criar(nome=nome_normalizado, campus=campus_normalizado)
+        return self.repository.criar(nome=nome_normalizado, campus=campus_normalizado, sigla=sigla_normalizada)
 
     def atualizar(
         self,
         faculdade_id: int,
         nome: Optional[str] = None,
         campus: Optional[str] = None,
+        sigla: Optional[str] = None,
         ativo: Optional[bool] = None,
     ) -> FaculdadeORM:
         self._validar_id(faculdade_id, "faculdade_id")
@@ -56,10 +58,13 @@ class FaculdadeService:
         if campus is not None:
             campus_normalizado = self._validar_campo_obrigatorio(campus, "campus", "O campus da faculdade não pode ser vazio.")
 
+        sigla_normalizada = sigla.strip() if sigla is not None and str(sigla).strip() else (None if sigla is not None else None)
+
         return self.repository.atualizar(
             faculdade_id=faculdade_id,
             nome=nome_normalizado,
             campus=campus_normalizado,
+            sigla=sigla_normalizada,
             ativo=ativo,
         )
 

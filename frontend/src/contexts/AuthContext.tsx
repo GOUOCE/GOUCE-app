@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect, ReactNode } from
 import { useRouter, useSegments } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService, User } from '../services/authService';
+import { calcularStatusAluno } from '../utils/statusAluno';
 
 export type UserRole = 'ALUNO' | 'MOTORISTA' | 'ADMINISTRADOR';
 
@@ -130,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name: response.usuario.nome || response.usuario.nome_completo || 'Usuário',
       email: response.usuario.email,
       role: actualRole,
-      status: String(response.usuario.status_cadastro || 'ativado').toLowerCase() as User['status'],
+      status: calcularStatusAluno(response.usuario.status_cadastro, response.usuario.acesso_expirado),
       telefone: response.usuario.telefone,
       curso: response.usuario.curso,
       faculdade: response.usuario.faculdade,

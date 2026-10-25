@@ -5,17 +5,19 @@ from src.modulos.usuarios.application.dtos.renovacao_vinculo_dto import (
     RenovacaoVinculoDTO,
 )
 from src.modulos.usuarios.application.use_cases.renovar_vinculo_use_case import (
+    RenovacaoJaEmAnaliseError,
     RenovarVinculoUseCase,
 )
 from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
 
 
 class FakeRenewalRepository:
-    def __init__(self):
+    def __init__(self, status_cadastro="ativado"):
         self.usuario = SimpleNamespace(id=7, email="aluno@example.com")
         self.aluno = SimpleNamespace(
             aluno_id=7,
             id_comprovante_residencia=None,
+            status_cadastro=status_cadastro,
         )
         self.update_call = None
 
@@ -28,8 +30,30 @@ class FakeRenewalRepository:
 
 
 class FakeSaveFileUseCase:
+    def __init__(self):
+        self.salvos = []
+
     def execute(self, conteudo, nome, content_type):
+        self.salvos.append(nome)
         return SimpleNamespace(id=f"id-{nome}")
+
+
+def criar_dto():
+    return RenovacaoVinculoDTO(
+        raca="Pardo",
+        nome="Maria da Silva",
+        identificacao_sexual="Bissexual",
+        identificacao_genero="Mulher",
+        transgenero="Não",
+        tem_filhos=False,
+        telefone="85999990000",
+        bairro_id="Centro",
+        faculdade_id=1,
+        curso="Engenharia de Software",
+        periodo_ingresso="2024.1",
+        turno_curso="Noturno",
+        semestre_atual=4,
+    )
 
 
 class RenovacaoVinculoUseCaseTest(unittest.TestCase):
@@ -70,6 +94,25 @@ class RenovacaoVinculoUseCaseTest(unittest.TestCase):
         self.assertEqual(repository.update_call["novo_status"], "analise_renovacao")
         self.assertEqual(repository.update_call["id_comprovante_matricula"], "id-matricula.pdf")
         self.assertEqual(repository.update_call["id_comprovante_residencia"], "id-residencia.pdf")
+
+    def test_recusa_nova_renovacao_enquanto_a_anterior_esta_em_analise(self):
+        # BUG-HU028-API-003 / #133: o segundo envio substituía o comprovante em análise.
+        for status in ("analise_renovacao", StatusCadastroEnum.ANALISE_RENOVACAO, "pendente"):
+            with self.subTest(status=status):
+                repository = FakeRenewalRepository(status_cadastro=status)
+                salvar = FakeSaveFileUseCase()
+                use_case = RenovarVinculoUseCase(repository, salvar)
+
+                with self.assertRaises(RenovacaoJaEmAnaliseError):
+                    use_case.execute(
+                        7,
+                        criar_dto(),
+                        ("matricula.pdf", "application/pdf", b"matricula"),
+                        None,
+                    )
+
+                self.assertIsNone(repository.update_call)
+                self.assertEqual(salvar.salvos, [])
 
 
 if __name__ == "__main__":

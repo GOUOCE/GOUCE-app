@@ -7,6 +7,7 @@ from sqlalchemy.orm import sessionmaker
 
 from src.modulos.arquivos.model.entities.arquivo import ArquivoORM
 from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
+from src.modulos.crud_basicos.domain.entities.bairro import BairroORM
 from src.modulos.usuarios.infrastructure.repositories.representante_repository import (
     RepresentanteRepository,
 )
@@ -37,6 +38,7 @@ class GerenciamentoRepresentantesTest(unittest.IsolatedAsyncioTestCase):
             AlunoORM.__table__,
             RepresentanteORM.__table__,
             FaculdadeORM.__table__,
+            BairroORM.__table__,
             TipoORM.__table__,
             UsuarioTipoORM.__table__,
             LogAuditoriaORM.__table__,

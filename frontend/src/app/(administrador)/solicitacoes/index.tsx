@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, TextInput, Avatar, Chip, Snackbar, useTheme } from 'react-native-paper';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, Search, ChevronRight, X } from 'lucide-react-native';
 
 import { solicitacaoService, SolicitacaoItem } from '@/services/solicitacaoService';
@@ -44,7 +44,7 @@ export default function FilaSolicitacoesScreen() {
   const carregarSolicitacoes = async () => {
     setIsLoading(true);
     try {
-      const lista = await solicitacaoService.listarSolicitacoes('pendente');
+      const lista = await solicitacaoService.listarSolicitacoes();
       setSolicitacoes(lista);
     } catch (error: any) {
       const msg = getErrorMessage(error, 'Erro ao carregar fila de solicitações.');
@@ -59,9 +59,16 @@ export default function FilaSolicitacoesScreen() {
     }
   };
 
+  // Recarrega a fila sempre que a tela ganha foco
+  useFocusEffect(
+    React.useCallback(() => {
+      carregarSolicitacoes();
+    }, [])
+  );
+
   useEffect(() => {
     let isMounted = true;
-    solicitacaoService.listarSolicitacoes('pendente').then((lista) => {
+    solicitacaoService.listarSolicitacoes().then((lista) => {
       if (isMounted) setSolicitacoes(lista);
     }).catch((err) => console.warn('Erro ao carregar solicitações:', err));
     return () => { isMounted = false; };

@@ -12,6 +12,7 @@ import {
   dataNascimentoSchema,
   telefoneSchema,
   renovacaoSchema,
+  fileSchema5MB,
 } from '../alunoSchema';
 import { loginSchema, forgotPasswordSchema, resetPasswordSchema } from '../loginSchema';
 import { editarPerfilSchema, alterarEmailSchema } from '../perfilSchema';
@@ -514,6 +515,80 @@ describe('Suíte de Testes Unitários Completa - HU-001 (Solicitação de Cadast
 
       const res = renovacaoSchema.safeParse(renovacaoCompleta);
       expect(res.success).toBe(true);
+    });
+  });
+
+  describe('Renovação de vínculo - comprovante de matrícula (fileSchema5MB) - HU-028', () => {
+    const MB = 1024 * 1024;
+    const arquivo = (name: string, type: string, size?: number) => ({ name, type, size, uri: `file:///${name}` });
+    const mensagem = (valor: unknown) => {
+      const res = fileSchema5MB.safeParse(valor);
+      return res.success ? null : res.error.issues[0].message;
+    };
+
+    it('deve exigir o comprovante quando nenhum arquivo é enviado', () => {
+      expect(mensagem(null)).toBe('O comprovante de matrícula é obrigatório');
+      expect(mensagem(undefined)).toBe('O comprovante de matrícula é obrigatório');
+      expect(mensagem({ assets: [] })).toBe('O comprovante de matrícula é obrigatório');
+    });
+
+    it('deve aprovar PDF, PNG, JPG e WEBP dentro do limite', () => {
+      expect(mensagem(arquivo('c.pdf', 'application/pdf', 2 * MB))).toBeNull();
+      expect(mensagem(arquivo('c.png', 'image/png', 1 * MB))).toBeNull();
+      expect(mensagem(arquivo('c.jpg', 'image/jpeg', 1 * MB))).toBeNull();
+      expect(mensagem(arquivo('c.webp', 'image/webp', 1 * MB))).toBeNull();
+    });
+
+    it('deve aprovar arquivo com exatamente 5 MB', () => {
+      expect(mensagem(arquivo('c.pdf', 'application/pdf', 5 * MB))).toBeNull();
+    });
+
+    it('deve recusar arquivo com 5 MB + 1 byte', () => {
+      expect(mensagem(arquivo('c.pdf', 'application/pdf', 5 * MB + 1))).toBe('O arquivo excede o limite de tamanho de 5 MB');
+    });
+
+    it('deve recusar o arquivo de 8 MB aceito antes da correção (BUG-HU028-API-001)', () => {
+      expect(mensagem(arquivo('c.pdf', 'application/pdf', 8 * MB))).toBe('O arquivo excede o limite de tamanho de 5 MB');
+    });
+
+    it('deve recusar formatos fora de PDF/PNG/JPG/WEBP, inclusive imagens como GIF', () => {
+      const invalido = 'Formato de arquivo inválido. Envie PDF ou imagem (PNG, JPG ou WEBP)';
+      expect(mensagem(arquivo('c.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 1024))).toBe(invalido);
+      expect(mensagem(arquivo('c.gif', 'image/gif', 1024))).toBe(invalido);
+      expect(mensagem(arquivo('c.exe', 'application/x-msdownload', 1024))).toBe(invalido);
+    });
+
+    it('deve aceitar o resultado do seletor de documentos no formato { assets: [arquivo] }', () => {
+      expect(mensagem({ assets: [arquivo('c.pdf', 'application/pdf', 1 * MB)] })).toBeNull();
+      expect(mensagem({ assets: [arquivo('c.pdf', 'application/pdf', 6 * MB)] })).toBe('O arquivo excede o limite de tamanho de 5 MB');
+    });
+
+    it('deve deixar o backend decidir quando o seletor não informa o tamanho', () => {
+      expect(mensagem(arquivo('c.pdf', 'application/pdf'))).toBeNull();
+    });
+
+    it('deve recusar a renovação sem comprovante e com comprovante acima de 5 MB', () => {
+      const base = {
+        nomeCompleto: 'João Silva Neves',
+        email: 'joao.neves@gmail.com',
+        dataNascimento: '15/05/2002',
+        raca: 'Branco',
+        identificacaoSexual: 'Heterossexual',
+        genero: 'Homem',
+        transgenero: 'Não',
+        temFilhos: false,
+        bairro: 'Centro',
+        whatsapp: '(88) 9 9999-8888',
+        instituicao: 'UFC - Universidade Federal do Ceará',
+        curso: 'Engenharia de Software',
+        campus: 'Quixadá',
+        periodoIngresso: '2023.1',
+        turno: 'Vespertino',
+        semestreAtual: '8º',
+      };
+      expect(renovacaoSchema.safeParse({ ...base, comprovanteMatricula: null }).success).toBe(false);
+      expect(renovacaoSchema.safeParse({ ...base, comprovanteMatricula: arquivo('c.pdf', 'application/pdf', 8 * MB) }).success).toBe(false);
+      expect(renovacaoSchema.safeParse({ ...base, comprovanteMatricula: arquivo('c.pdf', 'application/pdf', 2 * MB) }).success).toBe(true);
     });
   });
 

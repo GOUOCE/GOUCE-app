@@ -226,8 +226,9 @@ export const userService = {
       formData.append('comprovante_residencia', '');
     }
 
+    // A foto atual vem como URL do servidor; só envia quando o aluno escolheu uma nova
     const fotoPart = buildFilePart(data.fotoPerfil, 'foto_perfil.jpg', 'image/jpeg');
-    if (fotoPart) {
+    if (fotoPart && !/^https?:/i.test(fotoPart.uri)) {
       formData.append('foto_perfil', fotoPart as any);
     }
 
