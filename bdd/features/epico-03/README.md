@@ -52,12 +52,7 @@ Os cenários seguem a opção indicada e trazem um comentário `# Observação` 
 
 | HU             | Divergência                                                                                                                                                               | Opção seguida nos cenários                                  |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| HU-011 e 012   | O AC-01 cita rotas **ativas e inativas** na listagem; o AC-09 cita visualizar inativas "quando necessário"                                                                | Ativas na listagem e inativas com a chave "Mostrar inativos" |
-| HU-011 e 012   | O AC-05 cita a auditoria só da **inativação**; o fluxo principal registra **toda** operação no log                                                                        | Auditoria das quatro operações                              |
-| HU-011         | O AC-02 cita "uma ou mais faculdades"; o fluxo principal e o FA-003 citam "a faculdade de destino" (singular)                                                             | AC-02: uma ou mais faculdades, ao menos uma na ida          |
 | HU-012         | O AC-02 cita "horários" (plural) e o fluxo principal cita "pontos de conexão" (plural); o AC-08 e o formulário usam horário de saída e um ponto de conexão                | Um horário de saída e um ponto de conexão                   |
-| HU-012         | O AC-08 não inclui o **nome** nos campos obrigatórios, mas o AC-02 e o formulário o exigem                                                                                | Nome obrigatório                                            |
-| HU-011 e 012   | O texto da mensagem de bloqueio por agendamentos futuros (FA-001) não está definido                                                                                       | Cenários verificam o sentido da mensagem, não o texto exato |
 
 **Regras não definidas no requisito (sem cenário; precisam de decisão)**
 

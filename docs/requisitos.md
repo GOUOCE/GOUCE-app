@@ -1374,18 +1374,18 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar e
 
 **Critérios de Aceite:**
 
-1. Administrador acessa o menu "Rotas Complementares" e visualiza a listagem das rotas complementares cadastradas (ativas e inativas).
+1. Administrador acessa o menu "Rotas Complementares" e visualiza a listagem das rotas complementares ativas cadastradas.
 2. Administrador consegue criar uma nova rota complementar preenchendo nome, horários e ponto de conexão, vinculando-a a uma rota principal já existente.
 3. Campo de seleção de rota principal exibe apenas rotas ativas; rota principal inativada não aparece como opção, impedindo vínculo inválido.
 4. Administrador consegue editar dados de uma rota complementar existente (nome, horários, ponto de conexão, rota principal vinculada).
-5. Administrador consegue inativar (soft delete) uma rota complementar, sem apagar o registro do banco de dados; operação é registrada no log de auditoria (usuário, ação, timestamp).
-6. Tentativa de inativar uma rota complementar que possui agendamentos futuros de alunos é bloqueada com mensagem informando que a rota possui agendamentos pendentes.
-7. Inativação bem-sucedida exibe mensagem de confirmação ("Operação realizada com sucesso") e atualiza a listagem.
-8. Campos obrigatórios (horários, ponto de conexão, rota principal vinculada) são destacados se vazios; sistema bloqueia salvamento até preenchimento.
-9. Administrador consegue visualizar rotas complementares inativas na listagem quando necessário.  
+5. Administrador consegue inativar (soft delete) ou reativar uma rota complementar, sem apagar o registro do banco de dados; todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
+6. Tentativa de inativar uma rota complementar que possui agendamentos futuros de alunos é bloqueada com a mensagem: "Esta rota possui agendamentos pendentes e não pode ser inativada no momento."
+7. Toda operação bem-sucedida (cadastro, edição, inativação ou reativação) exibe a mensagem de confirmação "Operação realizada com sucesso" e atualiza a listagem.
+8. Campos obrigatórios (nome, horários, ponto de conexão, rota principal vinculada) são destacados se vazios; sistema bloqueia salvamento até preenchimento.
+9. Administrador consegue visualizar as rotas complementares inativas ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.  
    **Fluxo Principal:**
 10. O administrador acessa o menu de "Rotas Complementares".
-11. O sistema exibe a listagem das rotas complementares cadastradas (ativas e inativas).
+11. O sistema exibe a listagem das rotas complementares ativas cadastradas.
 12. O administrador seleciona a ação: "Nova Rota", "Editar", ou "Inativar" ou “Reativar” em um registro existente.
 13. O administrador preenche as informações da rota (nome, horários, pontos de conexão) e a vincula a uma rota principal já existente.
 14. O sistema valida os dados e aplica a operação no banco de dados (executando o soft delete em caso de inativação).
