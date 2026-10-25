@@ -9,11 +9,11 @@ os.environ.setdefault(
 from src.modulos.motoristas.application.dtos.motorista_dto import AtualizarMotoristaDTO
 from src.modulos.motoristas.application.use_cases.gerenciar_motoristas_use_case import (
     GerenciarMotoristasUseCase,
+    MotoristaComAlocacoesPendentesError,
     MotoristaNaoEncontradoError,
     MotoristaValidationError,
 )
 from src.modulos.motoristas.infrastructure.repositories.motorista_repository import (
-    AlocacoesFuturasNaoVerificadasError,
     MotoristaTelefoneEmUsoError,
 )
 
@@ -42,9 +42,8 @@ class FakeRepository:
         self.reativar_chamadas = []
         self.criar_error = None
         self.atualizar_error = None
-        self.inativar_error = AlocacoesFuturasNaoVerificadasError(
-            "Verificação de alocações futuras pendente."
-        )
+        self.motoristas_com_alocacoes_futuras = set()
+        self.alocacoes_chamadas = []
 
     def criar(self, nome, telefone):
         self.criar_chamadas.append((nome, telefone))
@@ -86,10 +85,12 @@ class FakeRepository:
             motorista["telefone"] = telefone
         return motorista
 
-    def inativar(self, motorista_id, usuario_executor_id, **kwargs):
-        self.inativar_chamadas.append((motorista_id, usuario_executor_id, kwargs))
-        if self.inativar_error is not None:
-            raise self.inativar_error
+    def possui_alocacoes_futuras(self, motorista_id):
+        self.alocacoes_chamadas.append(motorista_id)
+        return motorista_id in self.motoristas_com_alocacoes_futuras
+
+    def inativar(self, motorista_id, usuario_executor_id):
+        self.inativar_chamadas.append((motorista_id, usuario_executor_id))
         motorista = self.motoristas.get(motorista_id)
         if motorista is None:
             return None
@@ -166,16 +167,49 @@ class GerenciarMotoristasUseCaseTest(unittest.TestCase):
         ):
             self.use_case.criar("Maria da Silva", "85999990000")
 
-    def test_listar_delega_filtro_de_status_e_busca_por_nome(self):
-        resultado = self.use_case.listar(ativo=False, nome="  JOÃO ")
+    def test_listar_por_padrao_retorna_somente_ativos(self):
+        resultado = self.use_case.listar()
 
-        self.assertEqual([item["id"] for item in resultado], [2])
-        self.assertEqual(self.repository.listar_chamadas, [(False, "JOÃO")])
+        self.assertEqual([item["id"] for item in resultado], [1])
+        self.assertTrue(all(item["ativo"] for item in resultado))
+        self.assertEqual(self.repository.listar_chamadas, [(True, None)])
+
+    def test_listar_com_incluir_inativos_retorna_todos_com_status(self):
+        resultado = self.use_case.listar(incluir_inativos=True)
+
+        self.assertEqual(
+            [(item["id"], item["ativo"]) for item in resultado],
+            [(1, True), (2, False)],
+        )
+        self.assertEqual(self.repository.listar_chamadas, [(None, None)])
+
+    def test_listar_busca_parcial_por_nome_sem_diferenciar_caixa(self):
+        with self.subTest(caso="inativo oculto por padrão"):
+            self.assertEqual(self.use_case.listar(nome="  JOÃO "), [])
+
+        with self.subTest(caso="inativo incluído"):
+            resultado = self.use_case.listar(incluir_inativos=True, nome="  joão ")
+            self.assertEqual([item["id"] for item in resultado], [2])
+
+        with self.subTest(caso="trecho do nome"):
+            resultado = self.use_case.listar(nome="silv")
+            self.assertEqual([item["id"] for item in resultado], [1])
+
+        self.assertEqual(
+            self.repository.listar_chamadas,
+            [(True, "JOÃO"), (None, "joão"), (True, "silv")],
+        )
 
     def test_listar_aceita_busca_vazia_sem_criar_regra_extra(self):
         self.use_case.listar(nome="   ")
 
-        self.assertEqual(self.repository.listar_chamadas, [(None, "")])
+        self.assertEqual(self.repository.listar_chamadas, [(True, "")])
+
+    def test_listar_rejeita_nome_nao_textual(self):
+        with self.assertRaises(MotoristaValidationError):
+            self.use_case.listar(nome=123)
+
+        self.assertEqual(self.repository.listar_chamadas, [])
 
     def test_buscar_retorna_motorista_existente(self):
         resultado = self.use_case.buscar(1)
@@ -259,20 +293,33 @@ class GerenciarMotoristasUseCaseTest(unittest.TestCase):
         with self.assertRaises(MotoristaNaoEncontradoError):
             self.use_case.reativar(99, usuario_executor_id=10)
 
-    def test_inativar_preserva_bloqueio_de_alocacoes_futuras(self):
-        with self.assertRaises(AlocacoesFuturasNaoVerificadasError):
+    def test_inativar_bloqueia_motorista_com_alocacoes_futuras(self):
+        self.repository.motoristas_com_alocacoes_futuras.add(1)
+
+        with self.assertRaises(MotoristaComAlocacoesPendentesError) as contexto:
             self.use_case.inativar(1, usuario_executor_id=10)
 
         self.assertEqual(
-            self.repository.inativar_chamadas,
-            [(1, 10, {})],
+            str(contexto.exception),
+            "Este profissional possui alocações pendentes e não pode ser "
+            "inativado no momento.",
         )
+        self.assertEqual(self.repository.alocacoes_chamadas, [1])
+        self.assertEqual(self.repository.inativar_chamadas, [])
         self.assertTrue(self.repository.motoristas[1]["ativo"])
+
+    def test_inativar_motorista_sem_alocacoes_futuras(self):
+        resultado = self.use_case.inativar(1, usuario_executor_id=10)
+
+        self.assertFalse(resultado["ativo"])
+        self.assertEqual(self.repository.alocacoes_chamadas, [1])
+        self.assertEqual(self.repository.inativar_chamadas, [(1, 10)])
 
     def test_inativar_motorista_inexistente_nao_chama_repository_de_status(self):
         with self.assertRaises(MotoristaNaoEncontradoError):
             self.use_case.inativar(99, usuario_executor_id=10)
 
+        self.assertEqual(self.repository.alocacoes_chamadas, [])
         self.assertEqual(self.repository.inativar_chamadas, [])
 
 
