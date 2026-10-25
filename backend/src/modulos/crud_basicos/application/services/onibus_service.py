@@ -44,8 +44,8 @@ class OnibusService:
         id_foto_onibus: Optional[str] = None,
     ) -> OnibusORM:
         placa_normalizada = self._validar_placa(placa, "placa")
-        self._validar_capacidade(qtd_assentos, "qtd_assentos", "A quantidade de assentos deve ser maior ou igual a zero.")
-        self._validar_capacidade(capacidade_maxima, "capacidade_maxima", "A capacidade máxima de alunos em pé deve ser maior ou igual a zero.")
+        self._validar_capacidade(qtd_assentos, "qtd_assentos", "A quantidade de assentos deve ser maior que zero.")
+        self._validar_capacidade_em_pe(capacidade_maxima, "capacidade_maxima", "A capacidade máxima de alunos em pé deve ser maior ou igual a zero.")
 
         if id_foto_onibus:
             id_foto_limpo = str(id_foto_onibus).strip()
@@ -79,10 +79,10 @@ class OnibusService:
             placa_nova_normalizada = self._validar_placa(nova_placa, "placa")
 
         if qtd_assentos is not None:
-            self._validar_capacidade(qtd_assentos, "qtd_assentos", "A quantidade de assentos deve ser maior ou igual a zero.")
+            self._validar_capacidade(qtd_assentos, "qtd_assentos", "A quantidade de assentos deve ser maior que zero.")
 
         if capacidade_maxima is not None:
-            self._validar_capacidade(capacidade_maxima, "capacidade_maxima", "A capacidade máxima de alunos em pé deve ser maior ou igual a zero.")
+            self._validar_capacidade_em_pe(capacidade_maxima, "capacidade_maxima", "A capacidade máxima de alunos em pé deve ser maior ou igual a zero.")
 
         if id_foto_onibus is not None:
             id_foto_limpo = str(id_foto_onibus).strip()
@@ -144,8 +144,13 @@ class OnibusService:
 
     @staticmethod
     def _validar_capacidade(valor: object, campo: str, mensagem: str) -> None:
-        if valor is None or isinstance(valor, bool) or not isinstance(valor, int) or valor < 0:
+        if valor is None or isinstance(valor, bool) or not isinstance(valor, int) or valor <= 0:
             raise OnibusValidationError(campo, mensagem)
+
+    @staticmethod
+    def _validar_capacidade_em_pe(valor: object, campo: str, mensagem: str) -> None:
+            if valor is None or isinstance(valor, bool) or not isinstance(valor, int) or valor < 0:
+                raise OnibusValidationError(campo, mensagem)
 
     @staticmethod
     def _validar_id(valor: object, campo: str) -> None:
