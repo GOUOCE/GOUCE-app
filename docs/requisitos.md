@@ -269,7 +269,7 @@ Os requisitos funcionais descrevem as funcionalidades e os comportamentos espera
 | **RF-031** | Avaliação de Solicitação de Cadastro  | O sistema deve permitir ao administrador visualizar a fila de solicitações pendentes, consultar os documentos anexados pelo aluno e aprovar ou reprovar o cadastro.                                                                                                                                                          | Alta       | A Definir |
 | **RF-032** | Emissão de Carterinha Digital         | O sistema deve gerar automaticamente uma carteirinha de identificação digital para os alunos com status 'Aprovado', exibindo foto, dados do aluno, instituição e QR Code.                                                                                                                                                    | Alta       | A Definir |
 | **RF-033** | Renovação Semestral                   | O sistema deve bloquear o agendamento de transporte no início de cada semestre letivo até que o aluno envie um novo comprovante de matrícula para revalidação.                                                                                                                                                               | Alta       | A Definir |
-| **RF-34**  | Gerenciamento de Representantes       | O sistema deve permitir ao administrador cadastrar, editar e inativar representantes das universidades responsáveis pelo acompanhamento da frequência dos alunos.                                                                                                                                                            | Alta       | A Definir |
+| **RF-034** | Gerenciamento de Representantes       | O sistema deve permitir ao administrador cadastrar, editar e inativar representantes das universidades responsáveis pelo acompanhamento da frequência dos alunos.                                                                                                                                                            | Alta       | A Definir |
 
 Fonte: Elaborado pelo Clidenor(2026).
 
@@ -1271,14 +1271,14 @@ Como administrador, quero atribuir ou revogar a função de representante de um 
     8. O sistema atualiza a listagem e exibe uma mensagem de sucesso.
 22. FA-002 \- Aluno não aprovado ou com cadastro desatualizado.
     1. O administrador tenta atribuir a função de representante a um aluno cujo cadastro não esteja aprovado ou atualizado.
-    2. O sistema bloqueia a operação e informa que somente alunos aprovados podem ser representantes.
+    2. O sistema bloqueia a operação e exibe a mensagem: "Somente alunos aprovados podem ser representantes."
 23. FA-003 \- Aluno já é representante
     1. O administrador seleciona um aluno que já possui a função de representante.
-    2. O sistema informa que o aluno já possui essa função e impede uma nova atribuição.
+    2. O sistema impede uma nova atribuição e exibe a mensagem: "Este aluno já é representante."
 24. FA-004 \- Aluno não encontrado.
     1. O administrador realiza uma pesquisa pelo aluno.
     2. O sistema não encontra nenhum aluno correspondente.
-    3. O sistema informa que nenhum aluno foi encontrado.
+    3. O sistema exibe a mensagem: "Nenhum aluno encontrado."
 
     **Regras de Negócio Relacionadas:**
 
