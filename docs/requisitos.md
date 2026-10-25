@@ -1122,7 +1122,7 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar, 
 7. Toda operação bem-sucedida (cadastro, edição, inativação ou reativação) exibe mensagem de confirmação ("Operação realizada com sucesso") e atualiza a listagem.
 8. Campos obrigatórios (placa e capacidade máxima(de assentos e em pé)) são destacados se vazios; sistema bloqueia salvamento até preenchimento, inclusive na edição.
 9. A placa deve estar em formato Mercosul (ABC1D23) ou antigo (ABC1234); placa em outro formato bloqueia o salvamento com a mensagem "Placa inválida."
-10. A quantidade de assentos deve ser um número inteiro maior ou igual a 1 e a capacidade de alunos em pé um número inteiro maior ou igual a 0; valores fora dessa regra (zero ou negativo nos assentos, negativo, decimal ou texto) bloqueiam o salvamento, o campo é destacado como inválido e é exibida a mensagem "Quantidade de assentos inválida." ou "Capacidade de alunos em pé inválida.", conforme o campo.
+10. A quantidade de assentos deve ser um número inteiro maior ou igual a 1 e a capacidade de alunos em pé um número inteiro maior ou igual a 0; valores fora dessa regra (zero ou negativo nos assentos, negativo, decimal ou texto) bloqueiam o salvamento, o campo é destacado como inválido e é exibida a mensagem "A quantidade de assentos deve ser maior que zero" ou "A capacidade em pé não pode ser negativa", conforme o campo.
 11. Administrador consegue visualizar os ônibus inativos ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.
 12. Todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
 13. Ônibus inativos não são exibidos para seleção na escalação de rotas; rotas, alocações e relatórios anteriores mantêm o vínculo (RN-004).  
@@ -1271,10 +1271,10 @@ Como administrador, quero atribuir ou revogar a função de representante de um 
     8. O sistema atualiza a listagem e exibe uma mensagem de sucesso.
 22. FA-002 \- Aluno não aprovado ou com cadastro desatualizado.
     1. O administrador tenta atribuir a função de representante a um aluno cujo cadastro não esteja aprovado ou atualizado.
-    2. O sistema bloqueia a operação e exibe a mensagem: "Somente alunos aprovados podem ser representantes."
+    2. O sistema bloqueia a operação e exibe a mensagem: "Aluno não aprovado ou inativo."
 23. FA-003 \- Aluno já é representante
     1. O administrador seleciona um aluno que já possui a função de representante.
-    2. O sistema impede uma nova atribuição e exibe a mensagem: "Este aluno já é representante."
+    2. O sistema impede uma nova atribuição e exibe a mensagem: "Este aluno já é um representante ativo."
 24. FA-004 \- Aluno não encontrado.
     1. O administrador realiza uma pesquisa pelo aluno.
     2. O sistema não encontra nenhum aluno correspondente.
