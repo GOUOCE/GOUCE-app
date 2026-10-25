@@ -81,8 +81,6 @@ Funcionalidade: Gerenciamento de Representantes
 
 
     # FA-002 - Aluno sem cadastro aprovado e ativo (AC-03)
-    # Observação: o requisito não define o texto exato das mensagens de bloqueio (FA-002, FA-003
-    # e FA-004); os cenários verificam o sentido da mensagem e devem ser alinhados com o time.
     @fluxo_infeliz @FA002 @prioridade_alta
     Esquema do Cenário: Sistema bloqueia a atribuição para aluno sem cadastro aprovado e ativo
       Dado que existe o aluno "Marcos Vinícius" com status de cadastro "<status_cadastro>"
@@ -90,7 +88,7 @@ Funcionalidade: Gerenciamento de Representantes
       E seleciona a instituição de ensino "UFC - Campus Quixadá"
       E pesquisa e seleciona o aluno "Marcos Vinícius"
       E confirma a atribuição da função
-      Então o sistema informa que somente alunos aprovados podem ser representantes
+      Então o sistema exibe a mensagem "Somente alunos aprovados podem ser representantes."
       E a função de representante não é atribuída a "Marcos Vinícius"
 
       Exemplos:
@@ -107,7 +105,7 @@ Funcionalidade: Gerenciamento de Representantes
       Dado que a aluna "Ana Beatriz" possui a função de representante ativa
       Quando o administrador seleciona "Adicionar Representante"
       E pesquisa e seleciona a aluna "Ana Beatriz"
-      Então o sistema informa que "Ana Beatriz" já possui a função de representante
+      Então o sistema exibe a mensagem "Este aluno já é representante."
       E o sistema impede uma nova atribuição
 
 
@@ -116,7 +114,7 @@ Funcionalidade: Gerenciamento de Representantes
     Cenário: Sistema informa quando nenhum aluno corresponde à pesquisa
       Quando o administrador seleciona "Adicionar Representante"
       E pesquisa pelo aluno "Nome Inexistente da Silva"
-      Então o sistema informa que nenhum aluno foi encontrado
+      Então o sistema exibe a mensagem "Nenhum aluno encontrado."
 
 
   Regra: Atribuição e revogação ficam registradas na auditoria
