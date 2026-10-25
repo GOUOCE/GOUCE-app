@@ -178,13 +178,13 @@ Funcionalidade: Gerenciamento de Frota (Ônibus)
 
       Exemplos:
         | campo                      | valor | mensagem                                 |
-        | Quantidade de assentos     | 0     | Quantidade de assentos inválida.         |
-        | Quantidade de assentos     | -5    | Quantidade de assentos inválida.         |
-        | Quantidade de assentos     | abc   | Quantidade de assentos inválida.         |
-        | Quantidade de assentos     | 4.5   | Quantidade de assentos inválida.         |
-        | Capacidade de alunos em pé | -1    | Capacidade de alunos em pé inválida.     |
-        | Capacidade de alunos em pé | abc   | Capacidade de alunos em pé inválida.     |
-        | Capacidade de alunos em pé | 2.5   | Capacidade de alunos em pé inválida.     |
+        | Quantidade de assentos     | 0     | A quantidade de assentos deve ser maior que zero |
+        | Quantidade de assentos     | -5    | A quantidade de assentos deve ser maior que zero |
+        | Quantidade de assentos     | abc   | A quantidade de assentos deve ser maior que zero |
+        | Quantidade de assentos     | 4.5   | A quantidade de assentos deve ser maior que zero |
+        | Capacidade de alunos em pé | -1    | A capacidade em pé não pode ser negativa         |
+        | Capacidade de alunos em pé | abc   | A capacidade em pé não pode ser negativa         |
+        | Capacidade de alunos em pé | 2.5   | A capacidade em pé não pode ser negativa         |
 
 
     # AC-04, AC-07 - Edição de ônibus existente
