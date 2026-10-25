@@ -1314,21 +1314,21 @@ Fonte: Elaborado pelo autor (2026).
 Como administrador, quero acessar um painel para cadastrar, visualizar, editar e inativar rotas principais e seus respectivos horários, vinculando os bairros de origem às faculdades de destino, para estruturar os trajetos e horários oficiais disponibilizados para o agendamento dos estudantes.  
 **Critérios de Aceite:**
 
-1. Administrador acessa o menu "Rotas" e visualiza a listagem das rotas cadastradas com seus horários de saída e retorno (ativas e inativas).
+1. Administrador acessa o menu "Rotas" e visualiza a listagem das rotas ativas cadastradas com seus horários de saída e retorno.
 2. Administrador consegue criar uma nova rota preenchendo nome, horários de saída/retorno, vinculando um ou mais bairros/pontos de parada e selecionando uma ou mais faculdades (IES) atendidas na ida e na volta.
 3. Campos de seleção de bairro e faculdade exibem apenas registros ativos; bairros ou faculdades inativados não aparecem como opção, impedindo vínculo inválido.
 4. Administrador consegue editar dados de uma rota existente (nome, horários, faculdades atendidas na ida e na volta, e bairros vinculados).
-5. Administrador consegue inativar (soft delete) uma rota, sem apagar o registro do banco de dados; operação é registrada no log de auditoria (usuário, ação, timestamp).
-6. Tentativa de inativar uma rota que possui agendamentos futuros de alunos é bloqueada com mensagem informando que a rota possui agendamentos pendentes.
-7. Inativação bem-sucedida exibe mensagem de confirmação ("Operação realizada com sucesso") e atualiza a listagem.
+5. Administrador consegue inativar (soft delete) ou reativar uma rota, sem apagar o registro do banco de dados; todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
+6. Tentativa de inativar uma rota que possui agendamentos futuros de alunos é bloqueada com a mensagem: "Esta rota possui agendamentos pendentes e não pode ser inativada no momento."
+7. Toda operação bem-sucedida (cadastro, edição, inativação ou reativação) exibe a mensagem de confirmação "Operação realizada com sucesso" e atualiza a listagem.
 8. Campos obrigatórios (nome, horários, ao menos uma faculdade vinculada e ao menos um bairro vinculado) são destacados se vazios; sistema bloqueia salvamento até preenchimento.
-9. Administrador consegue visualizar rotas inativas na listagem quando necessário.
+9. Administrador consegue visualizar as rotas inativas ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.
 10. O sistema deve permitir que as faculdades atendidas na volta (origem) sejam configuradas de forma independente das faculdades atendidas na ida (destino), sem exigir que o ônibus passe exatamente pelas mesmas instituições nos dois turnos (ex: caso não haja alunos agendados para retornar de uma determinada faculdade naquele dia/rota).  
     **Fluxo Principal:**
 11. O administrador acessa o menu de "Rotas".
-12. O sistema exibe a listagem das rotas cadastradas com seus horários de saída e retorno (ativas e inativas).
+12. O sistema exibe a listagem das rotas ativas cadastradas com seus horários de saída e retorno.
 13. O administrador seleciona a ação: "Nova Rota", "Editar", ou "Inativar" ou “Reativar” em um registro existente.
-14. O administrador preenche as informações da rota (nome, faculdade de destino, horários de saída e retorno) e vincula os bairros/pontos de parada previamente cadastrados.
+14. O administrador preenche as informações da rota (nome, faculdades atendidas na ida e na volta, horários de saída e retorno) e vincula os bairros/pontos de parada previamente cadastrados.
 15. O sistema valida os dados e aplica a operação no banco de dados (executando o soft delete em caso de inativação).
 16. O sistema registra a operação no log de auditoria.
 17. O sistema exibe uma mensagem de sucesso e atualiza a listagem na tela.  
@@ -1340,7 +1340,7 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar e
     1. O administrador tenta criar ou editar uma rota vinculando um bairro ou faculdade que foi inativado.
     2. O sistema não exibe as opções inativas nos campos de seleção, impedindo o vínculo inválido.
 20. FA-003 \- Campos obrigatórios ausentes.
-    1. O administrador tenta salvar o formulário sem definir os horários, a faculdade de destino ou sem vincular ao menos um bairro.
+    1. O administrador tenta salvar o formulário sem definir o nome, os horários, ao menos uma faculdade ou sem vincular ao menos um bairro.
     2. O sistema sinaliza os campos vazios e impede o salvamento.
 
     **Regras de Negócio Relacionadas:**
