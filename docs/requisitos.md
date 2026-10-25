@@ -1122,7 +1122,7 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar, 
 7. Toda operação bem-sucedida (cadastro, edição, inativação ou reativação) exibe mensagem de confirmação ("Operação realizada com sucesso") e atualiza a listagem.
 8. Campos obrigatórios (placa e capacidade máxima(de assentos e em pé)) são destacados se vazios; sistema bloqueia salvamento até preenchimento, inclusive na edição.
 9. A placa deve estar em formato Mercosul (ABC1D23) ou antigo (ABC1234); placa em outro formato bloqueia o salvamento com a mensagem "Placa inválida."
-10. A quantidade de assentos deve ser um número inteiro maior ou igual a 1 e a capacidade de alunos em pé um número inteiro maior ou igual a 0; valores fora dessa regra (zero ou negativo nos assentos, negativo, decimal ou texto) bloqueiam o salvamento e o campo é destacado como inválido.
+10. A quantidade de assentos deve ser um número inteiro maior ou igual a 1 e a capacidade de alunos em pé um número inteiro maior ou igual a 0; valores fora dessa regra (zero ou negativo nos assentos, negativo, decimal ou texto) bloqueiam o salvamento, o campo é destacado como inválido e é exibida a mensagem "Quantidade de assentos inválida." ou "Capacidade de alunos em pé inválida.", conforme o campo.
 11. Administrador consegue visualizar os ônibus inativos ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.
 12. Todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
 13. Ônibus inativos não são exibidos para seleção na escalação de rotas; rotas, alocações e relatórios anteriores mantêm o vínculo (RN-004).  
