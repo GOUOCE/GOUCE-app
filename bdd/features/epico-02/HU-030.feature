@@ -88,7 +88,7 @@ Funcionalidade: Gerenciamento de Representantes
       E seleciona a instituição de ensino "UFC - Campus Quixadá"
       E pesquisa e seleciona o aluno "Marcos Vinícius"
       E confirma a atribuição da função
-      Então o sistema exibe a mensagem "Somente alunos aprovados podem ser representantes."
+      Então o sistema exibe a mensagem "Aluno não aprovado ou inativo."
       E a função de representante não é atribuída a "Marcos Vinícius"
 
       Exemplos:
@@ -105,7 +105,7 @@ Funcionalidade: Gerenciamento de Representantes
       Dado que a aluna "Ana Beatriz" possui a função de representante ativa
       Quando o administrador seleciona "Adicionar Representante"
       E pesquisa e seleciona a aluna "Ana Beatriz"
-      Então o sistema exibe a mensagem "Este aluno já é representante."
+      Então o sistema exibe a mensagem "Este aluno já é um representante ativo."
       E o sistema impede uma nova atribuição
 
 
