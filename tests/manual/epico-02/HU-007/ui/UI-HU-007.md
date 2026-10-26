@@ -11,14 +11,14 @@
 | Tela            | Painel do administrador → aba **Cadastros** → **Bairros e pontos de parada** (listagem **Bairros e Pontos**, **Novo Bairro** e **Editar Bairro**) |
 | Ambiente        | Desenvolvimento — app no celular (Expo Go) ou versão web (`http://localhost:3000`) |
 | Total de casos  | 13 |
-| Última execução | 2026-10-26 (em andamento) |
+| Última execução | 2026-10-26 |
 | Testador        | Cauan Ricardo |
 
 ## Resultado geral
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Em execução | 13 | 5 | 7 | 0 | 1 |
+| ❌ Concluída com falhas | 13 | 5 | 8 | 0 | 0 |
 
 ## Pré-condições
 
@@ -61,7 +61,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 | --- | --- | --- | --- | --- | --- |
 | CT-HU007-UI-011 | Aluno e representante sem acesso | Menu do aluno e do representante; link `bairros` | Menu não exibido; link mostra Acesso Negado | ✅ PASSOU | Link direto mostra Acesso Negado para aluno e representante; a API devolve 403 nas escritas. |
 | CT-HU007-UI-012 | Bairros no cadastro de aluno | Bairro novo e bairro inativo na etapa 3 do cadastro | Bairro ativo novo aparece; bairro inativo não aparece | ❌ FALHOU | A lista de bairros do cadastro de aluno é fixa no app e não reflete o cadastro do administrador; o app envia o nome do bairro e a API espera o id (500). Relacionado à #192. |
-| CT-HU007-UI-013 | Falha de conexão ao salvar | Wi-Fi e dados desligados ao cadastrar e ao inativar | Mensagem de conexão; nada “salvo” só na tela; dados mantidos para nova tentativa | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-013 | Falha de conexão ao salvar | Wi-Fi e dados desligados ao cadastrar e ao inativar | Mensagem de conexão; nada “salvo” só na tela; dados mantidos para nova tentativa | ❌ FALHOU | Sem conexão, o serviço de bairros grava só no mock em memória, devolve sucesso e mostra bairros de exemplo; a API não recebe nada. Testado na web. |
 
 ## Detalhamento dos casos
 
@@ -419,8 +419,11 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Reprovado pelo testador. O teste foi feito na **web** (o celular não abre o app por causa do Expo Go SDK 58).
+- Nada chegou à API: não há `POST` nem `PATCH` novo no log, e o banco não tem `Serra do Estêvão`. O que falha é o comportamento da tela.
+- **Defeito (causa no código):** em `bairroService.ts`, quando a requisição falha sem resposta da API (rede caída), o cadastro, a edição e a inativação **não mostram erro**: gravam só em um mock em memória e devolvem sucesso. A listagem também troca os dados do banco pelos bairros de exemplo (`Centro`, `Bairro Novo`, `Vila Antiga`). Reproduzido com um teste temporário de unidade simulando “Network Error”: cadastro e inativação devolveram sucesso, e a lista trouxe o bairro novo entre os de exemplo. Esperado: mensagem de conexão, bairro fora da lista e campos preenchidos para nova tentativa (`getErrorMessage` já tem o texto “Erro de conexão com o servidor…”, mas o serviço não chega a repassar o erro).
+- **Web × celular:** em ambos o erro de rede chega sem `response`, então o serviço cai no mesmo mock. O resultado deve ser igual no celular; confirmar quando houver ambiente com Expo Go compatível. Os testes de conexão de outras telas passam no celular porque os serviços delas não têm esse mock de fallback.
+- Status: ❌ Falhou.
 
 ## Rastreabilidade
 
