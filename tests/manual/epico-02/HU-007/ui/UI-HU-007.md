@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Em execução | 13 | 4 | 6 | 0 | 3 |
+| ⏳ Em execução | 13 | 5 | 6 | 0 | 2 |
 
 ## Pré-condições
 
@@ -59,7 +59,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU007-UI-011 | Aluno e representante sem acesso | Menu do aluno e do representante; link `bairros` | Menu não exibido; link mostra Acesso Negado | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-011 | Aluno e representante sem acesso | Menu do aluno e do representante; link `bairros` | Menu não exibido; link mostra Acesso Negado | ✅ PASSOU | Link direto mostra Acesso Negado para aluno e representante; a API devolve 403 nas escritas. |
 | CT-HU007-UI-012 | Bairros no cadastro de aluno | Bairro novo e bairro inativo na etapa 3 do cadastro | Bairro ativo novo aparece; bairro inativo não aparece | ⏳ PENDENTE | Não executado. |
 | CT-HU007-UI-013 | Falha de conexão ao salvar | Wi-Fi e dados desligados ao cadastrar e ao inativar | Mensagem de conexão; nada “salvo” só na tela; dados mantidos para nova tentativa | ⏳ PENDENTE | Não executado. |
 
@@ -365,8 +365,10 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Aluno e representante não veem o menu de bairros. Ao abrir `http://localhost:3000/bairros` diretamente, aparece **Acesso Negado** (a proteção está no layout do administrador: papel diferente de `ADMINISTRADOR` redireciona para `/acesso-negado`).
+- Conferido na API com os dois perfis: `POST /bairros` devolve **403**.
+- `GET /bairros` responde 200 para aluno, representante e até sem login, mas só com bairros **ativos** (o inativo não vem); a lista pública é a que alimenta o cadastro de aluno (CT-012). Não é falha de acesso, pois só administrador cadastra, edita e inativa (RN-006).
+- Status: ✅ Passou.
 
 ---
 
