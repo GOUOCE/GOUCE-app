@@ -447,7 +447,15 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-001, CT-002, CT-010 | Telas não recriadas: seta volta ao Painel, formulários não limpam, edição não é descartada nem pede confirmação | [#245](https://github.com/GOUOCE/GOUCE-app/issues/245) · [BUG-HU007-UI-001](issues/BUG-HU007-UI-001-telas-de-bairros-nao-recriadas.md) |
+| CT-001 | Chave “Mostrar inativos” já vem ligada e a listagem mostra só a quantidade de pontos | [#246](https://github.com/GOUOCE/GOUCE-app/issues/246) · [BUG-HU007-UI-002](issues/BUG-HU007-UI-002-listagem-chave-inativos-e-pontos.md) |
+| CT-007, CT-009 | Tela sem inativar/reativar ponto e sem mostrar pontos inativos | [#247](https://github.com/GOUOCE/GOUCE-app/issues/247) · [BUG-HU007-UI-003](issues/BUG-HU007-UI-003-tela-sem-inativar-reativar-ponto.md) |
+| CT-002, CT-004 | Ponto `Praça da Matriz` pré-preenchido; aviso por baixo do modal; rótulo repetido | [#248](https://github.com/GOUOCE/GOUCE-app/issues/248) · [BUG-HU007-UI-004](issues/BUG-HU007-UI-004-cadastro-ponto-padrao-aviso-escondido.md) |
+| CT-013, CT-009 | Sem conexão o app mostra sucesso e dados de exemplo (mock); erro da reativação só no console | [#249](https://github.com/GOUOCE/GOUCE-app/issues/249) · [BUG-HU007-UI-005](issues/BUG-HU007-UI-005-sem-conexao-mostra-sucesso-com-mock.md) |
+| CT-012 | Lista de bairros do cadastro de aluno é fixa; envio do nome do bairro dá 500 | [#250](https://github.com/GOUOCE/GOUCE-app/issues/250) · [BUG-HU007-UI-006](issues/BUG-HU007-UI-006-cadastro-aluno-lista-de-bairros-fixa.md) |
+| CT-004, CT-005 | Sem regra de caracteres e de tamanho mínimo na API (regra proposta no PR #244) | [#251](https://github.com/GOUOCE/GOUCE-app/issues/251) · [BUG-HU007-UI-007](issues/BUG-HU007-UI-007-sem-regra-de-caracteres-no-nome.md) |
+| CT-003 | Ponto com mesmo nome em outro bairro é bloqueado pela API | [#210](https://github.com/GOUOCE/GOUCE-app/issues/210) (já aberta na suíte de API) |
+| CT-007 | Ponto retirado é apagado, sem soft delete | [#211](https://github.com/GOUOCE/GOUCE-app/issues/211) (já aberta na suíte de API) |
 
 ## Observações gerais
 
