@@ -11,14 +11,14 @@
 | Tela | Painel do administrador → aba **Cadastros** → **Frota**; **Cadastrar Ônibus** e **Editar Ônibus**. Implementação consultada no PR #179, ainda aberto. |
 | Ambiente | Desenvolvimento — app no celular (Expo Go) ou web (`http://localhost:3000`); preencher branch e commit realmente executados |
 | Total de casos | 13 |
-| Última execução | Não realizada |
+| Última execução | 2026-10-26 |
 | Testador | Cauan Ricardo |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 13 | 0 | 0 | 0 | 0 | 13 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 🔄 Em andamento | 13 | 0 | 1 | 0 | 12 |
 
 ## Pré-condições
 
@@ -40,7 +40,7 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU009-UI-001 | Abrir a frota, buscar e conferir lista vazia | Banco vazio; depois um ativo e um inativo; placa/nome e busca inexistente | Sem exemplos inventados; só ativos por padrão; capacidades e busca corretas | ⏳ PENDENTE | Depende da tela do PR #179. |
+| CT-HU009-UI-001 | Abrir a frota, buscar e conferir lista vazia | Banco vazio; depois um ativo e um inativo; placa/nome e busca inexistente | Sem exemplos inventados; só ativos por padrão; capacidades e busca corretas | ❌ FALHOU | Com o banco vazio a lista mostra os ônibus de exemplo (`OCR-1234`, `OCR-5521`, `OCR-8890`), a chave “Mostrar inativos” vem ligada e a seta volta ao Painel. Busca e massa corretas. |
 | CT-HU009-UI-002 | Cadastrar e conferir persistência | `QXD2E45`, 44 assentos, 20 em pé | Confirmação, sucesso, listagem atualizada e registro na API após reabrir | ⏳ PENDENTE | Não executado. |
 | CT-HU009-UI-003 | Normalizar placa e evitar duplicidade contra exemplos | `ABC-1234`, `def-2g34`, `OCR-1234` inexistentes no banco | Maiúsculas/sem hífen; formatos aceitos; exemplo interno não bloqueia cadastro legítimo | ⏳ PENDENTE | Não executado. |
 | CT-HU009-UI-004 | Bloquear duplicidade de placa ativa e inativa | `QXD2E45` e variações; `XYZ9K87` inativo | “Este veículo já está registrado.”; nenhum novo registro | ⏳ PENDENTE | Não executado. |
@@ -89,8 +89,11 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Banco vazio** (`GET /onibus` devolveu `[]`): a listagem mostrou os ônibus de exemplo `OCR-1234`, `OCR-5521` e `OCR-8890`, que não existem no banco, um deles na lista de inativos. Pelo código, `frotaService.listarOnibus` usa a lista de exemplo (`ONIBUS_MOCK`) sempre que a API devolve lista vazia.
+- A chave **Mostrar inativos** já vem **ligada**; o esperado é desligada (AC-01, AC-11). Na tela, `frota/index.tsx` inicia o estado com `useState(true)`.
+- **Com a massa** (PC-04, preparada pela API: `ABC1D23` ativo, 44 assentos e 20 em pé; `XYZ9K87` inativo, 32 e 0): a listagem mostra os dois ônibus, o ativo entre as ativas e o inativo identificado; os exemplos somem porque a API deixou de devolver lista vazia. A busca filtra corretamente.
+- **Defeito:** a seta de voltar leva ao **Painel**, e não a **Cadastros**; ao abrir **Novo** e **Editar**, a seta também leva ao Painel, e não à listagem **Frota**. As telas **Cadastrar** e **Editar** reabrem com os dados da vez anterior, sem limpar. É o mesmo defeito da HU-007 ([#245](https://github.com/GOUOCE/GOUCE-app/issues/245)) e da HU-008 ([#256](https://github.com/GOUOCE/GOUCE-app/issues/256)): as telas ficam numa aba oculta e `router.back()` cai na primeira aba (`frota/index.tsx`, `cadastrar.tsx` e `editar.tsx`).
+- Status: ❌ Falhou.
 
 ---
 
@@ -416,7 +419,9 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-001 | Com o banco vazio a lista mostra ônibus de exemplo (`OCR-1234`, `OCR-5521`, `OCR-8890`) | Issue a abrir ao final da suíte |
+| CT-001 | Chave “Mostrar inativos” já vem ligada na listagem de frota | Issue a abrir ao final da suíte (mesma causa de [#257](https://github.com/GOUOCE/GOUCE-app/issues/257)) |
+| CT-001 | Telas de frota não recriadas: a seta volta ao Painel e Cadastrar/Editar reabrem com dados anteriores | Issue a abrir ao final da suíte (mesma causa de [#256](https://github.com/GOUOCE/GOUCE-app/issues/256)) |
 
 ## Observações gerais
 
