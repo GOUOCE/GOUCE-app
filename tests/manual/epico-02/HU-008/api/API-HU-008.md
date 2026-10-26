@@ -9,16 +9,16 @@
 | Camada | API |
 | Tipo de teste | Funcional manual — suíte essencial (baseada em risco) |
 | Endpoints | `GET /faculdades`, `GET /faculdades/{id}`, `POST /faculdades`, `PATCH /faculdades/{id}`, `PATCH /faculdades/{id}/inativar` e `PATCH /faculdades/{id}/ativar` — `application/json`. Corpo: `{"nome_faculdade": "...", "campus_faculdade": "...", "sigla": "..."}` (a API também aceita `nome` e `campus`; `sigla` é opcional) |
-| Ambiente | A preencher — URL, branch e commit testados |
+| Ambiente | Stack Docker isolada com banco limpo (`docker compose -p atu-api`), API em `http://localhost:8001`, branch `feature/testes-api-hu-008`, commit `5e7301a0` (`develop`). Migrations aplicadas até a 75 com um contorno de ambiente (ver Observações gerais) |
 | Total de casos | 12 |
-| Última execução | Não realizada |
+| Última execução | 2026-10-25 |
 | Testador | Cauan Ricardo — execução com apoio de IA (Claude Code) |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 12 | 0 | 0 | 0 | 0 | 12 |
+| ❌ Reprovada | 12 | 6 | 4 | 1 | 1 | 0 |
 
 ## Pré-condições
 
@@ -37,18 +37,18 @@ Executar na ordem abaixo. São **12 casos essenciais**. Todas as chamadas usam o
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU008-API-001 | Listar faculdades e filtrar por status | Sem filtro; `ativo=true`; `ativo=false`; sem token | HTTP 200; filtro respeitado; sem token só ativas | ⏳ PENDENTE | Não executado. |
-| CT-HU008-API-002 | Cadastrar faculdade válida | `UFC` / `Quixadá`; `"  IFCE  "` / `"  Quixadá "` | HTTP 201 “Operação realizada com sucesso”; criada ativa; espaços removidos | ⏳ PENDENTE | Não executado. |
-| CT-HU008-API-003 | Mesmo nome em outro campus | `UFC` / `Fortaleza` | HTTP 201 | ⏳ PENDENTE | Não executado. |
-| CT-HU008-API-004 | Duplicidade no cadastro e na edição | `UFC`/`Quixadá` em variações; faculdade inativa; edição para nome+campus em uso | HTTP 409 “Esta faculdade já está cadastrada.”; nada criado nem alterado | ⏳ PENDENTE | Não executado. |
-| CT-HU008-API-005 | Obrigatórios e limites | Sem nome; sem campus; em branco; 256 caracteres; edição esvaziando | HTTP 422 com campo e motivo em português; nada gravado | ⏳ PENDENTE | Não executado. |
-| CT-HU008-API-006 | Editar faculdade | Trocar só o campus; trocar só o nome; id inexistente | HTTP 200; 404 “Faculdade não encontrada.”; conflito detectado com o outro campo atual | ⏳ PENDENTE | Não executado. |
-| CT-HU008-API-007 | Inativar e reativar (soft delete) | `Uniateneu`/`Ocara`: inativar, repetir, ativar, repetir; id inexistente | 200 nas válidas; registro mantido; 409 ou resposta clara nas repetidas; 404 no inexistente | ⏳ PENDENTE | Não executado. |
-| CT-HU008-API-008 | Inativação pelo `PATCH` com `ativo` | `{"ativo": false}` na edição | Mesmas regras e auditoria da rota de inativar (ou campo não aceito) | ⏳ PENDENTE | Não executado. |
-| CT-HU008-API-009 | Auditoria das operações de escrita | Operações dos CT-002, 006 e 007 | Um registro por cadastro, edição, inativação e reativação | ⏳ PENDENTE | Não executado. |
-| CT-HU008-API-010 | Acesso sem privilégio | Token de aluno; token de representante; sem token | HTTP 403 (aluno e representante) e 401 (sem token) nas rotas de escrita | ⏳ PENDENTE | Não executado. |
-| CT-HU008-API-011 | Faculdade inativa fora de novos vínculos e histórico preservado | Promover representante em faculdade inativa; cadastro de aluno com faculdade inativa; aluno já vinculado | Novos vínculos recusados; vínculo existente mantido | ⏳ PENDENTE | Não executado. |
-| CT-HU008-API-012 | Bloqueio por alunos agendados no futuro | Faculdade com agendamento futuro | HTTP 409 “Esta instituição possui viagens programadas pendentes. Não é possível inativar no momento.” | ⏳ PENDENTE | Depende da HU-013 (agenda). Sem ela, marcar 🚫. |
+| CT-HU008-API-001 | Listar faculdades e filtrar por status | Sem filtro; `ativo=true`; `ativo=false`; sem token | HTTP 200; filtro respeitado; sem token só ativas | ✅ PASSOU | HTTP 200; filtros respeitados; sem token só ativas; `GET /faculdades/{id}` da inativa: 200 (admin) e 404 (sem token). |
+| CT-HU008-API-002 | Cadastrar faculdade válida | `UFC` / `Quixadá`; `"  IFCE  "` / `"  Quixadá "` | HTTP 201 “Operação realizada com sucesso”; criada ativa; espaços removidos | ✅ PASSOU | HTTP 201 nas três; espaços removidos; sem sigla aceito (`sigla: null`). |
+| CT-HU008-API-003 | Mesmo nome em outro campus | `UFC` / `Fortaleza` | HTTP 201 | ✅ PASSOU | HTTP 201 para `UFC` / `Fortaleza`; sigla repetida aceita; `UFC` / `Quixadá` intacta. |
+| CT-HU008-API-004 | Duplicidade no cadastro e na edição | `UFC`/`Quixadá` em variações; faculdade inativa; edição para nome+campus em uso | HTTP 409 “Esta faculdade já está cadastrada.”; nada criado nem alterado | ✅ PASSOU | HTTP 409 nos itens 1 a 4 (variações, faculdade inativa e edições); nada criado nem alterado. |
+| CT-HU008-API-005 | Obrigatórios e limites | Sem nome; sem campus; em branco; 256 caracteres; edição esvaziando | HTTP 422 com campo e motivo em português; nada gravado | ⚠️ PARCIAL | HTTP 422 em todas e nada gravado; mas a mensagem é só “Valor inválido.”, sem o motivo. |
+| CT-HU008-API-006 | Editar faculdade | Trocar só o campus; trocar só o nome; id inexistente | HTTP 200; 404 “Faculdade não encontrada.”; conflito detectado com o outro campo atual | ✅ PASSOU | HTTP 200 nas edições de campo isolado; 404 “Faculdade não encontrada.”; campos não enviados mantidos. |
+| CT-HU008-API-007 | Inativar e reativar (soft delete) | `Uniateneu`/`Ocara`: inativar, repetir, ativar, repetir; id inexistente | 200 nas válidas; registro mantido; 409 ou resposta clara nas repetidas; 404 no inexistente | ❌ FALHOU | Repetir inativar/ativar devolve 200 (esperado 409) e grava auditoria duplicada; demais verificações corretas. |
+| CT-HU008-API-008 | Inativação pelo `PATCH` com `ativo` | `{"ativo": false}` na edição | Mesmas regras e auditoria da rota de inativar (ou campo não aceito) | ❌ FALHOU | `PATCH` com `{"ativo": false}` inativa a faculdade sem gravar auditoria. |
+| CT-HU008-API-009 | Auditoria das operações de escrita | Operações dos CT-002, 006 e 007 | Um registro por cadastro, edição, inativação e reativação | ❌ FALHOU | Só inativar/ativar geram auditoria (e duplicada nas repetições); cadastro e edição não geram. |
+| CT-HU008-API-010 | Acesso sem privilégio | Token de aluno; token de representante; sem token | HTTP 403 (aluno e representante) e 401 (sem token) nas rotas de escrita | ✅ PASSOU | 403 (aluno e representante) e 401 (sem token) nas 4 rotas; nada alterado; aluno vê só ativas. |
+| CT-HU008-API-011 | Faculdade inativa fora de novos vínculos e histórico preservado | Promover representante em faculdade inativa; cadastro de aluno com faculdade inativa; aluno já vinculado | Novos vínculos recusados; vínculo existente mantido | ❌ FALHOU | Vínculo mantido e promoção recusada (422 “Faculdade inativa.”); mas o cadastro de aluno com faculdade inativa foi aceito (201). |
+| CT-HU008-API-012 | Bloqueio por alunos agendados no futuro | Faculdade com agendamento futuro | HTTP 409 “Esta instituição possui viagens programadas pendentes. Não é possível inativar no momento.” | 🚫 BLOQUEADO | Agenda de viagens (HU-013) ausente na `develop`: nenhuma rota de agendamento no OpenAPI. |
 
 ## Detalhamento dos casos
 
@@ -71,8 +71,10 @@ Executar na ordem abaixo. São **12 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `GET /faculdades` (sem filtro): 6 itens, 5 ativos e a `Uniateneu` inativa. `?ativo=true`: 5 ativas. `?ativo=false`: só a `Uniateneu`. Cada item tem `id_faculdade`, `nome_faculdade`, `campus_faculdade`, `sigla` e `ativo`.
+- Sem token com `?ativo=false`: HTTP `200` com só as 5 ativas.
+- `GET /faculdades/6` (inativa): `200` com o token do administrador; `404` “Faculdade não encontrada.” sem token.
+- Status: ✅ Passou.
 
 ---
 
@@ -97,8 +99,10 @@ Executar na ordem abaixo. São **12 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `UFC` / `Quixadá`: HTTP `201`, “Operação realizada com sucesso”, `ativo: true`.
+- `"  IFCE  "` / `"  Quixadá "` / `" IFCE "`: `201`; gravados `IFCE`, `Quixadá` e `IFCE`, sem espaços.
+- `UNILAB` / `Redenção` sem sigla: `201` com `sigla: null` (a API aceita; a tela exige a sigla). Registrado como observação.
+- Status: ✅ Passou.
 
 ---
 
@@ -119,8 +123,8 @@ Executar na ordem abaixo. São **12 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `UFC` / `Fortaleza` com sigla `UFC` (já usada pela UFC/Quixadá): HTTP `201`, “Operação realizada com sucesso”. A sigla repetida não causa conflito. A `UFC` / `Quixadá` não foi alterada.
+- Status: ✅ Passou.
 
 ---
 
@@ -145,8 +149,10 @@ Executar na ordem abaixo. São **12 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Item 1 (`UFC`/`Quixadá`, `ufc`/`quixadá`, `UFC`/`QUIXADÁ`, `" UFC "`/`" Quixadá "`): HTTP `409` “Esta faculdade já está cadastrada.” nas quatro.
+- Item 2 (`Uniateneu`/`Ocara` criada, inativada e recriada): `409`. Item 3 (campus da `UFC`/`Fortaleza` para `Quixadá`): `409`. Item 4 (nome da `IFCE` para `UFC`): `409`.
+- Nenhum `500`; nenhuma faculdade extra criada (além da `Uniateneu`); `UFC`/`Fortaleza` e `IFCE` mantiveram os dados.
+- Status: ✅ Passou.
 
 ---
 
@@ -173,8 +179,10 @@ Em `PATCH /faculdades/{id da IFCE}`: `{"nome_faculdade": ""}` e `{"campus_faculd
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- HTTP `422` em todas: `{}`, nome vazio e em branco, campus vazio e em branco, nome e campus com 256 caracteres, sigla com 51 caracteres, e na edição nome vazio e campus em branco. Nada criado; a `IFCE` ficou intacta. Nenhum `500` e nenhum texto cru do framework.
+- A mensagem de todas é só `"Valor inválido."`, com o campo certo (`nome_faculdade`, `campus_faculdade`, `sigla`), mas sem o motivo (esperado, por exemplo, “O nome da faculdade é obrigatório.”).
+- Defeito: [BUG-HU008-API-005](issues/BUG-HU008-API-005-mensagens-de-validacao-genericas.md).
+- Status: ⚠️ Parcial.
 
 ---
 
@@ -198,8 +206,10 @@ Em `PATCH /faculdades/{id da IFCE}`: `{"nome_faculdade": ""}` e `{"campus_faculd
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Campus da `IFCE` para `Quixadá Centro`: HTTP `200`, “Operação realizada com sucesso”; só o campus mudou.
+- Nome da `IFCE` para `Instituto Federal do Ceará`: `200`; campus e sigla mantidos.
+- `/faculdades/999999`: `404` “Faculdade não encontrada.”
+- Status: ✅ Passou.
 
 ---
 
@@ -226,8 +236,11 @@ Em `PATCH /faculdades/{id da IFCE}`: `{"nome_faculdade": ""}` e `{"campus_faculd
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Inativar a `Uniateneu` (já inativa pelo CT-004): `200` “Operação realizada com sucesso” (esperado `409`). Reativar: `200`; reativar de novo: `200` (esperado `409`). Inativar e inativar de novo: `200` e `200`.
+- Cada repetição gravou um novo registro em `log_auditoria` (6 registros para 6 chamadas).
+- Corretos: soft delete (registro mantido), `?ativo=false` do administrador lista a faculdade, sem token ela some e `GET /faculdades/{id}` sem token dá `404`; id `999999` dá `404` nas duas rotas.
+- Defeito: [BUG-HU008-API-001](issues/BUG-HU008-API-001-repetir-inativar-ativar-retorna-200-e-duplica-auditoria.md).
+- Status: ❌ Falhou.
 
 ---
 
@@ -248,8 +261,10 @@ Em `PATCH /faculdades/{id da IFCE}`: `{"nome_faculdade": ""}` e `{"campus_faculd
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `PATCH /faculdades/3` com `{"ativo": false}`: HTTP `200`, a `IFCE` ficou `ativo: false` (conferido em `GET`). `log_auditoria` continuou com 6 registros: nenhuma auditoria gravada.
+- `{"ativo": true}`: `200`, `ativo: true`, também sem auditoria. A `IFCE` foi deixada ativa.
+- Defeito: [BUG-HU008-API-002](issues/BUG-HU008-API-002-patch-com-ativo-altera-status-sem-auditoria.md).
+- Status: ❌ Falhou.
 
 ---
 
@@ -270,8 +285,10 @@ Em `PATCH /faculdades/{id da IFCE}`: `{"nome_faculdade": ""}` e `{"campus_faculd
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `log_auditoria` (`entidade = 'faculdade'`) tem 6 registros, todos da `Uniateneu` e do administrador A (`usuario_id` 1): `INATIVAR`, `INATIVAR`, `ATIVAR`, `ATIVAR`, `INATIVAR`, `INATIVAR` (3 deles duplicados por repetição, ver CT-007).
+- Os 6 cadastros de faculdade e as 2 edições da `IFCE` **não geraram** registro. As tentativas recusadas (CT-004 e CT-005) corretamente não geraram.
+- Defeito: [BUG-HU008-API-003](issues/BUG-HU008-API-003-cadastro-e-edicao-sem-auditoria.md).
+- Status: ❌ Falhou.
 
 ---
 
@@ -294,8 +311,9 @@ Em `PATCH /faculdades/{id da IFCE}`: `{"nome_faculdade": ""}` e `{"campus_faculd
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Aluno e representante: HTTP `403` “Acesso negado” em `POST /faculdades`, `PATCH /faculdades/{id}`, `/inativar` e `/ativar`. Sem token: `401` “Não autenticado” nas quatro.
+- `GET /faculdades?ativo=false` com token de aluno: só as 5 faculdades ativas. A `IFCE` permaneceu inalterada.
+- Status: ✅ Passou.
 
 ---
 
@@ -309,7 +327,7 @@ Em `PATCH /faculdades/{id da IFCE}`: `{"nome_faculdade": ""}` e `{"campus_faculd
 2. Inativar a `UFC` / `Quixadá`.
 3. Conferir de novo o `faculdade_id` do aluno (banco ou `GET /alunos/{id}`).
 4. `POST /representantes/promover` com a `UFC` inativa e o aluno do PC-06.
-5. `POST /alunos` com o `faculdade_id` da `UFC` inativa e os demais dados válidos.
+5. `POST /usuarios/cadastrar` (`multipart/form-data`) com o `faculdade_id` da `UFC` inativa e os demais dados válidos.
 6. Reativar a `UFC` ao final.
 
 **Resultado esperado**
@@ -320,8 +338,11 @@ Em `PATCH /faculdades/{id da IFCE}`: `{"nome_faculdade": ""}` e `{"campus_faculd
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O aluno vinculado à `UFC` / `Quixadá` (`aluno.faculdade_id = 2`) manteve o vínculo após a inativação (conferido no banco).
+- `POST /representantes/promover` com a `UFC` inativa: HTTP `422` “Faculdade inativa.”; nenhuma promoção gravada.
+- `POST /usuarios/cadastrar` (a rota `POST /alunos` da suíte não existe) com `faculdade_id = 2` inativa: HTTP `201`, usuário criado (id 5). Esperado: recusa.
+- Defeito: [BUG-HU008-API-004](issues/BUG-HU008-API-004-cadastro-de-aluno-aceita-faculdade-inativa.md).
+- Status: ❌ Falhou.
 
 ---
 
@@ -341,8 +362,9 @@ Em `PATCH /faculdades/{id da IFCE}`: `{"nome_faculdade": ""}` e `{"campus_faculd
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- A `develop` (commit `5e7301a0`) não tem a agenda de viagens: o OpenAPI não lista nenhum caminho de agendamento, viagem ou rota. Sem agendamento futuro não há como verificar o bloqueio.
+- Dependência: HU-013. Reexecutar quando a agenda estiver na branch testada.
+- Status: 🚫 Bloqueado.
 
 ## Rastreabilidade
 
@@ -365,7 +387,11 @@ Em `PATCH /faculdades/{id da IFCE}`: `{"nome_faculdade": ""}` e `{"campus_faculd
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-HU008-API-007 | Repetir inativar/ativar devolve 200 e grava auditoria duplicada | [#217](https://github.com/GOUOCE/GOUCE-app/issues/217) |
+| CT-HU008-API-008 | `PATCH` com `ativo` altera o status sem auditoria | [#218](https://github.com/GOUOCE/GOUCE-app/issues/218) |
+| CT-HU008-API-009 | Cadastro e edição de faculdade não geram auditoria | [#219](https://github.com/GOUOCE/GOUCE-app/issues/219) |
+| CT-HU008-API-011 | Cadastro de aluno aceita faculdade inativa | [#220](https://github.com/GOUOCE/GOUCE-app/issues/220) |
+| CT-HU008-API-005 | Mensagens de validação genéricas (“Valor inválido.”) | [#221](https://github.com/GOUOCE/GOUCE-app/issues/221) |
 
 ## Observações gerais
 
@@ -379,4 +405,8 @@ Em `PATCH /faculdades/{id da IFCE}`: `{"nome_faculdade": ""}` e `{"campus_faculd
   - `sigla` é opcional na API e obrigatória na tela (CT-002).
 - A listagem e a consulta por id são públicas (sem token devolvem só ativas), pois o cadastro de aluno precisa delas. Não é falha.
 - A decisão sobre a duplicidade valer também para faculdades inativas está registrada na [issue #185](https://github.com/GOUOCE/GOUCE-app/issues/185); os casos seguem o AC-03.
+- **Execução (2026-10-25):** stack isolada (`docker compose -p atu-api`), banco limpo, sem tocar no banco de desenvolvimento. Resultado: 6 passaram, 4 falharam, 1 parcial e 1 bloqueado.
+- **Contorno de ambiente (não é do caso):** em banco vazio a migration `69_faculdade_fk_in_aluno` falha (`column f.sigla does not exist`); a migration 68 foi copiada para um diretório temporário com a coluna `sigla`, sem alterar o repositório. Defeito já aberto na [issue #215](https://github.com/GOUOCE/GOUCE-app/issues/215).
+- **Massa do ambiente:** a migration `69` cria a faculdade `UFC` / `Campus Quixadá` (id 1) e a `74` cria o bairro `Centro`; não conflitam com a massa da suíte (`UFC` / `Quixadá`). Os alunos de apoio (ativo, representante e um terceiro) foram criados pela API, com `bairro_id = 1`.
+- **Risco confirmado:** repetição de inativar/ativar com auditoria duplicada, `PATCH` com `ativo` sem auditoria, cadastro e edição sem auditoria e cadastro de aluno sem checar a faculdade ativa foram todos reproduzidos. O bloqueio por agendamento (CT-012) não pôde ser exercitado.
 - Ao final, deixar as faculdades de teste ativas ou inativas conforme combinado com o líder, sem apagar registros.
