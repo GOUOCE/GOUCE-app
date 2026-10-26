@@ -192,7 +192,7 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- **Defeito:** nome, sigla e campus **aceitam emoji e caracteres especiais**. Não há regra de caracteres na tela (`faculdadeSchema.ts` só confere o tamanho) nem na API (`faculdade_dto.py`). É o mesmo defeito da HU-007 ([#251](https://github.com/GOUOCE/GOUCE-app/issues/251)). A regra proposta para a HU-008 está na branch `docs/regra-caracteres-faculdade` (critério 12 e cenários BDD).
+- **Defeito:** nome, sigla e campus **aceitam emoji e caracteres especiais**. Não há regra de caracteres na tela (`faculdadeSchema.ts` só confere o tamanho) nem na API (`faculdade_dto.py`). É o mesmo defeito da HU-007 ([#251](https://github.com/GOUOCE/GOUCE-app/issues/251)). Issue [#261](https://github.com/GOUOCE/GOUCE-app/issues/261). A regra proposta para a HU-008 está no PR [#255](https://github.com/GOUOCE/GOUCE-app/pull/255) (critério 12 e cenários BDD).
 - **Relatado pelo testador:** o nome com 151 caracteres foi aceito e uma das tentativas não mostrou mensagem em nenhum campo. **A confirmar:** no banco a faculdade criada (id 9) tem nome de exatamente 150 caracteres, sigla vazia e campus `C  s`; pelo código, 151 caracteres deveriam ser bloqueados com “O nome da instituição deve ter no máximo 150 caracteres” (a tela apara espaços no início e no fim antes de contar). Repetir a tentativa com um texto de 151 caracteres sem espaços nas pontas e anotar qual tentativa ficou sem mensagem.
 - Pelo código, os limites da tela e da API **não coincidem**: a tela exige nome de 3 a 150, sigla de 2 a 20 e campus de 2 a 100; a API aceita de 1 a 255 (nome e campus) e até 50 (sigla). Quem chamar a API direto passa por cima da tela.
 - Status: ❌ Falhou.
@@ -402,17 +402,15 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| CT-001, CT-002, CT-009 | Telas de faculdades não recriadas: a seta volta ao Painel (listagem, Cadastrar e Editar), Cadastrar/Editar reabrem com os dados da vez anterior e Editar sai sem pedir confirmação | [#245](https://github.com/GOUOCE/GOUCE-app/issues/245) cobre bairros e sugere corrigir também faculdades; issue própria a abrir ao final da suíte |
-| CT-012 | Sem conexão com a API o app mostra sucesso e a lista de exemplo (`FACULDADES_MOCK`) em vez de erro; nada é gravado | [#249](https://github.com/GOUOCE/GOUCE-app/issues/249) é de bairros; issue própria a abrir ao final da suíte |
-| CT-011 | Instituição de Ensino fixa no cadastro de aluno (`UFC`, `IFCE`, `UNILAB`, `Estácio`, `Outra`) e no cadastro de representante (`UFC`, `IFCE`, `UECE`, campus Quixadá): não refletem as faculdades do banco nem escondem as inativas | [#192](https://github.com/GOUOCE/GOUCE-app/issues/192) cobre o envio do nome em vez do id no aluno; issue própria a abrir ao final da suíte (aluno e representante) |
-| CT-007 | Inativar a faculdade de `id` 1 é barrado pela lista de exemplo (“viagens programadas pendentes”) sem agendamento real e sem chamar a API | Issue própria a abrir ao final da suíte |
-| CT-005 | Nome, sigla e campus aceitam emoji e caracteres especiais (sem regra na tela nem na API) | [#251](https://github.com/GOUOCE/GOUCE-app/issues/251) é de bairros; issue própria a abrir ao final da suíte |
-| CT-005 | Limites de tamanho: relatado 151 caracteres aceito e tentativa sem mensagem (a confirmar); limites da API diferentes dos da tela | Issue própria a abrir ao final da suíte, depois de confirmar |
-| CT-002 | Cadastro com `Universidade Federal do Ceará` / `UFC` / `Campus Quixadá` é barrado pela lista de exemplo do app, sem chamar a API | Issue própria a abrir ao final da suíte |
-| CT-002 | A sigla não é enviada à API nem gravada no banco | Issue própria a abrir ao final da suíte |
-| CT-006 | A sigla editada não é salva nem exibida a partir do banco | Mesma causa do CT-002; issue própria a abrir ao final da suíte |
-| CT-002 | Mensagem de sucesso é uma barra preta, fora do padrão de pop-up, e o texto difere do requisito | Issue própria a abrir ao final da suíte |
-| CT-001 | Chave “Mostrar inativos” já vem ligada na listagem de faculdades | [#246](https://github.com/GOUOCE/GOUCE-app/issues/246) é de bairros; issue própria a abrir ao final da suíte |
+| CT-001, CT-002, CT-009 | Telas não recriadas: seta volta ao Painel, Cadastrar/Editar reabrem com os dados da vez anterior e Editar sai sem pedir confirmação | [#256](https://github.com/GOUOCE/GOUCE-app/issues/256) · [BUG-HU008-UI-001](issues/BUG-HU008-UI-001-telas-de-faculdades-nao-recriadas.md) |
+| CT-001 | Chave “Mostrar inativos” já vem ligada na listagem | [#257](https://github.com/GOUOCE/GOUCE-app/issues/257) · [BUG-HU008-UI-002](issues/BUG-HU008-UI-002-listagem-chave-inativos-ligada.md) |
+| CT-002, CT-007 | Cadastro (`UFC` / `Campus Quixadá`) e inativação do `id` 1 barrados pelos dados de exemplo do app, sem chamar a API | [#258](https://github.com/GOUOCE/GOUCE-app/issues/258) · [BUG-HU008-UI-003](issues/BUG-HU008-UI-003-dados-de-exemplo-barram-cadastro-e-inativacao.md) |
+| CT-002, CT-003, CT-006, CT-007 | Sigla não é enviada nem gravada; a tela inventa a sigla a partir do nome | [#259](https://github.com/GOUOCE/GOUCE-app/issues/259) · [BUG-HU008-UI-004](issues/BUG-HU008-UI-004-sigla-nao-enviada-nem-gravada.md) |
+| CT-002, CT-006, CT-007 | Sucesso em barra preta e com texto fora do requisito | [#260](https://github.com/GOUOCE/GOUCE-app/issues/260) · [BUG-HU008-UI-005](issues/BUG-HU008-UI-005-mensagem-de-sucesso-barra-preta.md) |
+| CT-005 | Nome, sigla e campus aceitam emoji e símbolos; limites da API diferentes dos da tela | [#261](https://github.com/GOUOCE/GOUCE-app/issues/261) · [BUG-HU008-UI-006](issues/BUG-HU008-UI-006-sem-regra-de-caracteres-e-limites-da-api.md) |
+| CT-011 | Lista de instituições fixa no cadastro de aluno e de representante | [#262](https://github.com/GOUOCE/GOUCE-app/issues/262) · [BUG-HU008-UI-007](issues/BUG-HU008-UI-007-instituicao-fixa-cadastro-aluno-e-representante.md) |
+| CT-012 | Sem conexão o app mostra sucesso e dados de exemplo em vez de erro | [#263](https://github.com/GOUOCE/GOUCE-app/issues/263) · [BUG-HU008-UI-008](issues/BUG-HU008-UI-008-sem-conexao-mostra-sucesso-com-mock.md) |
+| CT-002, CT-006 | Cadastro e edição de faculdade não geram registro de auditoria | [#219](https://github.com/GOUOCE/GOUCE-app/issues/219) (já aberta na suíte de API) |
 
 ## Observações gerais
 
@@ -425,3 +423,9 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
   - a lista de instituições do cadastro de aluno é fixa no app (#192) (CT-011).
 - O bloqueio por agendamentos futuros (AC-06) depende da HU-013 e fica para quando a agenda estiver na develop.
 - Ocultar senhas e dados pessoais nas evidências.
+- **Pontos em aberto ao fechar a suíte:**
+  - **CT-008** (mostrar inativos e reativar): sem confirmação; o log da API não registrou `PATCH /ativar` e as faculdades 5 e 7 continuam inativas.
+  - **CT-005**: o relato de 151 caracteres aceitos não foi reproduzido pelo código; repetir com um texto de 151 caracteres sem espaços nas pontas (no banco a faculdade criada tem 150).
+  - **CT-006**, passo 3: a edição para uma combinação já existente ainda não foi executada (nenhum `PATCH` com `409` no log).
+  - **Acentuação:** `Campus Quixada` e `Campus Quixadá` são faculdades diferentes para a API; decisão de produto pendente (#207), tratada no PR #255.
+- **Regra de caracteres e tamanho** de nome, sigla e campus proposta no PR [#255](https://github.com/GOUOCE/GOUCE-app/pull/255).
