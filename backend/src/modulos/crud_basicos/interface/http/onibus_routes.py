@@ -221,7 +221,7 @@ async def buscar_onibus(
 async def criar_onibus(
     placa: str = Form(..., description="Placa do ônibus"),
     assentos: int = Form(..., description="Quantidade de assentos", ge=0),
-    capacidade_em_pe: int = Form(0, description="Capacidade máxima de alunos em pé", ge=0),
+    capacidade_em_pe: int = Form(None, description="Capacidade máxima de alunos em pé"),
     apelido: Optional[str] = Form(None, description="Apelido do veículo"),
     id_foto_onibus: Optional[str] = Form(None, description="UUID da foto já cadastrada em arquivos"),
     foto: Optional[UploadFile] = File(None, description="Arquivo de imagem da foto do ônibus"),
@@ -231,6 +231,13 @@ async def criar_onibus(
     _: dict = Depends(admin_required),
 ):
     try:
+
+        if capacidade_em_pe is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="A capacidade em pé é obrigatória."
+            )
+
         id_foto_onibus = id_foto_onibus.strip() or None if id_foto_onibus is not None else None
 
         dto = CriarOnibusDTO(
