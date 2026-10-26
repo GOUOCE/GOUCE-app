@@ -42,7 +42,7 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 | CT-HU008-UI-001 | Acessar a gestão de faculdades | Cadastros → Faculdades | Listagem só de ativas; busca; chave “Mostrar inativos” desligada; botão para cadastrar | ❌ FALHOU | A chave “Mostrar inativos” já vem ligada; a seta de voltar leva ao Painel, não a Cadastros. Listagem, busca e mensagem de lista vazia funcionam. |
 | CT-HU008-UI-002 | Cadastrar faculdade | `Universidade Federal do Ceará` / `UFC` / `Campus Quixadá` | Sucesso; na listagem; continua após reabrir o app e existe na API | ❌ FALHOU | Com os dados do caso o app barra o cadastro (lista de exemplo interna) e nada chega à API. Com outro nome o cadastro é gravado, mas a sigla não é salva e o sucesso aparece numa barra preta, fora do padrão de pop-up. |
 | CT-HU008-UI-003 | Mesmo nome em outro campus | Mesma instituição em `Campus Fortaleza` | Cadastro aceito | ✅ PASSOU | Cadastro aceito; conferido no banco. A sigla continua sem ser gravada (defeito do CT-002). |
-| CT-HU008-UI-004 | Cadastro duplicado | Nome e campus iguais, com variação de maiúsculas e espaços | “Esta faculdade já está cadastrada.”; nada criado | ⏳ PENDENTE | Não executado. |
+| CT-HU008-UI-004 | Cadastro duplicado | Nome e campus iguais, com variação de maiúsculas e espaços | “Esta faculdade já está cadastrada.”; nada criado | ⏳ PENDENTE | Tentativas 1 a 4 passaram (bloqueio vem da API, `409`). Falta a tentativa 5 (faculdade inativa), que depende do CT-007. |
 | CT-HU008-UI-005 | Campos obrigatórios e limites | Campos vazios; nome de 2 letras; textos longos | Campos destacados com mensagem; nada salvo | ⏳ PENDENTE | Não executado. |
 
 ### Seção B — Edição, inativação e reativação
@@ -166,8 +166,10 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Tentativas 1 a 4 feitas sobre a faculdade já gravada `Universidade Federal do Ceará` / `Campus Fortaleza` (id 4), e não sobre `Campus Quixadá`, que cairia na lista de exemplo do app e esconderia o bloqueio da API: igual, minúsculas, maiúsculas e com dois espaços no início e no fim (nome e campus). Nas quatro apareceu “Esta faculdade já está cadastrada.”.
+- O bloqueio vem da **API**: o log registrou `POST /faculdades` com `409 Conflict` nas tentativas, e o banco não ganhou nenhuma faculdade com esses dados.
+- Falta a **tentativa 5** (repetir uma faculdade inativa): executar depois do CT-007, com a faculdade inativada pela tela.
+- Status: ⏳ Pendente (1 a 4 passaram).
 
 ---
 
