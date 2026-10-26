@@ -11,14 +11,14 @@
 | Tela            | Painel do administrador → aba **Cadastros** → **Faculdades** (listagem **Faculdades**, **Cadastrar Faculdade** e **Editar**) |
 | Ambiente        | Desenvolvimento — app no celular (Expo Go) ou versão web (`http://localhost:3000`) |
 | Total de casos  | 12 |
-| Última execução | Não realizada |
+| Última execução | 2026-10-26 |
 | Testador        | Cauan Ricardo |
 
 ## Resultado geral
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Não executada | 12 | 0 | 0 | 0 | 12 |
+| 🔄 Em andamento | 12 | 0 | 2 | 0 | 10 |
 
 ## Pré-condições
 
@@ -39,8 +39,8 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU008-UI-001 | Acessar a gestão de faculdades | Cadastros → Faculdades | Listagem só de ativas; busca; chave “Mostrar inativos” desligada; botão para cadastrar | ⏳ PENDENTE | Não executado. |
-| CT-HU008-UI-002 | Cadastrar faculdade | `Universidade Federal do Ceará` / `UFC` / `Campus Quixadá` | Sucesso; na listagem; continua após reabrir o app e existe na API | ⏳ PENDENTE | Não executado. |
+| CT-HU008-UI-001 | Acessar a gestão de faculdades | Cadastros → Faculdades | Listagem só de ativas; busca; chave “Mostrar inativos” desligada; botão para cadastrar | ❌ FALHOU | A chave “Mostrar inativos” já vem ligada; a seta de voltar leva ao Painel, não a Cadastros. Listagem, busca e mensagem de lista vazia funcionam. |
+| CT-HU008-UI-002 | Cadastrar faculdade | `Universidade Federal do Ceará` / `UFC` / `Campus Quixadá` | Sucesso; na listagem; continua após reabrir o app e existe na API | ❌ FALHOU | Com os dados do caso o app barra o cadastro (lista de exemplo interna) e nada chega à API. Com outro nome o cadastro é gravado, mas a sigla não é salva e o sucesso aparece numa barra preta, fora do padrão de pop-up. |
 | CT-HU008-UI-003 | Mesmo nome em outro campus | Mesma instituição em `Campus Fortaleza` | Cadastro aceito | ⏳ PENDENTE | Não executado. |
 | CT-HU008-UI-004 | Cadastro duplicado | Nome e campus iguais, com variação de maiúsculas e espaços | “Esta faculdade já está cadastrada.”; nada criado | ⏳ PENDENTE | Não executado. |
 | CT-HU008-UI-005 | Campos obrigatórios e limites | Campos vazios; nome de 2 letras; textos longos | Campos destacados com mensagem; nada salvo | ⏳ PENDENTE | Não executado. |
@@ -87,8 +87,10 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- A listagem abre, a busca filtra a lista e, sem resultado, aparece a mensagem de lista vazia.
+- A chave **Mostrar inativos** já vem **ligada** por padrão; o esperado é desligada (AC-01, AC-09). Na tela, `faculdades/index.tsx` inicia o estado com `useState(true)`. É o mesmo defeito da HU-007 ([#246](https://github.com/GOUOCE/GOUCE-app/issues/246)).
+- A seta de voltar da listagem leva ao **Painel**, e não a **Cadastros**. Observado também ao abrir **Cadastrar Faculdade** e **Editar**: a seta leva ao Painel, e não à listagem **Faculdades**. É o mesmo defeito da HU-007 ([#245](https://github.com/GOUOCE/GOUCE-app/issues/245)): as telas ficam numa aba oculta e o `router.back()` cai na primeira aba. As setas de **Cadastrar** e **Editar** serão conferidas de novo no CT-002 e no CT-006.
+- Status: ❌ Falhou.
 
 ---
 
@@ -113,8 +115,13 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Com os dados do caso** (`Universidade Federal do Ceará` / `UFC` / `Campus Quixadá`): ao confirmar, aparece “Esta faculdade já está cadastrada.” e nada é criado. O banco só tinha a `UFC` / `Campus Quixadá` do seed, e o log da API não registrou nenhum `POST /faculdades`. A causa está em `faculdadeService.ts`: `criarFaculdade` compara os dados com a lista de exemplo interna (`FACULDADES_MOCK`, cujo primeiro item é exatamente esses dados) antes de chamar a API. Defeito já mapeado como risco (nome + campus **ou** sigla + campus).
+- **Com outro nome** (`Universidade Mineira` / `Campus Centro`, que não bate com a lista de exemplo): antes de salvar aparece o pop-up “Realizar cadastro?”; depois de confirmar, a API responde `201 Created` e a faculdade é gravada no banco (id 2, ativa, nome e campus corretos).
+- **Defeito:** a **sigla não é gravada**. No banco o campo `sigla` da faculdade criada está vazio. `criarFaculdade` envia à API só `nome_faculdade` e `campus_faculdade`, sem a sigla (o `faculdade_dto.py` aceita o campo).
+- **Defeito:** o sucesso aparece como uma **barra preta (toast)** com o texto “Faculdade cadastrada com sucesso”, fora do padrão de pop-up de sucesso usado no resto do app (por exemplo, em administradores). O requisito pede “Operação realizada com sucesso”.
+- **Defeito:** as telas **Cadastrar Faculdade** e **Editar** não são recriadas. Ao sair sem salvar, ou ao salvar e voltar, a tela reabre com os dados da vez anterior (nome, sigla e campus), sem limpar. Mesmo defeito da HU-007 ([#245](https://github.com/GOUOCE/GOUCE-app/issues/245)).
+- Listagem após o cadastro e persistência depois de recarregar a página: ainda não relatadas neste caso.
+- Status: ❌ Falhou.
 
 ---
 
@@ -372,7 +379,11 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-001, CT-002 | Telas de faculdades não recriadas: a seta volta ao Painel (listagem, Cadastrar e Editar) e Cadastrar/Editar reabrem com os dados da vez anterior | [#245](https://github.com/GOUOCE/GOUCE-app/issues/245) cobre bairros e sugere corrigir também faculdades; issue própria a abrir ao final da suíte |
+| CT-002 | Cadastro com `Universidade Federal do Ceará` / `UFC` / `Campus Quixadá` é barrado pela lista de exemplo do app, sem chamar a API | Issue própria a abrir ao final da suíte |
+| CT-002 | A sigla não é enviada à API nem gravada no banco | Issue própria a abrir ao final da suíte |
+| CT-002 | Mensagem de sucesso é uma barra preta, fora do padrão de pop-up, e o texto difere do requisito | Issue própria a abrir ao final da suíte |
+| CT-001 | Chave “Mostrar inativos” já vem ligada na listagem de faculdades | [#246](https://github.com/GOUOCE/GOUCE-app/issues/246) é de bairros; issue própria a abrir ao final da suíte |
 
 ## Observações gerais
 
