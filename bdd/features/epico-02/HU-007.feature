@@ -149,6 +149,27 @@ Funcionalidade: Gerenciamento de Bairros e Pontos de Parada
         | Posto @#$%    |
 
 
+    # AC-12 - Tamanho mínimo do nome do bairro
+    @fluxo_infeliz @validacao_campos @prioridade_media
+    Cenário: Sistema bloqueia nome de bairro com menos de 3 caracteres
+      Quando o administrador seleciona "Novo Cadastro"
+      E preenche o nome do bairro com "Ab"
+      E adiciona o ponto de parada "Praça José de Barros"
+      E clica no botão "Salvar"
+      Então o sistema exibe a mensagem "Informe o nome do bairro com pelo menos 3 caracteres"
+      E o bairro não é cadastrado
+
+
+    # AC-12 - Tamanho mínimo do nome do ponto de parada
+    @fluxo_infeliz @validacao_campos @prioridade_media
+    Cenário: Sistema bloqueia nome de ponto de parada com menos de 2 caracteres
+      Quando o administrador seleciona "Novo Cadastro"
+      E preenche o nome do bairro com "Campo Velho"
+      E adiciona o ponto de parada "A"
+      Então o sistema exibe a mensagem "Informe um nome válido com pelo menos 2 caracteres."
+      E o ponto de parada não é adicionado
+
+
     # AC-12 - Números são aceitos no nome do ponto de parada
     @fluxo_feliz @validacao_campos @prioridade_media
     Cenário: Administrador cadastra ponto de parada com número no nome
