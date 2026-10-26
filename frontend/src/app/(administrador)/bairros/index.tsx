@@ -5,6 +5,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, Plus, Search, Pencil, Trash2, RotateCcw, X } from 'lucide-react-native';
 
 import { bairroService, BairroItem } from '@/services/bairroService';
+import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function BairrosListScreen() {
