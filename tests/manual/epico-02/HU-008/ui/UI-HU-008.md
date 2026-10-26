@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| 🔄 Em andamento | 12 | 1 | 2 | 0 | 9 |
+| 🔄 Em andamento | 12 | 1 | 3 | 0 | 8 |
 
 ## Pré-condições
 
@@ -43,7 +43,7 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 | CT-HU008-UI-002 | Cadastrar faculdade | `Universidade Federal do Ceará` / `UFC` / `Campus Quixadá` | Sucesso; na listagem; continua após reabrir o app e existe na API | ❌ FALHOU | Com os dados do caso o app barra o cadastro (lista de exemplo interna) e nada chega à API. Com outro nome o cadastro é gravado, mas a sigla não é salva e o sucesso aparece numa barra preta, fora do padrão de pop-up. |
 | CT-HU008-UI-003 | Mesmo nome em outro campus | Mesma instituição em `Campus Fortaleza` | Cadastro aceito | ✅ PASSOU | Cadastro aceito; conferido no banco. A sigla continua sem ser gravada (defeito do CT-002). |
 | CT-HU008-UI-004 | Cadastro duplicado | Nome e campus iguais, com variação de maiúsculas e espaços | “Esta faculdade já está cadastrada.”; nada criado | ⏳ PENDENTE | Tentativas 1 a 4 passaram (bloqueio vem da API, `409`). Falta a tentativa 5 (faculdade inativa), que depende do CT-007. |
-| CT-HU008-UI-005 | Campos obrigatórios e limites | Campos vazios; nome de 2 letras; textos longos | Campos destacados com mensagem; nada salvo | ⏳ PENDENTE | Não executado. |
+| CT-HU008-UI-005 | Campos obrigatórios e limites | Campos vazios; nome de 2 letras; textos longos | Campos destacados com mensagem; nada salvo | ❌ FALHOU | Nome, sigla e campus aceitam emoji e símbolos. Relatado: nome de 151 caracteres aceito e uma tentativa sem mensagem no campo (a conferir). |
 
 ### Seção B — Edição, inativação e reativação
 
@@ -190,8 +190,10 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Defeito:** nome, sigla e campus **aceitam emoji e caracteres especiais**. Não há regra de caracteres na tela (`faculdadeSchema.ts` só confere o tamanho) nem na API (`faculdade_dto.py`). É o mesmo defeito da HU-007 ([#251](https://github.com/GOUOCE/GOUCE-app/issues/251)). A regra proposta para a HU-008 está na branch `docs/regra-caracteres-faculdade` (critério 12 e cenários BDD).
+- **Relatado pelo testador:** o nome com 151 caracteres foi aceito e uma das tentativas não mostrou mensagem em nenhum campo. **A confirmar:** no banco a faculdade criada (id 9) tem nome de exatamente 150 caracteres, sigla vazia e campus `C  s`; pelo código, 151 caracteres deveriam ser bloqueados com “O nome da instituição deve ter no máximo 150 caracteres” (a tela apara espaços no início e no fim antes de contar). Repetir a tentativa com um texto de 151 caracteres sem espaços nas pontas e anotar qual tentativa ficou sem mensagem.
+- Pelo código, os limites da tela e da API **não coincidem**: a tela exige nome de 3 a 150, sigla de 2 a 20 e campus de 2 a 100; a API aceita de 1 a 255 (nome e campus) e até 50 (sigla). Quem chamar a API direto passa por cima da tela.
+- Status: ❌ Falhou.
 
 ### Seção B — Edição, inativação e reativação
 
@@ -384,6 +386,8 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 | Caso | Defeito | Issue |
 | --- | --- | --- |
 | CT-001, CT-002 | Telas de faculdades não recriadas: a seta volta ao Painel (listagem, Cadastrar e Editar) e Cadastrar/Editar reabrem com os dados da vez anterior | [#245](https://github.com/GOUOCE/GOUCE-app/issues/245) cobre bairros e sugere corrigir também faculdades; issue própria a abrir ao final da suíte |
+| CT-005 | Nome, sigla e campus aceitam emoji e caracteres especiais (sem regra na tela nem na API) | [#251](https://github.com/GOUOCE/GOUCE-app/issues/251) é de bairros; issue própria a abrir ao final da suíte |
+| CT-005 | Limites de tamanho: relatado 151 caracteres aceito e tentativa sem mensagem (a confirmar); limites da API diferentes dos da tela | Issue própria a abrir ao final da suíte, depois de confirmar |
 | CT-002 | Cadastro com `Universidade Federal do Ceará` / `UFC` / `Campus Quixadá` é barrado pela lista de exemplo do app, sem chamar a API | Issue própria a abrir ao final da suíte |
 | CT-002 | A sigla não é enviada à API nem gravada no banco | Issue própria a abrir ao final da suíte |
 | CT-002 | Mensagem de sucesso é uma barra preta, fora do padrão de pop-up, e o texto difere do requisito | Issue própria a abrir ao final da suíte |
