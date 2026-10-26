@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| 🔄 Em andamento | 12 | 2 | 6 | 0 | 4 |
+| 🔄 Em andamento | 12 | 3 | 7 | 0 | 2 |
 
 ## Pré-condições
 
@@ -58,8 +58,8 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU008-UI-010 | Aluno e representante sem acesso | Menus do aluno e do representante; link `faculdades` | Menu não exibido; link mostra Acesso Negado | ⏳ PENDENTE | Não executado. |
-| CT-HU008-UI-011 | Faculdades na seleção de cadastro | Faculdade nova ativa e faculdade inativa | Ativa aparece; inativa não aparece (cadastro de aluno e de representante) | ⏳ PENDENTE | Não executado. |
+| CT-HU008-UI-010 | Aluno e representante sem acesso | Menus do aluno e do representante; link `faculdades` | Menu não exibido; link mostra Acesso Negado | ✅ PASSOU | Aluno e representante não veem o menu de faculdades e o link direto mostra Acesso Negado (relatado pelo testador). |
+| CT-HU008-UI-011 | Faculdades na seleção de cadastro | Faculdade nova ativa e faculdade inativa | Ativa aparece; inativa não aparece (cadastro de aluno e de representante) | ❌ FALHOU | As listas de instituição do cadastro de representante e do cadastro de aluno são fixas no app e não refletem as faculdades do banco. |
 | CT-HU008-UI-012 | Falha de conexão e dados de exemplo | Servidor/Wi-Fi desligado ao listar, cadastrar e inativar | Mensagem de conexão; app não finge sucesso nem mostra dados que não existem | ⏳ PENDENTE | Não executado. |
 
 ## Detalhamento dos casos
@@ -324,8 +324,9 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Entrada como aluno (`qa.hu007.aluno@teste.com`) e como representante (`qa.hu007.rep@teste.com`). Antes do caso, a senha das duas contas de teste foi redefinida no banco local, porque as senhas antigas não estavam registradas (PC-03). Nenhuma outra conta foi alterada.
+- O menu de faculdades não aparece para os dois perfis e o link direto mostra **Acesso Negado**, conforme relatado pelo testador (RN-006).
+- Status: ✅ Passou.
 
 ---
 
@@ -347,8 +348,10 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Cadastro de representante** (administrador → Representantes → cadastrar): a seleção de **Instituição de Ensino** mostra `UFC - Campus Quixadá`, `IFCE - Campus Quixadá` e `UECE - Campus Quixadá`. A lista é fixa em `representantes/cadastrar.tsx` e não consulta a API.
+- **Cadastro de aluno** (Criar conta → passo 3, Contato e Vínculo): a seleção de **Instituição de Ensino** mostra `UFC - Universidade Federal do Ceará`, `IFCE`, `UNILAB`, `Estácio` e `Outra`. A lista é fixa em `Passo3ContatoVinculo.tsx`.
+- Nenhuma das faculdades cadastradas na suíte aparece nas duas telas, e a faculdade inativa também não é tratada: as telas não usam o serviço de faculdades. Falha em AC-11 e no vínculo entre o cadastro do administrador e o cadastro de aluno e de representante. Relacionado à [#192](https://github.com/GOUOCE/GOUCE-app/issues/192) (o app envia o nome da instituição e a API exige o id numérico) e ao PR #253, que altera o `Passo3ContatoVinculo.tsx` para os bairros.
+- Status: ❌ Falhou.
 
 ---
 
@@ -397,6 +400,7 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 | Caso | Defeito | Issue |
 | --- | --- | --- |
 | CT-001, CT-002, CT-009 | Telas de faculdades não recriadas: a seta volta ao Painel (listagem, Cadastrar e Editar), Cadastrar/Editar reabrem com os dados da vez anterior e Editar sai sem pedir confirmação | [#245](https://github.com/GOUOCE/GOUCE-app/issues/245) cobre bairros e sugere corrigir também faculdades; issue própria a abrir ao final da suíte |
+| CT-011 | Instituição de Ensino fixa no cadastro de aluno (`UFC`, `IFCE`, `UNILAB`, `Estácio`, `Outra`) e no cadastro de representante (`UFC`, `IFCE`, `UECE`, campus Quixadá): não refletem as faculdades do banco nem escondem as inativas | [#192](https://github.com/GOUOCE/GOUCE-app/issues/192) cobre o envio do nome em vez do id no aluno; issue própria a abrir ao final da suíte (aluno e representante) |
 | CT-007 | Inativar a faculdade de `id` 1 é barrado pela lista de exemplo (“viagens programadas pendentes”) sem agendamento real e sem chamar a API | Issue própria a abrir ao final da suíte |
 | CT-005 | Nome, sigla e campus aceitam emoji e caracteres especiais (sem regra na tela nem na API) | [#251](https://github.com/GOUOCE/GOUCE-app/issues/251) é de bairros; issue própria a abrir ao final da suíte |
 | CT-005 | Limites de tamanho: relatado 151 caracteres aceito e tentativa sem mensagem (a confirmar); limites da API diferentes dos da tela | Issue própria a abrir ao final da suíte, depois de confirmar |
