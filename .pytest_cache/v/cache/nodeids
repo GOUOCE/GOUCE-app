@@ -246,7 +246,6 @@
   "backend/tests/test_senha_validator.py::SenhaValidatorTest::test_rejeita_senha_sem_numero",
   "backend/tests/test_token_session_security.py::TokenSessionSecurityTests::test_active_student_can_access_own_protected_context",
   "backend/tests/test_token_session_security.py::TokenSessionSecurityTests::test_expired_access_validity_allows_authentication_with_limited_access",
-  "backend/tests/test_token_session_security.py::TokenSessionSecurityTests::test_expired_access_validity_is_rejected",
   "backend/tests/test_token_session_security.py::TokenSessionSecurityTests::test_expired_signed_access_token_returns_401",
   "backend/tests/test_token_session_security.py::TokenSessionSecurityTests::test_file_from_another_user_is_not_revealed",
   "backend/tests/test_token_session_security.py::TokenSessionSecurityTests::test_invalid_access_token_returns_401",
