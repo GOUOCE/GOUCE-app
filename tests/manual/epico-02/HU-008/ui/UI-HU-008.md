@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| 🔄 Em andamento | 12 | 3 | 8 | 0 | 1 |
+| ❌ Concluída com falhas | 12 | 4 | 8 | 0 | 0 |
 
 ## Pré-condições
 
@@ -43,15 +43,15 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 | CT-HU008-UI-002 | Cadastrar faculdade | `Universidade Federal do Ceará` / `UFC` / `Campus Quixadá` | Sucesso; na listagem; continua após reabrir o app e existe na API | ❌ FALHOU | Com os dados do caso o app barra o cadastro (lista de exemplo interna) e nada chega à API. Com outro nome o cadastro é gravado, mas a sigla não é salva e o sucesso aparece numa barra preta, fora do padrão de pop-up. |
 | CT-HU008-UI-003 | Mesmo nome em outro campus | Mesma instituição em `Campus Fortaleza` | Cadastro aceito | ✅ PASSOU | Cadastro aceito; conferido no banco. A sigla continua sem ser gravada (defeito do CT-002). |
 | CT-HU008-UI-004 | Cadastro duplicado | Nome e campus iguais, com variação de maiúsculas e espaços | “Esta faculdade já está cadastrada.”; nada criado | ✅ PASSOU | Cinco tentativas bloqueadas pela API (`409`), inclusive com a faculdade inativa. Nada foi criado. Observação: a comparação diferencia acentos (`Quixada` ≠ `Quixadá`), decisão de produto pendente. |
-| CT-HU008-UI-005 | Campos obrigatórios e limites | Campos vazios; nome de 2 letras; textos longos | Campos destacados com mensagem; nada salvo | ❌ FALHOU | Nome, sigla e campus aceitam emoji e símbolos. Relatado: nome de 151 caracteres aceito e uma tentativa sem mensagem no campo (a conferir). |
+| CT-HU008-UI-005 | Campos obrigatórios e limites | Campos vazios; nome de 2 letras; textos longos | Campos destacados com mensagem; nada salvo | ❌ FALHOU | Nome, sigla e campus aceitam emoji e símbolos; a API aceita limites diferentes dos da tela. |
 
 ### Seção B — Edição, inativação e reativação
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU008-UI-006 | Editar faculdade | Trocar campus; trocar para nome+campus em uso | Sucesso e listagem atualizada; combinação em uso bloqueada | ❌ FALHOU | Edições de campus gravadas (`PATCH 200`), mas a sigla editada não é salva. Falta executar a edição duplicada (passo 3): não houve `409` no log. |
+| CT-HU008-UI-006 | Editar faculdade | Trocar campus; trocar para nome+campus em uso | Sucesso e listagem atualizada; combinação em uso bloqueada | ❌ FALHOU | Edições de campus gravadas (`PATCH 200`) e edição duplicada bloqueada pela API (`409`), mas a sigla editada não é salva. |
 | CT-HU008-UI-007 | Inativar faculdade | Cancelar e confirmar a inativação | Cancelar não muda nada; confirmar mostra sucesso e tira a faculdade dos ativos | ❌ FALHOU | Cancelar, confirmar e gravação passaram (auditada). Inativar a faculdade de `id` 1 mostra “viagens programadas pendentes” sem existir agendamento: é a regra de exemplo do app, sem chamar a API. |
-| CT-HU008-UI-008 | Mostrar inativos e reativar | Ligar a chave; reativar | Inativas identificadas; reativação com sucesso | ⏳ PENDENTE | Não executado. |
+| CT-HU008-UI-008 | Mostrar inativos e reativar | Ligar a chave; reativar | Inativas identificadas; reativação com sucesso | ✅ PASSOU | Chave de inativos e reativação funcionaram, conforme relatado pelo testador. |
 | CT-HU008-UI-009 | Sair sem salvar | Alterar o nome em Editar e tocar na seta | Pedir confirmação; nada salvo; ao reabrir, dados salvos | ❌ FALHOU | A seta não pede confirmação e a tela reabre com o texto digitado e não salvo. Nada é gravado no banco. |
 
 ### Seção C — Integração, acesso e robustez
@@ -193,7 +193,7 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 **Resultado obtido**
 
 - **Defeito:** nome, sigla e campus **aceitam emoji e caracteres especiais**. Não há regra de caracteres na tela (`faculdadeSchema.ts` só confere o tamanho) nem na API (`faculdade_dto.py`). É o mesmo defeito da HU-007 ([#251](https://github.com/GOUOCE/GOUCE-app/issues/251)). Issue [#261](https://github.com/GOUOCE/GOUCE-app/issues/261). A regra proposta para a HU-008 está no PR [#255](https://github.com/GOUOCE/GOUCE-app/pull/255) (critério 12 e cenários BDD).
-- **Relatado pelo testador:** o nome com 151 caracteres foi aceito e uma das tentativas não mostrou mensagem em nenhum campo. **A confirmar:** no banco a faculdade criada (id 9) tem nome de exatamente 150 caracteres, sigla vazia e campus `C  s`; pelo código, 151 caracteres deveriam ser bloqueados com “O nome da instituição deve ter no máximo 150 caracteres” (a tela apara espaços no início e no fim antes de contar). Repetir a tentativa com um texto de 151 caracteres sem espaços nas pontas e anotar qual tentativa ficou sem mensagem.
+- **Limite de 151 caracteres:** o testador relatou nome de 151 caracteres aceito e uma tentativa sem mensagem. Pelo código isso não se reproduz: as regras da tela (`faculdadeSchema.ts`), executadas com os textos do caso, bloqueiam nome de 151, sigla de 21, campus de 101, vazios, só espaços e abaixo do mínimo, cada um com a sua mensagem; no banco a faculdade criada (id 9) tem nome de exatamente 150 caracteres (a tela apara os espaços das pontas antes de contar). Por isso o limite da tela **não foi aberto como defeito**; permanece o defeito dos caracteres e dos limites da API.
 - Pelo código, os limites da tela e da API **não coincidem**: a tela exige nome de 3 a 150, sigla de 2 a 20 e campus de 2 a 100; a API aceita de 1 a 255 (nome e campus) e até 50 (sigla). Quem chamar a API direto passa por cima da tela.
 - Status: ❌ Falhou.
 
@@ -222,9 +222,9 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 - Edições feitas na faculdade `Universidade Federal do Ceará` (id 4), e não em `UFC` / `Campus Fortaleza`, que não existe no banco. O log da API registrou `PATCH /faculdades/4` com `200` quatro vezes; a primeira tentativa voltou `401` (sessão vencida, PC-06) e foi repetida depois de entrar de novo. No banco o campus da faculdade 4 ficou `Campus Quixadá`: a alteração foi gravada na API.
 - A mensagem de sucesso da edição, pelo código (`editar.tsx`), é “Faculdade alterada com sucesso”, exibida na mesma barra preta (toast) do cadastro, e não “Operação realizada com sucesso”.
 - **Defeito:** a **sigla editada não é salva**. `atualizarFaculdade` envia à API só nome e campus, e a coluna `sigla` da faculdade 4 continua vazia. Depois de salvar, a tela mostra a sigla digitada ou, se ela estiver vazia, o nome da instituição, e não o que está no banco. Mesma causa do CT-002.
-- **Não verificado:** a edição para uma combinação já existente (passo 3). Não houve nenhum `PATCH` com `409` no log, e a edição do campus da faculdade 4 para `Campus Quixadá` foi aceita porque não existe outra `Universidade Federal do Ceará` nesse campus. A tela não tem checagem própria de duplicidade na edição, então o bloqueio depende da API. Repetir com uma combinação que exista de fato.
+- **Passo 3 (editar para uma combinação já existente), conferido pela API:** a edição do campus da faculdade 4 para `Campus Quixadá` foi aceita porque não existe outra `Universidade Federal do Ceará` nesse campus. Para a combinação existente, `PATCH /faculdades/6` com `Campus Quixadá` (e também com ` campus quixadá `, com espaços e minúsculas) responde `409` com “Esta faculdade já está cadastrada.” e o campus continua `Campus Cratéus` no banco. A tela não tem checagem própria na edição e mostra a mensagem devolvida pela API em pop-up de erro (`editar.tsx`).
 - Nenhum registro de auditoria da edição: `log_auditoria` não tem ação de edição de faculdade (mesmo defeito do cadastro e da edição já registrado na suíte de API, CT-HU008-API-009).
-- Status: ❌ Falhou (passo 3 pendente).
+- Status: ❌ Falhou.
 
 ---
 
@@ -277,8 +277,10 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Com a chave **Mostrar inativos** ligada, as faculdades inativas aparecem sob o título “Inativas”; a reativação pede confirmação (“Reativar faculdade?”), mostra a mensagem de sucesso e a faculdade volta às ativas, conforme relatado pelo testador (AC-05, AC-09).
+- Pelo código (`index.tsx` e `faculdadeService.ts`), a reativação chama `PATCH /faculdades/{id}/ativar`, rota que existe no backend (`faculdade_routes.py`) e que respondeu `200` na suíte de API. Na conferência no banco e no log feita logo depois, o `PATCH /ativar` não aparecia e as faculdades 5 e 7 seguiam inativas: o resultado fica por conta do relato do testador.
+- Observação (código): se a reativação falhar, a tela só escreve no console e não mostra mensagem (`handleReativar`); o caso pede que o app não falhe em silêncio.
+- Status: ✅ Passou.
 
 ---
 
@@ -378,6 +380,7 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 - Com a API fora do ar, o app **não mostrou erro de conexão**: a listagem, o cadastro e a inativação pareceram funcionar, com mensagem de sucesso. Ao religar a API, a listagem estava diferente do que a tela tinha mostrado offline (relatado pelo testador).
 - Conferido no banco: nenhuma faculdade `Faculdade Offline` foi criada, nenhuma faculdade mudou de status e o `log_auditoria` não ganhou registros. Ou seja, nada do que a tela mostrou como feito foi gravado.
 - Causa, em `faculdadeService.ts`: quando a chamada à API falha **sem resposta do servidor** (`!error.response`), cada operação trata o erro como se fosse sucesso e age só na lista de exemplo (`FACULDADES_MOCK`, em memória): `listarFaculdades` devolve a lista de exemplo sem lançar erro (`UFC`, `IFCE`, `Uniateneu`); `criarFaculdade` insere a faculdade na lista de exemplo e devolve sucesso; `atualizarFaculdade`, `inativarFaculdade` e `reativarFaculdade` alteram a lista de exemplo e retornam sem erro. A lista de exemplo só existe na memória da página e some ao recarregar, o que explica a diferença depois que a API voltou.
+- Depois que a API voltou, a tela tentou inativar a faculdade criada offline e o log registrou `OPTIONS /faculdades/1793054060905/inativar`: o `id` é um `Date.now()` gerado pelo app, e não um `id` do banco.
 - Falha nos três pontos do esperado: não há mensagem de falha de conexão, o app mostra sucesso sem a API gravar e exibe faculdades de exemplo que não existem no banco. Mesmo defeito da HU-007 ([#249](https://github.com/GOUOCE/GOUCE-app/issues/249), bairros).
 - Status: ❌ Falhou.
 
@@ -423,9 +426,9 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
   - a lista de instituições do cadastro de aluno é fixa no app (#192) (CT-011).
 - O bloqueio por agendamentos futuros (AC-06) depende da HU-013 e fica para quando a agenda estiver na develop.
 - Ocultar senhas e dados pessoais nas evidências.
-- **Pontos em aberto ao fechar a suíte:**
-  - **CT-008** (mostrar inativos e reativar): sem confirmação; o log da API não registrou `PATCH /ativar` e as faculdades 5 e 7 continuam inativas.
-  - **CT-005**: o relato de 151 caracteres aceitos não foi reproduzido pelo código; repetir com um texto de 151 caracteres sem espaços nas pontas (no banco a faculdade criada tem 150).
-  - **CT-006**, passo 3: a edição para uma combinação já existente ainda não foi executada (nenhum `PATCH` com `409` no log).
+- **Fechamento da suíte:**
+  - **CT-008** foi dado como aprovado pelo testador; a conferência no banco e no log não mostrou o `PATCH /ativar` (ver o caso).
+  - **CT-005:** o relato de 151 caracteres não se reproduz pelo código (o limite da tela bloqueia); não foi aberto como defeito.
+  - **CT-006**, passo 3: conferido pela API (`409`, “Esta faculdade já está cadastrada.”).
   - **Acentuação:** `Campus Quixada` e `Campus Quixadá` são faculdades diferentes para a API; decisão de produto pendente (#207), tratada no PR #255.
 - **Regra de caracteres e tamanho** de nome, sigla e campus proposta no PR [#255](https://github.com/GOUOCE/GOUCE-app/pull/255).
