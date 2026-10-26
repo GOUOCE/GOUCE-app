@@ -34,10 +34,24 @@ let MOTORISTAS_MOCK: MotoristaItem[] = [
 ];
 
 export const motoristaService = {
-  async listarMotoristas(busca = ''): Promise<MotoristaItem[]> {
+  resetMocks() {
+    MOTORISTAS_MOCK = [
+      { id: 1, nome: 'José Almeida', telefone: '(88) 9 9999-9999', ativo: true, alocacoes_pendentes: true },
+      { id: 2, nome: 'Ana Souza', telefone: '(88) 9 9999-9999', ativo: true, alocacoes_pendentes: false },
+      { id: 3, nome: 'Paulo Ferreira', telefone: '(88) 9 9999-9999', ativo: false, alocacoes_pendentes: false },
+    ];
+  },
+
+  async listarMotoristas(busca = '', incluirInativos = true): Promise<MotoristaItem[]> {
     try {
-      const response = await api.get<any[]>('/motoristas');
-      const lista = response.data || [];
+      const params: any = {};
+      if (incluirInativos) params.incluir_inativos = true;
+      if (busca && busca.trim()) params.nome = busca.trim();
+
+      const response = await api.get<any[]>('/motoristas', { params });
+      const listaApi = response.data || [];
+      const lista = listaApi.length > 0 ? listaApi : MOTORISTAS_MOCK;
+
       const mapeados: MotoristaItem[] = lista.map((m) => ({
         id: m.id,
         nome: m.nome,
@@ -57,9 +71,15 @@ export const motoristaService = {
     } catch (error) {
       console.warn('Backend /motoristas indisponível, utilizando MOCK:', error);
       const q = busca.toLowerCase().trim();
-      if (!q) return JSON.parse(JSON.stringify(MOTORISTAS_MOCK));
+      let resultado = JSON.parse(JSON.stringify(MOTORISTAS_MOCK));
 
-      return JSON.parse(JSON.stringify(MOTORISTAS_MOCK)).filter(
+      if (!incluirInativos) {
+        resultado = resultado.filter((m: MotoristaItem) => m.ativo);
+      }
+
+      if (!q) return resultado;
+
+      return resultado.filter(
         (m: MotoristaItem) =>
           m.nome.toLowerCase().includes(q) ||
           m.telefone.toLowerCase().includes(q)
@@ -92,15 +112,6 @@ export const motoristaService = {
     const nomeLimpo = nome.trim();
     const telefoneLimpo = telefone.trim();
 
-    // Validação de Telefone Único (Ativo ou Inativo)
-    const jaExiste = MOTORISTAS_MOCK.some(
-      (m) => m.telefone.replace(/\D/g, '') === telefoneLimpo.replace(/\D/g, '')
-    );
-
-    if (jaExiste) {
-      throw new Error('Este profissional já está registrado.');
-    }
-
     try {
       const response = await api.post<any>('/motoristas', {
         nome: nomeLimpo,
@@ -114,11 +125,19 @@ export const motoristaService = {
         ativo: true,
       };
     } catch (error: any) {
-      if (error.response?.status === 409) {
+      if (error.response?.status === 409 || error.message?.includes('registrado')) {
         throw new Error('Este profissional já está registrado.');
       }
 
       if (!error.response) {
+        const jaExiste = MOTORISTAS_MOCK.some(
+          (m) => m.telefone.replace(/\D/g, '') === telefoneLimpo.replace(/\D/g, '')
+        );
+
+        if (jaExiste) {
+          throw new Error('Este profissional já está registrado.');
+        }
+
         const novoMotorista: MotoristaItem = {
           id: Date.now(),
           nome: nomeLimpo,
@@ -139,14 +158,6 @@ export const motoristaService = {
     const nomeLimpo = nome.trim();
     const telefoneLimpo = telefone.trim();
 
-    const duplicado = MOTORISTAS_MOCK.some(
-      (m) => m.id !== id && m.telefone.replace(/\D/g, '') === telefoneLimpo.replace(/\D/g, '')
-    );
-
-    if (duplicado) {
-      throw new Error('Este profissional já está registrado.');
-    }
-
     try {
       const response = await api.patch<any>(`/motoristas/${id}`, {
         nome: nomeLimpo,
@@ -160,11 +171,19 @@ export const motoristaService = {
         ativo: true,
       };
     } catch (error: any) {
-      if (error.response?.status === 409) {
+      if (error.response?.status === 409 || error.message?.includes('registrado')) {
         throw new Error('Este profissional já está registrado.');
       }
 
       if (!error.response) {
+        const duplicado = MOTORISTAS_MOCK.some(
+          (m) => m.id !== id && m.telefone.replace(/\D/g, '') === telefoneLimpo.replace(/\D/g, '')
+        );
+
+        if (duplicado) {
+          throw new Error('Este profissional já está registrado.');
+        }
+
         const index = MOTORISTAS_MOCK.findIndex((m) => m.id === id);
         if (index !== -1) {
           MOTORISTAS_MOCK[index].nome = nomeLimpo;
@@ -187,6 +206,11 @@ export const motoristaService = {
       await api.patch(`/motoristas/${id}/inativar`);
       if (motLocal) motLocal.ativo = false;
     } catch (error: any) {
+      if (error.response?.status === 409 || error.response?.data?.detail) {
+        const msg = error.response.data.detail || error.response.data.message;
+        if (msg) throw new Error(msg);
+      }
+
       if (!error.response) {
         if (motLocal) {
           motLocal.ativo = false;
@@ -200,7 +224,8 @@ export const motoristaService = {
   async reativarMotorista(id: number): Promise<void> {
     const motLocal = MOTORISTAS_MOCK.find((m) => m.id === id);
     try {
-      await api.patch(`/motoristas/${id}/ativar`);
+      // Reativar motorista via rota oficial PATCH /motoristas/{id}/reativar
+      await api.patch(`/motoristas/${id}/reativar`);
       if (motLocal) motLocal.ativo = true;
     } catch (error: any) {
       if (!error.response) {
