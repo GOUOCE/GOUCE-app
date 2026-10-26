@@ -11,14 +11,14 @@
 | Tela            | Painel do administrador → aba **Cadastros** → **Bairros e pontos de parada** (listagem **Bairros e Pontos**, **Novo Bairro** e **Editar Bairro**) |
 | Ambiente        | Desenvolvimento — app no celular (Expo Go) ou versão web (`http://localhost:3000`) |
 | Total de casos  | 13 |
-| Última execução | Não realizada |
+| Última execução | 2026-10-26 (em andamento) |
 | Testador        | Cauan Ricardo |
 
 ## Resultado geral
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Não executada | 13 | 0 | 0 | 0 | 13 |
+| ⏳ Em execução | 13 | 0 | 1 | 0 | 12 |
 
 ## Pré-condições
 
@@ -39,7 +39,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU007-UI-001 | Acessar a gestão de bairros | Cadastros → Bairros e pontos de parada | Listagem só de ativos com seus pontos; busca; chave “Mostrar inativos” desligada; botão Novo | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-001 | Acessar a gestão de bairros | Cadastros → Bairros e pontos de parada | Listagem só de ativos com seus pontos; busca; chave “Mostrar inativos” desligada; botão Novo | ❌ FALHOU | A chave “Mostrar inativos” já vem ligada; a seta de voltar leva ao Painel, não a Cadastros. Busca por nome funciona. |
 | CT-HU007-UI-002 | Cadastrar bairro com pontos de parada | `Campo Velho` + 1 ponto; `Centro` + 3 pontos | “Operação realizada com sucesso”; bairro na listagem; dado continua após reabrir o app e existe na API | ⏳ PENDENTE | Não executado. |
 | CT-HU007-UI-003 | Mesmo nome de ponto em outro bairro | `Planalto Universitário` + `Posto de Saúde` | Cadastro aceito | ⏳ PENDENTE | Não executado. |
 | CT-HU007-UI-004 | Cadastro duplicado | `Centro`, `centro`, `CENTRO`, `" Centro "`; ponto repetido no formulário | “Esta localidade já está cadastrada.”; nada criado | ⏳ PENDENTE | Não executado. |
@@ -88,8 +88,12 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- A listagem abre e a busca por nome filtra corretamente.
+- A chave **Mostrar inativos** já vem **ligada** por padrão; o esperado é desligada (AC-01, AC-09).
+- A seta de voltar leva ao **Painel**, e não a **Cadastros**. O mesmo ocorre na tela **Novo Bairro**: a seta leva ao Painel, e não à listagem **Bairros e Pontos**.
+- A listagem mostra o nome do bairro e só a **quantidade** de pontos (o `Centro` aparece com 0 pontos, igual ao banco), e não os nomes dos pontos.
+- Busca por um nome que não existe: aparece a mensagem de lista vazia.
+- Status: ❌ Falhou.
 
 ---
 
