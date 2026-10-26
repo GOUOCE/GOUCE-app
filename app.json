@@ -48,7 +48,10 @@
             "usesCleartextTraffic": true
           }
         }
-      ]
+      ],
+      "expo-font",
+      "expo-splash-screen",
+      "expo-status-bar"
     ],
     "scheme": "gouoce-app",
     "extra": {
