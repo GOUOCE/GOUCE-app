@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Em execução | 13 | 0 | 3 | 0 | 10 |
+| ⏳ Em execução | 13 | 1 | 3 | 0 | 9 |
 
 ## Pré-condições
 
@@ -42,7 +42,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 | CT-HU007-UI-001 | Acessar a gestão de bairros | Cadastros → Bairros e pontos de parada | Listagem só de ativos com seus pontos; busca; chave “Mostrar inativos” desligada; botão Novo | ❌ FALHOU | A chave “Mostrar inativos” já vem ligada; a seta de voltar leva ao Painel, não a Cadastros. Busca por nome funciona. |
 | CT-HU007-UI-002 | Cadastrar bairro com pontos de parada | `Campo Velho` + 1 ponto; `Centro` + 3 pontos | “Operação realizada com sucesso”; bairro na listagem; dado continua após reabrir o app e existe na API | ❌ FALHOU | Gravou certo na API, mas o formulário de Novo Bairro e o modal de ponto não limpam os campos depois de salvar. |
 | CT-HU007-UI-003 | Mesmo nome de ponto em outro bairro | `Planalto Universitário` + `Posto de Saúde` | Cadastro aceito | ❌ FALHOU | Bloqueado com “Esta localidade já está cadastrada.” (API devolve 409). Mesma causa da #210. |
-| CT-HU007-UI-004 | Cadastro duplicado | `Centro`, `centro`, `CENTRO`, `" Centro "`; ponto repetido no formulário | “Esta localidade já está cadastrada.”; nada criado | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-004 | Cadastro duplicado | `Centro`, `centro`, `CENTRO`, `" Centro "`; ponto repetido no formulário | “Esta localidade já está cadastrada.”; nada criado | ✅ PASSOU | Variações de maiúsculas e espaços bloqueadas com a mensagem correta. Observações: nome sem acento (`RODOVIARIA`) é aceito como ponto diferente; modal do ponto com rótulo e placeholder repetidos. |
 | CT-HU007-UI-005 | Campos obrigatórios e limites | Nome vazio; sem ponto; nome `Ab`; ponto com 1 letra | Campos destacados com mensagem; nada salvo | ⏳ PENDENTE | Não executado. |
 
 ### Seção B — Edição, inativação e reativação
@@ -174,8 +174,12 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Os nomes de bairro `Centro` com maiúsculas, minúsculas e espaços nas pontas foram bloqueados com “Esta localidade já está cadastrada.”, e nenhum bairro foi criado.
+- No formulário de `Bairro Novo`, o segundo ponto `rodoviária` (mesmo nome do `Rodoviária`, só em minúsculas) foi bloqueado com a mesma mensagem.
+- **Observação (decisão de produto):** `RODOVIARIA` (maiúsculas e **sem acento**) foi aceito no mesmo formulário ao lado de `Rodoviária`. O requisito só desconsidera maiúsculas, minúsculas e espaços nas pontas (AC-03); acento não está coberto, então o app seguiu o texto do requisito. Levar ao #207 para decidir se `Rodoviária` e `Rodoviaria` contam como o mesmo nome.
+- **Defeito de interface (não bloqueante):** ao abrir **Novo ponto de parada**, o campo mostra o rótulo “Nome do Ponto *” e, ao mesmo tempo, o texto de ajuda “Nome do ponto de parada”, repetindo a informação.
+- **Defeito (regra de caracteres):** o nome do bairro aceita números, emoji e caracteres especiais. Não existe regra para isso nos requisitos nem no código (`bairroSchema.ts` só valida tamanho). Regra proposta no CT-005.
+- Status: ✅ Passou.
 
 ---
 
