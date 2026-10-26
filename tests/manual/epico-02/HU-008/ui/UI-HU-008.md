@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| 🔄 Em andamento | 12 | 2 | 5 | 0 | 5 |
+| 🔄 Em andamento | 12 | 2 | 6 | 0 | 4 |
 
 ## Pré-condições
 
@@ -52,7 +52,7 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 | CT-HU008-UI-006 | Editar faculdade | Trocar campus; trocar para nome+campus em uso | Sucesso e listagem atualizada; combinação em uso bloqueada | ❌ FALHOU | Edições de campus gravadas (`PATCH 200`), mas a sigla editada não é salva. Falta executar a edição duplicada (passo 3): não houve `409` no log. |
 | CT-HU008-UI-007 | Inativar faculdade | Cancelar e confirmar a inativação | Cancelar não muda nada; confirmar mostra sucesso e tira a faculdade dos ativos | ❌ FALHOU | Cancelar, confirmar e gravação passaram (auditada). Inativar a faculdade de `id` 1 mostra “viagens programadas pendentes” sem existir agendamento: é a regra de exemplo do app, sem chamar a API. |
 | CT-HU008-UI-008 | Mostrar inativos e reativar | Ligar a chave; reativar | Inativas identificadas; reativação com sucesso | ⏳ PENDENTE | Não executado. |
-| CT-HU008-UI-009 | Sair sem salvar | Alterar o nome em Editar e tocar na seta | Pedir confirmação; nada salvo; ao reabrir, dados salvos | ⏳ PENDENTE | Não executado. |
+| CT-HU008-UI-009 | Sair sem salvar | Alterar o nome em Editar e tocar na seta | Pedir confirmação; nada salvo; ao reabrir, dados salvos | ❌ FALHOU | A seta não pede confirmação e a tela reabre com o texto digitado e não salvo. Nada é gravado no banco. |
 
 ### Seção C — Integração, acesso e robustez
 
@@ -300,8 +300,10 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Ao alterar o nome em **Editar** e tocar na seta de voltar, o app **sai sem pedir confirmação**: não há aviso de alterações não salvas. `faculdades/editar.tsx` não tem nenhuma checagem de alteração pendente.
+- Nada é gravado: o log da API não registrou `PATCH` e o banco manteve os dados anteriores.
+- Ao abrir a faculdade de novo, a tela **reabre com o nome digitado e não salvo**, e não com os dados do banco. A tela não é recriada e só recarrega quando o `id` muda (`useEffect` com `[id]`). Mesmo defeito da HU-007 ([#245](https://github.com/GOUOCE/GOUCE-app/issues/245); confirmação ao sair cobrada na #156).
+- Status: ❌ Falhou.
 
 ### Seção C — Integração, acesso e robustez
 
@@ -394,7 +396,7 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| CT-001, CT-002 | Telas de faculdades não recriadas: a seta volta ao Painel (listagem, Cadastrar e Editar) e Cadastrar/Editar reabrem com os dados da vez anterior | [#245](https://github.com/GOUOCE/GOUCE-app/issues/245) cobre bairros e sugere corrigir também faculdades; issue própria a abrir ao final da suíte |
+| CT-001, CT-002, CT-009 | Telas de faculdades não recriadas: a seta volta ao Painel (listagem, Cadastrar e Editar), Cadastrar/Editar reabrem com os dados da vez anterior e Editar sai sem pedir confirmação | [#245](https://github.com/GOUOCE/GOUCE-app/issues/245) cobre bairros e sugere corrigir também faculdades; issue própria a abrir ao final da suíte |
 | CT-007 | Inativar a faculdade de `id` 1 é barrado pela lista de exemplo (“viagens programadas pendentes”) sem agendamento real e sem chamar a API | Issue própria a abrir ao final da suíte |
 | CT-005 | Nome, sigla e campus aceitam emoji e caracteres especiais (sem regra na tela nem na API) | [#251](https://github.com/GOUOCE/GOUCE-app/issues/251) é de bairros; issue própria a abrir ao final da suíte |
 | CT-005 | Limites de tamanho: relatado 151 caracteres aceito e tentativa sem mensagem (a confirmar); limites da API diferentes dos da tela | Issue própria a abrir ao final da suíte, depois de confirmar |
