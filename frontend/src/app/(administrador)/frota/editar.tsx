@@ -186,7 +186,7 @@ export default function EditarOnibusScreen() {
         {/* Botão Salvar Alterações */}
         <Button
           mode="contained"
-          onPress={handleSubmit(onSubmit)}
+          onPress={() => { void handleSubmit(onSubmit)(); }}
           loading={isLoading}
           disabled={isLoading}
           style={styles.saveButton}
