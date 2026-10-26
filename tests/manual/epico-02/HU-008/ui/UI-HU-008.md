@@ -50,7 +50,7 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU008-UI-006 | Editar faculdade | Trocar campus; trocar para nome+campus em uso | Sucesso e listagem atualizada; combinação em uso bloqueada | ❌ FALHOU | Edições de campus gravadas (`PATCH 200`), mas a sigla editada não é salva. Falta executar a edição duplicada (passo 3): não houve `409` no log. |
-| CT-HU008-UI-007 | Inativar faculdade | Cancelar e confirmar a inativação | Cancelar não muda nada; confirmar mostra sucesso e tira a faculdade dos ativos | ⏳ PENDENTE | Não executado. |
+| CT-HU008-UI-007 | Inativar faculdade | Cancelar e confirmar a inativação | Cancelar não muda nada; confirmar mostra sucesso e tira a faculdade dos ativos | ⏳ PENDENTE | Passos 1 a 4 passaram (pop-up de confirmação, inativação gravada e auditada). Falta o passo 5: tentar inativar a faculdade de `id` 1. |
 | CT-HU008-UI-008 | Mostrar inativos e reativar | Ligar a chave; reativar | Inativas identificadas; reativação com sucesso | ⏳ PENDENTE | Não executado. |
 | CT-HU008-UI-009 | Sair sem salvar | Alterar o nome em Editar e tocar na seta | Pedir confirmação; nada salvo; ao reabrir, dados salvos | ⏳ PENDENTE | Não executado. |
 
@@ -248,8 +248,11 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Inativada a faculdade `UFC` / `Campus  Vicosa` (id 7), criada na suíte, e não a `Uniateneu` / `Ocara` do roteiro. Apareceu o pop-up de confirmação “Inativar faculdade?” (“A faculdade e suas configurações ficarão inativas no sistema.”) e a inativação foi concluída.
+- Conferido na API e no banco: `PATCH /faculdades/7/inativar` com `200`; a faculdade 7 continua no banco com `ativo = false` (não foi apagada) e o `log_auditoria` registrou `INATIVAR` (valor anterior `ativo`, novo `inativo`, usuário 1).
+- Pelo código (`index.tsx`), a mensagem de sucesso é “Faculdade <sigla> inativada”, em barra preta (toast), e não “Operação realizada com sucesso”. A `<sigla>` mostrada na tela **não vem do banco**: como a sigla não é gravada (CT-002), `faculdadeService.ts` monta uma sigla a partir do nome (o próprio nome, se tiver até 10 letras; senão, a primeira palavra).
+- **Não executado:** passo 5 (inativar a faculdade de `id` 1, `UFC` / `Campus Quixadá`, do seed). Pelo código, `inativarFaculdade` barra o `id` 1 com “Esta instituição possui viagens programadas pendentes…” **sem chamar a API**, porque a lista de exemplo marca o `id` 1 com essa pendência; sem agendamentos reais, isso seria um defeito. A confirmar na tela.
+- Status: ⏳ Pendente (passos 1 a 4 passaram).
 
 ---
 
