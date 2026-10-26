@@ -1,4 +1,5 @@
 from typing import Optional
+import re
 
 from src.modulos.crud_basicos.infrastructure.repositories.onibus_repository import (
     OnibusJaCadastradoError,
@@ -9,6 +10,7 @@ from src.modulos.crud_basicos.infrastructure.repositories.onibus_repository impo
 )
 from src.modulos.crud_basicos.domain.entities.onibus import OnibusORM
 
+PLACA_REGEX = r"^[A-Z]{3}(?:[0-9]{4}|[0-9][A-Z][0-9]{2})$"
 
 class OnibusValidationError(ValueError):
     def __init__(self, field: str, message: str):
@@ -136,10 +138,22 @@ class OnibusService:
     @staticmethod
     def _validar_placa(valor: Optional[str], campo: str) -> str:
         if valor is None:
-            raise OnibusValidationError(campo, "A placa do veículo é obrigatória.")
-        valor_limpo = str(valor).strip().upper()
+            raise OnibusValidationError(
+                campo, "A placa do veículo é obrigatória."
+            )
+
+        valor_limpo = str(valor).strip().upper().replace("-", "")
+
         if not valor_limpo:
-            raise OnibusValidationError(campo, "A placa do veículo é obrigatória.")
+            raise OnibusValidationError(
+                campo, "A placa do veículo é obrigatória."
+            )
+
+        if not re.fullmatch(PLACA_REGEX, valor_limpo):
+            raise OnibusValidationError(
+                campo, "Placa inválida."
+            )
+
         return valor_limpo
 
     @staticmethod
