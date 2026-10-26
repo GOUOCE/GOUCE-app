@@ -24,6 +24,12 @@ from src.modulos.crud_basicos.interface.http.faculdade_routes import (
     router as faculdade_router,
 )
 from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
+from src.modulos.rotas.model.entities.rota_principal import (
+    RotaPrincipalORM,
+    rota_principal_bairro,
+    rota_principal_faculdade_ida,
+    rota_principal_faculdade_volta,
+)
 from src.shared.auth.dependencies import require_roles
 from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.infrastructure.audit_model import LogAuditoriaORM
@@ -70,6 +76,7 @@ class FaculdadesCrudUnitTest(unittest.TestCase):
             faculdade.id_faculdade,
             nome="   UFC Atualizada   ",
             campus="   Campus Pici   ",
+            usuario_executor_id=1
         )
         self.assertEqual(atualizada.nome_faculdade, "UFC Atualizada")
         self.assertEqual(atualizada.campus_faculdade, "Campus Pici")
@@ -122,18 +129,18 @@ class FaculdadesCrudUnitTest(unittest.TestCase):
         f2 = self.service.criar("UFC", "Sobral")
 
         # Mantém o mesmo nome e campus da própria faculdade -> deve permitir
-        f1_atualizada = self.service.atualizar(f1.id_faculdade, nome="UFC", campus="Crateús")
+        f1_atualizada = self.service.atualizar(f1.id_faculdade, nome="UFC", campus="Crateús", usuario_executor_id=1)
         self.assertEqual(f1_atualizada.nome_faculdade, "UFC")
 
         # Tenta atualizar f1 para coincidir com f2 -> deve bloquear
         with self.assertRaises(FaculdadeJaCadastradaError) as ctx:
-            self.service.atualizar(f1.id_faculdade, nome="UFC", campus="Sobral")
+            self.service.atualizar(f1.id_faculdade, nome="UFC", campus="Sobral", usuario_executor_id=1)
 
         self.assertEqual(str(ctx.exception), "Esta faculdade já está cadastrada.")
 
     def test_editar_faculdade_inexistente_lanca_erro(self):
         with self.assertRaises(FaculdadeNaoEncontradaError):
-            self.service.atualizar(9999, nome="Inexistente", campus="Campus")
+            self.service.atualizar(9999, nome="Inexistente", campus="Campus", usuario_executor_id=1)
 
     def test_inativar_com_auditoria_registra_dados_e_soft_delete(self):
         faculdade = self.service.criar("UECE", "Itaperi")
@@ -235,7 +242,14 @@ class FaculdadesApiHttpTest(unittest.IsolatedAsyncioTestCase):
         self.engine = create_engine("sqlite:///:memory:")
         Base.metadata.create_all(
             self.engine,
-            tables=[FaculdadeORM.__table__, LogAuditoriaORM.__table__],
+            tables=[
+                FaculdadeORM.__table__,
+                LogAuditoriaORM.__table__,
+                RotaPrincipalORM.__table__,
+                rota_principal_bairro,
+                rota_principal_faculdade_ida,
+                rota_principal_faculdade_volta,
+            ],
         )
         self.Session = sessionmaker(bind=self.engine)
         self.session = self.Session()
@@ -260,7 +274,14 @@ class FaculdadesApiHttpTest(unittest.IsolatedAsyncioTestCase):
         self.session.close()
         Base.metadata.drop_all(
             self.engine,
-            tables=[FaculdadeORM.__table__, LogAuditoriaORM.__table__],
+            tables=[
+                FaculdadeORM.__table__,
+                LogAuditoriaORM.__table__,
+                RotaPrincipalORM.__table__,
+                rota_principal_bairro,
+                rota_principal_faculdade_ida,
+                rota_principal_faculdade_volta,
+            ],
         )
 
     async def asgi_request(self, path, payload=None, method="GET", query_string=b""):

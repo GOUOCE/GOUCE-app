@@ -56,7 +56,7 @@ export default function GestaoCadastrosScreen() {
             icon={Bus}
             title="Frota"
             subtitle="Veículos e limites de lotação"
-            onPress={() => router.push('/(administrador)/cadastros/frota' as any)}
+            onPress={() => router.push('/(administrador)/frota' as any)}
           />
           <View style={styles.divider} />
           <SectionItem

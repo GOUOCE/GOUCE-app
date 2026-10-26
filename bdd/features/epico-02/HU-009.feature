@@ -162,8 +162,6 @@ Funcionalidade: Gerenciamento de Frota (Ônibus)
 
 
     # AC-10 - Valores inválidos de assentos e capacidade em pé
-    # Observação: o texto da mensagem não está definido no requisito; os cenários verificam
-    # que o campo é destacado como inválido e devem ser alinhados com o time.
     @fluxo_infeliz @validacao_campos @prioridade_alta
     Esquema do Cenário: Sistema bloqueia o salvamento de ônibus com quantidade inválida
       Quando o administrador seleciona "Novo Cadastro"
@@ -175,17 +173,18 @@ Funcionalidade: Gerenciamento de Frota (Ônibus)
       E altera o campo "<campo>" para "<valor>"
       E clica no botão "Salvar"
       Então o sistema destaca o campo "<campo>" como inválido
+      E o sistema exibe a mensagem "<mensagem>"
       E o ônibus não é cadastrado
 
       Exemplos:
-        | campo                      | valor |
-        | Quantidade de assentos     | 0     |
-        | Quantidade de assentos     | -5    |
-        | Quantidade de assentos     | abc   |
-        | Quantidade de assentos     | 4.5   |
-        | Capacidade de alunos em pé | -1    |
-        | Capacidade de alunos em pé | abc   |
-        | Capacidade de alunos em pé | 2.5   |
+        | campo                      | valor | mensagem                                 |
+        | Quantidade de assentos     | 0     | A quantidade de assentos deve ser maior que zero |
+        | Quantidade de assentos     | -5    | A quantidade de assentos deve ser maior que zero |
+        | Quantidade de assentos     | abc   | A quantidade de assentos deve ser maior que zero |
+        | Quantidade de assentos     | 4.5   | A quantidade de assentos deve ser maior que zero |
+        | Capacidade de alunos em pé | -1    | A capacidade em pé não pode ser negativa         |
+        | Capacidade de alunos em pé | abc   | A capacidade em pé não pode ser negativa         |
+        | Capacidade de alunos em pé | 2.5   | A capacidade em pé não pode ser negativa         |
 
 
     # AC-04, AC-07 - Edição de ônibus existente
