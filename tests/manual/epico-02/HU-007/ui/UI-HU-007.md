@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Em execução | 13 | 5 | 6 | 0 | 2 |
+| ⏳ Em execução | 13 | 5 | 7 | 0 | 1 |
 
 ## Pré-condições
 
@@ -60,7 +60,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU007-UI-011 | Aluno e representante sem acesso | Menu do aluno e do representante; link `bairros` | Menu não exibido; link mostra Acesso Negado | ✅ PASSOU | Link direto mostra Acesso Negado para aluno e representante; a API devolve 403 nas escritas. |
-| CT-HU007-UI-012 | Bairros no cadastro de aluno | Bairro novo e bairro inativo na etapa 3 do cadastro | Bairro ativo novo aparece; bairro inativo não aparece | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-012 | Bairros no cadastro de aluno | Bairro novo e bairro inativo na etapa 3 do cadastro | Bairro ativo novo aparece; bairro inativo não aparece | ❌ FALHOU | A lista de bairros do cadastro de aluno é fixa no app e não reflete o cadastro do administrador; o app envia o nome do bairro e a API espera o id (500). Relacionado à #192. |
 | CT-HU007-UI-013 | Falha de conexão ao salvar | Wi-Fi e dados desligados ao cadastrar e ao inativar | Mensagem de conexão; nada “salvo” só na tela; dados mantidos para nova tentativa | ⏳ PENDENTE | Não executado. |
 
 ## Detalhamento dos casos
@@ -391,8 +391,10 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Defeito:** os bairros que aparecem na etapa 3 do cadastro de aluno **não são os cadastrados pelo administrador**. A lista está fixa no código (`Passo3ContatoVinculo.tsx`): `Centro`, `Croatá`, `Bairro Novo`, `Planalto`, `Serra` e `Outro`. `Centro QA` e `Campo Velho QA II` (ativos) não aparecem, e `Croatá`, `Planalto` e `Serra` aparecem sem existir no banco (AC-11 não é atendido).
+- **Defeito:** o app envia o **nome** do bairro (`bairro_id=Centro`), e o banco espera o **id** numérico. Reproduzido na API: `POST /usuarios/cadastrar` com `bairro_id=Centro` devolve **500** (“Erro interno ao processar a solicitação”). O cadastro com bairro em texto, como o app faz, não é concluído. Mesma causa da **#192**, que já registra o problema para a faculdade.
+- O bairro inativo (`Planalto Universitário QA`) não aparece, mas só porque a lista é fixa, e não porque é filtrada. A lista pública da API (`GET /bairros`) já devolve apenas os ativos; o app não a usa.
+- Status: ❌ Falhou.
 
 ---
 
