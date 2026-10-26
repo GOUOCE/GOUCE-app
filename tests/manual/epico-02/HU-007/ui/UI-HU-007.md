@@ -43,7 +43,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 | CT-HU007-UI-002 | Cadastrar bairro com pontos de parada | `Campo Velho` + 1 ponto; `Centro` + 3 pontos | “Operação realizada com sucesso”; bairro na listagem; dado continua após reabrir o app e existe na API | ❌ FALHOU | Gravou certo na API, mas o formulário de Novo Bairro e o modal de ponto não limpam os campos depois de salvar. |
 | CT-HU007-UI-003 | Mesmo nome de ponto em outro bairro | `Planalto Universitário` + `Posto de Saúde` | Cadastro aceito | ❌ FALHOU | Bloqueado com “Esta localidade já está cadastrada.” (API devolve 409). Mesma causa da #210. |
 | CT-HU007-UI-004 | Cadastro duplicado | `Centro`, `centro`, `CENTRO`, `" Centro "`; ponto repetido no formulário | “Esta localidade já está cadastrada.”; nada criado | ✅ PASSOU | Variações de maiúsculas e espaços bloqueadas com a mensagem correta. Observações: nome sem acento (`RODOVIARIA`) é aceito como ponto diferente; modal do ponto com rótulo e placeholder repetidos. |
-| CT-HU007-UI-005 | Campos obrigatórios e limites | Nome vazio; sem ponto; nome `Ab`; ponto com 1 letra | Campos destacados com mensagem; nada salvo | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-005 | Campos obrigatórios, limites e caracteres | Nome vazio; sem ponto; nome `Ab`; ponto com 1 letra; número, emoji e símbolos no bairro e no ponto | Campos destacados com mensagem; nada salvo | ⏳ PENDENTE | Não executado. |
 
 ### Seção B — Edição, inativação e reativação
 
@@ -185,7 +185,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 #### CT-HU007-UI-005 — Campos obrigatórios e limites
 
-**Dados de entrada:** Quatro tentativas em **Novo**: nome vazio com um ponto; nome `Bairro Teste` sem ponto; nome `Ab` com um ponto; no modal de ponto, o nome `A`.
+**Dados de entrada:** Tentativas em **Novo**: nome vazio com um ponto; nome `Bairro Teste` sem ponto; nome `Ab` com um ponto; nomes de bairro `Centro 2`, `Centro 😀` e `Centro @#$%`; no modal de ponto, os nomes `A`, `Escola 😀` e `Posto @#$%`, e depois `Parada 12` (aceito).
 
 **Passos**
 
@@ -197,6 +197,8 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 - Nome vazio e sem ponto: os campos ficam destacados com mensagem em português e o cadastro não é enviado (AC-08, FA-003).
 - Nome `Ab`: alerta de tamanho mínimo no campo.
 - Ponto `A`: o modal não aceita e mostra a orientação no campo.
+- Bairro com número, emoji ou símbolo: bloqueado com “Use apenas letras, espaços, hífen ou apóstrofo” (AC-12).
+- Ponto com emoji ou símbolo: bloqueado com “Use apenas letras, números, espaços, hífen, apóstrofo ou ponto”; `Parada 12` é aceito (AC-12).
 - Nenhum bairro criado.
 
 **Resultado obtido**
@@ -405,6 +407,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 | AC-06 / FA-001 — rota ativa | Bloqueia inativação vinculada a rota ativa | Não coberto na UI nesta rodada (depende da HU-011); ver CT-HU007-API-012 |
 | AC-07 — mensagem de sucesso | Todos os cenários de sucesso | CT-002, 006, 008, 009 |
 | AC-08 / FA-003 — obrigatórios | Campo obrigatório; bairro sem ponto ativo | CT-005, CT-007 |
+| AC-12 — caracteres permitidos (proposto) | Bloqueia número, emoji e símbolos no bairro e no ponto | CT-004, CT-005 |
 | AC-09 — Mostrar inativos | Visualiza inativos | CT-001, CT-007, CT-009 |
 | AC-10 — auditoria | Log de auditoria | Conferido na API (CT-HU007-API-009) |
 | AC-11 — inativos fora da seleção | Bairro inativo fora do cadastro de aluno | CT-012 |
