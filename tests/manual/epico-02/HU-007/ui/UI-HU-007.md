@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Em execução | 13 | 0 | 1 | 0 | 12 |
+| ⏳ Em execução | 13 | 0 | 2 | 0 | 11 |
 
 ## Pré-condições
 
@@ -40,7 +40,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU007-UI-001 | Acessar a gestão de bairros | Cadastros → Bairros e pontos de parada | Listagem só de ativos com seus pontos; busca; chave “Mostrar inativos” desligada; botão Novo | ❌ FALHOU | A chave “Mostrar inativos” já vem ligada; a seta de voltar leva ao Painel, não a Cadastros. Busca por nome funciona. |
-| CT-HU007-UI-002 | Cadastrar bairro com pontos de parada | `Campo Velho` + 1 ponto; `Centro` + 3 pontos | “Operação realizada com sucesso”; bairro na listagem; dado continua após reabrir o app e existe na API | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-002 | Cadastrar bairro com pontos de parada | `Campo Velho` + 1 ponto; `Centro` + 3 pontos | “Operação realizada com sucesso”; bairro na listagem; dado continua após reabrir o app e existe na API | ❌ FALHOU | Gravou certo na API, mas o formulário de Novo Bairro e o modal de ponto não limpam os campos depois de salvar. |
 | CT-HU007-UI-003 | Mesmo nome de ponto em outro bairro | `Planalto Universitário` + `Posto de Saúde` | Cadastro aceito | ⏳ PENDENTE | Não executado. |
 | CT-HU007-UI-004 | Cadastro duplicado | `Centro`, `centro`, `CENTRO`, `" Centro "`; ponto repetido no formulário | “Esta localidade já está cadastrada.”; nada criado | ⏳ PENDENTE | Não executado. |
 | CT-HU007-UI-005 | Campos obrigatórios e limites | Nome vazio; sem ponto; nome `Ab`; ponto com 1 letra | Campos destacados com mensagem; nada salvo | ⏳ PENDENTE | Não executado. |
@@ -119,8 +119,14 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Usados `Campo Velho QA` (1 ponto) e `Centro QA` (3 pontos), pois o `Centro` já existia por seed da migration (PC-04).
+- A confirmação e a mensagem de sucesso aparecem de forma clara (“Bairro cadastrado com sucesso”); a confirmação diz “Essa ação não poderá ser desfeita.”. O bairro entra na listagem e continua depois de recarregar a página.
+- Conferido na API (`GET /bairros`) e no banco: `Campo Velho QA` (id 2) com 1 ponto e `Centro QA` (id 3) com 3 pontos, todos ativos e com os nomes exatos digitados.
+- **Defeito:** ao tocar em **Novo** de novo depois de cadastrar (ou de confirmar/voltar no meio do cadastro), a tela continua com o nome do bairro e os pontos do cadastro anterior, sem limpar. O mesmo ocorre no modal **Novo ponto de parada**, que mantém o nome digitado antes.
+- **Defeito:** o pop-up de erro “Esta localidade já está cadastrada.” aparece **por baixo** da tela de cadastro (e, no modal de ponto, por baixo do modal). Só fica visível depois de fechar o modal do ponto.
+- **Defeito:** a tela de Novo Bairro já abre com o ponto `Praça da Matriz` preenchido (sobra de dado de exemplo: `cadastrar.tsx` inicia o estado e o `defaultValues` com esse nome). Se o administrador não remover, o ponto é gravado sem ter sido digitado por ele. Como a tela não é recriada, às vezes ele aparece e às vezes não.
+- Campos vazios e limites (CT-005) ainda não foram testados.
+- Status: ❌ Falhou.
 
 ---
 
