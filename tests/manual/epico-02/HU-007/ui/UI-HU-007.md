@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Em execução | 13 | 1 | 3 | 0 | 9 |
+| ⏳ Em execução | 13 | 1 | 4 | 0 | 8 |
 
 ## Pré-condições
 
@@ -43,7 +43,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 | CT-HU007-UI-002 | Cadastrar bairro com pontos de parada | `Campo Velho` + 1 ponto; `Centro` + 3 pontos | “Operação realizada com sucesso”; bairro na listagem; dado continua após reabrir o app e existe na API | ❌ FALHOU | Gravou certo na API, mas o formulário de Novo Bairro e o modal de ponto não limpam os campos depois de salvar. |
 | CT-HU007-UI-003 | Mesmo nome de ponto em outro bairro | `Planalto Universitário` + `Posto de Saúde` | Cadastro aceito | ❌ FALHOU | Bloqueado com “Esta localidade já está cadastrada.” (API devolve 409). Mesma causa da #210. |
 | CT-HU007-UI-004 | Cadastro duplicado | `Centro`, `centro`, `CENTRO`, `" Centro "`; ponto repetido no formulário | “Esta localidade já está cadastrada.”; nada criado | ✅ PASSOU | Variações de maiúsculas e espaços bloqueadas com a mensagem correta. Observações: nome sem acento (`RODOVIARIA`) é aceito como ponto diferente; modal do ponto com rótulo e placeholder repetidos. |
-| CT-HU007-UI-005 | Campos obrigatórios, limites e caracteres | Nome vazio; sem ponto; nome `Ab`; ponto com 1 letra; número, emoji e símbolos no bairro e no ponto | Campos destacados com mensagem; nada salvo | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-005 | Campos obrigatórios, limites e caracteres | Nome vazio; sem ponto; nome `Ab`; ponto com 1 letra; número, emoji e símbolos no bairro e no ponto | Campos destacados com mensagem; nada salvo | ❌ FALHOU | Tamanho mínimo e obrigatórios funcionam; número, emoji e símbolos são aceitos no bairro e no ponto (sem regra de caracteres, AC-12). |
 
 ### Seção B — Edição, inativação e reativação
 
@@ -203,8 +203,12 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Nome do bairro vazio: o campo é destacado com “Informe o nome do bairro com pelo menos 3 caracteres” e nada é enviado.
+- Ponto de parada com menos de 2 caracteres: o modal bloqueia com “Informe um nome válido com pelo menos 2 caracteres.”.
+- Os limites mínimos (3 no bairro, 2 no ponto) e a obrigatoriedade funcionam como esperado.
+- **Defeito:** o app aceita **emoji, números e caracteres especiais** no nome do bairro e no nome do ponto. Não há bloqueio nem mensagem (esperado no AC-12: números, emoji e símbolos bloqueados no bairro; emoji e símbolos bloqueados no ponto).
+- Por leitura do código, a API também não valida caracteres (`BairroCreateDTO` só limita o tamanho máximo a 100 e não há mínimo de 3), então o mesmo dado passaria direto pela API.
+- Status: ❌ Falhou.
 
 ### Seção B — Edição, inativação e reativação
 
