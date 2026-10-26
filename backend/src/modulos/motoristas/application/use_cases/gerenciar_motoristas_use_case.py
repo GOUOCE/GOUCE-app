@@ -18,6 +18,10 @@ class MotoristaNaoEncontradoError(ValueError):
     """Indica que o motorista solicitado não existe."""
 
 
+class MotoristaComAlocacoesPendentesError(ValueError):
+    """Impede a inativação de motorista escalado para rotas em dias futuros."""
+
+
 class GerenciarMotoristasUseCase:
     """Coordena validações de negócio e operações do repository de motoristas."""
 
@@ -36,7 +40,7 @@ class GerenciarMotoristasUseCase:
 
     def listar(
         self,
-        ativo: bool | None = None,
+        incluir_inativos: bool = False,
         nome: str | None = None,
     ) -> list[dict]:
         if nome is not None:
@@ -47,6 +51,9 @@ class GerenciarMotoristasUseCase:
                 )
             nome = nome.strip()
 
+        # Por padrão somente motoristas ativos; com ``incluir_inativos`` o
+        # filtro de status é removido e cada item mantém o campo ``ativo``.
+        ativo = None if incluir_inativos else True
         return self.repository.listar(ativo=ativo, nome=nome)
 
     def buscar(self, motorista_id: int) -> dict:
@@ -88,11 +95,13 @@ class GerenciarMotoristasUseCase:
         self._validar_id(motorista_id, "motorista_id")
         self._validar_id(usuario_executor_id, "usuario_executor_id")
 
-        # A consulta prévia permite diferenciar inexistência da regra de
-        # alocações pendente. A chamada seguinte não recebe nenhuma
-        # autorização artificial; o repository deve falhar fechado enquanto
-        # a verificação real de alocações não estiver integrada.
+        # A consulta prévia diferencia inexistência da regra de alocações.
         self.buscar(motorista_id)
+        if self.repository.possui_alocacoes_futuras(motorista_id):
+            raise MotoristaComAlocacoesPendentesError(
+                "Este profissional possui alocações pendentes e não pode "
+                "ser inativado no momento."
+            )
         resultado = self.repository.inativar(motorista_id, usuario_executor_id)
         if not resultado:
             raise MotoristaNaoEncontradoError("Motorista não encontrado.")
