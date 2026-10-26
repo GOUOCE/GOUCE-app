@@ -194,12 +194,15 @@ async def atualizar_faculdade(
     faculdade_id: int,
     dados: AtualizarFaculdadeDTO,
     service: FaculdadeService = Depends(get_service),
-    _: dict = Depends(admin_required),
+    current_user: dict = Depends(admin_required)
 ):
     try:
+        user_id = current_user.get("current_user_id") or current_user.get("sub")
+        usuario_executor_id = int(user_id) if user_id is not None else None
         faculdade = service.atualizar(
             faculdade_id=faculdade_id,
             nome=dados.nome,
+            usuario_executor_id=usuario_executor_id,
             campus=dados.campus,
             sigla=dados.sigla,
             ativo=dados.ativo,
