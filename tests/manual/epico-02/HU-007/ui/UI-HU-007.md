@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Em execução | 13 | 1 | 4 | 0 | 8 |
+| ⏳ Em execução | 13 | 2 | 4 | 0 | 7 |
 
 ## Pré-condições
 
@@ -49,7 +49,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU007-UI-006 | Editar bairro | Renomear `Campo Velho` e adicionar ponto; renomear para `Centro` | Sucesso e listagem atualizada; nome em uso bloqueado | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-006 | Editar bairro | Renomear `Campo Velho` e adicionar ponto; renomear para `Centro` | Sucesso e listagem atualizada; nome em uso bloqueado | ✅ PASSOU | Edição gravada na API; nome em uso bloqueado. |
 | CT-HU007-UI-007 | Inativar ponto e último ponto | Retirar `Mercado Público` do Centro; retirar o único ponto de outro bairro | Ponto vira inativo (não some); último ponto bloqueado | ⏳ PENDENTE | Não executado. |
 | CT-HU007-UI-008 | Inativar bairro | Cancelar e depois confirmar a inativação do `Campo Velho II` | Cancelar não muda nada; confirmar mostra sucesso e tira o bairro dos ativos | ⏳ PENDENTE | Não executado. |
 | CT-HU007-UI-009 | Mostrar inativos e reativar | Ligar a chave; reativar `Campo Velho II` | Inativos identificados; reativação com sucesso | ⏳ PENDENTE | Não executado. |
@@ -229,8 +229,11 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Os campos vêm preenchidos ao abrir o lápis. A primeira edição foi salva com sucesso: o bairro passou a se chamar `Campo Velho QA II` e ganhou o ponto `Praça chalé`; o ponto original `Escola Coronel Virgílio Távora` continua ativo. Conferido no banco (bairro 2, pontos 1 e 9).
+- A mensagem de sucesso é “Bairro alterado com sucesso”, exibida na barra preta (toast) embaixo, e a tela volta para a listagem (`editar.tsx`).
+- A tentativa de usar um nome já cadastrado foi bloqueada com “Esta localidade já está cadastrada.” e o nome não mudou; o log da API mostra o `PATCH /bairros/2` com 409 antes do 200.
+- Não há registro de auditoria da edição (já coberto pela #212).
+- Status: ✅ Passou.
 
 ---
 
