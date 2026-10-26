@@ -36,7 +36,9 @@ class AdministradorRepository:
         )
         if ativo is not None:
             query = query.filter(AdministradorORM.is_administrador_ativo == ativo)
-        return [self._serializar(usuario, administrador) for usuario, administrador in query.order_by(UsuarioORM.nome_completo).all()]
+        # nome_completo é cifrado: ordenar no banco ordenaria o texto cifrado, então ordena aqui.
+        administradores = [self._serializar(usuario, administrador) for usuario, administrador in query.all()]
+        return sorted(administradores, key=lambda adm: ((adm["nome"] or "").casefold(), adm["id"]))
 
     def buscar(self, administrador_id: int):
         return (

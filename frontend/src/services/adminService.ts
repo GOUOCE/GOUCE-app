@@ -67,20 +67,34 @@ export const adminService = {
   },
 
   async listarAlunosAprovados(search?: string): Promise<AlunoAprovadoItem[]> {
-    const response = await api.get<any[]>('/usuarios/alunos', {
-      params: { status: 'ativado' },
-    });
+    const [resAlunos, admins] = await Promise.all([
+      api.get<any[]>('/usuarios/alunos', { params: { status: 'ativado' } }),
+      this.listarAdministradores().catch(() => []),
+    ]);
 
-    const lista = response.data.map((item) => ({
-      id: item.id || item.aluno_id,
-      aluno_id: item.aluno_id || item.id,
-      nome: item.nome || item.nome_completo,
-      email: item.email,
-      faculdade_id: item.faculdade_id,
-      campus: item.campus,
-      curso: item.curso,
-      status_cadastro: item.status_cadastro,
-    }));
+    const adminEmails = new Set(admins.map((adm) => (adm.email || '').toLowerCase().trim()));
+    const adminIds = new Set(admins.map((adm) => adm.id));
+
+    const lista = (resAlunos.data || [])
+      .filter((item) => {
+        const emailAluno = (item.email || '').toLowerCase().trim();
+        const idAluno = item.id || item.aluno_id;
+        // Exclui alunos que já possuem registro como administrador
+        if (adminEmails.has(emailAluno) || adminIds.has(idAluno)) {
+          return false;
+        }
+        return true;
+      })
+      .map((item) => ({
+        id: item.id || item.aluno_id,
+        aluno_id: item.aluno_id || item.id,
+        nome: item.nome || item.nome_completo,
+        email: item.email,
+        faculdade_id: item.faculdade_id,
+        campus: item.campus,
+        curso: item.curso,
+        status_cadastro: item.status_cadastro,
+      }));
 
     if (search && search.trim()) {
       const q = search.toLowerCase().trim();
