@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Em execução | 13 | 2 | 5 | 0 | 6 |
+| ⏳ Em execução | 13 | 3 | 5 | 0 | 5 |
 
 ## Pré-condições
 
@@ -51,7 +51,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 | --- | --- | --- | --- | --- | --- |
 | CT-HU007-UI-006 | Editar bairro | Renomear `Campo Velho` e adicionar ponto; renomear para `Centro` | Sucesso e listagem atualizada; nome em uso bloqueado | ✅ PASSOU | Edição gravada na API; nome em uso bloqueado. |
 | CT-HU007-UI-007 | Inativar ponto e último ponto | Retirar `Mercado Público` do Centro; retirar o único ponto de outro bairro | Ponto vira inativo (não some); último ponto bloqueado | ❌ FALHOU | A lixeira do ponto o apaga do banco: não aparece em “Mostrar inativos” e pode ser cadastrado de novo. Último ponto bloqueado corretamente. Mesma causa da #211. |
-| CT-HU007-UI-008 | Inativar bairro | Cancelar e depois confirmar a inativação do `Campo Velho II` | Cancelar não muda nada; confirmar mostra sucesso e tira o bairro dos ativos | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-008 | Inativar bairro | Cancelar e depois confirmar a inativação do `Campo Velho II` | Cancelar não muda nada; confirmar mostra sucesso e tira o bairro dos ativos | ✅ PASSOU | Inativação confirmada, gravada e auditada; mensagem de sucesso só em toast preto; pontos do bairro inativo seguem ativos no banco. |
 | CT-HU007-UI-009 | Mostrar inativos e reativar | Ligar a chave; reativar `Campo Velho II` | Inativos identificados; reativação com sucesso | ⏳ PENDENTE | Não executado. |
 | CT-HU007-UI-010 | Sair sem salvar | Alterar nome em Editar Bairro e tocar na seta | Pedir confirmação; nada salvo; ao reabrir, dados salvos | ⏳ PENDENTE | Não executado. |
 
@@ -284,8 +284,13 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- A lixeira abre o pop-up “Inativar bairro?” com “O bairro e seus pontos ficarão inativos no sistema.”. **Cancelar** não muda nada (nenhuma chamada à API).
+- Ao confirmar, o bairro sai da lista de ativos e a mensagem de sucesso aparece só como **barra preta (toast) embaixo da tela**, sem pop-up. Texto no código: “Bairro <nome> inativado”, e não “Operação realizada com sucesso” (AC-07).
+- O bairro não é apagado: `Campo Velho QA II` e `Planalto Universitário QA` estão com `ativo = false` no banco e aparecem no título **Inativos** quando a chave está ligada.
+- O log de auditoria registrou as duas inativações (`INATIVAR`, bairro 2 e 7, usuário 1).
+- **Observação (formato da mensagem):** o app mistura dois padrões de sucesso. Cadastros de administrador, perfil do aluno e fluxos de autenticação usam pop-up de sucesso; bairros, faculdades, motoristas e representantes usam o toast preto. A decisão sobre o padrão é do time de Front.
+- **Observação (pontos):** o pop-up promete que “seus pontos ficarão inativos”, mas no banco os pontos do bairro inativo continuam com `ativo = true`. Conferir na API se eles ficam indisponíveis para uso (requisitos, AC-05).
+- Status: ✅ Passou.
 
 ---
 
