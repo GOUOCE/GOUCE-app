@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| 🔄 Em andamento | 12 | 3 | 7 | 0 | 2 |
+| 🔄 Em andamento | 12 | 3 | 8 | 0 | 1 |
 
 ## Pré-condições
 
@@ -60,7 +60,7 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 | --- | --- | --- | --- | --- | --- |
 | CT-HU008-UI-010 | Aluno e representante sem acesso | Menus do aluno e do representante; link `faculdades` | Menu não exibido; link mostra Acesso Negado | ✅ PASSOU | Aluno e representante não veem o menu de faculdades e o link direto mostra Acesso Negado (relatado pelo testador). |
 | CT-HU008-UI-011 | Faculdades na seleção de cadastro | Faculdade nova ativa e faculdade inativa | Ativa aparece; inativa não aparece (cadastro de aluno e de representante) | ❌ FALHOU | As listas de instituição do cadastro de representante e do cadastro de aluno são fixas no app e não refletem as faculdades do banco. |
-| CT-HU008-UI-012 | Falha de conexão e dados de exemplo | Servidor/Wi-Fi desligado ao listar, cadastrar e inativar | Mensagem de conexão; app não finge sucesso nem mostra dados que não existem | ⏳ PENDENTE | Não executado. |
+| CT-HU008-UI-012 | Falha de conexão e dados de exemplo | Servidor/Wi-Fi desligado ao listar, cadastrar e inativar | Mensagem de conexão; app não finge sucesso nem mostra dados que não existem | ❌ FALHOU | Sem a API, o app finge sucesso e usa a lista de exemplo; nada é gravado no banco. |
 
 ## Detalhamento dos casos
 
@@ -375,8 +375,11 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Com a API fora do ar, o app **não mostrou erro de conexão**: a listagem, o cadastro e a inativação pareceram funcionar, com mensagem de sucesso. Ao religar a API, a listagem estava diferente do que a tela tinha mostrado offline (relatado pelo testador).
+- Conferido no banco: nenhuma faculdade `Faculdade Offline` foi criada, nenhuma faculdade mudou de status e o `log_auditoria` não ganhou registros. Ou seja, nada do que a tela mostrou como feito foi gravado.
+- Causa, em `faculdadeService.ts`: quando a chamada à API falha **sem resposta do servidor** (`!error.response`), cada operação trata o erro como se fosse sucesso e age só na lista de exemplo (`FACULDADES_MOCK`, em memória): `listarFaculdades` devolve a lista de exemplo sem lançar erro (`UFC`, `IFCE`, `Uniateneu`); `criarFaculdade` insere a faculdade na lista de exemplo e devolve sucesso; `atualizarFaculdade`, `inativarFaculdade` e `reativarFaculdade` alteram a lista de exemplo e retornam sem erro. A lista de exemplo só existe na memória da página e some ao recarregar, o que explica a diferença depois que a API voltou.
+- Falha nos três pontos do esperado: não há mensagem de falha de conexão, o app mostra sucesso sem a API gravar e exibe faculdades de exemplo que não existem no banco. Mesmo defeito da HU-007 ([#249](https://github.com/GOUOCE/GOUCE-app/issues/249), bairros).
+- Status: ❌ Falhou.
 
 ## Rastreabilidade
 
@@ -400,6 +403,7 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 | Caso | Defeito | Issue |
 | --- | --- | --- |
 | CT-001, CT-002, CT-009 | Telas de faculdades não recriadas: a seta volta ao Painel (listagem, Cadastrar e Editar), Cadastrar/Editar reabrem com os dados da vez anterior e Editar sai sem pedir confirmação | [#245](https://github.com/GOUOCE/GOUCE-app/issues/245) cobre bairros e sugere corrigir também faculdades; issue própria a abrir ao final da suíte |
+| CT-012 | Sem conexão com a API o app mostra sucesso e a lista de exemplo (`FACULDADES_MOCK`) em vez de erro; nada é gravado | [#249](https://github.com/GOUOCE/GOUCE-app/issues/249) é de bairros; issue própria a abrir ao final da suíte |
 | CT-011 | Instituição de Ensino fixa no cadastro de aluno (`UFC`, `IFCE`, `UNILAB`, `Estácio`, `Outra`) e no cadastro de representante (`UFC`, `IFCE`, `UECE`, campus Quixadá): não refletem as faculdades do banco nem escondem as inativas | [#192](https://github.com/GOUOCE/GOUCE-app/issues/192) cobre o envio do nome em vez do id no aluno; issue própria a abrir ao final da suíte (aluno e representante) |
 | CT-007 | Inativar a faculdade de `id` 1 é barrado pela lista de exemplo (“viagens programadas pendentes”) sem agendamento real e sem chamar a API | Issue própria a abrir ao final da suíte |
 | CT-005 | Nome, sigla e campus aceitam emoji e caracteres especiais (sem regra na tela nem na API) | [#251](https://github.com/GOUOCE/GOUCE-app/issues/251) é de bairros; issue própria a abrir ao final da suíte |
