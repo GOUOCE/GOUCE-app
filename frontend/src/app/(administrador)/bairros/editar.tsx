@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
 import { Text, TextInput, Button, Portal, Snackbar } from 'react-native-paper';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, Trash2, X } from 'lucide-react-native';
+import { ChevronLeft, Trash2, RotateCcw, X } from 'lucide-react-native';
 
 import { bairroSchema, BairroFormData } from '@/schemas/bairroSchema';
-import { bairroService } from '@/services/bairroService';
+import { bairroService, PontoParadaItem } from '@/services/bairroService';
 import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
@@ -15,7 +15,7 @@ export default function EditarBairroScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  const [pontos, setPontos] = useState<string[]>([]);
+  const [pontos, setPontos] = useState<PontoParadaItem[]>([]);
   const [modalPontoVisible, setModalPontoVisible] = useState(false);
   const [novoPontoNome, setNovoPontoNome] = useState('');
   const [erroPonto, setErroPonto] = useState(false);
@@ -32,6 +32,8 @@ export default function EditarBairroScreen() {
     title: string;
     message: string;
     confirmText?: string;
+    cancelText?: string;
+    confirmColor?: string;
     onConfirm?: () => void;
   }>({
     visible: false,
@@ -47,7 +49,7 @@ export default function EditarBairroScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const { control, handleSubmit, formState: { errors }, reset, setValue, trigger } = useForm<BairroFormData>({
+  const { control, handleSubmit, formState: { errors, isDirty }, reset, setValue, trigger } = useForm<BairroFormData>({
     resolver: zodResolver(bairroSchema),
     defaultValues: {
       nome: '',
@@ -55,25 +57,62 @@ export default function EditarBairroScreen() {
     },
   });
 
-  useEffect(() => {
-    async function carregarDados() {
-      if (!id) return;
-      try {
-        const b = await bairroService.obterBairroPorId(Number(id));
-        if (b) {
-          const pontosNomes = b.pontos.map((p) => p.nome);
-          setPontos(pontosNomes);
-          reset({
-            nome: b.nome,
-            pontos: pontosNomes,
-          });
+  // Recarrega os dados oficiais do banco de dados ao ganhar foco e descarta alterações não salvas ao sair
+  useFocusEffect(
+    React.useCallback(() => {
+      let isMounted = true;
+
+      async function carregarDadosOficiais() {
+        if (!id) return;
+        try {
+          const b = await bairroService.obterBairroPorId(Number(id));
+          if (b && isMounted) {
+            setPontos(b.pontos);
+            const pontosAtivosNomes = b.pontos.filter((p) => p.ativo !== false).map((p) => p.nome);
+            setNovoPontoNome('');
+            setErroPonto(false);
+            setModalPontoVisible(false);
+            reset({
+              nome: b.nome,
+              pontos: pontosAtivosNomes.length > 0 ? pontosAtivosNomes : ['Ponto de Parada'],
+            });
+          }
+        } catch (err) {
+          console.warn('Erro ao carregar dados do bairro:', err);
         }
-      } catch (err) {
-        console.warn('Erro ao carregar dados do bairro:', err);
       }
+
+      carregarDadosOficiais();
+
+      return () => {
+        isMounted = false;
+        setNovoPontoNome('');
+        setErroPonto(false);
+        setModalPontoVisible(false);
+      };
+    }, [id, reset])
+  );
+
+  const voltarParaListagem = () => {
+    closePopup();
+    router.replace('/(administrador)/bairros');
+  };
+
+  const handleBack = () => {
+    if (isDirty) {
+      showPopup({
+        type: 'warning',
+        title: 'Sair desta tela?',
+        message: 'As alterações não salvas serão perdidas.',
+        confirmText: 'Sim, sair',
+        cancelText: 'Continuar aqui',
+        confirmColor: '#B00020',
+        onConfirm: voltarParaListagem,
+      });
+    } else {
+      voltarParaListagem();
     }
-    carregarDados();
-  }, [id, reset]);
+  };
 
   const handleAdicionarPonto = () => {
     if (!novoPontoNome || novoPontoNome.trim().length < 2) {
@@ -82,7 +121,34 @@ export default function EditarBairroScreen() {
     }
 
     const pontoFormatado = novoPontoNome.trim();
-    if (pontos.some((p) => p.toLowerCase() === pontoFormatado.toLowerCase())) {
+    const indexExistente = pontos.findIndex((p) => p.nome.toLowerCase() === pontoFormatado.toLowerCase());
+
+    if (indexExistente !== -1) {
+      const pontoExistente = pontos[indexExistente];
+      if (!pontoExistente.ativo) {
+        // Ponto inativo encontrado -> Oferece reativação
+        showPopup({
+          type: 'info',
+          title: 'Reativar ponto de parada?',
+          message: `O ponto de parada "${pontoExistente.nome}" consta como inativo. Deseja reativá-lo?`,
+          confirmText: 'Reativar',
+          cancelText: 'Cancelar',
+          onConfirm: () => {
+            closePopup();
+            const novos = [...pontos];
+            novos[indexExistente].ativo = true;
+            setPontos(novos);
+            const nomesAtivos = novos.filter((p) => p.ativo).map((p) => p.nome);
+            setValue('pontos', nomesAtivos, { shouldDirty: true });
+            trigger('pontos');
+            setNovoPontoNome('');
+            setErroPonto(false);
+            setModalPontoVisible(false);
+          },
+        });
+        return;
+      }
+
       showPopup({
         type: 'error',
         title: 'Aviso',
@@ -92,19 +158,31 @@ export default function EditarBairroScreen() {
       return;
     }
 
-    const novosPontos = [...pontos, pontoFormatado];
+    const novosPontos: PontoParadaItem[] = [...pontos, { id: Date.now(), nome: pontoFormatado, ativo: true }];
     setPontos(novosPontos);
-    setValue('pontos', novosPontos);
+    const nomesAtivos = novosPontos.filter((p) => p.ativo).map((p) => p.nome);
+    setValue('pontos', nomesAtivos, { shouldDirty: true });
     trigger('pontos');
     setNovoPontoNome('');
     setErroPonto(false);
     setModalPontoVisible(false);
   };
 
-  const handleRemoverPonto = (index: number) => {
-    const novosPontos = pontos.filter((_, i) => i !== index);
-    setPontos(novosPontos);
-    setValue('pontos', novosPontos);
+  const handleInativarPonto = (index: number) => {
+    const novos = [...pontos];
+    novos[index].ativo = false;
+    setPontos(novos);
+    const nomesAtivos = novos.filter((p) => p.ativo).map((p) => p.nome);
+    setValue('pontos', nomesAtivos.length > 0 ? nomesAtivos : [], { shouldDirty: true });
+    trigger('pontos');
+  };
+
+  const handleReativarPonto = (index: number) => {
+    const novos = [...pontos];
+    novos[index].ativo = true;
+    setPontos(novos);
+    const nomesAtivos = novos.filter((p) => p.ativo).map((p) => p.nome);
+    setValue('pontos', nomesAtivos, { shouldDirty: true });
     trigger('pontos');
   };
 
@@ -117,7 +195,7 @@ export default function EditarBairroScreen() {
       setSnackbarMessage('Bairro alterado com sucesso');
       setSnackbarVisivel(true);
       setTimeout(() => {
-        router.replace('/(administrador)/bairros');
+        voltarParaListagem();
       }, 1200);
     } catch (error: any) {
       setIsLoading(false);
@@ -131,11 +209,14 @@ export default function EditarBairroScreen() {
     }
   };
 
+  const pontosAtivos = pontos.map((p, originalIdx) => ({ ...p, originalIdx })).filter((p) => p.ativo !== false);
+  const pontosInativos = pontos.map((p, originalIdx) => ({ ...p, originalIdx })).filter((p) => p.ativo === false);
+
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={handleBack}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Editar Bairro</Text>
@@ -148,6 +229,8 @@ export default function EditarBairroScreen() {
         title={popup.title}
         message={popup.message}
         confirmText={popup.confirmText}
+        cancelText={popup.cancelText}
+        confirmColor={popup.confirmColor}
         onConfirm={popup.onConfirm}
         onDismiss={closePopup}
       />
@@ -173,14 +256,14 @@ export default function EditarBairroScreen() {
           {errors.nome && <Text style={styles.errorText}>{errors.nome.message}</Text>}
         </View>
 
-        {/* Pontos de Parada */}
+        {/* Pontos de Parada Ativos */}
         <Text variant="titleMedium" style={styles.sectionTitle}>Pontos de Parada</Text>
 
         <View style={styles.pontosList}>
-          {pontos.map((ponto, idx) => (
-            <View key={idx} style={styles.pontoRow}>
-              <Text variant="bodyLarge" style={styles.pontoName}>{ponto}</Text>
-              <TouchableOpacity onPress={() => handleRemoverPonto(idx)}>
+          {pontosAtivos.map((item) => (
+            <View key={item.id || item.originalIdx} style={styles.pontoRow}>
+              <Text variant="bodyLarge" style={styles.pontoName}>{item.nome}</Text>
+              <TouchableOpacity onPress={() => handleInativarPonto(item.originalIdx)}>
                 <Trash2 size={20} color="#333" />
               </TouchableOpacity>
             </View>
@@ -188,6 +271,24 @@ export default function EditarBairroScreen() {
 
           {errors.pontos && <Text style={styles.errorText}>{errors.pontos.message}</Text>}
         </View>
+
+        {/* Pontos Inativos (Se houver) */}
+        {pontosInativos.length > 0 && (
+          <View style={styles.inativosSection}>
+            <Text variant="titleMedium" style={styles.inativosTitle}>Pontos Inativos</Text>
+            {pontosInativos.map((item) => (
+              <View key={item.id || item.originalIdx} style={styles.pontoRow}>
+                <View style={{ flex: 1 }}>
+                  <Text variant="bodyLarge" style={[styles.pontoName, { color: '#888' }]}>{item.nome}</Text>
+                  <Text variant="bodySmall" style={{ color: '#888' }}>(inativo)</Text>
+                </View>
+                <TouchableOpacity onPress={() => handleReativarPonto(item.originalIdx)}>
+                  <RotateCcw size={20} color="#333" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Botão Adicionar Ponto de Parada */}
         <Button
@@ -306,6 +407,15 @@ const styles = StyleSheet.create({
   pontoName: {
     color: '#333',
     fontSize: 16,
+  },
+  inativosSection: {
+    marginTop: 8,
+    marginBottom: 20,
+  },
+  inativosTitle: {
+    fontWeight: 'bold',
+    color: '#666',
+    marginBottom: 8,
   },
   addPontoButton: {
     borderColor: '#3E5F90',

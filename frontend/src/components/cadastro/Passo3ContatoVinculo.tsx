@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { TextInput, Text, useTheme, Portal } from 'react-native-paper';
 import { useFormContext, Controller } from 'react-hook-form';
 import { ChevronDown, Phone, School, GraduationCap, Search, X } from 'lucide-react-native';
 import { formatarCelular } from '../../utils/formatarTelefone';
 import { abreviarParaLargura } from '../../utils/abreviarTexto';
+import { bairroService } from '../../services/bairroService';
+import { faculdadeService } from '../../services/faculdadeService';
 
 interface SelectInputProps {
   label: string;
@@ -150,14 +152,34 @@ const LISTA_DE_CURSOS = [
 
 export function Passo3ContatoVinculo() {
   const { control, formState: { errors }, watch, setValue } = useFormContext();
-  // Enquanto o campo está em foco, mostra só os dígitos (dá para apagar e editar
-  // em qualquer posição); a máscara é aplicada ao sair do campo. Reformatar a cada
-  // tecla impedia apagar no meio do número e fazia o cursor pular para o final.
   const [editandoTelefone, setEditandoTelefone] = useState(false);
+
+  const [bairrosAtivos, setBairrosAtivos] = useState<string[]>(['Centro', 'Bairro Novo', 'Outro']);
+  const [faculdadesAtivas, setFaculdadesAtivas] = useState<string[]>(['UFC - Universidade Federal do Ceará', 'IFCE', 'Outra']);
 
   const cursoSelecionado = watch('curso');
   const instituicaoSelecionada = watch('instituicao');
   const bairroSelecionado = watch('bairro');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    bairroService.listarBairros().then((lista) => {
+      if (isMounted && lista && lista.length > 0) {
+        const nomesAtivos = lista.filter((b) => b.ativo !== false).map((b) => b.nome);
+        setBairrosAtivos([...nomesAtivos, 'Outro']);
+      }
+    }).catch(() => {});
+
+    faculdadeService.listarFaculdades().then((lista) => {
+      if (isMounted && lista && lista.length > 0) {
+        const nomesAtivos = lista.filter((f) => f.ativo !== false).map((f) => `${f.sigla} - ${f.nome}`);
+        setFaculdadesAtivas([...nomesAtivos, 'Outra']);
+      }
+    }).catch(() => {});
+
+    return () => { isMounted = false; };
+  }, []);
 
   const gerarPeriodosIngresso = () => {
     const anoAtual = new Date().getFullYear();
@@ -178,7 +200,7 @@ export function Passo3ContatoVinculo() {
           <CustomSelect
             label="Bairro / Localidade *"
             value={value}
-            options={['Centro', 'Croatá', 'Bairro Novo', 'Planalto', 'Serra', 'Outro']}
+            options={bairrosAtivos}
             onSelect={(val) => {
               onChange(val);
               if (val !== 'Outro') setValue('bairroEspecifico', '');
@@ -239,7 +261,7 @@ export function Passo3ContatoVinculo() {
           <CustomSelect
             label="Instituição de Ensino *"
             value={value}
-            options={['UFC - Universidade Federal do Ceará', 'IFCE', 'UNILAB', 'Estácio', 'Outra']}
+            options={faculdadesAtivas}
             onSelect={(val) => {
               onChange(val);
               if (val !== 'Outra') setValue('instituicaoEspecifica', '');

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, TextInput, Button, Snackbar } from 'react-native-paper';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft, Building2, X } from 'lucide-react-native';
@@ -41,7 +41,7 @@ export default function CadastrarFaculdadeScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const { control, handleSubmit, formState: { errors } } = useForm<FaculdadeFormData>({
+  const { control, handleSubmit, formState: { errors }, reset } = useForm<FaculdadeFormData>({
     resolver: zodResolver(faculdadeSchema),
     defaultValues: {
       nome: '',
@@ -49,6 +49,30 @@ export default function CadastrarFaculdadeScreen() {
       campus: '',
     },
   });
+
+  // Reseta o formulário limpo sempre que ganha ou perde o foco
+  useFocusEffect(
+    React.useCallback(() => {
+      reset({
+        nome: '',
+        sigla: '',
+        campus: '',
+      });
+
+      return () => {
+        reset({
+          nome: '',
+          sigla: '',
+          campus: '',
+        });
+      };
+    }, [reset])
+  );
+
+  const voltarParaListagem = () => {
+    closePopup();
+    router.replace('/(administrador)/faculdades');
+  };
 
   const onSubmit = (dados: FaculdadeFormData) => {
     showPopup({
@@ -66,7 +90,7 @@ export default function CadastrarFaculdadeScreen() {
           setSnackbarMessage('Faculdade cadastrada com sucesso');
           setSnackbarVisivel(true);
           setTimeout(() => {
-            router.replace('/(administrador)/faculdades');
+            voltarParaListagem();
           }, 1200);
         } catch (error: any) {
           setIsLoading(false);
@@ -86,7 +110,7 @@ export default function CadastrarFaculdadeScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={voltarParaListagem}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Cadastrar Faculdade</Text>

@@ -1,5 +1,9 @@
+import re
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+REGEX_BAIRRO = re.compile(r"^[A-Za-zÀ-ÖØ-öø-ÿ'’\-. ]+$")
+REGEX_PONTO = re.compile(r"^[A-Za-z0-9À-ÖØ-öø-ÿ'’\-. ]+$")
 
 
 class PontoDeParadaResponseDTO(BaseModel):
@@ -15,7 +19,7 @@ class PontoDeParadaResponseDTO(BaseModel):
 class CriarBairroDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    nome: str = Field(..., alias="nome_bairro", min_length=1, max_length=100)
+    nome: str = Field(..., alias="nome_bairro", min_length=3, max_length=100)
     pontos_de_parada: list[str] = Field(..., min_length=1)
 
     @field_validator("nome", mode="before")
@@ -24,8 +28,10 @@ class CriarBairroDTO(BaseModel):
         if valor is None:
             raise ValueError("O nome do bairro é obrigatório.")
         valor_str = str(valor).strip()
-        if not valor_str:
-            raise ValueError("O nome do bairro é obrigatório.")
+        if not valor_str or len(valor_str) < 3:
+            raise ValueError("Informe o nome do bairro com pelo menos 3 caracteres")
+        if not REGEX_BAIRRO.match(valor_str):
+            raise ValueError("Use apenas letras, espaços, hífen ou apóstrofo")
         return valor_str
 
     @field_validator("pontos_de_parada", mode="before")
@@ -38,8 +44,10 @@ class CriarBairroDTO(BaseModel):
             if p is None:
                 raise ValueError("O nome do ponto de parada não pode ser vazio.")
             p_str = str(p).strip()
-            if not p_str:
-                raise ValueError("O nome do ponto de parada não pode ser vazio.")
+            if len(p_str) < 2:
+                raise ValueError("Informe um nome de ponto com pelo menos 2 caracteres")
+            if not REGEX_PONTO.match(p_str):
+                raise ValueError("Use apenas letras, números, espaços, hífen, apóstrofo ou ponto")
             pontos_limpos.append(p_str)
         if not pontos_limpos:
             raise ValueError("Ao menos um ponto de parada é obrigatório.")
@@ -59,8 +67,10 @@ class AtualizarBairroDTO(BaseModel):
         if valor is None:
             return None
         valor_str = str(valor).strip()
-        if not valor_str:
-            raise ValueError("O nome do bairro não pode ser vazio.")
+        if not valor_str or len(valor_str) < 3:
+            raise ValueError("Informe o nome do bairro com pelo menos 3 caracteres")
+        if not REGEX_BAIRRO.match(valor_str):
+            raise ValueError("Use apenas letras, espaços, hífen ou apóstrofo")
         return valor_str
 
     @field_validator("pontos_de_parada", mode="before")
@@ -75,8 +85,10 @@ class AtualizarBairroDTO(BaseModel):
             if p is None:
                 raise ValueError("O nome do ponto de parada não pode ser vazio.")
             p_str = str(p).strip()
-            if not p_str:
-                raise ValueError("O nome do ponto de parada não pode ser vazio.")
+            if len(p_str) < 2:
+                raise ValueError("Informe um nome de ponto com pelo menos 2 caracteres")
+            if not REGEX_PONTO.match(p_str):
+                raise ValueError("Use apenas letras, números, espaços, hífen, apóstrofo ou ponto")
             pontos_limpos.append(p_str)
         if not pontos_limpos:
             raise ValueError("Ao menos um ponto de parada deve ser informado.")

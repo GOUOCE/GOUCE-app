@@ -1,6 +1,8 @@
 import { api } from '../api/api';
 import { AlunoFormData } from '@/schemas/alunoSchema';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { bairroService } from './bairroService';
+import { faculdadeService } from './faculdadeService';
 
 export interface CadastroResponse {
   success: true;
@@ -143,12 +145,41 @@ export const userService = {
     formData.append('transgenero', String(data.transgenero || ''));
     formData.append('tem_filhos', String(Boolean(data.temFilhos)));
 
-    const bairroFinal = data.bairro === 'Outro' && data.bairroEspecifico ? data.bairroEspecifico : data.bairro;
-    const instFinal = data.instituicao === 'Outra' && data.instituicaoEspecifica ? data.instituicaoEspecifica : data.instituicao;
+    // Mapeamento dinâmico de Bairro ID e Faculdade ID para o backend
+    let bairroIdFinal: string = data.bairro === 'Outro' && data.bairroEspecifico ? data.bairroEspecifico : data.bairro;
+    let faculdadeIdFinal: string = data.instituicao === 'Outra' && data.instituicaoEspecifica ? data.instituicaoEspecifica : data.instituicao;
     const cursoFinal = data.curso === 'Outro' && data.cursoEspecifico ? data.cursoEspecifico : data.curso;
 
-    formData.append('bairro_id', String(bairroFinal || ''));
-    formData.append('faculdade_id', String(instFinal || ''));
+    try {
+      const [listaBairros, listaFaculdades] = await Promise.all([
+        bairroService.listarBairros().catch(() => []),
+        faculdadeService.listarFaculdades().catch(() => []),
+      ]);
+
+      const bairroEncontrado = listaBairros.find(
+        (b) => b.nome.toLowerCase().trim() === String(bairroIdFinal).toLowerCase().trim()
+      );
+      if (bairroEncontrado) {
+        bairroIdFinal = String(bairroEncontrado.id);
+      }
+
+      const facEncontrada = listaFaculdades.find(
+        (f) =>
+          f.nome.toLowerCase().trim() === String(faculdadeIdFinal).toLowerCase().trim() ||
+          f.sigla.toLowerCase().trim() === String(faculdadeIdFinal).toLowerCase().trim() ||
+          `${f.sigla} - ${f.nome}`.toLowerCase().trim() === String(faculdadeIdFinal).toLowerCase().trim()
+      );
+      if (facEncontrada) {
+        faculdadeIdFinal = String(facEncontrada.id);
+      } else if (!/^\d+$/.test(faculdadeIdFinal)) {
+        faculdadeIdFinal = '1';
+      }
+    } catch (err) {
+      if (!/^\d+$/.test(faculdadeIdFinal)) faculdadeIdFinal = '1';
+    }
+
+    formData.append('bairro_id', bairroIdFinal || '1');
+    formData.append('faculdade_id', faculdadeIdFinal || '1');
     formData.append('curso', String(cursoFinal || ''));
     formData.append('campus', String(data.campus || 'Quixadá'));
 
@@ -195,13 +226,42 @@ export const userService = {
     formData.append('transgenero', String(data.transgenero || ''));
     formData.append('tem_filhos', String(Boolean(data.temFilhos)));
 
-    const bairroFinal = data.bairro === 'Outro' && data.bairroEspecifico ? data.bairroEspecifico : data.bairro;
-    const instFinal = data.instituicao === 'Outra' && data.instituicaoEspecifica ? data.instituicaoEspecifica : data.instituicao;
+    // Mapeamento dinâmico de Bairro ID e Faculdade ID para a renovação
+    let bairroIdFinal: string = data.bairro === 'Outro' && data.bairroEspecifico ? data.bairroEspecifico : data.bairro;
+    let faculdadeIdFinal: string = data.instituicao === 'Outra' && data.instituicaoEspecifica ? data.instituicaoEspecifica : data.instituicao;
     const cursoFinal = data.curso === 'Outro' && data.cursoEspecifico ? data.cursoEspecifico : data.curso;
 
+    try {
+      const [listaBairros, listaFaculdades] = await Promise.all([
+        bairroService.listarBairros().catch(() => []),
+        faculdadeService.listarFaculdades().catch(() => []),
+      ]);
+
+      const bairroEncontrado = listaBairros.find(
+        (b) => b.nome.toLowerCase().trim() === String(bairroIdFinal).toLowerCase().trim()
+      );
+      if (bairroEncontrado) {
+        bairroIdFinal = String(bairroEncontrado.id);
+      }
+
+      const facEncontrada = listaFaculdades.find(
+        (f) =>
+          f.nome.toLowerCase().trim() === String(faculdadeIdFinal).toLowerCase().trim() ||
+          f.sigla.toLowerCase().trim() === String(faculdadeIdFinal).toLowerCase().trim() ||
+          `${f.sigla} - ${f.nome}`.toLowerCase().trim() === String(faculdadeIdFinal).toLowerCase().trim()
+      );
+      if (facEncontrada) {
+        faculdadeIdFinal = String(facEncontrada.id);
+      } else if (!/^\d+$/.test(faculdadeIdFinal)) {
+        faculdadeIdFinal = '1';
+      }
+    } catch (err) {
+      if (!/^\d+$/.test(faculdadeIdFinal)) faculdadeIdFinal = '1';
+    }
+
     formData.append('telefone', String(data.whatsapp || ''));
-    formData.append('bairro_id', String(bairroFinal || ''));
-    formData.append('faculdade_id', String(instFinal || ''));
+    formData.append('bairro_id', bairroIdFinal || '1');
+    formData.append('faculdade_id', faculdadeIdFinal || '1');
     formData.append('curso', String(cursoFinal || ''));
     formData.append('campus', String(data.campus || 'Quixadá'));
 

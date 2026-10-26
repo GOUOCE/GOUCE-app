@@ -11,7 +11,7 @@ export default function BairrosListScreen() {
   const router = useRouter();
 
   const [busca, setBusca] = useState('');
-  const [mostrarInativos, setMostrarInativos] = useState(true);
+  const [mostrarInativos, setMostrarInativos] = useState(false); // Inicia desligada por padrão (AC-01 / AC-09)
   const [bairros, setBairros] = useState<BairroItem[]>([]);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarVisivel, setSnackbarVisivel] = useState(false);
@@ -99,7 +99,13 @@ export default function BairrosListScreen() {
           setSnackbarVisivel(true);
           carregarBairros();
         } catch (err) {
-          console.error('Erro ao reativar bairro:', err);
+          const msg = getErrorMessage(err, 'Erro ao reativar bairro.');
+          showPopup({
+            type: 'error',
+            title: 'Erro ao reativar',
+            message: msg,
+            confirmText: 'Entendido',
+          });
         }
       },
     });
@@ -112,7 +118,7 @@ export default function BairrosListScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.replace('/(administrador)/cadastros')}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Bairros e Pontos</Text>
@@ -167,14 +173,19 @@ export default function BairrosListScreen() {
         {/* Lista de Ativos */}
         <View style={styles.listSection}>
           {ativos.map((bairro) => {
-            const qtdPontos = bairro.pontos.length;
-            const textoPontos = `${qtdPontos} ${qtdPontos === 1 ? 'ponto de parada' : 'pontos de parada'}`;
+            const pontosAtivosNomes = bairro.pontos
+              .filter((p) => p.ativo !== false)
+              .map((p) => p.nome)
+              .join(', ');
+            const textoPontos = pontosAtivosNomes || 'Nenhum ponto registrado';
 
             return (
               <View key={bairro.id} style={styles.itemRow}>
                 <View style={styles.itemInfo}>
                   <Text variant="bodyLarge" style={styles.itemName}>{bairro.nome}</Text>
-                  <Text variant="bodySmall" style={styles.itemSub}>{textoPontos}</Text>
+                  <Text variant="bodySmall" style={styles.itemSub} numberOfLines={1}>
+                    {textoPontos}
+                  </Text>
                 </View>
 
                 <View style={styles.actionButtons}>
@@ -208,14 +219,16 @@ export default function BairrosListScreen() {
           <View style={styles.inativosSection}>
             <Text variant="titleMedium" style={styles.inativosTitle}>Inativos</Text>
             {inativos.map((bairro) => {
-              const qtdPontos = bairro.pontos.length;
-              const textoPontos = `${qtdPontos} ${qtdPontos === 1 ? 'ponto de parada' : 'pontos de parada'}`;
+              const pontosNomes = bairro.pontos.map((p) => p.nome).join(', ');
+              const textoPontos = pontosNomes || 'Nenhum ponto registrado';
 
               return (
                 <View key={bairro.id} style={styles.itemRow}>
                   <View style={styles.itemInfo}>
                     <Text variant="bodyLarge" style={styles.itemName}>{bairro.nome}</Text>
-                    <Text variant="bodySmall" style={styles.itemSub}>{textoPontos}</Text>
+                    <Text variant="bodySmall" style={styles.itemSub} numberOfLines={1}>
+                      {textoPontos}
+                    </Text>
                   </View>
 
                   <TouchableOpacity onPress={() => handleReativar(bairro)} style={styles.iconBtn}>

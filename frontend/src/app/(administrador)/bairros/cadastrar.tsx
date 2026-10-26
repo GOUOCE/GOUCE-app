@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
 import { Text, TextInput, Button, Snackbar, Portal } from 'react-native-paper';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft, Trash2, X } from 'lucide-react-native';
@@ -14,7 +14,7 @@ import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 export default function CadastrarBairroScreen() {
   const router = useRouter();
 
-  const [pontos, setPontos] = useState<string[]>(['Praça da Matriz']);
+  const [pontos, setPontos] = useState<string[]>([]);
   const [modalPontoVisible, setModalPontoVisible] = useState(false);
   const [novoPontoNome, setNovoPontoNome] = useState('');
   const [erroPonto, setErroPonto] = useState(false);
@@ -47,13 +47,43 @@ export default function CadastrarBairroScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const { control, handleSubmit, formState: { errors }, setValue, trigger } = useForm<BairroFormData>({
+  const { control, handleSubmit, formState: { errors }, setValue, trigger, reset } = useForm<BairroFormData>({
     resolver: zodResolver(bairroSchema),
     defaultValues: {
       nome: '',
-      pontos: ['Praça da Matriz'],
+      pontos: [],
     },
   });
+
+  // Reseta o formulário e o modal sempre que a tela ganha/perde foco
+  useFocusEffect(
+    React.useCallback(() => {
+      setPontos([]);
+      setNovoPontoNome('');
+      setErroPonto(false);
+      setModalPontoVisible(false);
+      reset({
+        nome: '',
+        pontos: [],
+      });
+
+      return () => {
+        setPontos([]);
+        setNovoPontoNome('');
+        setErroPonto(false);
+        setModalPontoVisible(false);
+        reset({
+          nome: '',
+          pontos: [],
+        });
+      };
+    }, [reset])
+  );
+
+  const voltarParaListagem = () => {
+    closePopup();
+    router.replace('/(administrador)/bairros');
+  };
 
   const handleAdicionarPonto = () => {
     if (!novoPontoNome || novoPontoNome.trim().length < 2) {
@@ -63,6 +93,7 @@ export default function CadastrarBairroScreen() {
 
     const pontoFormatado = novoPontoNome.trim();
     if (pontos.some((p) => p.toLowerCase() === pontoFormatado.toLowerCase())) {
+      setModalPontoVisible(false);
       showPopup({
         type: 'error',
         title: 'Aviso',
@@ -104,7 +135,7 @@ export default function CadastrarBairroScreen() {
           setSnackbarMessage('Bairro cadastrado com sucesso');
           setSnackbarVisivel(true);
           setTimeout(() => {
-            router.replace('/(administrador)/bairros');
+            voltarParaListagem();
           }, 1200);
         } catch (error: any) {
           setIsLoading(false);
@@ -124,7 +155,7 @@ export default function CadastrarBairroScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={voltarParaListagem}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Novo Bairro</Text>
@@ -213,7 +244,6 @@ export default function CadastrarBairroScreen() {
               <TextInput
                 label="Nome do Ponto *"
                 mode="outlined"
-                placeholder="Nome do ponto de parada"
                 value={novoPontoNome}
                 onChangeText={setNovoPontoNome}
                 error={erroPonto}
@@ -347,7 +377,7 @@ const styles = StyleSheet.create({
   },
   modalButtons: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justify.content: 'flex-end',
     gap: 12,
   },
   snackbar: {
