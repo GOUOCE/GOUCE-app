@@ -11,14 +11,14 @@
 | Tela            | Painel do administrador → aba **Cadastros** → **Bairros e pontos de parada** (listagem **Bairros e Pontos**, **Novo Bairro** e **Editar Bairro**) |
 | Ambiente        | Desenvolvimento — app no celular (Expo Go) ou versão web (`http://localhost:3000`) |
 | Total de casos  | 13 |
-| Última execução | Não realizada |
+| Última execução | 2026-10-26 |
 | Testador        | Cauan Ricardo |
 
 ## Resultado geral
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Não executada | 13 | 0 | 0 | 0 | 13 |
+| ❌ Concluída com falhas | 13 | 5 | 8 | 0 | 0 |
 
 ## Pré-condições
 
@@ -39,29 +39,29 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU007-UI-001 | Acessar a gestão de bairros | Cadastros → Bairros e pontos de parada | Listagem só de ativos com seus pontos; busca; chave “Mostrar inativos” desligada; botão Novo | ⏳ PENDENTE | Não executado. |
-| CT-HU007-UI-002 | Cadastrar bairro com pontos de parada | `Campo Velho` + 1 ponto; `Centro` + 3 pontos | “Operação realizada com sucesso”; bairro na listagem; dado continua após reabrir o app e existe na API | ⏳ PENDENTE | Não executado. |
-| CT-HU007-UI-003 | Mesmo nome de ponto em outro bairro | `Planalto Universitário` + `Posto de Saúde` | Cadastro aceito | ⏳ PENDENTE | Não executado. |
-| CT-HU007-UI-004 | Cadastro duplicado | `Centro`, `centro`, `CENTRO`, `" Centro "`; ponto repetido no formulário | “Esta localidade já está cadastrada.”; nada criado | ⏳ PENDENTE | Não executado. |
-| CT-HU007-UI-005 | Campos obrigatórios e limites | Nome vazio; sem ponto; nome `Ab`; ponto com 1 letra | Campos destacados com mensagem; nada salvo | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-001 | Acessar a gestão de bairros | Cadastros → Bairros e pontos de parada | Listagem só de ativos com seus pontos; busca; chave “Mostrar inativos” desligada; botão Novo | ❌ FALHOU | A chave “Mostrar inativos” já vem ligada; a seta de voltar leva ao Painel, não a Cadastros. Busca por nome funciona. |
+| CT-HU007-UI-002 | Cadastrar bairro com pontos de parada | `Campo Velho` + 1 ponto; `Centro` + 3 pontos | “Operação realizada com sucesso”; bairro na listagem; dado continua após reabrir o app e existe na API | ❌ FALHOU | Gravou certo na API, mas o formulário de Novo Bairro e o modal de ponto não limpam os campos depois de salvar. |
+| CT-HU007-UI-003 | Mesmo nome de ponto em outro bairro | `Planalto Universitário` + `Posto de Saúde` | Cadastro aceito | ❌ FALHOU | Bloqueado com “Esta localidade já está cadastrada.” (API devolve 409). Mesma causa da #210. |
+| CT-HU007-UI-004 | Cadastro duplicado | `Centro`, `centro`, `CENTRO`, `" Centro "`; ponto repetido no formulário | “Esta localidade já está cadastrada.”; nada criado | ✅ PASSOU | Variações de maiúsculas e espaços bloqueadas com a mensagem correta. Observações: nome sem acento (`RODOVIARIA`) é aceito como ponto diferente; modal do ponto com rótulo e placeholder repetidos. |
+| CT-HU007-UI-005 | Campos obrigatórios, limites e caracteres | Nome vazio; sem ponto; nome `Ab`; ponto com 1 letra; número, emoji e símbolos no bairro e no ponto | Campos destacados com mensagem; nada salvo | ❌ FALHOU | Tamanho mínimo e obrigatórios funcionam; número, emoji e símbolos são aceitos no bairro e no ponto (sem regra de caracteres, AC-12). |
 
 ### Seção B — Edição, inativação e reativação
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU007-UI-006 | Editar bairro | Renomear `Campo Velho` e adicionar ponto; renomear para `Centro` | Sucesso e listagem atualizada; nome em uso bloqueado | ⏳ PENDENTE | Não executado. |
-| CT-HU007-UI-007 | Inativar ponto e último ponto | Retirar `Mercado Público` do Centro; retirar o único ponto de outro bairro | Ponto vira inativo (não some); último ponto bloqueado | ⏳ PENDENTE | Não executado. |
-| CT-HU007-UI-008 | Inativar bairro | Cancelar e depois confirmar a inativação do `Campo Velho II` | Cancelar não muda nada; confirmar mostra sucesso e tira o bairro dos ativos | ⏳ PENDENTE | Não executado. |
-| CT-HU007-UI-009 | Mostrar inativos e reativar | Ligar a chave; reativar `Campo Velho II` | Inativos identificados; reativação com sucesso | ⏳ PENDENTE | Não executado. |
-| CT-HU007-UI-010 | Sair sem salvar | Alterar nome em Editar Bairro e tocar na seta | Pedir confirmação; nada salvo; ao reabrir, dados salvos | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-006 | Editar bairro | Renomear `Campo Velho` e adicionar ponto; renomear para `Centro` | Sucesso e listagem atualizada; nome em uso bloqueado | ✅ PASSOU | Edição gravada na API; nome em uso bloqueado. |
+| CT-HU007-UI-007 | Inativar ponto e último ponto | Retirar `Mercado Público` do Centro; retirar o único ponto de outro bairro | Ponto vira inativo (não some); último ponto bloqueado | ❌ FALHOU | A lixeira do ponto o apaga do banco: não aparece em “Mostrar inativos” e pode ser cadastrado de novo. Último ponto bloqueado corretamente. Mesma causa da #211. |
+| CT-HU007-UI-008 | Inativar bairro | Cancelar e depois confirmar a inativação do `Campo Velho II` | Cancelar não muda nada; confirmar mostra sucesso e tira o bairro dos ativos | ✅ PASSOU | Inativação confirmada, gravada e auditada; mensagem de sucesso só em toast preto; pontos do bairro inativo seguem ativos no banco. |
+| CT-HU007-UI-009 | Mostrar inativos e reativar | Ligar a chave; reativar `Campo Velho II` | Inativos identificados; reativação com sucesso | ✅ PASSOU | Reativação gravada, auditada e mantida após recarregar. Erro de reativação só vai ao console (risco do código). |
+| CT-HU007-UI-010 | Sair sem salvar | Alterar nome em Editar Bairro e tocar na seta | Pedir confirmação; nada salvo; ao reabrir, dados salvos | ❌ FALHOU | A seta volta sem pedir confirmação e, ao reabrir, a tela mostra o texto digitado e não salvo (não recarrega do banco). Nada é gravado. |
 
 ### Seção C — Integração, acesso e robustez
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU007-UI-011 | Aluno e representante sem acesso | Menu do aluno e do representante; link `bairros` | Menu não exibido; link mostra Acesso Negado | ⏳ PENDENTE | Não executado. |
-| CT-HU007-UI-012 | Bairros no cadastro de aluno | Bairro novo e bairro inativo na etapa 3 do cadastro | Bairro ativo novo aparece; bairro inativo não aparece | ⏳ PENDENTE | Não executado. |
-| CT-HU007-UI-013 | Falha de conexão ao salvar | Wi-Fi e dados desligados ao cadastrar e ao inativar | Mensagem de conexão; nada “salvo” só na tela; dados mantidos para nova tentativa | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-011 | Aluno e representante sem acesso | Menu do aluno e do representante; link `bairros` | Menu não exibido; link mostra Acesso Negado | ✅ PASSOU | Link direto mostra Acesso Negado para aluno e representante; a API devolve 403 nas escritas. |
+| CT-HU007-UI-012 | Bairros no cadastro de aluno | Bairro novo e bairro inativo na etapa 3 do cadastro | Bairro ativo novo aparece; bairro inativo não aparece | ❌ FALHOU | A lista de bairros do cadastro de aluno é fixa no app e não reflete o cadastro do administrador; o app envia o nome do bairro e a API espera o id (500). Relacionado à #192. |
+| CT-HU007-UI-013 | Falha de conexão ao salvar | Wi-Fi e dados desligados ao cadastrar e ao inativar | Mensagem de conexão; nada “salvo” só na tela; dados mantidos para nova tentativa | ❌ FALHOU | Sem conexão, o serviço de bairros grava só no mock em memória, devolve sucesso e mostra bairros de exemplo; a API não recebe nada. Testado na web. |
 
 ## Detalhamento dos casos
 
@@ -88,8 +88,12 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- A listagem abre e a busca por nome filtra corretamente.
+- A chave **Mostrar inativos** já vem **ligada** por padrão; o esperado é desligada (AC-01, AC-09).
+- A seta de voltar leva ao **Painel**, e não a **Cadastros**. O mesmo ocorre na tela **Novo Bairro**: a seta leva ao Painel, e não à listagem **Bairros e Pontos**.
+- A listagem mostra o nome do bairro e só a **quantidade** de pontos (o `Centro` aparece com 0 pontos, igual ao banco), e não os nomes dos pontos.
+- Busca por um nome que não existe: aparece a mensagem de lista vazia.
+- Status: ❌ Falhou.
 
 ---
 
@@ -115,8 +119,14 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Usados `Campo Velho QA` (1 ponto) e `Centro QA` (3 pontos), pois o `Centro` já existia por seed da migration (PC-04).
+- Antes de salvar aparece o pop-up “Realizar cadastro?” com o texto “Essa ação não poderá ser desfeita.”. Depois de confirmar, o sucesso aparece só como uma **barra preta (toast) na parte de baixo da tela**, com o texto “Bairro cadastrado com sucesso” e um X para fechar; não há pop-up de sucesso. A tela volta para a listagem em cerca de 1,2 segundo, então a mensagem some rápido. O bairro entra na listagem e continua depois de recarregar a página.
+- Conferido na API (`GET /bairros`) e no banco: `Campo Velho QA` (id 2) com 1 ponto e `Centro QA` (id 3) com 3 pontos, todos ativos e com os nomes exatos digitados.
+- **Defeito:** ao tocar em **Novo** de novo depois de cadastrar (ou de confirmar/voltar no meio do cadastro), a tela continua com o nome do bairro e os pontos do cadastro anterior, sem limpar. O mesmo ocorre no modal **Novo ponto de parada**, que mantém o nome digitado antes.
+- **Defeito:** ao adicionar um ponto com nome repetido, o pop-up “Esta localidade já está cadastrada.” abre **por baixo do modal do ponto** (o `AppPopup` é montado antes do modal) e só fica visível depois de fechar o modal.
+- **Defeito:** a tela de Novo Bairro já abre com o ponto `Praça da Matriz` preenchido (sobra de dado de exemplo: `cadastrar.tsx` inicia o estado e o `defaultValues` com esse nome). Se o administrador não remover, o ponto é gravado sem ter sido digitado por ele. Como a tela não é recriada, às vezes ele aparece e às vezes não.
+- Campos vazios e limites (CT-005) ainda não foram testados.
+- Status: ❌ Falhou.
 
 ---
 
@@ -136,8 +146,10 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O cadastro de `Planalto Universitário` com o ponto `Posto de Saúde` foi **bloqueado** com o pop-up “Esta localidade já está cadastrada.”; o bairro não foi criado (conferido no banco). A API respondeu 409.
+- Contraria o requisito e o BDD (AC-02): o nome do ponto só precisa ser único **dentro do mesmo bairro**. A tela só compara os pontos do próprio formulário; o bloqueio vem do backend (`bairro_repository.py`, `ponto_existe_no_sistema`), que procura o nome em **todos** os bairros. É o defeito já aberto na **#210** (CT-HU007-API-003).
+- O ponto `Posto de Saúde` do `Centro QA` não foi alterado.
+- Status: ❌ Falhou.
 
 ---
 
@@ -162,14 +174,18 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Os nomes de bairro `Centro` com maiúsculas, minúsculas e espaços nas pontas foram bloqueados com “Esta localidade já está cadastrada.”, e nenhum bairro foi criado.
+- No formulário de `Bairro Novo`, o segundo ponto `rodoviária` (mesmo nome do `Rodoviária`, só em minúsculas) foi bloqueado com a mesma mensagem.
+- **Observação (decisão de produto):** `RODOVIARIA` (maiúsculas e **sem acento**) foi aceito no mesmo formulário ao lado de `Rodoviária`. O requisito só desconsidera maiúsculas, minúsculas e espaços nas pontas (AC-03); acento não está coberto, então o app seguiu o texto do requisito. Levar ao #207 para decidir se `Rodoviária` e `Rodoviaria` contam como o mesmo nome.
+- **Defeito de interface (não bloqueante):** ao abrir **Novo ponto de parada**, o campo mostra o rótulo “Nome do Ponto *” e, ao mesmo tempo, o texto de ajuda “Nome do ponto de parada”, repetindo a informação.
+- **Defeito (regra de caracteres):** o nome do bairro aceita números, emoji e caracteres especiais. Não existe regra para isso nos requisitos nem no código (`bairroSchema.ts` só valida tamanho). Regra proposta no CT-005.
+- Status: ✅ Passou.
 
 ---
 
 #### CT-HU007-UI-005 — Campos obrigatórios e limites
 
-**Dados de entrada:** Quatro tentativas em **Novo**: nome vazio com um ponto; nome `Bairro Teste` sem ponto; nome `Ab` com um ponto; no modal de ponto, o nome `A`.
+**Dados de entrada:** Tentativas em **Novo**: nome vazio com um ponto; nome `Bairro Teste` sem ponto; nome `Ab` com um ponto; nomes de bairro `Centro 2`, `Centro 😀` e `Centro @#$%`; no modal de ponto, os nomes `A`, `Escola 😀` e `Posto @#$%`, e depois `Parada 12` (aceito).
 
 **Passos**
 
@@ -181,12 +197,18 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 - Nome vazio e sem ponto: os campos ficam destacados com mensagem em português e o cadastro não é enviado (AC-08, FA-003).
 - Nome `Ab`: alerta de tamanho mínimo no campo.
 - Ponto `A`: o modal não aceita e mostra a orientação no campo.
+- Bairro com número, emoji ou símbolo: bloqueado com “Use apenas letras, espaços, hífen ou apóstrofo” (AC-12).
+- Ponto com emoji ou símbolo: bloqueado com “Use apenas letras, números, espaços, hífen, apóstrofo ou ponto”; `Parada 12` é aceito (AC-12).
 - Nenhum bairro criado.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Nome do bairro vazio: o campo é destacado com “Informe o nome do bairro com pelo menos 3 caracteres” e nada é enviado.
+- Ponto de parada com menos de 2 caracteres: o modal bloqueia com “Informe um nome válido com pelo menos 2 caracteres.”.
+- Os limites mínimos (3 no bairro, 2 no ponto) e a obrigatoriedade funcionam como esperado.
+- **Defeito:** o app aceita **emoji, números e caracteres especiais** no nome do bairro e no nome do ponto. Não há bloqueio nem mensagem (esperado no AC-12: números, emoji e símbolos bloqueados no bairro; emoji e símbolos bloqueados no ponto).
+- Por leitura do código, a API também não valida caracteres (`BairroCreateDTO` só limita o tamanho máximo a 100 e não há mínimo de 3), então o mesmo dado passaria direto pela API.
+- Status: ❌ Falhou.
 
 ### Seção B — Edição, inativação e reativação
 
@@ -207,8 +229,11 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Os campos vêm preenchidos ao abrir o lápis. A primeira edição foi salva com sucesso: o bairro passou a se chamar `Campo Velho QA II` e ganhou o ponto `Praça chalé`; o ponto original `Escola Coronel Virgílio Távora` continua ativo. Conferido no banco (bairro 2, pontos 1 e 9).
+- A mensagem de sucesso é “Bairro alterado com sucesso”, exibida na barra preta (toast) embaixo, e a tela volta para a listagem (`editar.tsx`).
+- A tentativa de usar um nome já cadastrado foi bloqueada com “Esta localidade já está cadastrada.” e o nome não mudou; o log da API mostra o `PATCH /bairros/2` com 409 antes do 200.
+- Não há registro de auditoria da edição (já coberto pela #212).
+- Status: ✅ Passou.
 
 ---
 
@@ -231,8 +256,12 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Retirar `Mercado Público` do `Centro QA` e salvar funciona (“Bairro alterado com sucesso”, em toast preto, sem pop-up).
+- **Defeito:** o ponto retirado **não fica inativo, é apagado**. Com **Mostrar inativos** ligado, ele não aparece em lugar nenhum. No banco, o `Mercado Público` original (id 3) deixou de existir.
+- **Defeito:** como foi apagado, foi possível adicionar `Mercado Público` de novo ao mesmo bairro, sem bloqueio nem oferta de reativar (esperado: bloqueio ou reativação, AC-03). No banco, o ponto voltou como um registro novo (id 10).
+- Causa no código: a tela só tira o ponto da lista (a lixeira não inativa) e a API, ao receber a lista de pontos, remove do bairro os que não vieram (`bairro_repository.py`, bloco “Remover pontos que não foram mantidos”). É a **#211** (CT-HU007-API-002).
+- Retirar o único ponto de um bairro é **bloqueado** como esperado (AC-08).
+- Status: ❌ Falhou.
 
 ---
 
@@ -255,8 +284,13 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- A lixeira abre o pop-up “Inativar bairro?” com “O bairro e seus pontos ficarão inativos no sistema.”. **Cancelar** não muda nada (nenhuma chamada à API).
+- Ao confirmar, o bairro sai da lista de ativos e a mensagem de sucesso aparece só como **barra preta (toast) embaixo da tela**, sem pop-up. Texto no código: “Bairro <nome> inativado”, e não “Operação realizada com sucesso” (AC-07).
+- O bairro não é apagado: `Campo Velho QA II` e `Planalto Universitário QA` estão com `ativo = false` no banco e aparecem no título **Inativos** quando a chave está ligada.
+- O log de auditoria registrou as duas inativações (`INATIVAR`, bairro 2 e 7, usuário 1).
+- **Observação (formato da mensagem):** o app mistura dois padrões de sucesso. Cadastros de administrador, perfil do aluno e fluxos de autenticação usam pop-up de sucesso; bairros, faculdades, motoristas e representantes usam o toast preto. A decisão sobre o padrão é do time de Front.
+- **Observação (pontos):** o pop-up promete que “seus pontos ficarão inativos”, mas no banco os pontos do bairro inativo continuam com `ativo = true`. Conferir na API se eles ficam indisponíveis para uso (requisitos, AC-05).
+- Status: ✅ Passou.
 
 ---
 
@@ -280,8 +314,12 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Com a chave ligada, os bairros inativos aparecem sob o título **Inativos**. A reativação pede confirmação (“Reativar bairro?”), mostra o toast “Bairro <nome> reativado” e devolve o bairro à lista de ativos.
+- Depois de recarregar a página o status continua igual. No banco, `Campo Velho QA II` está com `ativo = true` e `Planalto Universitário QA` segue inativo.
+- O log de auditoria registrou a reativação (`ATIVAR`, bairro 2, inativo → ativo).
+- **Risco no código (não reproduzido):** se a reativação falhar, o erro só vai para o `console.error` e o usuário não vê mensagem (`index.tsx`, `handleReativar`), ao contrário da inativação, que mostra pop-up de erro.
+- A chave **Mostrar inativos** só traz bairros; como não existe inativação de ponto na tela (CT-007), não há ponto inativo para mostrar.
+- Status: ✅ Passou.
 
 ---
 
@@ -303,8 +341,10 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Defeito:** a seta de voltar não pede confirmação antes de descartar as alterações (`editar.tsx` só chama `router.back()`; não há aviso de alterações não salvas).
+- **Defeito:** ao abrir o mesmo bairro de novo, o formulário mostra o nome e os pontos digitados antes, sem salvar, em vez dos dados gravados. A tela não é recriada e só recarrega os dados quando o `id` muda (`useEffect` com `[id]`), então a edição antiga continua na tela. Mesma causa do formulário de cadastro que não limpa (CT-002) e da seta que leva ao Painel (CT-001).
+- Nada é gravado: o banco continua com `Centro QA` e seus três pontos, e o log da API não mostra nenhum `PATCH` desse bairro. O que engana é só a tela.
+- Status: ❌ Falhou.
 
 ### Seção C — Integração, acesso e robustez
 
@@ -325,8 +365,10 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Aluno e representante não veem o menu de bairros. Ao abrir `http://localhost:3000/bairros` diretamente, aparece **Acesso Negado** (a proteção está no layout do administrador: papel diferente de `ADMINISTRADOR` redireciona para `/acesso-negado`).
+- Conferido na API com os dois perfis: `POST /bairros` devolve **403**.
+- `GET /bairros` responde 200 para aluno, representante e até sem login, mas só com bairros **ativos** (o inativo não vem); a lista pública é a que alimenta o cadastro de aluno (CT-012). Não é falha de acesso, pois só administrador cadastra, edita e inativa (RN-006).
+- Status: ✅ Passou.
 
 ---
 
@@ -349,8 +391,11 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Defeito:** os bairros que aparecem na etapa 3 do cadastro de aluno **não são os cadastrados pelo administrador**. A lista está fixa no código (`Passo3ContatoVinculo.tsx`): `Centro`, `Croatá`, `Bairro Novo`, `Planalto`, `Serra` e `Outro`. `Centro QA` e `Campo Velho QA II` (ativos) não aparecem, e `Croatá`, `Planalto` e `Serra` aparecem sem existir no banco (AC-11 não é atendido).
+- **Defeito:** o app envia o **nome** do bairro (`bairro_id=Centro`), e o banco espera o **id** numérico. Reproduzido na API: `POST /usuarios/cadastrar` com `bairro_id=Centro` devolve **500** (“Erro interno ao processar a solicitação”). O cadastro com bairro em texto, como o app faz, não é concluído. Mesma causa da **#192**, que já registra o problema para a faculdade.
+- O bairro inativo (`Planalto Universitário QA`) não aparece, mas só porque a lista é fixa, e não porque é filtrada. A lista pública da API (`GET /bairros`) já devolve apenas os ativos; o app não a usa.
+- **Observação (fora do escopo da HU-007, tela de login):** ao preencher e-mail e senha, tocar em **Criar conta de aluno** e voltar, os campos continuam preenchidos, inclusive a senha. O código mantém a tela de login viva ao abrir o cadastro (`router.push`) e não limpa o formulário. Os requisitos não dizem se deve limpar; sugestão: limpar ao sair da tela ou, no mínimo, a senha. Levar à HU-002 como melhoria.
+- Status: ❌ Falhou.
 
 ---
 
@@ -374,8 +419,11 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Reprovado pelo testador. O teste foi feito na **web** (o celular não abre o app por causa do Expo Go SDK 58).
+- Nada chegou à API: não há `POST` nem `PATCH` novo no log, e o banco não tem `Serra do Estêvão`. O que falha é o comportamento da tela.
+- **Defeito (causa no código):** em `bairroService.ts`, quando a requisição falha sem resposta da API (rede caída), o cadastro, a edição e a inativação **não mostram erro**: gravam só em um mock em memória e devolvem sucesso. A listagem também troca os dados do banco pelos bairros de exemplo (`Centro`, `Bairro Novo`, `Vila Antiga`). Reproduzido com um teste temporário de unidade simulando “Network Error”: cadastro e inativação devolveram sucesso, e a lista trouxe o bairro novo entre os de exemplo. Esperado: mensagem de conexão, bairro fora da lista e campos preenchidos para nova tentativa (`getErrorMessage` já tem o texto “Erro de conexão com o servidor…”, mas o serviço não chega a repassar o erro).
+- **Web × celular:** em ambos o erro de rede chega sem `response`, então o serviço cai no mesmo mock. O resultado deve ser igual no celular; confirmar quando houver ambiente com Expo Go compatível. Os testes de conexão de outras telas passam no celular porque os serviços delas não têm esse mock de fallback.
+- Status: ❌ Falhou.
 
 ## Rastreabilidade
 
@@ -389,6 +437,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 | AC-06 / FA-001 — rota ativa | Bloqueia inativação vinculada a rota ativa | Não coberto na UI nesta rodada (depende da HU-011); ver CT-HU007-API-012 |
 | AC-07 — mensagem de sucesso | Todos os cenários de sucesso | CT-002, 006, 008, 009 |
 | AC-08 / FA-003 — obrigatórios | Campo obrigatório; bairro sem ponto ativo | CT-005, CT-007 |
+| AC-12 — caracteres permitidos (proposto) | Bloqueia número, emoji e símbolos no bairro e no ponto | CT-004, CT-005 |
 | AC-09 — Mostrar inativos | Visualiza inativos | CT-001, CT-007, CT-009 |
 | AC-10 — auditoria | Log de auditoria | Conferido na API (CT-HU007-API-009) |
 | AC-11 — inativos fora da seleção | Bairro inativo fora do cadastro de aluno | CT-012 |
@@ -398,7 +447,15 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-001, CT-002, CT-010 | Telas não recriadas: seta volta ao Painel, formulários não limpam, edição não é descartada nem pede confirmação | [#245](https://github.com/GOUOCE/GOUCE-app/issues/245) · [BUG-HU007-UI-001](issues/BUG-HU007-UI-001-telas-de-bairros-nao-recriadas.md) |
+| CT-001 | Chave “Mostrar inativos” já vem ligada e a listagem mostra só a quantidade de pontos | [#246](https://github.com/GOUOCE/GOUCE-app/issues/246) · [BUG-HU007-UI-002](issues/BUG-HU007-UI-002-listagem-chave-inativos-e-pontos.md) |
+| CT-007, CT-009 | Tela sem inativar/reativar ponto e sem mostrar pontos inativos | [#247](https://github.com/GOUOCE/GOUCE-app/issues/247) · [BUG-HU007-UI-003](issues/BUG-HU007-UI-003-tela-sem-inativar-reativar-ponto.md) |
+| CT-002, CT-004 | Ponto `Praça da Matriz` pré-preenchido; aviso por baixo do modal; rótulo repetido | [#248](https://github.com/GOUOCE/GOUCE-app/issues/248) · [BUG-HU007-UI-004](issues/BUG-HU007-UI-004-cadastro-ponto-padrao-aviso-escondido.md) |
+| CT-013, CT-009 | Sem conexão o app mostra sucesso e dados de exemplo (mock); erro da reativação só no console | [#249](https://github.com/GOUOCE/GOUCE-app/issues/249) · [BUG-HU007-UI-005](issues/BUG-HU007-UI-005-sem-conexao-mostra-sucesso-com-mock.md) |
+| CT-012 | Lista de bairros do cadastro de aluno é fixa; envio do nome do bairro dá 500 | [#250](https://github.com/GOUOCE/GOUCE-app/issues/250) · [BUG-HU007-UI-006](issues/BUG-HU007-UI-006-cadastro-aluno-lista-de-bairros-fixa.md) |
+| CT-004, CT-005 | Sem regra de caracteres e de tamanho mínimo na API (regra proposta no PR #244) | [#251](https://github.com/GOUOCE/GOUCE-app/issues/251) · [BUG-HU007-UI-007](issues/BUG-HU007-UI-007-sem-regra-de-caracteres-no-nome.md) |
+| CT-003 | Ponto com mesmo nome em outro bairro é bloqueado pela API | [#210](https://github.com/GOUOCE/GOUCE-app/issues/210) (já aberta na suíte de API) |
+| CT-007 | Ponto retirado é apagado, sem soft delete | [#211](https://github.com/GOUOCE/GOUCE-app/issues/211) (já aberta na suíte de API) |
 
 ## Observações gerais
 

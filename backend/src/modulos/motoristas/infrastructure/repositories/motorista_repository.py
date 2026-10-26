@@ -6,6 +6,8 @@ usa ``nome_completo`` e o resultado exposto para as camadas superiores usa
 ``EncryptedString`` definido na entidade.
 """
 
+from typing import Callable, Optional
+
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -15,10 +17,6 @@ from src.shared.infrastructure.audit_model import LogAuditoriaORM
 from src.shared.security.lgpd_encryption import hash_telefone
 
 
-class AlocacoesFuturasNaoVerificadasError(RuntimeError):
-    """Impede a inativação enquanto a regra de alocações não foi integrada."""
-
-
 class MotoristaTelefoneEmUsoError(ValueError):
     """Indica que o telefone já pertence a outro motorista."""
 
@@ -26,8 +24,13 @@ class MotoristaTelefoneEmUsoError(ValueError):
 class MotoristaRepository:
     """Repository SQLAlchemy para a entidade independente de motorista."""
 
-    def __init__(self, session: Session):
+    def __init__(
+        self,
+        session: Session,
+        alocacoes_futuras_checker: Optional[Callable[[int], bool]] = None,
+    ):
         self.session = session
+        self._alocacoes_futuras_checker = alocacoes_futuras_checker
 
     def criar(self, nome: str, telefone: str) -> dict:
         """Cria um motorista sem criar ou alterar registros de usuário."""
@@ -138,32 +141,27 @@ class MotoristaRepository:
             self.session.rollback()
             raise
 
-    def inativar(
-        self,
-        motorista_id: int,
-        usuario_executor_id: int,
-        *,
-        alocacoes_futuras_verificadas: bool = False,
-    ) -> dict | None:
-        """Inativa um motorista somente após uma verificação externa.
-
-        O módulo de rotas/alocações ainda não está disponível. Para não
-        contornar silenciosamente a regra de bloqueio, a operação falha
-        fechada até que o caso de uso faça a verificação real e informe
-        explicitamente ``alocacoes_futuras_verificadas=True``. O repository
-        não consulta tabelas inexistentes nem simula alocações.
-        """
-        if alocacoes_futuras_verificadas is not True:
-            raise AlocacoesFuturasNaoVerificadasError(
-                "Verifique as alocações futuras antes de inativar o motorista."
-            )
-
+    def inativar(self, motorista_id: int, usuario_executor_id: int) -> dict | None:
+        """Inativa (soft delete) um motorista e registra a operação de auditoria."""
         return self._alterar_status(
             motorista_id=motorista_id,
             usuario_executor_id=usuario_executor_id,
             ativo=False,
             acao="INATIVAR",
         )
+
+    def possui_alocacoes_futuras(self, motorista_id: int) -> bool:
+        """Indica se o motorista está escalado em rotas de dias futuros.
+
+        TODO(HU-010): a entidade de escalas/alocações de rotas ainda não existe.
+        Quando ela for criada, substituir este retorno por uma consulta real às
+        escalas do motorista com data posterior a hoje (ou injetar essa
+        consulta via ``alocacoes_futuras_checker``). Até lá a verificação
+        "falha aberto": sem checker injetado, nenhuma inativação é bloqueada.
+        """
+        if self._alocacoes_futuras_checker is not None:
+            return bool(self._alocacoes_futuras_checker(motorista_id))
+        return False
 
     def reativar(self, motorista_id: int, usuario_executor_id: int) -> dict | None:
         """Reativa um motorista inativo e registra a operação de auditoria."""
