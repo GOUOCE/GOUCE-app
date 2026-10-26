@@ -394,6 +394,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 - **Defeito:** os bairros que aparecem na etapa 3 do cadastro de aluno **não são os cadastrados pelo administrador**. A lista está fixa no código (`Passo3ContatoVinculo.tsx`): `Centro`, `Croatá`, `Bairro Novo`, `Planalto`, `Serra` e `Outro`. `Centro QA` e `Campo Velho QA II` (ativos) não aparecem, e `Croatá`, `Planalto` e `Serra` aparecem sem existir no banco (AC-11 não é atendido).
 - **Defeito:** o app envia o **nome** do bairro (`bairro_id=Centro`), e o banco espera o **id** numérico. Reproduzido na API: `POST /usuarios/cadastrar` com `bairro_id=Centro` devolve **500** (“Erro interno ao processar a solicitação”). O cadastro com bairro em texto, como o app faz, não é concluído. Mesma causa da **#192**, que já registra o problema para a faculdade.
 - O bairro inativo (`Planalto Universitário QA`) não aparece, mas só porque a lista é fixa, e não porque é filtrada. A lista pública da API (`GET /bairros`) já devolve apenas os ativos; o app não a usa.
+- **Observação (fora do escopo da HU-007, tela de login):** ao preencher e-mail e senha, tocar em **Criar conta de aluno** e voltar, os campos continuam preenchidos, inclusive a senha. O código mantém a tela de login viva ao abrir o cadastro (`router.push`) e não limpa o formulário. Os requisitos não dizem se deve limpar; sugestão: limpar ao sair da tela ou, no mínimo, a senha. Levar à HU-002 como melhoria.
 - Status: ❌ Falhou.
 
 ---
