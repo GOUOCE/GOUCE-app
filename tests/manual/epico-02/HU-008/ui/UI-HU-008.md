@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| 🔄 Em andamento | 12 | 1 | 4 | 0 | 7 |
+| 🔄 Em andamento | 12 | 2 | 5 | 0 | 5 |
 
 ## Pré-condições
 
@@ -42,7 +42,7 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 | CT-HU008-UI-001 | Acessar a gestão de faculdades | Cadastros → Faculdades | Listagem só de ativas; busca; chave “Mostrar inativos” desligada; botão para cadastrar | ❌ FALHOU | A chave “Mostrar inativos” já vem ligada; a seta de voltar leva ao Painel, não a Cadastros. Listagem, busca e mensagem de lista vazia funcionam. |
 | CT-HU008-UI-002 | Cadastrar faculdade | `Universidade Federal do Ceará` / `UFC` / `Campus Quixadá` | Sucesso; na listagem; continua após reabrir o app e existe na API | ❌ FALHOU | Com os dados do caso o app barra o cadastro (lista de exemplo interna) e nada chega à API. Com outro nome o cadastro é gravado, mas a sigla não é salva e o sucesso aparece numa barra preta, fora do padrão de pop-up. |
 | CT-HU008-UI-003 | Mesmo nome em outro campus | Mesma instituição em `Campus Fortaleza` | Cadastro aceito | ✅ PASSOU | Cadastro aceito; conferido no banco. A sigla continua sem ser gravada (defeito do CT-002). |
-| CT-HU008-UI-004 | Cadastro duplicado | Nome e campus iguais, com variação de maiúsculas e espaços | “Esta faculdade já está cadastrada.”; nada criado | ⏳ PENDENTE | Tentativas 1 a 4 passaram (bloqueio vem da API, `409`). Falta a tentativa 5 (faculdade inativa), que depende do CT-007. |
+| CT-HU008-UI-004 | Cadastro duplicado | Nome e campus iguais, com variação de maiúsculas e espaços | “Esta faculdade já está cadastrada.”; nada criado | ✅ PASSOU | Cinco tentativas bloqueadas pela API (`409`), inclusive com a faculdade inativa. Nada foi criado. Observação: a comparação diferencia acentos (`Quixada` ≠ `Quixadá`), decisão de produto pendente. |
 | CT-HU008-UI-005 | Campos obrigatórios e limites | Campos vazios; nome de 2 letras; textos longos | Campos destacados com mensagem; nada salvo | ❌ FALHOU | Nome, sigla e campus aceitam emoji e símbolos. Relatado: nome de 151 caracteres aceito e uma tentativa sem mensagem no campo (a conferir). |
 
 ### Seção B — Edição, inativação e reativação
@@ -50,7 +50,7 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU008-UI-006 | Editar faculdade | Trocar campus; trocar para nome+campus em uso | Sucesso e listagem atualizada; combinação em uso bloqueada | ❌ FALHOU | Edições de campus gravadas (`PATCH 200`), mas a sigla editada não é salva. Falta executar a edição duplicada (passo 3): não houve `409` no log. |
-| CT-HU008-UI-007 | Inativar faculdade | Cancelar e confirmar a inativação | Cancelar não muda nada; confirmar mostra sucesso e tira a faculdade dos ativos | ⏳ PENDENTE | Passos 1 a 4 passaram (pop-up de confirmação, inativação gravada e auditada). Falta o passo 5: tentar inativar a faculdade de `id` 1. |
+| CT-HU008-UI-007 | Inativar faculdade | Cancelar e confirmar a inativação | Cancelar não muda nada; confirmar mostra sucesso e tira a faculdade dos ativos | ❌ FALHOU | Cancelar, confirmar e gravação passaram (auditada). Inativar a faculdade de `id` 1 mostra “viagens programadas pendentes” sem existir agendamento: é a regra de exemplo do app, sem chamar a API. |
 | CT-HU008-UI-008 | Mostrar inativos e reativar | Ligar a chave; reativar | Inativas identificadas; reativação com sucesso | ⏳ PENDENTE | Não executado. |
 | CT-HU008-UI-009 | Sair sem salvar | Alterar o nome em Editar e tocar na seta | Pedir confirmação; nada salvo; ao reabrir, dados salvos | ⏳ PENDENTE | Não executado. |
 
@@ -169,8 +169,9 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 - Tentativas 1 a 4 feitas sobre a faculdade já gravada `Universidade Federal do Ceará` / `Campus Fortaleza` (id 4), e não sobre `Campus Quixadá`, que cairia na lista de exemplo do app e esconderia o bloqueio da API: igual, minúsculas, maiúsculas e com dois espaços no início e no fim (nome e campus). Nas quatro apareceu “Esta faculdade já está cadastrada.”.
 - O bloqueio vem da **API**: o log registrou `POST /faculdades` com `409 Conflict` nas tentativas, e o banco não ganhou nenhuma faculdade com esses dados.
 - Fora do roteiro, a diferença de **acento** foi testada: `UFC` / `Campus Quixadá` foi bloqueada com `409`, mas `UFC` / `Campus Quixada` (sem o acento) foi **aceita** e gravada como uma faculdade nova (id 10). A comparação de duplicidade diferencia acentos; o requisito (AC-03) só manda desconsiderar maiúsculas, minúsculas e espaços nas pontas. Decisão de produto pendente: tratar `Quixada` e `Quixadá` como a mesma faculdade ou não.
-- Falta a **tentativa 5** (repetir uma faculdade inativa): executar depois do CT-007, com a faculdade inativada pela tela.
-- Status: ⏳ Pendente (1 a 4 passaram).
+- **Tentativa 5** (repetir uma faculdade inativa): inativada a `Federal do Ceará` / `Campus Fortaleza` (id 5) pela tela e tentado cadastrar os mesmos dados. Apareceu “Esta faculdade já está cadastrada.”; o log registrou `POST /faculdades` com `409`, o banco manteve a faculdade 5 inativa e nenhuma faculdade nova foi criada (AC-03, FA-002).
+- O bloqueio veio da **API** em todas as tentativas. Os dados de exemplo do app só interceptam combinações da lista de exemplo (como no CT-002).
+- Status: ✅ Passou.
 
 ---
 
@@ -251,8 +252,8 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 - Inativada a faculdade `UFC` / `Campus  Vicosa` (id 7), criada na suíte, e não a `Uniateneu` / `Ocara` do roteiro. Apareceu o pop-up de confirmação “Inativar faculdade?” (“A faculdade e suas configurações ficarão inativas no sistema.”) e a inativação foi concluída.
 - Conferido na API e no banco: `PATCH /faculdades/7/inativar` com `200`; a faculdade 7 continua no banco com `ativo = false` (não foi apagada) e o `log_auditoria` registrou `INATIVAR` (valor anterior `ativo`, novo `inativo`, usuário 1).
 - Pelo código (`index.tsx`), a mensagem de sucesso é “Faculdade <sigla> inativada”, em barra preta (toast), e não “Operação realizada com sucesso”. A `<sigla>` mostrada na tela **não vem do banco**: como a sigla não é gravada (CT-002), `faculdadeService.ts` monta uma sigla a partir do nome (o próprio nome, se tiver até 10 letras; senão, a primeira palavra).
-- **Não executado:** passo 5 (inativar a faculdade de `id` 1, `UFC` / `Campus Quixadá`, do seed). Pelo código, `inativarFaculdade` barra o `id` 1 com “Esta instituição possui viagens programadas pendentes…” **sem chamar a API**, porque a lista de exemplo marca o `id` 1 com essa pendência; sem agendamentos reais, isso seria um defeito. A confirmar na tela.
-- Status: ⏳ Pendente (passos 1 a 4 passaram).
+- **Defeito (passo 5):** ao tentar inativar a faculdade de `id` 1 (`UFC` / `Campus Quixadá`, do seed), o app mostrou “Esta instituição possui viagens programadas pendentes. Não é possível inativar no momento.” e a faculdade não foi inativada. Não existe nenhum agendamento futuro (AC-06 depende da HU-013). O log da API **não registrou** `PATCH /faculdades/1/inativar` e a faculdade 1 continua `ativo = true` no banco. A causa está em `faculdadeService.ts`: `inativarFaculdade` consulta a lista de exemplo, cujo item de `id` 1 vem com `viagens_programadas_pendentes: true`, e barra antes de chamar a API. A regra vale para qualquer faculdade real que tenha `id` 1.
+- Status: ❌ Falhou.
 
 ---
 
@@ -394,6 +395,7 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 | Caso | Defeito | Issue |
 | --- | --- | --- |
 | CT-001, CT-002 | Telas de faculdades não recriadas: a seta volta ao Painel (listagem, Cadastrar e Editar) e Cadastrar/Editar reabrem com os dados da vez anterior | [#245](https://github.com/GOUOCE/GOUCE-app/issues/245) cobre bairros e sugere corrigir também faculdades; issue própria a abrir ao final da suíte |
+| CT-007 | Inativar a faculdade de `id` 1 é barrado pela lista de exemplo (“viagens programadas pendentes”) sem agendamento real e sem chamar a API | Issue própria a abrir ao final da suíte |
 | CT-005 | Nome, sigla e campus aceitam emoji e caracteres especiais (sem regra na tela nem na API) | [#251](https://github.com/GOUOCE/GOUCE-app/issues/251) é de bairros; issue própria a abrir ao final da suíte |
 | CT-005 | Limites de tamanho: relatado 151 caracteres aceito e tentativa sem mensagem (a confirmar); limites da API diferentes dos da tela | Issue própria a abrir ao final da suíte, depois de confirmar |
 | CT-002 | Cadastro com `Universidade Federal do Ceará` / `UFC` / `Campus Quixadá` é barrado pela lista de exemplo do app, sem chamar a API | Issue própria a abrir ao final da suíte |
