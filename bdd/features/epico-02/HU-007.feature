@@ -117,6 +117,49 @@ Funcionalidade: Gerenciamento de Bairros e Pontos de Parada
         | Ponto de parada   |
 
 
+    # AC-12 - Caracteres permitidos no nome do bairro
+    @fluxo_infeliz @validacao_campos @prioridade_media
+    Esquema do Cenário: Sistema bloqueia nome de bairro com caracteres não permitidos
+      Quando o administrador seleciona "Novo Cadastro"
+      E preenche o nome do bairro com "<nome>"
+      E adiciona o ponto de parada "Praça José de Barros"
+      E clica no botão "Salvar"
+      Então o sistema exibe a mensagem "Use apenas letras, espaços, hífen ou apóstrofo"
+      E o bairro não é cadastrado
+
+      Exemplos:
+        | nome         |
+        | Centro 2     |
+        | Centro 😀    |
+        | Centro @#$%  |
+
+
+    # AC-12 - Caracteres permitidos no nome do ponto de parada
+    @fluxo_infeliz @validacao_campos @prioridade_media
+    Esquema do Cenário: Sistema bloqueia nome de ponto de parada com caracteres não permitidos
+      Quando o administrador seleciona "Novo Cadastro"
+      E preenche o nome do bairro com "Campo Velho"
+      E adiciona o ponto de parada "<ponto>"
+      Então o sistema exibe a mensagem "Use apenas letras, números, espaços, hífen, apóstrofo ou ponto"
+      E o ponto de parada não é adicionado
+
+      Exemplos:
+        | ponto         |
+        | Escola 😀     |
+        | Posto @#$%    |
+
+
+    # AC-12 - Números são aceitos no nome do ponto de parada
+    @fluxo_feliz @validacao_campos @prioridade_media
+    Cenário: Administrador cadastra ponto de parada com número no nome
+      Quando o administrador seleciona "Novo Cadastro"
+      E preenche o nome do bairro com "Campo Velho"
+      E adiciona o ponto de parada "Parada 12"
+      E clica no botão "Salvar"
+      Então o sistema exibe a mensagem "Operação realizada com sucesso"
+      E a listagem exibe o bairro "Campo Velho" com o ponto de parada "Parada 12"
+
+
     # FA-003 - Bairro sem ponto de parada ativo na edição (AC-08)
     @fluxo_infeliz @FA003 @validacao_campos @prioridade_alta
     Esquema do Cenário: Sistema impede que o bairro fique sem ponto de parada ativo
