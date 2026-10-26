@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 0 | 1 | 0 | 12 |
+| 🔄 Em andamento | 13 | 0 | 2 | 0 | 11 |
 
 ## Pré-condições
 
@@ -41,7 +41,7 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU009-UI-001 | Abrir a frota, buscar e conferir lista vazia | Banco vazio; depois um ativo e um inativo; placa/nome e busca inexistente | Sem exemplos inventados; só ativos por padrão; capacidades e busca corretas | ❌ FALHOU | Com o banco vazio a lista mostra os ônibus de exemplo (`OCR-1234`, `OCR-5521`, `OCR-8890`), a chave “Mostrar inativos” vem ligada e a seta volta ao Painel. Busca e massa corretas. |
-| CT-HU009-UI-002 | Cadastrar e conferir persistência | `QXD2E45`, 44 assentos, 20 em pé | Confirmação, sucesso, listagem atualizada e registro na API após reabrir | ⏳ PENDENTE | Não executado. |
+| CT-HU009-UI-002 | Cadastrar e conferir persistência | `QXD2E45`, 44 assentos, 20 em pé | Confirmação, sucesso, listagem atualizada e registro na API após reabrir | ❌ FALHOU | Cancelar não grava e confirmar cria o ônibus corretamente, mas a mensagem de sucesso é uma barra preta, fora do padrão de pop-up, e o texto difere do requisito. |
 | CT-HU009-UI-003 | Normalizar placa e evitar duplicidade contra exemplos | `ABC-1234`, `def-2g34`, `OCR-1234` inexistentes no banco | Maiúsculas/sem hífen; formatos aceitos; exemplo interno não bloqueia cadastro legítimo | ⏳ PENDENTE | Não executado. |
 | CT-HU009-UI-004 | Bloquear duplicidade de placa ativa e inativa | `QXD2E45` e variações; `XYZ9K87` inativo | “Este veículo já está registrado.”; nenhum novo registro | ⏳ PENDENTE | Não executado. |
 | CT-HU009-UI-005 | Obrigatórios no cadastro e na edição | Cada campo vazio; placa só com espaços; capacidade em pé apagada versus zero | Destaque e bloqueio; apagar não vira zero; dados anteriores preservados | ⏳ PENDENTE | Não executado. |
@@ -118,8 +118,11 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Ao tocar em **Finalizar cadastro** aparece o diálogo “Realizar cadastro?” (“Essa ação não poderá ser desfeita.”). Em **Cancelar**, os campos continuam preenchidos e nada é criado: o log da API não registrou `POST /onibus` até a confirmação.
+- Em **Confirmar**, o cadastro é feito: `POST /onibus` com `201`; no banco, `QXD2E45` com 44 assentos e 20 em pé, ativo, sem foto. Foi criado um único registro.
+- **Defeito:** o sucesso aparece como uma **barra preta (toast)** na parte de baixo da tela, que some rápido, com o texto “Ônibus cadastrado com sucesso” (`frota/cadastrar.tsx`), fora do padrão de pop-up de sucesso do app e diferente da mensagem do requisito (“Operação realizada com sucesso”, AC-07). A edição segue o mesmo padrão (“Ônibus alterado com sucesso”, `frota/editar.tsx`), e a inativação e a reativação mostram “Ônibus inativado” e “Ônibus reativado” na mesma barra. Mesmo defeito da HU-008 ([#260](https://github.com/GOUOCE/GOUCE-app/issues/260)).
+- O cadastro não gerou registro em `log_auditoria` (só a inativação feita na preparação da massa): já aberto na suíte de API ([#230](https://github.com/GOUOCE/GOUCE-app/issues/230)).
+- Status: ❌ Falhou.
 
 ---
 
@@ -421,6 +424,7 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 | --- | --- | --- |
 | CT-001 | Com o banco vazio a lista mostra ônibus de exemplo (`OCR-1234`, `OCR-5521`, `OCR-8890`) | Issue a abrir ao final da suíte |
 | CT-001 | Chave “Mostrar inativos” já vem ligada na listagem de frota | Issue a abrir ao final da suíte (mesma causa de [#257](https://github.com/GOUOCE/GOUCE-app/issues/257)) |
+| CT-002, CT-008, CT-009, CT-010 | Mensagens de sucesso em barra preta, fora do padrão de pop-up e com texto diferente do requisito | Issue a abrir ao final da suíte (mesma causa de [#260](https://github.com/GOUOCE/GOUCE-app/issues/260)) |
 | CT-001 | Telas de frota não recriadas: a seta volta ao Painel e Cadastrar/Editar reabrem com dados anteriores | Issue a abrir ao final da suíte (mesma causa de [#256](https://github.com/GOUOCE/GOUCE-app/issues/256)) |
 
 ## Observações gerais
