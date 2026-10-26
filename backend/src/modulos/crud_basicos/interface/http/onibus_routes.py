@@ -231,6 +231,8 @@ async def criar_onibus(
     _: dict = Depends(admin_required),
 ):
     try:
+        id_foto_onibus = id_foto_onibus.strip() or None if id_foto_onibus is not None else None
+
         dto = CriarOnibusDTO(
             placa=placa,
             assentos=assentos,

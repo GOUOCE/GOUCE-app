@@ -9,16 +9,16 @@
 | Camada | API |
 | Tipo de teste | Funcional manual — suíte essencial (baseada em risco) |
 | Endpoints | `GET /bairros`, `GET /bairros/{id}`, `POST /bairros`, `PATCH /bairros/{id}`, `PATCH /bairros/{id}/inativar` e `PATCH /bairros/{id}/ativar` — `application/json`. Corpo: `{"nome": "...", "pontos_de_parada": ["..."]}` (a API também aceita `nome_bairro`) |
-| Ambiente | A preencher — URL, branch e commit testados |
+| Ambiente | Stack Docker isolada com banco limpo (`docker compose -p atu-api`), API em `http://localhost:8001`, branch `feature/testes-api-hu-007`, commit `5e7301a0` (`develop`). Migrations aplicadas até a 75 com um contorno de ambiente (ver Observações gerais) |
 | Total de casos | 12 |
-| Última execução | Não realizada |
+| Última execução | 2026-10-25 |
 | Testador | Cauan Ricardo — execução com apoio de IA (Claude Code) |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 12 | 0 | 0 | 0 | 0 | 12 |
+| ❌ Reprovada | 12 | 5 | 4 | 2 | 1 | 0 |
 
 ## Pré-condições
 
@@ -37,18 +37,18 @@ Executar na ordem abaixo. São **12 casos essenciais**. Todas as chamadas usam o
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU007-API-001 | Listar bairros e filtrar por status | Sem filtro; `ativo=true`; `ativo=false`; sem token | HTTP 200; bairros com seus pontos; filtro respeitado; sem token só ativos | ⏳ PENDENTE | Não executado. |
-| CT-HU007-API-002 | Cadastrar bairro com pontos de parada | `Campo Velho` (1 ponto); `"  Centro  "` (3 pontos) | HTTP 201 “Operação realizada com sucesso”; bairro e pontos ativos; nome sem espaços | ⏳ PENDENTE | Não executado. |
-| CT-HU007-API-003 | Mesmo nome de ponto em outro bairro | `Planalto Universitário` com o ponto `Posto de Saúde` (já usado no Centro) | HTTP 201; ponto criado no novo bairro | ⏳ PENDENTE | Não executado. |
-| CT-HU007-API-004 | Cadastro e edição duplicados | `Centro`, `centro`, `CENTRO`, `" Centro "`; bairro inativo; edição para nome em uso; ponto repetido no mesmo bairro | HTTP 409 “Esta localidade já está cadastrada.”; nada criado nem alterado | ⏳ PENDENTE | Não executado. |
-| CT-HU007-API-005 | Campos obrigatórios e limites | Sem nome; nome vazio; sem pontos; lista vazia; ponto em branco; nome com 101 caracteres; edição esvaziando | HTTP 422 com campo e motivo em português; nada gravado | ⏳ PENDENTE | Não executado. |
-| CT-HU007-API-006 | Editar bairro | Renomear `Campo Velho` e adicionar ponto; id inexistente | HTTP 200 “Operação realizada com sucesso”; ponto antigo mantém o id; 404 no inexistente | ⏳ PENDENTE | Não executado. |
-| CT-HU007-API-007 | Inativar um ponto de parada (soft delete) | Edição do Centro sem `Mercado Público`; depois readicionar o mesmo nome | Ponto fica `ativo: false` e continua no banco; readição bloqueada com 409 | ⏳ PENDENTE | Não executado. |
-| CT-HU007-API-008 | Inativar e reativar bairro | `Campo Velho II`: inativar, repetir, ativar, repetir; id inexistente | HTTP 200 nas operações válidas; registro mantido; 409 nas repetidas; 404 no inexistente | ⏳ PENDENTE | Não executado. |
-| CT-HU007-API-009 | Auditoria das operações de escrita | Registros gerados nos CT-002, 006 e 008 | Um registro por cadastro, edição, inativação e reativação, com usuário, ação e data/hora | ⏳ PENDENTE | Não executado. |
-| CT-HU007-API-010 | Acesso sem privilégio | Token de aluno; token de representante; sem token | HTTP 403 (aluno e representante) e 401 (sem token) nas rotas de escrita; nada gravado | ⏳ PENDENTE | Não executado. |
-| CT-HU007-API-011 | Bairro inativo fora de novos vínculos e histórico preservado | Aluno vinculado ao Centro; inativar o Centro; novo cadastro com o Centro inativo | Aluno existente mantém o vínculo; novo cadastro com bairro inativo é recusado | ⏳ PENDENTE | Não executado. |
-| CT-HU007-API-012 | Bloqueio de inativação por rota ativa | Bairro e ponto usados em rota ativa (HU-011) | HTTP 409 com as mensagens do AC-06; nada inativado | ⏳ PENDENTE | Depende da HU-011 (rotas). Sem rotas na develop, marcar 🚫. |
+| CT-HU007-API-001 | Listar bairros e filtrar por status | Sem filtro; `ativo=true`; `ativo=false`; sem token | HTTP 200; bairros com seus pontos; filtro respeitado; sem token só ativos | ✅ PASSOU | HTTP 200 nas quatro chamadas; filtros respeitados; sem token só ativos, mesmo com `ativo=false`. |
+| CT-HU007-API-002 | Cadastrar bairro com pontos de parada | `Campo Velho` (1 ponto); `"  Centro  "` (3 pontos) | HTTP 201 “Operação realizada com sucesso”; bairro e pontos ativos; nome sem espaços | ✅ PASSOU | HTTP 201 nos dois bairros; nome `Centro` e ponto `Mercado Público` sem espaços; todos ativos. |
+| CT-HU007-API-003 | Mesmo nome de ponto em outro bairro | `Planalto Universitário` com o ponto `Posto de Saúde` (já usado no Centro) | HTTP 201; ponto criado no novo bairro | ❌ FALHOU | HTTP 409 “Esta localidade já está cadastrada.” ao repetir `Posto de Saúde` em outro bairro (esperado 201). |
+| CT-HU007-API-004 | Cadastro e edição duplicados | `Centro`, `centro`, `CENTRO`, `" Centro "`; bairro inativo; edição para nome em uso; ponto repetido no mesmo bairro | HTTP 409 “Esta localidade já está cadastrada.”; nada criado nem alterado | ✅ PASSOU | HTTP 409 nos 5 itens (variações de caixa e espaços, bairro inativo, edição, ponto repetido); nada criado nem alterado. |
+| CT-HU007-API-005 | Campos obrigatórios e limites | Sem nome; nome vazio; sem pontos; lista vazia; ponto em branco; nome com 101 caracteres; edição esvaziando | HTTP 422 com campo e motivo em português; nada gravado | ⚠️ PARCIAL | HTTP 422 em todas as tentativas e nada gravado; mas a mensagem é só “Valor inválido.”, sem o motivo, e o campo vem como `nome_bairro` ou `nome`. |
+| CT-HU007-API-006 | Editar bairro | Renomear `Campo Velho` e adicionar ponto; id inexistente | HTTP 200 “Operação realizada com sucesso”; ponto antigo mantém o id; 404 no inexistente | ⚠️ PARCIAL | Chamada 1 como escrita: 409 (mesma causa do CT-003). Variante sem colisão: 200, ponto antigo manteve o `id`. 404 no inexistente. |
+| CT-HU007-API-007 | Inativar um ponto de parada (soft delete) | Edição do Centro sem `Mercado Público`; depois readicionar o mesmo nome | Ponto fica `ativo: false` e continua no banco; readição bloqueada com 409 | ❌ FALHOU | Ponto removido da lista foi **apagado** do banco (não ficou `ativo: false`); readicionar criou novo `id` (201 em vez de 409). |
+| CT-HU007-API-008 | Inativar e reativar bairro | `Campo Velho II`: inativar, repetir, ativar, repetir; id inexistente | HTTP 200 nas operações válidas; registro mantido; 409 nas repetidas; 404 no inexistente | ✅ PASSOU | 200/409/404 conforme o esperado; registro mantido; inativo some sem token. Pontos do bairro inativo continuam com `ativo: true`. |
+| CT-HU007-API-009 | Auditoria das operações de escrita | Registros gerados nos CT-002, 006 e 008 | Um registro por cadastro, edição, inativação e reativação, com usuário, ação e data/hora | ❌ FALHOU | Só inativação e reativação geram `log_auditoria`; cadastro e edição não geram registro. |
+| CT-HU007-API-010 | Acesso sem privilégio | Token de aluno; token de representante; sem token | HTTP 403 (aluno e representante) e 401 (sem token) nas rotas de escrita; nada gravado | ✅ PASSOU | 403 (aluno e representante) e 401 (sem token) nas 4 rotas de escrita; nada alterado; aluno vê só ativos. |
+| CT-HU007-API-011 | Bairro inativo fora de novos vínculos e histórico preservado | Aluno vinculado ao Centro; inativar o Centro; novo cadastro com o Centro inativo | Aluno existente mantém o vínculo; novo cadastro com bairro inativo é recusado | ❌ FALHOU | Vínculo do aluno existente preservado; mas o cadastro de aluno com bairro inativo foi aceito (201). |
+| CT-HU007-API-012 | Bloqueio de inativação por rota ativa | Bairro e ponto usados em rota ativa (HU-011) | HTTP 409 com as mensagens do AC-06; nada inativado | 🚫 BLOQUEADO | Gestão de rotas (HU-011) ausente: nenhuma rota `/rotas` no OpenAPI da `develop`. |
 
 ## Detalhamento dos casos
 
@@ -69,8 +69,10 @@ Executar na ordem abaixo. São **12 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `GET /bairros` e `?ativo=true` / `?ativo=false` com o token do administrador A: HTTP `200`, itens com `bairro_id`, `nome`, `ativo` e `pontos_de_parada` (`ponto_id`, `nome`, `bairro_id`, `ativo`). Sem filtro: ativos e o inativo; `ativo=true`: ids 1 e 2; `ativo=false`: id 3 (Alto São Francisco).
+- Sem token com `?ativo=false`: HTTP `200` com só os ativos (ids 1 e 2).
+- Observação: o campo do identificador chama-se `bairro_id`/`ponto_id`, não `id` (o esperado cita `id`); a doc está apenas imprecisa.
+- Status: ✅ Passou.
 
 ---
 
@@ -94,8 +96,9 @@ Executar na ordem abaixo. São **12 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `Campo Velho`: HTTP `201`, `success: true`, “Operação realizada com sucesso”, bairro e ponto com `ativo: true`.
+- `"  Centro  "`: HTTP `201`; nome gravado `Centro`; pontos `Praça José de Barros`, `Mercado Público` (sem espaços) e `Posto de Saúde`, todos ativos.
+- Status: ✅ Passou.
 
 ---
 
@@ -115,8 +118,10 @@ Executar na ordem abaixo. São **12 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `POST /bairros` com `Planalto Universitário` e o ponto `Posto de Saúde`: HTTP `409`, `{"message": "Esta localidade já está cadastrada.", "error": {"code": "CONFLICT"}}`.
+- Nenhum bairro criado. O ponto só deveria ser único dentro do mesmo bairro (AC-02), mas a API o bloqueia por já existir no Centro.
+- Defeito: [BUG-HU007-API-001](issues/BUG-HU007-API-001-ponto-repetido-em-outro-bairro-bloqueado.md).
+- Status: ❌ Falhou.
 
 ---
 
@@ -142,8 +147,10 @@ Executar na ordem abaixo. São **12 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Item 1 (`Centro`, `centro`, `CENTRO`, `" Centro "`): HTTP `409` “Esta localidade já está cadastrada.” nas quatro.
+- Item 2 (`Alto São Francisco` inativado e recriado): `409`. Item 3 (renomear Campo Velho para `Centro`): `409`. Item 4 (`Rodoviária` e `rodoviária ` no mesmo bairro): `409`. Item 5 (`mercado público` no Centro): `409`.
+- Banco após as tentativas: nenhum bairro novo; Campo Velho com o nome original; Centro com os 3 pontos.
+- Status: ✅ Passou.
 
 ---
 
@@ -173,8 +180,10 @@ Em `PATCH /bairros/{id do Campo Velho}`: `{"nome": ""}` e `{"pontos_de_parada": 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- HTTP `422` em todas: `{}`, nome vazio, nome em branco, sem pontos, lista vazia, ponto em branco, nome com 101 caracteres, e na edição nome vazio e lista vazia. Nada gravado; Campo Velho inalterado.
+- A mensagem de todas é só `"Valor inválido."`, sem dizer o motivo (esperado, por exemplo, “O nome do bairro é obrigatório.”). O campo vem como `nome_bairro` no `{}` e como `nome` nas demais.
+- Defeito: [BUG-HU007-API-005](issues/BUG-HU007-API-005-mensagens-de-validacao-genericas.md).
+- Status: ⚠️ Parcial.
 
 ---
 
@@ -197,8 +206,11 @@ Em `PATCH /bairros/{id do Campo Velho}`: `{"nome": ""}` e `{"pontos_de_parada": 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Chamada 1 conforme o caso (`Campo Velho II` com `Posto de Saúde`): HTTP `409`, pelo mesmo motivo do CT-003; nada alterado.
+- Variante sem colisão (`Campo Velho II` com `Escola Coronel Virgílio Távora` e `Ponto Novo CV`): HTTP `200`, “Operação realizada com sucesso”; o ponto antigo manteve o `ponto_id` 1.
+- Chamada 2 (`/bairros/999999`): HTTP `404` “Bairro não encontrado.”
+- A parte que falha é consequência do defeito do CT-003.
+- Status: ⚠️ Parcial.
 
 ---
 
@@ -222,8 +234,11 @@ Em `PATCH /bairros/{id do Campo Velho}`: `{"nome": ""}` e `{"pontos_de_parada": 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Edição do Centro sem `Mercado Público`: HTTP `200`, mas o ponto (`ponto_id` 3) **deixou de existir** na tabela `ponto_de_parada`; não ficou `ativo: false`, e nenhuma consulta o mostra como inativo.
+- Readicionar `Mercado Público`: HTTP `200` e criou um **novo** ponto (`ponto_id` 6), em vez do `409` esperado.
+- Não existe rota para inativar ou reativar um ponto individual.
+- Defeito: [BUG-HU007-API-002](issues/BUG-HU007-API-002-edicao-apaga-ponto-de-parada.md).
+- Status: ❌ Falhou.
 
 ---
 
@@ -250,8 +265,10 @@ Em `PATCH /bairros/{id do Campo Velho}`: `{"nome": ""}` e `{"pontos_de_parada": 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Inativar o Campo Velho II: HTTP `200`, `ativo: false`; aparece em `?ativo=false` (administrador), não aparece em `GET /bairros` sem token e `GET /bairros/{id}` sem token devolve `404`. Registro e pontos mantidos no banco.
+- Repetir a inativação: `409` “Bairro já está desativado.” Reativar: `200` `ativo: true`; repetir: `409` “Bairro já está ativado.” Id `999999`: `404` nas duas rotas.
+- Observação: enquanto o bairro está inativo, a API mantém seus pontos com `ativo: true`; eles só ficam indisponíveis porque o bairro some das listagens públicas.
+- Status: ✅ Passou.
 
 ---
 
@@ -271,8 +288,10 @@ Em `PATCH /bairros/{id do Campo Velho}`: `{"nome": ""}` e `{"pontos_de_parada": 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Em `log_auditoria` há só 3 registros: `INATIVAR` (Alto São Francisco), `INATIVAR` e `ATIVAR` (Campo Velho II), todos com `usuario_id` 1.
+- Os cadastros (Campo Velho, Centro, Alto São Francisco) e as edições (Campo Velho II) **não geraram** registro. As tentativas recusadas (CT-004 e CT-005) corretamente não geraram.
+- Defeito: [BUG-HU007-API-003](issues/BUG-HU007-API-003-cadastro-e-edicao-sem-auditoria.md).
+- Status: ❌ Falhou.
 
 ---
 
@@ -295,8 +314,10 @@ Em `PATCH /bairros/{id do Campo Velho}`: `{"nome": ""}` e `{"pontos_de_parada": 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Aluno e representante: HTTP `403` “Acesso negado” em `POST /bairros`, `PATCH /bairros/{id}`, `/inativar` e `/ativar`. Sem token: `401` “Não autenticado” nas quatro.
+- `GET /bairros?ativo=false` com token de aluno: só bairros ativos. O Centro permaneceu ativo e sem alteração.
+- O login do representante funcionou na `develop` (aluno promovido pela HU-030).
+- Status: ✅ Passou.
 
 ---
 
@@ -309,7 +330,7 @@ Em `PATCH /bairros/{id do Campo Velho}`: `{"nome": ""}` e `{"pontos_de_parada": 
 1. Conferir o `bairro_id` do aluno vinculado.
 2. Inativar o Centro (`PATCH /bairros/{id}/inativar`).
 3. Conferir de novo o `bairro_id` do aluno (banco ou `GET /alunos/{id}`).
-4. Enviar `POST /alunos` com o `bairro_id` do Centro inativo e os demais dados válidos.
+4. Enviar `POST /usuarios/cadastrar` (`multipart/form-data`) com o `bairro_id` do Centro inativo e os demais dados válidos.
 5. Reativar o Centro ao final.
 
 **Resultado esperado**
@@ -319,8 +340,10 @@ Em `PATCH /bairros/{id do Campo Velho}`: `{"nome": ""}` e `{"pontos_de_parada": 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O aluno vinculado ao Centro (`aluno.bairro_id = 2`) manteve o vínculo depois de o Centro ser inativado (conferido no banco).
+- `POST /usuarios/cadastrar` (a rota `POST /alunos` citada na suíte não existe; `/alunos` só tem validações) com `bairro_id = 2` (Centro inativo): HTTP `201`, cadastro criado (usuário id 4). Esperado: recusa.
+- Defeito: [BUG-HU007-API-004](issues/BUG-HU007-API-004-cadastro-de-aluno-aceita-bairro-inativo.md).
+- Status: ❌ Falhou.
 
 ---
 
@@ -342,8 +365,9 @@ Em `PATCH /bairros/{id do Campo Velho}`: `{"nome": ""}` e `{"pontos_de_parada": 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- A `develop` (commit `5e7301a0`) não tem a gestão de rotas: o OpenAPI não lista nenhum caminho com “rota”. Sem rota ativa não há como verificar o bloqueio.
+- Dependência: HU-011. Reexecutar quando a gestão de rotas estiver na branch testada.
+- Status: 🚫 Bloqueado.
 
 ## Rastreabilidade
 
@@ -366,7 +390,12 @@ Em `PATCH /bairros/{id do Campo Velho}`: `{"nome": ""}` e `{"pontos_de_parada": 
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-HU007-API-003 | Ponto com o mesmo nome em outro bairro é bloqueado | [#210](https://github.com/GOUOCE/GOUCE-app/issues/210) |
+| CT-HU007-API-007 | Editar o bairro apaga o ponto removido em vez de inativá-lo; não há rota para inativar/reativar ponto | [#211](https://github.com/GOUOCE/GOUCE-app/issues/211) |
+| CT-HU007-API-009 | Cadastro e edição de bairro não geram auditoria | [#212](https://github.com/GOUOCE/GOUCE-app/issues/212) |
+| CT-HU007-API-011 | Cadastro de aluno aceita bairro inativo | [#213](https://github.com/GOUOCE/GOUCE-app/issues/213) |
+| CT-HU007-API-005 | Mensagens de validação genéricas (“Valor inválido.”) | [#214](https://github.com/GOUOCE/GOUCE-app/issues/214) |
+| PC-01 (ambiente) | A `develop` não sobe em banco vazio: a migration 69 lê `faculdade.sigla`, criada só na 75 | [#215](https://github.com/GOUOCE/GOUCE-app/issues/215) |
 
 ## Observações gerais
 
@@ -379,4 +408,8 @@ Em `PATCH /bairros/{id do Campo Velho}`: `{"nome": ""}` e `{"pontos_de_parada": 
   - o cadastro de aluno não confere se o bairro está ativo (CT-011);
   - os erros `422` do DTO passam pelo tradutor genérico (`validation_details`) e podem perder a mensagem específica (ex.: “Valor inválido.”) (CT-005).
 - A listagem e a consulta por id são públicas (sem token devolvem só ativos), pois o cadastro de aluno precisa delas. Não é falha.
+- **Execução (2026-10-25):** stack isolada (`docker compose -p atu-api`, Postgres, MinIO e a imagem do backend), banco limpo, sem tocar no banco de desenvolvimento. Resultado: 5 passaram, 4 falharam, 2 parciais e 1 bloqueado.
+- **Contorno de ambiente (não é do caso):** em banco vazio a migration `69_faculdade_fk_in_aluno` falha com `column f.sigla does not exist`, pois a coluna só é criada na `75`. Para subir o ambiente, a migration 68 foi copiada para um diretório temporário com a coluna `sigla` adicionada (nada foi alterado no repositório). Registrado no BUG-HU007-API-006.
+- **Massa preparada fora da suíte:** a migration `74` insere o bairro `Centro` sem pontos em banco novo, o que colide com o CT-002. Os bairros e pontos desse seed foram apagados do banco de teste antes de começar, para seguir a PC-05. Também foram criados, pela API, a faculdade UFC/Quixadá, um aluno ativo e um aluno promovido a representante (CT-010 e CT-011).
+- **Risco confirmado:** os pontos sobre unicidade global, `delete-orphan`, auditoria só em inativar/ativar, ausência do verificador de rota e cadastro de aluno sem checar bairro ativo foram todos reproduzidos. O verificador de rota (CT-012) não pôde ser exercitado.
 - Ao final, deixar os bairros de teste ativos ou inativos conforme combinado com o líder, sem apagar registros.
