@@ -120,7 +120,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 **Resultado obtido**
 
 - Usados `Campo Velho QA` (1 ponto) e `Centro QA` (3 pontos), pois o `Centro` já existia por seed da migration (PC-04).
-- A confirmação e a mensagem de sucesso aparecem de forma clara (“Bairro cadastrado com sucesso”); a confirmação diz “Essa ação não poderá ser desfeita.”. O bairro entra na listagem e continua depois de recarregar a página.
+- Antes de salvar aparece o pop-up “Realizar cadastro?” com o texto “Essa ação não poderá ser desfeita.”. Depois de confirmar, o sucesso aparece só como uma **barra preta (toast) na parte de baixo da tela**, com o texto “Bairro cadastrado com sucesso” e um X para fechar; não há pop-up de sucesso. A tela volta para a listagem em cerca de 1,2 segundo, então a mensagem some rápido. O bairro entra na listagem e continua depois de recarregar a página.
 - Conferido na API (`GET /bairros`) e no banco: `Campo Velho QA` (id 2) com 1 ponto e `Centro QA` (id 3) com 3 pontos, todos ativos e com os nomes exatos digitados.
 - **Defeito:** ao tocar em **Novo** de novo depois de cadastrar (ou de confirmar/voltar no meio do cadastro), a tela continua com o nome do bairro e os pontos do cadastro anterior, sem limpar. O mesmo ocorre no modal **Novo ponto de parada**, que mantém o nome digitado antes.
 - **Defeito:** o pop-up de erro “Esta localidade já está cadastrada.” aparece **por baixo** da tela de cadastro (e, no modal de ponto, por baixo do modal). Só fica visível depois de fechar o modal do ponto.
