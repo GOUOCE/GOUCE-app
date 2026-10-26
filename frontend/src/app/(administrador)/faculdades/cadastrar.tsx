@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Button, Snackbar } from 'react-native-paper';
-import { useRouter } from 'expo-router';
+import { Text, TextInput, Button } from 'react-native-paper';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, Building2, X } from 'lucide-react-native';
+import { ChevronLeft, Building2 } from 'lucide-react-native';
 
 import { faculdadeSchema, FaculdadeFormData } from '@/schemas/faculdadeSchema';
 import { faculdadeService } from '@/services/faculdadeService';
@@ -15,8 +15,6 @@ export default function CadastrarFaculdadeScreen() {
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -41,7 +39,7 @@ export default function CadastrarFaculdadeScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const { control, handleSubmit, formState: { errors } } = useForm<FaculdadeFormData>({
+  const { control, handleSubmit, formState: { errors }, reset } = useForm<FaculdadeFormData>({
     resolver: zodResolver(faculdadeSchema),
     defaultValues: {
       nome: '',
@@ -49,6 +47,29 @@ export default function CadastrarFaculdadeScreen() {
       campus: '',
     },
   });
+
+  useFocusEffect(
+    React.useCallback(() => {
+      reset({
+        nome: '',
+        sigla: '',
+        campus: '',
+      });
+
+      return () => {
+        reset({
+          nome: '',
+          sigla: '',
+          campus: '',
+        });
+      };
+    }, [reset])
+  );
+
+  const voltarParaListagem = () => {
+    closePopup();
+    router.replace('/(administrador)/faculdades');
+  };
 
   const onSubmit = (dados: FaculdadeFormData) => {
     showPopup({
@@ -63,11 +84,13 @@ export default function CadastrarFaculdadeScreen() {
         try {
           await faculdadeService.criarFaculdade(dados.nome, dados.sigla, dados.campus);
           setIsLoading(false);
-          setSnackbarMessage('Faculdade cadastrada com sucesso');
-          setSnackbarVisivel(true);
-          setTimeout(() => {
-            router.replace('/(administrador)/faculdades');
-          }, 1200);
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: 'A faculdade foi cadastrada com sucesso.',
+            confirmText: 'OK',
+            onConfirm: voltarParaListagem,
+          });
         } catch (error: any) {
           setIsLoading(false);
           const msg = getErrorMessage(error, 'Erro ao cadastrar faculdade.');
@@ -86,7 +109,7 @@ export default function CadastrarFaculdadeScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={voltarParaListagem}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Cadastrar Faculdade</Text>
@@ -169,7 +192,7 @@ export default function CadastrarFaculdadeScreen() {
         {/* Botão Finalizar Cadastro */}
         <Button
           mode="contained"
-          onPress={handleSubmit(onSubmit)}
+          onPress={handleSubmit(onSubmit) as any}
           loading={isLoading}
           disabled={isLoading}
           style={styles.saveButton}
@@ -178,20 +201,6 @@ export default function CadastrarFaculdadeScreen() {
           Finalizar cadastro
         </Button>
       </ScrollView>
-
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
     </View>
   );
 }
@@ -234,11 +243,5 @@ const styles = StyleSheet.create({
   },
   buttonContent: {
     height: 55,
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });

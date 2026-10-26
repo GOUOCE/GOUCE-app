@@ -5,12 +5,18 @@ import { useRouter } from 'expo-router';
 import { ChevronLeft, Search, Building2, ChevronDown, X } from 'lucide-react-native';
 
 import { representanteService, AlunoElegivelItem } from '@/services/representanteService';
+import { faculdadeService } from '@/services/faculdadeService';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function CadastrarRepresentanteScreen() {
   const router = useRouter();
 
   const [instituicao, setInstituicao] = useState('UFC - Campus Quixadá');
+  const [faculdadesAtivas, setFaculdadesAtivas] = useState<string[]>([
+    'UFC - Campus Quixadá',
+    'IFCE - Campus Quixadá',
+    'UECE - Campus Quixadá',
+  ]);
   const [modalInstVisible, setModalInstVisible] = useState(false);
   const [busca, setBusca] = useState('');
   const [alunoSelecionado, setAlunoSelecionado] = useState<AlunoElegivelItem | null>(null);
@@ -42,6 +48,21 @@ export default function CadastrarRepresentanteScreen() {
   const closePopup = () => {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
+
+  useEffect(() => {
+    let isMounted = true;
+    faculdadeService.listarFaculdades().then((lista) => {
+      if (isMounted && lista && lista.length > 0) {
+        const ativas = lista.filter((f) => f.ativo !== false).map((f) => `${f.sigla} - ${f.campus}`);
+        if (ativas.length > 0) {
+          setFaculdadesAtivas(ativas);
+          setInstituicao(ativas[0]);
+        }
+      }
+    }).catch(() => {});
+
+    return () => { isMounted = false; };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -144,7 +165,7 @@ export default function CadastrarRepresentanteScreen() {
             <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalInstVisible(false)}>
               <View style={styles.modalSelectContent}>
                 <Text variant="titleMedium" style={styles.modalSelectTitle}>Instituição de Ensino</Text>
-                {['UFC - Campus Quixadá', 'IFCE - Campus Quixadá', 'UECE - Campus Quixadá'].map((inst) => (
+                {faculdadesAtivas.map((inst) => (
                   <TouchableOpacity
                     key={inst}
                     style={styles.optionItem}

@@ -1,20 +1,19 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Switch, Snackbar } from 'react-native-paper';
+import { Text, TextInput, Switch } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, Plus, Search, Pencil, Trash2, RotateCcw, X } from 'lucide-react-native';
 
 import { faculdadeService, FaculdadeItem } from '@/services/faculdadeService';
+import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function FaculdadesListScreen() {
   const router = useRouter();
 
   const [busca, setBusca] = useState('');
-  const [mostrarInativos, setMostrarInativos] = useState(true);
+  const [mostrarInativos, setMostrarInativos] = useState(false); // Inicia desligada por padrão (AC-01 / AC-09)
   const [faculdades, setFaculdades] = useState<FaculdadeItem[]>([]);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -45,7 +44,13 @@ export default function FaculdadesListScreen() {
       const lista = await faculdadeService.listarFaculdades(busca);
       setFaculdades(lista);
     } catch (err) {
-      console.warn('Erro ao carregar faculdades:', err);
+      const msg = getErrorMessage(err, 'Erro ao carregar listagem de faculdades.');
+      showPopup({
+        type: 'error',
+        title: 'Erro de Conexão',
+        message: msg,
+        confirmText: 'Entendido',
+      });
     }
   }, [busca]);
 
@@ -67,9 +72,16 @@ export default function FaculdadesListScreen() {
         closePopup();
         try {
           await faculdadeService.inativarFaculdade(fac.id);
-          setSnackbarMessage(`Faculdade ${fac.sigla} inativada`);
-          setSnackbarVisivel(true);
-          carregarFaculdades();
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: 'A faculdade foi inativada com sucesso.',
+            confirmText: 'OK',
+            onConfirm: () => {
+              closePopup();
+              carregarFaculdades();
+            },
+          });
         } catch (error: any) {
           showPopup({
             type: 'error',
@@ -95,11 +107,24 @@ export default function FaculdadesListScreen() {
         closePopup();
         try {
           await faculdadeService.reativarFaculdade(fac.id);
-          setSnackbarMessage(`Faculdade ${fac.sigla} reativada`);
-          setSnackbarVisivel(true);
-          carregarFaculdades();
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: 'A faculdade foi reativada com sucesso.',
+            confirmText: 'OK',
+            onConfirm: () => {
+              closePopup();
+              carregarFaculdades();
+            },
+          });
         } catch (err) {
-          console.error('Erro ao reativar faculdade:', err);
+          const msg = getErrorMessage(err, 'Erro ao reativar faculdade.');
+          showPopup({
+            type: 'error',
+            title: 'Erro ao reativar',
+            message: msg,
+            confirmText: 'Entendido',
+          });
         }
       },
     });
@@ -112,7 +137,7 @@ export default function FaculdadesListScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.replace('/(administrador)/cadastros')}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Faculdades</Text>
@@ -221,20 +246,6 @@ export default function FaculdadesListScreen() {
           </View>
         )}
       </ScrollView>
-
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
     </View>
   );
 }
@@ -332,11 +343,5 @@ const styles = StyleSheet.create({
     color: '#888',
     textAlign: 'center',
     marginVertical: 24,
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });
