@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Em execução | 13 | 2 | 4 | 0 | 7 |
+| ⏳ Em execução | 13 | 2 | 5 | 0 | 6 |
 
 ## Pré-condições
 
@@ -50,7 +50,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU007-UI-006 | Editar bairro | Renomear `Campo Velho` e adicionar ponto; renomear para `Centro` | Sucesso e listagem atualizada; nome em uso bloqueado | ✅ PASSOU | Edição gravada na API; nome em uso bloqueado. |
-| CT-HU007-UI-007 | Inativar ponto e último ponto | Retirar `Mercado Público` do Centro; retirar o único ponto de outro bairro | Ponto vira inativo (não some); último ponto bloqueado | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-007 | Inativar ponto e último ponto | Retirar `Mercado Público` do Centro; retirar o único ponto de outro bairro | Ponto vira inativo (não some); último ponto bloqueado | ❌ FALHOU | A lixeira do ponto o apaga do banco: não aparece em “Mostrar inativos” e pode ser cadastrado de novo. Último ponto bloqueado corretamente. Mesma causa da #211. |
 | CT-HU007-UI-008 | Inativar bairro | Cancelar e depois confirmar a inativação do `Campo Velho II` | Cancelar não muda nada; confirmar mostra sucesso e tira o bairro dos ativos | ⏳ PENDENTE | Não executado. |
 | CT-HU007-UI-009 | Mostrar inativos e reativar | Ligar a chave; reativar `Campo Velho II` | Inativos identificados; reativação com sucesso | ⏳ PENDENTE | Não executado. |
 | CT-HU007-UI-010 | Sair sem salvar | Alterar nome em Editar Bairro e tocar na seta | Pedir confirmação; nada salvo; ao reabrir, dados salvos | ⏳ PENDENTE | Não executado. |
@@ -256,8 +256,12 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Retirar `Mercado Público` do `Centro QA` e salvar funciona (“Bairro alterado com sucesso”, em toast preto, sem pop-up).
+- **Defeito:** o ponto retirado **não fica inativo, é apagado**. Com **Mostrar inativos** ligado, ele não aparece em lugar nenhum. No banco, o `Mercado Público` original (id 3) deixou de existir.
+- **Defeito:** como foi apagado, foi possível adicionar `Mercado Público` de novo ao mesmo bairro, sem bloqueio nem oferta de reativar (esperado: bloqueio ou reativação, AC-03). No banco, o ponto voltou como um registro novo (id 10).
+- Causa no código: a tela só tira o ponto da lista (a lixeira não inativa) e a API, ao receber a lista de pontos, remove do bairro os que não vieram (`bairro_repository.py`, bloco “Remover pontos que não foram mantidos”). É a **#211** (CT-HU007-API-002).
+- Retirar o único ponto de um bairro é **bloqueado** como esperado (AC-08).
+- Status: ❌ Falhou.
 
 ---
 
