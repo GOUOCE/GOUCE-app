@@ -46,6 +46,8 @@ class CriarBairroDTO(BaseModel):
             p_str = str(p).strip()
             if len(p_str) < 2:
                 raise ValueError("Informe um nome de ponto com pelo menos 2 caracteres")
+            if len(p_str) > 100:
+                raise ValueError("O ponto de parada deve ter no máximo 100 caracteres")
             if not REGEX_PONTO.match(p_str):
                 raise ValueError("Use apenas letras, números, espaços, hífen, apóstrofo ou ponto")
             pontos_limpos.append(p_str)
@@ -87,6 +89,8 @@ class AtualizarBairroDTO(BaseModel):
             p_str = str(p).strip()
             if len(p_str) < 2:
                 raise ValueError("Informe um nome de ponto com pelo menos 2 caracteres")
+            if len(p_str) > 100:
+                raise ValueError("O ponto de parada deve ter no máximo 100 caracteres")
             if not REGEX_PONTO.match(p_str):
                 raise ValueError("Use apenas letras, números, espaços, hífen, apóstrofo ou ponto")
             pontos_limpos.append(p_str)

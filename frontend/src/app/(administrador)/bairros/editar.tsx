@@ -78,7 +78,13 @@ export default function EditarBairroScreen() {
             });
           }
         } catch (err) {
-          console.warn('Erro ao carregar dados do bairro:', err);
+          const msg = getErrorMessage(err, 'Erro ao carregar dados do bairro.');
+          showPopup({
+            type: 'error',
+            title: 'Erro de Conexão',
+            message: msg,
+            confirmText: 'Entendido',
+          });
         }
       }
 

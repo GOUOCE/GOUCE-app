@@ -46,9 +46,15 @@ export default function BairrosListScreen() {
       const lista = await bairroService.listarBairros(busca);
       setBairros(lista);
     } catch (err) {
-      console.warn('Erro ao carregar bairros:', err);
+      const msg = getErrorMessage(err, 'Erro ao carregar listagem de bairros.');
+      showPopup({
+        type: 'error',
+        title: 'Erro de Conexão',
+        message: msg,
+        confirmText: 'Entendido',
+      });
     }
-  }, [busca]);
+  }, [busca, showPopup]);
 
   useFocusEffect(
     React.useCallback(() => {
