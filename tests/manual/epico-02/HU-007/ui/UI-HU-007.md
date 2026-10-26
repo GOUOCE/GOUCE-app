@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Em execução | 13 | 3 | 5 | 0 | 5 |
+| ⏳ Em execução | 13 | 4 | 5 | 0 | 4 |
 
 ## Pré-condições
 
@@ -52,7 +52,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 | CT-HU007-UI-006 | Editar bairro | Renomear `Campo Velho` e adicionar ponto; renomear para `Centro` | Sucesso e listagem atualizada; nome em uso bloqueado | ✅ PASSOU | Edição gravada na API; nome em uso bloqueado. |
 | CT-HU007-UI-007 | Inativar ponto e último ponto | Retirar `Mercado Público` do Centro; retirar o único ponto de outro bairro | Ponto vira inativo (não some); último ponto bloqueado | ❌ FALHOU | A lixeira do ponto o apaga do banco: não aparece em “Mostrar inativos” e pode ser cadastrado de novo. Último ponto bloqueado corretamente. Mesma causa da #211. |
 | CT-HU007-UI-008 | Inativar bairro | Cancelar e depois confirmar a inativação do `Campo Velho II` | Cancelar não muda nada; confirmar mostra sucesso e tira o bairro dos ativos | ✅ PASSOU | Inativação confirmada, gravada e auditada; mensagem de sucesso só em toast preto; pontos do bairro inativo seguem ativos no banco. |
-| CT-HU007-UI-009 | Mostrar inativos e reativar | Ligar a chave; reativar `Campo Velho II` | Inativos identificados; reativação com sucesso | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-009 | Mostrar inativos e reativar | Ligar a chave; reativar `Campo Velho II` | Inativos identificados; reativação com sucesso | ✅ PASSOU | Reativação gravada, auditada e mantida após recarregar. Erro de reativação só vai ao console (risco do código). |
 | CT-HU007-UI-010 | Sair sem salvar | Alterar nome em Editar Bairro e tocar na seta | Pedir confirmação; nada salvo; ao reabrir, dados salvos | ⏳ PENDENTE | Não executado. |
 
 ### Seção C — Integração, acesso e robustez
@@ -314,8 +314,12 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Com a chave ligada, os bairros inativos aparecem sob o título **Inativos**. A reativação pede confirmação (“Reativar bairro?”), mostra o toast “Bairro <nome> reativado” e devolve o bairro à lista de ativos.
+- Depois de recarregar a página o status continua igual. No banco, `Campo Velho QA II` está com `ativo = true` e `Planalto Universitário QA` segue inativo.
+- O log de auditoria registrou a reativação (`ATIVAR`, bairro 2, inativo → ativo).
+- **Risco no código (não reproduzido):** se a reativação falhar, o erro só vai para o `console.error` e o usuário não vê mensagem (`index.tsx`, `handleReativar`), ao contrário da inativação, que mostra pop-up de erro.
+- A chave **Mostrar inativos** só traz bairros; como não existe inativação de ponto na tela (CT-007), não há ponto inativo para mostrar.
+- Status: ✅ Passou.
 
 ---
 
