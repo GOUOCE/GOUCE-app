@@ -18,6 +18,14 @@ class FaculdadeNaoEncontradaError(ValueError):
     """Lançada quando a faculdade não é encontrada."""
     pass
 
+class FaculdadeJaAtivadaError(ValueError):
+    """Lançada quando a faculdade não é encontrada."""
+    pass
+
+class FaculdadeJaDesativadaError(ValueError):
+    """Lançada quando a faculdade não é encontrada."""
+    pass
+
 
 class FaculdadeRepository:
     def __init__(self, session: Session):
@@ -88,41 +96,90 @@ class FaculdadeRepository:
             self.session.rollback()
             raise FaculdadeJaCadastradaError("Esta faculdade já está cadastrada.")
 
+
     def atualizar(
         self,
         faculdade_id: int,
+        usuario_executor_id: int,
         nome: Optional[str] = None,
         campus: Optional[str] = None,
         sigla: Optional[str] = None,
         ativo: Optional[bool] = None,
     ) -> FaculdadeORM:
+
         faculdade = self.buscar_por_id(faculdade_id)
+
         if not faculdade:
-            raise FaculdadeNaoEncontradaError("Faculdade não encontrada.")
+            raise FaculdadeNaoEncontradaError(
+                "Faculdade não encontrada."
+            )
 
-        nome_final = nome.strip() if nome is not None else faculdade.nome_faculdade
-        campus_final = campus.strip() if campus is not None else faculdade.campus_faculdade
-        sigla_final = sigla.strip() if sigla is not None else faculdade.sigla
+        nome_final = (
+            nome.strip() if nome is not None
+            else faculdade.nome_faculdade
+        )
 
-        if self.existe_por_nome_e_campus(nome_final, campus_final, ignorar_id=faculdade_id):
-            raise FaculdadeJaCadastradaError("Esta faculdade já está cadastrada.")
+        campus_final = (
+            campus.strip() if campus is not None
+            else faculdade.campus_faculdade
+        )
 
-        if nome is not None:
-            faculdade.nome_faculdade = nome_final
-        if campus is not None:
-            faculdade.campus_faculdade = campus_final
-        if sigla is not None:
-            faculdade.sigla = sigla_final
-        if ativo is not None:
-            faculdade.ativo = ativo
+        sigla_final = (
+            sigla.strip() if sigla is not None
+            else faculdade.sigla
+        )
+
+        if self.existe_por_nome_e_campus(
+            nome_final,
+            campus_final,
+            ignorar_id=faculdade_id
+        ):
+            raise FaculdadeJaCadastradaError(
+                "Esta faculdade já está cadastrada."
+            )
 
         try:
+            if ativo is not None and ativo != faculdade.ativo:
+
+                log = LogAuditoriaORM(
+                    usuario_id=usuario_executor_id,
+                    acao="ATIVAR" if ativo else "INATIVAR",
+                    entidade="faculdade",
+                    entidade_id=faculdade_id,
+                    valor_anterior=(
+                        "ativo" if faculdade.ativo else "inativo"
+                    ),
+                    valor_novo=(
+                        "ativo" if ativo else "inativo"
+                    ),
+                    criado_em=datetime.now(timezone.utc),
+                )
+
+                self.session.add(log)
+
+            if nome is not None:
+                faculdade.nome_faculdade = nome_final
+
+            if campus is not None:
+                faculdade.campus_faculdade = campus_final
+
+            if sigla is not None:
+                faculdade.sigla = sigla_final
+
+            if ativo is not None:
+                faculdade.ativo = ativo
+
             self.session.commit()
             self.session.refresh(faculdade)
+
             return faculdade
+
         except IntegrityError:
             self.session.rollback()
-            raise FaculdadeJaCadastradaError("Esta faculdade já está cadastrada.")
+            raise FaculdadeJaCadastradaError(
+                "Esta faculdade já está cadastrada."
+            )
+
 
     def ativar(
         self,
@@ -133,7 +190,9 @@ class FaculdadeRepository:
         if not faculdade:
             raise FaculdadeNaoEncontradaError("Faculdade não encontrada.")
 
-        valor_anterior = "ativo" if faculdade.ativo else "inativo"
+        if faculdade.ativo:
+            raise FaculdadeJaAtivadaError("Faculdade já ativada.")
+
         faculdade.ativo = True
 
         log = LogAuditoriaORM(
@@ -141,7 +200,7 @@ class FaculdadeRepository:
             acao="ATIVAR",
             entidade="faculdade",
             entidade_id=faculdade_id,
-            valor_anterior=valor_anterior,
+            valor_anterior="inativo",
             valor_novo="ativo",
             criado_em=datetime.now(timezone.utc),
         )
@@ -159,7 +218,9 @@ class FaculdadeRepository:
         if not faculdade:
             raise FaculdadeNaoEncontradaError("Faculdade não encontrada.")
 
-        valor_anterior = "ativo" if faculdade.ativo else "inativo"
+        if not faculdade.ativo:
+            raise FaculdadeJaDesativadaError("Faculdade já desativada.")
+
         faculdade.ativo = False
 
         log = LogAuditoriaORM(
@@ -167,7 +228,7 @@ class FaculdadeRepository:
             acao="INATIVAR",
             entidade="faculdade",
             entidade_id=faculdade_id,
-            valor_anterior=valor_anterior,
+            valor_anterior="ativo",
             valor_novo="inativo",
             criado_em=datetime.now(timezone.utc),
         )
