@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| 🔄 Em andamento | 12 | 1 | 3 | 0 | 8 |
+| 🔄 Em andamento | 12 | 1 | 4 | 0 | 7 |
 
 ## Pré-condições
 
@@ -49,7 +49,7 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU008-UI-006 | Editar faculdade | Trocar campus; trocar para nome+campus em uso | Sucesso e listagem atualizada; combinação em uso bloqueada | ⏳ PENDENTE | Não executado. |
+| CT-HU008-UI-006 | Editar faculdade | Trocar campus; trocar para nome+campus em uso | Sucesso e listagem atualizada; combinação em uso bloqueada | ❌ FALHOU | Edições de campus gravadas (`PATCH 200`), mas a sigla editada não é salva. Falta executar a edição duplicada (passo 3): não houve `409` no log. |
 | CT-HU008-UI-007 | Inativar faculdade | Cancelar e confirmar a inativação | Cancelar não muda nada; confirmar mostra sucesso e tira a faculdade dos ativos | ⏳ PENDENTE | Não executado. |
 | CT-HU008-UI-008 | Mostrar inativos e reativar | Ligar a chave; reativar | Inativas identificadas; reativação com sucesso | ⏳ PENDENTE | Não executado. |
 | CT-HU008-UI-009 | Sair sem salvar | Alterar o nome em Editar e tocar na seta | Pedir confirmação; nada salvo; ao reabrir, dados salvos | ⏳ PENDENTE | Não executado. |
@@ -168,6 +168,7 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 
 - Tentativas 1 a 4 feitas sobre a faculdade já gravada `Universidade Federal do Ceará` / `Campus Fortaleza` (id 4), e não sobre `Campus Quixadá`, que cairia na lista de exemplo do app e esconderia o bloqueio da API: igual, minúsculas, maiúsculas e com dois espaços no início e no fim (nome e campus). Nas quatro apareceu “Esta faculdade já está cadastrada.”.
 - O bloqueio vem da **API**: o log registrou `POST /faculdades` com `409 Conflict` nas tentativas, e o banco não ganhou nenhuma faculdade com esses dados.
+- Fora do roteiro, a diferença de **acento** foi testada: `UFC` / `Campus Quixadá` foi bloqueada com `409`, mas `UFC` / `Campus Quixada` (sem o acento) foi **aceita** e gravada como uma faculdade nova (id 10). A comparação de duplicidade diferencia acentos; o requisito (AC-03) só manda desconsiderar maiúsculas, minúsculas e espaços nas pontas. Decisão de produto pendente: tratar `Quixada` e `Quixadá` como a mesma faculdade ou não.
 - Falta a **tentativa 5** (repetir uma faculdade inativa): executar depois do CT-007, com a faculdade inativada pela tela.
 - Status: ⏳ Pendente (1 a 4 passaram).
 
@@ -217,8 +218,12 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Edições feitas na faculdade `Universidade Federal do Ceará` (id 4), e não em `UFC` / `Campus Fortaleza`, que não existe no banco. O log da API registrou `PATCH /faculdades/4` com `200` quatro vezes; a primeira tentativa voltou `401` (sessão vencida, PC-06) e foi repetida depois de entrar de novo. No banco o campus da faculdade 4 ficou `Campus Quixadá`: a alteração foi gravada na API.
+- A mensagem de sucesso da edição, pelo código (`editar.tsx`), é “Faculdade alterada com sucesso”, exibida na mesma barra preta (toast) do cadastro, e não “Operação realizada com sucesso”.
+- **Defeito:** a **sigla editada não é salva**. `atualizarFaculdade` envia à API só nome e campus, e a coluna `sigla` da faculdade 4 continua vazia. Depois de salvar, a tela mostra a sigla digitada ou, se ela estiver vazia, o nome da instituição, e não o que está no banco. Mesma causa do CT-002.
+- **Não verificado:** a edição para uma combinação já existente (passo 3). Não houve nenhum `PATCH` com `409` no log, e a edição do campus da faculdade 4 para `Campus Quixadá` foi aceita porque não existe outra `Universidade Federal do Ceará` nesse campus. A tela não tem checagem própria de duplicidade na edição, então o bloqueio depende da API. Repetir com uma combinação que exista de fato.
+- Nenhum registro de auditoria da edição: `log_auditoria` não tem ação de edição de faculdade (mesmo defeito do cadastro e da edição já registrado na suíte de API, CT-HU008-API-009).
+- Status: ❌ Falhou (passo 3 pendente).
 
 ---
 
@@ -390,6 +395,7 @@ Executar na ordem abaixo. São **12 casos essenciais**, em três seções. Os ID
 | CT-005 | Limites de tamanho: relatado 151 caracteres aceito e tentativa sem mensagem (a confirmar); limites da API diferentes dos da tela | Issue própria a abrir ao final da suíte, depois de confirmar |
 | CT-002 | Cadastro com `Universidade Federal do Ceará` / `UFC` / `Campus Quixadá` é barrado pela lista de exemplo do app, sem chamar a API | Issue própria a abrir ao final da suíte |
 | CT-002 | A sigla não é enviada à API nem gravada no banco | Issue própria a abrir ao final da suíte |
+| CT-006 | A sigla editada não é salva nem exibida a partir do banco | Mesma causa do CT-002; issue própria a abrir ao final da suíte |
 | CT-002 | Mensagem de sucesso é uma barra preta, fora do padrão de pop-up, e o texto difere do requisito | Issue própria a abrir ao final da suíte |
 | CT-001 | Chave “Mostrar inativos” já vem ligada na listagem de faculdades | [#246](https://github.com/GOUOCE/GOUCE-app/issues/246) é de bairros; issue própria a abrir ao final da suíte |
 
