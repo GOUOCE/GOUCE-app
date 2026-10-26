@@ -18,7 +18,7 @@
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Em execução | 13 | 4 | 5 | 0 | 4 |
+| ⏳ Em execução | 13 | 4 | 6 | 0 | 3 |
 
 ## Pré-condições
 
@@ -53,7 +53,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 | CT-HU007-UI-007 | Inativar ponto e último ponto | Retirar `Mercado Público` do Centro; retirar o único ponto de outro bairro | Ponto vira inativo (não some); último ponto bloqueado | ❌ FALHOU | A lixeira do ponto o apaga do banco: não aparece em “Mostrar inativos” e pode ser cadastrado de novo. Último ponto bloqueado corretamente. Mesma causa da #211. |
 | CT-HU007-UI-008 | Inativar bairro | Cancelar e depois confirmar a inativação do `Campo Velho II` | Cancelar não muda nada; confirmar mostra sucesso e tira o bairro dos ativos | ✅ PASSOU | Inativação confirmada, gravada e auditada; mensagem de sucesso só em toast preto; pontos do bairro inativo seguem ativos no banco. |
 | CT-HU007-UI-009 | Mostrar inativos e reativar | Ligar a chave; reativar `Campo Velho II` | Inativos identificados; reativação com sucesso | ✅ PASSOU | Reativação gravada, auditada e mantida após recarregar. Erro de reativação só vai ao console (risco do código). |
-| CT-HU007-UI-010 | Sair sem salvar | Alterar nome em Editar Bairro e tocar na seta | Pedir confirmação; nada salvo; ao reabrir, dados salvos | ⏳ PENDENTE | Não executado. |
+| CT-HU007-UI-010 | Sair sem salvar | Alterar nome em Editar Bairro e tocar na seta | Pedir confirmação; nada salvo; ao reabrir, dados salvos | ❌ FALHOU | A seta volta sem pedir confirmação e, ao reabrir, a tela mostra o texto digitado e não salvo (não recarrega do banco). Nada é gravado. |
 
 ### Seção C — Integração, acesso e robustez
 
@@ -341,8 +341,10 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Defeito:** a seta de voltar não pede confirmação antes de descartar as alterações (`editar.tsx` só chama `router.back()`; não há aviso de alterações não salvas).
+- **Defeito:** ao abrir o mesmo bairro de novo, o formulário mostra o nome e os pontos digitados antes, sem salvar, em vez dos dados gravados. A tela não é recriada e só recarrega os dados quando o `id` muda (`useEffect` com `[id]`), então a edição antiga continua na tela. Mesma causa do formulário de cadastro que não limpa (CT-002) e da seta que leva ao Painel (CT-001).
+- Nada é gravado: o banco continua com `Centro QA` e seus três pontos, e o log da API não mostra nenhum `PATCH` desse bairro. O que engana é só a tela.
+- Status: ❌ Falhou.
 
 ### Seção C — Integração, acesso e robustez
 
