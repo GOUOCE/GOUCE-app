@@ -447,7 +447,7 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 - Referências: [HU-012, seção 7.4.2](../../../../../docs/requisitos.md), [cenários BDD](../../../../../bdd/features/epico-03/HU-012.feature), [decisões do PO (#208)](https://github.com/GOUOCE/GOUCE-app/issues/208) e [suíte de UI](../ui/UI-HU-012.md).
 - **O que mudou desde o planejamento anterior** (base `5554bc90`, 24/10/2026): o PO respondeu a #208 (nome único entre todas as rotas, um ponto e um par saída/retorno, bloqueio da reativação com principal inativa, mensagens definidas); os requisitos passaram a exigir o nome e a chave “Mostrar inativos”; e o backend de rotas complementares entrou na `develop`.
-- **Riscos mapeados no código** (backend em `backend/src/modulos/rotas/`, `develop` `7c3d72d8`), que orientaram a escolha dos casos:
+- **Riscos mapeados no planejamento (histórico; resultados reproduzidos acima)** (backend em `backend/src/modulos/rotas/`, `develop` `7c3d72d8`), que orientaram a escolha dos casos:
   - a tabela `rota_complementar` e o DTO têm **só `horario_saida`**; não há horário de retorno, que o item 4 da #208 exige. Como o DTO recusa campos extras, o `horario_retorno` deve voltar 422 (CT-003);
   - o nome é conferido só entre **complementares**; uma complementar com o nome de uma principal é aceita (CT-004);
   - a mensagem da reativação bloqueada é “A rota principal vinculada está inativa. Reative-a ou altere o vínculo antes.”, diferente do texto do PO (CT-010);

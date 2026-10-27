@@ -1,0 +1,310 @@
+{
+  "run_id": "20261027T174349Z",
+  "environment": {
+    "base_url": "http://127.0.0.1:18812",
+    "branch": "feat/front-hu012",
+    "application_commit": "23d1063f09f13cc195da7e45422581f73e2ae6da",
+    "plan_commit": "939921e3",
+    "database": "PostgreSQL 15 isolado; migrations reais",
+    "transport": "HTTP localhost via urllib.request; sem mocks",
+    "python": "3.12.3"
+  },
+  "started_at": "2026-10-27T17:43:49.104672+00:00",
+  "finished_at": "2026-10-27T17:43:53.111866+00:00",
+  "fixture_ids": {
+    "B1": 1,
+    "B2": 2,
+    "B0": 3,
+    "F1": 1,
+    "F2": 2,
+    "F3": 3,
+    "F0": 4,
+    "RP1": 1,
+    "RP2": 2,
+    "RP0": 3,
+    "RC1": 1,
+    "RC2": 2,
+    "RC3": 6
+  },
+  "accounts": {
+    "admin": {
+      "id": 1,
+      "role": "administrador",
+      "roles": [
+        "administrador"
+      ]
+    },
+    "aluno": {
+      "id": 2,
+      "role": "aluno",
+      "roles": [
+        "aluno"
+      ]
+    },
+    "representante": {
+      "id": 3,
+      "role": "aluno",
+      "roles": [
+        "aluno",
+        "supervisor"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "case_id": "CT-HU012-API-001",
+      "status": "PASS",
+      "issues": [],
+      "dependencies": []
+    },
+    {
+      "case_id": "CT-HU012-API-002",
+      "status": "PASS",
+      "issues": [],
+      "dependencies": []
+    },
+    {
+      "case_id": "CT-HU012-API-003",
+      "status": "FAIL",
+      "issues": [
+        {
+          "number": 310,
+          "url": "https://github.com/GOUOCE/GOUCE-app/issues/310"
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "case_id": "CT-HU012-API-004",
+      "status": "FAIL",
+      "issues": [
+        {
+          "number": 309,
+          "url": "https://github.com/GOUOCE/GOUCE-app/issues/309"
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "case_id": "CT-HU012-API-005",
+      "status": "PASS",
+      "issues": [],
+      "dependencies": []
+    },
+    {
+      "case_id": "CT-HU012-API-006",
+      "status": "PASS",
+      "issues": [],
+      "dependencies": []
+    },
+    {
+      "case_id": "CT-HU012-API-007",
+      "status": "PASS",
+      "issues": [],
+      "dependencies": []
+    },
+    {
+      "case_id": "CT-HU012-API-008",
+      "status": "PASS",
+      "issues": [],
+      "dependencies": []
+    },
+    {
+      "case_id": "CT-HU012-API-009",
+      "status": "PARTIAL",
+      "issues": [
+        {
+          "number": 311,
+          "url": "https://github.com/GOUOCE/GOUCE-app/issues/311"
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "case_id": "CT-HU012-API-010",
+      "status": "PARTIAL",
+      "issues": [
+        {
+          "number": 312,
+          "url": "https://github.com/GOUOCE/GOUCE-app/issues/312"
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "case_id": "CT-HU012-API-011",
+      "status": "PASS",
+      "issues": [],
+      "dependencies": []
+    },
+    {
+      "case_id": "CT-HU012-API-012",
+      "status": "PASS",
+      "issues": [],
+      "dependencies": []
+    },
+    {
+      "case_id": "CT-HU012-API-013",
+      "status": "BLOCKED",
+      "issues": [],
+      "dependencies": [
+        {
+          "status": "BLOCKED",
+          "reason": "HU-013 não implementada nesta versão: sem entidade/endpoints de agendamentos. Não foi criada agenda diretamente no banco e não houve simulação do checker."
+        }
+      ]
+    }
+  ],
+  "policy": "Respostas reais HTTP; credenciais/tokens/dados de conta redigidos. Ausência de HU-013 não foi simulada como aprovação. Operações de massa de rotas via API.",
+  "totals": {
+    "PASS": 8,
+    "FAIL": 2,
+    "PARTIAL": 2,
+    "BLOCKED": 1
+  },
+  "request_count_including_setup": 123,
+  "issue_numbers": [
+    309,
+    310,
+    311,
+    312
+  ],
+  "runner_sha256": "31f1204a1351824dee3c5100044f5a07b56ef1ca296aac288f3b5e53bb40f4a1",
+  "commit_index": [
+    {
+      "kind": "setup",
+      "commit": "a2f841cf00efe7bdddd5ce0047fb5a946c573191"
+    },
+    {
+      "kind": "case",
+      "case_id": "CT-HU012-API-001",
+      "status": "PASS",
+      "issues": [],
+      "commit": "f71e3d90cf9294fbdd7e1833bda311398474e244"
+    },
+    {
+      "kind": "case",
+      "case_id": "CT-HU012-API-002",
+      "status": "PASS",
+      "issues": [],
+      "commit": "cae30f8338e92feb51692d689876be9ea0ce2738"
+    },
+    {
+      "kind": "case",
+      "case_id": "CT-HU012-API-003",
+      "status": "FAIL",
+      "issues": [
+        {
+          "number": 310,
+          "url": "https://github.com/GOUOCE/GOUCE-app/issues/310"
+        }
+      ],
+      "commit": "b15d443585d1c5b160dc7306a09b161b41229c4b"
+    },
+    {
+      "kind": "case",
+      "case_id": "CT-HU012-API-004",
+      "status": "FAIL",
+      "issues": [
+        {
+          "number": 309,
+          "url": "https://github.com/GOUOCE/GOUCE-app/issues/309"
+        }
+      ],
+      "commit": "a09f0ed96bb4f7e1aa4149af070dbc07f6ee1e6b"
+    },
+    {
+      "kind": "case",
+      "case_id": "CT-HU012-API-005",
+      "status": "PASS",
+      "issues": [],
+      "commit": "c1cef041895c91eb7af77db03f0877ce096d1e09"
+    },
+    {
+      "kind": "case",
+      "case_id": "CT-HU012-API-006",
+      "status": "PASS",
+      "issues": [],
+      "commit": "9b4094d74bdd5bc7dbf4dc53d01753fd1dd8d9c2"
+    },
+    {
+      "kind": "case",
+      "case_id": "CT-HU012-API-007",
+      "status": "PASS",
+      "issues": [],
+      "commit": "41a019615f031ef1cef99fc122a3f4dc0f4beb76"
+    },
+    {
+      "kind": "case",
+      "case_id": "CT-HU012-API-008",
+      "status": "PASS",
+      "issues": [],
+      "commit": "0c408e080345e38e785d3b23b9fa85faf354952b"
+    },
+    {
+      "kind": "case",
+      "case_id": "CT-HU012-API-009",
+      "status": "PARTIAL",
+      "issues": [
+        {
+          "number": 311,
+          "url": "https://github.com/GOUOCE/GOUCE-app/issues/311"
+        }
+      ],
+      "commit": "6d6dc3b46bad11fc1fc032dabb7b7bbb922b3519"
+    },
+    {
+      "kind": "case",
+      "case_id": "CT-HU012-API-010",
+      "status": "PARTIAL",
+      "issues": [
+        {
+          "number": 312,
+          "url": "https://github.com/GOUOCE/GOUCE-app/issues/312"
+        }
+      ],
+      "commit": "f3a1ef51c40df4a9b5894ccd74421bd6f871abad"
+    },
+    {
+      "kind": "case",
+      "case_id": "CT-HU012-API-011",
+      "status": "PASS",
+      "issues": [],
+      "commit": "f19b46bc0ac0e64efd4e31a3c95108e57482fde0"
+    },
+    {
+      "kind": "case",
+      "case_id": "CT-HU012-API-012",
+      "status": "PASS",
+      "issues": [],
+      "commit": "d9aae987220452f1b081c82a46f97933d18cff95"
+    },
+    {
+      "kind": "case",
+      "case_id": "CT-HU012-API-013",
+      "status": "BLOCKED",
+      "issues": [],
+      "commit": "fd9341d2f92d76de7711d9fe730222206aedcb4c"
+    },
+    {
+      "kind": "issue",
+      "issue_number": 309,
+      "commit": "003dc328bf2908eb95bcd7934b6514bc5417c2d9"
+    },
+    {
+      "kind": "issue",
+      "issue_number": 310,
+      "commit": "83ee626e1d55add5b1278af77e54525dbd0524c2"
+    },
+    {
+      "kind": "issue",
+      "issue_number": 311,
+      "commit": "062158de33ad87033fc333bdecffd6592df1911d"
+    },
+    {
+      "kind": "issue",
+      "issue_number": 312,
+      "commit": "abfada08d62de3d1902932499287a5ad317411f1"
+    }
+  ]
+}
