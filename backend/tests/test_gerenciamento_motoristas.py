@@ -16,6 +16,10 @@ from src.modulos.motoristas.application.use_cases.gerenciar_motoristas_use_case 
 from src.modulos.motoristas.infrastructure.repositories.motorista_repository import (
     MotoristaTelefoneEmUsoError,
 )
+from tests.test_motorista_telefone_validator import (
+    TELEFONES_INVALIDOS,
+    TELEFONES_VALIDOS,
+)
 
 
 class FakeRepository:
@@ -45,8 +49,8 @@ class FakeRepository:
         self.motoristas_com_alocacoes_futuras = set()
         self.alocacoes_chamadas = []
 
-    def criar(self, nome, telefone):
-        self.criar_chamadas.append((nome, telefone))
+    def criar(self, nome, telefone, usuario_executor_id):
+        self.criar_chamadas.append((nome, telefone, usuario_executor_id))
         if self.criar_error is not None:
             raise self.criar_error
         motorista = {
@@ -72,8 +76,10 @@ class FakeRepository:
         self.buscar_chamadas.append(motorista_id)
         return self.motoristas.get(motorista_id)
 
-    def atualizar(self, motorista_id, nome, telefone):
-        self.atualizar_chamadas.append((motorista_id, nome, telefone))
+    def atualizar(self, motorista_id, nome, telefone, *, usuario_executor_id):
+        self.atualizar_chamadas.append(
+            (motorista_id, nome, telefone, usuario_executor_id)
+        )
         if self.atualizar_error is not None:
             raise self.atualizar_error
         motorista = self.motoristas.get(motorista_id)
@@ -112,49 +118,102 @@ class GerenciarMotoristasUseCaseTest(unittest.TestCase):
         self.use_case = GerenciarMotoristasUseCase(self.repository)
 
     def test_criar_normaliza_dados_e_delega_ao_repository(self):
-        resultado = self.use_case.criar("  Ana Lima  ", " 85977770000 ")
+        resultado = self.use_case.criar("  Ana Lima  ", " 85977770000 ", 10)
 
         self.assertEqual(resultado["nome"], "Ana Lima")
         self.assertEqual(resultado["telefone"], "85977770000")
         self.assertEqual(
             self.repository.criar_chamadas,
-            [("Ana Lima", "85977770000")],
+            [("Ana Lima", "85977770000", 10)],
         )
+
+    def test_criar_e_atualizar_repassam_o_executor_ao_repository(self):
+        self.use_case.criar("Ana Lima", "85977770000", 42)
+        self.use_case.atualizar(1, nome="Maria Souza", usuario_executor_id=43)
+
+        self.assertEqual(
+            self.repository.criar_chamadas,
+            [("Ana Lima", "85977770000", 42)],
+        )
+        self.assertEqual(
+            self.repository.atualizar_chamadas,
+            [(1, "Maria Souza", None, 43)],
+        )
+
+    def test_executor_invalido_nao_chama_o_repository_para_escrever(self):
+        for executor in (None, 0, -1, True, "10"):
+            with self.subTest(executor=executor):
+                with self.assertRaises(MotoristaValidationError) as criar:
+                    self.use_case.criar("Ana Lima", "85977770000", executor)
+                with self.assertRaises(MotoristaValidationError) as atualizar:
+                    self.use_case.atualizar(
+                        1, nome="Maria Souza", usuario_executor_id=executor
+                    )
+                self.assertEqual(criar.exception.field, "usuario_executor_id")
+                self.assertEqual(atualizar.exception.field, "usuario_executor_id")
+
+        self.assertEqual(self.repository.criar_chamadas, [])
+        self.assertEqual(self.repository.atualizar_chamadas, [])
+
+    def test_erros_de_validacao_e_de_inexistencia_nao_escrevem_no_repository(self):
+        with self.assertRaises(MotoristaValidationError):
+            self.use_case.criar("   ", "85977770000", 10)
+        with self.assertRaises(MotoristaValidationError):
+            self.use_case.criar("Ana Lima", "123", 10)
+        with self.assertRaises(MotoristaValidationError):
+            self.use_case.atualizar(1, usuario_executor_id=10)
+        self.assertEqual(self.repository.criar_chamadas, [])
+        self.assertEqual(self.repository.atualizar_chamadas, [])
+
+        with self.assertRaises(MotoristaNaoEncontradoError):
+            self.use_case.atualizar(99, nome="Novo Nome", usuario_executor_id=10)
 
     def test_criar_exige_nome_e_telefone_nao_vazios(self):
         with self.subTest(campo="nome ausente"):
             with self.assertRaises(MotoristaValidationError):
-                self.use_case.criar(None, "85999990000")
+                self.use_case.criar(None, "85999990000", 10)
 
         with self.subTest(campo="nome vazio"):
             with self.assertRaises(MotoristaValidationError):
-                self.use_case.criar("   ", "85999990000")
+                self.use_case.criar("   ", "85999990000", 10)
 
         with self.subTest(campo="telefone ausente"):
             with self.assertRaises(MotoristaValidationError):
-                self.use_case.criar("Maria da Silva", None)
+                self.use_case.criar("Maria da Silva", None, 10)
 
         with self.subTest(campo="telefone vazio"):
             with self.assertRaises(MotoristaValidationError):
-                self.use_case.criar("Maria da Silva", "   ")
+                self.use_case.criar("Maria da Silva", "   ", 10)
 
         self.assertEqual(self.repository.criar_chamadas, [])
 
-    def test_criar_rejeita_telefone_sem_digitos(self):
-        with self.assertRaisesRegex(
-            MotoristaValidationError,
-            "Telefone deve conter ao menos um dígito",
-        ):
-            self.use_case.criar("Maria da Silva", "abc")
+    def test_criar_rejeita_telefone_malformado_sem_chamar_o_repository(self):
+        for telefone in TELEFONES_INVALIDOS:
+            if not telefone.strip():
+                continue
+            with self.subTest(telefone=telefone):
+                with self.assertRaises(MotoristaValidationError) as contexto:
+                    self.use_case.criar("Maria da Silva", telefone, 10)
+                self.assertEqual(contexto.exception.field, "telefone")
+                self.assertEqual(
+                    str(contexto.exception),
+                    "Informe um telefone válido com DDD.",
+                )
 
         self.assertEqual(self.repository.criar_chamadas, [])
+
+    def test_criar_aceita_telefones_validos_como_digitados(self):
+        for telefone in TELEFONES_VALIDOS:
+            with self.subTest(telefone=telefone):
+                resultado = self.use_case.criar("Maria da Silva", telefone, 10)
+                self.assertEqual(resultado["telefone"], telefone)
 
     def test_criar_rejeita_tipos_nao_textuais(self):
         with self.assertRaises(MotoristaValidationError):
-            self.use_case.criar(123, "85999990000")
+            self.use_case.criar(123, "85999990000", 10)
 
         with self.assertRaises(MotoristaValidationError):
-            self.use_case.criar("Maria da Silva", 85999990000)
+            self.use_case.criar("Maria da Silva", 85999990000, 10)
 
     def test_criar_propagada_conflito_de_telefone_do_repository(self):
         self.repository.criar_error = MotoristaTelefoneEmUsoError(
@@ -165,7 +224,7 @@ class GerenciarMotoristasUseCaseTest(unittest.TestCase):
             MotoristaTelefoneEmUsoError,
             "Este profissional já está registrado\\.",
         ):
-            self.use_case.criar("Maria da Silva", "85999990000")
+            self.use_case.criar("Maria da Silva", "85999990000", 10)
 
     def test_listar_por_padrao_retorna_somente_ativos(self):
         resultado = self.use_case.listar()
@@ -236,44 +295,59 @@ class GerenciarMotoristasUseCaseTest(unittest.TestCase):
             MotoristaValidationError,
             "Informe ao menos um campo",
         ):
-            self.use_case.atualizar(1)
+            self.use_case.atualizar(1, usuario_executor_id=10)
 
         self.assertEqual(self.repository.atualizar_chamadas, [])
 
     def test_atualizar_rejeita_campos_enviados_vazios(self):
         with self.assertRaises(MotoristaValidationError):
-            self.use_case.atualizar(1, nome="   ")
+            self.use_case.atualizar(1, nome="   ", usuario_executor_id=10)
 
         with self.assertRaises(MotoristaValidationError):
-            self.use_case.atualizar(1, telefone="   ")
+            self.use_case.atualizar(1, telefone="   ", usuario_executor_id=10)
 
         self.assertEqual(self.repository.atualizar_chamadas, [])
 
-    def test_atualizar_rejeita_telefone_sem_digitos(self):
-        with self.assertRaisesRegex(
-            MotoristaValidationError,
-            "Telefone deve conter ao menos um dígito",
-        ):
-            self.use_case.atualizar(1, telefone="abc")
+    def test_atualizar_rejeita_telefone_malformado_sem_chamar_o_repository(self):
+        for telefone in TELEFONES_INVALIDOS:
+            if not telefone.strip():
+                continue
+            with self.subTest(telefone=telefone):
+                with self.assertRaises(MotoristaValidationError) as contexto:
+                    self.use_case.atualizar(1, telefone=telefone, usuario_executor_id=10)
+                self.assertEqual(contexto.exception.field, "telefone")
+                self.assertEqual(
+                    str(contexto.exception),
+                    "Informe um telefone válido com DDD.",
+                )
 
         self.assertEqual(self.repository.atualizar_chamadas, [])
+
+    def test_atualizar_so_o_nome_nao_valida_o_telefone_antigo(self):
+        self.repository.motoristas[1]["telefone"] = "123"
+
+        resultado = self.use_case.atualizar(1, nome="Maria Souza", usuario_executor_id=10)
+
+        self.assertEqual(resultado["nome"], "Maria Souza")
+        self.assertEqual(self.repository.atualizar_chamadas, [(1, "Maria Souza", None, 10)])
 
     def test_atualizar_parcialmente_nome_e_telefone(self):
         resultado = self.use_case.atualizar(
             1,
             nome="  Maria Oliveira ",
+            usuario_executor_id=10,
         )
 
         self.assertEqual(resultado["nome"], "Maria Oliveira")
         self.assertEqual(resultado["telefone"], "85999990000")
         self.assertEqual(
             self.repository.atualizar_chamadas,
-            [(1, "Maria Oliveira", None)],
+            [(1, "Maria Oliveira", None, 10)],
         )
 
     def test_atualizar_trata_motorista_inexistente(self):
         with self.assertRaises(MotoristaNaoEncontradoError):
-            self.use_case.atualizar(99, nome="Novo Nome")
+            self.use_case.atualizar(99, nome="Novo Nome", usuario_executor_id=10)
 
     def test_atualizar_propagada_conflito_de_telefone_do_repository(self):
         self.repository.atualizar_error = MotoristaTelefoneEmUsoError(
@@ -281,7 +355,7 @@ class GerenciarMotoristasUseCaseTest(unittest.TestCase):
         )
 
         with self.assertRaises(MotoristaTelefoneEmUsoError):
-            self.use_case.atualizar(1, telefone="85988880000")
+            self.use_case.atualizar(1, telefone="85988880000", usuario_executor_id=10)
 
     def test_reativar_delega_id_do_motorista_e_executor(self):
         resultado = self.use_case.reativar(2, usuario_executor_id=10)

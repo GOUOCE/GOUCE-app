@@ -3,7 +3,9 @@
 from src.modulos.motoristas.infrastructure.repositories.motorista_repository import (
     MotoristaRepository,
 )
-from src.shared.security.lgpd_encryption import normalizar_telefone
+from src.modulos.motoristas.application.validators.telefone_validator import (
+    validar_telefone_br,
+)
 
 
 class MotoristaValidationError(ValueError):
@@ -28,7 +30,8 @@ class GerenciarMotoristasUseCase:
     def __init__(self, repository: MotoristaRepository):
         self.repository = repository
 
-    def criar(self, nome: str, telefone: str) -> dict:
+    def criar(self, nome: str, telefone: str, usuario_executor_id: int) -> dict:
+        self._validar_id(usuario_executor_id, "usuario_executor_id")
         nome = self._validar_texto_obrigatorio(nome, "nome", "Nome")
         telefone = self._validar_texto_obrigatorio(
             telefone,
@@ -36,7 +39,7 @@ class GerenciarMotoristasUseCase:
             "Telefone",
         )
         telefone = self._validar_telefone(telefone)
-        return self.repository.criar(nome, telefone)
+        return self.repository.criar(nome, telefone, usuario_executor_id)
 
     def listar(
         self,
@@ -68,8 +71,11 @@ class GerenciarMotoristasUseCase:
         motorista_id: int,
         nome: str | None = None,
         telefone: str | None = None,
+        *,
+        usuario_executor_id: int,
     ) -> dict:
         self._validar_id(motorista_id, "motorista_id")
+        self._validar_id(usuario_executor_id, "usuario_executor_id")
         if nome is None and telefone is None:
             raise MotoristaValidationError(
                 "motorista",
@@ -86,7 +92,12 @@ class GerenciarMotoristasUseCase:
             )
             telefone = self._validar_telefone(telefone)
 
-        resultado = self.repository.atualizar(motorista_id, nome, telefone)
+        resultado = self.repository.atualizar(
+            motorista_id,
+            nome,
+            telefone,
+            usuario_executor_id=usuario_executor_id,
+        )
         if not resultado:
             raise MotoristaNaoEncontradoError("Motorista não encontrado.")
         return resultado
@@ -138,12 +149,10 @@ class GerenciarMotoristasUseCase:
 
     @staticmethod
     def _validar_telefone(telefone: str) -> str:
-        if not normalizar_telefone(telefone):
-            raise MotoristaValidationError(
-                "telefone",
-                "Telefone deve conter ao menos um dígito.",
-            )
-        return telefone
+        try:
+            return validar_telefone_br(telefone)
+        except ValueError as error:
+            raise MotoristaValidationError("telefone", str(error)) from error
 
     @staticmethod
     def _validar_id(valor: int, campo: str) -> None:

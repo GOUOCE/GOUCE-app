@@ -1,0 +1,155 @@
+[
+  {
+    "passo": "1a",
+    "descricao": "R1 com o token antigo consulta o perfil",
+    "data_hora_utc": "2026-10-27T17:54:15Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/usuarios/me",
+      "credencial": "r1_antigo",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 401,
+      "corpo": {
+        "success": false,
+        "error": {
+          "code": "UNAUTHORIZED",
+          "message": "Não autorizado"
+        }
+      }
+    }
+  },
+  {
+    "passo": "1b",
+    "descricao": "R1 com o token antigo consulta as pendências",
+    "data_hora_utc": "2026-10-27T17:54:16Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/usuarios/reenvio_documento",
+      "credencial": "r1_antigo",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 401,
+      "corpo": {
+        "success": false,
+        "error": {
+          "code": "UNAUTHORIZED",
+          "message": "Não autorizado"
+        }
+      }
+    }
+  },
+  {
+    "passo": "2",
+    "descricao": "Novo login do R1",
+    "data_hora_utc": "2026-10-27T17:54:16Z",
+    "requisicao": {
+      "metodo": "POST",
+      "rota": "/auth/login",
+      "credencial": "-",
+      "corpo": {
+        "email": "r1.rafael@qa.gouce.app",
+        "senha": "***"
+      }
+    },
+    "resposta": {
+      "status": 401,
+      "corpo": {
+        "detail": "Sua conta está pendente de aprovação pela coordenação."
+      }
+    }
+  },
+  {
+    "passo": "3",
+    "descricao": "Administrador abre os detalhes do R1",
+    "data_hora_utc": "2026-10-27T17:54:16Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/alunos/8",
+      "credencial": "admin",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "id": 8,
+        "nome": "Rafael Reprovado Um",
+        "email": "r1.rafael@qa.gouce.app",
+        "telefone": "88999990011",
+        "data_criacao": "2026-10-27T17:51:59.668452Z",
+        "status_cadastro": "pendente",
+        "faculdade_id": 1,
+        "faculdade": "Universidade Federal do Ceará",
+        "nome_faculdade": "Universidade Federal do Ceará",
+        "sigla": "UFC",
+        "sigla_faculdade": "UFC",
+        "campus": "Campus Quixadá",
+        "bairro": "Centro",
+        "curso": "Ciência da Computação",
+        "semestre_atual": 3,
+        "periodo_ingresso": "2025.1",
+        "turno_curso": "Noturno",
+        "data_nascimento": 20020510,
+        "identificacao_genero": "Mulher",
+        "transgenero": "Não",
+        "raca": "Pardo",
+        "identificacao_sexual": "Heterossexual",
+        "tem_filhos": false,
+        "id_foto_aluno": "a1514883-c949-40cd-8d0d-fe9bdade528a",
+        "validade_acesso": null,
+        "acesso_expirado": false,
+        "motivo_reprovacao": "Documentos precisam ser reenviados.",
+        "id_comprovante_matricula": "7b01e315-216b-4bfd-8b9b-89aed9bac5da",
+        "id_comprovante_residencia": "0a3e38d9-b378-4b40-95c7-145466c3b037",
+        "nome_comprovante_matricula": "doc_1mb.pdf",
+        "nome_comprovante_residencia": "foto.png",
+        "documentos_reenvio": [
+          {
+            "tipo": "comprovante_matricula",
+            "motivo": "Comprovante de matrícula desatualizado."
+          },
+          {
+            "tipo": "comprovante_residencia",
+            "motivo": "Comprovante com mais de 3 meses."
+          }
+        ],
+        "data_hora_envio_analise": "2026-10-27T17:52:54.145425Z",
+        "data_hora_ultima_renovacao_matricula": null,
+        "termos_de_uso": true,
+        "consentimento_lgpd_em": "2026-10-27T17:51:59.668181Z",
+        "versao_termos": "1.0"
+      }
+    }
+  },
+  {
+    "passo": "4-id_comprovante_matricula",
+    "descricao": "Administrador abre o documento novo (id_comprovante_matricula)",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/arquivos/7b01e315-216b-4bfd-8b9b-89aed9bac5da/view",
+      "credencial": "admin"
+    },
+    "resposta": {
+      "status_content_type_bytes": "200 application/pdf 1048771"
+    }
+  },
+  {
+    "passo": "4-id_comprovante_residencia",
+    "descricao": "Administrador abre o documento novo (id_comprovante_residencia)",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/arquivos/0a3e38d9-b378-4b40-95c7-145466c3b037/view",
+      "credencial": "admin"
+    },
+    "resposta": {
+      "status_content_type_bytes": "200 image/png 74"
+    }
+  },
+  {
+    "passo": "5",
+    "descricao": "Banco R1: status | documentos_reenvio depois do reenvio",
+    "resultado": "pendente | [{\"tipo\": \"comprovante_matricula\", \"motivo\": \"Comprovante de matr\\u00edcula desatualizado.\", \"arquivo_id\": \"7b01e315-216b-4bfd-8b9b-89aed9bac5da\"}, {\"tipo\": \"comprovante_residencia\", \"motivo\": \"Comprovante com mais de 3 meses.\", \"arquivo_id\": \"0a3e38d9-b378-4b40-95c7-145466c3b037\"}]"
+  }
+]

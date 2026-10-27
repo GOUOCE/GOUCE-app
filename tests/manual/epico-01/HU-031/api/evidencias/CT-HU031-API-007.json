@@ -1,0 +1,108 @@
+[
+  {
+    "passo": "0",
+    "descricao": "Banco antes: aluno_id | status | matrícula (AP=6, R1=8)",
+    "resultado": "6 | ativado | 63ebd51f-4d36-4361-a18f-bfb9f24dae15;8 | pendente | 7b01e315-216b-4bfd-8b9b-89aed9bac5da;"
+  },
+  {
+    "passo": "ap",
+    "descricao": "AP (aprovado) tenta reenviar a matrícula",
+    "data_hora_utc": "2026-10-27T17:54:02Z",
+    "requisicao": {
+      "metodo": "PUT",
+      "rota": "/usuarios/reenvio_documento",
+      "credencial": "ap",
+      "corpo": {
+        "comprovante_matricula": "doc.pdf"
+      }
+    },
+    "resposta": {
+      "status": 403,
+      "corpo": {
+        "success": false,
+        "error": {
+          "code": "FORBIDDEN",
+          "message": "O reenvio de documentos está disponível somente para cadastros rejeitados."
+        }
+      }
+    }
+  },
+  {
+    "passo": "admin",
+    "descricao": "Administrador A tenta reenviar a matrícula",
+    "data_hora_utc": "2026-10-27T17:54:02Z",
+    "requisicao": {
+      "metodo": "PUT",
+      "rota": "/usuarios/reenvio_documento",
+      "credencial": "admin",
+      "corpo": {
+        "comprovante_matricula": "doc.pdf"
+      }
+    },
+    "resposta": {
+      "status": 403,
+      "corpo": {
+        "success": false,
+        "error": {
+          "code": "FORBIDDEN",
+          "message": "Acesso negado"
+        }
+      }
+    }
+  },
+  {
+    "passo": "-",
+    "descricao": "Sem token tenta reenviar a matrícula",
+    "data_hora_utc": "2026-10-27T17:54:02Z",
+    "requisicao": {
+      "metodo": "PUT",
+      "rota": "/usuarios/reenvio_documento",
+      "credencial": "-",
+      "corpo": {
+        "comprovante_matricula": "doc.pdf"
+      }
+    },
+    "resposta": {
+      "status": 401,
+      "corpo": {
+        "success": false,
+        "error": {
+          "code": "UNAUTHORIZED",
+          "message": "Não autorizado"
+        }
+      }
+    }
+  },
+  {
+    "passo": "r1_antigo",
+    "descricao": "R1 com o token de antes do reenvio (CT-004) tenta reenviar a matrícula",
+    "data_hora_utc": "2026-10-27T17:54:02Z",
+    "requisicao": {
+      "metodo": "PUT",
+      "rota": "/usuarios/reenvio_documento",
+      "credencial": "r1_antigo",
+      "corpo": {
+        "comprovante_matricula": "doc.pdf"
+      }
+    },
+    "resposta": {
+      "status": 401,
+      "corpo": {
+        "success": false,
+        "error": {
+          "code": "UNAUTHORIZED",
+          "message": "Não autorizado"
+        }
+      }
+    }
+  },
+  {
+    "passo": "p1",
+    "descricao": "P1 (pendente) não tem token: login recusado no CT-HU031-API-001. Parte do P1 bloqueada."
+  },
+  {
+    "passo": "final",
+    "descricao": "Banco depois: aluno_id | status | matrícula",
+    "resultado": "6 | ativado | 63ebd51f-4d36-4361-a18f-bfb9f24dae15;8 | pendente | 7b01e315-216b-4bfd-8b9b-89aed9bac5da;"
+  }
+]

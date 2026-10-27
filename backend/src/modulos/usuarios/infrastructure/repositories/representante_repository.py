@@ -1,6 +1,7 @@
 import json
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
 from src.modulos.usuarios.model.entities.aluno import AlunoORM
@@ -26,6 +27,9 @@ class FaculdadeInativaError(ValueError):
 
 
 class AlunoNaoAprovadoOuInativoError(ValueError):
+    pass
+
+class AlunoValidadeAcessoExpiradoError(ValueError):
     pass
 
 
@@ -83,6 +87,11 @@ class RepresentanteRepository:
             .filter(UsuarioORM.id == aluno_id)
             .first()
         )
+        validade_acesso = self.session.execute(
+            select(AlunoORM.validade_acesso).where(
+                AlunoORM.aluno_id == aluno_id
+            )
+        ).scalar_one_or_none()
         if not resultado_aluno:
             raise AlunoNaoEncontradoError("Aluno não encontrado.")
 
@@ -93,6 +102,12 @@ class RepresentanteRepository:
         if not is_aprovado or not is_ativo:
             raise AlunoNaoAprovadoOuInativoError("Aluno não aprovado ou inativo.")
 
+        if (
+            validade_acesso is not None
+            and validade_acesso < datetime.now(timezone.utc)
+        ):
+            raise AlunoValidadeAcessoExpiradoError("Aluno com validade de acesso expirada ou não definida.")
+        
         faculdade = (
             self.session.query(FaculdadeORM)
             .filter(FaculdadeORM.id_faculdade == faculdade_id)
