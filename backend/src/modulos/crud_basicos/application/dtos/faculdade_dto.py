@@ -2,6 +2,7 @@ import re
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field, AliasChoices, field_validator
 
+# Validação estrita conforme Critério 12 - HU-008
 REGEX_TEXTO_LIVRE = re.compile(r"^[A-Za-z0-9À-ÖØ-öø-ÿ'’\-. ]+$")
 REGEX_SIGLA = re.compile(r"^[A-Za-z0-9]+$")
 
