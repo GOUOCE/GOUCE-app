@@ -103,6 +103,103 @@ Funcionalidade: Gerenciamento de Faculdades
         | Campus            |
 
 
+    # AC-12 - Caracteres permitidos no nome, na sigla e no campus
+    @fluxo_infeliz @validacao_campos @prioridade_media
+    Esquema do Cenário: Sistema bloqueia nome da instituição ou campus com caracteres não permitidos
+      Quando o administrador seleciona "Novo Cadastro"
+      E preenche o campo "<campo>" com "<valor>"
+      E preenche os demais campos corretamente
+      E clica no botão "Salvar"
+      Então o sistema exibe a mensagem "Use apenas letras, números, espaços, hífen, apóstrofo ou ponto"
+      E a faculdade não é cadastrada
+
+      Exemplos:
+        | campo  | valor           |
+        | Nome   | Faculdade 😀    |
+        | Nome   | Faculdade @#$%  |
+        | Campus | Campus 😀       |
+        | Campus | Campus @#$%     |
+
+
+    # AC-12 - Caracteres permitidos na sigla
+    @fluxo_infeliz @validacao_campos @prioridade_media
+    Esquema do Cenário: Sistema bloqueia sigla com caracteres não permitidos
+      Quando o administrador seleciona "Novo Cadastro"
+      E preenche o campo "Sigla" com "<sigla>"
+      E preenche os demais campos corretamente
+      E clica no botão "Salvar"
+      Então o sistema exibe a mensagem "Use apenas letras e números na sigla, sem espaços"
+      E a faculdade não é cadastrada
+
+      Exemplos:
+        | sigla  |
+        | U F C  |
+        | UFC 😀 |
+        | UFC@#  |
+
+
+    # AC-12 - Números são aceitos no nome, na sigla e no campus
+    @fluxo_feliz @validacao_campos @prioridade_media
+    Cenário: Administrador cadastra faculdade com número no nome e na sigla
+      Quando o administrador seleciona "Novo Cadastro"
+      E preenche o nome da instituição com "Faculdade 7 de Setembro"
+      E preenche a sigla com "FA7"
+      E preenche o campus com "Campus Fortaleza"
+      E clica no botão "Salvar"
+      Então o sistema exibe a mensagem "Operação realizada com sucesso"
+      E a listagem exibe a faculdade "Faculdade 7 de Setembro" com a sigla "FA7" no campus "Campus Fortaleza"
+
+
+    # AC-12 - Tamanho mínimo do nome, da sigla e do campus
+    @fluxo_infeliz @validacao_campos @prioridade_media
+    Esquema do Cenário: Sistema bloqueia campo abaixo do tamanho mínimo
+      Quando o administrador seleciona "Novo Cadastro"
+      E preenche o campo "<campo>" com "<valor>"
+      E preenche os demais campos corretamente
+      E clica no botão "Salvar"
+      Então o sistema exibe a mensagem "<mensagem>"
+      E a faculdade não é cadastrada
+
+      Exemplos:
+        | campo  | valor | mensagem                                                       |
+        | Nome   | UF    | Informe o nome da instituição com pelo menos 3 caracteres      |
+        | Sigla  | U     | Informe a sigla do nome (ex.: UFC)                             |
+        | Campus | C     | Informe o campus da instituição                                |
+
+
+    # AC-12 - Tamanho máximo do nome, da sigla e do campus
+    @fluxo_infeliz @validacao_campos @prioridade_media
+    Esquema do Cenário: Sistema bloqueia campo acima do tamanho máximo
+      Quando o administrador seleciona "Novo Cadastro"
+      E preenche o campo "<campo>" com um texto de <quantidade> caracteres
+      E preenche os demais campos corretamente
+      E clica no botão "Salvar"
+      Então o sistema exibe a mensagem "<mensagem>"
+      E a faculdade não é cadastrada
+
+      Exemplos:
+        | campo  | quantidade | mensagem                                                |
+        | Nome   | 151        | O nome da instituição deve ter no máximo 150 caracteres |
+        | Sigla  | 21         | A sigla deve ter no máximo 20 caracteres                |
+        | Campus | 101        | O campus deve ter no máximo 100 caracteres              |
+
+
+    # AC-12 - A API aplica as mesmas regras de caracteres e de tamanho
+    @fluxo_infeliz @validacao_campos @teste_api @nao_automatizavel_via_appium @prioridade_media
+    Esquema do Cenário: API rejeita faculdade fora das regras de caracteres e de tamanho
+      Quando um administrador envia uma requisição para cadastrar uma faculdade com "<campo>" igual a "<valor>"
+      Então a API responde com o status "422 Unprocessable Entity"
+      E a faculdade não é cadastrada
+
+      Exemplos:
+        | campo  | valor           |
+        | nome   | Faculdade 😀    |
+        | nome   | UF              |
+        | sigla  | U F C           |
+        | campus | Campus @#$%     |
+        | campus | C               |
+
+
     # FA-003 - Campos obrigatórios ausentes na edição (AC-08)
     @fluxo_infeliz @FA003 @validacao_campos @prioridade_media
     Esquema do Cenário: Sistema bloqueia a edição quando um campo obrigatório é esvaziado
