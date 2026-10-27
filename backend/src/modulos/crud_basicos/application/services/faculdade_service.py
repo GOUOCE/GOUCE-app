@@ -43,6 +43,7 @@ class FaculdadeService:
     def atualizar(
         self,
         faculdade_id: int,
+        usuario_executor_id: int,
         nome: Optional[str] = None,
         campus: Optional[str] = None,
         sigla: Optional[str] = None,
@@ -63,6 +64,7 @@ class FaculdadeService:
         return self.repository.atualizar(
             faculdade_id=faculdade_id,
             nome=nome_normalizado,
+            usuario_executor_id=usuario_executor_id,
             campus=campus_normalizado,
             sigla=sigla_normalizada,
             ativo=ativo,

@@ -17,6 +17,7 @@ export default function CadastrarAdministradorScreen() {
   const [aba, setAba] = useState<'promover' | 'novo'>('promover');
   const [buscaAluno, setBuscaAluno] = useState('');
   const [alunos, setAlunos] = useState<AlunoAprovadoItem[]>([]);
+  const [recarga, setRecarga] = useState(0);
   const [alunoSelecionado, setAlunoSelecionado] = useState<AlunoAprovadoItem | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -63,6 +64,8 @@ export default function CadastrarAdministradorScreen() {
         setBuscaAluno('');
       };
       limpar();
+      // Recarrega a lista de elegíveis: quem foi promovido não pode reaparecer ao voltar.
+      setRecarga((n) => n + 1);
       return limpar;
     }, [reset])
   );
@@ -75,7 +78,7 @@ export default function CadastrarAdministradorScreen() {
       }).catch((err) => console.warn('Erro ao listar alunos aprovados:', err));
     }
     return () => { isMounted = false; };
-  }, [aba, buscaAluno]);
+  }, [aba, buscaAluno, recarga]);
 
   const getIniciais = (nome: string) => {
     if (!nome) return 'AL';

@@ -11,11 +11,11 @@ os.environ.setdefault(
 from fastapi import FastAPI
 
 from src.modulos.motoristas.application.use_cases.gerenciar_motoristas_use_case import (
+    MotoristaComAlocacoesPendentesError,
     MotoristaNaoEncontradoError,
     MotoristaValidationError,
 )
 from src.modulos.motoristas.infrastructure.repositories.motorista_repository import (
-    AlocacoesFuturasNaoVerificadasError,
     MotoristaTelefoneEmUsoError,
 )
 from src.modulos.motoristas.interface.http import motorista_routes
@@ -47,6 +47,7 @@ class FakeMotoristaUseCase:
         self.reativar_chamadas = []
         self.criar_error = None
         self.atualizar_error = None
+        self.inativar_error = None
 
     def criar(self, nome, telefone):
         self.criar_chamadas.append((nome, telefone))
@@ -59,11 +60,11 @@ class FakeMotoristaUseCase:
             "ativo": True,
         }
 
-    def listar(self, ativo=None, nome=None):
-        self.listar_chamadas.append((ativo, nome))
+    def listar(self, incluir_inativos=False, nome=None):
+        self.listar_chamadas.append((incluir_inativos, nome))
         resultados = list(self.motoristas.values())
-        if ativo is not None:
-            resultados = [item for item in resultados if item["ativo"] == ativo]
+        if not incluir_inativos:
+            resultados = [item for item in resultados if item["ativo"]]
         if nome:
             termo = nome.casefold()
             resultados = [item for item in resultados if termo in item["nome"].casefold()]
@@ -96,9 +97,13 @@ class FakeMotoristaUseCase:
 
     def inativar(self, motorista_id, usuario_executor_id):
         self.inativar_chamadas.append((motorista_id, usuario_executor_id))
-        raise AlocacoesFuturasNaoVerificadasError(
-            "Verificação de alocações futuras pendente."
-        )
+        if self.inativar_error is not None:
+            raise self.inativar_error
+        resultado = self.motoristas.get(motorista_id)
+        if resultado is None:
+            raise MotoristaNaoEncontradoError("Motorista não encontrado.")
+        resultado["ativo"] = False
+        return resultado
 
     def reativar(self, motorista_id, usuario_executor_id):
         self.reativar_chamadas.append((motorista_id, usuario_executor_id))
@@ -221,6 +226,7 @@ class MotoristaRoutesTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status_code, 201)
         body = response.json()
         self.assertIs(body["success"], True)
+        self.assertEqual(body["message"], "Motorista cadastrado com sucesso.")
         self.assertEqual(
             set(body["data"]),
             {"id", "nome", "telefone", "ativo"},
@@ -250,16 +256,58 @@ class MotoristaRoutesTest(unittest.IsolatedAsyncioTestCase):
             "Este profissional já está registrado.",
         )
 
-    async def test_listagem_aplica_filtros_de_status_e_nome(self):
+    async def test_listagem_por_padrao_retorna_somente_ativos(self):
+        response = await asgi_request(self.app, "GET", "/motoristas")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    "id": 1,
+                    "nome": "Maria da Silva",
+                    "telefone": "85999990000",
+                    "ativo": True,
+                }
+            ],
+        )
+        self.assertEqual(self.use_case.listar_chamadas, [(False, None)])
+
+    async def test_listagem_com_incluir_inativos_retorna_status_de_cada_item(self):
         response = await asgi_request(
             self.app,
             "GET",
-            "/motoristas?ativo=false&nome=Jo%C3%A3o",
+            "/motoristas?incluir_inativos=true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [(item["id"], item["ativo"]) for item in response.json()],
+            [(1, True), (2, False)],
+        )
+        self.assertEqual(self.use_case.listar_chamadas, [(True, None)])
+
+    async def test_listagem_aplica_busca_por_nome_com_inativos(self):
+        response = await asgi_request(
+            self.app,
+            "GET",
+            "/motoristas?incluir_inativos=true&nome=jo%C3%A3o",
         )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual([item["id"] for item in response.json()], [2])
-        self.assertEqual(self.use_case.listar_chamadas, [(False, "João")])
+        self.assertEqual(self.use_case.listar_chamadas, [(True, "joão")])
+
+    async def test_listagem_com_incluir_inativos_invalido_retorna_422(self):
+        response = await asgi_request(
+            self.app,
+            "GET",
+            "/motoristas?incluir_inativos=talvez",
+        )
+
+        self.assertEqual(response.status_code, 422)
+        self.assert_error_response(self, response.json(), "REQUEST_VALIDATION_ERROR")
+        self.assertEqual(self.use_case.listar_chamadas, [])
 
     async def test_consulta_por_id_retorna_200(self):
         response = await asgi_request(self.app, "GET", "/motoristas/1")
@@ -284,6 +332,7 @@ class MotoristaRoutesTest(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["message"], "Motorista alterado com sucesso.")
         self.assertEqual(response.json()["data"]["telefone"], "85911112222")
         self.assertEqual(
             self.use_case.atualizar_chamadas,
@@ -314,7 +363,81 @@ class MotoristaRoutesTest(unittest.IsolatedAsyncioTestCase):
         response = await asgi_request(self.app, "PATCH", "/motoristas/1", {})
 
         self.assertEqual(response.status_code, 422)
-        self.assert_error_response(self, response.json(), "REQUEST_VALIDATION_ERROR")
+        body = response.json()
+        self.assert_error_response(self, body, "REQUEST_VALIDATION_ERROR")
+        self.assertEqual(
+            body["error"]["details"],
+            [
+                {
+                    "field": "motorista",
+                    "message": "Informe ao menos um campo para atualização.",
+                }
+            ],
+        )
+
+    async def test_cadastro_com_campos_vazios_retorna_erro_por_campo(self):
+        esperado = [
+            {"field": "nome", "message": "Nome Completo é obrigatório."},
+            {"field": "telefone", "message": "Telefone é obrigatório."},
+        ]
+        for payload in (
+            {"nome": "", "telefone": ""},
+            {"nome": "   ", "telefone": "   "},
+            {},
+            {"nome": None, "telefone": None},
+        ):
+            with self.subTest(payload=payload):
+                response = await asgi_request(
+                    self.app,
+                    "POST",
+                    "/motoristas",
+                    payload,
+                )
+
+                self.assertEqual(response.status_code, 422)
+                body = response.json()
+                self.assert_error_response(self, body, "REQUEST_VALIDATION_ERROR")
+                self.assertEqual(body["error"]["details"], esperado)
+
+        self.assertEqual(self.use_case.criar_chamadas, [])
+
+    async def test_edicao_com_campos_vazios_retorna_erro_por_campo(self):
+        response = await asgi_request(
+            self.app,
+            "PATCH",
+            "/motoristas/1",
+            {"nome": " ", "telefone": ""},
+        )
+
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(
+            response.json()["error"]["details"],
+            [
+                {"field": "nome", "message": "Nome Completo é obrigatório."},
+                {"field": "telefone", "message": "Telefone é obrigatório."},
+            ],
+        )
+        self.assertEqual(self.use_case.atualizar_chamadas, [])
+
+    async def test_cadastro_com_tamanho_e_tipo_invalidos_retorna_erro_por_campo(self):
+        response = await asgi_request(
+            self.app,
+            "POST",
+            "/motoristas",
+            {"nome": "A" * 151, "telefone": 85999990000},
+        )
+
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(
+            response.json()["error"]["details"],
+            [
+                {
+                    "field": "nome",
+                    "message": "Nome Completo deve ter no máximo 150 caracteres.",
+                },
+                {"field": "telefone", "message": "Telefone deve ser um texto válido."},
+            ],
+        )
 
     async def test_payload_invalido_retorna_422_padronizado(self):
         response = await asgi_request(
@@ -327,7 +450,13 @@ class MotoristaRoutesTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status_code, 422)
         body = response.json()
         self.assert_error_response(self, body, "REQUEST_VALIDATION_ERROR")
-        self.assertEqual(body["error"]["details"][0]["field"], "telefone")
+        self.assertEqual(
+            body["error"]["details"],
+            [
+                {"field": "telefone", "message": "Telefone é obrigatório."},
+                {"field": "cpf", "message": "Campo não permitido."},
+            ],
+        )
         self.assertEqual(self.use_case.criar_chamadas, [])
 
     async def test_cadastro_com_telefone_sem_digitos_retorna_422(self):
@@ -343,6 +472,15 @@ class MotoristaRoutesTest(unittest.IsolatedAsyncioTestCase):
             self,
             response.json(),
             "REQUEST_VALIDATION_ERROR",
+        )
+        self.assertEqual(
+            response.json()["error"]["details"],
+            [
+                {
+                    "field": "telefone",
+                    "message": "Telefone deve conter ao menos um dígito.",
+                }
+            ],
         )
         self.assertEqual(self.use_case.criar_chamadas, [])
 
@@ -360,6 +498,15 @@ class MotoristaRoutesTest(unittest.IsolatedAsyncioTestCase):
             response.json(),
             "REQUEST_VALIDATION_ERROR",
         )
+        self.assertEqual(
+            response.json()["error"]["details"],
+            [
+                {
+                    "field": "telefone",
+                    "message": "Telefone deve conter ao menos um dígito.",
+                }
+            ],
+        )
         self.assertEqual(self.use_case.atualizar_chamadas, [])
 
     async def test_id_invalido_retorna_422_padronizado(self):
@@ -372,10 +519,11 @@ class MotoristaRoutesTest(unittest.IsolatedAsyncioTestCase):
         response = await asgi_request(self.app, "PATCH", "/motoristas/2/reativar")
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["message"], "Motorista reativado com sucesso.")
         self.assertTrue(response.json()["data"]["ativo"])
         self.assertEqual(self.use_case.reativar_chamadas, [(2, 42)])
 
-    async def test_inativacao_nao_aceita_executor_do_payload_e_retorna_503(self):
+    async def test_inativacao_retorna_200_e_usa_executor_autenticado(self):
         response = await asgi_request(
             self.app,
             "PATCH",
@@ -383,9 +531,37 @@ class MotoristaRoutesTest(unittest.IsolatedAsyncioTestCase):
             {"usuario_executor_id": 999},
         )
 
-        self.assertEqual(response.status_code, 503)
-        self.assert_error_response(self, response.json(), "SERVICE_UNAVAILABLE")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["message"], "Motorista inativado com sucesso.")
+        self.assertFalse(response.json()["data"]["ativo"])
         self.assertEqual(self.use_case.inativar_chamadas, [(1, 42)])
+
+    async def test_inativacao_com_alocacoes_futuras_retorna_409_e_mensagem_exata(self):
+        mensagem = (
+            "Este profissional possui alocações pendentes e não pode ser "
+            "inativado no momento."
+        )
+        self.use_case.inativar_error = MotoristaComAlocacoesPendentesError(mensagem)
+
+        response = await asgi_request(self.app, "PATCH", "/motoristas/1/inativar")
+
+        self.assertEqual(response.status_code, 409)
+        body = response.json()
+        self.assert_error_response(self, body, "CONFLICT")
+        self.assertEqual(body["error"]["message"], mensagem)
+        self.assertTrue(self.use_case.motoristas[1]["ativo"])
+
+    async def test_inativacao_de_motorista_inexistente_retorna_404(self):
+        response = await asgi_request(self.app, "PATCH", "/motoristas/99/inativar")
+
+        self.assertEqual(response.status_code, 404)
+        self.assert_error_response(self, response.json(), "RESOURCE_NOT_FOUND")
+
+    async def test_reativacao_de_motorista_inexistente_retorna_404(self):
+        response = await asgi_request(self.app, "PATCH", "/motoristas/99/reativar")
+
+        self.assertEqual(response.status_code, 404)
+        self.assert_error_response(self, response.json(), "RESOURCE_NOT_FOUND")
 
     async def test_sem_autenticacao_retorna_401_padronizado(self):
         self.app.dependency_overrides.pop(get_current_user, None)

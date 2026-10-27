@@ -144,8 +144,7 @@ Funcionalidade: Gerenciamento de Motoristas
 
 
     # AC-10 - Formato do telefone (DDD + 8 dígitos de fixo ou 9 de celular)
-    # Observação: o texto da mensagem não está definido no requisito; os cenários seguem
-    # a mensagem exibida pelo formulário e devem ser alinhados com o time.
+    # A mensagem "Informe um telefone válido com DDD" está definida no critério 10.
     @fluxo_infeliz @validacao_campos @prioridade_alta
     Esquema do Cenário: Sistema bloqueia o salvamento de motorista com telefone incompleto
       Quando o administrador clica em "+ Novo"
@@ -159,6 +158,116 @@ Funcionalidade: Gerenciamento de Motoristas
         | telefone_invalido | motivo         |
         | 123               | poucos dígitos |
         | 998112233         | sem DDD        |
+
+
+    # AC-10 - Máscara e limitador do campo Telefone
+    @fluxo_feliz @validacao_campos @prioridade_media
+    Esquema do Cenário: Campo Telefone aceita apenas números, aplica a máscara e limita a 11 dígitos
+      Quando o administrador clica em "+ Novo"
+      E digita "<digitado>" no campo "Telefone"
+      Então o campo "Telefone" exibe "<exibido>"
+
+      Exemplos:
+        | digitado           | exibido         | motivo                                  |
+        | 88998112233        | (88) 99811-2233 | celular com máscara                     |
+        | 8834125566         | (88) 3412-5566  | fixo com máscara                        |
+        | abc88998112233     | (88) 99811-2233 | letras não entram no campo              |
+        | 88 99811-22😀33    | (88) 99811-2233 | emoji e símbolos não entram no campo    |
+        | 889981122334455    | (88) 99811-2233 | o 12º dígito em diante não entra        |
+
+
+    # AC-10 - A API recusa telefone fora do formato
+    @fluxo_infeliz @validacao_campos @teste_api @nao_automatizavel_via_appium @prioridade_alta
+    Esquema do Cenário: API recusa telefone com letras ou fora de 10 e 11 dígitos
+      Quando o administrador envia uma requisição para cadastrar um motorista com o telefone "<telefone_invalido>"
+      Então a API responde com o status "422 Unprocessable Entity"
+      E a mensagem informa "Informe um telefone válido com DDD"
+      E o motorista não é cadastrado
+
+      Exemplos:
+        | telefone_invalido | motivo                  |
+        | 123               | poucos dígitos          |
+        | 998112233         | sem DDD                 |
+        | 889981122334      | 12 dígitos              |
+        | 889981122334455   | 15 dígitos              |
+        | abcdefghijk       | somente letras          |
+        | (88) abcdef       | letras depois do DDD    |
+
+
+    # AC-13 - Caracteres permitidos no Nome Completo
+    @fluxo_infeliz @validacao_campos @prioridade_media
+    Esquema do Cenário: Sistema bloqueia Nome Completo com caracteres não permitidos
+      Quando o administrador clica em "+ Novo"
+      E preenche o campo "Nome Completo" com "<nome>"
+      E preenche o campo "Telefone" com "88998112233"
+      E clica no botão "Finalizar cadastro"
+      Então o sistema exibe a mensagem "Use apenas letras, espaços, hífen ou apóstrofo"
+      E o motorista não é cadastrado
+
+      Exemplos:
+        | nome             | motivo            |
+        | Francisco 😀     | emoji             |
+        | Francisco @#$%   | símbolos          |
+        | Francisco Alves2 | número no nome    |
+        | 333333333333     | somente números   |
+
+
+    # AC-13 - Nome e sobrenome
+    @fluxo_infeliz @validacao_campos @prioridade_media
+    Cenário: Sistema bloqueia Nome Completo com uma única palavra
+      Quando o administrador clica em "+ Novo"
+      E preenche o campo "Nome Completo" com "Francisco"
+      E preenche o campo "Telefone" com "88998112233"
+      E clica no botão "Finalizar cadastro"
+      Então o sistema exibe a mensagem "Informe nome e sobrenome completos"
+      E o motorista não é cadastrado
+
+
+    # AC-13 - Letras acentuadas, hífen e apóstrofo são aceitos
+    @fluxo_feliz @validacao_campos @prioridade_media
+    Esquema do Cenário: Administrador cadastra motorista com acento, hífen ou apóstrofo no nome
+      Quando o administrador clica em "+ Novo"
+      E preenche o campo "Nome Completo" com "<nome>"
+      E preenche o campo "Telefone" com "88998112233"
+      E clica no botão "Finalizar cadastro"
+      Então o sistema exibe uma notificação de confirmação
+      E a listagem exibe o motorista "<nome>"
+
+      Exemplos:
+        | nome              |
+        | João D'Ávila      |
+        | Ana-Clara Souza   |
+        | José da Conceição |
+
+
+    # AC-13 - Tamanho mínimo e máximo do Nome Completo
+    @fluxo_infeliz @validacao_campos @prioridade_media
+    Esquema do Cenário: Sistema bloqueia Nome Completo fora do tamanho permitido
+      Quando o administrador clica em "+ Novo"
+      E preenche o campo "Nome Completo" com <valor>
+      E preenche o campo "Telefone" com "88998112233"
+      E clica no botão "Finalizar cadastro"
+      Então o sistema exibe a mensagem "<mensagem>"
+      E o motorista não é cadastrado
+
+      Exemplos:
+        | valor                       | mensagem                                              |
+        | "Jo"                        | Informe o nome completo com pelo menos 3 caracteres   |
+        | um texto de 151 caracteres  | O nome deve ter no máximo 150 caracteres              |
+
+
+    # AC-13 - A API aplica a mesma regra de caracteres do Nome Completo
+    @fluxo_infeliz @validacao_campos @teste_api @nao_automatizavel_via_appium @prioridade_alta
+    Esquema do Cenário: API recusa Nome Completo com caracteres não permitidos
+      Quando o administrador envia uma requisição para cadastrar um motorista com o nome "<nome>"
+      Então a API responde com o status "422 Unprocessable Entity"
+      E o motorista não é cadastrado
+
+      Exemplos:
+        | nome             |
+        | Francisco 😀     |
+        | Francisco @#$%   |
+        | 333333333333     |
 
 
     # AC-04, AC-07 - Edição de motorista existente

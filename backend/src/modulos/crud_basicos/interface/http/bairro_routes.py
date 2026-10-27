@@ -27,6 +27,9 @@ from src.modulos.crud_basicos.infrastructure.repositories.bairro_repository impo
     BairroRepository,
     PontoDeParadaJaCadastradoError,
 )
+from src.modulos.rotas.infrastructure.rota_ativa_checkers import (
+    bairro_em_rota_ativa,
+)
 from src.shared.auth.dependencies import get_optional_current_user, require_roles
 from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.http.validation import validation_details
@@ -93,7 +96,9 @@ router = APIRouter(
 
 
 def get_repository(session: Annotated[Session, Depends(get_session)]) -> BairroRepository:
-    return BairroRepository(session)
+    return BairroRepository(
+        session, rota_ativa_checker=bairro_em_rota_ativa(session)
+    )
 
 
 def get_service(

@@ -44,6 +44,8 @@ from src.modulos.usuarios.application.use_cases.criar_usuario_use_case import (
     CriarUsuarioUseCase,
     EmailAlreadyRegisteredError,
 )
+from src.modulos.crud_basicos.infrastructure.repositories.bairro_repository import BairroRepository
+from src.modulos.crud_basicos.infrastructure.repositories.faculdade_repository import FaculdadeRepository
 from src.modulos.usuarios.application.use_cases.validar_etapa_1_use_case import ValidarEtapa1UsuarioUseCase
 from src.modulos.usuarios.application.use_cases.validar_etapa_2_use_case import ValidarEtapa2UsuarioUseCase
 from src.modulos.usuarios.application.use_cases.validar_etapa_3_use_case import ValidarEtapa3UsuarioUseCase
@@ -160,6 +162,14 @@ def get_storage_service():
     return MinioStorageService()
 
 
+def get_bairro_repository(session: Annotated[Session, Depends(get_session)]) -> BairroRepository:
+    return BairroRepository(session)
+
+
+def get_faculdade_repository(session: Annotated[Session, Depends(get_session)]) -> FaculdadeRepository:
+    return FaculdadeRepository(session)
+
+
 
 
 
@@ -269,9 +279,14 @@ async def validar_etapa_2_cadastro_usuario(
 )
 async def validar_etapa_3_cadastro_usuario(
     dto: ValidarEtapa3CadastroUsuarioDTO,
+    repository_faculdade: Annotated[FaculdadeRepository, Depends(get_faculdade_repository)],
+    repository_bairro: Annotated[BairroRepository, Depends(get_bairro_repository)],
 ):
     try:
-        use_case = ValidarEtapa3UsuarioUseCase()
+        use_case = ValidarEtapa3UsuarioUseCase(
+            repository_faculdade=repository_faculdade,
+            repository_bairro=repository_bairro,
+        )
         return use_case.execute(dto)
     except ValidacaoMultiplaError as e:
         return _error_response(status_code=422, code="BUSINESS_VALIDATION_ERROR", message="Erros de validação encontrados na Etapa 3", details=e.erros)
