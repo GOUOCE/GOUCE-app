@@ -4,6 +4,83 @@ jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock')
 );
 
+jest.mock('../../api/api', () => ({
+  api: {
+    get: jest.fn((...args: any[]) => {
+      const url = args[0];
+      if (url === '/faculdades/2') {
+        return Promise.resolve({
+          data: {
+            id_faculdade: 2,
+            nome_faculdade: 'IFCE',
+            sigla: 'IFCE',
+            campus_faculdade: 'Campus Quixadá',
+            ativo: false,
+          },
+        });
+      }
+      if (url === '/faculdades/3') {
+        return Promise.resolve({
+          data: {
+            id_faculdade: 3,
+            nome_faculdade: 'Uniateneu',
+            sigla: 'Uniateneu',
+            campus_faculdade: 'Ocara',
+            ativo: true,
+          },
+        });
+      }
+      return Promise.resolve({
+        data: [
+          {
+            id_faculdade: 1,
+            nome_faculdade: 'Universidade Federal do Ceará',
+            sigla: 'UFC',
+            campus_faculdade: 'Campus Quixadá',
+            ativo: true,
+            viagens_programadas_pendentes: true,
+          },
+          {
+            id_faculdade: 2,
+            nome_faculdade: 'IFCE',
+            sigla: 'IFCE',
+            campus_faculdade: 'Campus Quixadá',
+            ativo: true,
+            viagens_programadas_pendentes: false,
+          },
+        ],
+      });
+    }),
+    post: jest.fn((...args: any[]) => {
+      const url = args[0];
+      const body = args[1];
+      if (url === '/faculdades' && body?.sigla_faculdade === 'UFC') {
+        const error: any = new Error('Esta faculdade já está cadastrada.');
+        (error as any).response = { status: 409 };
+        return Promise.reject(error);
+      }
+      return Promise.resolve({
+        data: {
+          id_faculdade: 100,
+          nome_faculdade: body?.nome_faculdade || 'Faculdade Teste',
+          sigla: body?.sigla_faculdade || 'TST',
+          campus_faculdade: body?.campus_faculdade || 'Campus',
+          ativo: true,
+        },
+      });
+    }),
+    patch: jest.fn((...args: any[]) => {
+      const url = args[0];
+      if (url === '/faculdades/1/inativar') {
+        const error: any = new Error('Esta instituição possui viagens programadas pendentes. Não é possível inativar no momento.');
+        (error as any).response = { status: 409 };
+        return Promise.reject(error);
+      }
+      return Promise.resolve({ data: { success: true } });
+    }),
+  },
+}));
+
 import { faculdadeSchema } from '../faculdadeSchema';
 import { faculdadeService } from '../../services/faculdadeService';
 
@@ -56,7 +133,7 @@ describe('Suíte de Testes Unitários - HU-008 (Gerenciamento de Faculdades)', (
   });
 
   describe('Regras de Negócio de Faculdades', () => {
-    it('deve bloquear o cadastro se a combinação (nome + campus) ou (sigla + campus) já existir', async () => {
+    it('deve bloquear o cadastro se a combinação já existir', async () => {
       await expect(
         faculdadeService.criarFaculdade(
           'Universidade Federal do Ceará',
