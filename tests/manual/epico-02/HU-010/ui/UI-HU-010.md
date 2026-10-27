@@ -434,14 +434,14 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| CT-001 | Com a lista vazia, a tela mostra motoristas de exemplo que não existem no banco (erro introduzido pelo PR #243). **Bloqueante** | Issue a abrir (Front) |
-| CT-001, CT-010 | Chave “Mostrar inativos” já vem ligada; a consulta pede sempre `incluir_inativos=true` | Issue a abrir (Front) |
-| CT-001, CT-003 | Telas não recriadas: formulário reabre com dados anteriores e a seta volta ao Painel | Issue a abrir (Front) |
-| CT-002, CT-007, CT-009, CT-010 | Mensagens de sucesso em barra preta no rodapé, fora do padrão de pop-up | Issue a abrir (Front) |
-| CT-005 | Nome Completo aceita números, emoji e símbolos, no app e na API | Issue a abrir (Front + Back) |
-| CT-006 | Telefone aceita 12 e 15 dígitos e letras; a edição sobrescreve com valor inválido; mensagem do A5 não orienta; sem máscara nem limitador | Issue a abrir (Front); relacionada às [#231](https://github.com/GOUOCE/GOUCE-app/issues/231) e [#234](https://github.com/GOUOCE/GOUCE-app/issues/234) |
-| CT-009 | O motorista de id 1 não pode ser inativado: alocação pendente fictícia do exemplo. **Bloqueante** | Issue a abrir (Front) |
-| CT-012, CT-013 | Sem resposta da API, o app mostra sucesso falso e exemplos como reais. **Bloqueante** | Issue a abrir (Front) |
+| CT-001 | Com a lista vazia, a tela mostra motoristas de exemplo que não existem no banco (erro introduzido pelo PR #243). **Bloqueante** | [#286](https://github.com/GOUOCE/GOUCE-app/issues/286) |
+| CT-001, CT-010 | Chave “Mostrar inativos” já vem ligada; a consulta pede sempre `incluir_inativos=true` | [#287](https://github.com/GOUOCE/GOUCE-app/issues/287) |
+| CT-001, CT-003 | Telas não recriadas: formulário reabre com dados anteriores e a seta volta ao Painel | [#288](https://github.com/GOUOCE/GOUCE-app/issues/288) |
+| CT-002, CT-007, CT-009, CT-010 | Mensagens de sucesso em barra preta no rodapé, fora do padrão de pop-up | [#289](https://github.com/GOUOCE/GOUCE-app/issues/289) |
+| CT-005 | Nome Completo aceita números, emoji e símbolos, no app e na API | [#290](https://github.com/GOUOCE/GOUCE-app/issues/290) |
+| CT-006 | Telefone aceita 12 e 15 dígitos e letras; a edição sobrescreve com valor inválido; mensagem do A5 não orienta; sem máscara nem limitador | [#291](https://github.com/GOUOCE/GOUCE-app/issues/291); relacionada às [#231](https://github.com/GOUOCE/GOUCE-app/issues/231) e [#234](https://github.com/GOUOCE/GOUCE-app/issues/234) |
+| CT-009 | O motorista de id 1 não pode ser inativado: alocação pendente fictícia do exemplo. **Bloqueante** | [#292](https://github.com/GOUOCE/GOUCE-app/issues/292) |
+| CT-012, CT-013 | Sem resposta da API, o app mostra sucesso falso e exemplos como reais. **Bloqueante** | [#293](https://github.com/GOUOCE/GOUCE-app/issues/293) |
 | CT-011 | Representante não consegue entrar (“Perfil incompatível”) | Já registrado na [#190](https://github.com/GOUOCE/GOUCE-app/issues/190), reaberta, com comentário |
 | CT-002 | Cadastro e edição sem registro de auditoria | Já aberto na suíte de API ([#233](https://github.com/GOUOCE/GOUCE-app/issues/233)) |
 

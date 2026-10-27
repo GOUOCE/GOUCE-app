@@ -5,7 +5,7 @@
 | **Tipo** | Bug funcional |
 | **Severidade** | 🔴 Alta (bloqueante) |
 | **Ambiente** | Desenvolvimento — app web (`http://localhost:3000`), API local (`http://localhost:8000`), branch `test/manual-ui-hu-010` a partir da `develop` (`4b1706ee`), com o `motoristaService.ts` do PR #243 aplicado |
-| **Issue** | A definir |
+| **Issue** | [#292](https://github.com/GOUOCE/GOUCE-app/issues/292) |
 | **Caso relacionado** | `CT-HU010-UI-009` |
 | **Documentação** | [HU-010 — Testes manuais de UI](https://github.com/GOUOCE/GOUCE-app/blob/test/manual-ui-hu-010/tests/manual/epico-02/HU-010/ui/UI-HU-010.md#ct-hu010-ui-009--inativar-motorista-sem-alocação-futura) |
 | **Issue relacionada** | [#258](https://github.com/GOUOCE/GOUCE-app/issues/258) (faculdades), AC-05/AC-06 da HU-010 |

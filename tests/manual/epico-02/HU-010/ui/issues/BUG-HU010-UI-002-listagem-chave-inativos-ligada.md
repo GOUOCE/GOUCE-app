@@ -5,7 +5,7 @@
 | **Tipo** | Bug de requisito |
 | **Severidade** | 🟢 Baixa |
 | **Ambiente** | Desenvolvimento — app web (`http://localhost:3000`), API local (`http://localhost:8000`), branch `test/manual-ui-hu-010` a partir da `develop` (`4b1706ee`), com o `motoristaService.ts` do PR #243 aplicado |
-| **Issue** | A definir |
+| **Issue** | [#287](https://github.com/GOUOCE/GOUCE-app/issues/287) |
 | **Caso relacionado** | `CT-HU010-UI-001`, `CT-HU010-UI-010` |
 | **Documentação** | [HU-010 — Testes manuais de UI](https://github.com/GOUOCE/GOUCE-app/blob/test/manual-ui-hu-010/tests/manual/epico-02/HU-010/ui/UI-HU-010.md#ct-hu010-ui-001--abrir-listagem-e-buscar-por-nome) |
 | **Issue relacionada** | [#276](https://github.com/GOUOCE/GOUCE-app/issues/276) (frota), [#257](https://github.com/GOUOCE/GOUCE-app/issues/257) (faculdades) e AC-01/AC-09 da HU-010 |

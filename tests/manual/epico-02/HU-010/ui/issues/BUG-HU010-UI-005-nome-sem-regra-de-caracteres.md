@@ -5,7 +5,7 @@
 | **Tipo** | Bug de validação / requisito |
 | **Severidade** | 🟡 Média |
 | **Ambiente** | Desenvolvimento — app web (`http://localhost:3000`), API local (`http://localhost:8000`), branch `test/manual-ui-hu-010` a partir da `develop` (`4b1706ee`), com o `motoristaService.ts` do PR #243 aplicado |
-| **Issue** | A definir |
+| **Issue** | [#290](https://github.com/GOUOCE/GOUCE-app/issues/290) |
 | **Caso relacionado** | `CT-HU010-UI-005` |
 | **Documentação** | [HU-010 — Testes manuais de UI](https://github.com/GOUOCE/GOUCE-app/blob/test/manual-ui-hu-010/tests/manual/epico-02/HU-010/ui/UI-HU-010.md#ct-hu010-ui-005--campos-obrigatórios-no-cadastro-e-na-edição) |
 | **Issue relacionada** | [#261](https://github.com/GOUOCE/GOUCE-app/issues/261) (faculdades) e [#280](https://github.com/GOUOCE/GOUCE-app/issues/280) (frota) |

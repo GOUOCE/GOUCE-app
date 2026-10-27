@@ -5,7 +5,7 @@
 | **Tipo** | Bug de UX / requisito |
 | **Severidade** | 🟢 Baixa |
 | **Ambiente** | Desenvolvimento — app web (`http://localhost:3000`), API local (`http://localhost:8000`), branch `test/manual-ui-hu-010` a partir da `develop` (`4b1706ee`), com o `motoristaService.ts` do PR #243 aplicado |
-| **Issue** | A definir |
+| **Issue** | [#289](https://github.com/GOUOCE/GOUCE-app/issues/289) |
 | **Caso relacionado** | `CT-HU010-UI-002`, `CT-HU010-UI-007`, `CT-HU010-UI-009`, `CT-HU010-UI-010` |
 | **Documentação** | [HU-010 — Testes manuais de UI](https://github.com/GOUOCE/GOUCE-app/blob/test/manual-ui-hu-010/tests/manual/epico-02/HU-010/ui/UI-HU-010.md#ct-hu010-ui-002--cadastrar-celular-e-conferir-persistência) |
 | **Issue relacionada** | [#278](https://github.com/GOUOCE/GOUCE-app/issues/278) (frota), [#260](https://github.com/GOUOCE/GOUCE-app/issues/260) (faculdades) e AC-07 da HU-010 |

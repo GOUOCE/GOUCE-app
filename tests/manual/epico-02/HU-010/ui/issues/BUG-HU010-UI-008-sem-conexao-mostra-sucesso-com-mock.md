@@ -5,7 +5,7 @@
 | **Tipo** | Bug funcional |
 | **Severidade** | 🔴 Alta (bloqueante) |
 | **Ambiente** | Desenvolvimento — app web (`http://localhost:3000`), API local (`http://localhost:8000`), branch `test/manual-ui-hu-010` a partir da `develop` (`4b1706ee`), com o `motoristaService.ts` do PR #243 aplicado |
-| **Issue** | A definir |
+| **Issue** | [#293](https://github.com/GOUOCE/GOUCE-app/issues/293) |
 | **Caso relacionado** | `CT-HU010-UI-012`, `CT-HU010-UI-013` |
 | **Documentação** | [HU-010 — Testes manuais de UI](https://github.com/GOUOCE/GOUCE-app/blob/test/manual-ui-hu-010/tests/manual/epico-02/HU-010/ui/UI-HU-010.md#ct-hu010-ui-012--falha-de-conexão-sem-exemplos-nem-sucesso-falso) |
 | **Issue relacionada** | [#283](https://github.com/GOUOCE/GOUCE-app/issues/283) (frota), [#263](https://github.com/GOUOCE/GOUCE-app/issues/263) (faculdades) e [#249](https://github.com/GOUOCE/GOUCE-app/issues/249) (bairros) |
