@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 1 | 4 | 0 | 8 |
+| 🔄 Em andamento | 13 | 1 | 5 | 0 | 7 |
 
 ## Pré-condições
 
@@ -45,7 +45,7 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 | CT-HU009-UI-003 | Normalizar placa e evitar duplicidade contra exemplos | `ABC-1234`, `def-2g34`, `OCR-1234` inexistentes no banco | Maiúsculas/sem hífen; formatos aceitos; exemplo interno não bloqueia cadastro legítimo | ❌ FALHOU | `ABC-1234` e `def-2g34` são gravadas sem hífen e em maiúsculas, mas `OCR-1234` é bloqueada pelo app com “Este veículo já está registrado.” por causa da lista de exemplo, sem chamar a API. |
 | CT-HU009-UI-004 | Bloquear duplicidade de placa ativa e inativa | `QXD2E45` e variações; `XYZ9K87` inativo | “Este veículo já está registrado.”; nenhum novo registro | ✅ PASSOU | As seis tentativas (`QXD2E45`, `qxd2e45`, `QXD-2E45`, com espaços, `XYZ9K87`, `xyz-9k87`) foram barradas pelo servidor (`409`). Nenhum registro novo. |
 | CT-HU009-UI-005 | Obrigatórios no cadastro e na edição | Cada campo vazio; placa só com espaços; capacidade em pé apagada versus zero | Destaque e bloqueio; apagar não vira zero; dados anteriores preservados | ❌ FALHOU | Placa e assentos vazios são destacados e barrados, mas a capacidade em pé vazia (ou só com espaços) é aceita e gravada como `0`, no cadastro e na edição. Na edição, `QXD2E45` passou de 20 para 0 em pé sem aviso. |
-| CT-HU009-UI-006 | Rejeitar formato inválido de placa | Letras, números, tamanho, posição e símbolo incorretos | “Placa inválida.”; sem cadastro nem edição | ⏳ PENDENTE | Não executado. |
+| CT-HU009-UI-006 | Rejeitar formato inválido de placa | Letras, números, tamanho, posição e símbolo incorretos | “Placa inválida.”; sem cadastro nem edição | ❌ FALHOU | `ABCDEFG`, `1234567`, `AB1234`, `ABC12345`, `A1C1D23` e `ABC@1D2` foram barradas, mas `GHI@3J45` foi aceita e gravada como `GHI3J45`: o app apagou o `@` e transformou a placa inválida em outra válida. |
 | CT-HU009-UI-007 | Validar fronteiras e inteiros das capacidades | Assentos −1/0/1; em pé −1/0/1; texto e decimal | Inválidos bloqueados no campo; 1 assento/0 em pé aceitos | ⏳ PENDENTE | Não executado. |
 
 ### Seção B — Edição, inativação e reativação
@@ -226,8 +226,11 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Cadastro:** `ABCDEFG`, `1234567`, `AB1234`, `ABC12345`, `A1C1D23` e `ABC@1D2` foram barradas na tela, segundo o testador, e o log não registrou `POST /onibus` para elas.
+- **`GHI@3J45` foi aceita.** O log registrou `POST /onibus` com `201` e o banco ganhou `GHI3J45` (33 assentos, 9 em pé; o testador usou esses valores em vez de 44/20). O `@` foi apagado e a placa inválida virou outra válida no formato Mercosul, o que o caso proíbe.
+- **Causa:** `frotaSchema.ts` aplica `.replace(/[^A-Za-z0-9]/g, '')` antes de validar o formato, então qualquer símbolo é descartado em silêncio. Só `ABC@1D2` foi barrada porque, sem o `@`, sobram 6 caracteres (`ABC1D2`). A API tem o mesmo problema ([#225](https://github.com/GOUOCE/GOUCE-app/issues/225), [#227](https://github.com/GOUOCE/GOUCE-app/issues/227)).
+- **Edição (parte B):** não executada, porque o caso já está reprovado. O `editar.tsx` usa o mesmo `frotaSchema`, então o comportamento esperado é o mesmo, mas isso não foi testado na tela.
+- Status: ❌ Falhou.
 
 ---
 
@@ -440,6 +443,7 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 | CT-003 | Cadastro de `OCR-1234`, `OCR-5521` e `OCR-8890` bloqueado pelo app com “Este veículo já está registrado.”, sem chamar a API, por causa da lista de exemplo | Issue a abrir ao final da suíte (mesma causa de [#258](https://github.com/GOUOCE/GOUCE-app/issues/258)) |
 | CT-003 | Melhoria: campo da placa sem limite de 7 caracteres e sem bloqueio de emoji e caracteres especiais na digitação | Issue a abrir ao final da suíte (não bloqueante) |
 | CT-005 | Capacidade em pé vazia (ou só com espaços) é aceita e gravada como `0`, no cadastro e na edição (sobrescreve o valor anterior), contrariando o AC-08 | Issue a abrir ao final da suíte; decisão de produto pendente (manter `0` automático ou exigir preenchimento), relacionada à [#226](https://github.com/GOUOCE/GOUCE-app/issues/226) |
+| CT-006 | Símbolos na placa são apagados em silêncio e a placa inválida `GHI@3J45` é aceita como `GHI3J45`; é o mesmo ponto da melhoria de limitar a 7 caracteres e bloquear símbolos (CT-003) | Issue a abrir ao final da suíte (mesma da melhoria do CT-003); relacionada às [#225](https://github.com/GOUOCE/GOUCE-app/issues/225) e [#227](https://github.com/GOUOCE/GOUCE-app/issues/227) |
 
 ## Observações gerais
 
