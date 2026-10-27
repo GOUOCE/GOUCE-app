@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 2 | 0 | 0 | 11 |
+| 🔄 Em andamento | 13 | 2 | 2 | 0 | 9 |
 
 ## Pré-condições
 
@@ -40,7 +40,7 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU030-UI-001 | Listar ativos e revogados sem representantes fictícios | Lista vazia; ativos/revogados reais | Sem exemplos; ambos os status identificados e dados reais | ⏳ PENDENTE | Não executado. |
+| CT-HU030-UI-001 | Listar ativos e revogados sem representantes fictícios | Lista vazia; ativos/revogados reais | Sem exemplos; ambos os status identificados e dados reais | ❌ FALHOU | A lista mostra representantes reais e a busca funciona, mas os representantes revogados não aparecem na tela, contrariando o AC-01. |
 | CT-HU030-UI-002 | Localizar aluno real e tratar pesquisa sem resultado | Busca real, nomes semelhantes e lista de elegíveis vazia | Aluno correto; vazio informado; sem João/Clara fictícios | ⏳ PENDENTE | Não executado. |
 | CT-HU030-UI-003 | Atribuir a instituição escolhida e preservar cadastro de aluno | Promover Larissa para F2 ≠ 1; confirmação e persistência | Sucesso; F2 correta no banco; mesmo aluno | ⏳ PENDENTE | Não executado. |
 | CT-HU030-UI-004 | Exigir instituição válida e impedir seleção inativa | Instituição vazia/inativa; seleção válida | Bloqueio compreensível; nenhum perfil ou instituição padrão indevida | ⏳ PENDENTE | Não executado. |
@@ -51,7 +51,7 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU030-UI-007 | Cancelar e confirmar revogação mantendo aluno e revogado na lista | Modal cancelar/confirmar; função revogada, aluno preservado | Cancelar não grava; confirmar revoga só a função e mantém linha visível | ⏳ PENDENTE | Não executado. |
+| CT-HU030-UI-007 | Cancelar e confirmar revogação mantendo aluno e revogado na lista | Modal cancelar/confirmar; função revogada, aluno preservado | Cancelar não grava; confirmar revoga só a função e mantém linha visível | ❌ FALHOU | Cancelar não revoga e confirmar revoga só a função, com auditoria, mas o revogado some da lista em vez de ficar visível como revogado. |
 | CT-HU030-UI-008 | Reatribuir ao revogado em instituição diferente | Revogada → ativa; responsabilidade F2 → F1 | Sucesso; mesma identidade; nova instituição correta | ⏳ PENDENTE | Não executado. |
 
 ### Seção C — Perfis, acesso e robustez
@@ -86,8 +86,11 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Banco não estava vazio:** já havia dois representantes reais (Cauan Ricardo e QA Teste Representante Sete); o trecho de lista vazia não foi executado. Antes do caso foi promovida pela API a conta `qa.hu007.aluno` (id 14) para servir de representante a revogar (auditoria `PROMOVER`, id 39).
+- **Dados reais e busca:** o testador relatou que a lista mostrou os representantes certos, sem exemplos fictícios, e que a busca por nome funcionou. O PR #195 removeu os exemplos de `representanteService.ts`.
+- **Revogados:** após a revogação do CT-007, a API continua devolvendo o QA Teste Aluno Sete com `ativo = false`, mas a tela não o mostra: `representantes/index.tsx` faz `setRepresentantes(lista.filter((r) => r.ativo))`. O AC-01 pede a listagem dos representantes ativos **e** dos que tiveram a função revogada, identificados.
+- Inventados quando a API não envia o campo: `UFC`, `Campus Quixadá`, `Engenharia de Software` e `2023.1` (`representanteService.ts`); não se manifestaram nesta execução, pois a API enviou os campos.
+- Status: ❌ Falhou (revogados fora da lista). O testador considerou o caso aprovado pelos itens de busca e dados reais.
 
 ---
 
@@ -230,8 +233,13 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Representante revogado: `QA Teste Aluno Sete` (aluno id 14, promovido pela API antes do CT-001).
+- **Cancelar:** o log da API não registrou chamada de revogação nessa etapa.
+- **Confirmar:** `PATCH /representantes/14/revogar` com `200`. No banco, `is_representante_ativo = false` para o id 14 e os outros dois representantes seguem ativos; a auditoria ganhou `REVOGAR` (id 40, de `{"faculdade_id":1,"ativo":true}` para `{"faculdade_id":1,"ativo":false}`).
+- **Lista:** o testador relatou que o QA Teste Aluno Sete não aparece mais, nem depois de atualizar a página. Pelo código, a tela filtra `ativo` (ver CT-001), então o revogado não fica visível como revogado, como o caso e o AC-01 pedem.
+- Mensagem de sucesso (pelo código): barra preta “Representante revogado” (`index.tsx`, `Snackbar`), fora do padrão de pop-up; o pop-up de confirmação é “Revogar representação?”. Se a revogação falhar, o código só faz `console.error`, sem aviso na tela.
+- A permanência do aluno ativo e dos dados originais é conferida no CT-010 (login como aluno).
+- Status: ❌ Falhou (revogado não permanece visível).
 
 ---
 
