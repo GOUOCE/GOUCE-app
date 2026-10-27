@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Em execução | 14 | 4 | 1 | 0 | 0 | 9 |
+| ⏳ Em execução | 14 | 5 | 1 | 0 | 0 | 8 |
 
 ## Pré-condições
 
@@ -43,7 +43,7 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 | CT-HU011-API-003 | Vários vínculos e volta independente da ida | RP2: B1+B2, ida F1+F2+F3, volta F1; RP3: ida F1+F2, volta F3 | HTTP 201; cada lista gravada como enviada, sem copiar a ida na volta | ✅ APROVADO | RP2 gravou dois bairros, três faculdades na ida e uma na volta; RP3 voltou por F3 sem copiá-la da ida. RP1 permaneceu inalterada. [JSON](evidencias/CT-HU011-API-003.json) |
 | CT-HU011-API-004 | Nome único entre todas as rotas (#208) | Nome igual; maiúsculas/espaços; nome de rota inativa; nome de complementar; edição para nome em uso | HTTP 409; nada criado nem alterado | ❌ FALHOU | Duplicidades no mesmo tipo foram recusadas, inclusive com case/trim e rota inativa. Porém, criar principal Van Trevo, nome já usado por complementar inativa, retornou 201 e persistiu o nome duplicado entre tabelas; esperado 409. [JSON](evidencias/CT-HU011-API-004.json) [#309](https://github.com/GOUOCE/GOUCE-app/issues/309) |
 | CT-HU011-API-005 | Obrigatórios, listas vazias e limites | Sem cada campo; nome em branco; listas `[]`; nome com 151 caracteres; edição esvaziando lista | HTTP 422 com campo e mensagem em português; nada gravado | ✅ APROVADO | Obrigatórios, nome em branco/nulo, listas ausentes/vazias, nome 151 e edição esvaziando vínculos foram recusados com 422/campo/mensagem. Controle de 150 aceito e inativado via API após captura. [JSON](evidencias/CT-HU011-API-005.json) |
-| CT-HU011-API-006 | Formato e ordem dos horários (#208) | `6:30`, `24:00`, `06:60`, `06:30:00`, texto; retorno igual e anterior à saída; 00:00/23:59 | Fora de `HH:MM` ou retorno ≤ saída: 422; sem faixa mínima/máxima | ⏳ PENDENTE | Não executado. |
+| CT-HU011-API-006 | Formato e ordem dos horários (#208) | `6:30`, `24:00`, `06:60`, `06:30:00`, texto; retorno igual e anterior à saída; 00:00/23:59 | Fora de `HH:MM` ou retorno ≤ saída: 422; sem faixa mínima/máxima | ✅ APROVADO | Formatos inválidos e retorno igual/anterior recusados; edição parcial usa o horário salvo. 00:00/23:59 e 13:15/13:16 aceitos sem conversão de fuso; controles inativados via API. [JSON](evidencias/CT-HU011-API-006.json) |
 | CT-HU011-API-007 | Vínculo com bairro ou faculdade inativo ou inexistente | B0; F0 na ida e na volta; id inexistente; ids repetidos; id `0`, negativo e texto | HTTP 422 no campo da lista; nenhuma rota nem vínculo inválido gravado | ⏳ PENDENTE | Não executado. |
 | CT-HU011-API-008 | Editar dados e vínculos da rota | RP1: só nome; só horários; trocar listas; `{}`; campo `ativo`; id inexistente | HTTP 200 no mesmo id; 422 sem campo ou com campo extra; 404 inexistente | ⏳ PENDENTE | Não executado. |
 | CT-HU011-API-009 | Inativar e reativar (soft delete) | RP2: inativar, repetir, reativar, repetir; id inexistente | HTTP 200 nas válidas; registro e vínculos mantidos; 409 nas repetidas; 404 | ⏳ PENDENTE | Não executado. |
@@ -230,8 +230,10 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Formatos inválidos e retorno igual/anterior recusados; edição parcial usa o horário salvo. 00:00/23:59 e 13:15/13:16 aceitos sem conversão de fuso; controles inativados via API.
+- 16 chamadas HTTP; 64 verificações registradas. Status observados: 200 (4×), 201 (2×), 422 (10×).
+- Evidência: [CT-HU011-API-006.json](evidencias/CT-HU011-API-006.json), com corpos reais, sequência/horário, verificações e consultas de persistência/auditoria.
+- Status: ✅ APROVADO.
 
 ---
 
