@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 1 | 2 | 0 | 10 |
+| 🔄 Em andamento | 13 | 2 | 2 | 0 | 9 |
 
 ## Pré-condições
 
@@ -43,7 +43,7 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 | CT-HU010-UI-001 | Abrir listagem e buscar por nome | Lista vazia; ativos; capacidades de pesquisa e inativos | Só ativos por padrão; nome/telefone corretos; busca e vazio reais | ❌ FALHOU | Com o código do PR #243, a lista vazia mostra motoristas de exemplo que não existem no banco, e a chave “Mostrar inativos” vem ligada. Com o código antigo da `develop` a lista vazia estava correta. |
 | CT-HU010-UI-002 | Cadastrar celular e conferir persistência | Celular válido, confirmação e reabertura | Sucesso; máscara; ativo persistido na API | ❌ FALHOU | O cadastro funciona e persiste (`Francisco Alves`, `(88) 99811-2233`, ativo, um único `POST`), mas a mensagem de sucesso é uma barra preta fora do padrão. |
 | CT-HU010-UI-003 | Cadastrar fixo, homônimo e número dos exemplos | Fixo; mesmo nome; telefone presente só nos exemplos | Todos aceitos; ids distintos; nenhum bloqueio por exemplo | ✅ PASSOU | Os três cadastros foram aceitos (fixo, homônimo e o telefone dos exemplos), com ids distintos e máscara correta. Observação: a tela de cadastro reabre com dados da vez anterior. |
-| CT-HU010-UI-004 | Bloquear telefone duplicado de ativo e inativo | Duplicidade com máscara e sem máscara, ativo/inativo | “Este profissional já está registrado.”; nada criado | ⏳ PENDENTE | Não executado. |
+| CT-HU010-UI-004 | Bloquear telefone duplicado de ativo e inativo | Duplicidade com máscara e sem máscara, ativo/inativo | “Este profissional já está registrado.”; nada criado | ✅ PASSOU | As quatro tentativas (celular do Francisco com e sem máscara; telefone do Raimundo inativo com e sem máscara) foram barradas pelo servidor (`409`). Nenhum registro novo. |
 | CT-HU010-UI-005 | Campos obrigatórios no cadastro e na edição | Nome/telefone ausentes ou esvaziados | Campo destacado; português; nenhum salvamento | ⏳ PENDENTE | Não executado. |
 | CT-HU010-UI-006 | Máscara e validação de telefone por dígitos | 3/9/12/15 dígitos; letras; fixo/celular e máscara | “Informe um telefone válido com DDD”; inválidos bloqueados | ⏳ PENDENTE | Não executado. |
 
@@ -169,8 +169,9 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Foram feitas as quatro tentativas, com nomes diferentes: telefone do Francisco como `88998112233` e `(88) 99811-2233`, e o do Raimundo (inativo) como `88998223344` e `(88) 99822-3344`. O testador relatou o bloqueio com a mensagem de duplicidade em todas.
+- O log da API registrou quatro `POST /motoristas` com `409 Conflict` (na primeira, antes, um `401` e a renovação automática do login). O banco continuou com 5 motoristas, sem nenhum dos nomes de teste: a duplicidade foi decidida pelo servidor, comparando os dígitos e considerando também o inativo (o Raimundo foi guardado sem máscara pela API e foi reconhecido com máscara).
+- Status: ✅ Passou.
 
 ---
 
