@@ -10,7 +10,7 @@ Planejamento essencial de API e UI das HU-011 e HU-012. **54 casos: 27 de API e 
 | HU-012 | 13 | 8 | 2 | 2 | 1 | 123 | [feat/front-hu012 — PR #182](https://github.com/GOUOCE/GOUCE-app/pull/182) |
 | Total API | 27 | 19 | 3 | 3 | 2 | 266 | Evidências separadas por HU |
 
-Issues reproduzidas: [#309](https://github.com/GOUOCE/GOUCE-app/issues/309), [#310](https://github.com/GOUOCE/GOUCE-app/issues/310), [#311](https://github.com/GOUOCE/GOUCE-app/issues/311) e [#312](https://github.com/GOUOCE/GOUCE-app/issues/312). Os casos bloqueados dependem da HU-013; não foram aprovados por simulação. Cada branch contém as evidências e os commits da respectiva HU; o outro resultado está no PR indicado. Os resultados de UI não foram preenchidos nesta execução.
+Issues reproduzidas: [#309](https://github.com/GOUOCE/GOUCE-app/issues/309), [#310](https://github.com/GOUOCE/GOUCE-app/issues/310), [#311](https://github.com/GOUOCE/GOUCE-app/issues/311) e [#312](https://github.com/GOUOCE/GOUCE-app/issues/312). Os casos bloqueados dependem da HU-013; não foram aprovados por simulação. Cada branch contém os resultados e os commits da respectiva HU; os JSONs de evidência ficam diretamente nos Markdown das issues e nas issues do GitHub; o outro resultado está no PR indicado. Os resultados de UI não foram preenchidos nesta execução.
 
 ## Índice das suítes
 

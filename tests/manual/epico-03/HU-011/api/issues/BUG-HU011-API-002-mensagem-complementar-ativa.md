@@ -57,6 +57,88 @@ Mensagem constante no backend de rotas difere da decisão oficial da #208.
 
 ### 📎 Evidência
 
-Reproduzido em 2026-10-27, HTTP real e PostgreSQL isolado. [CT-HU011-API-010 JSON](https://github.com/GOUOCE/GOUCE-app/blob/feat/front-hu011/tests/manual/epico-03/HU-011/api/evidencias/CT-HU011-API-010.json) [CT-HU012-API-009 JSON](https://github.com/GOUOCE/GOUCE-app/blob/feat/front-hu012/tests/manual/epico-03/HU-012/api/evidencias/CT-HU012-API-009.json). Respostas e consultas de persistência/auditoria estão preservadas; evidências entram nos PRs #194/#182 conforme a HU.
+Reproduzido em 2026-10-27 por HTTP real e PostgreSQL isolado. Abaixo estão os JSONs das chamadas que comprovam este defeito, extraídos da execução original. Senhas, tokens e contatos foram omitidos.
+
+**CT-HU011-API-010**
+
+```json
+{
+  "case_id": "CT-HU011-API-010",
+  "application_commit": "671a6e0df3d00016e87477deb326dfdb7c33b364",
+  "requests": [
+    {
+      "sequence": 102,
+      "timestamp": "2026-10-27T17:43:52.724380+00:00",
+      "actor": "admin",
+      "request": {
+        "method": "PATCH",
+        "url": "http://127.0.0.1:18811/rotas-principais/1/inativar",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": null
+      },
+      "response": {
+        "status": 409,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:51 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "CONFLICT",
+            "message": "Esta rota possui rotas complementares ativas e não pode ser inativada. Inative ou reassocie as complementares antes."
+          }
+        }
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    }
+  ]
+}
+```
+
+**CT-HU012-API-009**
+
+```json
+{
+  "case_id": "CT-HU012-API-009",
+  "application_commit": "23d1063f09f13cc195da7e45422581f73e2ae6da",
+  "requests": [
+    {
+      "sequence": 90,
+      "timestamp": "2026-10-27T17:43:52.319898+00:00",
+      "actor": "admin",
+      "request": {
+        "method": "PATCH",
+        "url": "http://127.0.0.1:18812/rotas-principais/2/inativar",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": null
+      },
+      "response": {
+        "status": 409,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:51 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "CONFLICT",
+            "message": "Esta rota possui rotas complementares ativas e não pode ser inativada. Inative ou reassocie as complementares antes."
+          }
+        }
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    }
+  ]
+}
+```
 
 Issue no GitHub: https://github.com/GOUOCE/GOUCE-app/issues/311

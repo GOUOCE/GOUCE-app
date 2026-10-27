@@ -99,6 +99,213 @@ Exemplo real do POST de principal:
 
 ### 📎 Evidência
 
-Reproduzido em 2026-10-27 por Cauan Ricardo com apoio do Codex, por HTTP real e PostgreSQL limpo e isolado. [HU-011 JSON](https://github.com/GOUOCE/GOUCE-app/blob/feat/front-hu011/tests/manual/epico-03/HU-011/api/evidencias/CT-HU011-API-004.json) e [HU-012 JSON](https://github.com/GOUOCE/GOUCE-app/blob/feat/front-hu012/tests/manual/epico-03/HU-012/api/evidencias/CT-HU012-API-004.json). Cada JSON contém requisição, resposta, estado antes/depois e delta de auditoria. Os registros indevidos foram inativados pela API após a captura; não foram excluídos. Evidências entram nos PRs #194 e #182 nesta execução.
+Reproduzido em 2026-10-27 por HTTP real e PostgreSQL isolado. Abaixo estão os JSONs das chamadas que comprovam este defeito, extraídos da execução original. Senhas, tokens e contatos foram omitidos.
+
+**CT-HU011-API-004**
+
+```json
+{
+  "case_id": "CT-HU011-API-004",
+  "application_commit": "671a6e0df3d00016e87477deb326dfdb7c33b364",
+  "requests": [
+    {
+      "sequence": 107,
+      "timestamp": "2026-10-27T17:43:52.874220+00:00",
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18811/rotas-principais",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "Van Trevo",
+          "horario_saida": "06:30",
+          "horario_retorno": "17:30",
+          "bairros_ids": [
+            1
+          ],
+          "faculdades_ida_ids": [
+            1
+          ],
+          "faculdades_volta_ids": [
+            1
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:52 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": true,
+          "message": "Operação realizada com sucesso",
+          "data": {
+            "id": 7,
+            "nome": "Van Trevo",
+            "horario_saida": "06:30",
+            "horario_retorno": "17:30",
+            "ativo": true,
+            "bairros": [
+              {
+                "id": 1,
+                "nome": "Centro"
+              }
+            ],
+            "faculdades_ida": [
+              {
+                "id": 1,
+                "nome": "UFC",
+                "campus": "Campus Quixadá"
+              }
+            ],
+            "faculdades_volta": [
+              {
+                "id": 1,
+                "nome": "UFC",
+                "campus": "Campus Quixadá"
+              }
+            ]
+          }
+        }
+      },
+      "database_unchanged": false,
+      "audit_delta": [
+        {
+          "id": 22,
+          "usuario_id": 1,
+          "acao": "CRIAR",
+          "entidade": "rota_principal",
+          "entidade_id": "7",
+          "valor_anterior": null,
+          "valor_novo": "{\"ativo\": true, \"bairros_ids\": [1], \"faculdades_ida_ids\": [1], \"faculdades_volta_ids\": [1], \"horario_retorno\": \"17:30\", \"horario_saida\": \"06:30\", \"nome\": \"Van Trevo\"}",
+          "criado_em": "2026-10-27T17:43:52.895081+00:00"
+        }
+      ],
+      "database_records_with_same_name": [
+        {
+          "table": "rota_principal",
+          "row": {
+            "id": 7,
+            "nome": "Van Trevo",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:52.892669+00:00"
+          }
+        },
+        {
+          "table": "rota_complementar",
+          "row": {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van Trevo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:52.714699+00:00"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+**CT-HU012-API-004**
+
+```json
+{
+  "case_id": "CT-HU012-API-004",
+  "application_commit": "23d1063f09f13cc195da7e45422581f73e2ae6da",
+  "requests": [
+    {
+      "sequence": 30,
+      "timestamp": "2026-10-27T17:43:50.965315+00:00",
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18812/rotas-complementares",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "Rota Centro - UFC",
+          "horario_saida": "06:00",
+          "ponto_conexao": "Trevo do Bairro Novo",
+          "rota_principal_id": 1
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": true,
+          "message": "Operação realizada com sucesso",
+          "data": {
+            "id": 3,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "rota_principal": {
+              "id": 1,
+              "nome": "Rota Centro - UFC",
+              "ativo": true
+            }
+          }
+        }
+      },
+      "database_unchanged": false,
+      "audit_delta": [
+        {
+          "id": 9,
+          "usuario_id": 1,
+          "acao": "CRIAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "3",
+          "valor_anterior": null,
+          "valor_novo": "{\"ativo\": true, \"horario_saida\": \"06:00\", \"nome\": \"Rota Centro - UFC\", \"ponto_conexao\": \"Trevo do Bairro Novo\", \"rota_principal_id\": 1}",
+          "criado_em": "2026-10-27T17:43:50.981790+00:00"
+        }
+      ],
+      "database_records_with_same_name": [
+        {
+          "table": "rota_principal",
+          "row": {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          }
+        },
+        {
+          "table": "rota_complementar",
+          "row": {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
 
 Issue no GitHub: https://github.com/GOUOCE/GOUCE-app/issues/309
