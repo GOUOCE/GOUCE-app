@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 7 | 6 | 0 | 0 |
+| ❌ Concluída com falhas | 13 | 7 | 6 | 0 | 0 |
 
 ## Pré-condições
 
@@ -117,7 +117,7 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 - **Cancelar:** o log não registrou `POST /motoristas` entre o cancelamento e a confirmação.
 - **Confirmar:** `POST /motoristas` com `201`. No banco e na API, `Francisco Alves` (id 1) ativo, com o telefone guardado como `(88) 99811-2233`. Foi criado um único registro; a lista foi atualizada, e o motorista continua após recarregar a página.
 - A máscara do telefone digitado e o comportamento do cancelar na tela não foram detalhados pelo testador; o valor gravado mostra a máscara correta para 11 dígitos.
-- **Defeito:** o sucesso aparece como **barra preta** (toast) que some rápido, e o testador não conseguiu ler o texto. Pelo código (`motoristas/cadastrar.tsx`) é “Motorista cadastrado com sucesso”, fora do padrão de pop-up de sucesso do app e sem o texto do requisito (“Operação realizada com sucesso”). Mesmo defeito da [#278](https://github.com/GOUOCE/GOUCE-app/issues/278) (frota) e da [#260](https://github.com/GOUOCE/GOUCE-app/issues/260) (faculdades). Edição, inativação e reativação usam o mesmo toast.
+- **Defeito:** o sucesso aparece como **barra preta** (toast) que some rápido, e o testador não conseguiu ler o texto. Pelo código (`motoristas/cadastrar.tsx`) é “Motorista cadastrado com sucesso”. O texto é coerente com o exemplo do AC-07 (“Motorista alterado com sucesso”); o defeito é o formato: barra preta no rodapé, fora do padrão de pop-up de sucesso do app, enquanto o fluxo pede a mensagem no topo da tela. Mesmo defeito da [#278](https://github.com/GOUOCE/GOUCE-app/issues/278) (frota) e da [#260](https://github.com/GOUOCE/GOUCE-app/issues/260) (faculdades). Edição, inativação e reativação usam o mesmo toast.
 - O cadastro não gerou registro em `log_auditoria`, já aberto na suíte de API ([#233](https://github.com/GOUOCE/GOUCE-app/issues/233)).
 - Observação: o telefone guardado pela tela vem com máscara, e o guardado pela API direta (`88998223344`, Raimundo Costa) vem sem máscara.
 - Status: ❌ Falhou.
@@ -222,7 +222,7 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 - **Barrados pelo app:** `123` e `998112233` (menos de 10 caracteres); o log não registrou chamada para eles.
 - **Aceitos no cadastro** (`POST /motoristas` com `201`): `889981122334` (12 dígitos, motorista id 7), `889981122334455` (15 dígitos, id 8) e `aaaaaaaaaw33333` (letras e números, id 9). A máscara só formata quando há exatamente 10 ou 11 dígitos e devolve o texto original nos demais casos; o schema do app conta caracteres e não dígitos (`motoristaSchema.ts`: `min(10)`, `max(20)`).
 - **A5, `abcdefghijk`:** o app deixou enviar e a API respondeu `422` com a mensagem “Telefone deve conter ao menos um dígito.”, exibida no pop-up de aviso. Segundo o testador, a mensagem não corresponde ao requisito (“Informe um telefone válido com DDD”) e confunde, porque a regra real é DDD de 2 dígitos mais 8 ou 9 dígitos. O testador também relatou que o texto vermelho abaixo do campo aparece distorcido nessa tentativa; isso foi observado na tela e não foi reproduzido na conferência.
-- **A API só exige um dígito** (`_validar_telefone` verifica apenas `normalizar_telefone`), o que explica a aceitação de 12 e 15 dígitos e de texto misturado ([#234](https://github.com/GOUOCE/GOUCE-app/issues/234), aberta na suíte de API).
+- **A API só exige um dígito** (`_validar_telefone` verifica apenas `normalizar_telefone`), o que explica a aceitação de 12 e 15 dígitos e de texto misturado ([#231](https://github.com/GOUOCE/GOUCE-app/issues/231), aberta na suíte de API; a mensagem genérica da API está na [#234](https://github.com/GOUOCE/GOUCE-app/issues/234)).
 - **Edição:** o log registrou três `PATCH /motoristas/1`, dois com `409` (telefones que já pertenciam a outros motoristas) e um com `200`. O `200` gravou no Francisco o telefone `88998112233422` (14 dígitos), perdendo o `(88) 99811-2233`. Dado inválido sobrescreve um dado correto.
 - **Preparo posterior (PC-05):** o telefone do Francisco foi restaurado pela API (`PATCH /motoristas/1` com `(88) 99811-2233`, `200`) para os próximos casos. Os motoristas de teste id 6 a 9 permanecem no banco.
 - Status: ❌ Falhou.
@@ -434,7 +434,16 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-001 | Com a lista vazia, a tela mostra motoristas de exemplo que não existem no banco (erro introduzido pelo PR #243). **Bloqueante** | Issue a abrir (Front) |
+| CT-001, CT-010 | Chave “Mostrar inativos” já vem ligada; a consulta pede sempre `incluir_inativos=true` | Issue a abrir (Front) |
+| CT-001, CT-003 | Telas não recriadas: formulário reabre com dados anteriores e a seta volta ao Painel | Issue a abrir (Front) |
+| CT-002, CT-007, CT-009, CT-010 | Mensagens de sucesso em barra preta no rodapé, fora do padrão de pop-up | Issue a abrir (Front) |
+| CT-005 | Nome Completo aceita números, emoji e símbolos, no app e na API | Issue a abrir (Front + Back) |
+| CT-006 | Telefone aceita 12 e 15 dígitos e letras; a edição sobrescreve com valor inválido; mensagem do A5 não orienta; sem máscara nem limitador | Issue a abrir (Front); relacionada às [#231](https://github.com/GOUOCE/GOUCE-app/issues/231) e [#234](https://github.com/GOUOCE/GOUCE-app/issues/234) |
+| CT-009 | O motorista de id 1 não pode ser inativado: alocação pendente fictícia do exemplo. **Bloqueante** | Issue a abrir (Front) |
+| CT-012, CT-013 | Sem resposta da API, o app mostra sucesso falso e exemplos como reais. **Bloqueante** | Issue a abrir (Front) |
+| CT-011 | Representante não consegue entrar (“Perfil incompatível”) | Já registrado na [#190](https://github.com/GOUOCE/GOUCE-app/issues/190), reaberta, com comentário |
+| CT-002 | Cadastro e edição sem registro de auditoria | Já aberto na suíte de API ([#233](https://github.com/GOUOCE/GOUCE-app/issues/233)) |
 
 ## Observações gerais
 
@@ -454,7 +463,6 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
   - O BDD ainda comenta FA-002 com CNH/CPF e mensagem de telefone sem definição; o requisito atual já define unicidade por telefone e “Informe um telefone válido com DDD”. Seguir o requisito e manter a divergência documental anotada.
   - API permite nome de 1 caractere e o frontend exige pelo menos 3; não há esse mínimo nos critérios. Confirmar o contrato antes de classificar nome curto apenas por essa diferença.
   - A issue #185 continua aberta, sem comentários na consulta de 24/10/2026. Aprovação das regras de telefone, duplicidade com inativos e seleção de inativos segue **pendente**, conforme orientação do responsável; os casos usam os requisitos atuais como referência provisória.
-- A execução futura será na branch da própria implementação/correção, antes de ir para develop. Estes arquivos ficam na branch `test/casos-api-ui-epico-02`; nenhuma troca de branch ou execução foi feita neste planejamento.
-- Todos os casos estão pendentes. “Falha esperada” significa risco confirmado por leitura estática, não defeito já reproduzido. Quando executar, marcar falhas e bloqueios por parte, sem transformar 503 ou massa preparada em aprovação de funcionalidade.
-- Suíte complementar: [API-HU-010.md](../api/API-HU-010.md). As conferências de persistência, cancelamento sem log e histórico usam PC-05; Cauan não precisa consultar o banco manualmente.
-- Ocultar senhas, tokens e dados pessoais nas evidências.
+- **Execução (27/10/2026):** 7 casos passaram (CT-003, 004, 005, 007, 008, 010 e 011, este só para o aluno) e 6 falharam (CT-001, 002, 006, 009, 012 e 013). CT-012 e CT-013 foram reprovados pela leitura do código, sem executar. O representante não conseguiu entrar (CT-011, #190).
+- **Atualização sobre o planejamento acima:** o backend da `develop` já inativa motorista (`PATCH /motoristas/{id}/inativar` com `200` e auditoria `INATIVAR`) e o app usa `PATCH /motoristas/{id}/reativar`, então o 503 e o `/ativar` citados nos riscos acima já não valem. A issue [#232](https://github.com/GOUOCE/GOUCE-app/issues/232) (503 ao inativar) está aberta e deve ser retestada.
+- Suíte complementar: [API-HU-010.md](../api/API-HU-010.md). Ocultar senhas, tokens e dados pessoais nas evidências.
