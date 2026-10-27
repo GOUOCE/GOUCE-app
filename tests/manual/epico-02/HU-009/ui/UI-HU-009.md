@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 1 | 8 | 0 | 4 |
+| 🔄 Em andamento | 13 | 1 | 9 | 0 | 3 |
 
 ## Pré-condições
 
@@ -54,7 +54,7 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 | --- | --- | --- | --- | --- | --- |
 | CT-HU009-UI-008 | Editar placa e capacidades; impedir colisão | `QXD2E45` → `QXD2E46`, 40/15; tentar `ABC1D23` | Sucesso persistido; só ônibus escolhido muda; duplicidade bloqueada | ❌ FALHOU | A edição funciona e persiste (`QXD2E45` virou `QXD2E46`, 40/15, sem criar segundo cadastro) e as placas duplicadas foram barradas pelo servidor (`409`), mas a mensagem de sucesso é a barra preta fora do padrão (“Ônibus alterado com sucesso”). |
 | CT-HU009-UI-009 | Cancelar e confirmar inativação do ônibus correto | Ônibus real sem alocação futura; outro veículo para comparação | Cancelar não muda; confirmar inativa só o selecionado e preserva o registro | ❌ FALHOU | Cancelar não inativa, mas confirmar a inativação falha: o app chama `PATCH /onibus/7/inativar` (número da linha, não a placa), a API responde `404` e o pop-up mostra “Request failed with status code 404”. Não é possível inativar um ônibus real pela tela. |
-| CT-HU009-UI-010 | Mostrar inativos e reativar | `XYZ9K87` inativo; cancelar e confirmar reativação | Inativo identificado; só selecionado reativado; persistência e erro visível se falhar | ⏳ PENDENTE | Não executado. |
+| CT-HU009-UI-010 | Mostrar inativos e reativar | `XYZ9K87` inativo; cancelar e confirmar reativação | Inativo identificado; só selecionado reativado; persistência e erro visível se falhar | ❌ FALHOU | Confirmar a reativação de `XYZ9K87` falha: o app chama `PATCH /onibus/8/ativar` (número da linha, não a placa) e a API responde `404`; o ônibus continua inativo. Mesma causa do CT-009. |
 
 ### Seção C — Integração, acesso e robustez
 
@@ -359,8 +359,12 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Massa:** `XYZ9K87` (32 assentos, 0 em pé), inativa desde a preparação (auditoria id 34, feita via API e não pela tela).
+- **Cancelar:** o log não registrou nenhuma chamada além das tentativas de confirmação, e o ônibus permaneceu inativo.
+- **Confirmar a reativação:** o log registrou duas vezes `PATCH /onibus/8/ativar` com `404 Not Found`. O número `8` é a posição de `XYZ9K87` na listagem, e não a placa. A causa é a mesma do CT-009 (`id: o.id || idx + 1` em `frotaService.listarOnibus`, repassado por `frota/index.tsx` a `reativarOnibus`, que só troca pelo valor correto se o ônibus estiver na lista de exemplo).
+- **Resultado no banco:** `XYZ9K87` continua inativa (`ativo = f`); a auditoria não ganhou registro de reativação; nenhum outro ônibus foi alterado.
+- A aparência da lista de inativos (identificação, chave ligada/desligada) e a mensagem exibida na tela de erro não foram detalhadas pelo testador nesta execução; a chave já vem ligada por padrão (defeito do CT-001).
+- Status: ❌ Falhou (reativação impossível pela tela com dados reais).
 
 ### Seção C — Integração, acesso e robustez
 
@@ -470,7 +474,7 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 | CT-007 | Decimais (`4.5`, `2.5`) em assentos e capacidade em pé passam pela validação do app; só a API recusa | Issue a abrir ao final da suíte (Front) |
 | CT-007 | Erro de campo numérico da API sai sem o nome do campo e a mesma frase se repete quando os dois campos são inválidos | Issue a abrir ao final da suíte (Front) |
 | CT-007 | Número acima do limite do banco (ex.: `883833333333`) causa `500`, sem CORS, na criação e na edição; no cadastro o app mostra sucesso falso (ônibus só na memória) | Issue a abrir ao final da suíte (Back + Front, mesma família da [#249](https://github.com/GOUOCE/GOUCE-app/issues/249) e [#263](https://github.com/GOUOCE/GOUCE-app/issues/263)) |
-| CT-009 | Inativar ônibus falha com `404` (“Request failed with status code 404”): o app envia o número da linha em vez da placa (`/onibus/7/inativar`); a reativação usa o mesmo caminho. **Bloqueante** | Issue a abrir ao final da suíte (Front; bloqueante) |
+| CT-009, CT-010 | Inativar e reativar ônibus falham com `404` (“Request failed with status code 404”): o app envia o número da linha em vez da placa (`/onibus/7/inativar`); a reativação usa o mesmo caminho. **Bloqueante** | Issue a abrir ao final da suíte (Front; bloqueante) |
 
 ## Observações gerais
 
