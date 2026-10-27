@@ -9,16 +9,16 @@
 | Camada | API |
 | Tipo de teste | Funcional manual — suíte essencial (baseada em risco) |
 | Endpoints | `POST /auth/login`, `GET /usuarios/me`, `GET /usuarios/reenvio_documento` e `PUT`/`PATCH /usuarios/reenvio_documento` (`multipart/form-data` com `comprovante_matricula`, `comprovante_residencia` e `foto_perfil`). A reprovação que gera a pendência usa `PATCH /usuarios/alunos/{id}/status` (HU-027) |
-| Ambiente | A preencher — URL, branch e commit testados (planejado sobre a `develop` `939921e3`) |
+| Ambiente | Branch `feature/testes-api-hu-027-hu-031` — Docker local isolado (projeto `atu-api`), `http://localhost:8001`, `develop` no commit `4bf26d55`, com o contorno das migrations descrito na [HU-027](../../HU-027/api/API-HU-027.md#observações-gerais) |
 | Total de casos | 8 |
-| Última execução | Não realizada |
+| Última execução | 27/10/2026 |
 | Testador | Cauan Ricardo — execução com apoio de IA (Claude Code) |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 8 | 0 | 0 | 0 | 0 | 8 |
+| ❌ Reprovada | 8 | 4 | 2 | 2 | 0 | 0 |
 
 ## Pré-condições
 
@@ -36,14 +36,14 @@ Executar na ordem abaixo. São **8 casos essenciais**. Cada chamada usa o token 
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU031-API-001 | Login e status de cada situação | Login de R1, P1 e AP | Os três entram e recebem o status do cadastro | ⏳ PENDENTE | Não executado. |
-| CT-HU031-API-002 | Documentos reprovados e motivos | `GET /usuarios/reenvio_documento` e `GET /usuarios/me` com R1 | Só os documentos reprovados, cada um com o motivo do administrador | ⏳ PENDENTE | Não executado. |
-| CT-HU031-API-003 | Sem pendências | `GET /usuarios/reenvio_documento` com AP e P1 | Lista vazia, sem erro | ⏳ PENDENTE | Não executado. |
-| CT-HU031-API-004 | Reenviar documentos reprovados | R1: novos comprovantes de matrícula e residência | HTTP 200; status `pendente`; arquivos novos gravados; volta à fila | ⏳ PENDENTE | Não executado. |
-| CT-HU031-API-005 | Impedir troca de documento não reprovado | R2: enviar comprovante; enviar nada; enviar foto + comprovante | Recusado com a mensagem do código; nenhum arquivo trocado | ⏳ PENDENTE | Não executado. |
-| CT-HU031-API-006 | Falha no envio | R2: foto de 6 MB, `.txt` e vazia | Recusado; R2 continua rejeitado; nenhum arquivo sem dono | ⏳ PENDENTE | Não executado. |
-| CT-HU031-API-007 | Reenvio fora da situação de reprovado | P1, AP, administrador e sem token; R1 de novo depois do CT-004 | 403 com a mensagem do código; 401 sem token | ⏳ PENDENTE | Não executado. |
-| CT-HU031-API-008 | Situação depois do reenvio | R1 depois do CT-004: chamadas com o token, novo login, fila e detalhes no admin | Aluno vê “Pendente de Aprovação”; admin vê os documentos novos | ⏳ PENDENTE | Não executado. |
+| CT-HU031-API-001 | Login e status de cada situação | Login de R1, P1 e AP | Os três entram e recebem o status do cadastro | ❌ FALHOU | R1 e AP entram; P1 recebe 401 “Sua conta está pendente de aprovação pela coordenação.”. [BUG-HU031-API-001](issues/BUG-HU031-API-001-aluno-pendente-nao-consegue-ver-o-status.md) · [#319](https://github.com/GOUOCE/GOUCE-app/issues/319) |
+| CT-HU031-API-002 | Documentos reprovados e motivos | `GET /usuarios/reenvio_documento` e `GET /usuarios/me` com R1 | Só os documentos reprovados, cada um com o motivo do administrador | ✅ PASSOU | Só os dois documentos reprovados, com os motivos exatos. `/usuarios/me` dá 403 para rejeitado (observação para a UI). |
+| CT-HU031-API-003 | Sem pendências | `GET /usuarios/reenvio_documento` com AP e P1 | Lista vazia, sem erro | ⚠️ PARCIAL | AP recebe `[]`; a parte do P1 ficou 🚫 (sem login, CT-001). |
+| CT-HU031-API-004 | Reenviar documentos reprovados | R1: novos comprovantes de matrícula e residência | HTTP 200; status `pendente`; arquivos novos gravados; volta à fila | ✅ PASSOU | 200 com a mensagem do código; `pendente`; comprovantes novos; volta ao fim da fila. |
+| CT-HU031-API-005 | Impedir troca de documento não reprovado | R2: enviar comprovante; enviar nada; enviar foto + comprovante | Recusado com a mensagem do código; nenhum arquivo trocado | ✅ PASSOU | Três recusas 400 com as mensagens do código; nenhum documento nem arquivo trocado. |
+| CT-HU031-API-006 | Falha no envio | R2: foto de 6 MB, `.txt` e vazia | Recusado; R2 continua rejeitado; nenhum arquivo sem dono | ✅ PASSOU | 6 MB, `.txt` e vazio recusados em português; R2 segue rejeitado; sem arquivo órfão. |
+| CT-HU031-API-007 | Reenvio fora da situação de reprovado | P1, AP, administrador e sem token; R1 de novo depois do CT-004 | 403 com a mensagem do código; 401 sem token | ⚠️ PARCIAL | AP 403 com a mensagem do código, admin 403, sem token 401; P1 🚫 e R1 só com 401 de sessão. |
+| CT-HU031-API-008 | Situação depois do reenvio | R1 depois do CT-004: chamadas com o token, novo login, fila e detalhes no admin | Aluno vê “Pendente de Aprovação”; admin vê os documentos novos | ❌ FALHOU | Depois do reenvio o token dá 401 e o novo login é recusado; admin vê os documentos novos. [BUG-HU031-API-001](issues/BUG-HU031-API-001-aluno-pendente-nao-consegue-ver-o-status.md) · [#319](https://github.com/GOUOCE/GOUCE-app/issues/319) |
 
 ## Detalhamento dos casos
 
@@ -64,8 +64,12 @@ Executar na ordem abaixo. São **8 casos essenciais**. Cada chamada usa o token 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Evidência: [`CT-HU031-API-001.json`](evidencias/CT-HU031-API-001.json). Massa criada pela API: R1 = id 8, R2 = 9, P1 = 10; AP = 6, da HU-027 ([preparação](evidencias/00-preparacao-massa.json)).
+- R1 (rejeitado): HTTP `200`, `status_cadastro` `rejeitado`.
+- AP (aprovado): HTTP `200`, `status_cadastro` `ativado`.
+- P1 (pendente): HTTP `401` `{"detail": "Sua conta está pendente de aprovação pela coordenação."}`. Sem token, o aluno pendente não consegue chegar ao **Status do Cadastro** (AC-01, AC-02, FA-002). A RN-011 e o AC-07 da HU-001 só bloqueiam o **agendamento** para pendentes; nenhum requisito bloqueia o login.
+- Defeito: [BUG-HU031-API-001](issues/BUG-HU031-API-001-aluno-pendente-nao-consegue-ver-o-status.md).
+- Status: ❌ Falhou.
 
 ---
 
@@ -87,8 +91,11 @@ Executar na ordem abaixo. São **8 casos essenciais**. Cada chamada usa o token 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Evidência: [`CT-HU031-API-002.json`](evidencias/CT-HU031-API-002.json).
+- `GET /usuarios/reenvio_documento` (R1): HTTP `200` `{"documentos": [{"tipo": "comprovante_matricula", "motivo": "Comprovante de matrícula desatualizado."}, {"tipo": "comprovante_residencia", "motivo": "Comprovante com mais de 3 meses."}]}`. A foto, não reprovada, não aparece (AC-03, AC-04).
+- `GET /usuarios/me` (R1): HTTP `403` “Acesso negado”. É a rota que o app usa para os motivos: a tela de pendências não vai conseguir carregá-los (verificar no CT-HU031-UI-003). A API oferece a rota certa; o ajuste é no app.
+- O motivo geral (`motivo_reprovacao`) não aparece em nenhuma das duas respostas.
+- Status: ✅ Passou.
 
 ---
 
@@ -107,8 +114,10 @@ Executar na ordem abaixo. São **8 casos essenciais**. Cada chamada usa o token 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Evidência: [`CT-HU031-API-003.json`](evidencias/CT-HU031-API-003.json).
+- AP: HTTP `200` `{"documentos": []}` (AC-08).
+- P1: 🚫 bloqueado; sem token porque o login foi recusado no CT-001.
+- Status: ⚠️ Parcial.
 
 ---
 
@@ -131,8 +140,12 @@ Executar na ordem abaixo. São **8 casos essenciais**. Cada chamada usa o token 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Evidência: [`CT-HU031-API-004.json`](evidencias/CT-HU031-API-004.json).
+- `PUT /usuarios/reenvio_documento` com matrícula (PDF de 1 MB) e residência (PNG): HTTP `200` “Documentos enviados com sucesso! Seu cadastro foi encaminhado para análise.”, `status` `pendente` (AC-05, AC-06).
+- Banco: matrícula `575c40c8…` → `7b01e315…`, residência `c03a9d72…` → `0a3e38d9…`, foto sem mudança; `data_hora_envio_analise` de `17:51:59` para `17:52:54`.
+- Fila do administrador: R1 volta em último (ids 5, 10, 8), pela data do novo envio.
+- Observação: a resposta e o banco ainda trazem os motivos antigos em `documentos_reenvio` (agora com `arquivo_id`). Ver CT-008.
+- Status: ✅ Passou.
 
 ---
 
@@ -158,8 +171,12 @@ Executar na ordem abaixo. São **8 casos essenciais**. Cada chamada usa o token 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Evidência: [`CT-HU031-API-005.json`](evidencias/CT-HU031-API-005.json). R2 só tem a foto reprovada.
+- Item 1 (só matrícula): HTTP `400` “Este documento não foi solicitado pelo administrador: comprovante_matricula” (AC-07).
+- Item 2 (sem arquivo): HTTP `400` “Selecione pelo menos um documento para continuar o reenvio.”.
+- Item 3 (foto + residência): HTTP `400` “Este documento não foi solicitado pelo administrador: comprovante_residencia”; a foto também não foi trocada.
+- Banco: ids dos três documentos iguais, R2 `rejeitado`, 29 linhas em `arquivos` antes e depois.
+- Status: ✅ Passou.
 
 ---
 
@@ -181,8 +198,12 @@ Executar na ordem abaixo. São **8 casos essenciais**. Cada chamada usa o token 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Evidência: [`CT-HU031-API-006.json`](evidencias/CT-HU031-API-006.json).
+- PDF de 6 MB: HTTP `400` “Não foi possível enviar o documento. O arquivo 'doc_6mb.pdf' excede o tamanho máximo permitido de 5MB”.
+- `.txt`: HTTP `400` “Não foi possível enviar o documento. Formato de arquivo inválido. Apenas arquivos PDF e Imagens (PNG, JPG, JPEG, WEBP) são permitidos.”.
+- Vazio: HTTP `400` “Não foi possível enviar o documento. O arquivo enviado está vazio”.
+- R2 continua `rejeitado` com a mesma pendência. As chamadas foram repetidas com a contagem do MinIO: 29 objetos no bucket antes e depois, e 29 linhas em `arquivos` (FA-003).
+- Status: ✅ Passou.
 
 ---
 
@@ -204,8 +225,13 @@ Executar na ordem abaixo. São **8 casos essenciais**. Cada chamada usa o token 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Evidência: [`CT-HU031-API-007.json`](evidencias/CT-HU031-API-007.json).
+- AP: HTTP `403` “O reenvio de documentos está disponível somente para cadastros rejeitados.” (AC-07).
+- Administrador A: HTTP `403` “Acesso negado”.
+- Sem token: HTTP `401`.
+- R1 depois do reenvio (token antigo): HTTP `401` “Não autorizado”. Os documentos não mudaram, mas a recusa veio da sessão derrubada (CT-008), e não da regra de estado.
+- P1: 🚫 sem token (CT-001).
+- Status: ⚠️ Parcial.
 
 ---
 
@@ -227,8 +253,13 @@ Executar na ordem abaixo. São **8 casos essenciais**. Cada chamada usa o token 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Evidência: [`CT-HU031-API-008.json`](evidencias/CT-HU031-API-008.json).
+- Token antigo do R1: HTTP `401` em `GET /usuarios/me` e em `GET /usuarios/reenvio_documento`.
+- Novo login do R1: HTTP `401` “Sua conta está pendente de aprovação pela coordenação.”. Depois do reenvio, o aluno perde o acesso e não consegue ver que o status é **Pendente de Aprovação** (AC-06, FA-002).
+- Administrador: `GET /alunos/8` mostra `pendente` e os ids novos; os dois documentos abrem (`application/pdf` de 1 MB e `image/png`).
+- `documentos_reenvio` continua com os dois motivos antigos. Para o aluno não deu para conferir (sem acesso); para o administrador, o detalhe mostra motivos de uma reprovação já respondida.
+- Defeito: [BUG-HU031-API-001](issues/BUG-HU031-API-001-aluno-pendente-nao-consegue-ver-o-status.md).
+- Status: ❌ Falhou.
 
 ## Rastreabilidade
 
@@ -249,7 +280,8 @@ Executar na ordem abaixo. São **8 casos essenciais**. Cada chamada usa o token 
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-HU031-API-001, 008 | O aluno pendente não consegue logar nem ver o status, e perde a sessão logo depois do reenvio | [BUG-HU031-API-001](issues/BUG-HU031-API-001-aluno-pendente-nao-consegue-ver-o-status.md) · [#319](https://github.com/GOUOCE/GOUCE-app/issues/319) |
+| Ambiente | A `develop` não sobe em banco vazio (duas heads de migration) | [BUG-HU027-API-006](../../HU-027/api/issues/BUG-HU027-API-006-develop-nao-sobe-em-banco-vazio-duas-heads.md) · [#318](https://github.com/GOUOCE/GOUCE-app/issues/318) |
 
 ## Observações gerais
 
@@ -260,5 +292,6 @@ Executar na ordem abaixo. São **8 casos essenciais**. Cada chamada usa o token 
   - não existe aprovação **por documento**: “documento aprovado” é qualquer um que não está em `documentos_reenvio`, e a regra é aplicada pelo “não foi solicitado” (CT-005);
   - depois do reenvio, `documentos_reenvio` continua gravado (com o `arquivo_id` novo), e os motivos antigos podem continuar aparecendo (CT-008);
   - o motivo geral (`motivo_reprovacao`) não é devolvido por `GET /usuarios/reenvio_documento` (CT-002).
-- Ao final, deixar R1 pendente com os documentos novos e R2 rejeitado, sem apagar registros.
+- **Resultado da leitura de código × execução:** todos os riscos da API se confirmaram, exceto que a regra de “documento aprovado” funciona bem pelo “não foi solicitado” (CT-005).
+- Estado final: R1 (8) `pendente` com os documentos novos, R2 (9) `rejeitado`, P1 (10) `pendente` e AP (6) `ativado`, sem apagar registros.
 - Ocultar senhas, tokens e dados pessoais nas evidências.

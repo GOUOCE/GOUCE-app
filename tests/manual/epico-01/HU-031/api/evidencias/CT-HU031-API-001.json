@@ -1,0 +1,100 @@
+[
+  {
+    "passo": "login-r1",
+    "descricao": "Login do R1 rejeitado",
+    "data_hora_utc": "2026-10-27T17:52:08Z",
+    "requisicao": {
+      "metodo": "POST",
+      "rota": "/auth/login",
+      "credencial": "-",
+      "corpo": {
+        "email": "r1.rafael@qa.gouce.app",
+        "senha": "***"
+      }
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "token_acesso": "***",
+        "token_atualizacao": "***",
+        "tipo_token": "***",
+        "usuario": {
+          "id": 8,
+          "nome": "Rafael Reprovado Um",
+          "email": "r1.rafael@qa.gouce.app",
+          "telefone": "88999990011",
+          "role": "aluno",
+          "roles": [
+            "aluno"
+          ],
+          "status_cadastro": "rejeitado",
+          "acesso_expirado": false,
+          "curso": "Ciência da Computação",
+          "faculdade": 1,
+          "periodo_ingresso": "2025.1",
+          "turno": "Noturno",
+          "foto_perfil": "a1514883-c949-40cd-8d0d-fe9bdade528a"
+        }
+      }
+    }
+  },
+  {
+    "passo": "login-p1",
+    "descricao": "Login do P1 pendente",
+    "data_hora_utc": "2026-10-27T17:52:08Z",
+    "requisicao": {
+      "metodo": "POST",
+      "rota": "/auth/login",
+      "credencial": "-",
+      "corpo": {
+        "email": "p1.paulo@qa.gouce.app",
+        "senha": "***"
+      }
+    },
+    "resposta": {
+      "status": 401,
+      "corpo": {
+        "detail": "Sua conta está pendente de aprovação pela coordenação."
+      }
+    }
+  },
+  {
+    "passo": "login-ap",
+    "descricao": "Login do AP aprovado",
+    "data_hora_utc": "2026-10-27T17:52:08Z",
+    "requisicao": {
+      "metodo": "POST",
+      "rota": "/auth/login",
+      "credencial": "-",
+      "corpo": {
+        "email": "ap.pedro@qa.gouce.app",
+        "senha": "***"
+      }
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "token_acesso": "***",
+        "token_atualizacao": "***",
+        "tipo_token": "***",
+        "usuario": {
+          "id": 6,
+          "nome": "Pedro Aprovado Silva",
+          "email": "ap.pedro@qa.gouce.app",
+          "telefone": "88999990005",
+          "role": "aluno",
+          "roles": [
+            "aluno"
+          ],
+          "status_cadastro": "ativado",
+          "acesso_expirado": false,
+          "curso": "Ciência da Computação",
+          "faculdade": 1,
+          "periodo_ingresso": "2025.1",
+          "turno": "Noturno",
+          "foto_perfil": "485343bc-61ef-4e36-8802-9c2512447c04"
+        }
+      }
+    }
+  }
+]
