@@ -1,12 +1,32 @@
+import re
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from src.shared.security.lgpd_encryption import normalizar_telefone
 
+REGEX_NOME_PESSOA = re.compile(r"^[A-Za-zÀ-ÖØ-öø-ÿ'’\- ]+$")
+
 
 def _validar_telefone_com_digitos(valor: str) -> str:
-    if not normalizar_telefone(valor):
-        raise ValueError("Telefone deve conter ao menos um dígito.")
-    return valor
+    if not valor:
+        raise ValueError("Informe um telefone válido com DDD")
+    digitos = re.sub(r"\D", "", str(valor))
+    if len(digitos) < 10 or len(digitos) > 11:
+        raise ValueError("Informe um telefone válido com DDD")
+    return digitos
+
+
+def _validar_nome_pessoa(valor: str) -> str:
+    if not valor:
+        raise ValueError("O nome do motorista é obrigatório.")
+    valor_str = str(valor).strip()
+    if len(valor_str) < 3 or len(valor_str) > 150:
+        raise ValueError("O nome deve ter entre 3 e 150 caracteres.")
+    if not REGEX_NOME_PESSOA.match(valor_str):
+        raise ValueError("Use apenas letras, espaços, hífen ou apóstrofo")
+    partes = valor_str.split()
+    if len(partes) < 2 or not all(len(p) >= 2 for p in partes):
+        raise ValueError("Informe nome e sobrenome completos")
+    return valor_str
 
 
 class _MotoristaCamposDTO(BaseModel):
@@ -15,8 +35,13 @@ class _MotoristaCamposDTO(BaseModel):
         str_strip_whitespace=True,
     )
 
-    nome: str = Field(min_length=1, max_length=150)
+    nome: str = Field(min_length=3, max_length=150)
     telefone: str = Field(min_length=1, max_length=20)
+
+    @field_validator("nome")
+    @classmethod
+    def nome_deve_ser_valido(cls, value: str) -> str:
+        return _validar_nome_pessoa(value)
 
     @field_validator("telefone")
     @classmethod
@@ -36,8 +61,15 @@ class AtualizarMotoristaDTO(BaseModel):
         str_strip_whitespace=True,
     )
 
-    nome: str | None = Field(default=None, min_length=1, max_length=150)
+    nome: str | None = Field(default=None, min_length=3, max_length=150)
     telefone: str | None = Field(default=None, min_length=1, max_length=20)
+
+    @field_validator("nome")
+    @classmethod
+    def nome_deve_ser_valido(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        return _validar_nome_pessoa(value)
 
     @field_validator("telefone")
     @classmethod

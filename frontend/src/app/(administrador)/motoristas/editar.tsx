@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Button, Snackbar } from 'react-native-paper';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Text, TextInput, Button } from 'react-native-paper';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, User, Phone, X } from 'lucide-react-native';
+import { ChevronLeft, User, Phone } from 'lucide-react-native';
 
 import { motoristaSchema, MotoristaFormData } from '@/schemas/motoristaSchema';
 import { motoristaService } from '@/services/motoristaService';
@@ -17,8 +17,6 @@ export default function EditarMotoristaScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -27,6 +25,8 @@ export default function EditarMotoristaScreen() {
     title: string;
     message: string;
     confirmText?: string;
+    cancelText?: string;
+    confirmColor?: string;
     onConfirm?: () => void;
   }>({
     visible: false,
@@ -42,7 +42,7 @@ export default function EditarMotoristaScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const { control, handleSubmit, formState: { errors }, reset } = useForm<MotoristaFormData>({
+  const { control, handleSubmit, formState: { errors, isDirty }, reset } = useForm<MotoristaFormData>({
     resolver: zodResolver(motoristaSchema),
     defaultValues: {
       nome: '',
@@ -50,23 +50,60 @@ export default function EditarMotoristaScreen() {
     },
   });
 
-  useEffect(() => {
-    async function carregarDados() {
-      if (!id) return;
-      try {
-        const m = await motoristaService.obterMotoristaPorId(Number(id));
-        if (m) {
-          reset({
-            nome: m.nome,
-            telefone: formatarTelefone(m.telefone) || m.telefone,
+  // Recarrega os dados oficiais do banco de dados ao ganhar foco e descarta alterações não salvas ao sair
+  useFocusEffect(
+    React.useCallback(() => {
+      let isMounted = true;
+
+      async function carregarDadosOficiais() {
+        if (!id) return;
+        try {
+          const m = await motoristaService.obterMotoristaPorId(Number(id));
+          if (m && isMounted) {
+            reset({
+              nome: m.nome,
+              telefone: formatarTelefone(m.telefone) || m.telefone,
+            });
+          }
+        } catch (err) {
+          const msg = getErrorMessage(err, 'Erro ao carregar dados do motorista.');
+          showPopup({
+            type: 'error',
+            title: 'Erro de Conexão',
+            message: msg,
+            confirmText: 'Entendido',
           });
         }
-      } catch (err) {
-        console.warn('Erro ao carregar dados do motorista:', err);
       }
+
+      carregarDadosOficiais();
+
+      return () => {
+        isMounted = false;
+      };
+    }, [id, reset])
+  );
+
+  const voltarParaListagem = () => {
+    closePopup();
+    router.replace('/(administrador)/motoristas');
+  };
+
+  const handleBack = () => {
+    if (isDirty) {
+      showPopup({
+        type: 'warning',
+        title: 'Sair desta tela?',
+        message: 'As alterações não salvas serão perdidas.',
+        confirmText: 'Sim, sair',
+        cancelText: 'Continuar aqui',
+        confirmColor: '#B00020',
+        onConfirm: voltarParaListagem,
+      });
+    } else {
+      voltarParaListagem();
     }
-    carregarDados();
-  }, [id, reset]);
+  };
 
   const onSubmit = async (dados: MotoristaFormData) => {
     if (!id) return;
@@ -74,11 +111,13 @@ export default function EditarMotoristaScreen() {
     try {
       await motoristaService.atualizarMotorista(Number(id), dados.nome, dados.telefone);
       setIsLoading(false);
-      setSnackbarMessage('Motorista alterado com sucesso');
-      setSnackbarVisivel(true);
-      setTimeout(() => {
-        router.replace('/(administrador)/motoristas');
-      }, 1200);
+      showPopup({
+        type: 'success',
+        title: 'Operação realizada com sucesso',
+        message: 'As alterações do profissional foram salvas.',
+        confirmText: 'OK',
+        onConfirm: voltarParaListagem,
+      });
     } catch (error: any) {
       setIsLoading(false);
       const status = error.response?.status;
@@ -100,7 +139,7 @@ export default function EditarMotoristaScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={handleBack}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Editar Motorista</Text>
@@ -113,6 +152,8 @@ export default function EditarMotoristaScreen() {
         title={popup.title}
         message={popup.message}
         confirmText={popup.confirmText}
+        cancelText={popup.cancelText}
+        confirmColor={popup.confirmColor}
         onConfirm={popup.onConfirm}
         onDismiss={closePopup}
       />
@@ -169,7 +210,7 @@ export default function EditarMotoristaScreen() {
         {/* Botão Salvar Alterações */}
         <Button
           mode="contained"
-          onPress={handleSubmit(onSubmit)}
+          onPress={handleSubmit(onSubmit) as any}
           loading={isLoading}
           disabled={isLoading}
           style={styles.saveButton}
@@ -178,20 +219,6 @@ export default function EditarMotoristaScreen() {
           Salvar alterações
         </Button>
       </ScrollView>
-
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
     </View>
   );
 }
@@ -234,11 +261,5 @@ const styles = StyleSheet.create({
   },
   buttonContent: {
     height: 55,
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });
