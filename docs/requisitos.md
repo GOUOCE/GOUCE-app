@@ -269,7 +269,7 @@ Os requisitos funcionais descrevem as funcionalidades e os comportamentos espera
 | **RF-031** | Avaliação de Solicitação de Cadastro  | O sistema deve permitir ao administrador visualizar a fila de solicitações pendentes, consultar os documentos anexados pelo aluno e aprovar ou reprovar o cadastro.                                                                                                                                                          | Alta       | A Definir |
 | **RF-032** | Emissão de Carterinha Digital         | O sistema deve gerar automaticamente uma carteirinha de identificação digital para os alunos com status 'Aprovado', exibindo foto, dados do aluno, instituição e QR Code.                                                                                                                                                    | Alta       | A Definir |
 | **RF-033** | Renovação Semestral                   | O sistema deve bloquear o agendamento de transporte no início de cada semestre letivo até que o aluno envie um novo comprovante de matrícula para revalidação.                                                                                                                                                               | Alta       | A Definir |
-| **RF-34**  | Gerenciamento de Representantes       | O sistema deve permitir ao administrador cadastrar, editar e inativar representantes das universidades responsáveis pelo acompanhamento da frequência dos alunos.                                                                                                                                                            | Alta       | A Definir |
+| **RF-034** | Gerenciamento de Representantes       | O sistema deve permitir ao administrador cadastrar, editar e inativar representantes das universidades responsáveis pelo acompanhamento da frequência dos alunos.                                                                                                                                                            | Alta       | A Definir |
 
 Fonte: Elaborado pelo Clidenor(2026).
 
@@ -995,6 +995,7 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar, 
 9.  Administrador consegue visualizar os bairros e pontos de parada inativos ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.
 10. Todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
 11. Bairros e pontos de parada inativos não são exibidos para seleção em novos cadastros (ex.: cadastro de aluno e montagem de rotas); alunos e rotas já vinculados a eles mantêm o vínculo (RN-004).
+12. Os nomes são validados no cadastro e na edição. **Nome do bairro:** de 3 a 100 caracteres, apenas letras (com acento), espaços, hífen, apóstrofo e ponto, mesmo conjunto do cadastro do aluno; números, emoji e outros símbolos bloqueiam o salvamento com a mensagem "Use apenas letras, espaços, hífen ou apóstrofo". **Nome do ponto de parada:** de 2 a 100 caracteres, apenas letras (com acento), números, espaços, hífen, apóstrofo e ponto (ex.: "Parada 12", "BR-116"); emoji e outros símbolos bloqueiam o salvamento com a mensagem "Use apenas letras, números, espaços, hífen, apóstrofo ou ponto". Abaixo do tamanho mínimo, o salvamento é bloqueado com "Informe o nome do bairro com pelo menos 3 caracteres" (bairro) e "Informe um nome válido com pelo menos 2 caracteres." (ponto de parada). A regra vale na tela e na API.
 
     **Fluxo Principal:**
 
@@ -1061,6 +1062,7 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar, 
 9. Administrador consegue visualizar as faculdades inativas ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.
 10. Todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
 11. Faculdades inativas não são exibidas para seleção em novos cadastros (ex.: cadastro de aluno); alunos já vinculados a elas mantêm o vínculo (RN-004).
+12. Os campos são validados no cadastro e na edição. **Nome da instituição:** de 3 a 150 caracteres, apenas letras (com acento), números, espaços, hífen, apóstrofo e ponto (ex.: "Faculdade 7 de Setembro"); emoji e outros símbolos bloqueiam o salvamento com a mensagem "Use apenas letras, números, espaços, hífen, apóstrofo ou ponto". **Sigla:** de 2 a 20 caracteres, apenas letras e números, sem espaços (ex.: "UFC", "UNI7"); qualquer outro caractere bloqueia o salvamento com a mensagem "Use apenas letras e números na sigla, sem espaços". **Campus:** de 2 a 100 caracteres, mesmo conjunto de caracteres do nome da instituição. Abaixo do tamanho mínimo, o salvamento é bloqueado com "Informe o nome da instituição com pelo menos 3 caracteres", "Informe a sigla do nome (ex.: UFC)" e "Informe o campus da instituição"; acima do máximo, com "O nome da instituição deve ter no máximo 150 caracteres", "A sigla deve ter no máximo 20 caracteres" e "O campus deve ter no máximo 100 caracteres". A sigla é gravada e exibida junto da faculdade. A regra vale na tela e na API.
 
 **Fluxo Principal:**
 
@@ -1122,7 +1124,7 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar, 
 7. Toda operação bem-sucedida (cadastro, edição, inativação ou reativação) exibe mensagem de confirmação ("Operação realizada com sucesso") e atualiza a listagem.
 8. Campos obrigatórios (placa e capacidade máxima(de assentos e em pé)) são destacados se vazios; sistema bloqueia salvamento até preenchimento, inclusive na edição.
 9. A placa deve estar em formato Mercosul (ABC1D23) ou antigo (ABC1234); placa em outro formato bloqueia o salvamento com a mensagem "Placa inválida."
-10. A quantidade de assentos deve ser um número inteiro maior ou igual a 1 e a capacidade de alunos em pé um número inteiro maior ou igual a 0; valores fora dessa regra (zero ou negativo nos assentos, negativo, decimal ou texto) bloqueiam o salvamento e o campo é destacado como inválido.
+10. A quantidade de assentos deve ser um número inteiro maior ou igual a 1 e a capacidade de alunos em pé um número inteiro maior ou igual a 0; valores fora dessa regra (zero ou negativo nos assentos, negativo, decimal ou texto) bloqueiam o salvamento, o campo é destacado como inválido e é exibida a mensagem "A quantidade de assentos deve ser maior que zero" ou "A capacidade em pé não pode ser negativa", conforme o campo.
 11. Administrador consegue visualizar os ônibus inativos ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.
 12. Todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
 13. Ônibus inativos não são exibidos para seleção na escalação de rotas; rotas, alocações e relatórios anteriores mantêm o vínculo (RN-004).  
@@ -1183,9 +1185,10 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, buscar, 
 7. Operações bem-sucedidas (cadastro, edição, inativação ou reativação) exibem uma notificação de confirmação (ex: _"Motorista alterado com sucesso"_) e atualizam a listagem.
 8. Os campos obrigatórios (**Nome Completo** e **Telefone**) são destacados se estiverem vazios; o sistema bloqueia o salvamento até o devido preenchimento, inclusive na edição.
 9. O administrador consegue visualizar a seção de motoristas "Inativos" na listagem ao ativar a chave seletora (_switch_) "Mostrar inativos"; os registros inativos são identificados como inativos.
-10. O telefone deve ter DDD seguido de 8 dígitos (fixo) ou 9 dígitos (celular), pois o motorista pode ter apenas telefone fixo; o formulário aplica a máscara automaticamente. Telefone incompleto (sem DDD ou com poucos dígitos) bloqueia o salvamento com a mensagem _"Informe um telefone válido com DDD"_.
+10. O telefone deve ter DDD seguido de 8 dígitos (fixo) ou 9 dígitos (celular), pois o motorista pode ter apenas telefone fixo. O formulário aplica a máscara automaticamente, `(DD) 9XXXX-XXXX` para celular e `(DD) XXXX-XXXX` para fixo, aceita apenas números (letras, emoji e símbolos digitados não entram no campo) e limita a 11 dígitos. Telefone incompleto (sem DDD ou com poucos dígitos) bloqueia o salvamento com a mensagem _"Informe um telefone válido com DDD"_. A mesma regra vale na API, que recusa telefone com letras ou com menos de 10 ou mais de 11 dígitos (desconsiderada a máscara) com a mesma mensagem, e o telefone é gravado sempre no mesmo formato.
 11. Todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, _timestamp_).
 12. Motoristas inativos não são exibidos para seleção na escalação de rotas; rotas, alocações e relatórios anteriores mantêm o vínculo (RN-004).  
+13. O **Nome Completo** é validado no cadastro e na edição, depois de remover espaços nas pontas e juntar espaços repetidos: de 3 a 150 caracteres, apenas letras (com acento), espaços, hífen e apóstrofo, mesmo conjunto do cadastro do aluno (ex.: "João D'Ávila", "Ana-Clara Souza"); números, emoji e outros símbolos bloqueiam o salvamento com a mensagem _"Use apenas letras, espaços, hífen ou apóstrofo"_, e o nome precisa ter pelo menos nome e sobrenome (duas partes com 2 letras ou mais), com a mensagem _"Informe nome e sobrenome completos"_. Abaixo do tamanho mínimo, o salvamento é bloqueado com _"Informe o nome completo com pelo menos 3 caracteres"_; acima do máximo, com _"O nome deve ter no máximo 150 caracteres"_. A regra vale na tela e na API.
    **Fluxo Principal:**
 10. O administrador acessa a tela de "Motoristas".
 11. O sistema exibe a listagem dos motoristas ativos (e os inativos, caso a opção "Mostrar inativos" esteja habilitada).
@@ -1271,14 +1274,14 @@ Como administrador, quero atribuir ou revogar a função de representante de um 
     8. O sistema atualiza a listagem e exibe uma mensagem de sucesso.
 22. FA-002 \- Aluno não aprovado ou com cadastro desatualizado.
     1. O administrador tenta atribuir a função de representante a um aluno cujo cadastro não esteja aprovado ou atualizado.
-    2. O sistema bloqueia a operação e informa que somente alunos aprovados podem ser representantes.
+    2. O sistema bloqueia a operação e exibe a mensagem: "Aluno não aprovado ou inativo."
 23. FA-003 \- Aluno já é representante
     1. O administrador seleciona um aluno que já possui a função de representante.
-    2. O sistema informa que o aluno já possui essa função e impede uma nova atribuição.
+    2. O sistema impede uma nova atribuição e exibe a mensagem: "Este aluno já é um representante ativo."
 24. FA-004 \- Aluno não encontrado.
     1. O administrador realiza uma pesquisa pelo aluno.
     2. O sistema não encontra nenhum aluno correspondente.
-    3. O sistema informa que nenhum aluno foi encontrado.
+    3. O sistema exibe a mensagem: "Nenhum aluno encontrado."
 
     **Regras de Negócio Relacionadas:**
 
@@ -1314,21 +1317,21 @@ Fonte: Elaborado pelo autor (2026).
 Como administrador, quero acessar um painel para cadastrar, visualizar, editar e inativar rotas principais e seus respectivos horários, vinculando os bairros de origem às faculdades de destino, para estruturar os trajetos e horários oficiais disponibilizados para o agendamento dos estudantes.  
 **Critérios de Aceite:**
 
-1. Administrador acessa o menu "Rotas" e visualiza a listagem das rotas cadastradas com seus horários de saída e retorno (ativas e inativas).
+1. Administrador acessa o menu "Rotas" e visualiza a listagem das rotas ativas cadastradas com seus horários de saída e retorno.
 2. Administrador consegue criar uma nova rota preenchendo nome, horários de saída/retorno, vinculando um ou mais bairros/pontos de parada e selecionando uma ou mais faculdades (IES) atendidas na ida e na volta.
 3. Campos de seleção de bairro e faculdade exibem apenas registros ativos; bairros ou faculdades inativados não aparecem como opção, impedindo vínculo inválido.
 4. Administrador consegue editar dados de uma rota existente (nome, horários, faculdades atendidas na ida e na volta, e bairros vinculados).
-5. Administrador consegue inativar (soft delete) uma rota, sem apagar o registro do banco de dados; operação é registrada no log de auditoria (usuário, ação, timestamp).
-6. Tentativa de inativar uma rota que possui agendamentos futuros de alunos é bloqueada com mensagem informando que a rota possui agendamentos pendentes.
-7. Inativação bem-sucedida exibe mensagem de confirmação ("Operação realizada com sucesso") e atualiza a listagem.
+5. Administrador consegue inativar (soft delete) ou reativar uma rota, sem apagar o registro do banco de dados; todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
+6. Tentativa de inativar uma rota que possui agendamentos futuros de alunos é bloqueada com a mensagem: "Esta rota possui agendamentos pendentes e não pode ser inativada no momento."
+7. Toda operação bem-sucedida (cadastro, edição, inativação ou reativação) exibe a mensagem de confirmação "Operação realizada com sucesso" e atualiza a listagem.
 8. Campos obrigatórios (nome, horários, ao menos uma faculdade vinculada e ao menos um bairro vinculado) são destacados se vazios; sistema bloqueia salvamento até preenchimento.
-9. Administrador consegue visualizar rotas inativas na listagem quando necessário.
+9. Administrador consegue visualizar as rotas inativas ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.
 10. O sistema deve permitir que as faculdades atendidas na volta (origem) sejam configuradas de forma independente das faculdades atendidas na ida (destino), sem exigir que o ônibus passe exatamente pelas mesmas instituições nos dois turnos (ex: caso não haja alunos agendados para retornar de uma determinada faculdade naquele dia/rota).  
     **Fluxo Principal:**
 11. O administrador acessa o menu de "Rotas".
-12. O sistema exibe a listagem das rotas cadastradas com seus horários de saída e retorno (ativas e inativas).
+12. O sistema exibe a listagem das rotas ativas cadastradas com seus horários de saída e retorno.
 13. O administrador seleciona a ação: "Nova Rota", "Editar", ou "Inativar" ou “Reativar” em um registro existente.
-14. O administrador preenche as informações da rota (nome, faculdade de destino, horários de saída e retorno) e vincula os bairros/pontos de parada previamente cadastrados.
+14. O administrador preenche as informações da rota (nome, faculdades atendidas na ida e na volta, horários de saída e retorno) e vincula os bairros/pontos de parada previamente cadastrados.
 15. O sistema valida os dados e aplica a operação no banco de dados (executando o soft delete em caso de inativação).
 16. O sistema registra a operação no log de auditoria.
 17. O sistema exibe uma mensagem de sucesso e atualiza a listagem na tela.  
@@ -1340,7 +1343,7 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar e
     1. O administrador tenta criar ou editar uma rota vinculando um bairro ou faculdade que foi inativado.
     2. O sistema não exibe as opções inativas nos campos de seleção, impedindo o vínculo inválido.
 20. FA-003 \- Campos obrigatórios ausentes.
-    1. O administrador tenta salvar o formulário sem definir os horários, a faculdade de destino ou sem vincular ao menos um bairro.
+    1. O administrador tenta salvar o formulário sem definir o nome, os horários, ao menos uma faculdade ou sem vincular ao menos um bairro.
     2. O sistema sinaliza os campos vazios e impede o salvamento.
 
     **Regras de Negócio Relacionadas:**
@@ -1374,18 +1377,18 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar e
 
 **Critérios de Aceite:**
 
-1. Administrador acessa o menu "Rotas Complementares" e visualiza a listagem das rotas complementares cadastradas (ativas e inativas).
+1. Administrador acessa o menu "Rotas Complementares" e visualiza a listagem das rotas complementares ativas cadastradas.
 2. Administrador consegue criar uma nova rota complementar preenchendo nome, horários e ponto de conexão, vinculando-a a uma rota principal já existente.
 3. Campo de seleção de rota principal exibe apenas rotas ativas; rota principal inativada não aparece como opção, impedindo vínculo inválido.
 4. Administrador consegue editar dados de uma rota complementar existente (nome, horários, ponto de conexão, rota principal vinculada).
-5. Administrador consegue inativar (soft delete) uma rota complementar, sem apagar o registro do banco de dados; operação é registrada no log de auditoria (usuário, ação, timestamp).
-6. Tentativa de inativar uma rota complementar que possui agendamentos futuros de alunos é bloqueada com mensagem informando que a rota possui agendamentos pendentes.
-7. Inativação bem-sucedida exibe mensagem de confirmação ("Operação realizada com sucesso") e atualiza a listagem.
-8. Campos obrigatórios (horários, ponto de conexão, rota principal vinculada) são destacados se vazios; sistema bloqueia salvamento até preenchimento.
-9. Administrador consegue visualizar rotas complementares inativas na listagem quando necessário.  
+5. Administrador consegue inativar (soft delete) ou reativar uma rota complementar, sem apagar o registro do banco de dados; todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
+6. Tentativa de inativar uma rota complementar que possui agendamentos futuros de alunos é bloqueada com a mensagem: "Esta rota possui agendamentos pendentes e não pode ser inativada no momento."
+7. Toda operação bem-sucedida (cadastro, edição, inativação ou reativação) exibe a mensagem de confirmação "Operação realizada com sucesso" e atualiza a listagem.
+8. Campos obrigatórios (nome, horários, ponto de conexão, rota principal vinculada) são destacados se vazios; sistema bloqueia salvamento até preenchimento.
+9. Administrador consegue visualizar as rotas complementares inativas ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.  
    **Fluxo Principal:**
 10. O administrador acessa o menu de "Rotas Complementares".
-11. O sistema exibe a listagem das rotas complementares cadastradas (ativas e inativas).
+11. O sistema exibe a listagem das rotas complementares ativas cadastradas.
 12. O administrador seleciona a ação: "Nova Rota", "Editar", ou "Inativar" ou “Reativar” em um registro existente.
 13. O administrador preenche as informações da rota (nome, horários, pontos de conexão) e a vincula a uma rota principal já existente.
 14. O sistema valida os dados e aplica a operação no banco de dados (executando o soft delete em caso de inativação).

@@ -24,9 +24,6 @@ Funcionalidade: Gerenciamento de Rotas Complementares
 
 
     # AC-01 - Listagem de rotas complementares ativas
-    # Observação: o AC-01 cita rotas ativas e inativas; o AC-09 cita visualizar inativas "quando
-    # necessário". Os cenários seguem o padrão do épico 02 (ativas na listagem e inativas com a
-    # chave "Mostrar inativos").
     @fluxo_feliz @prioridade_media
     Cenário: Administrador visualiza as rotas complementares ativas com horário e ponto de conexão
       Dado que existe a rota complementar ativa "Van 2 - Bairro Novo" vinculada à rota principal "Rota Centro - UFC", com saída às "06:00" e ponto de conexão "Trevo do Bairro Novo"
@@ -136,13 +133,11 @@ Funcionalidade: Gerenciamento de Rotas Complementares
 
 
     # FA-001 - Inativação de rota complementar com agendamentos futuros (AC-06, RNF-012)
-    # Observação: o requisito não define o texto exato da mensagem; o cenário verifica que ela
-    # informa que a rota possui agendamentos pendentes.
     @fluxo_infeliz @FA001 @RNF012 @prioridade_alta @depende_de_HU013
     Cenário: Sistema bloqueia a inativação de rota complementar com alunos agendados para datas futuras
       Dado que a rota complementar ativa "Van 2 - Bairro Novo" possui alunos agendados para datas futuras
       Quando o administrador tenta inativar a rota complementar "Van 2 - Bairro Novo"
-      Então o sistema informa que a rota possui agendamentos pendentes
+      Então o sistema exibe a mensagem "Esta rota possui agendamentos pendentes e não pode ser inativada no momento."
       E a rota complementar "Van 2 - Bairro Novo" permanece ativa
 
 
@@ -165,8 +160,6 @@ Funcionalidade: Gerenciamento de Rotas Complementares
 
 
     # AC-05, RNF-013 - Auditoria de todas as operações de escrita
-    # Observação: o AC-05 cita a auditoria da inativação; o fluxo principal registra toda operação
-    # no log. Os cenários cobrem as quatro operações.
     @auditoria @RNF013 @teste_api @nao_automatizavel_via_appium @prioridade_media
     Esquema do Cenário: Sistema registra no log de auditoria cada operação de escrita sobre rotas complementares
       Dado que o administrador "admin.qa@gouce.com" está autenticado no sistema

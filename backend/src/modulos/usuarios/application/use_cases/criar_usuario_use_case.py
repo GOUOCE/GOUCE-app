@@ -37,6 +37,8 @@ class CriarUsuarioUseCase:
         repository,
         hasher,
         token_service,
+        repository_faculdade=None,
+        repository_bairro=None,
         email_validator=None,
         string_validator=None,
         telefone_validator=None,
@@ -49,6 +51,8 @@ class CriarUsuarioUseCase:
         self.repository = repository
         self.hasher = hasher
         self.token_service = token_service
+        self.repository_faculdade = repository_faculdade
+        self.repository_bairro = repository_bairro
         self.email_validator = email_validator or EmailValidator()
         self.string_validator = string_validator or StringSemNumeroValidator()
         self.telefone_validator = telefone_validator or TelefoneValidator()
@@ -188,9 +192,27 @@ class CriarUsuarioUseCase:
                 "transgenero": transgenero_formatado,
             })
 
+        # Validação de Bairro
+        bairro_id = str(dto.bairro_id).strip() if dto.bairro_id else ""
+        if not bairro_id:
+            erros.append(CadastroValidationError("bairro_id", "Bairro é obrigatório"))
+        elif self.repository_bairro is not None:
+            bairro_id_int = None
+            try:
+                bairro_id_int = int(bairro_id)
+            except (ValueError, TypeError):
+                bairro_id_int = None
+            bairro = self.repository_bairro.buscar_por_id(bairro_id_int) if bairro_id_int is not None else None
+            if bairro is None or not getattr(bairro, "ativo", True):
+                erros.append(CadastroValidationError("bairro_id", "Bairro não existente"))
+
         # 10. Validação de Instituição / Faculdade
         if not dto.faculdade_id or not isinstance(dto.faculdade_id, int) or dto.faculdade_id <= 0:
             erros.append(CadastroValidationError("faculdade_id", "Instituição/Faculdade é obrigatória (informe o ID da faculdade)"))
+        elif self.repository_faculdade is not None:
+            faculdade = self.repository_faculdade.buscar_por_id(dto.faculdade_id)
+            if faculdade is None or not getattr(faculdade, "ativo", True):
+                erros.append(CadastroValidationError("faculdade_id", "Instituição/Faculdade não existente"))
 
         # 11. Validação de Curso
         if not dto.curso or len(str(dto.curso).strip()) < 2:
