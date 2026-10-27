@@ -6,6 +6,7 @@ de sucesso e as mensagens de validação por campo.
 
 import unittest
 from datetime import time
+from unittest.mock import MagicMock
 
 from tests.rota_principal_support import ADMIN_ID, asgi_request, dados_rota
 
@@ -13,8 +14,10 @@ from fastapi import FastAPI
 
 from src.modulos.rotas.application.use_cases.gerenciar_rotas_principais_use_case import (
     MENSAGEM_ROTA_COM_AGENDAMENTOS,
+    MENSAGEM_ROTA_COM_COMPLEMENTARES_ATIVAS,
     MENSAGEM_ROTA_COM_VINCULO_INATIVO,
     RotaComAgendamentosPendentesError,
+    RotaComComplementaresAtivasError,
     RotaComVinculoInativoError,
     RotaPrincipalNaoEncontradaError,
     RotaPrincipalStatusInalteradoError,
@@ -187,6 +190,15 @@ class MapeamentoDeErrosTest(RotasHttpUnitBase):
             "Esta rota possui agendamentos pendentes e não pode ser inativada no momento.",
         )
 
+    async def test_complementares_ativas_vira_409_com_a_mensagem_exata_na_inativacao(self):
+        await self.assert_erro(
+            "PATCH", "/rotas-principais/1/inativar", None,
+            RotaComComplementaresAtivasError(MENSAGEM_ROTA_COM_COMPLEMENTARES_ATIVAS),
+            409, "CONFLICT",
+            "Esta rota possui rotas complementares ativas e não pode ser inativada. "
+            "Inative ou reassocie as complementares antes.",
+        )
+
     async def test_vinculo_inativo_vira_409_com_a_mensagem_exata_na_reativacao(self):
         await self.assert_erro(
             "PATCH", "/rotas-principais/1/reativar", None,
@@ -280,6 +292,14 @@ class MensagensDeValidacaoDoCorpoTest(RotasHttpUnitBase):
             {"bairros_ids": "Vincule ao menos um bairro.", "faculdades_volta_ids": "Informe ao menos uma faculdade na volta."},
         )
 
+    async def test_nul_no_nome_vira_texto_invalido_no_post_e_no_patch(self):
+        mensagem = {"nome": "Nome da rota deve ser um texto válido."}
+
+        self.assertEqual(await self.mensagens(dados_rota(nome="a\x00b")), mensagem)
+        self.assertEqual(
+            await self.mensagens({"nome": "a\x00b"}, "PATCH", "/rotas-principais/1"), mensagem
+        )
+
     async def test_campo_extra_e_mensagem_unica(self):
         self.assertEqual(await self.mensagens(dados_rota(ativo=False)), {"ativo": "Campo não permitido."})
 
@@ -292,6 +312,34 @@ class MensagensDeValidacaoDoCorpoTest(RotasHttpUnitBase):
             await self.mensagens({"nome": "ok"}, "PATCH", "/rotas-principais/abc"),
             {"rota_id": "Informe um número válido."},
         )
+
+
+class FiltroDeNomeComUseCaseRealTest(RotasHttpUnitBase):
+    """Listagem com o caso de uso real e o repository simulado (sem banco)."""
+
+    def setUp(self):
+        super().setUp()
+        self.repository = MagicMock()
+        self.repository.listar.return_value = []
+        self.app.dependency_overrides.pop(rotas.get_use_case)
+        self.app.dependency_overrides[rotas.get_repository] = lambda: self.repository
+
+    async def test_nome_com_nul_vira_422_no_campo_nome_sem_consultar_o_repository(self):
+        status, resposta = await self.chamar("GET", "/rotas-principais?nome=a%00b")
+
+        self.assertEqual(status, 422, resposta)
+        self.assertEqual(resposta["error"]["code"], "REQUEST_VALIDATION_ERROR")
+        self.assertEqual(
+            resposta["error"]["details"],
+            [{"field": "nome", "message": "Nome deve ser um texto válido."}],
+        )
+        self.repository.listar.assert_not_called()
+
+    async def test_nome_comum_continua_chegando_ao_repository(self):
+        status, resposta = await self.chamar("GET", "/rotas-principais?nome=rota")
+
+        self.assertEqual((status, resposta), (200, []))
+        self.repository.listar.assert_called_once_with(ativo=True, nome="rota")
 
 
 class ProvedoresDeDependenciaTest(unittest.TestCase):
