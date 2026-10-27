@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 0 | 3 | 0 | 10 |
+| 🔄 Em andamento | 13 | 1 | 3 | 0 | 9 |
 
 ## Pré-condições
 
@@ -43,7 +43,7 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 | CT-HU009-UI-001 | Abrir a frota, buscar e conferir lista vazia | Banco vazio; depois um ativo e um inativo; placa/nome e busca inexistente | Sem exemplos inventados; só ativos por padrão; capacidades e busca corretas | ❌ FALHOU | Com o banco vazio a lista mostra os ônibus de exemplo (`OCR-1234`, `OCR-5521`, `OCR-8890`), a chave “Mostrar inativos” vem ligada e a seta volta ao Painel. Busca e massa corretas. |
 | CT-HU009-UI-002 | Cadastrar e conferir persistência | `QXD2E45`, 44 assentos, 20 em pé | Confirmação, sucesso, listagem atualizada e registro na API após reabrir | ❌ FALHOU | Cancelar não grava e confirmar cria o ônibus corretamente, mas a mensagem de sucesso é uma barra preta, fora do padrão de pop-up, e o texto difere do requisito. |
 | CT-HU009-UI-003 | Normalizar placa e evitar duplicidade contra exemplos | `ABC-1234`, `def-2g34`, `OCR-1234` inexistentes no banco | Maiúsculas/sem hífen; formatos aceitos; exemplo interno não bloqueia cadastro legítimo | ❌ FALHOU | `ABC-1234` e `def-2g34` são gravadas sem hífen e em maiúsculas, mas `OCR-1234` é bloqueada pelo app com “Este veículo já está registrado.” por causa da lista de exemplo, sem chamar a API. |
-| CT-HU009-UI-004 | Bloquear duplicidade de placa ativa e inativa | `QXD2E45` e variações; `XYZ9K87` inativo | “Este veículo já está registrado.”; nenhum novo registro | ⏳ PENDENTE | Não executado. |
+| CT-HU009-UI-004 | Bloquear duplicidade de placa ativa e inativa | `QXD2E45` e variações; `XYZ9K87` inativo | “Este veículo já está registrado.”; nenhum novo registro | ✅ PASSOU | As seis tentativas (`QXD2E45`, `qxd2e45`, `QXD-2E45`, com espaços, `XYZ9K87`, `xyz-9k87`) foram barradas pelo servidor (`409`). Nenhum registro novo. |
 | CT-HU009-UI-005 | Obrigatórios no cadastro e na edição | Cada campo vazio; placa só com espaços; capacidade em pé apagada versus zero | Destaque e bloqueio; apagar não vira zero; dados anteriores preservados | ⏳ PENDENTE | Não executado. |
 | CT-HU009-UI-006 | Rejeitar formato inválido de placa | Letras, números, tamanho, posição e símbolo incorretos | “Placa inválida.”; sem cadastro nem edição | ⏳ PENDENTE | Não executado. |
 | CT-HU009-UI-007 | Validar fronteiras e inteiros das capacidades | Assentos −1/0/1; em pé −1/0/1; texto e decimal | Inválidos bloqueados no campo; 1 assento/0 em pé aceitos | ⏳ PENDENTE | Não executado. |
@@ -173,8 +173,10 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Foram feitas as seis tentativas, uma por vez, com 40 assentos e 5 em pé: `QXD2E45`, `qxd2e45`, `QXD-2E45`, `  QXD2E45  `, `XYZ9K87` (inativa) e `xyz-9k87`. Em todas o testador relatou o bloqueio com a mensagem de duplicidade (no código: “Este veículo já está registrado.”, `frota/cadastrar.tsx`).
+- O log da API registrou seis `POST /onibus` com `409 Conflict`, ou seja, quem barrou foi o servidor, não uma regra do app. (Na primeira tentativa houve antes um `401` e a renovação automática do login, seguida do `409`.)
+- Banco depois dos testes: continua com as mesmas cinco placas (`ABC1234`, `ABC1D23`, `DEF2G34`, `QXD2E45`, `XYZ9K87`), uma só `QXD2E45` e `XYZ9K87` ainda inativa com 32/0. Nenhum duplicado foi criado e nada existente mudou.
+- Status: ✅ Passou.
 
 ---
 
