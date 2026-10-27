@@ -7,69 +7,70 @@
 | Módulo | Gestão de Rotas e Horários (EP-003) |
 | Funcionalidade | HU-012 — Gerenciamento de Rotas Complementares |
 | Camada | API |
-| Tipo de teste | Funcional manual — suíte essencial (baseada em risco), planejada antes da implementação |
-| Endpoints | Não publicados na base analisada. Mapear OP-LISTAR, OP-CONSULTAR, OP-CADASTRAR, OP-EDITAR, OP-INATIVAR e OP-REATIVAR em [api/README.md](README.md) com o contrato real antes de executar. |
-| Ambiente | A preencher — URL, branch e commit da implementação |
+| Tipo de teste | Funcional manual — suíte essencial (baseada em risco) |
+| Endpoints | `GET /rotas-complementares`, `GET /rotas-complementares/opcoes`, `GET /rotas-complementares/{id}`, `POST /rotas-complementares`, `PATCH /rotas-complementares/{id}`, `PATCH /rotas-complementares/{id}/inativar` e `PATCH /rotas-complementares/{id}/reativar` — `application/json`. Corpo: `{"nome": "...", "horario_saida": "HH:MM", "ponto_conexao": "...", "rota_principal_id": 1}` |
+| Ambiente | HTTP local `http://127.0.0.1:18812`; PostgreSQL 15/MinIO QA isolados; branch `feat/front-hu012`, aplicação `23d1063f09f13cc195da7e45422581f73e2ae6da`; plano `939921e3` |
 | Total de casos | 13 |
-| Última execução | Não realizada |
-| Testador | Cauan Ricardo — execução com apoio de IA (Claude Code) |
+| Última execução | 2026-10-27 — HTTP real com evidências JSON e consultas ao PostgreSQL |
+| Testador | Cauan Ricardo — execução com apoio do Codex |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 13 | 0 | 0 | 0 | 0 | 13 |
+| ⏳ Em execução | 13 | 0 | 0 | 0 | 0 | 13 |
 
 ## Pré-condições
 
 | ID | Descrição |
 | --- | --- |
-| PC-01 | A camada da HU-012 deve existir na branch escolhida para execução; na base `5554bc90` ela não foi identificada. Este é planejamento, sem stack/testes. Na execução futura usar ambiente isolado; sem funcionalidade, registrar 🚫 nas partes dependentes. |
-| PC-02 | Administrador A do seed, autenticado via `POST /auth/login`; anotar id e horário para auditoria. Usar Postman/Insomnia ou Swagger /docs. |
-| PC-03 | Credenciais de aluno aprovado/ativo e representante ativo; falha de login bloqueia somente a respectiva variação. Sessão vencida exige novo login antes de repetir o passo. |
-| PC-04 | Principais com dados-base válidos: RP-A Rota Centro - UFC ativa (06:30/17:30), RP-B Rota Integrada ativa e RP-0 Rota Antiga inativa. RC0 Van Antiga inativa vinculada a RP-A ativa; RC1 Van 2 - Bairro Novo criada no CT-002 com saída 06:00 e conexão Trevo do Bairro Novo. Usar ids distintos e registrar o identificador de cada tipo; preparar massa via HU-011/API/banco local se necessário, anotando origem sem contar como aprovação funcional. |
-| PC-05 | **Apoio da IA (Claude Code)** para executar API com validação de Cauan e conferir persistência, vínculo correto, estados e auditoria na API/banco e preparar massa local quando necessário. Cauan executa UI; ids de principal e complementar não devem ser confundidos. |
-| PC-06 | Preencher métodos/URLs, Content-Type, campos, ids, representação de hora/conexão, respostas e consulta de auditoria no README de API. As operações lógicas não são endpoints reais; verificar contrato integral/parcial de edição. |
-| PC-07 | HU-011 ou preparo local para principais; HU-013 para agenda; módulos/dados históricos para RN-004; decisões abertas antes de julgar a parte correspondente. Sem dependência/decisão, registrar 🚫 somente na parte afetada. |
+| PC-01 | API e banco disponíveis em **stack isolada com banco limpo** (ver [README](README.md)). Usar Postman, Insomnia ou Swagger em `/docs`. |
+| PC-02 | Token do **administrador A** (executor): `POST /auth/login` com o administrador padrão do seed. Anotar o `id` dele para conferir a auditoria. |
+| PC-03 | Token de um **aluno aprovado e ativo** e de um **representante ativo**, para o CT-012. Se o login do representante não funcionar, executar só o aluno e marcar a outra parte como 🚫. |
+| PC-04 | Acesso de leitura ao banco: tabelas `rota_complementar`, `rota_principal` e `log_auditoria`. |
+| PC-05 | Rotas principais preparadas pela IA via `POST /rotas-principais` antes do CT-001 (anotar os ids): **RP1 Rota Centro - UFC** (06:30/17:30) e **RP2 Rota Campo Velho - IFCE** (06:40/18:00) ativas; **RP0 Rota Antiga** criada e inativada. |
+| PC-06 | Massa de complementares criada pela própria suíte: **RC1 Van 2 - Bairro Novo** e **RC2 Van 5 - Trevo da BR** (CT-002); **RC3 Van Sítio** (CT-008, para a reativação). |
+| PC-07 | Agendamento de alunos (HU-013) **não existe** na base analisada: o CT-013 fica 🚫 até a agenda estar na `develop`. |
 
 ## Resumo da execução
 
-São **13 casos essenciais**. CT-001 verifica vazio antes da massa e repete depois de CT-002. CT-006 edita os dados; CT-007 troca principal; CT-008 inativa RC1; CT-009 reativa RC0 preparada, sem depender da inativação anterior. Registrar cada variação e origem de massa; dados preparados pela IA não aprovam a funcionalidade.
+Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o token do administrador A, exceto onde indicado; itens que dependem de um caso posterior trazem essa indicação no próprio caso. As regras marcadas com **#208** vêm das decisões do PO na [issue #208](https://github.com/GOUOCE/GOUCE-app/issues/208).
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU012-API-001 | Listar complementares com horário, conexão e principal | Lista vazia; RC1 ativa; RC0 inativa; principais RP-A/RP-B ativas | Dados reais e dois estados acessíveis; vínculo correto | ⏳ PENDENTE | Não executado. |
-| CT-HU012-API-002 | Cadastrar complementar vinculada a principal ativa | RC1 Van 2 - Bairro Novo; RP-A Rota Centro - UFC; 06:00; Trevo do Bairro Novo | Complementar ativa, persistida e vinculada à principal enviada | ⏳ PENDENTE | Não executado. |
-| CT-HU012-API-003 | Exigir nome, saída, conexão e principal no cadastro/edição | Cada campo omitido/vazio/nulo; principal sem seleção; edição esvaziando | Erro por campo; sem cadastro incompleto ou edição parcial | ⏳ PENDENTE | Não executado. |
-| CT-HU012-API-004 | Rejeitar principal inativa ou inexistente e preservar atomicidade | RP-0 inativa; id inexistente; edição de nome/conexão junto com principal inválida | Nenhum vínculo inválido nem gravação parcial | ⏳ PENDENTE | Não executado. |
-| CT-HU012-API-005 | Validar horário sem presumir regra de transferência | 06:00 e 05:45 válidos; minuto 60/texto; 00:00/23:59 para caracterização | Formato preservado; entradas impossíveis recusadas; limites operacionais pendentes | ⏳ PENDENTE | Não executado. |
-| CT-HU012-API-006 | Editar nome, horário e conexão sem trocar a principal | RC1: Van 3 - Bairro Novo; 05:45; Posto Central; manter RP-A | Mesmo id; dados atualizados; principal e outra complementar intactas | ⏳ PENDENTE | Não executado. |
-| CT-HU012-API-007 | Trocar rota principal e tratar complementar inexistente | RC1 de RP-A para RP-B Rota Integrada; id de complementar inexistente | Referência nova correta, sem vínculo atual residual ou alteração das principais | ⏳ PENDENTE | Não executado. |
-| CT-HU012-API-008 | Inativar sem agendamento futuro e manter principal ativa | RC1 ativa sem agenda futura; principal RP-B ativa | Soft delete só da complementar; registro e vínculos mantidos | ⏳ PENDENTE | Não executado. |
-| CT-HU012-API-009 | Reativar complementar com principal ativa | RC0 inativa com RP-A ativa, independente da inativação de RC1 | Mesmo registro reativado com dados e vínculo preservados | ⏳ PENDENTE | Não executado. |
-| CT-HU012-API-010 | Auditar as quatro escritas da complementar | Cadastro CT-002; edições CT-006/007; inativação CT-008; reativação CT-009 | Usuário, ação, timestamp e vínculo corretos por escrita efetiva | ⏳ PENDENTE | Não executado. |
-| CT-HU012-API-011 | Bloquear inativação com agendamento futuro, sem contorno | Complementar A com agenda amanhã; B sem agenda; C só com passado | Futuro bloqueado; sem futuro permite; sem alteração parcial | ⏳ PENDENTE | Depende da HU-013 para agenda real; não executado. |
-| CT-HU012-API-012 | Negar gestão a aluno, representante e sem autenticação | Três credenciais em cadastro/edição/inativação/reativação | 403 nos perfis sem privilégio; autenticação exigida; nenhuma escrita | ⏳ PENDENTE | Não executado. |
-| CT-HU012-API-013 | Preservar histórico e caracterizar seleção no agendamento | Complementar com passado, conexão e principal registradas; outra inativa; HU-013 e operação diária | Histórico mantido; seleção inferida pendente; veículo diário fora do cadastro | ⏳ PENDENTE | Histórico real; HU-013 e decisão para seleção; operação diária fora deste recorte. |
+| CT-HU012-API-001 | Listar, filtrar e consultar complementares | Sem filtro; `incluir_inativos=true`; `nome`; `rota_principal_id`; `GET /{id}`; `/opcoes` | HTTP 200; padrão só ativas; filtros respeitados; opções só com principais ativas | ⏳ PENDENTE | Não executado. |
+| CT-HU012-API-002 | Cadastrar rota complementar válida | RC1 ligada a RP1; RC2 ligada a RP2, com espaços nas pontas | HTTP 201 “Operação realizada com sucesso”; ativa; vínculo e dados corretos | ⏳ PENDENTE | Não executado. |
+| CT-HU012-API-003 | Horário de retorno da complementar (#208) | `horario_saida` e `horario_retorno`; retorno igual e anterior à saída | Retorno aceito e gravado; retorno ≤ saída recusado com 422 | ⏳ PENDENTE | Não executado. |
+| CT-HU012-API-004 | Nome único entre todas as rotas (#208) | Nome de RC1 com variações; de complementar inativa; de rota principal; edição para nome em uso | HTTP 409; nada criado nem alterado | ⏳ PENDENTE | Não executado. |
+| CT-HU012-API-005 | Obrigatórios, formato e limites | Sem cada campo; em branco; 151 caracteres; horário fora de `HH:MM`; edição com `null` | HTTP 422 com campo e mensagem em português; nada gravado | ⏳ PENDENTE | Não executado. |
+| CT-HU012-API-006 | Vínculo com rota principal inativa ou inexistente | RP0 inativa; id inexistente; id `0`, negativo e texto; cadastro e edição | HTTP 422 no `rota_principal_id`; nenhum vínculo inválido | ⏳ PENDENTE | Não executado. |
+| CT-HU012-API-007 | Editar dados e trocar a rota principal | RC1: só nome; horário e ponto; trocar para RP2; `{}`; campo `ativo`; id inexistente | HTTP 200 no mesmo id; 422 sem campo ou com campo extra; 404 inexistente | ⏳ PENDENTE | Não executado. |
+| CT-HU012-API-008 | Inativar e reativar (soft delete) | RC3: inativar, repetir, reativar, repetir; id inexistente | HTTP 200 nas válidas; registro mantido; 409 nas repetidas; 404 | ⏳ PENDENTE | Não executado. |
+| CT-HU012-API-009 | Complementar ativa protege a principal | RP2 com RC2 ativa; trocar RC2 para RP1; inativar RP2 | Com RC2 ativa, 409; depois de trocar o vínculo, 200 | ⏳ PENDENTE | Não executado. |
+| CT-HU012-API-010 | Reativar complementar com principal inativa (#208) | RC3 inativa ligada a RP2; RP2 inativada; reativar RC3; trocar para RP1 e reativar | HTTP 409 com a mensagem do PO; depois de trocar o vínculo, 200 | ⏳ PENDENTE | Não executado. |
+| CT-HU012-API-011 | Auditoria das operações de escrita | Operações dos CT-002, 007 e 008; recusas dos CT-004 a 009 | Um registro por escrita efetiva; nenhum para recusa ou edição sem mudança | ⏳ PENDENTE | Não executado. |
+| CT-HU012-API-012 | Acesso sem privilégio | Token de aluno; token de representante; sem token | HTTP 403 (aluno e representante) e 401 (sem token) em todas as rotas | ⏳ PENDENTE | Não executado. |
+| CT-HU012-API-013 | Agendamentos futuros e complementar inativa no agendamento | Complementar com aluno agendado para amanhã; complementar inativa na agenda | HTTP 409 “Esta rota possui agendamentos pendentes e não pode ser inativada no momento.”; inativa fora da agenda | ⏳ PENDENTE | Depende da HU-013. Sem ela, marcar 🚫. |
 
 ## Detalhamento dos casos
 
-### CT-HU012-API-001 — Listar complementares com horário, conexão e principal
+### CT-HU012-API-001 — Listar, filtrar e consultar complementares
 
-**Dados de entrada:** Lista vazia; RC1 ativa; RC0 inativa; principais RP-A/RP-B ativas.
+**Dados de entrada:** `GET /rotas-complementares`; `?incluir_inativos=true`; `?nome=van` e `?nome=VAN 2`; `?rota_principal_id={RP1}`; `?rota_principal_id=0`; `GET /rotas-complementares/{id}` de RC1, de RC3 inativa e de id `999999`; `GET /rotas-complementares/opcoes`.
 
 **Passos**
 
-1. Com contrato PC-06 preenchido, usar OP-LISTAR antes da massa; preparar RC0 e executar CT-002 para obter RC1.
-2. Listar novamente, consultar cada complementar e usar filtros apenas se publicados.
-3. Pedir à IA para comparar nome, saída, conexão, principal e estado com os dados persistidos (PC-05).
+1. Antes do CT-002, enviar `GET /rotas-complementares` com o banco sem complementares.
+2. Executar de novo depois do CT-008 (RC3 inativa) e enviar as demais chamadas.
 
 **Resultado esperado**
 
-- Leitura de sucesso conforme contrato; vazio real, sem substituir por exemplos.
-- Administrador acessa complementares ativas e inativas, com horário, ponto de conexão e principal corretos (AC-01, AC-09 e BDD).
-- Requisito inclui os dois estados na listagem; BDD usa Mostrar inativos. Padrão inicial e mecanismo de filtro aguardam alinhamento.
-- Identificador da complementar deve permanecer distinto do identificador da principal; não confundir o alvo das operações.
+- Banco sem complementares: HTTP `200` com lista vazia `[]`.
+- Sem filtro: só **ativas**, cada uma com `id`, `nome`, `horario_saida`, `ponto_conexao`, `ativo` e `rota_principal` (`id`, `nome`, `ativo`) (AC-01).
+- `incluir_inativos=true`: ativas e inativas, com `ativo` indicando o estado (AC-09).
+- `nome` filtra por parte do nome sem diferenciar maiúsculas; `rota_principal_id` traz só as complementares daquela principal; `rota_principal_id=0`: HTTP `422` “Informe um ID de rota principal válido.”
+- `GET /{id}` devolve a ativa ou inativa; id inexistente: HTTP `404` “Rota complementar não encontrada.”
+- `/opcoes` lista só **rotas principais ativas** (RP1 e RP2; RP0 ausente), com nome e horários (AC-03, FA-002).
 
 **Resultado obtido**
 
@@ -78,22 +79,23 @@ São **13 casos essenciais**. CT-001 verifica vazio antes da massa e repete depo
 
 ---
 
-### CT-HU012-API-002 — Cadastrar complementar vinculada a principal ativa
+### CT-HU012-API-002 — Cadastrar rota complementar válida
 
-**Dados de entrada:** RC1 Van 2 - Bairro Novo; RP-A Rota Centro - UFC; 06:00; Trevo do Bairro Novo.
+**Dados de entrada:**
+
+1. RC1: `{"nome": "Van 2 - Bairro Novo", "horario_saida": "06:00", "ponto_conexao": "Trevo do Bairro Novo", "rota_principal_id": RP1}`.
+2. RC2: `{"nome": "  Van 5 - Trevo da BR ", "horario_saida": "06:10", "ponto_conexao": "  Posto da BR-122 ", "rota_principal_id": RP2}`.
 
 **Passos**
 
-1. Conferir RP-A ativa e seu id real; preparar OP-CADASTRAR com nome Van 2 - Bairro Novo, saída 06:00 e conexão Trevo do Bairro Novo.
-2. Usar a representação de conexão confirmada no contrato: texto, entidade ou outro formato documentado, sem presumir campo de chave estrangeira.
-3. Registrar o id de RC1 e pedir à IA para conferir a complementar, vínculo e dados da principal (PC-05).
+1. Enviar `POST /rotas-complementares` com cada corpo e anotar os ids.
+2. Conferir em `GET /rotas-complementares/{id}` e pedir à IA para conferir a linha em `rota_complementar`.
 
 **Resultado esperado**
 
-- Criação efetiva de complementar ativa com os quatro valores corretos (AC-02, RN-010 no escopo cadastral).
-- A rota principal existe e não é alterada pelo cadastro da complementar; não criar outra principal silenciosamente.
-- Confirmação de sucesso conforme fluxo/BDD; o BDD usa “Operação realizada com sucesso”. Código e payload dependem do contrato.
-- Cadastro não fixa veículo/motorista por conta própria: a operação diária prevista em RN-010 é dependência de outras HUs.
+- HTTP `201` com `success: true`, `message` “Operação realizada com sucesso” e a rota em `data` (AC-02, AC-07).
+- Criadas **ativas**, com nome e ponto de conexão sem os espaços das pontas e o horário em `HH:MM`.
+- `rota_principal` aponta para a principal enviada; a rota principal não é alterada.
 
 **Resultado obtido**
 
@@ -102,22 +104,24 @@ São **13 casos essenciais**. CT-001 verifica vazio antes da massa e repete depo
 
 ---
 
-### CT-HU012-API-003 — Exigir nome, saída, conexão e principal no cadastro/edição
+### CT-HU012-API-003 — Horário de retorno da complementar (#208)
 
-**Dados de entrada:** Cada campo omitido/vazio/nulo; principal sem seleção; edição esvaziando.
+**Dados de entrada:**
+
+1. Cadastro `Van Retorno` ligado a RP1, com `"horario_saida": "06:00"` e `"horario_retorno": "17:40"`.
+2. O mesmo com retorno `06:00` (igual) e `05:30` (anterior).
+3. Edição de RC1 com `{"horario_retorno": "17:45"}`.
 
 **Passos**
 
-1. Em OP-CADASTRAR, omitir um campo por tentativa: nome, saída, ponto de conexão ou principal; manter os demais válidos.
-2. Testar nome/conexão só com espaços se forem textuais; na edição de RC1, esvaziar explicitamente cada obrigatório.
-3. Pedir à IA para conferir ausência de novos registros e preservação de RC1 (PC-05).
+1. Enviar cada chamada e conferir em `GET /rotas-complementares/{id}`.
 
 **Resultado esperado**
 
-- Impedir cadastro/edição sem os dados exigidos (AC-02, AC-08, FA-003 e BDD), com erro de cliente e indicação do campo conforme contrato.
-- O nome não aparece no AC-08, mas é exigido no cadastro pelo AC-02 e no BDD: registrar essa diferença de redação, sem permitir complementar sem nome.
-- Sem principal não pode surgir vínculo padrão oculto; ausência em edição parcial não equivale a esvaziamento, conforme semântica de método ainda a mapear.
-- Não inventar tamanho máximo de nome/conexão, horário de retorno ou mais de uma conexão obrigatória.
+- Cada complementar tem **1 ponto de conexão, 1 horário de saída (ida) e 1 horário de retorno (volta)** (#208, item 4), porque o aluno pode usar a complementar na ida e na volta (HU-013, CA 6 e CA 9).
+- Item 1 e item 3: HTTP `201` / `200`, com `horario_retorno` gravado e devolvido na consulta.
+- Item 2: HTTP `422` no `horario_retorno`: o retorno precisa ser **depois** da saída (#208, item 2a).
+- Se a API recusar o campo `horario_retorno` (“Campo não permitido.”), registrar ❌: a complementar não guarda o horário da volta.
 
 **Resultado obtido**
 
@@ -126,21 +130,26 @@ São **13 casos essenciais**. CT-001 verifica vazio antes da massa e repete depo
 
 ---
 
-### CT-HU012-API-004 — Rejeitar principal inativa ou inexistente e preservar atomicidade
+### CT-HU012-API-004 — Nome único entre todas as rotas (#208)
 
-**Dados de entrada:** RP-0 inativa; id inexistente; edição de nome/conexão junto com principal inválida.
+**Dados de entrada:**
+
+1. Cadastro com o nome `Van 2 - Bairro Novo` (igual a RC1), com `van 2 - bairro novo` e com `"  VAN 2 - BAIRRO NOVO "`.
+2. Depois do CT-008: cadastro com o nome de RC3 inativa (`Van Sítio`).
+3. Cadastro com o nome `Rota Centro - UFC` (nome de RP1).
+4. Edição de RC2 com `{"nome": "Van 2 - Bairro Novo"}`; edição de RC1 com o próprio nome.
 
 **Passos**
 
-1. Conferir RP-0 inativa e id inexistente; enviar criações válidas trocando somente a referência da principal.
-2. Tentar editar RC1 com nome Novo não deve salvar, conexão Posto Central e principal inválida, numa única operação.
-3. Pedir à IA para conferir todos os dados e associações de RC1/RP-A depois de cada recusa (PC-05).
+1. Enviar cada chamada.
+2. Pedir à IA para conferir que nenhuma complementar nova foi criada e que RC2 manteve o nome.
 
 **Resultado esperado**
 
-- Principal inválida/inativa não recebe vínculo novo (AC-03, FA-002, RNF-012), inclusive em chamada direta de API.
-- A edição recusada não altera nome, horário, conexão ou referência anterior; nenhum órfão, exclusão ou erro interno por referência inválida.
-- Não aplicar automaticamente a mesma política à reativação de vínculo antigo com principal agora inativa: isso é outra decisão pendente.
+- Itens 1, 2 e edição de RC2: HTTP `409` com `error.code` `CONFLICT` e “Já existe uma rota complementar com este nome.” Comparação **sem diferenciar maiúsculas, sem os espaços das pontas e contra ativas e inativas** (#208, item 1).
+- Item 3: HTTP `409`. O nome é único **entre rotas principais e complementares** (#208, item 1).
+- Edição de RC1 com o próprio nome: HTTP `200`.
+- Nenhuma complementar nova; RC2 mantém o nome.
 
 **Resultado obtido**
 
@@ -149,21 +158,30 @@ São **13 casos essenciais**. CT-001 verifica vazio antes da massa e repete depo
 
 ---
 
-### CT-HU012-API-005 — Validar horário sem presumir regra de transferência
+### CT-HU012-API-005 — Obrigatórios, formato e limites
 
-**Dados de entrada:** 06:00 e 05:45 válidos; minuto 60/texto; 00:00/23:59 para caracterização.
+**Dados de entrada:** a partir do corpo válido de RC1, com outro nome:
+
+1. Sem `nome`; sem `horario_saida`; sem `ponto_conexao`; sem `rota_principal_id`; corpo `{}`.
+2. `nome` `"   "` e `ponto_conexao` `"   "`.
+3. `nome` e `ponto_conexao` com 150 caracteres (controle) e com 151.
+4. `horario_saida` `6:00`, `24:00`, `06:60` e `manhã`.
+5. Edição de RC1 com `{"ponto_conexao": null}` e com `{"rota_principal_id": null}`.
 
 **Passos**
 
-1. Usar o formato de saída confirmado no contrato para cadastrar/editar uma complementar com 06:00 e depois 05:45.
-2. Testar separadamente minuto 60 e texto incompatível; pedir à IA para conferir que os dados não mudaram (PC-05).
-3. Caracterizar 00:00/23:59 e uma saída posterior à da principal, anotando respostas sem impor janela de conexão não definida.
+1. Enviar cada variação, uma por vez.
+2. Pedir à IA para conferir que nada foi criado e que RC1 não mudou.
 
 **Resultado esperado**
 
-- Horário válido persistido e lido sem conversão silenciosa de fuso/dia e sem alterar o da principal.
-- Entrada impossível para o formato documentado é recusada com campo e motivo; sem truncamento ou gravação parcial.
-- Horário mínimo/máximo, antecedência para transferência, duração do trajeto e relação com horário da principal não estão definidos. Não aprovar/reprovar essas variações até decisão.
+- HTTP `422` com `error.code` `REQUEST_VALIDATION_ERROR` e `error.details` indicando o campo, com mensagens em português (AC-08, FA-003):
+  - “Nome da rota complementar é obrigatório.”, “Horário de saída é obrigatório.”, “Ponto de conexão é obrigatório.” e “Rota principal vinculada é obrigatória.”;
+  - 151 caracteres: “… deve ter no máximo 150 caracteres.”;
+  - horário inválido: “Horário deve estar no formato HH:MM.”
+- Corpo `{}`: um erro para cada campo obrigatório, sem erro interno.
+- 150 caracteres: HTTP `201`.
+- Edição com `null`: HTTP `422`; RC1 não muda.
 
 **Resultado obtido**
 
@@ -172,21 +190,25 @@ São **13 casos essenciais**. CT-001 verifica vazio antes da massa e repete depo
 
 ---
 
-### CT-HU012-API-006 — Editar nome, horário e conexão sem trocar a principal
+### CT-HU012-API-006 — Vínculo com rota principal inativa ou inexistente
 
-**Dados de entrada:** RC1: Van 3 - Bairro Novo; 05:45; Posto Central; manter RP-A.
+**Dados de entrada:**
+
+1. Cadastro com `rota_principal_id` igual a RP0 (inativa) e igual a `999999`.
+2. Cadastro com `rota_principal_id` `0`, `-1` e `"1"`.
+3. Edição de RC1 com `{"nome": "Van 2 - Editada", "rota_principal_id": RP0}`.
 
 **Passos**
 
-1. Registrar RC1, RC0 e RP-A antes da operação.
-2. Editar RC1 com os novos dados, preservando a principal; se o contrato permitir edição parcial, conferir campos omitidos; se exigir corpo completo, enviá-lo integralmente.
-3. Reler e pedir à IA para conferir id, conexão, horário e os registros não envolvidos (PC-05).
+1. Enviar cada chamada.
+2. Pedir à IA para conferir que nenhuma complementar ficou ligada a RP0 e que RC1 manteve nome e vínculo.
 
 **Resultado esperado**
 
-- Alteração válida persistida, com confirmação e listagem atualizada (AC-04 e fluxo principal).
-- Mesmo id e vínculo RP-A; não criar nova complementar nem alterar RC0/principal.
-- Troca de conexão atual não apaga entidade-base eventualmente compartilhada; representação/relacionamentos devem ser confirmados no contrato.
+- Item 1: HTTP `422` no `rota_principal_id`, com “Rota principal inativa ou inexistente.” (AC-03, FA-002, RNF-012).
+- Item 2: HTTP `422` com “Informe um ID de rota principal válido.”
+- Item 3: HTTP `422`; **nada** da edição é aplicado (nem o nome).
+- Nenhum erro `500`.
 
 **Resultado obtido**
 
@@ -195,21 +217,28 @@ São **13 casos essenciais**. CT-001 verifica vazio antes da massa e repete depo
 
 ---
 
-### CT-HU012-API-007 — Trocar rota principal e tratar complementar inexistente
+### CT-HU012-API-007 — Editar dados e trocar a rota principal
 
-**Dados de entrada:** RC1 de RP-A para RP-B Rota Integrada; id de complementar inexistente.
+**Dados de entrada:** em RC1:
+
+1. `{"nome": "Van 2 - Bairro Novo Manhã"}`.
+2. `{"horario_saida": "05:50", "ponto_conexao": "Praça do Bairro Novo"}`.
+3. `{"rota_principal_id": RP2}` e depois `{"rota_principal_id": RP1}`.
+4. `{}`.
+5. `{"ativo": false}`.
+6. `PATCH /rotas-complementares/999999` com `{"nome": "Qualquer"}`.
 
 **Passos**
 
-1. Conferir RP-B ativa e registrar o vínculo anterior de RC1.
-2. Editar a referência de RC1 para RP-B; pedir à IA para conferir complementar e relacionamentos atuais de RP-A/RP-B (PC-05).
-3. Tentar a mesma edição com identificador de complementar inexistente, mantendo corpo válido.
+1. Enviar cada edição e conferir em `GET /rotas-complementares/{id}`.
+2. Conferir `GET /rotas-complementares?rota_principal_id={RP2}` depois da troca.
 
 **Resultado esperado**
 
-- RC1 passa a apontar para RP-B com o mesmo id, horário e conexão corretos (AC-04).
-- Não manter a associação atual antiga nem modificar nome/horários/status das principais. Preservação de histórico anterior é conferida no CT-013.
-- Id inexistente é recusado conforme contrato, sem criação por engano. Não fixar código de detalhe ainda não publicado.
+- Itens 1 a 3: HTTP `200` “Operação realizada com sucesso”, no **mesmo id** (AC-04, AC-07). Só os campos enviados mudam; a troca de principal aparece no filtro por `rota_principal_id`.
+- Item 4: HTTP `422` “Informe ao menos um campo para atualização.”
+- Item 5: HTTP `422` “Campo não permitido.”; a complementar continua ativa.
+- Item 6: HTTP `404` “Rota complementar não encontrada.”
 
 **Resultado obtido**
 
@@ -218,21 +247,23 @@ São **13 casos essenciais**. CT-001 verifica vazio antes da massa e repete depo
 
 ---
 
-### CT-HU012-API-008 — Inativar sem agendamento futuro e manter principal ativa
+### CT-HU012-API-008 — Inativar e reativar (soft delete)
 
-**Dados de entrada:** RC1 ativa sem agenda futura; principal RP-B ativa.
+**Dados de entrada:** criar RC3 `{"nome": "Van Sítio", "horario_saida": "05:40", "ponto_conexao": "Entrada do Sítio Riacho", "rota_principal_id": RP2}`. Depois: `PATCH /rotas-complementares/{RC3}/inativar` duas vezes; `PATCH /rotas-complementares/{RC3}/reativar` duas vezes; `PATCH /rotas-complementares/999999/inativar`.
 
 **Passos**
 
-1. Pedir à IA para conferir cenário sem futuro e registrar dados/status de RC1 e RP-B (PC-05).
-2. Usar OP-INATIVAR em RC1 e reler os dois registros.
-3. Repetir no mesmo estado para caracterizar o contrato; conferir registro, vínculo e auditoria.
+1. Inativar RC3 e conferir a listagem sem filtro e com `incluir_inativos=true`.
+2. Pedir à IA para conferir que a linha continua no banco.
+3. Repetir a inativação; reativar; repetir a reativação.
+4. Ao final, deixar RC3 **inativa** para os CT-001, CT-004 e CT-010.
 
 **Resultado esperado**
 
-- Complementar mantida no banco como inativa, com mesmo id/conexão/principal; resposta “Operação realizada com sucesso” (AC-05, AC-07, RF-014).
-- Inativar complementar não inativa nem apaga sua rota principal.
-- Repetição não causa exclusão/duplicação de vínculos; idempotência versus conflito depende do contrato futuro e não deve ser copiada de outra HU.
+- Inativar e reativar: HTTP `200` “Operação realizada com sucesso”, com `data.ativo` `false` / `true` (AC-05, AC-07).
+- Inativa sai da listagem padrão e aparece com `incluir_inativos=true` (AC-09); linha mantida no banco (soft delete).
+- Repetição: HTTP `409` “Rota complementar já está inativa.” / “Rota complementar já está ativa.”, sem nova auditoria.
+- Id inexistente: HTTP `404` “Rota complementar não encontrada.”
 
 **Resultado obtido**
 
@@ -241,21 +272,19 @@ São **13 casos essenciais**. CT-001 verifica vazio antes da massa e repete depo
 
 ---
 
-### CT-HU012-API-009 — Reativar complementar com principal ativa
+### CT-HU012-API-009 — Complementar ativa protege a principal
 
-**Dados de entrada:** RC0 inativa com RP-A ativa, independente da inativação de RC1.
+**Dados de entrada:** RP2 com RC2 ativa: `PATCH /rotas-principais/{RP2}/inativar`; `PATCH /rotas-complementares/{RC2}` com `{"rota_principal_id": RP1}`; de novo `PATCH /rotas-principais/{RP2}/inativar` (RC3 inativa não conta); reativar RP2.
 
 **Passos**
 
-1. Confirmar principal ativa antes de OP-REATIVAR; registrar a complementar e logs anteriores.
-2. Reativar RC0 e pedir à IA para conferir status, dados, vínculo e auditoria na API/banco (PC-05).
-3. Repetir a reativação e registrar o tratamento de mesmo estado.
+1. Enviar as chamadas na ordem e conferir o status de RP2 depois de cada uma.
 
 **Resultado esperado**
 
-- Reativação prevista no fluxo principal/BDD devolve a mesma complementar às ativas, com confirmação de sucesso.
-- Não gerar outra linha nem alterar rota principal ou conexão. A repetição não pode duplicar vínculos.
-- Este caso segue a pré-condição explícita do BDD: principal ativa. Reativação com principal inativa permanece fora de julgamento até decisão.
+- Com RC2 ativa ligada a RP2: HTTP `409` com “Esta rota possui rotas complementares ativas vinculadas. Inative ou desvincule as rotas complementares antes de continuar.” (#208, item 5). RP2 continua ativa.
+- Depois de trocar RC2 para RP1: HTTP `200`. Uma complementar **inativa** (RC3) não impede a inativação da principal.
+- A mensagem é conferida em detalhe no CT-HU011-API-010; aqui o foco é o efeito da troca de vínculo.
 
 **Resultado obtido**
 
@@ -264,21 +293,21 @@ São **13 casos essenciais**. CT-001 verifica vazio antes da massa e repete depo
 
 ---
 
-### CT-HU012-API-010 — Auditar as quatro escritas da complementar
+### CT-HU012-API-010 — Reativar complementar com principal inativa (#208)
 
-**Dados de entrada:** Cadastro CT-002; edições CT-006/007; inativação CT-008; reativação CT-009.
+**Dados de entrada:** RC3 inativa ligada a RP2. RC2 já foi trocada para RP1 no CT-009, então RP2 não tem complementar ativa. Depois: `PATCH /rotas-principais/{RP2}/inativar`; `PATCH /rotas-complementares/{RC3}/reativar`; `PATCH /rotas-complementares/{RC3}` com `{"rota_principal_id": RP1}`; reativar RC3 de novo.
 
 **Passos**
 
-1. Pedir à IA para localizar logs pelo tipo/id real da complementar e pelo intervalo registrado (PC-05).
-2. Relacionar as escritas concluídas aos logs, diferenciando id da complementar e id da principal.
-3. Conferir que tentativas recusadas não aparecem como alterações concluídas; registrar separadamente eventual log de tentativa.
+1. Inativar RP2 e tentar reativar RC3.
+2. Trocar o vínculo de RC3 para RP1 (complementar inativa pode ser editada) e reativar.
+3. Ao final, reativar RP2.
 
 **Resultado esperado**
 
-- Cadastro, edição, inativação e reativação rastreáveis pelo executor, ação e timestamp (fluxo principal/BDD, RNF-013); AC-05 explicita ao menos inativação.
-- Troca de principal não pode tornar a operação indistinguível de edição da rota principal ou apagar a auditoria anterior.
-- Não inventar nomes de ação/entidade ou exigir estrutura de valor anterior/novo além do que for documentado; registrar ausência de rastreabilidade.
+- Reativação com RP2 inativa: HTTP `409` com a mensagem definida pelo PO: “Não é possível reativar esta rota complementar pois a rota principal vinculada está inativa.” (#208, item 6). RC3 continua inativa.
+- Troca de vínculo para RP1: HTTP `200`; reativação depois disso: HTTP `200`.
+- Registrar o texto exato: se o bloqueio acontecer com outro texto, o caso é ⚠️ (regra certa, mensagem diferente da decisão).
 
 **Resultado obtido**
 
@@ -287,21 +316,21 @@ São **13 casos essenciais**. CT-001 verifica vazio antes da massa e repete depo
 
 ---
 
-### CT-HU012-API-011 — Bloquear inativação com agendamento futuro, sem contorno
+### CT-HU012-API-011 — Auditoria das operações de escrita
 
-**Dados de entrada:** Complementar A com agenda amanhã; B sem agenda; C só com passado.
+**Dados de entrada:** operações efetivas dos CT-002 (cadastro), CT-007 (edições) e CT-008 (inativação e reativação); recusas dos CT-004 a CT-010; edição de RC1 reenviando o mesmo nome.
 
 **Passos**
 
-1. Conferir HU-013 e preparar agenda real com apoio da IA, registrando datas/fuso (PC-05). Sem agenda, marcar a parte como 🚫.
-2. Tentar inativar cada complementar e conferir também o estado das principais vinculadas.
-3. Se houver edição genérica de status, repetir a tentativa com futuro por esse caminho; se não houver, registrar não aplicável.
+1. Pedir à IA para consultar `log_auditoria` com `entidade = 'rota_complementar'` no intervalo da execução.
+2. Relacionar cada operação efetiva com um registro.
+3. Enviar a edição sem mudança e consultar de novo.
 
 **Resultado esperado**
 
-- Agenda futura impede inativar e informa agendamentos pendentes; mantém complementar e principal nos estados anteriores (AC-06, FA-001).
-- Sem futuro e somente passado não devem ser tratados como agenda futura. Código/texto literal da recusa ainda dependem do contrato.
-- Não gerar log de inativação concluída para operação recusada nem contornar pelo campo de status; erro 500/503 não prova regra de negócio.
+- Um registro por cadastro, edição, inativação e reativação efetiva, com o `id` do administrador A, a ação, o id da complementar e a data/hora (AC-05, RNF-013).
+- A troca de rota principal aparece no valor anterior e no novo da edição.
+- Nenhum registro para operação recusada nem para edição que não muda nada.
 
 **Resultado obtido**
 
@@ -310,21 +339,20 @@ São **13 casos essenciais**. CT-001 verifica vazio antes da massa e repete depo
 
 ---
 
-### CT-HU012-API-012 — Negar gestão a aluno, representante e sem autenticação
+### CT-HU012-API-012 — Acesso sem privilégio
 
-**Dados de entrada:** Três credenciais em cadastro/edição/inativação/reativação.
+**Dados de entrada:** as sete rotas da HU com o token do aluno, com o token do representante e sem o cabeçalho `Authorization`. Corpo válido e alvo RC1 nas escritas.
 
 **Passos**
 
-1. Enviar operações administrativas com alvo existente e corpo válido usando aluno e representante ativo.
-2. Repetir sem cabeçalho, cookie ou parâmetro de token; pedir à IA para conferir registros e ausência de log de sucesso (PC-05).
-3. Caracterizar política de leitura somente quando publicada, diferenciando consulta de opções de agendamento da gestão.
+1. Enviar cada chamada com cada credencial.
+2. Pedir à IA para conferir que RC1 não mudou e que não há auditoria nova.
 
 **Resultado esperado**
 
-- Escritas por aluno/representante recebem `403 Forbidden` (RN-006 e BDD); sem autenticação deve ser recusado, seguindo o mecanismo compartilhado atual de 401.
-- Nenhuma complementar criada/editada/inativada/reativada indevidamente, nem mudança nas rotas principais.
-- Permissão de leitura pública/restrita não foi definida para esta API: não impor uma regra de GET por analogia. Login indisponível de representante bloqueia só essa variação.
+- Aluno e representante: HTTP `403` em todas as rotas, inclusive as de leitura e `/opcoes` (RN-006).
+- Sem token: HTTP `401`.
+- Nenhuma complementar criada, editada ou com status alterado.
 
 **Resultado obtido**
 
@@ -333,23 +361,21 @@ São **13 casos essenciais**. CT-001 verifica vazio antes da massa e repete depo
 
 ---
 
-### CT-HU012-API-013 — Preservar histórico e caracterizar seleção no agendamento
+### CT-HU012-API-013 — Agendamentos futuros e complementar inativa no agendamento
 
-**Dados de entrada:** Complementar com passado, conexão e principal registradas; outra inativa; HU-013 e operação diária.
+**Dados de entrada:** complementar A com aluno agendado para amanhã; complementar B só com agendamento passado; complementar C inativa.
 
 **Passos**
 
-1. Pedir à IA para registrar ids e vínculos históricos reais de alocação/relatórios (PC-05), sem agenda futura.
-2. Inativar a complementar e conferir manutenção do registro e das referências históricas; se trocar principal/conexão, conferir também integridade dos registros anteriores.
-3. Com HU-013 e decisão disponíveis, conferir seleção de inativa e tentativa de vínculo novo pelo endpoint real.
-4. Registrar separadamente a cobertura de uso diário/veículo de RN-010, dependente das HUs operacionais, sem criar campo fixo de veículo no cadastro.
+1. Conferir se a HU-013 (agendamento) está na `develop`. Se não estiver, marcar 🚫 e não preparar agenda pelo banco.
+2. Com a agenda disponível: tentar inativar A e B.
+3. Consultar as opções de agendamento do aluno (ida e volta) e procurar a complementar C.
 
 **Resultado esperado**
 
-- Histórico não apagado nem rompido pela inativação/edição (RN-004), nem alteração indevida da principal.
-- Exclusão de inativa das opções de agendamento é inferência explicitamente pendente no BDD; sem decisão, não emitir aprovação/reprovação dessa parte.
-- RN-010 inclui rota, horário, conexão e veículo da operação diária. Esta suíte cobre os dados cadastrais; prova de veículo programado/troca por dia depende das HUs operacionais, não é declarada concluída.
-- Sem histórico/agenda/decisão, bloquear a parte dependente e manter as verificações independentes registradas.
+- Complementar A: HTTP `409` “Esta rota possui agendamentos pendentes e não pode ser inativada no momento.”; continua ativa (AC-06, FA-001).
+- Complementar B: HTTP `200`.
+- Complementar C não aparece nas opções de novo agendamento; agendamentos antigos continuam no histórico (#208, item 8; RN-004).
 
 **Resultado obtido**
 
@@ -360,20 +386,22 @@ São **13 casos essenciais**. CT-001 verifica vazio antes da massa e repete depo
 
 | Critério | Cenário BDD | Casos |
 | --- | --- | --- |
-| AC-01 / AC-09 — listagem e inativas | Visualiza ativas com horário/conexão/principal; visualiza inativas | CT-001, CT-008, CT-009; padrão inicial pendente |
-| AC-02 — cadastro | Cadastra nova complementar | CT-002 |
-| AC-03 / FA-002 — principal ativa | Não oferece principal inativa | CT-004; seleção na UI |
-| AC-04 — edição | Edita nome, saída, conexão e principal | CT-006, CT-007 |
-| AC-05 / RF-014 — soft delete | Inativa e mantém registro no banco | CT-008 |
-| Fluxo principal — reativação | Reativa complementar com principal ativa | CT-009 |
-| AC-06 / FA-001 — agenda futura | Bloqueia inativação com agendamento futuro | CT-011 — HU-013 |
-| AC-07 — mensagem da inativação | Inativa com sucesso e atualiza lista | CT-008; demais sucessos pelo fluxo/BDD |
-| AC-08 / FA-003 — obrigatórios | Cadastro/edição sem obrigatório | CT-003; nome também por AC-02/BDD |
-| RF-028 — horário e conexão | Dados do cadastro/edição; formato/fronteiras como complemento técnico | CT-005 — relação temporal com principal pendente |
-| RNF-013 / fluxo — auditoria | Log de cada escrita | CT-010 |
-| RN-004 — histórico | Preserva alocações/relatórios antigos | CT-013 — histórico real |
-| RN-010 — uso operacional | Inativa fora do agendamento (inferência BDD) | CT-013 — HU-013/decisão; uso diário/veículo fora do recorte |
-| RN-006 — exclusividade administrativa | API nega gestão a aluno/representante | CT-012 |
+| AC-01 — listagem de ativas | Visualiza as complementares ativas com horário e ponto de conexão | CT-001 |
+| AC-02 — cadastro ligado a uma principal | Cadastra rota complementar | CT-002 |
+| AC-03 / FA-002 — só principal ativa | Não oferece rota principal inativa | CT-001 (`/opcoes`), CT-006 |
+| AC-04 — edição | Edita dados e rota principal vinculada | CT-007 |
+| AC-05 — inativar e reativar (soft delete) | Inativa; reativa; registro permanece | CT-008 |
+| AC-06 / FA-001 — agendamentos futuros | Bloqueia inativação com alunos agendados | CT-013 (depende da HU-013) |
+| AC-07 — mensagem de sucesso | Cenários de sucesso | CT-002, CT-007, CT-008 |
+| AC-08 / FA-003 — obrigatórios | Cadastro sem obrigatório; edição esvaziando | CT-005 |
+| AC-09 — inativas | Mostrar inativos | CT-001, CT-008 |
+| AC-05 / RNF-013 — auditoria | Registra cada operação de escrita | CT-011 |
+| #208 item 1 — nome único | — (decisão do PO) | CT-004 |
+| #208 item 2 e 4 — saída, retorno e ponto únicos | — (decisão do PO) | CT-003, CT-005 |
+| #208 item 5 — principal com complementar ativa | — (decisão do PO) | CT-009 |
+| #208 item 6 — reativar com principal inativa | — (decisão do PO) | CT-010 |
+| #208 item 8 / RN-004 — inativa fora do agendamento | Inativa fora do agendamento do aluno | CT-013 (depende da HU-013) |
+| RN-006 — exclusividade administrativa | API nega gestão a outros perfis | CT-012 |
 
 ## Defeitos encontrados
 
@@ -383,24 +411,14 @@ São **13 casos essenciais**. CT-001 verifica vazio antes da massa e repete depo
 
 ## Observações gerais
 
-- Fontes: [requisitos, seção 7.4.2](../../../../../docs/requisitos.md), [HU-012.feature](../../../../../bdd/features/epico-03/HU-012.feature) e [README do BDD](../../../../../bdd/features/epico-03/README.md), nesta ordem de autoridade. Nenhum requisito/BDD foi alterado.
-- **Riscos mapeados no código** — base `5554bc90`, conferida em 24/10/2026:
-  - [backend/main.py](../../../../../backend/main.py) não registra router de gestão de rotas principais/complementares; contrato, DTO e service da HU-012 não foram identificados em `backend/src`. Operações e campos do plano são lógicos; métodos/URLs reais só podem ser preenchidos quando a implementação existir.
-  - [cadastros.tsx](../../../../../frontend/src/app/%28administrador%29/cadastros.tsx) aponta o card para `/(administrador)/cadastros/rotas-complementares`, sem tela correspondente identificada em `frontend/src`. Link planejado não prova acesso ou autorização.
-  - A HU-011 também está em planejamento. Massa de principal criada diretamente pela IA permite testar a complementar depois de sua entrega, mas não aprova o cadastro da principal.
-  - Riscos preventivos: trocar id de complementar pelo de principal, enviar principal padrão diferente da escolhida, manter vínculo atual antigo, gravar parcialmente edição inválida, não validar principal que ficou inativa e apagar histórico/entidades compartilhadas. Sem código de negócio entregue, não há falhas confirmadas dessas hipóteses.
-  - Integração futura precisa retornar estado realmente persistido e erro visível; sucesso local/mocks não pode substituir API. Não foi identificado service de complementares com esse comportamento nesta base.
-- Técnicas: **partição de equivalência** (principal ativa/inativa/inexistente; perfis; obrigatórios), **valor-limite** (zero/uma seleção e formato de hora), **transição de estado** (ativa → inativa → ativa, com principal ativa) e **tabela de decisão** (sem agenda / passado / futuro; principal ativa/inativa ao gravar). Prioridade em integridade e identidade do vínculo, atomicidade e histórico.
-- **Dúvidas/divergências para alinhamento**:
-  - AC-01/fluxo incluem ativas e inativas; BDD usa ativas inicialmente e chave Mostrar inativos. Visibilidade dos dois estados é requisito; mecanismo e padrão inicial estão abertos.
-  - AC-05 menciona log da inativação; fluxo/BDD preveem as quatro escritas. Cobrir todas se apoia nesses trechos; nomes de ação, entidade e códigos dependem do contrato futuro.
-  - AC-02/fluxo usam “horários” e “pontos de conexão” no plural; BDD adota **um horário de saída e uma conexão**. Confirmar se a entrega terá retorno ou múltiplas conexões, sem acrescentá-los como obrigatórios nesta suíte.
-  - AC-08 não lista nome, mas AC-02 e BDD o exigem: os casos incluem nome obrigatório e registram a diferença de redação.
-  - Tipo da conexão (texto, ponto cadastrado ou outra estrutura) e validações de pertencimento precisam ser confirmados antes de definir payload ou exigir referência a um ponto de parada.
-  - Nome único, limite de texto, janela temporal para transferência e relação entre saída complementar/principal não estão definidos; não inventar bloqueios.
-  - Inativar principal com complementares ativas: cascata, bloqueio ou manutenção do vínculo não definidos. Reativar complementar com principal inativa também aguarda decisão; não inferir isso da regra de criar vínculo novo.
-  - Complementar inativa fora do agendamento é comportamento **inferido a confirmar** no BDD. Sem decisão, não emitir aprovação/reprovação dessa parte.
-- RN-010 envolve rota, horário, conexão e veículo **da operação diária**, permitindo troca do veículo conforme programação. A suíte cobre cadastro/vínculo; uso pelo aluno, programação e troca de veículo exigem HUs operacionais próprias. Não declarar RN-010 integralmente validada com este CRUD.
-- Nenhum teste executado, nenhuma stack iniciada, nenhum defeito reproduzido. Os 13 casos desta camada estão pendentes. Na execução, marcar 🚫 nas partes sem implementação/contrato/dependência/decisão, preservando as verificações independentes. Não trocar esperado para adaptar ao código.
-- Ocultar credenciais e dados pessoais nas evidências. Preparo direto de inativo não aprova a operação de inativação; retorno genérico de erro não comprova bloqueio por agendamento.
-- Suíte complementar: [UI-HU-012.md](../ui/UI-HU-012.md). Seletores e cancelamento visual ficam na UI; validação final e persistência aqui.
+- Referências: [HU-012, seção 7.4.2](../../../../../docs/requisitos.md), [cenários BDD](../../../../../bdd/features/epico-03/HU-012.feature), [decisões do PO (#208)](https://github.com/GOUOCE/GOUCE-app/issues/208) e [suíte de UI](../ui/UI-HU-012.md).
+- **O que mudou desde o planejamento anterior** (base `5554bc90`, 24/10/2026): o PO respondeu a #208 (nome único entre todas as rotas, um ponto e um par saída/retorno, bloqueio da reativação com principal inativa, mensagens definidas); os requisitos passaram a exigir o nome e a chave “Mostrar inativos”; e o backend de rotas complementares entrou na `develop`.
+- **Riscos mapeados no código** (backend em `backend/src/modulos/rotas/`, `develop` `7c3d72d8`), que orientaram a escolha dos casos:
+  - a tabela `rota_complementar` e o DTO têm **só `horario_saida`**; não há horário de retorno, que o item 4 da #208 exige. Como o DTO recusa campos extras, o `horario_retorno` deve voltar 422 (CT-003);
+  - o nome é conferido só entre **complementares**; uma complementar com o nome de uma principal é aceita (CT-004);
+  - a mensagem da reativação bloqueada é “A rota principal vinculada está inativa. Reative-a ou altere o vínculo antes.”, diferente do texto do PO (CT-010);
+  - a checagem de agendamentos futuros sempre responde “sem agendamentos” até a HU-013 existir (`TODO(HU-013)`): o bloqueio do AC-06 nunca dispara hoje (CT-013);
+  - a edição de complementar **inativa** permite trocar a principal, o que é o caminho para reativá-la quando a principal original está inativa (CT-010).
+- O ponto de conexão é texto livre (até 150 caracteres), sem ligação com os pontos de parada da HU-007.
+- Ao final, deixar RP1 e RP2 ativas, RP0 inativa e RC1, RC2 e RC3 ativas, sem apagar registros.
+- Ocultar senhas e tokens nas evidências.
