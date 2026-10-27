@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 4 | 3 | 0 | 6 |
+| 🔄 Em andamento | 13 | 5 | 3 | 0 | 5 |
 
 ## Pré-condições
 
@@ -52,7 +52,7 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU010-UI-007 | Editar nome e telefone sem trocar o motorista | Edição válida e colisão de telefone | Sucesso persistido; duplicidade bloqueada sem alteração parcial | ✅ PASSOU | A edição válida do Francisco foi gravada no mesmo registro (id 1) e o Antônio ficou intacto. A tentativa de colisão com o telefone do Antônio foi relatada como barrada, mas não aparece no log. |
-| CT-HU010-UI-008 | Cancelar inativação sem alterar dados nem auditoria | Abrir modal e cancelar | Ativo mantido e nenhum novo log | ⏳ PENDENTE | Não executado. |
+| CT-HU010-UI-008 | Cancelar inativação sem alterar dados nem auditoria | Abrir modal e cancelar | Ativo mantido e nenhum novo log | ✅ PASSOU | Cancelar a inativação manteve o Francisco ativo, sem chamada de inativação e sem registro novo na auditoria. |
 | CT-HU010-UI-009 | Inativar motorista sem alocação futura | Confirmar inativação sem alocação real | Sucesso e soft delete; código tende a 503 ou bloqueio fictício | ⏳ PENDENTE | Falha esperada no código; não executado. |
 | CT-HU010-UI-010 | Mostrar inativos e reativar com persistência | Ligar chave; cancelar e confirmar reativação | Inativo identificado; reativação persistida; erro visível se falhar | ⏳ PENDENTE | Não executado. |
 
@@ -276,8 +276,10 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Antes:** `Francisco Alves QA` (id 1) ativo; última linha de auditoria de motoristas: `INATIVAR` do id 2 (id 35 do log).
+- O testador tocou na lixeira, viu o pop-up de confirmação e cancelou; relatou que o motorista continuou ativo na lista.
+- **Depois (conferido):** o log da API não registrou nenhum `PATCH .../inativar` para ele, o motorista continua ativo no banco e a auditoria segue no mesmo id 35. Nenhuma confirmação de sucesso de inativação.
+- Status: ✅ Passou.
 
 ---
 
