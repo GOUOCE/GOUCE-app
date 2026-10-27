@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 1 | 6 | 0 | 6 |
+| 🔄 Em andamento | 13 | 1 | 7 | 0 | 5 |
 
 ## Pré-condições
 
@@ -52,7 +52,7 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU009-UI-008 | Editar placa e capacidades; impedir colisão | `QXD2E45` → `QXD2E46`, 40/15; tentar `ABC1D23` | Sucesso persistido; só ônibus escolhido muda; duplicidade bloqueada | ⏳ PENDENTE | Não executado. |
+| CT-HU009-UI-008 | Editar placa e capacidades; impedir colisão | `QXD2E45` → `QXD2E46`, 40/15; tentar `ABC1D23` | Sucesso persistido; só ônibus escolhido muda; duplicidade bloqueada | ❌ FALHOU | A edição funciona e persiste (`QXD2E45` virou `QXD2E46`, 40/15, sem criar segundo cadastro) e as placas duplicadas foram barradas pelo servidor (`409`), mas a mensagem de sucesso é a barra preta fora do padrão (“Ônibus alterado com sucesso”). |
 | CT-HU009-UI-009 | Cancelar e confirmar inativação do ônibus correto | Ônibus real sem alocação futura; outro veículo para comparação | Cancelar não muda; confirmar inativa só o selecionado e preserva o registro | ⏳ PENDENTE | Não executado. |
 | CT-HU009-UI-010 | Mostrar inativos e reativar | `XYZ9K87` inativo; cancelar e confirmar reativação | Inativo identificado; só selecionado reativado; persistência e erro visível se falhar | ⏳ PENDENTE | Não executado. |
 
@@ -299,8 +299,12 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Edição válida:** o lápis de `QXD2E45` abriu o ônibus correto. Salvando `QXD2E46`, 40 assentos e 15 em pé, o log registrou `PATCH /onibus/QXD2E45` com `200`. No banco, a placa antiga não existe mais e `QXD2E46` está ativa com 40/15; os demais ônibus não mudaram (`ABC1D23` continua 44/20) e não nasceu um segundo cadastro. Houve ainda um segundo `PATCH /onibus/QXD2E46` com `200` (novo salvamento do mesmo registro, que terminou com os valores esperados).
+- **Duplicidade:** as tentativas de mudar para `ABC1D23` e `ABC-1D23` geraram dois `PATCH /onibus/QXD2E46` com `409 Conflict`; o servidor barrou e `QXD2E46` manteve 40/15.
+- **Reabrir, recarregar e sair sem salvar:** relatados como corretos pelo testador; não há marca no log para isso.
+- **Defeito:** a mensagem de sucesso da edição é a barra preta “Ônibus alterado com sucesso” (`frota/editar.tsx`), fora do padrão de pop-up e diferente do requisito (“Operação realizada com sucesso”, AC-07); mesmo defeito registrado no CT-002.
+- A edição não gerou registro de auditoria (já aberto na API, [#230](https://github.com/GOUOCE/GOUCE-app/issues/230)).
+- Status: ❌ Falhou apenas pela mensagem; as regras de dados (AC-03, AC-04) foram atendidas.
 
 ---
 
