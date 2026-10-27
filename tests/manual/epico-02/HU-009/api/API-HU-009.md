@@ -9,26 +9,26 @@
 | Camada | API |
 | Tipo de teste | Funcional manual — suíte essencial (baseada em risco) |
 | Endpoints | `GET /onibus`, `GET /onibus/{placa}`, `POST /onibus`, `PATCH /onibus/{placa}`, `PATCH /onibus/{placa}/inativar` e `PATCH /onibus/{placa}/ativar` (alias `/reativar`). A URL usa a **placa**, não um id numérico. POST/PATCH de dados usam campos Form; enviar `multipart/form-data` com `placa`, `assentos`, `capacidade_em_pe` e, opcionalmente, `apelido` e `foto`. A rota também adapta JSON para Form. |
-| Ambiente | A preencher — URL, branch e commit testados; tipo do banco e migrations aplicadas |
+| Ambiente | Docker local isolado (execução inicial em `http://127.0.0.1:60909`; falhas reproduzidas em `http://localhost:8001`); branch `feature/testes-api-hu-009`; código `5e7301a0`; PostgreSQL 15 e migrations até 75; workaround de bootstrap documentado na issue existente #215 |
 | Total de casos | 13 |
-| Última execução | Não realizada |
-| Testador | Cauan Ricardo — execução com apoio de IA (Claude Code) |
+| Última execução | 2026-10-25  |
+| Testador | Execução via terminal com apoio do Codex; validação de Cauan Ricardo pendente |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 13 | 0 | 0 | 0 | 0 | 13 |
+| ❌ Executada com falhas e bloqueios | 13 | 5 | 7 | 0 | 1 | 0 |
 
 ## Pré-condições
 
 | ID | Descrição |
 | --- | --- |
-| PC-01 | Na execução futura, API e banco disponíveis em **stack isolada com banco limpo**. Usar Postman, Insomnia ou Swagger em `/docs`. Este documento é planejamento: nenhuma chamada de teste foi realizada. |
+| PC-01 | Ambiente exclusivo com banco inicialmente vazio. Inicialização padrão falhou na migration 69; evidência preservada e issue existente #215 vinculada. Para prosseguir, aplicada antecipação de faculdade.sigla apenas no banco descartável e depois migrations originais até 75. Ver evidências. |
 | PC-02 | Token do **administrador A**, obtido em `POST /auth/login` com o administrador do seed. Anotar o id do executor e os horários das operações para conferir a auditoria. |
 | PC-03 | Tokens de **aluno ativo** e **representante**. Se não for possível autenticar o representante, registrar o motivo e marcar apenas essa parte como 🚫; não substituir pelo token do administrador. |
-| PC-04 | Acesso de leitura às tabelas `onibus` e `log_auditoria`. Preparar `XYZ9K87` inativo, com 32 assentos e 0 em pé, sem alocações futuras. Se a rota de inativar falhar, a massa pode ser preparada no banco local; registrar esse preparo e não considerá-lo evidência de que a inativação funciona. |
-| PC-05 | **Apoio da IA (Claude Code)** para executar as chamadas e conferir na API/banco os dados, o tipo efetivo de `log_auditoria.entidade_id` e os logs, com validação de Cauan Ricardo. Registrar as evidências sem tokens nem credenciais. |
+| PC-04 | Leitura das tabelas onibus e log_auditoria. XYZ9K87 foi criado e colocado inativo pela própria API (PATCH de dados com ativo=false), registrando esse passo como preparo e não como aprovação da auditoria. Nenhuma inserção de massa por SQL. |
+| PC-05 | **Apoio da IA (Codex nesta execução)** para executar as chamadas e conferir na API/banco os dados, o tipo efetivo de `log_auditoria.entidade_id` e os logs, com validação de Cauan Ricardo. Registrar as evidências sem tokens nem credenciais. |
 | PC-06 | O CT-002 cria `QXD2E45`; o CT-003 cria `ABC1D23`, `DEF2G34` e `ABC1234`; o CT-008 troca `QXD2E45` por `QXD2E46`; o CT-009 usa `ABC1D23`. Nas variações de obrigatórios e números, usar uma placa válida **ainda inexistente por tentativa**, como `OBR1A01`, `OBR1A02` e `LIM1A01`, `LIM1A02`. Se um inválido for aceito, anotar a falha e usar outra placa na próxima tentativa para não mascarar a validação com um 409. |
 | PC-07 | Para o CT-013, escalação de rotas das HU-016/017 e dados históricos disponíveis na versão testada. Identificar os endpoints reais em `/docs` e os relacionamentos no banco; não criar rotas fictícias. Sem a funcionalidade, marcar a parte dependente como 🚫 na execução. |
 
@@ -38,19 +38,19 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU009-API-001 | Listar e consultar com filtros e diferentes perfis | Banco vazio; sem filtro; `ativo=true/false`; placa inexistente; sem token/aluno/representante | 200; administrador consulta ativos e inativos; demais recebem só ativos; 404 na consulta indisponível | ⏳ PENDENTE | Não executado. |
-| CT-HU009-API-002 | Cadastrar ônibus válido e confirmar o contrato JSON/Form | `QXD2E45`, 44 assentos, 20 em pé; sem foto; `OCR1234` via JSON | 201; sucesso; ativo e persistido; foto opcional; JSON adaptado | ⏳ PENDENTE | Não executado. |
-| CT-HU009-API-003 | Normalizar placas válidas | `abc1d23`, `DEF-2G34`, `ABC-1234` | 201; maiúsculas e sem hífen; formatos Mercosul e antigo aceitos | ⏳ PENDENTE | Não executado. |
-| CT-HU009-API-004 | Bloquear placa duplicada no cadastro e na edição | Placa ativa/inativa; variações de caixa, hífen e espaços; edição para placa em uso | 409 “Este veículo já está registrado.”; dados preservados | ⏳ PENDENTE | Não executado. |
-| CT-HU009-API-005 | Exigir campos no cadastro e impedir esvaziamento na edição | Omitir cada obrigatório no POST; vazio/espaços no POST e PATCH | 422 com campo e motivo; não gravar; omitir campo no PATCH mantém o valor atual | ⏳ PENDENTE | Não executado. |
-| CT-HU009-API-006 | Rejeitar formato inválido de placa | Letras, números, tamanho incorreto, posição inválida e símbolo | 422 “Placa inválida.”; nada criado ou alterado | ⏳ PENDENTE | Não executado. |
-| CT-HU009-API-007 | Validar limites e tipo das capacidades | Assentos −1/0/1; em pé −1/0/1; texto e decimal; POST e PATCH | Assentos inteiro ≥ 1; em pé inteiro ≥ 0; inválidos 422; limites válidos persistidos | ⏳ PENDENTE | Não executado. |
-| CT-HU009-API-008 | Editar dados e a placa usada como chave | Edição parcial; `QXD2E45` → `QXD2E46`; `ZZZ9Z99` inexistente | 200; dados corretos na nova URL; antiga 404; inexistente 404 | ⏳ PENDENTE | Não executado. |
-| CT-HU009-API-009 | Inativar e reativar sem apagar | `ABC1D23` sem alocação futura; repetir operações; placa inexistente | 200 nas transições; registro mantido; repetição 409 no contrato atual; inexistente 404 | ⏳ PENDENTE | Risco de auditoria depende do schema real. |
-| CT-HU009-API-010 | Auditar todas as escritas | Cadastro, edição, inativação e reativação dos casos anteriores | Um log por escrita efetiva, com usuário, ação e timestamp | ⏳ PENDENTE | Não executado. |
-| CT-HU009-API-011 | Impedir desvio das regras pelo campo `ativo` | `PATCH /onibus/{placa}` com `ativo=false/true` | Campo recusado/ignorado ou mudança sujeita às mesmas regras e auditoria | ⏳ PENDENTE | Não executado. |
-| CT-HU009-API-012 | Negar escrita a perfis sem privilégio | Aluno, representante e sem autenticação; rotas de escrita, inclusive foto | 403 para aluno/representante; 401 sem autenticação; nada gravado | ⏳ PENDENTE | Não executado. |
-| CT-HU009-API-013 | Bloqueio por alocação futura, seleção e histórico | Ônibus com alocação futura; outro só com histórico; ônibus inativo | 409 e ativo na futura; sem bloqueio indevido no passado; inativo fora de nova escala; histórico intacto | ⏳ PENDENTE | HU-016/017 e histórico: marcar 🚫 se indisponíveis. |
+| CT-HU009-API-001 | Listar e consultar com filtros e diferentes perfis | Banco vazio; sem filtro; `ativo=true/false`; placa inexistente; sem token/aluno/representante | 200; administrador consulta ativos e inativos; demais recebem só ativos; 404 na consulta indisponível | ✅ PASSOU | 200 nos filtros; administrador vê os dois estados; demais só ativos; inativo/inexistente 404 conforme perfil. |
+| CT-HU009-API-002 | Cadastrar ônibus válido e confirmar o contrato JSON/Form | `QXD2E45`, 44 assentos, 20 em pé; sem foto; `OCR1234` via JSON | 201; sucesso; ativo e persistido; foto opcional; JSON adaptado | ✅ PASSOU | 201 em Form e JSON; valores, ativo, apelido e ausência de foto persistidos. |
+| CT-HU009-API-003 | Normalizar placas válidas | `abc1d23`, `DEF-2G34`, `ABC-1234` | 201; maiúsculas e sem hífen; formatos Mercosul e antigo aceitos | ❌ FALHOU | Hífen permanece no banco; consulta pela forma sem hífen retorna 404. Minúsculas/espaços normalizados. |
+| CT-HU009-API-004 | Bloquear placa duplicada no cadastro e na edição | Placa ativa/inativa; variações de caixa, hífen e espaços; edição para placa em uso | 409 “Este veículo já está registrado.”; dados preservados | ❌ FALHOU | Placa com hífen aceita no POST (201) e PATCH (200), inclusive contra inativo; dados alterados indevidamente. |
+| CT-HU009-API-005 | Exigir campos no cadastro e impedir esvaziamento na edição | Omitir cada obrigatório no POST; vazio/espaços no POST e PATCH | 422 com campo e motivo; não gravar; omitir campo no PATCH mantém o valor atual | ❌ FALHOU | Capacidade em pé omitida/vazia cria com zero (201); outros vazios recusados, mas há mensagens genéricas. |
+| CT-HU009-API-006 | Rejeitar formato inválido de placa | Letras, números, tamanho incorreto, posição inválida e símbolo | 422 “Placa inválida.”; nada criado ou alterado | ❌ FALHOU | Sete placas inválidas criadas (201); edição inválida também aceita (200) e comprovada no banco. |
+| CT-HU009-API-007 | Validar limites e tipo das capacidades | Assentos −1/0/1; em pé −1/0/1; texto e decimal; POST e PATCH | Assentos inteiro ≥ 1; em pé inteiro ≥ 0; inválidos 422; limites válidos persistidos | ❌ FALHOU | Zero assentos aceito em POST/PATCH; negativos/decimais/texto recusados, com mensagens divergentes do requisito. |
+| CT-HU009-API-008 | Editar dados e a placa usada como chave | Edição parcial; `QXD2E45` → `QXD2E46`; `ZZZ9Z99` inexistente | 200; dados corretos na nova URL; antiga 404; inexistente 404 | ✅ PASSOU | 200 na edição e troca de chave; nova URL 200, antiga/inexistente 404; demais dados preservados. |
+| CT-HU009-API-009 | Inativar e reativar sem apagar | `ABC1D23` sem alocação futura; repetir operações; placa inexistente | 200 nas transições; registro mantido; repetição 409 no contrato atual; inexistente 404 | ✅ PASSOU | 200 nas transições; 409 nas repetições; registro mantido. Coluna de auditoria efetiva é VARCHAR, sem 500. |
+| CT-HU009-API-010 | Auditar todas as escritas | Cadastro, edição, inativação e reativação dos casos anteriores | Um log por escrita efetiva, com usuário, ação e timestamp | ❌ FALHOU | Sem logs de cadastro/edição; logs das ações próprias de inativar/ativar presentes com executor correto. |
+| CT-HU009-API-011 | Impedir desvio das regras pelo campo `ativo` | `PATCH /onibus/{placa}` com `ativo=false/true` | Campo recusado/ignorado ou mudança sujeita às mesmas regras e auditoria | ❌ FALHOU | ativo=false/true muda o estado (200) sem gerar novos logs de auditoria. |
+| CT-HU009-API-012 | Negar escrita a perfis sem privilégio | Aluno, representante e sem autenticação; rotas de escrita, inclusive foto | 403 para aluno/representante; 401 sem autenticação; nada gravado | ✅ PASSOU | 403 aluno/representante e 401 sem autenticação nas sete escritas, inclusive foto; banco sem efeitos. |
+| CT-HU009-API-013 | Bloqueio por alocação futura, seleção e histórico | Ônibus com alocação futura; outro só com histórico; ônibus inativo | 409 e ativo na futura; sem bloqueio indevido no passado; inativo fora de nova escala; histórico intacto | 🚫 BLOQUEADO | HU-016/017 e contratos de alocação/histórico ausentes; não foi fabricada massa para simular dependência. |
 
 ## Detalhamento dos casos
 
@@ -74,8 +74,8 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- 200 nos filtros; administrador vê os dois estados; demais só ativos; inativo/inexistente 404 conforme perfil.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -98,8 +98,8 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- 201 em Form e JSON; valores, ativo, apelido e ausência de foto persistidos.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -120,8 +120,9 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Hífen permanece no banco; consulta pela forma sem hífen retorna 404. Minúsculas/espaços normalizados.
+- Defeitos: [BUG-HU009-API-001](issues/BUG-HU009-API-001-placa-com-hifen-permite-duplicidade.md) ([#225](https://github.com/GOUOCE/GOUCE-app/issues/225)), [BUG-HU009-API-001](issues/BUG-HU009-API-001-placa-com-hifen-permite-duplicidade.md) ([#225](https://github.com/GOUOCE/GOUCE-app/issues/225))
+- Status: ❌ FALHOU.
 
 ---
 
@@ -144,8 +145,9 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Placa com hífen aceita no POST (201) e PATCH (200), inclusive contra inativo; dados alterados indevidamente.
+- Defeitos: [BUG-HU009-API-001](issues/BUG-HU009-API-001-placa-com-hifen-permite-duplicidade.md) ([#225](https://github.com/GOUOCE/GOUCE-app/issues/225)), [BUG-HU009-API-001](issues/BUG-HU009-API-001-placa-com-hifen-permite-duplicidade.md) ([#225](https://github.com/GOUOCE/GOUCE-app/issues/225))
+- Status: ❌ FALHOU.
 
 ---
 
@@ -169,8 +171,9 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Capacidade em pé omitida/vazia cria com zero (201); outros vazios recusados, mas há mensagens genéricas.
+- Defeitos: [BUG-HU009-API-002](issues/BUG-HU009-API-002-capacidade-em-pe-ausente-aceita.md) ([#226](https://github.com/GOUOCE/GOUCE-app/issues/226)), [BUG-HU009-API-002](issues/BUG-HU009-API-002-capacidade-em-pe-ausente-aceita.md) ([#226](https://github.com/GOUOCE/GOUCE-app/issues/226)), [BUG-HU009-API-005](issues/BUG-HU009-API-005-validacao-capacidades-mensagem-generica.md) ([#229](https://github.com/GOUOCE/GOUCE-app/issues/229)), [BUG-HU009-API-005](issues/BUG-HU009-API-005-validacao-capacidades-mensagem-generica.md) ([#229](https://github.com/GOUOCE/GOUCE-app/issues/229))
+- Status: ❌ FALHOU.
 
 ---
 
@@ -191,8 +194,9 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Sete placas inválidas criadas (201); edição inválida também aceita (200) e comprovada no banco.
+- Defeitos: [BUG-HU009-API-003](issues/BUG-HU009-API-003-placas-fora-do-formato-aceitas.md) ([#227](https://github.com/GOUOCE/GOUCE-app/issues/227)), [BUG-HU009-API-003](issues/BUG-HU009-API-003-placas-fora-do-formato-aceitas.md) ([#227](https://github.com/GOUOCE/GOUCE-app/issues/227))
+- Status: ❌ FALHOU.
 
 ---
 
@@ -220,8 +224,9 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Zero assentos aceito em POST/PATCH; negativos/decimais/texto recusados, com mensagens divergentes do requisito.
+- Defeitos: [BUG-HU009-API-004](issues/BUG-HU009-API-004-onibus-com-zero-assentos.md) ([#228](https://github.com/GOUOCE/GOUCE-app/issues/228)), [BUG-HU009-API-004](issues/BUG-HU009-API-004-onibus-com-zero-assentos.md) ([#228](https://github.com/GOUOCE/GOUCE-app/issues/228)), [BUG-HU009-API-005](issues/BUG-HU009-API-005-validacao-capacidades-mensagem-generica.md) ([#229](https://github.com/GOUOCE/GOUCE-app/issues/229)), [BUG-HU009-API-005](issues/BUG-HU009-API-005-validacao-capacidades-mensagem-generica.md) ([#229](https://github.com/GOUOCE/GOUCE-app/issues/229))
+- Status: ❌ FALHOU.
 
 ---
 
@@ -246,8 +251,8 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- 200 na edição e troca de chave; nova URL 200, antiga/inexistente 404; demais dados preservados.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -273,8 +278,8 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- 200 nas transições; 409 nas repetições; registro mantido. Coluna de auditoria efetiva é VARCHAR, sem 500.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -296,8 +301,9 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Sem logs de cadastro/edição; logs das ações próprias de inativar/ativar presentes com executor correto.
+- Defeitos: [BUG-HU009-API-006](issues/BUG-HU009-API-006-escritas-de-onibus-sem-auditoria.md) ([#230](https://github.com/GOUOCE/GOUCE-app/issues/230)), [BUG-HU009-API-006](issues/BUG-HU009-API-006-escritas-de-onibus-sem-auditoria.md) ([#230](https://github.com/GOUOCE/GOUCE-app/issues/230))
+- Status: ❌ FALHOU.
 
 ---
 
@@ -319,8 +325,9 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- ativo=false/true muda o estado (200) sem gerar novos logs de auditoria.
+- Defeitos: [BUG-HU009-API-006](issues/BUG-HU009-API-006-escritas-de-onibus-sem-auditoria.md) ([#230](https://github.com/GOUOCE/GOUCE-app/issues/230)), [BUG-HU009-API-006](issues/BUG-HU009-API-006-escritas-de-onibus-sem-auditoria.md) ([#230](https://github.com/GOUOCE/GOUCE-app/issues/230))
+- Status: ❌ FALHOU.
 
 ---
 
@@ -342,8 +349,8 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- 403 aluno/representante e 401 sem autenticação nas sete escritas, inclusive foto; banco sem efeitos.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -368,8 +375,9 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- HU-016/017 e contratos de alocação/histórico ausentes; não foi fabricada massa para simular dependência.
+- 🚫 HU-016/017 e contratos reais de rotas/alocacoes/relatorios ausentes no OpenAPI. Nao simulada alocacao nem criado historico ficticio; subverificacoes de bloqueio futuro, selecao e historico nao executadas.
+- Status: 🚫 BLOQUEADO.
 
 ## Rastreabilidade
 
@@ -394,7 +402,13 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-003, CT-004 | Frota guarda placa com hífen e permite duplicar o mesmo veículo | [#225](https://github.com/GOUOCE/GOUCE-app/issues/225) |
+| CT-005 | Cadastro de ônibus aceita capacidade em pé ausente ou vazia e grava zero | [#226](https://github.com/GOUOCE/GOUCE-app/issues/226) |
+| CT-006 | API da frota aceita placas fora dos formatos Mercosul e antigo | [#227](https://github.com/GOUOCE/GOUCE-app/issues/227) |
+| CT-007 | API da frota permite cadastrar e editar ônibus com zero assentos | [#228](https://github.com/GOUOCE/GOUCE-app/issues/228) |
+| CT-005, CT-007 | Validação da frota devolve “Valor inválido.” sem informar o motivo | [#229](https://github.com/GOUOCE/GOUCE-app/issues/229) |
+| CT-010, CT-011 | Cadastro, edição e PATCH de status de ônibus não registram auditoria | [#230](https://github.com/GOUOCE/GOUCE-app/issues/230) |
+| PC-01 | Banco vazio não inicia: migration 69 usa sigla antes da criação | [#215](https://github.com/GOUOCE/GOUCE-app/issues/215) |
 
 ## Observações gerais
 
@@ -410,6 +424,11 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
   - **Correção da hipótese inicial:** a assinatura HTTP usa Form, mas `OnibusValidationRoute` converte JSON em Form. Não registrar falha de integração JSON/Form sem execução e evidência (CT-002).
 - **Dúvidas/divergências para alinhamento:**
   - O requisito já define “Placa inválida.” no AC-09, enquanto o comentário do BDD diz que o texto não está definido. O README do BDD ainda menciona FA-002 só para ativos, mas o requisito atual já diz ativo ou inativo. Seguir o requisito; alinhar os comentários.
-  - A issue #185 continua aberta, sem comentários na consulta de 24/10/2026, com aprovação pendente das regras de formato, capacidades, unicidade com inativos e indisponibilidade para novas escalas. Os casos seguem a versão atual dos requisitos e não encerram essas decisões.
-  - Não há mensagem exata para capacidade inválida nem limite máximo estabelecido; não acrescentar esses requisitos. Confirmar com o time o contrato de vazio explícito no PATCH quando o parser o converte em ausência.
-- Todos os casos estão pendentes. Dependências só mudam para 🚫 quando a execução verificar a indisponibilidade; riscos estáticos não são defeitos executados. Preservar evidências de cada variação e dados históricos, sem apagar registros para fazer o teste passar.
+  - A issue #185 foi encerrada; as decisões de produto agora estão na [#207](https://github.com/GOUOCE/GOUCE-app/issues/207), aberta e sem respostas na consulta desta execução. Regras de formato, limites e inativos continuam provisórias conforme indicado nela.
+  - O requisito no commit testado já define mensagens de capacidades no AC-10. O texto planejado de “Resultado esperado” foi preservado; a comparação adicional usa a versão atual do requisito e está discriminada na issue de mensagens (#229).
+- Os status desta suíte foram atualizados pela execução de API. Bloqueios correspondem às dependências/decisões discriminadas; falhas exigem reteste após correção. Os casos de UI não foram executados.
+
+### Registro desta execução
+
+- **Reteste dos defeitos (2026-10-25):** as falhas foram reproduzidas por Cauan Ricardo (com apoio do Claude Code) em stack Docker isolada, `http://localhost:8001`, commit `5e7301a0`; a requisição, a resposta e a conferência no banco de cada uma estão na issue correspondente. Massa criada pela API; o banco só foi consultado para conferir resultados. Em banco vazio a migration 69 falha ([#215](https://github.com/GOUOCE/GOUCE-app/issues/215)); para subir o ambiente foi usada uma cópia temporária da migration 68 com a coluna `sigla`, sem alterar o repositório.
+- Resultados esperados originais preservados. Decisões de produto ainda pendentes não foram aprovadas por este teste; as divergências são relatadas contra o documento publicado.
