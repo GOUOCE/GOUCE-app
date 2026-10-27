@@ -33,9 +33,9 @@ export default function BairrosListScreen() {
     message: '',
   });
 
-  const showPopup = (config: Omit<typeof popup, 'visible'>) => {
+  const showPopup = React.useCallback((config: Omit<typeof popup, 'visible'>) => {
     setPopup({ ...config, visible: true });
-  };
+  }, []);
 
   const closePopup = () => {
     setPopup((prev) => ({ ...prev, visible: false }));
@@ -81,9 +81,7 @@ export default function BairrosListScreen() {
           showPopup({
             type: 'error',
             title: 'Inativação Bloqueada',
-            message:
-              error.message ||
-              'Este bairro não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar.',
+            message: getErrorMessage(error, 'Erro ao inativar bairro.'),
             confirmText: 'Entendido',
           });
         }
@@ -185,6 +183,10 @@ export default function BairrosListScreen() {
               .map((p) => p.nome)
               .join(', ');
             const textoPontos = pontosAtivosNomes || 'Nenhum ponto registrado';
+            const pontosInativosNomes = bairro.pontos
+              .filter((p) => p.ativo === false)
+              .map((p) => p.nome)
+              .join(', ');
 
             return (
               <View key={bairro.id} style={styles.itemRow}>
@@ -193,6 +195,11 @@ export default function BairrosListScreen() {
                   <Text variant="bodySmall" style={styles.itemSub} numberOfLines={1}>
                     {textoPontos}
                   </Text>
+                  {mostrarInativos && pontosInativosNomes !== '' && (
+                    <Text variant="bodySmall" style={styles.itemSub}>
+                      Pontos inativos: {pontosInativosNomes}
+                    </Text>
+                  )}
                 </View>
 
                 <View style={styles.actionButtons}>
