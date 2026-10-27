@@ -9,15 +9,16 @@ REGEX_NOME_PESSOA = re.compile(r"^[A-Za-zÀ-ÖØ-öø-ÿ'’\- ]+$")
 def _validar_telefone_com_digitos(valor: str) -> str:
     if not valor:
         raise ValueError("Informe um telefone válido com DDD")
-    digitos = re.sub(r"\D", "", str(valor))
+    valor_str = str(valor).strip()
+    digitos = re.sub(r"\D", "", valor_str)
     if len(digitos) < 10 or len(digitos) > 11:
         raise ValueError("Informe um telefone válido com DDD")
-    return digitos
+    return valor_str
 
 
 def _validar_nome_pessoa(valor: str) -> str:
     if not valor:
-        raise ValueError("O nome do motorista é obrigatório.")
+        raise ValueError("O motorista é obrigatório.")
     valor_str = str(valor).strip()
     if len(valor_str) < 3 or len(valor_str) > 150:
         raise ValueError("O nome deve ter entre 3 e 150 caracteres.")
