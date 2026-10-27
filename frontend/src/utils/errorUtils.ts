@@ -1,4 +1,15 @@
-import { AxiosError } from 'axios';
+const DICIONARIO_CAMPOS: Record<string, string> = {
+  assentos: 'Qtd. de Assentos',
+  capacidade_em_pe: 'Capac. Máxima em Pé',
+  placa: 'Placa',
+  nome: 'Nome',
+  email: 'E-mail',
+  telefone: 'Telefone',
+  bairro_id: 'Bairro',
+  faculdade_id: 'Instituição de Ensino',
+  horario_saida: 'Horário de Saída',
+  horario_retorno: 'Horário de Retorno',
+};
 
 /**
  * Extrai uma mensagem de erro padronizada, clara e específica de uma resposta da API (FastAPI)
@@ -19,7 +30,7 @@ export function getErrorMessage(error: any, defaultMessage: string = 'Erro ao pr
   }
 
   if (data?.error?.code === 'EMAIL_ALREADY_REGISTERED') {
-    return 'Este e-mail já está cadastrado na plataforma GOUOCE.';
+    return 'Este e-mail já está cadastrado na plataforma GOUCE.';
   }
 
   // 1. Caso { detail: { erros: [...] } }
@@ -29,19 +40,38 @@ export function getErrorMessage(error: any, defaultMessage: string = 'Erro ao pr
 
   // 2. Caso { error: { details: [...] } }
   if (data?.error?.details && Array.isArray(data.error.details)) {
-    return data.error.details
-      .map((d: any) => (typeof d === 'string' ? d : d.message || (d.field ? `${d.field}: ${d.message}` : JSON.stringify(d))))
-      .join('\n');
+    const mensagens = data.error.details
+      .map((d: any) => {
+        if (typeof d === 'string') return d;
+        const nomeCampoRaw = d.field || '';
+        const rotuloAmigavel = DICIONARIO_CAMPOS[nomeCampoRaw] || nomeCampoRaw;
+        const msg = d.message || '';
+        if (rotuloAmigavel && msg) {
+          return `${rotuloAmigavel}: ${msg}`;
+        }
+        return msg || rotuloAmigavel || JSON.stringify(d);
+      })
+      .filter(Boolean);
+
+    // Evita duplicatas mantendo a ordem
+    return Array.from(new Set(mensagens)).join('\n');
   }
 
   // 3. Caso FastAPI 422 { detail: [ { loc: [...], msg: "..." } ] }
   if (Array.isArray(data?.detail)) {
-    return data.detail
+    const mensagens = data.detail
       .map((err: any) => {
-        const field = Array.isArray(err.loc) ? err.loc.slice(-1)[0] : '';
-        return field ? `${field}: ${err.msg}` : err.msg || JSON.stringify(err);
+        const rawField = Array.isArray(err.loc) ? err.loc.slice(-1)[0] : '';
+        const rotuloAmigavel = DICIONARIO_CAMPOS[rawField] || rawField;
+        const msg = err.msg || '';
+        if (rotuloAmigavel && msg) {
+          return `${rotuloAmigavel}: ${msg}`;
+        }
+        return msg || rotuloAmigavel || JSON.stringify(err);
       })
-      .join('\n');
+      .filter(Boolean);
+
+    return Array.from(new Set(mensagens)).join('\n');
   }
 
   // 4. Caso { detail: "..." } - Padrão FastAPI

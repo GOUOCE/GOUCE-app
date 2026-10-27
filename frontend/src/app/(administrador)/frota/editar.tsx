@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Button, Snackbar } from 'react-native-paper';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Text, TextInput, Button } from 'react-native-paper';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, X } from 'lucide-react-native';
+import { ChevronLeft } from 'lucide-react-native';
 
 import { frotaSchema, FrotaFormData } from '@/schemas/frotaSchema';
 import { frotaService } from '@/services/frotaService';
@@ -16,8 +16,6 @@ export default function EditarOnibusScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -26,6 +24,8 @@ export default function EditarOnibusScreen() {
     title: string;
     message: string;
     confirmText?: string;
+    cancelText?: string;
+    confirmColor?: string;
     onConfirm?: () => void;
   }>({
     visible: false,
@@ -41,7 +41,7 @@ export default function EditarOnibusScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const { control, handleSubmit, formState: { errors }, reset } = useForm<FrotaFormData>({
+  const { control, handleSubmit, formState: { errors, isDirty }, reset } = useForm<FrotaFormData>({
     resolver: zodResolver(frotaSchema),
     defaultValues: {
       placa: '',
@@ -50,36 +50,75 @@ export default function EditarOnibusScreen() {
     },
   });
 
-  useEffect(() => {
-    async function carregarDados() {
-      if (!id) return;
-      try {
-        const o = await frotaService.obterOnibusPorId(Number(id));
-        if (o) {
-          reset({
-            placa: o.placa,
-            assentos: o.assentos,
-            capacidadeEmPe: o.capacidade_em_pe,
+  // Recarrega os dados oficiais do banco de dados ao ganhar foco e descarta alterações não salvas ao sair
+  useFocusEffect(
+    React.useCallback(() => {
+      let isMounted = true;
+
+      async function carregarDadosOficiais() {
+        if (!id) return;
+        try {
+          const o = await frotaService.obterOnibusPorId(id);
+          if (o && isMounted) {
+            reset({
+              placa: o.placa,
+              assentos: o.assentos,
+              capacidadeEmPe: o.capacidade_em_pe,
+            });
+          }
+        } catch (err) {
+          const msg = getErrorMessage(err, 'Erro ao carregar dados do ônibus.');
+          showPopup({
+            type: 'error',
+            title: 'Erro de Conexão',
+            message: msg,
+            confirmText: 'Entendido',
           });
         }
-      } catch (err) {
-        console.warn('Erro ao carregar dados do ônibus:', err);
       }
+
+      carregarDadosOficiais();
+
+      return () => {
+        isMounted = false;
+      };
+    }, [id, reset])
+  );
+
+  const voltarParaListagem = () => {
+    closePopup();
+    router.replace('/(administrador)/frota');
+  };
+
+  const handleBack = () => {
+    if (isDirty) {
+      showPopup({
+        type: 'warning',
+        title: 'Sair desta tela?',
+        message: 'As alterações não salvas serão perdidas.',
+        confirmText: 'Sim, sair',
+        cancelText: 'Continuar aqui',
+        confirmColor: '#B00020',
+        onConfirm: voltarParaListagem,
+      });
+    } else {
+      voltarParaListagem();
     }
-    carregarDados();
-  }, [id, reset]);
+  };
 
   const onSubmit = async (dados: FrotaFormData) => {
     if (!id) return;
     setIsLoading(true);
     try {
-      await frotaService.atualizarOnibus(Number(id), dados.placa, Number(dados.assentos), Number(dados.capacidadeEmPe));
+      await frotaService.atualizarOnibus(id, dados.placa, Number(dados.assentos), Number(dados.capacidadeEmPe));
       setIsLoading(false);
-      setSnackbarMessage('Ônibus alterado com sucesso');
-      setSnackbarVisivel(true);
-      setTimeout(() => {
-        router.replace('/(administrador)/frota');
-      }, 1200);
+      showPopup({
+        type: 'success',
+        title: 'Operação realizada com sucesso',
+        message: 'As alterações do veículo foram salvas.',
+        confirmText: 'OK',
+        onConfirm: voltarParaListagem,
+      });
     } catch (error: any) {
       setIsLoading(false);
       const status = error.response?.status;
@@ -101,7 +140,7 @@ export default function EditarOnibusScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={handleBack}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Editar Ônibus</Text>
@@ -114,6 +153,8 @@ export default function EditarOnibusScreen() {
         title={popup.title}
         message={popup.message}
         confirmText={popup.confirmText}
+        cancelText={popup.cancelText}
+        confirmColor={popup.confirmColor}
         onConfirm={popup.onConfirm}
         onDismiss={closePopup}
       />
@@ -130,6 +171,7 @@ export default function EditarOnibusScreen() {
                 mode="outlined"
                 placeholder="ex: OCR-1234"
                 value={value}
+                maxLength={8}
                 onChangeText={(t) => onChange(t.toUpperCase())}
                 autoCapitalize="characters"
                 error={!!errors.placa}
@@ -186,7 +228,7 @@ export default function EditarOnibusScreen() {
         {/* Botão Salvar Alterações */}
         <Button
           mode="contained"
-          onPress={handleSubmit(onSubmit)}
+          onPress={handleSubmit(onSubmit) as any}
           loading={isLoading}
           disabled={isLoading}
           style={styles.saveButton}
@@ -195,20 +237,6 @@ export default function EditarOnibusScreen() {
           Salvar alterações
         </Button>
       </ScrollView>
-
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
     </View>
   );
 }
@@ -259,11 +287,5 @@ const styles = StyleSheet.create({
   },
   buttonContent: {
     height: 55,
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });

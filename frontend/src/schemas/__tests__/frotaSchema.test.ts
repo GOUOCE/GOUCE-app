@@ -4,6 +4,72 @@ jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock')
 );
 
+jest.mock('../../api/api', () => ({
+  api: {
+    get: jest.fn((...args: any[]) => {
+      const url = args[0];
+      if (url === '/onibus/OCR5521') {
+        return Promise.resolve({
+          data: {
+            id: 2,
+            placa_onibus: 'OCR5521',
+            qtd_assentos: 32,
+            capacidade_maxima: 6,
+            ativo: false,
+          },
+        });
+      }
+      if (url === '/onibus/OCR8890') {
+        return Promise.resolve({
+          data: {
+            id: 3,
+            placa_onibus: 'OCR8890',
+            qtd_assentos: 42,
+            capacidade_maxima: 10,
+            ativo: true,
+          },
+        });
+      }
+      return Promise.resolve({
+        data: [
+          { id: 1, placa_onibus: 'OCR1234', qtd_assentos: 42, capacidade_maxima: 10, ativo: true },
+          { id: 2, placa_onibus: 'OCR5521', qtd_assentos: 32, capacidade_maxima: 6, ativo: true },
+        ],
+      });
+    }),
+    post: jest.fn((...args: any[]) => {
+      const url = args[0];
+      const body = args[1];
+      if (url === '/onibus' && (body?.placa === 'OCR-1234' || body?.placa === 'OCR1234')) {
+        const error: any = new Error('Este veículo já está registrado.');
+        (error as any).response = { status: 409 };
+        return Promise.reject(error);
+      }
+      return Promise.resolve({
+        data: {
+          id: 100,
+          placa_onibus: body?.placa || 'NEW1234',
+          qtd_assentos: body?.assentos || 40,
+          capacidade_maxima: body?.capacidade_em_pe || 10,
+          ativo: true,
+        },
+      });
+    }),
+    patch: jest.fn((...args: any[]) => {
+      const url = args[0];
+      if (url === '/onibus/1/inativar' || url === '/onibus/OCR1234/inativar') {
+        const error: any = new Error('Este veículo possui alocações pendentes e não pode ser inativado no momento.');
+        (error as any).response = {
+          status: 409,
+          data: { detail: 'Este veículo possui alocações pendentes e não pode ser inativado no momento.' },
+        };
+        return Promise.reject(error);
+      }
+      return Promise.resolve({ data: { success: true } });
+    }),
+  },
+}));
+
 import { frotaSchema } from '../frotaSchema';
 import { frotaService } from '../../services/frotaService';
 
@@ -84,19 +150,19 @@ describe('Suíte de Testes BDD / Unitários - HU-009 (Gerenciamento da Frota / �
   describe('FA-001 & AC-06 - Bloqueio de Inativação de Ônibus Escalado em Rota Futura', () => {
     it('deve bloquear a inativação se o ônibus tiver alocações pendentes para dias futuros', async () => {
       await expect(
-        frotaService.inativarOnibus(1)
+        frotaService.inativarOnibus('OCR-1234')
       ).rejects.toThrow('Este veículo possui alocações pendentes e não pode ser inativado no momento.');
     });
 
     it('deve permitir inativar um ônibus sem alocações pendentes', async () => {
-      await frotaService.inativarOnibus(2);
-      const onibus = await frotaService.obterOnibusPorId(2);
+      await frotaService.inativarOnibus('OCR5521');
+      const onibus = await frotaService.obterOnibusPorId('OCR5521');
       expect(onibus?.ativo).toBe(false);
     });
 
     it('deve permitir reativar um ônibus inativo', async () => {
-      await frotaService.reativarOnibus(3);
-      const onibus = await frotaService.obterOnibusPorId(3);
+      await frotaService.reativarOnibus('OCR8890');
+      const onibus = await frotaService.obterOnibusPorId('OCR8890');
       expect(onibus?.ativo).toBe(true);
     });
   });

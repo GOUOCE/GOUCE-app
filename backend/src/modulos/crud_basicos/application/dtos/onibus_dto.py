@@ -6,8 +6,8 @@ class CriarOnibusDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     placa: str = Field(..., alias="placa_onibus", min_length=1, max_length=20)
-    assentos: int = Field(..., alias="qtd_assentos", ge=0)
-    capacidade_em_pe: int = Field(..., alias="capacidade_maxima", ge=0)
+    assentos: int = Field(..., alias="qtd_assentos", ge=0, le=2147483647)
+    capacidade_em_pe: int = Field(..., alias="capacidade_maxima", ge=0, le=2147483647)
     apelido: Optional[str] = Field(default=None, alias="apelido_onibus", max_length=100)
     id_foto_onibus: Optional[str] = Field(default=None, alias="foto_onibus", max_length=36)
 
@@ -37,6 +37,19 @@ class CriarOnibusDTO(BaseModel):
             dados["id_foto_onibus"] = dados["foto_onibus"]
         return dados
 
+    @field_validator("assentos", "capacidade_em_pe", mode="before")
+    @classmethod
+    def validar_limite_inteiro_criar(cls, valor: object) -> object:
+        if valor is None:
+            return valor
+        try:
+            v_num = int(valor)
+            if v_num > 2147483647:
+                raise ValueError("O valor informado excede o limite máximo permitido.")
+            return v_num
+        except (ValueError, TypeError):
+            raise ValueError("Informe um valor numérico válido dentro do limite permitido.")
+
     @field_validator("placa", mode="before")
     @classmethod
     def validar_placa(cls, valor: object) -> str:
@@ -60,8 +73,8 @@ class AtualizarOnibusDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     placa: Optional[str] = Field(default=None, alias="placa_onibus", max_length=20)
-    assentos: Optional[int] = Field(default=None, alias="qtd_assentos", ge=0)
-    capacidade_em_pe: Optional[int] = Field(default=None, alias="capacidade_maxima", ge=0)
+    assentos: Optional[int] = Field(default=None, alias="qtd_assentos", ge=0, le=2147483647)
+    capacidade_em_pe: Optional[int] = Field(default=None, alias="capacidade_maxima", ge=0, le=2147483647)
     apelido: Optional[str] = Field(default=None, alias="apelido_onibus", max_length=100)
     ativo: Optional[bool] = None
     id_foto_onibus: Optional[str] = Field(default=None, alias="foto_onibus", max_length=36)
@@ -91,6 +104,19 @@ class AtualizarOnibusDTO(BaseModel):
         if "id_foto_onibus" not in dados and "foto_onibus" in dados:
             dados["id_foto_onibus"] = dados["foto_onibus"]
         return dados
+
+    @field_validator("assentos", "capacidade_em_pe", mode="before")
+    @classmethod
+    def validar_limite_inteiro_atualizar(cls, valor: object) -> object:
+        if valor is None:
+            return valor
+        try:
+            v_num = int(valor)
+            if v_num > 2147483647:
+                raise ValueError("O valor informado excede o limite máximo permitido.")
+            return v_num
+        except (ValueError, TypeError):
+            raise ValueError("Informe um valor numérico válido dentro do limite permitido.")
 
     @field_validator("placa", mode="before")
     @classmethod
