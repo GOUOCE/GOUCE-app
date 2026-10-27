@@ -4,6 +4,7 @@
   "backend/tests/test_aprovar_aluno_validade.py::AprovarAlunoValidadeTest::test_somar_meses_ajusta_o_fim_do_mes",
   "backend/tests/test_bairros_crud.py::BairrosApiHttpTest::test_api_fluxo_completo_e_criterios_de_aceite",
   "backend/tests/test_bairros_crud.py::BairrosCrudUnitTest::test_criterio_2_e_1_criar_e_listar_com_pontos",
+  "backend/tests/test_bairros_crud.py::BairrosCrudUnitTest::test_criterio_3_mesmo_ponto_em_bairros_diferentes_e_permitido",
   "backend/tests/test_bairros_crud.py::BairrosCrudUnitTest::test_criterio_3_unicidade_bairro_mensagem_exata",
   "backend/tests/test_bairros_crud.py::BairrosCrudUnitTest::test_criterio_3_unicidade_bloqueia_mesmo_se_inativo",
   "backend/tests/test_bairros_crud.py::BairrosCrudUnitTest::test_criterio_3_unicidade_ponto_de_parada_mensagem_exata",
