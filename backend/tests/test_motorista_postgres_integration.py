@@ -39,6 +39,10 @@ if INTEGRATION_DATABASE_URL:
     os.environ["DATABASE_URL"] = INTEGRATION_DATABASE_URL
     os.environ.setdefault("SECRET_KEY_JWT", "hu010-integration-only-secret")
 
+    from src.modulos.motoristas.application.use_cases.gerenciar_motoristas_use_case import (
+        GerenciarMotoristasUseCase,
+        MotoristaValidationError,
+    )
     from src.modulos.motoristas.infrastructure.repositories.motorista_repository import (
         MotoristaTelefoneEmUsoError,
         MotoristaRepository,
@@ -186,6 +190,29 @@ class MotoristaPostgreSQLIntegrationTest(unittest.TestCase):
         self.repository.inativar(primeiro["id"], executor_id)
         with self.assertRaises(MotoristaTelefoneEmUsoError):
             self.repository.criar("Terceiro", "(85) 99999-0000")
+
+    def test_telefone_invalido_nao_grava_e_telefone_antigo_nao_bloqueia_nome(self):
+        use_case = GerenciarMotoristasUseCase(self.repository)
+        antigo = self._criar("Antigo", "123")
+
+        for telefone in ("123", "998112233", "889981122334", "(88) abcdef"):
+            with self.subTest(telefone=telefone):
+                with self.assertRaises(MotoristaValidationError):
+                    use_case.criar(f"{self.prefix} Recusado", telefone)
+                with self.assertRaises(MotoristaValidationError):
+                    use_case.atualizar(antigo["id"], telefone=telefone)
+
+        recusados = self.repository.listar(nome=f"{self.prefix} Recusado")
+        self.assertEqual(recusados, [])
+
+        editado = use_case.atualizar(antigo["id"], nome=f"{self.prefix} Novo Nome")
+        self.assertEqual(editado["nome"], f"{self.prefix} Novo Nome")
+        self.assertEqual(editado["telefone"], "123")
+
+        valido = use_case.criar(f"{self.prefix} Valido", "(88) 99811-2233")
+        self.created_ids.add(valido["id"])
+        with self.assertRaises(MotoristaTelefoneEmUsoError):
+            use_case.criar(f"{self.prefix} Duplicado", "88998112233")
 
     def test_edicao_permite_proprio_telefone_e_rejeita_outro(self):
         primeiro = self._criar("Primeiro", "85911112222")

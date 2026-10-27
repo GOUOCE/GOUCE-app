@@ -1,6 +1,10 @@
 import os
 import unittest
 
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
 os.environ.setdefault(
     "DATABASE_URL",
     "postgresql://test:test@localhost:5432/test",
@@ -9,6 +13,7 @@ os.environ.setdefault(
 from src.modulos.motoristas.application.use_cases.gerenciar_motoristas_use_case import (
     GerenciarMotoristasUseCase,
     MotoristaComAlocacoesPendentesError,
+    MotoristaValidationError,
 )
 from src.modulos.motoristas.infrastructure.repositories.motorista_repository import (
     MotoristaRepository,
@@ -17,6 +22,7 @@ from src.modulos.motoristas.infrastructure.repositories.motorista_repository imp
 from src.modulos.motoristas.model.entities.motorista import MotoristaORM
 from src.modulos.usuarios.model.entities.usuario import UsuarioORM
 from src.shared.infrastructure.audit_model import LogAuditoriaORM
+from src.shared.infrastructure.db import Base
 from src.shared.security.lgpd_encryption import hash_telefone
 
 
@@ -364,3 +370,109 @@ class InativacaoComAlocacoesFuturasTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MotoristaTelefoneSQLiteTest(unittest.TestCase):
+    """Valida telefone, hash e persistência com um SQLite real em memória."""
+
+    def setUp(self):
+        self.engine = create_engine(
+            "sqlite://",
+            poolclass=StaticPool,
+            connect_args={"check_same_thread": False},
+        )
+        Base.metadata.create_all(
+            self.engine,
+            tables=[MotoristaORM.__table__, LogAuditoriaORM.__table__],
+        )
+        self.session = sessionmaker(bind=self.engine)()
+        self.repository = MotoristaRepository(self.session)
+        self.use_case = GerenciarMotoristasUseCase(self.repository)
+
+    def tearDown(self):
+        self.session.close()
+        self.engine.dispose()
+
+    def _contar(self, tabela):
+        return self.session.execute(text(f"SELECT COUNT(*) FROM {tabela}")).scalar()
+
+    def test_formas_com_e_sem_mascara_geram_o_mesmo_hash(self):
+        self.assertEqual(
+            hash_telefone("(88) 99811-2233"),
+            hash_telefone("88998112233"),
+        )
+
+        criado = self.use_case.criar("Francisco Alves", "(88) 99811-2233")
+        linha = self.session.execute(
+            text("SELECT telefone_hash FROM motorista WHERE id = :id"),
+            {"id": criado["id"]},
+        ).scalar()
+
+        self.assertEqual(linha, hash_telefone("88998112233"))
+
+    def test_telefone_com_e_sem_mascara_continua_sendo_duplicado(self):
+        self.use_case.criar("Francisco Alves", "(88) 99811-2233")
+
+        for telefone in ("88998112233", "88 99811-2233", "(88) 99811-2233"):
+            with self.subTest(telefone=telefone):
+                with self.assertRaises(MotoristaTelefoneEmUsoError):
+                    self.use_case.criar("Francisco Alves Filho", telefone)
+
+        outro = self.use_case.criar("Antônio Lima", "(88) 99700-4455")
+        with self.assertRaises(MotoristaTelefoneEmUsoError):
+            self.use_case.atualizar(outro["id"], telefone="88998112233")
+        self.assertEqual(self._contar("motorista"), 2)
+
+    def test_telefone_e_gravado_como_digitado_e_criptografado(self):
+        criado = self.use_case.criar("Francisco Alves", "(88) 99811-2233")
+
+        bruto = self.session.execute(
+            text("SELECT telefone FROM motorista WHERE id = :id"),
+            {"id": criado["id"]},
+        ).scalar()
+        self.assertNotIn("99811", bruto)
+        self.assertEqual(
+            self.repository.buscar(criado["id"])["telefone"],
+            "(88) 99811-2233",
+        )
+
+        editado = self.use_case.atualizar(criado["id"], telefone="8834125566")
+        self.assertEqual(editado["telefone"], "8834125566")
+
+    def test_telefone_recusado_nao_grava_nem_comita(self):
+        existente = self.use_case.criar("Francisco Alves", "(88) 99811-2233")
+        commits = []
+        original_commit = self.session.commit
+        self.session.commit = lambda: commits.append(1) or original_commit()
+
+        for telefone in ("123", "998112233", "(88) abcdef", "+55 88 99811-2233"):
+            with self.subTest(telefone=telefone):
+                with self.assertRaises(MotoristaValidationError):
+                    self.use_case.criar("Antônio Lima", telefone)
+                with self.assertRaises(MotoristaValidationError):
+                    self.use_case.atualizar(existente["id"], telefone=telefone)
+
+        self.assertEqual(commits, [])
+        self.assertEqual(self._contar("motorista"), 1)
+        self.assertEqual(self._contar("log_auditoria"), 0)
+        self.assertEqual(
+            self.repository.buscar(existente["id"])["telefone"],
+            "(88) 99811-2233",
+        )
+
+    def test_editar_so_o_nome_nao_falha_com_telefone_antigo_invalido(self):
+        legado = MotoristaORM(
+            nome_completo="Maria Antiga",
+            telefone="123",
+            telefone_hash=hash_telefone("123"),
+            ativo=True,
+        )
+        self.session.add(legado)
+        self.session.commit()
+
+        editado = self.use_case.atualizar(legado.id, nome="Maria Atual")
+
+        self.assertEqual(editado["nome"], "Maria Atual")
+        self.assertEqual(editado["telefone"], "123")
+        with self.assertRaises(MotoristaValidationError):
+            self.use_case.atualizar(legado.id, telefone="123")

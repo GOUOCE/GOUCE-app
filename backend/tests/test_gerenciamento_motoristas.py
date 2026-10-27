@@ -16,6 +16,10 @@ from src.modulos.motoristas.application.use_cases.gerenciar_motoristas_use_case 
 from src.modulos.motoristas.infrastructure.repositories.motorista_repository import (
     MotoristaTelefoneEmUsoError,
 )
+from tests.test_motorista_telefone_validator import (
+    TELEFONES_INVALIDOS,
+    TELEFONES_VALIDOS,
+)
 
 
 class FakeRepository:
@@ -140,14 +144,26 @@ class GerenciarMotoristasUseCaseTest(unittest.TestCase):
 
         self.assertEqual(self.repository.criar_chamadas, [])
 
-    def test_criar_rejeita_telefone_sem_digitos(self):
-        with self.assertRaisesRegex(
-            MotoristaValidationError,
-            "Telefone deve conter ao menos um dígito",
-        ):
-            self.use_case.criar("Maria da Silva", "abc")
+    def test_criar_rejeita_telefone_malformado_sem_chamar_o_repository(self):
+        for telefone in TELEFONES_INVALIDOS:
+            if not telefone.strip():
+                continue
+            with self.subTest(telefone=telefone):
+                with self.assertRaises(MotoristaValidationError) as contexto:
+                    self.use_case.criar("Maria da Silva", telefone)
+                self.assertEqual(contexto.exception.field, "telefone")
+                self.assertEqual(
+                    str(contexto.exception),
+                    "Informe um telefone válido com DDD.",
+                )
 
         self.assertEqual(self.repository.criar_chamadas, [])
+
+    def test_criar_aceita_telefones_validos_como_digitados(self):
+        for telefone in TELEFONES_VALIDOS:
+            with self.subTest(telefone=telefone):
+                resultado = self.use_case.criar("Maria da Silva", telefone)
+                self.assertEqual(resultado["telefone"], telefone)
 
     def test_criar_rejeita_tipos_nao_textuais(self):
         with self.assertRaises(MotoristaValidationError):
@@ -249,14 +265,28 @@ class GerenciarMotoristasUseCaseTest(unittest.TestCase):
 
         self.assertEqual(self.repository.atualizar_chamadas, [])
 
-    def test_atualizar_rejeita_telefone_sem_digitos(self):
-        with self.assertRaisesRegex(
-            MotoristaValidationError,
-            "Telefone deve conter ao menos um dígito",
-        ):
-            self.use_case.atualizar(1, telefone="abc")
+    def test_atualizar_rejeita_telefone_malformado_sem_chamar_o_repository(self):
+        for telefone in TELEFONES_INVALIDOS:
+            if not telefone.strip():
+                continue
+            with self.subTest(telefone=telefone):
+                with self.assertRaises(MotoristaValidationError) as contexto:
+                    self.use_case.atualizar(1, telefone=telefone)
+                self.assertEqual(contexto.exception.field, "telefone")
+                self.assertEqual(
+                    str(contexto.exception),
+                    "Informe um telefone válido com DDD.",
+                )
 
         self.assertEqual(self.repository.atualizar_chamadas, [])
+
+    def test_atualizar_so_o_nome_nao_valida_o_telefone_antigo(self):
+        self.repository.motoristas[1]["telefone"] = "123"
+
+        resultado = self.use_case.atualizar(1, nome="Maria Souza")
+
+        self.assertEqual(resultado["nome"], "Maria Souza")
+        self.assertEqual(self.repository.atualizar_chamadas, [(1, "Maria Souza", None)])
 
     def test_atualizar_parcialmente_nome_e_telefone(self):
         resultado = self.use_case.atualizar(

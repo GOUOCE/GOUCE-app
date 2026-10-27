@@ -3,7 +3,9 @@
 from src.modulos.motoristas.infrastructure.repositories.motorista_repository import (
     MotoristaRepository,
 )
-from src.shared.security.lgpd_encryption import normalizar_telefone
+from src.modulos.motoristas.application.validators.telefone_validator import (
+    validar_telefone_br,
+)
 
 
 class MotoristaValidationError(ValueError):
@@ -138,12 +140,10 @@ class GerenciarMotoristasUseCase:
 
     @staticmethod
     def _validar_telefone(telefone: str) -> str:
-        if not normalizar_telefone(telefone):
-            raise MotoristaValidationError(
-                "telefone",
-                "Telefone deve conter ao menos um dígito.",
-            )
-        return telefone
+        try:
+            return validar_telefone_br(telefone)
+        except ValueError as error:
+            raise MotoristaValidationError("telefone", str(error)) from error
 
     @staticmethod
     def _validar_id(valor: int, campo: str) -> None:

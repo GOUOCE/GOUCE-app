@@ -21,6 +21,7 @@ from src.modulos.motoristas.infrastructure.repositories.motorista_repository imp
 from src.modulos.motoristas.interface.http import motorista_routes
 from src.shared.auth.dependencies import get_current_user
 from src.shared.enums.cargo_enum import CargoEnum
+from tests.test_motorista_telefone_validator import TELEFONES_INVALIDOS
 
 
 class FakeMotoristaUseCase:
@@ -459,55 +460,113 @@ class MotoristaRoutesTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(self.use_case.criar_chamadas, [])
 
-    async def test_cadastro_com_telefone_sem_digitos_retorna_422(self):
-        response = await asgi_request(
-            self.app,
-            "POST",
-            "/motoristas",
-            {"nome": "Ana Lima", "telefone": "abc"},
-        )
+    async def test_cadastro_com_telefone_malformado_retorna_422(self):
+        invalidos = [t for t in TELEFONES_INVALIDOS if t.strip()]
+        for telefone in invalidos:
+            with self.subTest(telefone=telefone):
+                response = await asgi_request(
+                    self.app,
+                    "POST",
+                    "/motoristas",
+                    {"nome": "Ana Lima", "telefone": telefone},
+                )
 
-        self.assertEqual(response.status_code, 422)
-        self.assert_error_response(
-            self,
-            response.json(),
-            "REQUEST_VALIDATION_ERROR",
-        )
-        self.assertEqual(
-            response.json()["error"]["details"],
-            [
-                {
-                    "field": "telefone",
-                    "message": "Telefone deve conter ao menos um dígito.",
-                }
-            ],
-        )
+                self.assertEqual(response.status_code, 422)
+                self.assert_error_response(
+                    self,
+                    response.json(),
+                    "REQUEST_VALIDATION_ERROR",
+                )
+                self.assertEqual(
+                    response.json()["error"]["details"],
+                    [
+                        {
+                            "field": "telefone",
+                            "message": "Informe um telefone válido com DDD.",
+                        }
+                    ],
+                )
+
         self.assertEqual(self.use_case.criar_chamadas, [])
+        listagem = await asgi_request(self.app, "GET", "/motoristas")
+        self.assertEqual([m["id"] for m in listagem.json()], [1])
 
-    async def test_edicao_com_telefone_sem_digitos_retorna_422(self):
-        response = await asgi_request(
-            self.app,
-            "PATCH",
-            "/motoristas/1",
-            {"telefone": "abc"},
-        )
+    async def test_edicao_com_telefone_malformado_retorna_422(self):
+        invalidos = [t for t in TELEFONES_INVALIDOS if t.strip()]
+        for telefone in invalidos:
+            with self.subTest(telefone=telefone):
+                response = await asgi_request(
+                    self.app,
+                    "PATCH",
+                    "/motoristas/1",
+                    {"telefone": telefone},
+                )
 
-        self.assertEqual(response.status_code, 422)
-        self.assert_error_response(
-            self,
-            response.json(),
-            "REQUEST_VALIDATION_ERROR",
-        )
-        self.assertEqual(
-            response.json()["error"]["details"],
-            [
-                {
-                    "field": "telefone",
-                    "message": "Telefone deve conter ao menos um dígito.",
-                }
-            ],
-        )
+                self.assertEqual(response.status_code, 422)
+                self.assert_error_response(
+                    self,
+                    response.json(),
+                    "REQUEST_VALIDATION_ERROR",
+                )
+                self.assertEqual(
+                    response.json()["error"]["details"],
+                    [
+                        {
+                            "field": "telefone",
+                            "message": "Informe um telefone válido com DDD.",
+                        }
+                    ],
+                )
+
         self.assertEqual(self.use_case.atualizar_chamadas, [])
+        detalhe = await asgi_request(self.app, "GET", "/motoristas/1")
+        self.assertEqual(detalhe.json()["telefone"], "85999990000")
+
+    async def test_cadastro_e_edicao_com_telefone_vazio_ou_nulo_dizem_obrigatorio(self):
+        obrigatorio = [
+            {"field": "telefone", "message": "Telefone é obrigatório."}
+        ]
+        for telefone in ("", "   ", None):
+            with self.subTest(metodo="POST", telefone=telefone):
+                response = await asgi_request(
+                    self.app,
+                    "POST",
+                    "/motoristas",
+                    {"nome": "Ana Lima", "telefone": telefone},
+                )
+                self.assertEqual(response.status_code, 422)
+                self.assertEqual(response.json()["error"]["details"], obrigatorio)
+        for telefone in ("", "   "):
+            with self.subTest(metodo="PATCH", telefone=telefone):
+                response = await asgi_request(
+                    self.app,
+                    "PATCH",
+                    "/motoristas/1",
+                    {"telefone": telefone},
+                )
+                self.assertEqual(response.status_code, 422)
+                self.assertEqual(response.json()["error"]["details"], obrigatorio)
+
+        self.assertEqual(self.use_case.criar_chamadas, [])
+        self.assertEqual(self.use_case.atualizar_chamadas, [])
+
+    async def test_cadastro_e_edicao_com_telefone_valido_chegam_ao_use_case(self):
+        for telefone in ("(88) 99811-2233", "88998112233", "(88) 3412-5566"):
+            with self.subTest(telefone=telefone):
+                criado = await asgi_request(
+                    self.app,
+                    "POST",
+                    "/motoristas",
+                    {"nome": "Ana Lima", "telefone": telefone},
+                )
+                self.assertEqual(criado.status_code, 201)
+                editado = await asgi_request(
+                    self.app,
+                    "PATCH",
+                    "/motoristas/1",
+                    {"telefone": telefone},
+                )
+                self.assertEqual(editado.status_code, 200)
 
     async def test_id_invalido_retorna_422_padronizado(self):
         response = await asgi_request(self.app, "GET", "/motoristas/invalido")

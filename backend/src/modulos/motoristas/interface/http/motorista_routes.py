@@ -19,6 +19,9 @@ from src.modulos.motoristas.application.use_cases.gerenciar_motoristas_use_case 
     MotoristaNaoEncontradoError,
     MotoristaValidationError,
 )
+from src.modulos.motoristas.application.validators.telefone_validator import (
+    MENSAGEM_TELEFONE_INVALIDO,
+)
 from src.modulos.motoristas.infrastructure.repositories.motorista_repository import (
     MotoristaRepository,
     MotoristaTelefoneEmUsoError,
@@ -65,7 +68,7 @@ def _mensagem_campo_motorista(error: dict, field: str | None) -> str | None:
     if error_type == "string_type":
         return f"{rotulo} deve ser um texto válido."
     if error_type == "value_error" and field == "telefone":
-        return "Telefone deve conter ao menos um dígito."
+        return MENSAGEM_TELEFONE_INVALIDO
     return None
 
 
