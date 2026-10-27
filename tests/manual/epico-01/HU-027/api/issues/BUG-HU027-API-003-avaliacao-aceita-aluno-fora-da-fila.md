@@ -5,6 +5,7 @@
 | **Tipo** | Bug funcional / regra de negócio |
 | **Severidade** | 🟠 Alta |
 | **Ambiente** | Branch `feature/testes-api-hu-027-hu-031` — Docker local isolado, `http://localhost:8001`, commit `4bf26d55` |
+| **Issue** | [#315](https://github.com/GOUOCE/GOUCE-app/issues/315) |
 | **Caso relacionado** | `CT-HU027-API-007` |
 | **Documentação** | [HU-027 — Testes manuais de API](../API-HU-027.md#ct-hu027-api-007--avaliar-quem-não-está-na-fila) |
 

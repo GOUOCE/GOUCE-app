@@ -5,6 +5,7 @@
 | **Tipo** | Bug de validação / mensagem |
 | **Severidade** | 🟢 Baixa |
 | **Ambiente** | Branch `feature/testes-api-hu-027-hu-031` — Docker local isolado, `http://localhost:8001`, commit `4bf26d55` |
+| **Issue** | [#317](https://github.com/GOUOCE/GOUCE-app/issues/317) |
 | **Caso relacionado** | `CT-HU027-API-006` |
 | **Documentação** | [HU-027 — Testes manuais de API](../API-HU-027.md#ct-hu027-api-006--motivo-obrigatório-na-reprovação) |
 

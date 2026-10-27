@@ -5,6 +5,7 @@
 | **Tipo** | Bug de ambiente / migration |
 | **Severidade** | 🔴 Crítica |
 | **Ambiente** | Branch `feature/testes-api-hu-027-hu-031` — Docker local isolado, `http://localhost:8001`, commit `4bf26d55` |
+| **Issue** | [#318](https://github.com/GOUOCE/GOUCE-app/issues/318) |
 | **Caso relacionado** | `PC-01 (ambiente das suítes HU-027 e HU-031)` |
 | **Documentação** | [HU-027 — Testes manuais de API](../API-HU-027.md#observações-gerais) |
 | **Issue relacionada** | [#215](https://github.com/GOUOCE/GOUCE-app/issues/215) (problema anterior de banco vazio, já fechado) |

@@ -5,6 +5,7 @@
 | **Tipo** | Bug funcional |
 | **Severidade** | 🟡 Média |
 | **Ambiente** | Branch `feature/testes-api-hu-027-hu-031` — Docker local isolado, `http://localhost:8001`, commit `4bf26d55` |
+| **Issue** | [#313](https://github.com/GOUOCE/GOUCE-app/issues/313) |
 | **Caso relacionado** | `CT-HU027-API-004` |
 | **Documentação** | [HU-027 — Testes manuais de API](../API-HU-027.md#ct-hu027-api-004--notificar-o-aluno-da-aprovação) |
 
