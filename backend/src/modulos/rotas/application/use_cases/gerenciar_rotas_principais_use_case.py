@@ -2,8 +2,13 @@
 
 from datetime import time
 
-from src.modulos.rotas.application.dtos.rota_principal_dto import interpretar_horario
+from src.modulos.rotas.application.dtos.rota_principal_dto import (
+    contem_nul,
+    interpretar_horario,
+)
 from src.modulos.rotas.infrastructure.repositories.rota_principal_repository import (
+    MENSAGEM_ROTA_COM_COMPLEMENTARES_ATIVAS,
+    RotaComComplementaresAtivasError,
     RotaPrincipalRepository,
 )
 
@@ -73,7 +78,7 @@ class GerenciarRotasPrincipaisUseCase:
         nome: str | None = None,
     ) -> list[dict]:
         if nome is not None:
-            if not isinstance(nome, str):
+            if not isinstance(nome, str) or contem_nul(nome):
                 raise RotaPrincipalValidationError(
                     "nome", "Nome deve ser um texto válido."
                 )
@@ -164,6 +169,10 @@ class GerenciarRotasPrincipaisUseCase:
         rota = self.buscar(rota_id)
         if not rota["ativo"]:
             raise RotaPrincipalStatusInalteradoError("Rota já está inativa.")
+        if self.repository.possui_complementares_ativas(rota_id):
+            raise RotaComComplementaresAtivasError(
+                MENSAGEM_ROTA_COM_COMPLEMENTARES_ATIVAS
+            )
         if self.repository.possui_agendamentos_futuros(rota_id):
             raise RotaComAgendamentosPendentesError(MENSAGEM_ROTA_COM_AGENDAMENTOS)
         resultado = self.repository.inativar(rota_id, usuario_executor_id)
@@ -187,7 +196,7 @@ class GerenciarRotasPrincipaisUseCase:
     def _validar_nome(valor: object) -> str:
         if valor is None:
             raise RotaPrincipalValidationError("nome", "Nome da rota é obrigatório.")
-        if not isinstance(valor, str):
+        if not isinstance(valor, str) or contem_nul(valor):
             raise RotaPrincipalValidationError(
                 "nome", "Nome da rota deve ser um texto válido."
             )

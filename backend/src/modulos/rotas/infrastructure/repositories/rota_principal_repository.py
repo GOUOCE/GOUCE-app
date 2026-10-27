@@ -2,7 +2,10 @@
 
 Bairros, faculdades da ida e faculdades da volta são vínculos independentes.
 Toda escrita (criar, editar, inativar, reativar) grava o log de auditoria na
-mesma transação; qualquer falha desfaz a operação inteira.
+mesma transação; qualquer falha desfaz a operação inteira. A inativação lê a
+linha da rota com ``FOR UPDATE`` e confere as complementares ativas dentro da
+transação; criar, trocar o vínculo ou reativar uma complementar trava a mesma
+linha, então as duas operações se serializam.
 """
 
 import json
@@ -15,11 +18,21 @@ from sqlalchemy.orm import Session, selectinload
 
 from src.modulos.crud_basicos.domain.entities.bairro import BairroORM
 from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
+from src.modulos.rotas.model.entities.rota_complementar import RotaComplementarORM
 from src.modulos.rotas.model.entities.rota_principal import RotaPrincipalORM
 from src.modulos.usuarios.model.entities.usuario import UsuarioORM  # noqa: F401
 from src.shared.infrastructure.audit_model import LogAuditoriaORM
 
 ENTIDADE_AUDITORIA = "rota_principal"
+
+MENSAGEM_ROTA_COM_COMPLEMENTARES_ATIVAS = (
+    "Esta rota possui rotas complementares ativas e não pode ser inativada. "
+    "Inative ou reassocie as complementares antes."
+)
+
+
+class RotaComComplementaresAtivasError(ValueError):
+    """Impede a inativação de rota principal que tem rotas complementares ativas."""
 
 
 class RotaPrincipalNomeEmUsoError(ValueError):
@@ -244,6 +257,18 @@ class RotaPrincipalRepository:
             return bool(self._agendamentos_futuros_checker(rota_id))
         return False
 
+    def possui_complementares_ativas(self, rota_id: int) -> bool:
+        """Indica se alguma rota complementar ativa está vinculada a esta rota."""
+        return (
+            self.session.query(RotaComplementarORM.id)
+            .filter(
+                RotaComplementarORM.rota_principal_id == rota_id,
+                RotaComplementarORM.ativo.is_(True),
+            )
+            .first()
+            is not None
+        )
+
     def possui_vinculo_inativo(self, rota_id: int) -> bool:
         """Indica se algum bairro ou faculdade (ida ou volta) da rota está inativo."""
         rota = self._buscar_orm(rota_id)
@@ -270,9 +295,17 @@ class RotaPrincipalRepository:
             rota = self._buscar_orm(rota_id)
             if rota is None:
                 return None
+            if not ativo:
+                # Trava antes de decidir: o estado e as complementares lidos
+                # abaixo já refletem qualquer escrita concorrente confirmada.
+                self._ler_para_atualizar(rota_id)
             estado_anterior = bool(rota.ativo)
             if estado_anterior == ativo:
                 return self._serializar(rota)
+            if not ativo and self.possui_complementares_ativas(rota_id):
+                raise RotaComComplementaresAtivasError(
+                    MENSAGEM_ROTA_COM_COMPLEMENTARES_ATIVAS
+                )
 
             rota.ativo = ativo
             self._registrar(
@@ -319,6 +352,16 @@ class RotaPrincipalRepository:
         return (
             self._query_com_vinculos()
             .filter(RotaPrincipalORM.id == rota_id)
+            .first()
+        )
+
+    def _ler_para_atualizar(self, rota_id: int) -> RotaPrincipalORM | None:
+        """Lê a rota travando a linha até o fim da transação (atualiza a instância carregada)."""
+        return (
+            self.session.query(RotaPrincipalORM)
+            .filter(RotaPrincipalORM.id == rota_id)
+            .with_for_update()
+            .populate_existing()
             .first()
         )
 

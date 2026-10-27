@@ -16,6 +16,8 @@ from tests.rota_principal_support import (
     semear_base,
 )
 
+from datetime import time
+
 from fastapi import FastAPI
 
 from src.modulos.crud_basicos.interface.http import bairro_routes, faculdade_routes
@@ -23,6 +25,7 @@ from src.modulos.rotas.infrastructure.repositories.rota_principal_repository imp
     RotaPrincipalRepository,
 )
 from src.modulos.rotas.interface.http import rota_principal_routes
+from src.modulos.rotas.model.entities.rota_complementar import RotaComplementarORM
 from src.shared.auth.dependencies import get_current_user
 from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.infrastructure.audit_model import LogAuditoriaORM
@@ -585,6 +588,45 @@ class InativacaoEReativacaoTest(RotaPrincipalHttpTestBase):
         status, _ = await self.requisitar("PATCH", f"/rotas-principais/{rota['id']}/inativar")
 
         self.assertEqual(status, 200)
+
+
+class BloqueioPorComplementaresAtivasTest(RotaPrincipalHttpTestBase):
+    def inserir_complementar(self, rota_id, ativo=True):
+        self.session.add(
+            RotaComplementarORM(
+                rota_principal_id=rota_id, nome="Van 2 - Bairro Novo",
+                horario_saida=time(6, 0), ponto_conexao="Trevo do Bairro Novo", ativo=ativo,
+            )
+        )
+        self.session.commit()
+
+    async def test_complementar_ativa_bloqueia_a_inativacao_com_409_sem_alterar_nem_logar(self):
+        rota = await self.criar_rota()
+        self.inserir_complementar(rota["id"])
+        logs_antes = len(self.logs())
+
+        status, corpo = await self.requisitar("PATCH", f"/rotas-principais/{rota['id']}/inativar")
+
+        self.assertEqual(status, 409)
+        self.assertEqual(corpo["error"]["code"], "CONFLICT")
+        self.assertEqual(
+            corpo["error"]["message"],
+            "Esta rota possui rotas complementares ativas e não pode ser inativada. "
+            "Inative ou reassocie as complementares antes.",
+        )
+        _, depois = await self.requisitar("GET", f"/rotas-principais/{rota['id']}")
+        self.assertTrue(depois["ativo"])
+        self.assertEqual(len(self.logs()), logs_antes)
+
+    async def test_complementar_inativa_nao_impede_a_inativacao(self):
+        rota = await self.criar_rota()
+        self.inserir_complementar(rota["id"], ativo=False)
+
+        status, corpo = await self.requisitar("PATCH", f"/rotas-principais/{rota['id']}/inativar")
+
+        self.assertEqual(status, 200)
+        self.assertFalse(corpo["data"]["ativo"])
+        self.assertEqual([l.acao for l in self.logs()][-1], "INATIVAR")
 
 
 class BloqueioDeBaseVinculadaTest(RotaPrincipalHttpTestBase):
