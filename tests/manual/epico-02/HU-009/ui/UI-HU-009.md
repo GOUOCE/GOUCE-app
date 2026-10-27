@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 1 | 9 | 0 | 3 |
+| 🔄 Em andamento | 13 | 2 | 9 | 0 | 2 |
 
 ## Pré-condições
 
@@ -60,7 +60,7 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU009-UI-011 | Impedir acesso de aluno e representante | Menus e links diretos de lista/cadastro/edição | Sem menu; Acesso Negado; sem dados ou ações administrativas | ⏳ PENDENTE | Não executado. |
+| CT-HU009-UI-011 | Impedir acesso de aluno e representante | Menus e links diretos de lista/cadastro/edição | Sem menu; Acesso Negado; sem dados ou ações administrativas | ✅ PASSOU | Aluno: o testador relatou que o menu Frota não aparece e que os links diretos levam a Acesso Negado. Representante: não foi possível entrar (“Perfil incompatível”); essa parte ficou bloqueada e é registrada à parte, a pedido do testador. |
 | CT-HU009-UI-012 | Falha de conexão sem sucesso falso | Abrir lista, cadastrar, editar e mudar status com API inacessível | Mensagem clara; sem exemplos nem sucesso não persistido; recuperação consistente | ⏳ PENDENTE | Não executado. |
 | CT-HU009-UI-013 | Bloquear alocação futura, excluir inativos da seleção e preservar histórico | Alocação amanhã; só histórico passado; ônibus inativo | Bloqueio correto na futura; passado preservado; inativo fora de nova escala | ⏳ PENDENTE | HU-016/017 e histórico; marcar 🚫 se indisponíveis. |
 
@@ -387,8 +387,10 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Aluno** (`qa.hu007.aluno@teste.com`): o testador relatou que o menu **Frota** não aparece e que os links diretos `/frota`, `/frota/cadastrar` e `/frota/editar?id=2` levam a **Acesso Negado**. Não há marca no log da API que comprove ou desminta isso (a proteção é feita pelo app).
+- **Representante** (`qa.hu007.rep@teste.com`): 🚫 **bloqueado**. Escolhendo “Sou representante”, o app mostra “Perfil incompatível. Sua conta é do perfil Aluno…”. Conferido: `POST /auth/login` dessa conta devolve `role: "aluno"`, embora ela tenha os dois tipos no banco (`usuario_tipo`: 2 = aluno e 4 = representante). O app compara o perfil escolhido com esse `role` (`AuthContext.tsx`, `signIn`) e recusa. É o mesmo comportamento descrito na [#190](https://github.com/GOUOCE/GOUCE-app/issues/190), que está fechada desde 2026-10-23, mas ainda se reproduz neste ambiente (develop atualizada). Sem entrar como representante, a verificação de Frota e dos links para esse perfil não foi feita.
+- **Decisão do testador:** aprovar o caso pelo resultado do aluno e investigar o motivo do representante depois. A aprovação cobre apenas o aluno; o representante segue como pendência.
+- Status: ✅ Passou (aluno); representante 🚫 bloqueado, pendente de nova execução.
 
 ---
 
