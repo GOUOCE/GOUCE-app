@@ -128,8 +128,8 @@ export const frotaService = {
     try {
       await api.patch(`/onibus/${placaOuId}/inativar`);
     } catch (error: any) {
-      const msg = error.response?.data?.detail || error.response?.data?.message || error.message;
-      if (error.response?.status === 409 || msg) {
+      if (error.response?.status === 409 || error.response?.data?.detail || error.response?.data?.message) {
+        const msg = error.response?.data?.detail || error.response?.data?.message || error.message;
         throw new Error(msg || 'Este veículo possui alocações pendentes e não pode ser inativado no momento.');
       }
       throw error;
