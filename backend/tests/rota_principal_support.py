@@ -15,6 +15,7 @@ from sqlalchemy.orm import sessionmaker
 from src.modulos.crud_basicos.domain.entities.bairro import BairroORM
 from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
 from src.modulos.crud_basicos.domain.entities.ponto_de_parada import PontoDeParadaORM
+from src.modulos.rotas.model.entities.rota_complementar import RotaComplementarORM
 from src.modulos.rotas.model.entities.rota_principal import (
     RotaPrincipalORM,
     rota_principal_bairro,
@@ -30,6 +31,7 @@ TABELAS = [
     FaculdadeORM.__table__,
     LogAuditoriaORM.__table__,
     RotaPrincipalORM.__table__,
+    RotaComplementarORM.__table__,
     rota_principal_bairro,
     rota_principal_faculdade_ida,
     rota_principal_faculdade_volta,

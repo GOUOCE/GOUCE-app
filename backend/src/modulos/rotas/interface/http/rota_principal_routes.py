@@ -17,6 +17,7 @@ from src.modulos.rotas.application.dtos.rota_principal_dto import (
 from src.modulos.rotas.application.use_cases.gerenciar_rotas_principais_use_case import (
     GerenciarRotasPrincipaisUseCase,
     RotaComAgendamentosPendentesError,
+    RotaComComplementaresAtivasError,
     RotaComVinculoInativoError,
     RotaPrincipalNaoEncontradaError,
     RotaPrincipalStatusInalteradoError,
@@ -266,7 +267,11 @@ async def inativar_rota(
         resultado = use_case.inativar(rota_id, _executor_id(current_user))
     except RotaPrincipalNaoEncontradaError:
         raise _nao_encontrada()
-    except (RotaComAgendamentosPendentesError, RotaPrincipalStatusInalteradoError) as error:
+    except (
+        RotaComAgendamentosPendentesError,
+        RotaComComplementaresAtivasError,
+        RotaPrincipalStatusInalteradoError,
+    ) as error:
         raise HTTPException(status_code=409, detail=str(error))
     return {"message": MENSAGEM_SUCESSO, "data": resultado}
 

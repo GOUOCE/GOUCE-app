@@ -13,6 +13,8 @@ from src.modulos.usuarios.application.use_cases.criar_usuario_use_case import Va
 class ValidarEtapa3UsuarioUseCase:
     def __init__(
         self,
+        repository_faculdade=None,
+        repository_bairro=None,
         telefone_validator=None,
         periodo_ingresso_validator=None,
         turno_curso_validator=None,
@@ -20,6 +22,8 @@ class ValidarEtapa3UsuarioUseCase:
         self.telefone_validator = telefone_validator or TelefoneValidator()
         self.periodo_ingresso_validator = periodo_ingresso_validator or PeriodoIngressoValidator()
         self.turno_curso_validator = turno_curso_validator or TurnoCursoValidator()
+        self.repository_faculdade = repository_faculdade
+        self.repository_bairro = repository_bairro
 
     def execute(self, dto: ValidarEtapa3CadastroUsuarioDTO) -> CadastroSucessoDTO:
         erros = []
@@ -29,6 +33,15 @@ class ValidarEtapa3UsuarioUseCase:
         bairro_id = str(dto.bairro_id).strip() if dto.bairro_id else ""
         if not bairro_id:
             erros.append({"field": "bairro_id", "message": "Bairro é obrigatório"})
+        elif self.repository_bairro is not None:
+            bairro_id_int = None
+            try:
+                bairro_id_int = int(bairro_id)
+            except (ValueError, TypeError):
+                bairro_id_int = None
+            bairro = self.repository_bairro.buscar_por_id(bairro_id_int) if bairro_id_int is not None else None
+            if bairro is None or not getattr(bairro, "ativo", True):
+                erros.append({"field": "bairro_id", "message": "Bairro não existente"})
 
         # Validação de Telefone / Celular com DDD
         telefone = str(dto.telefone).strip() if dto.telefone else ""
@@ -40,6 +53,10 @@ class ValidarEtapa3UsuarioUseCase:
         # Validação de Instituição / Faculdade
         if not dto.faculdade_id or not isinstance(dto.faculdade_id, int) or dto.faculdade_id <= 0:
             erros.append({"field": "faculdade_id", "message": "Instituição/Faculdade é obrigatória (informe o ID da faculdade)"})
+        elif self.repository_faculdade is not None:
+            faculdade = self.repository_faculdade.buscar_por_id(dto.faculdade_id)
+            if faculdade is None or not getattr(faculdade, "ativo", True):
+                erros.append({"field": "faculdade_id", "message": "Instituição/Faculdade não existente"})
 
         # Validação de Curso
         curso = str(dto.curso).strip() if dto.curso else ""
