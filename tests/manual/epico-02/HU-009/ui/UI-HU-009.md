@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 1 | 7 | 0 | 5 |
+| 🔄 Em andamento | 13 | 1 | 8 | 0 | 4 |
 
 ## Pré-condições
 
@@ -53,7 +53,7 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU009-UI-008 | Editar placa e capacidades; impedir colisão | `QXD2E45` → `QXD2E46`, 40/15; tentar `ABC1D23` | Sucesso persistido; só ônibus escolhido muda; duplicidade bloqueada | ❌ FALHOU | A edição funciona e persiste (`QXD2E45` virou `QXD2E46`, 40/15, sem criar segundo cadastro) e as placas duplicadas foram barradas pelo servidor (`409`), mas a mensagem de sucesso é a barra preta fora do padrão (“Ônibus alterado com sucesso”). |
-| CT-HU009-UI-009 | Cancelar e confirmar inativação do ônibus correto | Ônibus real sem alocação futura; outro veículo para comparação | Cancelar não muda; confirmar inativa só o selecionado e preserva o registro | ⏳ PENDENTE | Não executado. |
+| CT-HU009-UI-009 | Cancelar e confirmar inativação do ônibus correto | Ônibus real sem alocação futura; outro veículo para comparação | Cancelar não muda; confirmar inativa só o selecionado e preserva o registro | ❌ FALHOU | Cancelar não inativa, mas confirmar a inativação falha: o app chama `PATCH /onibus/7/inativar` (número da linha, não a placa), a API responde `404` e o pop-up mostra “Request failed with status code 404”. Não é possível inativar um ônibus real pela tela. |
 | CT-HU009-UI-010 | Mostrar inativos e reativar | `XYZ9K87` inativo; cancelar e confirmar reativação | Inativo identificado; só selecionado reativado; persistência e erro visível se falhar | ⏳ PENDENTE | Não executado. |
 
 ### Seção C — Integração, acesso e robustez
@@ -329,8 +329,14 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Preparo (PC-05):** `QXD2E46` e `ABC1D23` ativos; nenhuma tabela do banco liga ônibus a viagem ou alocação, então não havia alocação futura. A auditoria de ônibus tinha só a inativação de `XYZ9K87` feita na preparação (id 34).
+- **Cancelar:** o pop-up “Inativar ônibus?” (“O ônibus não estará mais disponível para alocações.”) foi cancelado e `QXD2E46` continuou ativo na lista; o log não registrou nenhum `PATCH .../inativar` nessa etapa.
+- **Confirmar:** pop-up de erro “Inativação Bloqueada” com o texto técnico **“Request failed with status code 404”**. O log registrou três `PATCH /onibus/7/inativar` com `404 Not Found` (uma por tentativa). O banco manteve `QXD2E46` ativo e a auditoria não ganhou registro; nenhum outro ônibus foi alterado.
+- **Causa:** a API não devolve `id` para ônibus (a chave é a placa). Na listagem, `frotaService.listarOnibus` inventa `id: o.id || idx + 1` e `frota/index.tsx` chama `inativarOnibus(item.id)`. `QXD2E46` é a 7ª linha, então a URL virou `/onibus/7/inativar`, mas a rota espera a placa (`/onibus/{placa}/inativar`). O app só troca o número pela placa se o ônibus estiver na lista de exemplo (`ONIBUS_MOCK`, ids 1 a 3); pelo código, as três primeiras linhas da lista usariam as placas de exemplo (`OCR-1234`, `OCR-5521`, `OCR-8890`) e não as reais (não testado na tela).
+- **Efeito:** a inativação (AC-05) não funciona pela tela com dados reais; a reativação usa o mesmo caminho e deve falhar igual (CT-010).
+- **Mensagem:** o texto do pop-up é o erro técnico do Axios, sem orientação ao usuário.
+- Passos 3 a 5 (mensagem de sucesso, auditoria do escolhido e conferência após reabrir) não puderam ser executados, porque a inativação não acontece.
+- Status: ❌ Falhou (bloqueia a inativação).
 
 ---
 
@@ -464,6 +470,7 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 | CT-007 | Decimais (`4.5`, `2.5`) em assentos e capacidade em pé passam pela validação do app; só a API recusa | Issue a abrir ao final da suíte (Front) |
 | CT-007 | Erro de campo numérico da API sai sem o nome do campo e a mesma frase se repete quando os dois campos são inválidos | Issue a abrir ao final da suíte (Front) |
 | CT-007 | Número acima do limite do banco (ex.: `883833333333`) causa `500`, sem CORS, na criação e na edição; no cadastro o app mostra sucesso falso (ônibus só na memória) | Issue a abrir ao final da suíte (Back + Front, mesma família da [#249](https://github.com/GOUOCE/GOUCE-app/issues/249) e [#263](https://github.com/GOUOCE/GOUCE-app/issues/263)) |
+| CT-009 | Inativar ônibus falha com `404` (“Request failed with status code 404”): o app envia o número da linha em vez da placa (`/onibus/7/inativar`); a reativação usa o mesmo caminho. **Bloqueante** | Issue a abrir ao final da suíte (Front; bloqueante) |
 
 ## Observações gerais
 
