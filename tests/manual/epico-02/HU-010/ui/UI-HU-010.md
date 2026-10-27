@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 2 | 2 | 0 | 9 |
+| 🔄 Em andamento | 13 | 3 | 2 | 0 | 8 |
 
 ## Pré-condições
 
@@ -44,7 +44,7 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 | CT-HU010-UI-002 | Cadastrar celular e conferir persistência | Celular válido, confirmação e reabertura | Sucesso; máscara; ativo persistido na API | ❌ FALHOU | O cadastro funciona e persiste (`Francisco Alves`, `(88) 99811-2233`, ativo, um único `POST`), mas a mensagem de sucesso é uma barra preta fora do padrão. |
 | CT-HU010-UI-003 | Cadastrar fixo, homônimo e número dos exemplos | Fixo; mesmo nome; telefone presente só nos exemplos | Todos aceitos; ids distintos; nenhum bloqueio por exemplo | ✅ PASSOU | Os três cadastros foram aceitos (fixo, homônimo e o telefone dos exemplos), com ids distintos e máscara correta. Observação: a tela de cadastro reabre com dados da vez anterior. |
 | CT-HU010-UI-004 | Bloquear telefone duplicado de ativo e inativo | Duplicidade com máscara e sem máscara, ativo/inativo | “Este profissional já está registrado.”; nada criado | ✅ PASSOU | As quatro tentativas (celular do Francisco com e sem máscara; telefone do Raimundo inativo com e sem máscara) foram barradas pelo servidor (`409`). Nenhum registro novo. |
-| CT-HU010-UI-005 | Campos obrigatórios no cadastro e na edição | Nome/telefone ausentes ou esvaziados | Campo destacado; português; nenhum salvamento | ⏳ PENDENTE | Não executado. |
+| CT-HU010-UI-005 | Campos obrigatórios no cadastro e na edição | Nome/telefone ausentes ou esvaziados | Campo destacado; português; nenhum salvamento | ✅ PASSOU | Nome e telefone vazios ou só com espaços foram destacados e bloqueados no cadastro e na edição, e nenhum dado foi alterado. O testador também apontou que o campo Nome aceita números, emoji e símbolos (vai para a issue). |
 | CT-HU010-UI-006 | Máscara e validação de telefone por dígitos | 3/9/12/15 dígitos; letras; fixo/celular e máscara | “Informe um telefone válido com DDD”; inválidos bloqueados | ⏳ PENDENTE | Não executado. |
 
 ### Seção B — Edição, inativação e reativação
@@ -193,8 +193,11 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O testador executou as tentativas A1 a A5 (nome vazio, nome só com espaços, telefone vazio, telefone só com espaços e nome de 2 letras) no cadastro e B1/B2 (apagar nome e telefone) na edição do Francisco, e relatou que todas foram destacadas e bloqueadas.
+- O log não registrou nenhum `PATCH /motoristas` e `Francisco Alves` continua `(88) 99811-2233`, ativo; nenhuma edição foi gravada.
+- **Divergência de contrato (conforme previsto no caso):** o app exige nome com no mínimo 3 caracteres; a API (`_validar_texto_obrigatorio`) aceita qualquer texto não vazio.
+- **Defeito fora do critério deste caso:** o campo **Nome Completo** não tem regra de caracteres, nem no app (`motoristaSchema.ts` só limita 3 a 150 caracteres) nem na API. Durante a execução foi criado o motorista id 6 com o nome `333333333333` (`POST /motoristas` com `201`), e o testador relatou que emoji e símbolos também são aceitos. O padrão do sistema para nome de pessoa (cadastro de aluno, `nomeSchema`) é de 3 a 150 caracteres, apenas letras (com acento), espaços, hífen e apóstrofo, com nome e sobrenome; o critério 12 da HU-010 não define essa regra, então ela vai como proposta na issue.
+- Status: ✅ Passou.
 
 ---
 
