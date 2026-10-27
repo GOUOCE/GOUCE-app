@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Em execução | 14 | 10 | 1 | 1 | 0 | 2 |
+| ⏳ Em execução | 14 | 11 | 1 | 1 | 0 | 1 |
 
 ## Pré-condições
 
@@ -50,7 +50,7 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 | CT-HU011-API-010 | Bloquear inativação com complementar ativa (#208) | RP1 com RC1 ativa; depois RC1 inativada | HTTP 409 com a mensagem do PO; rota segue ativa; sem RC1 ativa, inativa | ⚠️ PARCIAL | Complementar ativa bloqueou a principal com 409 e sem auditoria da recusa; após inativar a complementar, a principal pôde ser inativada/reativada. Texto diferente do definido pelo PO: “Esta rota possui rotas complementares ativas e não pode ser inativada. Inative ou reassocie as complementares antes.” [JSON](evidencias/CT-HU011-API-010.json) [#311](https://github.com/GOUOCE/GOUCE-app/issues/311) |
 | CT-HU011-API-011 | Bairro e faculdade em rota ativa (#208) | Inativar B1 e F1 usados por RP3 ativa; inativar RP3 e repetir; reativar RP3 | 409 com as mensagens da HU-007 e do PO; liberados com a rota inativa | ✅ APROVADO | B1 e F3 (somente na volta) protegidos por 409/mensagens corretas; liberados quando não havia rota ativa usando a base. Reativação com base inativa foi recusada. Base, RP1 e RP3 restauradas ativas por API. [JSON](evidencias/CT-HU011-API-011.json) |
 | CT-HU011-API-012 | Auditoria das operações de escrita | Operações dos CT-002, 008 e 009; recusas dos CT-004 a 011 | Um registro por escrita efetiva; nenhum para recusa ou edição sem mudança | ✅ APROVADO | Auditados cadastro, edição, inativação e reativação: uma linha por operação efetiva, executor correto, ação/id/data e snapshots de campos/vínculos. Recusas e edição sem mudança não criaram logs. [JSON](evidencias/CT-HU011-API-012.json) |
-| CT-HU011-API-013 | Acesso sem privilégio | Token de aluno; token de representante; sem token | HTTP 403 (aluno e representante) e 401 (sem token) em todas as rotas | ⏳ PENDENTE | Não executado. |
+| CT-HU011-API-013 | Acesso sem privilégio | Token de aluno; token de representante; sem token | HTTP 403 (aluno e representante) e 401 (sem token) em todas as rotas | ✅ APROVADO | As sete operações negaram 403 à conta de aluno e à conta ativa de representante, e 401 sem token; rotas e auditoria preservadas. O login da conta de representante devolve roles legados aluno/supervisor; a evidência registra esse contrato real, não um JWT fabricado nem teste do seletor visual de perfil. [JSON](evidencias/CT-HU011-API-013.json) |
 | CT-HU011-API-014 | Agendamentos futuros e rota inativa no agendamento | Rota com aluno agendado para amanhã; rota inativa na agenda do aluno | HTTP 409 “Esta rota possui agendamentos pendentes e não pode ser inativada no momento.”; inativa fora da agenda | ⏳ PENDENTE | Depende da HU-013. Sem ela, marcar 🚫. |
 
 ## Detalhamento dos casos
@@ -428,8 +428,10 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- As sete operações negaram 403 à conta de aluno e à conta ativa de representante, e 401 sem token; rotas e auditoria preservadas. O login da conta de representante devolve roles legados aluno/supervisor; a evidência registra esse contrato real, não um JWT fabricado nem teste do seletor visual de perfil.
+- 21 chamadas HTTP; 68 verificações registradas. Status observados: 401 (7×), 403 (14×).
+- Evidência: [CT-HU011-API-013.json](evidencias/CT-HU011-API-013.json), com corpos reais, sequência/horário, verificações e consultas de persistência/auditoria.
+- Status: ✅ APROVADO.
 
 ---
 
