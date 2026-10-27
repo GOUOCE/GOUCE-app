@@ -1,0 +1,80 @@
+[
+  {
+    "passo": "0",
+    "descricao": "Banco R2 antes: status | matrícula | residência | foto | total de linhas em arquivos",
+    "resultado": "rejeitado | 656ae0ec-e991-4d69-b40f-dad39b7ee06e | 5888b4f0-2d5f-404f-8735-bd5499f064e7 | 8122dbe1-5561-4840-96b1-53d7b9e1911f | arquivos=29"
+  },
+  {
+    "passo": "1",
+    "descricao": "R2 envia só a matrícula (não reprovada)",
+    "data_hora_utc": "2026-10-27T17:53:09Z",
+    "requisicao": {
+      "metodo": "PUT",
+      "rota": "/usuarios/reenvio_documento",
+      "credencial": "r2",
+      "corpo": {
+        "comprovante_matricula": "doc.pdf"
+      }
+    },
+    "resposta": {
+      "status": 400,
+      "corpo": {
+        "success": false,
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "Este documento não foi solicitado pelo administrador: comprovante_matricula"
+        }
+      }
+    }
+  },
+  {
+    "passo": "2",
+    "descricao": "R2 envia sem nenhum arquivo",
+    "data_hora_utc": "2026-10-27T17:53:09Z",
+    "requisicao": {
+      "metodo": "PUT",
+      "rota": "/usuarios/reenvio_documento",
+      "credencial": "r2",
+      "corpo": {}
+    },
+    "resposta": {
+      "status": 400,
+      "corpo": {
+        "success": false,
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "Selecione pelo menos um documento para continuar o reenvio."
+        }
+      }
+    }
+  },
+  {
+    "passo": "3",
+    "descricao": "R2 envia foto (reprovada) e residência (não reprovada)",
+    "data_hora_utc": "2026-10-27T17:53:09Z",
+    "requisicao": {
+      "metodo": "PUT",
+      "rota": "/usuarios/reenvio_documento",
+      "credencial": "r2",
+      "corpo": {
+        "foto_perfil": "foto.png",
+        "comprovante_residencia": "doc.pdf"
+      }
+    },
+    "resposta": {
+      "status": 400,
+      "corpo": {
+        "success": false,
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "Este documento não foi solicitado pelo administrador: comprovante_residencia"
+        }
+      }
+    }
+  },
+  {
+    "passo": "4",
+    "descricao": "Banco R2 depois: status | matrícula | residência | foto | total de linhas em arquivos",
+    "resultado": "rejeitado | 656ae0ec-e991-4d69-b40f-dad39b7ee06e | 5888b4f0-2d5f-404f-8735-bd5499f064e7 | 8122dbe1-5561-4840-96b1-53d7b9e1911f | arquivos=29"
+  }
+]
