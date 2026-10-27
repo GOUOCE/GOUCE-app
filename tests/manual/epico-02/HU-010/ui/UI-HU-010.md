@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 5 | 4 | 0 | 4 |
+| 🔄 Em andamento | 13 | 6 | 4 | 0 | 3 |
 
 ## Pré-condições
 
@@ -54,7 +54,7 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 | CT-HU010-UI-007 | Editar nome e telefone sem trocar o motorista | Edição válida e colisão de telefone | Sucesso persistido; duplicidade bloqueada sem alteração parcial | ✅ PASSOU | A edição válida do Francisco foi gravada no mesmo registro (id 1) e o Antônio ficou intacto. A tentativa de colisão com o telefone do Antônio foi relatada como barrada, mas não aparece no log. |
 | CT-HU010-UI-008 | Cancelar inativação sem alterar dados nem auditoria | Abrir modal e cancelar | Ativo mantido e nenhum novo log | ✅ PASSOU | Cancelar a inativação manteve o Francisco ativo, sem chamada de inativação e sem registro novo na auditoria. |
 | CT-HU010-UI-009 | Inativar motorista sem alocação futura | Confirmar inativação sem alocação real | Sucesso e soft delete; código tende a 503 ou bloqueio fictício | ❌ FALHOU | O Francisco (id 1) não pode ser inativado: o app o bloqueia com uma regra fictícia de “alocações pendentes” antes de chamar a API. O Antônio (id 3) foi inativado normalmente, com sucesso em barra preta. |
-| CT-HU010-UI-010 | Mostrar inativos e reativar com persistência | Ligar chave; cancelar e confirmar reativação | Inativo identificado; reativação persistida; erro visível se falhar | ⏳ PENDENTE | Não executado. |
+| CT-HU010-UI-010 | Mostrar inativos e reativar com persistência | Ligar chave; cancelar e confirmar reativação | Inativo identificado; reativação persistida; erro visível se falhar | ✅ PASSOU | Os dois inativos (Raimundo e Antônio) foram reativados pela rota `PATCH /motoristas/{id}/reativar`, com persistência e auditoria. A mensagem de sucesso segue na barra preta. |
 
 ### Seção C — Integração, acesso e robustez
 
@@ -327,8 +327,11 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Com a chave ligada, o testador localizou os inativos e reativou **Raimundo Costa** (id 2) e **Antônio Lima** (id 3); relatou que o caso passou.
+- **Log:** `PATCH /motoristas/2/reativar` (primeiro um `401` e a renovação automática do login, depois `200`) e `PATCH /motoristas/3/reativar` com `200`. O app usa a rota certa da API; o `/ativar` citado no plano não é mais usado desde o PR #243.
+- **Banco e auditoria:** os ids 2 e 3 voltaram a `ativo = true`, com os registros `REATIVAR` (ids 37 e 38 do log) e `valor_anterior = inativo`. Nenhum outro motorista foi alterado.
+- **Pontos já anotados:** a chave “Mostrar inativos” abre ligada (CT-001) e a mensagem “Motorista reativado” é a barra preta fora do padrão (CT-002). A falha de reativação mostra só `console.error` no código (`index.tsx`); como a reativação funcionou, esse caminho não foi exercitado.
+- Status: ✅ Passou.
 
 ---
 
