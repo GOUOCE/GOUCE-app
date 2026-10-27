@@ -28,6 +28,12 @@ from src.modulos.crud_basicos.interface.http.bairro_routes import (
     get_session,
     router as bairro_router,
 )
+from src.modulos.rotas.model.entities.rota_principal import (
+    RotaPrincipalORM,
+    rota_principal_bairro,
+    rota_principal_faculdade_ida,
+    rota_principal_faculdade_volta,
+)
 from src.shared.auth.dependencies import get_current_user, get_optional_current_user
 from src.shared.infrastructure.audit_model import LogAuditoriaORM
 from src.shared.infrastructure.db import Base
@@ -250,6 +256,10 @@ class BairrosApiHttpTest(unittest.IsolatedAsyncioTestCase):
                 BairroORM.__table__,
                 PontoDeParadaORM.__table__,
                 LogAuditoriaORM.__table__,
+                RotaPrincipalORM.__table__,
+                rota_principal_bairro,
+                rota_principal_faculdade_ida,
+                rota_principal_faculdade_volta,
             ],
         )
         self.Session = sessionmaker(bind=self.engine)
@@ -278,6 +288,10 @@ class BairrosApiHttpTest(unittest.IsolatedAsyncioTestCase):
                 BairroORM.__table__,
                 PontoDeParadaORM.__table__,
                 LogAuditoriaORM.__table__,
+                RotaPrincipalORM.__table__,
+                rota_principal_bairro,
+                rota_principal_faculdade_ida,
+                rota_principal_faculdade_volta,
             ],
         )
 

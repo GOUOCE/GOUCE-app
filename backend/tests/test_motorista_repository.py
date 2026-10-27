@@ -6,8 +6,11 @@ os.environ.setdefault(
     "postgresql://test:test@localhost:5432/test",
 )
 
+from src.modulos.motoristas.application.use_cases.gerenciar_motoristas_use_case import (
+    GerenciarMotoristasUseCase,
+    MotoristaComAlocacoesPendentesError,
+)
 from src.modulos.motoristas.infrastructure.repositories.motorista_repository import (
-    AlocacoesFuturasNaoVerificadasError,
     MotoristaRepository,
     MotoristaTelefoneEmUsoError,
 )
@@ -236,19 +239,31 @@ class MotoristaRepositoryTest(unittest.TestCase):
         self.assertEqual(self.session.rollback_count, 1)
         self.assertEqual(self.ativo.nome_completo, "Maria da Silva")
 
-    def test_inativar_bloqueia_sem_verificacao_de_alocacoes_futuras(self):
-        with self.assertRaises(AlocacoesFuturasNaoVerificadasError):
-            self.repository.inativar(1, usuario_executor_id=10)
+    def test_possui_alocacoes_futuras_sem_checker_nao_bloqueia(self):
+        # TODO(HU-010): enquanto não houver entidade de escalas, a
+        # verificação falha aberto.
+        self.assertFalse(self.repository.possui_alocacoes_futuras(1))
 
-        self.assertTrue(self.ativo.ativo)
-        self.assertEqual(self.session.commit_count, 0)
-        self.assertEqual(self.session.added, [])
+    def test_possui_alocacoes_futuras_delega_ao_checker_injetado(self):
+        chamadas = []
+
+        def checker(motorista_id):
+            chamadas.append(motorista_id)
+            return motorista_id == 1
+
+        repository = MotoristaRepository(
+            self.session,
+            alocacoes_futuras_checker=checker,
+        )
+
+        self.assertTrue(repository.possui_alocacoes_futuras(1))
+        self.assertFalse(repository.possui_alocacoes_futuras(2))
+        self.assertEqual(chamadas, [1, 2])
 
     def test_inativar_persiste_estado_e_log_sem_dados_pessoais(self):
         resultado = self.repository.inativar(
             1,
             usuario_executor_id=10,
-            alocacoes_futuras_verificadas=True,
         )
 
         self.assertFalse(resultado["ativo"])
@@ -293,11 +308,58 @@ class MotoristaRepositoryTest(unittest.TestCase):
             self.repository.inativar(
                 1,
                 usuario_executor_id=10,
-                alocacoes_futuras_verificadas=True,
             )
 
         self.assertTrue(self.ativo.ativo)
         self.assertEqual(self.session.rollback_count, 1)
+
+
+class InativacaoComAlocacoesFuturasTest(unittest.TestCase):
+    """Compõe use case e repository reais com o checker de alocações simulado."""
+
+    def setUp(self):
+        self.ativo = motorista(1, "Maria da Silva", "85999990000", True)
+        self.session = FakeSession([self.ativo])
+
+    def _use_case(self, possui_alocacoes: bool) -> GerenciarMotoristasUseCase:
+        repository = MotoristaRepository(
+            self.session,
+            alocacoes_futuras_checker=lambda _motorista_id: possui_alocacoes,
+        )
+        return GerenciarMotoristasUseCase(repository)
+
+    def test_checker_true_bloqueia_inativacao_sem_alterar_nem_auditar(self):
+        with self.assertRaises(MotoristaComAlocacoesPendentesError) as contexto:
+            self._use_case(True).inativar(1, usuario_executor_id=10)
+
+        self.assertEqual(
+            str(contexto.exception),
+            "Este profissional possui alocações pendentes e não pode ser "
+            "inativado no momento.",
+        )
+        self.assertTrue(self.ativo.ativo)
+        self.assertEqual(self.session.commit_count, 0)
+        self.assertEqual(self.session.added, [])
+
+    def test_checker_false_inativa_e_grava_log_de_auditoria(self):
+        resultado = self._use_case(False).inativar(1, usuario_executor_id=10)
+
+        self.assertFalse(resultado["ativo"])
+        self.assertFalse(self.ativo.ativo)
+        self.assertEqual(self.session.commit_count, 1)
+        logs = [item for item in self.session.added if isinstance(item, LogAuditoriaORM)]
+        self.assertEqual(len(logs), 1)
+        self.assertEqual(logs[0].usuario_id, 10)
+        self.assertEqual(logs[0].acao, "INATIVAR")
+        self.assertEqual(logs[0].entidade, "motorista")
+        self.assertEqual(logs[0].entidade_id, 1)
+        # Soft delete: o registro permanece persistido, apenas inativo.
+        self.assertIn(self.ativo, self.session.motoristas)
+
+    def test_log_de_auditoria_registra_timestamp_obrigatorio(self):
+        coluna = LogAuditoriaORM.__table__.c.criado_em
+        self.assertFalse(coluna.nullable)
+        self.assertIsNotNone(coluna.default)
 
 
 if __name__ == "__main__":
