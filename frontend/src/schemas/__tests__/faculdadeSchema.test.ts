@@ -73,7 +73,10 @@ jest.mock('../../api/api', () => ({
       const url = args[0];
       if (url === '/faculdades/1/inativar') {
         const error: any = new Error('Esta instituição possui viagens programadas pendentes. Não é possível inativar no momento.');
-        (error as any).response = { status: 409 };
+        (error as any).response = {
+          status: 409,
+          data: { detail: 'Esta instituição possui viagens programadas pendentes. Não é possível inativar no momento.' },
+        };
         return Promise.reject(error);
       }
       return Promise.resolve({ data: { success: true } });

@@ -10,7 +10,7 @@ class CriarFaculdadeDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     nome: str = Field(..., alias="nome_faculdade", min_length=3, max_length=150)
-    sigla: str = Field(..., min_length=2, max_length=20)
+    sigla: str = Field(..., alias="sigla_faculdade", min_length=2, max_length=20)
     campus: str = Field(..., alias="campus_faculdade", min_length=2, max_length=100)
 
     @field_validator("nome", mode="before")
@@ -60,7 +60,7 @@ class AtualizarFaculdadeDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     nome: Optional[str] = Field(default=None, alias="nome_faculdade", max_length=150)
-    sigla: Optional[str] = Field(default=None, max_length=20)
+    sigla: Optional[str] = Field(default=None, alias="sigla_faculdade", max_length=20)
     campus: Optional[str] = Field(default=None, alias="campus_faculdade", max_length=100)
     ativo: Optional[bool] = None
 
@@ -112,7 +112,7 @@ class FaculdadeResponseDTO(BaseModel):
 
     id_faculdade: int
     nome_faculdade: str
-    sigla: Optional[str] = None
+    sigla: Optional[str] = Field(default=None, validation_alias="sigla")
     campus_faculdade: str
     ativo: bool
 

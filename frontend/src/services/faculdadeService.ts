@@ -114,9 +114,9 @@ export const faculdadeService = {
     try {
       await api.patch(`/faculdades/${id}/inativar`);
     } catch (error: any) {
-      if (error.response?.status === 409 || error.response?.data?.detail) {
-        const msg = error.response.data.detail || error.response.data.message;
-        if (msg) throw new Error(msg);
+      const msg = error.response?.data?.detail || error.response?.data?.message || error.message;
+      if (error.response?.status === 409 || msg) {
+        throw new Error(msg || 'Esta instituição possui viagens programadas pendentes. Não é possível inativar no momento.');
       }
       throw error;
     }
