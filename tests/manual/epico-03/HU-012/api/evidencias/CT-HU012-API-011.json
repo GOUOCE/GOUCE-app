@@ -1,0 +1,1460 @@
+{
+  "case_id": "CT-HU012-API-011",
+  "run_id": "20261027T174349Z",
+  "environment": {
+    "base_url": "http://127.0.0.1:18812",
+    "branch": "feat/front-hu012",
+    "application_commit": "23d1063f09f13cc195da7e45422581f73e2ae6da",
+    "plan_commit": "939921e3",
+    "database": "PostgreSQL 15 isolado; migrations reais",
+    "transport": "HTTP localhost via urllib.request; sem mocks",
+    "python": "3.12.3",
+    "feature_head_before_execution": "23d1063f09f13cc195da7e45422581f73e2ae6da"
+  },
+  "started_at": "2026-10-27T17:43:52.602458+00:00",
+  "checks": [
+    {
+      "description": "auditoria única escrita seq 18",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "executor auditoria seq 18",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria com data/hora",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "ação auditoria seq 18",
+      "expected": "CRIAR",
+      "actual": "CRIAR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "id auditado seq 18",
+      "expected": "1",
+      "actual": "1",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo nome seq 18",
+      "expected": "Van 2 - Bairro Novo",
+      "actual": "Van 2 - Bairro Novo",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo horario_saida seq 18",
+      "expected": "06:00",
+      "actual": "06:00",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo ponto_conexao seq 18",
+      "expected": "Trevo do Bairro Novo",
+      "actual": "Trevo do Bairro Novo",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo rota_principal_id seq 18",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria única escrita seq 20",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "executor auditoria seq 20",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria com data/hora",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "ação auditoria seq 20",
+      "expected": "CRIAR",
+      "actual": "CRIAR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "id auditado seq 20",
+      "expected": "2",
+      "actual": "2",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo nome seq 20",
+      "expected": "Van 5 - Trevo da BR",
+      "actual": "Van 5 - Trevo da BR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo horario_saida seq 20",
+      "expected": "06:10",
+      "actual": "06:10",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo ponto_conexao seq 20",
+      "expected": "Posto da BR-122",
+      "actual": "Posto da BR-122",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo rota_principal_id seq 20",
+      "expected": 2,
+      "actual": 2,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria única escrita seq 30",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "executor auditoria seq 30",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria com data/hora",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "ação auditoria seq 30",
+      "expected": "CRIAR",
+      "actual": "CRIAR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "id auditado seq 30",
+      "expected": "3",
+      "actual": "3",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo nome seq 30",
+      "expected": "Rota Centro - UFC",
+      "actual": "Rota Centro - UFC",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo horario_saida seq 30",
+      "expected": "06:00",
+      "actual": "06:00",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo ponto_conexao seq 30",
+      "expected": "Trevo do Bairro Novo",
+      "actual": "Trevo do Bairro Novo",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo rota_principal_id seq 30",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria única escrita seq 31",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "executor auditoria seq 31",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria com data/hora",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "ação auditoria seq 31",
+      "expected": "INATIVAR",
+      "actual": "INATIVAR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "id auditado seq 31",
+      "expected": "3",
+      "actual": "3",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria única escrita seq 40",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "executor auditoria seq 40",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria com data/hora",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "ação auditoria seq 40",
+      "expected": "CRIAR",
+      "actual": "CRIAR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "id auditado seq 40",
+      "expected": "4",
+      "actual": "4",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo nome seq 40",
+      "expected": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "actual": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo horario_saida seq 40",
+      "expected": "06:00",
+      "actual": "06:00",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo ponto_conexao seq 40",
+      "expected": "Trevo do Bairro Novo",
+      "actual": "Trevo do Bairro Novo",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo rota_principal_id seq 40",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria única escrita seq 41",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "executor auditoria seq 41",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria com data/hora",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "ação auditoria seq 41",
+      "expected": "INATIVAR",
+      "actual": "INATIVAR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "id auditado seq 41",
+      "expected": "4",
+      "actual": "4",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria única escrita seq 44",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "executor auditoria seq 44",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria com data/hora",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "ação auditoria seq 44",
+      "expected": "CRIAR",
+      "actual": "CRIAR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "id auditado seq 44",
+      "expected": "5",
+      "actual": "5",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo nome seq 44",
+      "expected": "Controle limite ponto_conexao150",
+      "actual": "Controle limite ponto_conexao150",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo horario_saida seq 44",
+      "expected": "06:00",
+      "actual": "06:00",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo ponto_conexao seq 44",
+      "expected": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "actual": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo rota_principal_id seq 44",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria única escrita seq 45",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "executor auditoria seq 45",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria com data/hora",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "ação auditoria seq 45",
+      "expected": "INATIVAR",
+      "actual": "INATIVAR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "id auditado seq 45",
+      "expected": "5",
+      "actual": "5",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria única escrita seq 60",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "executor auditoria seq 60",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria com data/hora",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "ação auditoria seq 60",
+      "expected": "EDITAR",
+      "actual": "EDITAR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "id auditado seq 60",
+      "expected": "1",
+      "actual": "1",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo nome seq 60",
+      "expected": "Van 2 - Bairro Novo Manhã",
+      "actual": "Van 2 - Bairro Novo Manhã",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria única escrita seq 62",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "executor auditoria seq 62",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria com data/hora",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "ação auditoria seq 62",
+      "expected": "EDITAR",
+      "actual": "EDITAR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "id auditado seq 62",
+      "expected": "1",
+      "actual": "1",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo horario_saida seq 62",
+      "expected": "05:50",
+      "actual": "05:50",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo ponto_conexao seq 62",
+      "expected": "Praça do Bairro Novo",
+      "actual": "Praça do Bairro Novo",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria única escrita seq 64",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "executor auditoria seq 64",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria com data/hora",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "ação auditoria seq 64",
+      "expected": "EDITAR",
+      "actual": "EDITAR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "id auditado seq 64",
+      "expected": "1",
+      "actual": "1",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo rota_principal_id seq 64",
+      "expected": 2,
+      "actual": 2,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria única escrita seq 67",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "executor auditoria seq 67",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria com data/hora",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "ação auditoria seq 67",
+      "expected": "EDITAR",
+      "actual": "EDITAR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "id auditado seq 67",
+      "expected": "1",
+      "actual": "1",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo rota_principal_id seq 67",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria única escrita seq 72",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "executor auditoria seq 72",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria com data/hora",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "ação auditoria seq 72",
+      "expected": "CRIAR",
+      "actual": "CRIAR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "id auditado seq 72",
+      "expected": "6",
+      "actual": "6",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo nome seq 72",
+      "expected": "Van Sítio",
+      "actual": "Van Sítio",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo horario_saida seq 72",
+      "expected": "05:40",
+      "actual": "05:40",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo ponto_conexao seq 72",
+      "expected": "Entrada do Sítio Riacho",
+      "actual": "Entrada do Sítio Riacho",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo rota_principal_id seq 72",
+      "expected": 2,
+      "actual": 2,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria única escrita seq 73",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "executor auditoria seq 73",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria com data/hora",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "ação auditoria seq 73",
+      "expected": "INATIVAR",
+      "actual": "INATIVAR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "id auditado seq 73",
+      "expected": "6",
+      "actual": "6",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria única escrita seq 75",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "executor auditoria seq 75",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria com data/hora",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "ação auditoria seq 75",
+      "expected": "REATIVAR",
+      "actual": "REATIVAR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "id auditado seq 75",
+      "expected": "6",
+      "actual": "6",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria única escrita seq 78",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "executor auditoria seq 78",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria com data/hora",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "ação auditoria seq 78",
+      "expected": "INATIVAR",
+      "actual": "INATIVAR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "id auditado seq 78",
+      "expected": "6",
+      "actual": "6",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria única escrita seq 91",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "executor auditoria seq 91",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria com data/hora",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "ação auditoria seq 91",
+      "expected": "EDITAR",
+      "actual": "EDITAR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "id auditado seq 91",
+      "expected": "2",
+      "actual": "2",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo rota_principal_id seq 91",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria única escrita seq 97",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "executor auditoria seq 97",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria com data/hora",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "ação auditoria seq 97",
+      "expected": "EDITAR",
+      "actual": "EDITAR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "id auditado seq 97",
+      "expected": "6",
+      "actual": "6",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "snapshot novo rota_principal_id seq 97",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria única escrita seq 98",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "executor auditoria seq 98",
+      "expected": 1,
+      "actual": 1,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "auditoria com data/hora",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "ação auditoria seq 98",
+      "expected": "REATIVAR",
+      "actual": "REATIVAR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "id auditado seq 98",
+      "expected": "6",
+      "actual": "6",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "GET /rotas-complementares/1: HTTP",
+      "expected": 200,
+      "actual": 200,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "PATCH /rotas-complementares/1: HTTP",
+      "expected": 200,
+      "actual": 200,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "edição sem mudança não audita",
+      "expected": 27,
+      "actual": 27,
+      "passed": true,
+      "severity_if_failed": "failure"
+    }
+  ],
+  "requests": [
+    {
+      "sequence": 100,
+      "timestamp": "2026-10-27T17:43:52.602655+00:00",
+      "label": "",
+      "duration_ms": 16.87,
+      "actor": "admin",
+      "request": {
+        "method": "GET",
+        "url": "http://127.0.0.1:18812/rotas-complementares/1",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:51 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "id": 1,
+          "nome": "Van 2 - Bairro Novo Manhã",
+          "horario_saida": "05:50",
+          "ponto_conexao": "Praça do Bairro Novo",
+          "ativo": true,
+          "rota_principal": {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "ativo": true
+          }
+        }
+      }
+    },
+    {
+      "sequence": 101,
+      "timestamp": "2026-10-27T17:43:52.622273+00:00",
+      "label": "",
+      "duration_ms": 23.08,
+      "actor": "admin",
+      "request": {
+        "method": "PATCH",
+        "url": "http://127.0.0.1:18812/rotas-complementares/1",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "Van 2 - Bairro Novo Manhã"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:51 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": true,
+          "message": "Operação realizada com sucesso",
+          "data": {
+            "id": 1,
+            "nome": "Van 2 - Bairro Novo Manhã",
+            "horario_saida": "05:50",
+            "ponto_conexao": "Praça do Bairro Novo",
+            "ativo": true,
+            "rota_principal": {
+              "id": 1,
+              "nome": "Rota Centro - UFC",
+              "ativo": true
+            }
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo Manhã",
+            "horario_saida": "05:50:00",
+            "ponto_conexao": "Praça do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 1,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          },
+          {
+            "id": 5,
+            "rota_principal_id": 1,
+            "nome": "Controle limite ponto_conexao150",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.345239+00:00"
+          },
+          {
+            "id": 6,
+            "rota_principal_id": 1,
+            "nome": "Van Sítio",
+            "horario_saida": "05:40:00",
+            "ponto_conexao": "Entrada do Sítio Riacho",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:51.975865+00:00"
+          }
+        ]
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo Manhã",
+            "horario_saida": "05:50:00",
+            "ponto_conexao": "Praça do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 1,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          },
+          {
+            "id": 5,
+            "rota_principal_id": 1,
+            "nome": "Controle limite ponto_conexao150",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.345239+00:00"
+          },
+          {
+            "id": 6,
+            "rota_principal_id": 1,
+            "nome": "Van Sítio",
+            "horario_saida": "05:40:00",
+            "ponto_conexao": "Entrada do Sítio Riacho",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:51.975865+00:00"
+          }
+        ]
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    }
+  ],
+  "database_checks": [
+    {
+      "timestamp": "2026-10-27T17:43:52.648438+00:00",
+      "description": "Auditoria completa da HU",
+      "sql": "SELECT id,usuario_id,acao,entidade,entidade_id,valor_anterior,valor_novo,criado_em FROM log_auditoria WHERE entidade=%s ORDER BY id",
+      "parameters": [
+        "rota_complementar"
+      ],
+      "rows": [
+        {
+          "id": 7,
+          "usuario_id": 1,
+          "acao": "CRIAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "1",
+          "valor_anterior": null,
+          "valor_novo": "{\"ativo\": true, \"horario_saida\": \"06:00\", \"nome\": \"Van 2 - Bairro Novo\", \"ponto_conexao\": \"Trevo do Bairro Novo\", \"rota_principal_id\": 1}",
+          "criado_em": "2026-10-27T17:43:50.721814+00:00"
+        },
+        {
+          "id": 8,
+          "usuario_id": 1,
+          "acao": "CRIAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "2",
+          "valor_anterior": null,
+          "valor_novo": "{\"ativo\": true, \"horario_saida\": \"06:10\", \"nome\": \"Van 5 - Trevo da BR\", \"ponto_conexao\": \"Posto da BR-122\", \"rota_principal_id\": 2}",
+          "criado_em": "2026-10-27T17:43:50.767899+00:00"
+        },
+        {
+          "id": 9,
+          "usuario_id": 1,
+          "acao": "CRIAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "3",
+          "valor_anterior": null,
+          "valor_novo": "{\"ativo\": true, \"horario_saida\": \"06:00\", \"nome\": \"Rota Centro - UFC\", \"ponto_conexao\": \"Trevo do Bairro Novo\", \"rota_principal_id\": 1}",
+          "criado_em": "2026-10-27T17:43:50.981790+00:00"
+        },
+        {
+          "id": 10,
+          "usuario_id": 1,
+          "acao": "INATIVAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "3",
+          "valor_anterior": "ativo",
+          "valor_novo": "inativo",
+          "criado_em": "2026-10-27T17:43:51.004293+00:00"
+        },
+        {
+          "id": 11,
+          "usuario_id": 1,
+          "acao": "CRIAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "4",
+          "valor_anterior": null,
+          "valor_novo": "{\"ativo\": true, \"horario_saida\": \"06:00\", \"nome\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\", \"ponto_conexao\": \"Trevo do Bairro Novo\", \"rota_principal_id\": 1}",
+          "criado_em": "2026-10-27T17:43:51.201931+00:00"
+        },
+        {
+          "id": 12,
+          "usuario_id": 1,
+          "acao": "INATIVAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "4",
+          "valor_anterior": "ativo",
+          "valor_novo": "inativo",
+          "criado_em": "2026-10-27T17:43:51.236607+00:00"
+        },
+        {
+          "id": 13,
+          "usuario_id": 1,
+          "acao": "CRIAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "5",
+          "valor_anterior": null,
+          "valor_novo": "{\"ativo\": true, \"horario_saida\": \"06:00\", \"nome\": \"Controle limite ponto_conexao150\", \"ponto_conexao\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\", \"rota_principal_id\": 1}",
+          "criado_em": "2026-10-27T17:43:51.346441+00:00"
+        },
+        {
+          "id": 14,
+          "usuario_id": 1,
+          "acao": "INATIVAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "5",
+          "valor_anterior": "ativo",
+          "valor_novo": "inativo",
+          "criado_em": "2026-10-27T17:43:51.382431+00:00"
+        },
+        {
+          "id": 15,
+          "usuario_id": 1,
+          "acao": "EDITAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "1",
+          "valor_anterior": "{\"ativo\": true, \"horario_saida\": \"06:00\", \"nome\": \"Van 2 - Bairro Novo\", \"ponto_conexao\": \"Trevo do Bairro Novo\", \"rota_principal_id\": 1}",
+          "valor_novo": "{\"ativo\": true, \"horario_saida\": \"06:00\", \"nome\": \"Van 2 - Bairro Novo Manhã\", \"ponto_conexao\": \"Trevo do Bairro Novo\", \"rota_principal_id\": 1}",
+          "criado_em": "2026-10-27T17:43:51.719997+00:00"
+        },
+        {
+          "id": 16,
+          "usuario_id": 1,
+          "acao": "EDITAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "1",
+          "valor_anterior": "{\"ativo\": true, \"horario_saida\": \"06:00\", \"nome\": \"Van 2 - Bairro Novo Manhã\", \"ponto_conexao\": \"Trevo do Bairro Novo\", \"rota_principal_id\": 1}",
+          "valor_novo": "{\"ativo\": true, \"horario_saida\": \"05:50\", \"nome\": \"Van 2 - Bairro Novo Manhã\", \"ponto_conexao\": \"Praça do Bairro Novo\", \"rota_principal_id\": 1}",
+          "criado_em": "2026-10-27T17:43:51.766214+00:00"
+        },
+        {
+          "id": 17,
+          "usuario_id": 1,
+          "acao": "EDITAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "1",
+          "valor_anterior": "{\"ativo\": true, \"horario_saida\": \"05:50\", \"nome\": \"Van 2 - Bairro Novo Manhã\", \"ponto_conexao\": \"Praça do Bairro Novo\", \"rota_principal_id\": 1}",
+          "valor_novo": "{\"ativo\": true, \"horario_saida\": \"05:50\", \"nome\": \"Van 2 - Bairro Novo Manhã\", \"ponto_conexao\": \"Praça do Bairro Novo\", \"rota_principal_id\": 2}",
+          "criado_em": "2026-10-27T17:43:51.809106+00:00"
+        },
+        {
+          "id": 18,
+          "usuario_id": 1,
+          "acao": "EDITAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "1",
+          "valor_anterior": "{\"ativo\": true, \"horario_saida\": \"05:50\", \"nome\": \"Van 2 - Bairro Novo Manhã\", \"ponto_conexao\": \"Praça do Bairro Novo\", \"rota_principal_id\": 2}",
+          "valor_novo": "{\"ativo\": true, \"horario_saida\": \"05:50\", \"nome\": \"Van 2 - Bairro Novo Manhã\", \"ponto_conexao\": \"Praça do Bairro Novo\", \"rota_principal_id\": 1}",
+          "criado_em": "2026-10-27T17:43:51.870900+00:00"
+        },
+        {
+          "id": 19,
+          "usuario_id": 1,
+          "acao": "CRIAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "6",
+          "valor_anterior": null,
+          "valor_novo": "{\"ativo\": true, \"horario_saida\": \"05:40\", \"nome\": \"Van Sítio\", \"ponto_conexao\": \"Entrada do Sítio Riacho\", \"rota_principal_id\": 2}",
+          "criado_em": "2026-10-27T17:43:51.976623+00:00"
+        },
+        {
+          "id": 20,
+          "usuario_id": 1,
+          "acao": "INATIVAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "6",
+          "valor_anterior": "ativo",
+          "valor_novo": "inativo",
+          "criado_em": "2026-10-27T17:43:52.003138+00:00"
+        },
+        {
+          "id": 21,
+          "usuario_id": 1,
+          "acao": "REATIVAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "6",
+          "valor_anterior": "inativo",
+          "valor_novo": "ativo",
+          "criado_em": "2026-10-27T17:43:52.052403+00:00"
+        },
+        {
+          "id": 22,
+          "usuario_id": 1,
+          "acao": "INATIVAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "6",
+          "valor_anterior": "ativo",
+          "valor_novo": "inativo",
+          "criado_em": "2026-10-27T17:43:52.116808+00:00"
+        },
+        {
+          "id": 23,
+          "usuario_id": 1,
+          "acao": "EDITAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "2",
+          "valor_anterior": "{\"ativo\": true, \"horario_saida\": \"06:10\", \"nome\": \"Van 5 - Trevo da BR\", \"ponto_conexao\": \"Posto da BR-122\", \"rota_principal_id\": 2}",
+          "valor_novo": "{\"ativo\": true, \"horario_saida\": \"06:10\", \"nome\": \"Van 5 - Trevo da BR\", \"ponto_conexao\": \"Posto da BR-122\", \"rota_principal_id\": 1}",
+          "criado_em": "2026-10-27T17:43:52.360448+00:00"
+        },
+        {
+          "id": 27,
+          "usuario_id": 1,
+          "acao": "EDITAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "6",
+          "valor_anterior": "{\"ativo\": false, \"horario_saida\": \"05:40\", \"nome\": \"Van Sítio\", \"ponto_conexao\": \"Entrada do Sítio Riacho\", \"rota_principal_id\": 2}",
+          "valor_novo": "{\"ativo\": false, \"horario_saida\": \"05:40\", \"nome\": \"Van Sítio\", \"ponto_conexao\": \"Entrada do Sítio Riacho\", \"rota_principal_id\": 1}",
+          "criado_em": "2026-10-27T17:43:52.536326+00:00"
+        },
+        {
+          "id": 28,
+          "usuario_id": 1,
+          "acao": "REATIVAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "6",
+          "valor_anterior": "inativo",
+          "valor_novo": "ativo",
+          "criado_em": "2026-10-27T17:43:52.561424+00:00"
+        }
+      ]
+    }
+  ],
+  "notes": [],
+  "dependencies": [],
+  "status": "PASS",
+  "finished_at": "2026-10-27T17:43:53.095750+00:00",
+  "issues": []
+}
