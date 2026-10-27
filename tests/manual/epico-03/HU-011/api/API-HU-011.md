@@ -486,7 +486,7 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-HU011-API-004 | [HU-011/HU-012: nome de rota já usado no outro tipo é aceito com 201](issues/BUG-HU011-API-001-nome-unico-entre-tipos.md) | [#309](https://github.com/GOUOCE/GOUCE-app/issues/309) |
 
 ## Observações gerais
 
