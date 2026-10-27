@@ -493,7 +493,7 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 
 - Referências: [HU-011, seção 7.4.1](../../../../../docs/requisitos.md), [cenários BDD](../../../../../bdd/features/epico-03/HU-011.feature), [decisões do PO (#208)](https://github.com/GOUOCE/GOUCE-app/issues/208), [decisões do épico 02 (#207)](https://github.com/GOUOCE/GOUCE-app/issues/207) e [suíte de UI](../ui/UI-HU-011.md).
 - **O que mudou desde o planejamento anterior** (base `5554bc90`, 24/10/2026): o PO respondeu a #208 e confirmou todas as sugestões; os requisitos passaram a listar só ativas com a chave “Mostrar inativos”, auditoria das quatro operações, nome obrigatório e a mensagem de bloqueio por agendamentos; e o backend de rotas entrou na `develop`. Os casos agora usam o contrato real e as regras decididas, sem “a confirmar”.
-- **Riscos mapeados no código** (backend em `backend/src/modulos/rotas/`, `develop` `7c3d72d8`), que orientaram a escolha dos casos:
+- **Riscos mapeados no planejamento (histórico; resultados reproduzidos acima)** (backend em `backend/src/modulos/rotas/`, `develop` `7c3d72d8`), que orientaram a escolha dos casos:
   - o nome é conferido só entre **rotas principais**; uma principal com o nome de uma complementar é aceita, o que contraria o item 1 da #208 (CT-004);
   - a mensagem de bloqueio por complementar ativa é “Esta rota possui rotas complementares ativas e não pode ser inativada. Inative ou reassocie as complementares antes.”, diferente do texto definido pelo PO (CT-010);
   - a checagem de agendamentos futuros sempre responde “sem agendamentos” até a HU-013 existir (`TODO(HU-013)` no repository): o bloqueio do AC-06 nunca dispara hoje (CT-014);
