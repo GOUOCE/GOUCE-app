@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 0 | 2 | 0 | 11 |
+| 🔄 Em andamento | 13 | 0 | 3 | 0 | 10 |
 
 ## Pré-condições
 
@@ -42,7 +42,7 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 | --- | --- | --- | --- | --- | --- |
 | CT-HU009-UI-001 | Abrir a frota, buscar e conferir lista vazia | Banco vazio; depois um ativo e um inativo; placa/nome e busca inexistente | Sem exemplos inventados; só ativos por padrão; capacidades e busca corretas | ❌ FALHOU | Com o banco vazio a lista mostra os ônibus de exemplo (`OCR-1234`, `OCR-5521`, `OCR-8890`), a chave “Mostrar inativos” vem ligada e a seta volta ao Painel. Busca e massa corretas. |
 | CT-HU009-UI-002 | Cadastrar e conferir persistência | `QXD2E45`, 44 assentos, 20 em pé | Confirmação, sucesso, listagem atualizada e registro na API após reabrir | ❌ FALHOU | Cancelar não grava e confirmar cria o ônibus corretamente, mas a mensagem de sucesso é uma barra preta, fora do padrão de pop-up, e o texto difere do requisito. |
-| CT-HU009-UI-003 | Normalizar placa e evitar duplicidade contra exemplos | `ABC-1234`, `def-2g34`, `OCR-1234` inexistentes no banco | Maiúsculas/sem hífen; formatos aceitos; exemplo interno não bloqueia cadastro legítimo | ⏳ PENDENTE | Não executado. |
+| CT-HU009-UI-003 | Normalizar placa e evitar duplicidade contra exemplos | `ABC-1234`, `def-2g34`, `OCR-1234` inexistentes no banco | Maiúsculas/sem hífen; formatos aceitos; exemplo interno não bloqueia cadastro legítimo | ❌ FALHOU | `ABC-1234` e `def-2g34` são gravadas sem hífen e em maiúsculas, mas `OCR-1234` é bloqueada pelo app com “Este veículo já está registrado.” por causa da lista de exemplo, sem chamar a API. |
 | CT-HU009-UI-004 | Bloquear duplicidade de placa ativa e inativa | `QXD2E45` e variações; `XYZ9K87` inativo | “Este veículo já está registrado.”; nenhum novo registro | ⏳ PENDENTE | Não executado. |
 | CT-HU009-UI-005 | Obrigatórios no cadastro e na edição | Cada campo vazio; placa só com espaços; capacidade em pé apagada versus zero | Destaque e bloqueio; apagar não vira zero; dados anteriores preservados | ⏳ PENDENTE | Não executado. |
 | CT-HU009-UI-006 | Rejeitar formato inválido de placa | Letras, números, tamanho, posição e símbolo incorretos | “Placa inválida.”; sem cadastro nem edição | ⏳ PENDENTE | Não executado. |
@@ -145,8 +145,13 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Antes de começar, nenhuma das três placas existia no banco.
+- `ABC-1234` (44 assentos, 0 em pé): cadastrada. No banco ficou `ABC1234`, ativo, 44/0 (`POST /onibus` com `201`).
+- `def-2g34`: cadastrada e gravada como `DEF2G34`, ativa. O testador usou 33 assentos e 343 em pé em vez de 44/0, então o caso vale apenas para a normalização da placa (minúsculas e hífen removidos). O sistema não impõe limite de capacidade em pé em relação aos assentos.
+- `OCR-1234`: o app bloqueia com o pop-up “Este veículo já está registrado.” O log da API não registrou nenhum `POST /onibus` e o banco não tem `OCR1234`. A causa está em `frotaService.criarOnibus`, que compara a placa com a lista de exemplo do app (`ONIBUS_MOCK`: `OCR-1234`, `OCR-5521`, `OCR-8890`) antes de chamar a API. Isso impede o cadastro legítimo dessas três placas, exatamente o que o caso proíbe.
+- A listagem mostra a placa junta, sem hífen (`ABC1234`), o que está correto: o requisito pede a placa guardada normalizada (AC-02/AC-03).
+- **Sugestão do testador (melhoria, sem requisito):** o campo hoje só põe em maiúsculas ao digitar. Ao enviar, o `frotaSchema` apaga tudo que não é letra ou número e só então valida. Pedir limite de 7 caracteres e bloquear emoji e caracteres especiais já na digitação (mesma linha da [#261](https://github.com/GOUOCE/GOUCE-app/issues/261)).
+- Status: ❌ Falhou.
 
 ---
 
@@ -426,6 +431,8 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 | CT-001 | Chave “Mostrar inativos” já vem ligada na listagem de frota | Issue a abrir ao final da suíte (mesma causa de [#257](https://github.com/GOUOCE/GOUCE-app/issues/257)) |
 | CT-002, CT-008, CT-009, CT-010 | Mensagens de sucesso em barra preta, fora do padrão de pop-up e com texto diferente do requisito | Issue a abrir ao final da suíte (mesma causa de [#260](https://github.com/GOUOCE/GOUCE-app/issues/260)) |
 | CT-001 | Telas de frota não recriadas: a seta volta ao Painel e Cadastrar/Editar reabrem com dados anteriores | Issue a abrir ao final da suíte (mesma causa de [#256](https://github.com/GOUOCE/GOUCE-app/issues/256)) |
+| CT-003 | Cadastro de `OCR-1234`, `OCR-5521` e `OCR-8890` bloqueado pelo app com “Este veículo já está registrado.”, sem chamar a API, por causa da lista de exemplo | Issue a abrir ao final da suíte (mesma causa de [#258](https://github.com/GOUOCE/GOUCE-app/issues/258)) |
+| CT-003 | Melhoria: campo da placa sem limite de 7 caracteres e sem bloqueio de emoji e caracteres especiais na digitação | Issue a abrir ao final da suíte (não bloqueante) |
 
 ## Observações gerais
 
