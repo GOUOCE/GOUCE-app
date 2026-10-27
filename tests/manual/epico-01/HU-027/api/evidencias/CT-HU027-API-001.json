@@ -1,0 +1,317 @@
+[
+  {
+    "passo": "1",
+    "descricao": "Fila de pendentes sem o parâmetro ordem",
+    "data_hora_utc": "2026-10-27T17:48:48Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/usuarios/alunos?status=pendente",
+      "credencial": "admin",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": [
+        {
+          "id": 2,
+          "nome": "Zuleide Ramos Costa",
+          "email": "a1.zuleide@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:47:39.155681Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        },
+        {
+          "id": 3,
+          "nome": "Bruno Alves Lima",
+          "email": "a2.bruno@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:47:55.397834Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        },
+        {
+          "id": 4,
+          "nome": "Marta Sousa Neri",
+          "email": "a3.marta@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:47:58.528458Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        },
+        {
+          "id": 5,
+          "nome": "Ana Paula Freitas",
+          "email": "a4.ana@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:48:01.672455Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        }
+      ]
+    }
+  },
+  {
+    "passo": "2",
+    "descricao": "Fila de pendentes com ordem=asc",
+    "data_hora_utc": "2026-10-27T17:48:48Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/usuarios/alunos?status=pendente&ordem=asc",
+      "credencial": "admin",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": [
+        {
+          "id": 2,
+          "nome": "Zuleide Ramos Costa",
+          "email": "a1.zuleide@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:47:39.155681Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        },
+        {
+          "id": 3,
+          "nome": "Bruno Alves Lima",
+          "email": "a2.bruno@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:47:55.397834Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        },
+        {
+          "id": 4,
+          "nome": "Marta Sousa Neri",
+          "email": "a3.marta@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:47:58.528458Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        },
+        {
+          "id": 5,
+          "nome": "Ana Paula Freitas",
+          "email": "a4.ana@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:48:01.672455Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        }
+      ]
+    }
+  },
+  {
+    "passo": "3",
+    "descricao": "Status inválido",
+    "data_hora_utc": "2026-10-27T17:48:48Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/usuarios/alunos?status=xyz",
+      "credencial": "admin",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 400,
+      "corpo": {
+        "detail": "Status inválido. Informe um dos valores: analise_renovacao, ativado, inativado, pendente, rejeitado"
+      }
+    }
+  },
+  {
+    "passo": "4",
+    "descricao": "Sem filtro de status",
+    "data_hora_utc": "2026-10-27T17:48:49Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/usuarios/alunos",
+      "credencial": "admin",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": [
+        {
+          "id": 2,
+          "nome": "Zuleide Ramos Costa",
+          "email": "a1.zuleide@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:47:39.155681Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        },
+        {
+          "id": 3,
+          "nome": "Bruno Alves Lima",
+          "email": "a2.bruno@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:47:55.397834Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        },
+        {
+          "id": 4,
+          "nome": "Marta Sousa Neri",
+          "email": "a3.marta@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:47:58.528458Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        },
+        {
+          "id": 5,
+          "nome": "Ana Paula Freitas",
+          "email": "a4.ana@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:48:01.672455Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        },
+        {
+          "id": 6,
+          "nome": "Pedro Aprovado Silva",
+          "email": "ap.pedro@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "ativado",
+          "data_hora_envio_analise": "2026-10-27T17:48:02.805122Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        },
+        {
+          "id": 7,
+          "nome": "Rita Representante Melo",
+          "email": "rp.rita@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "ativado",
+          "data_hora_envio_analise": "2026-10-27T17:48:18.352014Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        }
+      ]
+    }
+  },
+  {
+    "passo": "5",
+    "descricao": "Rota /alunos (aluno_router) com status=pendente&ordem=asc",
+    "data_hora_utc": "2026-10-27T17:48:49Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/alunos?status=pendente&ordem=asc",
+      "credencial": "admin",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": [
+        {
+          "id": 2,
+          "nome": "Zuleide Ramos Costa",
+          "email": "a1.zuleide@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:47:39.155681Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        },
+        {
+          "id": 3,
+          "nome": "Bruno Alves Lima",
+          "email": "a2.bruno@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:47:55.397834Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        },
+        {
+          "id": 4,
+          "nome": "Marta Sousa Neri",
+          "email": "a3.marta@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:47:58.528458Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        },
+        {
+          "id": 5,
+          "nome": "Ana Paula Freitas",
+          "email": "a4.ana@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:48:01.672455Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        }
+      ]
+    }
+  }
+]

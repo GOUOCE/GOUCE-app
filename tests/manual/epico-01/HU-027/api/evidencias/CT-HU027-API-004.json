@@ -1,0 +1,18 @@
+[
+  {
+    "passo": "1",
+    "descricao": "Mailpit: mensagens para o A1 depois da aprovação do CT-003 (caixa limpa antes da aprovação)",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "http://127.0.0.1:58025/api/v1/search?query=to:a1.zuleide@qa.gouce.app"
+    },
+    "resposta": {
+      "total": 0,
+      "mensagens": []
+    }
+  },
+  {
+    "passo": "2",
+    "descricao": "Controle: na mesma stack, a reprovação do A2 (CT-005, passo 3) chegou ao Mailpit; o SMTP funciona e a aprovação é que não envia e-mail"
+  }
+]

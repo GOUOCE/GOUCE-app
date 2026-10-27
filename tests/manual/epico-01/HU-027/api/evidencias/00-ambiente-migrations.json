@@ -1,0 +1,29 @@
+[
+  {
+    "passo": "1",
+    "descricao": "alembic heads com as migrations da develop",
+    "commit": "4bf26d55",
+    "comando": "alembic heads",
+    "saida": [
+      "76_ponto_unico_por_bairro (head)",
+      "77_create_rota_complementar (head)"
+    ]
+  },
+  {
+    "passo": "2",
+    "descricao": "Log do container atuapi_backend ao subir com banco vazio e as migrations da develop (docker-entrypoint.sh executa alembic upgrade head)",
+    "comando": "docker logs atuapi_backend",
+    "saida": [
+      "Running database migrations via Alembic...",
+      "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.",
+      "INFO  [alembic.runtime.migration] Will assume transactional DDL.",
+      "ERROR [alembic.util.messaging] Multiple head revisions are present for given argument 'head'; please specify a specific target revision, '<branchname>@head' to narrow to a specific head, or 'heads' for all heads",
+      "FAILED: Multiple head revisions are present for given argument 'head'; please specify a specific target revision, '<branchname>@head' to narrow to a specific head, or 'heads' for all heads"
+    ],
+    "resultado": "API não sobe; GET /docs sem resposta (curl código 000)"
+  },
+  {
+    "passo": "3",
+    "descricao": "Contorno usado só na stack isolada: cópia das migrations em .qa-env/ com a migration zz_qa_merge_heads (down_revision = 76_ponto_unico_por_bairro, 77_create_rota_complementar). O repositório não foi alterado."
+  }
+]

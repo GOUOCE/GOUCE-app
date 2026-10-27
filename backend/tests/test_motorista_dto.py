@@ -14,6 +14,10 @@ from src.modulos.motoristas.application.dtos.motorista_dto import (
     MotoristaResponseDTO,
 )
 from src.modulos.motoristas.model.entities.motorista import MotoristaORM
+from tests.test_motorista_telefone_validator import (
+    TELEFONES_INVALIDOS,
+    TELEFONES_VALIDOS,
+)
 from src.shared.security.lgpd_encryption import (
     EncryptedString,
     hash_telefone,
@@ -55,9 +59,26 @@ class MotoristaDTOTest(unittest.TestCase):
         with self.assertRaises(ValidationError):
             CriarMotoristaDTO(nome="Maria da Silva", telefone="   ")
 
-    def test_cadastro_rejeita_telefone_sem_digitos(self):
-        with self.assertRaises(ValidationError):
-            CriarMotoristaDTO(nome="Maria da Silva", telefone="abc")
+    def test_cadastro_rejeita_telefone_malformado(self):
+        for telefone in TELEFONES_INVALIDOS:
+            if not telefone.strip():
+                continue
+            with self.subTest(telefone=telefone):
+                with self.assertRaises(ValidationError) as contexto:
+                    CriarMotoristaDTO(nome="Maria da Silva", telefone=telefone)
+                erro = contexto.exception.errors()[0]
+                self.assertEqual(erro["loc"], ("telefone",))
+                self.assertEqual(erro["type"], "value_error")
+                self.assertIn(
+                    "Informe um telefone válido com DDD.",
+                    erro["msg"],
+                )
+
+    def test_cadastro_aceita_telefones_validos_como_digitados(self):
+        for telefone in TELEFONES_VALIDOS:
+            with self.subTest(telefone=telefone):
+                dto = CriarMotoristaDTO(nome="Maria da Silva", telefone=telefone)
+                self.assertEqual(dto.telefone, telefone)
 
     def test_cadastro_aceita_telefone_formatado_com_digitos(self):
         dto = CriarMotoristaDTO(
@@ -67,12 +88,17 @@ class MotoristaDTOTest(unittest.TestCase):
 
         self.assertEqual(dto.telefone, "(85) 99999-0000")
 
-    def test_cadastro_rejeita_limites_de_tamanho(self):
+    def test_cadastro_rejeita_limite_de_tamanho_do_nome(self):
         with self.assertRaises(ValidationError):
             CriarMotoristaDTO(nome="A" * 151, telefone="85999990000")
 
-        with self.assertRaises(ValidationError):
-            CriarMotoristaDTO(nome="Maria da Silva", telefone="1" * 21)
+    def test_cadastro_nao_tem_limite_proprio_de_tamanho_para_telefone(self):
+        for telefone in ("1" * 21, "1" * 500):
+            with self.subTest(tamanho=len(telefone)):
+                with self.assertRaises(ValidationError) as contexto:
+                    CriarMotoristaDTO(nome="Maria da Silva", telefone=telefone)
+                erro = contexto.exception.errors()[0]
+                self.assertEqual(erro["type"], "value_error")
 
     def test_cadastro_rejeita_tipos_invalidos(self):
         with self.assertRaises(ValidationError):
@@ -108,16 +134,42 @@ class MotoristaDTOTest(unittest.TestCase):
         with self.assertRaises(ValidationError):
             AtualizarMotoristaDTO(telefone="   ")
 
-    def test_edicao_rejeita_telefone_sem_digitos(self):
-        with self.assertRaises(ValidationError):
-            AtualizarMotoristaDTO(telefone="abc")
+    def test_edicao_rejeita_telefone_malformado(self):
+        for telefone in TELEFONES_INVALIDOS:
+            if not telefone.strip():
+                continue
+            with self.subTest(telefone=telefone):
+                with self.assertRaises(ValidationError) as contexto:
+                    AtualizarMotoristaDTO(telefone=telefone)
+                erro = contexto.exception.errors()[0]
+                self.assertEqual(erro["loc"], ("telefone",))
+                self.assertEqual(erro["type"], "value_error")
+                self.assertIn(
+                    "Informe um telefone válido com DDD.",
+                    erro["msg"],
+                )
 
-    def test_edicao_rejeita_limites_de_tamanho(self):
+    def test_edicao_aceita_telefones_validos_como_digitados(self):
+        for telefone in TELEFONES_VALIDOS:
+            with self.subTest(telefone=telefone):
+                dto = AtualizarMotoristaDTO(telefone=telefone)
+                self.assertEqual(dto.telefone, telefone)
+
+    def test_edicao_sem_telefone_ou_com_telefone_nulo_nao_valida_telefone(self):
+        self.assertIsNone(AtualizarMotoristaDTO(nome="Maria da Silva").telefone)
+        self.assertIsNone(AtualizarMotoristaDTO(telefone=None).telefone)
+
+    def test_edicao_rejeita_limite_de_tamanho_do_nome(self):
         with self.assertRaises(ValidationError):
             AtualizarMotoristaDTO(nome="A" * 151)
 
-        with self.assertRaises(ValidationError):
-            AtualizarMotoristaDTO(telefone="1" * 21)
+    def test_edicao_nao_tem_limite_proprio_de_tamanho_para_telefone(self):
+        for telefone in ("1" * 21, "1" * 500):
+            with self.subTest(tamanho=len(telefone)):
+                with self.assertRaises(ValidationError) as contexto:
+                    AtualizarMotoristaDTO(telefone=telefone)
+                erro = contexto.exception.errors()[0]
+                self.assertEqual(erro["type"], "value_error")
 
     def test_edicao_rejeita_tipos_invalidos(self):
         with self.assertRaises(ValidationError):
