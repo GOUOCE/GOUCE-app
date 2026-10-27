@@ -39,44 +39,31 @@ let FACULDADES_MOCK: FaculdadeItem[] = [
 
 export const faculdadeService = {
   async listarFaculdades(busca = ''): Promise<FaculdadeItem[]> {
-    try {
-      const response = await api.get<any[]>('/faculdades');
-      const lista = response.data || [];
-      const mapeados: FaculdadeItem[] = lista.map((f) => {
-        const nomeCompleto = f.nome_faculdade || f.nome || '';
-        const siglaExtraida = f.sigla || (nomeCompleto.length <= 10 ? nomeCompleto : nomeCompleto.split(' ')[0]);
+    const response = await api.get<any[]>('/faculdades');
+    const lista = response.data || [];
+    const mapeados: FaculdadeItem[] = lista.map((f) => {
+      const nomeCompleto = f.nome_faculdade || f.nome || '';
+      const siglaExtraida = f.sigla || (nomeCompleto.length <= 10 ? nomeCompleto : nomeCompleto.split(' ')[0]);
 
-        return {
-          id: f.id_faculdade || f.id,
-          nome: nomeCompleto,
-          sigla: siglaExtraida,
-          campus: f.campus_faculdade || f.campus,
-          ativo: f.ativo ?? true,
-          viagens_programadas_pendentes: Boolean(f.viagens_programadas_pendentes),
-        };
-      });
+      return {
+        id: f.id_faculdade || f.id,
+        nome: nomeCompleto,
+        sigla: siglaExtraida,
+        campus: f.campus_faculdade || f.campus,
+        ativo: f.ativo ?? true,
+        viagens_programadas_pendentes: Boolean(f.viagens_programadas_pendentes),
+      };
+    });
 
-      const q = busca.toLowerCase().trim();
-      if (!q) return mapeados;
+    const q = busca.toLowerCase().trim();
+    if (!q) return mapeados;
 
-      return mapeados.filter(
-        (f) =>
-          f.nome.toLowerCase().includes(q) ||
-          f.sigla.toLowerCase().includes(q) ||
-          f.campus.toLowerCase().includes(q)
-      );
-    } catch (error) {
-      console.warn('Backend /faculdades indisponível, utilizando MOCK:', error);
-      const q = busca.toLowerCase().trim();
-      if (!q) return JSON.parse(JSON.stringify(FACULDADES_MOCK));
-
-      return JSON.parse(JSON.stringify(FACULDADES_MOCK)).filter(
-        (f: FaculdadeItem) =>
-          f.nome.toLowerCase().includes(q) ||
-          f.sigla.toLowerCase().includes(q) ||
-          f.campus.toLowerCase().includes(q)
-      );
-    }
+    return mapeados.filter(
+      (f) =>
+        f.nome.toLowerCase().includes(q) ||
+        f.sigla.toLowerCase().includes(q) ||
+        f.campus.toLowerCase().includes(q)
+    );
   },
 
   async obterFaculdadePorId(id: number): Promise<FaculdadeItem | undefined> {

@@ -47,6 +47,10 @@ from src.modulos.usuarios.application.use_cases.criar_usuario_use_case import (
 from src.modulos.usuarios.application.use_cases.validar_etapa_1_use_case import ValidarEtapa1UsuarioUseCase
 from src.modulos.usuarios.application.use_cases.validar_etapa_2_use_case import ValidarEtapa2UsuarioUseCase
 from src.modulos.usuarios.application.use_cases.validar_etapa_3_use_case import ValidarEtapa3UsuarioUseCase
+from src.shared.validators.id_localidade_validator import IdLocalidade
+from src.modulos.usuarios.application.use_cases.validar_vinculos_aluno_use_case import (
+    VinculoAlunoValidationError,
+)
 from src.modulos.usuarios.application.use_cases.validar_etapa_4_use_case import ValidarEtapa4UsuarioUseCase
 from src.modulos.usuarios.application.use_cases.renovar_vinculo_use_case import (
     RenovacaoJaEmAnaliseError,
@@ -327,8 +331,8 @@ async def renovar_vinculo(
     transgenero: str = Form(...),
     tem_filhos: bool = Form(...),
     telefone: str = Form(...),
-    bairro_id: str = Form(...),
-    faculdade_id: int = Form(...),
+    bairro_id: Annotated[IdLocalidade, Form()] = ...,
+    faculdade_id: Annotated[IdLocalidade, Form()] = ...,
     curso: str = Form(...),
     periodo_ingresso: str = Form(...),
     turno_curso: str = Form(...),
@@ -389,6 +393,13 @@ async def renovar_vinculo(
             code="REQUEST_VALIDATION_ERROR",
             message="Requisição inválida",
             details=validation_details(error.errors()),
+        )
+    except VinculoAlunoValidationError as error:
+        return _error_response(
+            status_code=422,
+            code="REQUEST_VALIDATION_ERROR",
+            message="Requisição inválida",
+            details=[{"field": error.field, "message": str(error)}],
         )
     except RenovacaoJaEmAnaliseError as error:
         return _error_response(409, "RENOVACAO_EM_ANALISE", str(error))

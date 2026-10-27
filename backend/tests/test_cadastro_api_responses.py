@@ -31,11 +31,19 @@ class FakeRepository:
         self.internal_error = internal_error
         self.invalid_response = False
         self.last_command = None
+        self.bairro_ativo = True
+        self.faculdade_ativa = True
 
     def buscar_por_email(self, email):
         if self.internal_error:
             raise self.internal_error
         return object() if self.email_exists else None
+
+    def bairro_ativo_existe(self, bairro_id):
+        return bairro_id == 1 and self.bairro_ativo
+
+    def faculdade_ativa_existe(self, faculdade_id):
+        return faculdade_id == 1 and self.faculdade_ativa
 
     def criar_aluno(self, comando, senha_hash):
         self.last_command = comando
@@ -139,7 +147,7 @@ class CadastroApiResponsesTest(unittest.IsolatedAsyncioTestCase):
             "senha": "Senha123",
             "telefone": "85999990000",
             "faculdade_id": 1,
-            "bairro_id": "Centro",
+            "bairro_id": "1",
             "identificacao_genero": "Mulher",
             "transgenero": "Não",
             "tem_filhos": False,
@@ -270,6 +278,37 @@ class CadastroApiResponsesTest(unittest.IsolatedAsyncioTestCase):
         self.assert_error_response(self, body, "EMAIL_ALREADY_REGISTERED")
         self.assertEqual(status, 409)
         self.assertEqual(body["error"]["message"], "E-mail já cadastrado no sistema")
+
+    async def test_vinculos_invalidos_retornam_422_em_json_e_multipart(self):
+        for request in (self.request, self.multipart_request):
+            for campo in ("bairro_id", "faculdade_id"):
+                for valor in ("Centro", "0", "-1", "1.5", "999", "999999999999999999"):
+                    with self.subTest(formato=request.__name__, campo=campo, valor=valor):
+                        self.repository.last_command = None
+                        status, body = await request(self.payload(**{campo: valor}))
+                        self.assertEqual(status, 422)
+                        self.assertEqual(body["error"]["details"][0]["field"], campo)
+                        self.assertIn("localidade" if not str(valor).isdigit() or valor == "0" or len(valor) > 10 else "ativ", body["error"]["details"][0]["message"])
+                        self.assertIsNone(self.repository.last_command)
+        self.assertEqual(self.storage_service.deleted_objects, [])
+
+    async def test_vinculos_inativos_retornam_422(self):
+        for campo, atributo in (("bairro_id", "bairro_ativo"), ("faculdade_id", "faculdade_ativa")):
+            for request in (self.request, self.multipart_request):
+                with self.subTest(campo=campo, formato=request.__name__):
+                    setattr(self.repository, atributo, False)
+                    status, body = await request(self.payload())
+                    setattr(self.repository, atributo, True)
+                    self.assertEqual(status, 422)
+                    self.assertEqual(body["error"]["details"][0]["field"], campo)
+                    self.assertIsNone(self.repository.last_command)
+
+    async def test_ids_inteiros_e_numericos_sao_normalizados(self):
+        for valor in (1, "1"):
+            status, _ = await self.request(self.payload(bairro_id=valor, faculdade_id=valor))
+            self.assertEqual(status, 201)
+            self.assertEqual(self.repository.last_command.bairro_id, 1)
+            self.assertIsInstance(self.repository.last_command.bairro_id, int)
 
     async def test_validacao_de_negocio_retorna_400_com_campo(self):
         status, body = await self.request(self.payload(nome="Maria"))

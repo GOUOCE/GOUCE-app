@@ -12,6 +12,9 @@ from src.shared.validators.senha_validator import SenhaValidator
 from src.shared.validators.turno_curso_validator import TurnoCursoValidator
 from src.shared.validators.demograficos_validator import DemograficosValidator
 from src.shared.validators.nome_completo_validator import validar_nome_completo
+from src.modulos.usuarios.application.use_cases.validar_vinculos_aluno_use_case import (
+    ValidarVinculosAlunoUseCase,
+)
 
 
 
@@ -229,6 +232,8 @@ class CriarUsuarioUseCase:
         # Lança a exceção com a lista de erros, se existirem
         if erros:
             raise ValidacaoMultiplaError(erros)
+
+        ValidarVinculosAlunoUseCase(self.repository).execute(dto.bairro_id, dto.faculdade_id)
 
         # Criação do usuário após passar por todas as validações
         senha_hash = self.hasher.hash(dto.senha)

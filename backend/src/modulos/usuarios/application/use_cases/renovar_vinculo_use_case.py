@@ -28,6 +28,9 @@ from src.modulos.usuarios.application.dtos.usuario_dto import (
 from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
 from src.shared.validators.string_sem_numero_validator import StringSemNumeroValidator
 from src.shared.validators.nome_completo_validator import validar_nome_completo
+from src.modulos.usuarios.application.use_cases.validar_vinculos_aluno_use_case import (
+    ValidarVinculosAlunoUseCase,
+)
 
 
 class RenovacaoJaEmAnaliseError(Exception):
@@ -129,6 +132,8 @@ class RenovarVinculoUseCase:
 
         if erros:
             raise ValidacaoMultiplaError(erros)
+
+        ValidarVinculosAlunoUseCase(self.repository).execute(dto.bairro_id, dto.faculdade_id)
 
         matricula = self.salvar_arquivo_use_case.execute(
             arquivo_matricula[2], arquivo_matricula[0], arquivo_matricula[1]
