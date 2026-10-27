@@ -11,7 +11,7 @@
 Funcionalidade: Gerenciamento de Rotas Complementares
   Como administrador
   Quero cadastrar, visualizar, editar, inativar e reativar rotas complementares,
-  definindo seus horários e pontos de conexão com as rotas principais
+  definindo seus horários de saída e retorno e o ponto de conexão com as rotas principais
   Para garantir que alunos de áreas não cobertas pelo trajeto principal consigam utilizar o transporte
 
 
@@ -25,11 +25,11 @@ Funcionalidade: Gerenciamento de Rotas Complementares
 
     # AC-01 - Listagem de rotas complementares ativas
     @fluxo_feliz @prioridade_media
-    Cenário: Administrador visualiza as rotas complementares ativas com horário e ponto de conexão
-      Dado que existe a rota complementar ativa "Van 2 - Bairro Novo" vinculada à rota principal "Rota Centro - UFC", com saída às "06:00" e ponto de conexão "Trevo do Bairro Novo"
+    Cenário: Administrador visualiza as rotas complementares ativas com horários e ponto de conexão
+      Dado que existe a rota complementar ativa "Van 2 - Bairro Novo" vinculada à rota principal "Rota Centro - UFC", com saída às "06:00", retorno às "17:40" e ponto de conexão "Trevo do Bairro Novo"
       E existe a rota complementar inativa "Van Antiga"
       Quando o administrador visualiza a listagem de rotas complementares
-      Então o sistema exibe a rota "Van 2 - Bairro Novo" com saída às "06:00", ponto de conexão "Trevo do Bairro Novo" e rota principal "Rota Centro - UFC"
+      Então o sistema exibe a rota "Van 2 - Bairro Novo" com saída às "06:00", retorno às "17:40", ponto de conexão "Trevo do Bairro Novo" e rota principal "Rota Centro - UFC"
       E o sistema não exibe a rota "Van Antiga"
 
 
@@ -43,6 +43,7 @@ Funcionalidade: Gerenciamento de Rotas Complementares
         | Rota Principal Vinculada | Rota Centro - UFC    |
         | Nome                     | Van 2 - Bairro Novo  |
         | Horário de saída         | 06:00                |
+        | Horário de retorno       | 17:40                |
         | Ponto de Conexão         | Trevo do Bairro Novo |
       E clica no botão "Salvar"
       Então o sistema exibe a mensagem "Operação realizada com sucesso"
@@ -63,6 +64,7 @@ Funcionalidade: Gerenciamento de Rotas Complementares
         | campo_obrigatorio        |
         | Nome                     |
         | Horário de saída         |
+        | Horário de retorno       |
         | Ponto de Conexão         |
         | Rota Principal Vinculada |
 
@@ -81,8 +83,87 @@ Funcionalidade: Gerenciamento de Rotas Complementares
         | campo_obrigatorio        |
         | Nome                     |
         | Horário de saída         |
+        | Horário de retorno       |
         | Ponto de Conexão         |
         | Rota Principal Vinculada |
+
+
+    # FA-005 - Nome de rota duplicado (AC-11, decisão do PO na #208, item 1)
+    @fluxo_infeliz @FA005 @prioridade_alta
+    Esquema do Cenário: Sistema bloqueia o cadastro de rota complementar com nome já usado por outra rota
+      Dado que existe a <tipo_existente> "<nome_existente>" com status "<status_existente>"
+      Quando o administrador seleciona "Nova Rota"
+      E preenche o campo "Nome" com "<nome_informado>"
+      E preenche os demais campos obrigatórios corretamente
+      E clica no botão "Salvar"
+      Então o sistema exibe a mensagem "Já existe uma rota com este nome."
+      E a rota complementar "<nome_informado>" não é cadastrada
+
+      Exemplos:
+        | tipo_existente    | nome_existente      | status_existente | nome_informado      |
+        | rota complementar | Van 2 - Bairro Novo | ativa            | Van 2 - Bairro Novo |
+        | rota complementar | Van 2 - Bairro Novo | ativa            | VAN 2 - BAIRRO NOVO |
+        | rota complementar | Van Antiga          | inativa          | Van Antiga          |
+        | rota principal    | Rota Centro - UFC   | ativa            | Rota Centro - UFC   |
+        | rota principal    | Rota Antiga         | inativa          | rota antiga         |
+
+
+    # FA-005 - Nome de rota duplicado na edição (AC-11)
+    @fluxo_infeliz @FA005 @prioridade_media
+    Cenário: Sistema bloqueia a edição de rota complementar para um nome já usado por outra rota
+      Dado que existem as rotas complementares ativas "Van 2 - Bairro Novo" e "Van 5 - Planalto"
+      Quando o administrador seleciona a ação "Editar" para "Van 5 - Planalto"
+      E altera o campo "Nome" para "Van 2 - Bairro Novo"
+      E clica no botão "Salvar"
+      Então o sistema exibe a mensagem "Já existe uma rota com este nome."
+      E a rota complementar "Van 5 - Planalto" mantém os dados originais
+
+
+    # FA-006 - Horário de retorno igual ou anterior à saída (AC-12, decisão do PO na #208, item 2)
+    @fluxo_infeliz @FA006 @validacao_campos @prioridade_alta
+    Esquema do Cenário: Sistema bloqueia rota complementar com horário de retorno que não é posterior ao de saída
+      Quando o administrador seleciona "Nova Rota"
+      E preenche o campo "Horário de saída" com "<saida>"
+      E preenche o campo "Horário de retorno" com "<retorno>"
+      E preenche os demais campos obrigatórios corretamente
+      E clica no botão "Salvar"
+      Então o sistema destaca o campo "Horário de retorno" como inválido
+      E exibe a mensagem "Horário de retorno deve ser maior que o horário de saída."
+      E a rota complementar não é cadastrada
+
+      Exemplos:
+        | saida | retorno |
+        | 06:00 | 06:00   |
+        | 06:00 | 05:59   |
+
+
+    # AC-10 - Um único ponto de conexão e um horário de saída e um de retorno (decisão do PO na #208, item 4)
+    @regra_negocio @teste_api @nao_automatizavel_via_appium @prioridade_media
+    Esquema do Cenário: API rejeita rota complementar com mais de um valor no campo "<campo>"
+      Quando o administrador envia uma requisição para cadastrar uma rota complementar com uma lista de valores em "<campo>"
+      Então a API responde com o status "422 Unprocessable Entity"
+      E a rota complementar não é cadastrada
+
+      Exemplos:
+        | campo           |
+        | ponto_conexao   |
+        | horario_saida   |
+        | horario_retorno |
+
+
+    # AC-15 - Tamanho máximo do nome e do ponto de conexão (valor-limite)
+    @validacao_campos @teste_api @nao_automatizavel_via_appium @prioridade_media
+    Esquema do Cenário: API valida o tamanho máximo do campo "<campo>" da rota complementar
+      Quando o administrador envia uma requisição para cadastrar uma rota complementar com "<campo>" de <tamanho> caracteres
+      Então a API responde com o status "<status>"
+      E <resultado>
+
+      Exemplos:
+        | campo         | tamanho | status                   | resultado                                                                                    |
+        | nome          | 150     | 201 Created              | a rota complementar é cadastrada                                                             |
+        | nome          | 151     | 422 Unprocessable Entity | a resposta informa a mensagem "Nome da rota complementar deve ter no máximo 150 caracteres." |
+        | ponto_conexao | 150     | 201 Created              | a rota complementar é cadastrada                                                             |
+        | ponto_conexao | 151     | 422 Unprocessable Entity | a resposta informa a mensagem "Ponto de conexão deve ter no máximo 150 caracteres."          |
 
 
     # FA-002 - Rota principal inativa fora das opções de seleção (AC-03)
@@ -104,11 +185,12 @@ Funcionalidade: Gerenciamento de Rotas Complementares
       Quando o administrador seleciona a ação "Editar" para "Van 2 - Bairro Novo"
       E altera o campo "Nome" para "Van 3 - Bairro Novo"
       E altera o campo "Horário de saída" para "05:45"
+      E altera o campo "Horário de retorno" para "18:10"
       E altera o campo "Ponto de Conexão" para "Posto Central"
       E altera o campo "Rota Principal Vinculada" para "Rota Integrada"
       E clica no botão "Salvar"
       Então o sistema exibe a mensagem "Operação realizada com sucesso"
-      E a listagem exibe a rota "Van 3 - Bairro Novo" com saída às "05:45", ponto de conexão "Posto Central" e rota principal "Rota Integrada"
+      E a listagem exibe a rota "Van 3 - Bairro Novo" com saída às "05:45", retorno às "18:10", ponto de conexão "Posto Central" e rota principal "Rota Integrada"
 
 
     # AC-05, AC-07 - Inativação de rota complementar
@@ -130,6 +212,16 @@ Funcionalidade: Gerenciamento de Rotas Complementares
       E confirma a reativação
       Então o sistema exibe a mensagem "Operação realizada com sucesso"
       E a rota complementar "Van Antiga" volta a ser exibida na listagem de ativas
+
+
+    # FA-004 - Reativação de rota complementar com rota principal inativa (AC-13, decisão do PO na #208, item 6)
+    @fluxo_infeliz @FA004 @RNF012 @prioridade_alta
+    Cenário: Sistema bloqueia a reativação de rota complementar cuja rota principal está inativa
+      Dado que existe a rota complementar inativa "Van Antiga" vinculada à rota principal inativa "Rota Antiga"
+      Quando o administrador ativa a chave "Mostrar inativos"
+      E tenta reativar a rota complementar "Van Antiga"
+      Então o sistema exibe a mensagem "Não é possível reativar esta rota complementar pois a rota principal vinculada está inativa."
+      E a rota complementar "Van Antiga" permanece inativa
 
 
     # FA-001 - Inativação de rota complementar com agendamentos futuros (AC-06, RNF-012)
@@ -185,9 +277,7 @@ Funcionalidade: Gerenciamento de Rotas Complementares
       Então os registros de alocação e relatórios de períodos anteriores permanecem inalterados
 
 
-    # RN-010 - Rota complementar inativa fora das opções de agendamento do aluno
-    # Observação: o requisito não descreve esse comportamento de forma explícita; ele decorre da
-    # finalidade da rota (oferecer trajetos para o agendamento) e deve ser confirmado com o time.
+    # AC-14, RN-010 - Rota complementar inativa fora das opções de agendamento do aluno (decisão do PO na #208, item 8)
     @regra_negocio @RN010 @prioridade_media @depende_de_HU013
     Cenário: Rota complementar inativa não é exibida como opção de agendamento para o aluno
       Dado que existe a rota complementar inativa "Van Antiga"

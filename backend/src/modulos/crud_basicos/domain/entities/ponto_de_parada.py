@@ -1,7 +1,14 @@
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    ForeignKey,
+    Boolean,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import relationship
 
 from src.shared.infrastructure.db import Base
@@ -9,6 +16,14 @@ from src.shared.infrastructure.db import Base
 
 class PontoDeParadaORM(Base):
     __tablename__ = "ponto_de_parada"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "bairro_id",
+            "nome",
+            name="uq_ponto_de_parada_bairro_nome",
+        ),
+    )
 
     ponto_id = Column(
         Integer,

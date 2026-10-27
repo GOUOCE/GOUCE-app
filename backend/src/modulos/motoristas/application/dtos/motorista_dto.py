@@ -46,8 +46,8 @@ class _MotoristaCamposDTO(BaseModel):
 
     @field_validator("telefone")
     @classmethod
-    def telefone_deve_conter_digito(cls, value: str) -> str:
-        return _validar_telefone_com_digitos(value)
+    def telefone_deve_ser_valido(cls, value: str) -> str:
+        return validar_telefone_br(value)
 
 
 class CriarMotoristaDTO(_MotoristaCamposDTO):
@@ -74,10 +74,10 @@ class AtualizarMotoristaDTO(BaseModel):
 
     @field_validator("telefone")
     @classmethod
-    def telefone_deve_conter_digito(cls, value: str | None) -> str | None:
+    def telefone_deve_ser_valido(cls, value: str | None) -> str | None:
         if value is None:
             return value
-        return _validar_telefone_com_digitos(value)
+        return validar_telefone_br(value)
 
 
 class MotoristaResponseDTO(BaseModel):
