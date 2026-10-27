@@ -24,6 +24,12 @@ from src.modulos.crud_basicos.interface.http.faculdade_routes import (
     router as faculdade_router,
 )
 from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
+from src.modulos.rotas.model.entities.rota_principal import (
+    RotaPrincipalORM,
+    rota_principal_bairro,
+    rota_principal_faculdade_ida,
+    rota_principal_faculdade_volta,
+)
 from src.shared.auth.dependencies import require_roles
 from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.infrastructure.audit_model import LogAuditoriaORM
@@ -236,7 +242,14 @@ class FaculdadesApiHttpTest(unittest.IsolatedAsyncioTestCase):
         self.engine = create_engine("sqlite:///:memory:")
         Base.metadata.create_all(
             self.engine,
-            tables=[FaculdadeORM.__table__, LogAuditoriaORM.__table__],
+            tables=[
+                FaculdadeORM.__table__,
+                LogAuditoriaORM.__table__,
+                RotaPrincipalORM.__table__,
+                rota_principal_bairro,
+                rota_principal_faculdade_ida,
+                rota_principal_faculdade_volta,
+            ],
         )
         self.Session = sessionmaker(bind=self.engine)
         self.session = self.Session()
@@ -261,7 +274,14 @@ class FaculdadesApiHttpTest(unittest.IsolatedAsyncioTestCase):
         self.session.close()
         Base.metadata.drop_all(
             self.engine,
-            tables=[FaculdadeORM.__table__, LogAuditoriaORM.__table__],
+            tables=[
+                FaculdadeORM.__table__,
+                LogAuditoriaORM.__table__,
+                RotaPrincipalORM.__table__,
+                rota_principal_bairro,
+                rota_principal_faculdade_ida,
+                rota_principal_faculdade_volta,
+            ],
         )
 
     async def asgi_request(self, path, payload=None, method="GET", query_string=b""):

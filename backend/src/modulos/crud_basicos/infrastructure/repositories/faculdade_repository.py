@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Callable, Optional
 
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
@@ -27,9 +27,30 @@ class FaculdadeJaDesativadaError(ValueError):
     pass
 
 
+class FaculdadeComRotaAtivaError(ValueError):
+    """Lançada ao inativar uma faculdade vinculada a uma rota ativa."""
+    pass
+
+
 class FaculdadeRepository:
-    def __init__(self, session: Session):
+    def __init__(
+        self,
+        session: Session,
+        rota_ativa_checker: Optional[Callable[[int], bool]] = None,
+    ):
         self.session = session
+        self._rota_ativa_checker = rota_ativa_checker
+
+    def possui_rota_ativa(self, faculdade_id: int) -> bool:
+        if self._rota_ativa_checker is not None:
+            return bool(self._rota_ativa_checker(faculdade_id))
+        return False
+
+    def _validar_sem_rota_ativa(self, faculdade_id: int) -> None:
+        if self.possui_rota_ativa(faculdade_id):
+            raise FaculdadeComRotaAtivaError(
+                "Esta faculdade não pode ser inativada pois pertence a uma rota ativa. Remova-a da rota antes de continuar."
+            )
 
     def listar(
         self,
@@ -138,6 +159,9 @@ class FaculdadeRepository:
                 "Esta faculdade já está cadastrada."
             )
 
+        if ativo is False and faculdade.ativo:
+            self._validar_sem_rota_ativa(faculdade_id)
+
         try:
             if ativo is not None and ativo != faculdade.ativo:
 
@@ -220,6 +244,8 @@ class FaculdadeRepository:
 
         if not faculdade.ativo:
             raise FaculdadeJaDesativadaError("Faculdade já desativada.")
+
+        self._validar_sem_rota_ativa(faculdade_id)
 
         faculdade.ativo = False
 

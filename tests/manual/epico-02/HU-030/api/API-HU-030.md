@@ -9,16 +9,16 @@
 | Camada | API |
 | Tipo de teste | Funcional manual — suíte essencial (baseada em risco) |
 | Endpoints | `GET /representantes` (filtros `ativo`, `faculdade_id`), `POST /representantes/promover` com JSON `aluno_id` e `faculdade_id`, `PATCH /representantes/{id}/revogar` sem corpo obrigatório. Todas exigem administrador. O id da URL é o do usuário/aluno. |
-| Ambiente | A preencher — URL, branch e commit da implementação/correção em execução |
+| Ambiente | Stack Docker isolada com banco limpo (`docker compose -p atu-api`), API em `http://localhost:8001`, branch `feature/testes-api-hu-030`, commit `5e7301a0` (`develop`, **sem** o PR #195). Migrations até a 75 com um contorno de ambiente (ver Observações gerais) |
 | Total de casos | 13 |
-| Última execução | Não realizada |
+| Última execução | 2026-10-25 |
 | Testador | Cauan Ricardo — execução com apoio de IA (Claude Code) |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 13 | 0 | 0 | 0 | 0 | 13 |
+| ❌ Reprovada | 13 | 9 | 1 | 2 | 1 | 0 |
 
 ## Pré-condições
 
@@ -38,19 +38,19 @@ São **13 casos essenciais**, executados na ordem abaixo. CT-001 começa com vaz
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU030-API-001 | Listar ativos e revogados e filtrar instituição | Vazio; ativos/revogados; filtros de status/instituição | 200; ambos os status sem filtro; id igual ao do aluno | ⏳ PENDENTE | Não executado. |
-| CT-HU030-API-002 | Promover aluno aprovado e ativo sem alterar seu cadastro | Larissa aprovada/ativa e instituição F2 com id ≠ 1 | 201; representação F2; mesmo aluno e dados preservados | ⏳ PENDENTE | Não executado. |
-| CT-HU030-API-003 | Validar instituição obrigatória e ids | Omissão/null; fronteiras −1/0/positivo e tipo inválido | 422; erro por campo; nenhuma promoção | ⏳ PENDENTE | Não executado. |
-| CT-HU030-API-004 | Recusar aluno/instituição inexistente e faculdade inativa | Referências inexistentes e instituição inativa | 404 para inexistentes; 422 para faculdade inativa | ⏳ PENDENTE | Não executado. |
-| CT-HU030-API-005 | Bloquear os quatro estados inelegíveis do BDD | Pendente; rejeitado; vínculo vencido; inativo | 422 com sentido de somente aprovados/ativos; sem promoção | ⏳ PENDENTE | Não executado. |
-| CT-HU030-API-006 | Impedir promoção repetida de representante ativo | Mesma função ativa, mesma ou outra instituição | 409; sem duplicação nem troca silenciosa de instituição | ⏳ PENDENTE | Não executado. |
-| CT-HU030-API-007 | Revogar função preservando aluno e tratar repetição/inexistente | Ativo → revogado; repetição; aluno sem representação | 200 e aluno mantido; repetição 409; inexistente 404 | ⏳ PENDENTE | Não executado. |
-| CT-HU030-API-008 | Auditar atribuição, revogação e reatribuição | PROMOVER/REVOGAR; valores, usuário e timestamp | Um log por operação efetiva; tentativas recusadas sem log de sucesso | ⏳ PENDENTE | Não executado. |
-| CT-HU030-API-009 | Reatribuir ao revogado em outra instituição sem duplicar aluno | Revogado → ativo; instituição diferente | 201; mesma linha e aluno; F1 correta; novo log | ⏳ PENDENTE | Não executado. |
-| CT-HU030-API-010 | Conceder perfil no login e preservar acesso de aluno | Login após promoção; perfis de aluno/representante e dados originais | 200; ambos os perfis; cadastro/credenciais preservados | ⏳ PENDENTE | Não executado. |
-| CT-HU030-API-011 | Remover permissões após revogação, inclusive com sessão anterior | Revogar com sessão existente; token antigo e login novo | Aluno continua acessando; nenhuma permissão de representante | ⏳ PENDENTE | Não executado. |
-| CT-HU030-API-012 | Restringir gestão a administrador e negar menus administrativos ao representante | Três credenciais × todas as rotas de representantes | 403 aluno/representante; 401 sem autenticação; nenhuma escrita | ⏳ PENDENTE | Não executado. |
-| CT-HU030-API-013 | Limitar lista e presença à instituição sob responsabilidade | Própria universidade × outra; consulta e escrita direta | Só próprios alunos; presença externa recusada e não gravada | ⏳ PENDENTE | Depende das HU-018/021; marcar 🚫 se ausentes. |
+| CT-HU030-API-001 | Listar ativos e revogados e filtrar instituição | Vazio; ativos/revogados; filtros de status/instituição | 200; ambos os status sem filtro; id igual ao do aluno | ✅ PASSOU | 200 `[]` no vazio; sem filtro vêm ativos e revogados; filtros por status, instituição e combinados respeitados. |
+| CT-HU030-API-002 | Promover aluno aprovado e ativo sem alterar seu cadastro | Larissa aprovada/ativa e instituição F2 com id ≠ 1 | 201; representação F2; mesmo aluno e dados preservados | ✅ PASSOU | 201 para Larissa na F2; mesmo aluno e matrícula; perfil de representante concedido sem novo usuário. |
+| CT-HU030-API-003 | Validar instituição obrigatória e ids | Omissão/null; fronteiras −1/0/positivo e tipo inválido | 422; erro por campo; nenhuma promoção | ⚠️ PARCIAL | 422 em todas as variações e nada gravado; mas a mensagem é só “Valor inválido.”, sem motivo. |
+| CT-HU030-API-004 | Recusar aluno/instituição inexistente e faculdade inativa | Referências inexistentes e instituição inativa | 404 para inexistentes; 422 para faculdade inativa | ✅ PASSOU | 404 “Aluno não encontrado.” e “Faculdade não encontrada.”; 422 “Faculdade inativa.”; nada gravado. |
+| CT-HU030-API-005 | Bloquear os quatro estados inelegíveis do BDD | Pendente; rejeitado; vínculo vencido; inativo | 422 com sentido de somente aprovados/ativos; sem promoção | ❌ FALHOU | Pendente, rejeitado e inativado recusados (422); aluno com vínculo vencido foi promovido (201). |
+| CT-HU030-API-006 | Impedir promoção repetida de representante ativo | Mesma função ativa, mesma ou outra instituição | 409; sem duplicação nem troca silenciosa de instituição | ✅ PASSOU | 409 “Este aluno já é um representante ativo.” na mesma e em outra instituição; sem troca silenciosa nem log. |
+| CT-HU030-API-007 | Revogar função preservando aluno e tratar repetição/inexistente | Ativo → revogado; repetição; aluno sem representação | 200 e aluno mantido; repetição 409; inexistente 404 | ✅ PASSOU | 200 na revogação (aluno mantido); repetição 409; inexistente e nunca promovido 404. |
+| CT-HU030-API-008 | Auditar atribuição, revogação e reatribuição | PROMOVER/REVOGAR; valores, usuário e timestamp | Um log por operação efetiva; tentativas recusadas sem log de sucesso | ✅ PASSOU | Um log por operação efetiva (PROMOVER/REVOGAR), com executor, valores e horário; recusas sem log. |
+| CT-HU030-API-009 | Reatribuir ao revogado em outra instituição sem duplicar aluno | Revogado → ativo; instituição diferente | 201; mesma linha e aluno; F1 correta; novo log | ✅ PASSOU | 201 na reatribuição à F1; mesma linha e aluno; F2 sem vínculo ativo; novo log PROMOVER. |
+| CT-HU030-API-010 | Conceder perfil no login e preservar acesso de aluno | Login após promoção; perfis de aluno/representante e dados originais | 200; ambos os perfis; cadastro/credenciais preservados | ✅ PASSOU | Login 200 com `aluno` e `supervisor` (papel legado do representante); dados originais preservados. |
+| CT-HU030-API-011 | Remover permissões após revogação, inclusive com sessão anterior | Revogar com sessão existente; token antigo e login novo | Aluno continua acessando; nenhuma permissão de representante | ⚠️ PARCIAL | Novo login volta só com `aluno`; a parte com endpoint exclusivo de representante é 🚫 (não existe na `develop`). |
+| CT-HU030-API-012 | Restringir gestão a administrador e negar menus administrativos ao representante | Três credenciais × todas as rotas de representantes | 403 aluno/representante; 401 sem autenticação; nenhuma escrita | ✅ PASSOU | 403 (aluno e representantes) e 401 (sem token) nas 3 rotas; representante também 403 em `/motoristas`; nada gravado. |
+| CT-HU030-API-013 | Limitar lista e presença à instituição sob responsabilidade | Própria universidade × outra; consulta e escrita direta | Só próprios alunos; presença externa recusada e não gravada | 🚫 BLOQUEADO | Sem endpoints de lista/presença (HU-018/021) na `develop`: o OpenAPI só tem as 3 rotas de representantes. |
 
 ## Detalhamento dos casos
 
@@ -72,8 +72,9 @@ São **13 casos essenciais**, executados na ordem abaixo. CT-001 começa com vaz
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Antes da massa, `GET /representantes` devolveu `200` `[]`. Com Ana (F1, ativa), Pedro (F1, revogado) e Bruno (F2, ativo): sem filtro, 3 itens (inclui o revogado); `ativo=true`: Ana e Bruno; `ativo=false`: Pedro; `faculdade_id=1`: Ana e Pedro; `faculdade_id=2`: Bruno; `ativo=false&faculdade_id=1`: Pedro; `ativo=true&faculdade_id=2`: Bruno.
+- Cada item traz `id`, `aluno_id` (iguais), nome, e-mail, `faculdade_id`, instituição e campus. `GET /usuarios/alunos?status=ativado` lista Larissa, usada na promoção.
+- Status: ✅ Passou.
 
 ---
 
@@ -95,8 +96,9 @@ São **13 casos essenciais**, executados na ordem abaixo. CT-001 começa com vaz
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `POST /representantes/promover` com Larissa (aluno 2, matrícula F2, validade futura) e F2: HTTP `201`, “Operação realizada com sucesso”, `ativo: true`, `faculdade_id: 2` (IFCE).
+- Banco: uma linha em `representante` (2, ativo, F2); `aluno` inalterado (2, `ativado`, F2); o perfil de representante entrou em `usuario_tipo` (conferido no CT-009: 2 linhas, aluno + representante); nenhum novo usuário.
+- Status: ✅ Passou.
 
 ---
 
@@ -117,8 +119,9 @@ São **13 casos essenciais**, executados na ordem abaixo. CT-001 começa com vaz
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- HTTP `422` em todas: sem `faculdade_id`, `null`, `0`, `-1` (mensagem “Valor inválido.”) e `"abc"` (“Informe um número válido.”); o mesmo para `aluno_id` ausente, `null`, `0`, `-1` e `"abc"`. Nenhuma instituição padrão assumida; nenhuma representação criada.
+- A mensagem para ausente, nulo e não positivo é só `"Valor inválido."`, sem o motivo. Defeito: [BUG-HU030-API-002](issues/BUG-HU030-API-002-mensagens-de-validacao-genericas.md).
+- Status: ⚠️ Parcial.
 
 ---
 
@@ -139,8 +142,8 @@ São **13 casos essenciais**, executados na ordem abaixo. CT-001 começa com vaz
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Aluno `999999` (F1): HTTP `404` “Aluno não encontrado.”. Faculdade `999999`: `404` “Faculdade não encontrada.”. Faculdade inativa (F3): `422` “Faculdade inativa.”. Nenhuma representação criada para o aluno livre.
+- Status: ✅ Passou.
 
 ---
 
@@ -163,8 +166,11 @@ São **13 casos essenciais**, executados na ordem abaixo. CT-001 começa com vaz
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Pendente, rejeitado e inativado: HTTP `422` “Aluno não aprovado ou inativo.”, sem representação criada. Variante `ativado` com `usuario.ativo = false`: `422`, sem representação.
+- Aluno `ativado`, usuário ativo e `validade_acesso` vencida há 30 dias: HTTP `201` e a função foi concedida (esperado `422`, BDD “Vínculo vencido”).
+- A frase da mensagem foi avaliada pelo sentido (“aprovado ou inativo”), não pelo texto.
+- Defeito: [BUG-HU030-API-001](issues/BUG-HU030-API-001-aluno-com-vinculo-vencido-pode-ser-representante.md).
+- Status: ❌ Falhou.
 
 ---
 
@@ -185,8 +191,8 @@ São **13 casos essenciais**, executados na ordem abaixo. CT-001 começa com vaz
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Promover de novo Larissa (ativa na F2) com a F2 e com a F1: HTTP `409` “Este aluno já é um representante ativo.” nas duas. A linha de representação continuou com a F2; a contagem de `log_auditoria` não mudou (6 antes e depois).
+- Status: ✅ Passou.
 
 ---
 
@@ -208,8 +214,9 @@ São **13 casos essenciais**, executados na ordem abaixo. CT-001 começa com vaz
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `PATCH /representantes/2/revogar`: HTTP `200`, `ativo: false`, que continua na listagem sem filtro. Aluno mantido (`ativado`, usuário ativo); `usuario_tipo` ficou só com `aluno`.
+- Repetir a revogação: `409` “Este usuário não é um representante ativo.”. Id `999999` e aluno que nunca foi representante: `404` “Representante não encontrado.”.
+- Status: ✅ Passou.
 
 ---
 
@@ -231,8 +238,9 @@ São **13 casos essenciais**, executados na ordem abaixo. CT-001 começa com vaz
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `log_auditoria` (`entidade = 'representante'`) tem 9 registros, todos do administrador A: PROMOVER (Ana, Pedro, Bruno e Larissa na F2), REVOGAR (Pedro), PROMOVER (aluno com vínculo vencido, ver CT-005), REVOGAR (Larissa), PROMOVER (Larissa na F1, `valor_anterior` F2 inativa, `valor_novo` F1 ativa) e REVOGAR (Larissa).
+- Recusas (404, 409, 422, 403) não geraram registro. Os logs anteriores não foram apagados na reatribuição.
+- Status: ✅ Passou.
 
 ---
 
@@ -254,8 +262,8 @@ São **13 casos essenciais**, executados na ordem abaixo. CT-001 começa com vaz
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `POST /representantes/promover` de Larissa revogada com a F1: HTTP `201`. `GET ?faculdade_id=1` a mostra ativa; `?faculdade_id=2` só tem Bruno. Mesma linha em `representante` (id 2, agora F1, ativa) e mesmo aluno; novo log PROMOVER com valor anterior (F2, inativa) e novo (F1, ativa).
+- Status: ✅ Passou.
 
 ---
 
@@ -277,8 +285,9 @@ São **13 casos essenciais**, executados na ordem abaixo. CT-001 começa com vaz
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `POST /auth/login` de Larissa promovida: HTTP `200`; `usuario.roles` e o token trazem `["aluno", "supervisor"]`. `GET /usuarios/me` devolve os dados originais (matrícula F2, `ativado`, bairro, curso).
+- A `develop` usa o papel legado `supervisor` para o representante; o rótulo `representante` só existe no PR #195 (não incluído nesta execução).
+- Status: ✅ Passou.
 
 ---
 
@@ -300,8 +309,9 @@ São **13 casos essenciais**, executados na ordem abaixo. CT-001 começa com vaz
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Revogar Larissa e entrar de novo: HTTP `200` com `roles: ["aluno"]`; `usuario_tipo` só `aluno`; `GET /usuarios/me` segue 200 com os dados do aluno.
+- Token anterior (de antes da revogação): `GET /usuarios/me` 200 como aluno; `GET /representantes` 403 (rota de administrador, o que não prova nada sobre o perfil). O token antigo continua carregando `supervisor` até expirar, mas não existe endpoint exclusivo de representante para tentar. Essa parte ficou 🚫 (depende da HU-018/021).
+- Status: ⚠️ Parcial.
 
 ---
 
@@ -323,8 +333,9 @@ São **13 casos essenciais**, executados na ordem abaixo. CT-001 começa com vaz
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Aluno comum, Ana e Bruno (representantes) e sem token, em `GET /representantes?ativo=true`, `POST /representantes/promover` e `PATCH /representantes/{id}/revogar`: HTTP `403` “Acesso negado” para os três perfis logados e `401` “Não autenticado” sem token, nas três rotas. Ana também recebeu `403` em `GET /motoristas`.
+- Contagem de `representante` (5) e de `log_auditoria` (9) igual antes e depois; Ana e Bruno seguiram ativos.
+- Status: ✅ Passou.
 
 ---
 
@@ -347,8 +358,8 @@ São **13 casos essenciais**, executados na ordem abaixo. CT-001 começa com vaz
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O OpenAPI da `develop` tem só `/representantes`, `/representantes/promover` e `/representantes/{id}/revogar`; não há lista de embarque nem presença (HU-018/021). Sem os endpoints, o isolamento por universidade (RN-015) não pode ser verificado.
+- Status: 🚫 Bloqueado.
 
 ## Rastreabilidade
 
@@ -372,7 +383,9 @@ São **13 casos essenciais**, executados na ordem abaixo. CT-001 começa com vaz
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-HU030-API-005 | Aluno com vínculo vencido pode ser promovido a representante | [#235](https://github.com/GOUOCE/GOUCE-app/issues/235) |
+| CT-HU030-API-003 | Mensagens de validação genéricas (“Valor inválido.”) | [#236](https://github.com/GOUOCE/GOUCE-app/issues/236) |
+| PC-01 (ambiente) | A `develop` não sobe em banco vazio (migration 69) | [#215](https://github.com/GOUOCE/GOUCE-app/issues/215) |
 
 ## Observações gerais
 
@@ -396,5 +409,10 @@ São **13 casos essenciais**, executados na ordem abaixo. CT-001 começa com vaz
   - FA-002, FA-003 e FA-004 não fixam texto literal. Conferir o sentido da mensagem; “Aluno não aprovado ou inativo.” não é falha apenas por não repetir outra frase. Vínculo vencido aceito, por outro lado, contraria o cenário expresso do BDD.
   - O requisito não diz que a instituição sob responsabilidade tem de ser igual à matrícula do aluno; o backend permite que difiram. **Confirmar essa regra** antes de exigir bloqueio de atribuição entre faculdades. Os casos conferem a instituição escolhida e a preservação da matrícula, sem criar restrição nova.
   - O requisito não exige seletor inicialmente vazio; o AC-12 exige instituição válida e preenchida. Se a UI não deixa limpar a seleção, registrar a variação vazia como não exercitável nela e usar o caso de API, sem presumir validação aprovada.
-- Todos os casos permanecem pendentes; riscos estáticos não são defeitos reproduzidos. Marcar dependências 🚫 somente durante a execução, distinguir falha da versão e impedimento de massa/funcionalidade e registrar cada variação. Não alterar o resultado esperado para aprovar o código atual.
+- **Execução (2026-10-25):** stack isolada (`docker compose -p atu-api`), banco limpo, na `develop` **sem** o PR #195. Resultado: 9 passaram, 1 falhou, 2 parciais e 1 bloqueado.
+- **Contorno de ambiente (não é do caso):** em banco vazio a migration `69_faculdade_fk_in_aluno` falha (`column f.sigla does not exist`); foi usada uma cópia temporária da migration 68 com a coluna `sigla`, sem alterar o repositório ([#215](https://github.com/GOUOCE/GOUCE-app/issues/215)).
+- **Massa:** F1 = UFC / Campus Quixadá (seed da migration 69, id 1), F2 = IFCE / Campus Quixadá (id 2) e F3 = Uniateneu / Campus Ocara inativa (id 3), criadas pela API. Alunos de teste cadastrados pela API e aprovados; os estados `rejeitado` e `inativado`, o `validade_acesso` vencido e o `usuario.ativo = false` do CT-005 foram preparados direto no banco local, e restaurados quando temporários. Ana, Pedro e Bruno foram promovidos pela API antes do CT-001 e entram na contagem de auditoria.
+- **Observação:** o aluno com vínculo vencido promovido no CT-005 (Aluno Vencido Qa) permaneceu como representante ativo no banco de teste.
+- **Observação de segurança (não confirmada como defeito):** o token de acesso emitido antes da revogação continua com o papel `supervisor` até expirar. Sem endpoint exclusivo de representante não foi possível mostrar impacto.
+- Todos os casos foram executados ou bloqueados nesta rodada; riscos estáticos não são defeitos reproduzidos. Marcar dependências 🚫 somente durante a execução, distinguir falha da versão e impedimento de massa/funcionalidade e registrar cada variação. Não alterar o resultado esperado para aprovar o código atual.
 - Suíte complementar: [UI-HU-030.md](../ui/UI-HU-030.md). Cancelamento de confirmação e pesquisa visual de aluno são verificados na UI; não existe chamada funcional de cancelar na API.

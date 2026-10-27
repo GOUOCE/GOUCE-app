@@ -995,6 +995,7 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar, 
 9.  Administrador consegue visualizar os bairros e pontos de parada inativos ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.
 10. Todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
 11. Bairros e pontos de parada inativos não são exibidos para seleção em novos cadastros (ex.: cadastro de aluno e montagem de rotas); alunos e rotas já vinculados a eles mantêm o vínculo (RN-004).
+12. Os nomes são validados no cadastro e na edição. **Nome do bairro:** de 3 a 100 caracteres, apenas letras (com acento), espaços, hífen, apóstrofo e ponto, mesmo conjunto do cadastro do aluno; números, emoji e outros símbolos bloqueiam o salvamento com a mensagem "Use apenas letras, espaços, hífen ou apóstrofo". **Nome do ponto de parada:** de 2 a 100 caracteres, apenas letras (com acento), números, espaços, hífen, apóstrofo e ponto (ex.: "Parada 12", "BR-116"); emoji e outros símbolos bloqueiam o salvamento com a mensagem "Use apenas letras, números, espaços, hífen, apóstrofo ou ponto". Abaixo do tamanho mínimo, o salvamento é bloqueado com "Informe o nome do bairro com pelo menos 3 caracteres" (bairro) e "Informe um nome válido com pelo menos 2 caracteres." (ponto de parada). A regra vale na tela e na API.
 
     **Fluxo Principal:**
 
@@ -1061,6 +1062,7 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar, 
 9. Administrador consegue visualizar as faculdades inativas ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.
 10. Todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
 11. Faculdades inativas não são exibidas para seleção em novos cadastros (ex.: cadastro de aluno); alunos já vinculados a elas mantêm o vínculo (RN-004).
+12. Os campos são validados no cadastro e na edição. **Nome da instituição:** de 3 a 150 caracteres, apenas letras (com acento), números, espaços, hífen, apóstrofo e ponto (ex.: "Faculdade 7 de Setembro"); emoji e outros símbolos bloqueiam o salvamento com a mensagem "Use apenas letras, números, espaços, hífen, apóstrofo ou ponto". **Sigla:** de 2 a 20 caracteres, apenas letras e números, sem espaços (ex.: "UFC", "UNI7"); qualquer outro caractere bloqueia o salvamento com a mensagem "Use apenas letras e números na sigla, sem espaços". **Campus:** de 2 a 100 caracteres, mesmo conjunto de caracteres do nome da instituição. Abaixo do tamanho mínimo, o salvamento é bloqueado com "Informe o nome da instituição com pelo menos 3 caracteres", "Informe a sigla do nome (ex.: UFC)" e "Informe o campus da instituição"; acima do máximo, com "O nome da instituição deve ter no máximo 150 caracteres", "A sigla deve ter no máximo 20 caracteres" e "O campus deve ter no máximo 100 caracteres". A sigla é gravada e exibida junto da faculdade. A regra vale na tela e na API.
 
 **Fluxo Principal:**
 
