@@ -106,7 +106,11 @@ class MotoristaPostgreSQLIntegrationTest(unittest.TestCase):
         self.created_ids.clear()
 
     def _criar(self, sufixo: str, telefone: str = "85999990000") -> dict:
-        resultado = self.repository.criar(f"{self.prefix} {sufixo}", telefone)
+        resultado = self.repository.criar(
+            f"{self.prefix} {sufixo}",
+            telefone,
+            self._executor_id(),
+        )
         self.created_ids.add(resultado["id"])
         return resultado
 
@@ -160,7 +164,7 @@ class MotoristaPostgreSQLIntegrationTest(unittest.TestCase):
         primeiro = self._criar("Primeiro", "(85) 99999-0000")
 
         with self.assertRaises(MotoristaTelefoneEmUsoError):
-            self.repository.criar("Segundo", "85999990000")
+            self.repository.criar("Segundo", "85999990000", self._executor_id())
 
         dados_crus = self.session.execute(
             text(
@@ -179,6 +183,7 @@ class MotoristaPostgreSQLIntegrationTest(unittest.TestCase):
         atualizado = self.repository.atualizar(
             primeiro["id"],
             nome=f"{self.prefix} Atualizado",
+            usuario_executor_id=self._executor_id(),
         )
         self.assertEqual(atualizado["nome"], f"{self.prefix} Atualizado")
         self.assertEqual(atualizado["telefone"], primeiro["telefone"])
@@ -189,7 +194,7 @@ class MotoristaPostgreSQLIntegrationTest(unittest.TestCase):
         executor_id = self._executor_id()
         self.repository.inativar(primeiro["id"], executor_id)
         with self.assertRaises(MotoristaTelefoneEmUsoError):
-            self.repository.criar("Terceiro", "(85) 99999-0000")
+            self.repository.criar("Terceiro", "(85) 99999-0000", self._executor_id())
 
     def test_telefone_invalido_nao_grava_e_telefone_antigo_nao_bloqueia_nome(self):
         use_case = GerenciarMotoristasUseCase(self.repository)
@@ -198,21 +203,35 @@ class MotoristaPostgreSQLIntegrationTest(unittest.TestCase):
         for telefone in ("123", "998112233", "889981122334", "(88) abcdef"):
             with self.subTest(telefone=telefone):
                 with self.assertRaises(MotoristaValidationError):
-                    use_case.criar(f"{self.prefix} Recusado", telefone)
+                    use_case.criar(
+                        f"{self.prefix} Recusado", telefone, self._executor_id()
+                    )
                 with self.assertRaises(MotoristaValidationError):
-                    use_case.atualizar(antigo["id"], telefone=telefone)
+                    use_case.atualizar(
+                        antigo["id"],
+                        telefone=telefone,
+                        usuario_executor_id=self._executor_id(),
+                    )
 
         recusados = self.repository.listar(nome=f"{self.prefix} Recusado")
         self.assertEqual(recusados, [])
 
-        editado = use_case.atualizar(antigo["id"], nome=f"{self.prefix} Novo Nome")
+        editado = use_case.atualizar(
+            antigo["id"],
+            nome=f"{self.prefix} Novo Nome",
+            usuario_executor_id=self._executor_id(),
+        )
         self.assertEqual(editado["nome"], f"{self.prefix} Novo Nome")
         self.assertEqual(editado["telefone"], "123")
 
-        valido = use_case.criar(f"{self.prefix} Valido", "(88) 99811-2233")
+        valido = use_case.criar(
+            f"{self.prefix} Valido", "(88) 99811-2233", self._executor_id()
+        )
         self.created_ids.add(valido["id"])
         with self.assertRaises(MotoristaTelefoneEmUsoError):
-            use_case.criar(f"{self.prefix} Duplicado", "88998112233")
+            use_case.criar(
+                f"{self.prefix} Duplicado", "88998112233", self._executor_id()
+            )
 
     def test_edicao_permite_proprio_telefone_e_rejeita_outro(self):
         primeiro = self._criar("Primeiro", "85911112222")
@@ -221,6 +240,7 @@ class MotoristaPostgreSQLIntegrationTest(unittest.TestCase):
         proprio = self.repository.atualizar(
             primeiro["id"],
             telefone="(85) 91111-2222",
+            usuario_executor_id=self._executor_id(),
         )
         self.assertEqual(proprio["telefone"], "(85) 91111-2222")
 
@@ -228,6 +248,7 @@ class MotoristaPostgreSQLIntegrationTest(unittest.TestCase):
             self.repository.atualizar(
                 primeiro["id"],
                 telefone="85 92222-3333",
+                usuario_executor_id=self._executor_id(),
             )
         self.assertEqual(
             self.repository.buscar(segundo["id"])["telefone"],
@@ -236,6 +257,7 @@ class MotoristaPostgreSQLIntegrationTest(unittest.TestCase):
 
     def test_concorrencia_preserva_unicidade_do_telefone(self):
         telefone = f"859{uuid4().int % 100_000_000:08d}"
+        executor_id = self._executor_id()
 
         def criar_em_sessao(sufixo: str):
             session = self.session_factory()
@@ -243,6 +265,7 @@ class MotoristaPostgreSQLIntegrationTest(unittest.TestCase):
                 resultado = MotoristaRepository(session).criar(
                     f"{self.prefix} {sufixo}",
                     telefone,
+                    executor_id,
                 )
                 return "sucesso", resultado["id"]
             except Exception as error:
@@ -298,6 +321,56 @@ class MotoristaPostgreSQLIntegrationTest(unittest.TestCase):
         self.assertEqual(log_reativacao.usuario_id, executor_id)
         self.assertIsNotNone(log_reativacao.criado_em)
 
+    def test_ciclo_auditado_cria_edita_inativa_e_reativa_sem_dados_pessoais(self):
+        executor_id = self._executor_id()
+        telefone = "(85) 97777-1234"
+        motorista = self._criar("Ciclo", telefone)
+        novo_nome = f"{self.prefix} Ciclo Editado"
+
+        self.repository.atualizar(
+            motorista["id"], nome=novo_nome, usuario_executor_id=executor_id
+        )
+        self.repository.inativar(motorista["id"], executor_id)
+        self.repository.reativar(motorista["id"], executor_id)
+
+        logs = (
+            self.session.query(LogAuditoriaORM)
+            .filter_by(entidade="motorista", entidade_id=str(motorista["id"]))
+            .order_by(LogAuditoriaORM.id)
+            .all()
+        )
+        self.assertEqual(
+            [(log.acao, log.valor_anterior, log.valor_novo) for log in logs],
+            [
+                ("CRIAR", None, "ativo"),
+                ("EDITAR", None, "nome"),
+                ("INATIVAR", "ativo", "inativo"),
+                ("REATIVAR", "inativo", "ativo"),
+            ],
+        )
+        for log in logs:
+            self.assertEqual(log.usuario_id, executor_id)
+            self.assertIsNotNone(log.criado_em)
+            # entidade_id é varchar no banco: compara como texto.
+            self.assertEqual(str(log.entidade_id), str(motorista["id"]))
+            texto = f"{log.valor_anterior}|{log.valor_novo}"
+            self.assertNotIn(self.prefix, texto)
+            self.assertNotIn(novo_nome, texto)
+            self.assertNotIn("97777", texto)
+
+        # Edição sem mudança efetiva e recusa por telefone duplicado não logam.
+        self.repository.atualizar(
+            motorista["id"], nome=novo_nome, usuario_executor_id=executor_id
+        )
+        with self.assertRaises(MotoristaTelefoneEmUsoError):
+            self.repository.criar("Duplicado", "85977771234", executor_id)
+        total = (
+            self.session.query(LogAuditoriaORM)
+            .filter_by(entidade="motorista", entidade_id=str(motorista["id"]))
+            .count()
+        )
+        self.assertEqual(total, 4)
+
     def test_rollback_de_falha_de_persistencia_preserva_dado(self):
         motorista = self._criar("Rollback")
         failing_factory = sessionmaker(bind=engine, class_=FailingCommitSession)
@@ -309,6 +382,7 @@ class MotoristaPostgreSQLIntegrationTest(unittest.TestCase):
                 failing_repository.atualizar(
                     motorista["id"],
                     nome=f"{self.prefix} Não Persistido",
+                    usuario_executor_id=self._executor_id(),
                 )
         finally:
             failing_session.close()

@@ -162,10 +162,14 @@ async def listar_motoristas(
 async def criar_motorista(
     dados: CriarMotoristaDTO,
     use_case: GerenciarMotoristasUseCase = Depends(get_use_case),
-    _: dict = Depends(require_roles(CargoEnum.ADMINISTRADOR.value)),
+    current_user: dict = Depends(require_roles(CargoEnum.ADMINISTRADOR.value)),
 ):
     try:
-        resultado = use_case.criar(dados.nome, dados.telefone)
+        resultado = use_case.criar(
+            dados.nome,
+            dados.telefone,
+            int(current_user["current_user_id"]),
+        )
         return {
             "message": "Motorista cadastrado com sucesso.",
             "data": resultado,
@@ -197,13 +201,14 @@ async def atualizar_motorista(
     motorista_id: int,
     dados: AtualizarMotoristaDTO,
     use_case: GerenciarMotoristasUseCase = Depends(get_use_case),
-    _: dict = Depends(require_roles(CargoEnum.ADMINISTRADOR.value)),
+    current_user: dict = Depends(require_roles(CargoEnum.ADMINISTRADOR.value)),
 ):
     try:
         resultado = use_case.atualizar(
             motorista_id,
             dados.nome,
             dados.telefone,
+            usuario_executor_id=int(current_user["current_user_id"]),
         )
         return {
             "message": "Motorista alterado com sucesso.",

@@ -32,8 +32,11 @@ class MotoristaRepository:
         self.session = session
         self._alocacoes_futuras_checker = alocacoes_futuras_checker
 
-    def criar(self, nome: str, telefone: str) -> dict:
-        """Cria um motorista sem criar ou alterar registros de usuário."""
+    def criar(self, nome: str, telefone: str, usuario_executor_id: int) -> dict:
+        """Cria um motorista e registra a auditoria na mesma transação.
+
+        Não cria nem altera registros de usuário.
+        """
         telefone_limpo = telefone.strip()
         try:
             if self.telefone_em_uso(telefone_limpo):
@@ -48,6 +51,8 @@ class MotoristaRepository:
                 ativo=True,
             )
             self.session.add(motorista)
+            self.session.flush()
+            self._registrar(usuario_executor_id, "CRIAR", motorista.id, None, "ativo")
             self.session.commit()
             self.session.refresh(motorista)
             return self._serializar(motorista)
@@ -102,16 +107,27 @@ class MotoristaRepository:
         motorista_id: int,
         nome: str | None = None,
         telefone: str | None = None,
+        *,
+        usuario_executor_id: int,
     ) -> dict | None:
-        """Atualiza parcialmente nome e telefone de um motorista."""
+        """Atualiza parcialmente nome e telefone e audita a mudança efetiva.
+
+        O log EDITAR guarda apenas os nomes dos campos alterados, pois nome e
+        telefone são dados pessoais criptografados. Sem mudança efetiva no
+        texto gravado, nenhum log é criado.
+        """
         telefone_limpo = None
+        campos_alterados = []
         try:
             motorista = self._buscar_orm(motorista_id)
             if motorista is None:
                 return None
 
             if nome is not None:
-                motorista.nome_completo = nome.strip()
+                nome_limpo = nome.strip()
+                if nome_limpo != (motorista.nome_completo or "").strip():
+                    campos_alterados.append("nome")
+                motorista.nome_completo = nome_limpo
             if telefone is not None:
                 telefone_limpo = telefone.strip()
                 if self.telefone_em_uso(
@@ -121,9 +137,20 @@ class MotoristaRepository:
                     raise MotoristaTelefoneEmUsoError(
                         "Este profissional já está registrado."
                     )
+                if telefone_limpo != (motorista.telefone or "").strip():
+                    campos_alterados.append("telefone")
                 motorista.telefone = telefone_limpo
                 motorista.telefone_hash = hash_telefone(telefone_limpo)
 
+            if campos_alterados:
+                self.session.flush()
+                self._registrar(
+                    usuario_executor_id,
+                    "EDITAR",
+                    motorista_id,
+                    None,
+                    ",".join(campos_alterados),
+                )
             self.session.commit()
             self.session.refresh(motorista)
             return self._serializar(motorista)
@@ -210,15 +237,12 @@ class MotoristaRepository:
                 return self._serializar(motorista)
 
             motorista.ativo = ativo
-            self.session.add(
-                LogAuditoriaORM(
-                    usuario_id=usuario_executor_id,
-                    acao=acao,
-                    entidade="motorista",
-                    entidade_id=motorista_id,
-                    valor_anterior="ativo" if estado_anterior else "inativo",
-                    valor_novo="ativo" if ativo else "inativo",
-                )
+            self._registrar(
+                usuario_executor_id,
+                acao,
+                motorista_id,
+                "ativo" if estado_anterior else "inativo",
+                "ativo" if ativo else "inativo",
             )
             self.session.commit()
             self.session.refresh(motorista)
@@ -226,6 +250,25 @@ class MotoristaRepository:
         except Exception:
             self.session.rollback()
             raise
+
+    def _registrar(
+        self,
+        usuario_id: int,
+        acao: str,
+        motorista_id: int,
+        valor_anterior: str | None,
+        valor_novo: str | None,
+    ) -> None:
+        self.session.add(
+            LogAuditoriaORM(
+                usuario_id=usuario_id,
+                acao=acao,
+                entidade="motorista",
+                entidade_id=motorista_id,
+                valor_anterior=valor_anterior,
+                valor_novo=valor_novo,
+            )
+        )
 
     @staticmethod
     def _serializar(motorista: MotoristaORM) -> dict:

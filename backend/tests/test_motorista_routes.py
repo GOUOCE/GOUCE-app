@@ -50,8 +50,8 @@ class FakeMotoristaUseCase:
         self.atualizar_error = None
         self.inativar_error = None
 
-    def criar(self, nome, telefone):
-        self.criar_chamadas.append((nome, telefone))
+    def criar(self, nome, telefone, usuario_executor_id):
+        self.criar_chamadas.append((nome, telefone, usuario_executor_id))
         if self.criar_error is not None:
             raise self.criar_error
         return {
@@ -78,8 +78,10 @@ class FakeMotoristaUseCase:
             raise MotoristaNaoEncontradoError("Motorista não encontrado.")
         return resultado
 
-    def atualizar(self, motorista_id, nome, telefone):
-        self.atualizar_chamadas.append((motorista_id, nome, telefone))
+    def atualizar(self, motorista_id, nome, telefone, *, usuario_executor_id):
+        self.atualizar_chamadas.append(
+            (motorista_id, nome, telefone, usuario_executor_id)
+        )
         if self.atualizar_error is not None:
             raise self.atualizar_error
         if nome is None and telefone is None:
@@ -234,7 +236,7 @@ class MotoristaRoutesTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(
             self.use_case.criar_chamadas,
-            [("Ana Lima", "85977770000")],
+            [("Ana Lima", "85977770000", 42)],
         )
 
     async def test_cadastro_com_telefone_duplicado_retorna_409_e_mensagem_exata(self):
@@ -337,7 +339,7 @@ class MotoristaRoutesTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.json()["data"]["telefone"], "85911112222")
         self.assertEqual(
             self.use_case.atualizar_chamadas,
-            [(1, None, "85911112222")],
+            [(1, None, "85911112222", 42)],
         )
 
     async def test_edicao_com_telefone_duplicado_retorna_409_e_mensagem_exata(self):
@@ -637,6 +639,72 @@ class MotoristaRoutesTest(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(response.status_code, 403)
         self.assert_error_response(self, response.json(), "FORBIDDEN")
+
+    async def test_cadastro_e_edicao_repassam_o_usuario_autenticado(self):
+        self.app.dependency_overrides[get_current_user] = lambda: {
+            **self._admin_context(),
+            "current_user_id": 77,
+        }
+
+        criado = await asgi_request(
+            self.app,
+            "POST",
+            "/motoristas",
+            {"nome": "Ana Lima", "telefone": "85977770000"},
+        )
+        editado = await asgi_request(
+            self.app,
+            "PATCH",
+            "/motoristas/1",
+            {"nome": "Maria Souza"},
+        )
+
+        self.assertEqual(criado.status_code, 201)
+        self.assertEqual(editado.status_code, 200)
+        self.assertEqual(
+            self.use_case.criar_chamadas,
+            [("Ana Lima", "85977770000", 77)],
+        )
+        self.assertEqual(
+            self.use_case.atualizar_chamadas,
+            [(1, "Maria Souza", None, 77)],
+        )
+
+    async def test_escrita_sem_token_ou_com_perfil_indevido_nao_tem_efeito(self):
+        corpo_post = {"nome": "Ana Lima", "telefone": "85977770000"}
+        corpo_patch = {"nome": "Maria Souza"}
+
+        self.app.dependency_overrides.pop(get_current_user, None)
+        for metodo, caminho, corpo in (
+            ("POST", "/motoristas", corpo_post),
+            ("PATCH", "/motoristas/1", corpo_patch),
+        ):
+            with self.subTest(metodo=metodo, perfil="sem token"):
+                response = await asgi_request(self.app, metodo, caminho, corpo)
+                self.assertEqual(response.status_code, 401)
+                self.assert_error_response(self, response.json(), "UNAUTHORIZED")
+
+        for perfil in (CargoEnum.ALUNO.value, CargoEnum.REPRESENTANTE.value):
+            self.app.dependency_overrides[get_current_user] = lambda perfil=perfil: {
+                "sub": "7",
+                "type": "access",
+                "role": perfil,
+                "current_role": perfil,
+                "current_roles": [perfil],
+                "current_user_id": 7,
+            }
+            for metodo, caminho, corpo in (
+                ("POST", "/motoristas", corpo_post),
+                ("PATCH", "/motoristas/1", corpo_patch),
+            ):
+                with self.subTest(metodo=metodo, perfil=perfil):
+                    response = await asgi_request(self.app, metodo, caminho, corpo)
+                    self.assertEqual(response.status_code, 403)
+                    self.assert_error_response(self, response.json(), "FORBIDDEN")
+
+        self.assertEqual(self.use_case.criar_chamadas, [])
+        self.assertEqual(self.use_case.atualizar_chamadas, [])
+        self.assertEqual(self.use_case.motoristas[1]["nome"], "Maria da Silva")
 
 
 if __name__ == "__main__":

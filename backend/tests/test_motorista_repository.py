@@ -99,6 +99,9 @@ class FakeSession:
             if entity not in self.motoristas:
                 self.motoristas.append(entity)
 
+    def flush(self):
+        return None
+
     def commit(self):
         self.commit_count += 1
         if self.fail_commit:
@@ -141,7 +144,7 @@ class MotoristaRepositoryTest(unittest.TestCase):
         self.repository = MotoristaRepository(self.session)
 
     def test_criar_persiste_motorista_sem_criar_usuario(self):
-        resultado = self.repository.criar("  Ana Lima  ", " 85977770000 ")
+        resultado = self.repository.criar("  Ana Lima  ", " 85977770000 ", 10)
 
         self.assertEqual(resultado["id"], 3)
         self.assertEqual(resultado["nome"], "Ana Lima")
@@ -157,7 +160,7 @@ class MotoristaRepositoryTest(unittest.TestCase):
         self.session.fail_commit = True
 
         with self.assertRaisesRegex(RuntimeError, "falha de persistência"):
-            self.repository.criar("Ana Lima", "85977770000")
+            self.repository.criar("Ana Lima", "85977770000", 10)
 
         self.assertEqual(self.session.rollback_count, 1)
         self.assertEqual(len(self.session.motoristas), 2)
@@ -167,7 +170,7 @@ class MotoristaRepositoryTest(unittest.TestCase):
             MotoristaTelefoneEmUsoError,
             "Este profissional já está registrado\\.",
         ):
-            self.repository.criar("Ana Lima", "85 99999-0000")
+            self.repository.criar("Ana Lima", "85 99999-0000", 10)
 
         self.assertEqual(self.session.commit_count, 0)
         self.assertEqual(self.session.rollback_count, 1)
@@ -175,13 +178,13 @@ class MotoristaRepositoryTest(unittest.TestCase):
 
     def test_criar_rejeita_telefone_de_motorista_inativo(self):
         with self.assertRaises(MotoristaTelefoneEmUsoError):
-            self.repository.criar("Ana Lima", "(85) 88888-0000")
+            self.repository.criar("Ana Lima", "(85) 88888-0000", 10)
 
         self.assertEqual(self.session.commit_count, 0)
         self.assertEqual(self.session.rollback_count, 1)
 
     def test_atualizar_permite_manter_o_proprio_telefone_formatado(self):
-        resultado = self.repository.atualizar(1, telefone="(85) 99999-0000")
+        resultado = self.repository.atualizar(1, telefone="(85) 99999-0000", usuario_executor_id=10)
 
         self.assertEqual(resultado["telefone"], "(85) 99999-0000")
         self.assertEqual(self.ativo.telefone_hash, hash_telefone("85999990000"))
@@ -189,7 +192,7 @@ class MotoristaRepositoryTest(unittest.TestCase):
 
     def test_atualizar_rejeita_telefone_de_outro_motorista_inativo(self):
         with self.assertRaises(MotoristaTelefoneEmUsoError):
-            self.repository.atualizar(1, telefone="85 88888-0000")
+            self.repository.atualizar(1, telefone="85 88888-0000", usuario_executor_id=10)
 
         self.assertEqual(self.ativo.telefone, "85999990000")
         self.assertEqual(self.session.commit_count, 0)
@@ -222,7 +225,7 @@ class MotoristaRepositoryTest(unittest.TestCase):
         self.assertIsNone(self.repository.buscar(99))
 
     def test_atualizar_altera_apenas_campos_informados(self):
-        resultado = self.repository.atualizar(1, telefone=" 85911112222 ")
+        resultado = self.repository.atualizar(1, telefone=" 85911112222 ", usuario_executor_id=10)
 
         self.assertEqual(resultado["nome"], "Maria da Silva")
         self.assertEqual(resultado["telefone"], "85911112222")
@@ -230,7 +233,7 @@ class MotoristaRepositoryTest(unittest.TestCase):
         self.assertEqual(self.session.commit_count, 1)
 
     def test_atualizar_motorista_inexistente_nao_persiste(self):
-        resultado = self.repository.atualizar(99, nome="Novo Nome")
+        resultado = self.repository.atualizar(99, nome="Novo Nome", usuario_executor_id=10)
 
         self.assertIsNone(resultado)
         self.assertEqual(self.session.commit_count, 0)
@@ -240,7 +243,7 @@ class MotoristaRepositoryTest(unittest.TestCase):
         self.session.fail_commit = True
 
         with self.assertRaisesRegex(RuntimeError, "falha de persistência"):
-            self.repository.atualizar(1, nome="Novo Nome")
+            self.repository.atualizar(1, nome="Novo Nome", usuario_executor_id=10)
 
         self.assertEqual(self.session.rollback_count, 1)
         self.assertEqual(self.ativo.nome_completo, "Maria da Silva")
@@ -368,10 +371,6 @@ class InativacaoComAlocacoesFuturasTest(unittest.TestCase):
         self.assertIsNotNone(coluna.default)
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class MotoristaTelefoneSQLiteTest(unittest.TestCase):
     """Valida telefone, hash e persistência com um SQLite real em memória."""
 
@@ -402,7 +401,7 @@ class MotoristaTelefoneSQLiteTest(unittest.TestCase):
             hash_telefone("88998112233"),
         )
 
-        criado = self.use_case.criar("Francisco Alves", "(88) 99811-2233")
+        criado = self.use_case.criar("Francisco Alves", "(88) 99811-2233", 10)
         linha = self.session.execute(
             text("SELECT telefone_hash FROM motorista WHERE id = :id"),
             {"id": criado["id"]},
@@ -411,20 +410,20 @@ class MotoristaTelefoneSQLiteTest(unittest.TestCase):
         self.assertEqual(linha, hash_telefone("88998112233"))
 
     def test_telefone_com_e_sem_mascara_continua_sendo_duplicado(self):
-        self.use_case.criar("Francisco Alves", "(88) 99811-2233")
+        self.use_case.criar("Francisco Alves", "(88) 99811-2233", 10)
 
         for telefone in ("88998112233", "88 99811-2233", "(88) 99811-2233"):
             with self.subTest(telefone=telefone):
                 with self.assertRaises(MotoristaTelefoneEmUsoError):
-                    self.use_case.criar("Francisco Alves Filho", telefone)
+                    self.use_case.criar("Francisco Alves Filho", telefone, 10)
 
-        outro = self.use_case.criar("Antônio Lima", "(88) 99700-4455")
+        outro = self.use_case.criar("Antônio Lima", "(88) 99700-4455", 10)
         with self.assertRaises(MotoristaTelefoneEmUsoError):
-            self.use_case.atualizar(outro["id"], telefone="88998112233")
+            self.use_case.atualizar(outro["id"], telefone="88998112233", usuario_executor_id=10)
         self.assertEqual(self._contar("motorista"), 2)
 
     def test_telefone_e_gravado_como_digitado_e_criptografado(self):
-        criado = self.use_case.criar("Francisco Alves", "(88) 99811-2233")
+        criado = self.use_case.criar("Francisco Alves", "(88) 99811-2233", 10)
 
         bruto = self.session.execute(
             text("SELECT telefone FROM motorista WHERE id = :id"),
@@ -436,11 +435,13 @@ class MotoristaTelefoneSQLiteTest(unittest.TestCase):
             "(88) 99811-2233",
         )
 
-        editado = self.use_case.atualizar(criado["id"], telefone="8834125566")
+        editado = self.use_case.atualizar(
+            criado["id"], telefone="8834125566", usuario_executor_id=10
+        )
         self.assertEqual(editado["telefone"], "8834125566")
 
     def test_telefone_recusado_nao_grava_nem_comita(self):
-        existente = self.use_case.criar("Francisco Alves", "(88) 99811-2233")
+        existente = self.use_case.criar("Francisco Alves", "(88) 99811-2233", 10)
         commits = []
         original_commit = self.session.commit
         self.session.commit = lambda: commits.append(1) or original_commit()
@@ -448,13 +449,16 @@ class MotoristaTelefoneSQLiteTest(unittest.TestCase):
         for telefone in ("123", "998112233", "(88) abcdef", "+55 88 99811-2233"):
             with self.subTest(telefone=telefone):
                 with self.assertRaises(MotoristaValidationError):
-                    self.use_case.criar("Antônio Lima", telefone)
+                    self.use_case.criar("Antônio Lima", telefone, 10)
                 with self.assertRaises(MotoristaValidationError):
-                    self.use_case.atualizar(existente["id"], telefone=telefone)
+                    self.use_case.atualizar(
+                        existente["id"], telefone=telefone, usuario_executor_id=10
+                    )
 
         self.assertEqual(commits, [])
         self.assertEqual(self._contar("motorista"), 1)
-        self.assertEqual(self._contar("log_auditoria"), 0)
+        # Só o CRIAR do cadastro inicial: as recusas não geram log.
+        self.assertEqual(self._contar("log_auditoria"), 1)
         self.assertEqual(
             self.repository.buscar(existente["id"])["telefone"],
             "(88) 99811-2233",
@@ -470,9 +474,212 @@ class MotoristaTelefoneSQLiteTest(unittest.TestCase):
         self.session.add(legado)
         self.session.commit()
 
-        editado = self.use_case.atualizar(legado.id, nome="Maria Atual")
+        editado = self.use_case.atualizar(legado.id, nome="Maria Atual", usuario_executor_id=10)
 
         self.assertEqual(editado["nome"], "Maria Atual")
         self.assertEqual(editado["telefone"], "123")
         with self.assertRaises(MotoristaValidationError):
-            self.use_case.atualizar(legado.id, telefone="123")
+            self.use_case.atualizar(legado.id, telefone="123", usuario_executor_id=10)
+
+
+class MotoristaAuditoriaSQLiteTest(unittest.TestCase):
+    """Auditoria de cadastro e edição com SQLite real em memória (HU-010, #233)."""
+
+    NOME = "Francisco Alves"
+    TELEFONE = "88998112233"
+
+    def setUp(self):
+        self.engine = create_engine(
+            "sqlite://",
+            poolclass=StaticPool,
+            connect_args={"check_same_thread": False},
+        )
+        Base.metadata.create_all(
+            self.engine,
+            tables=[MotoristaORM.__table__, LogAuditoriaORM.__table__],
+        )
+        self.session = sessionmaker(bind=self.engine)()
+        self.repository = MotoristaRepository(self.session)
+        self.criado = self.repository.criar(self.NOME, self.TELEFONE, 10)
+
+    def tearDown(self):
+        self.session.close()
+        self.engine.dispose()
+
+    def _logs(self):
+        self.session.expire_all()
+        return (
+            self.session.query(LogAuditoriaORM)
+            .order_by(LogAuditoriaORM.id)
+            .all()
+        )
+
+    def _assert_sem_dados_pessoais(self, logs):
+        for log in logs:
+            texto = f"{log.valor_anterior}|{log.valor_novo}|{log.acao}"
+            for proibido in (
+                self.NOME,
+                "Novo Nome",
+                self.TELEFONE,
+                "99811",
+                "(88)",
+            ):
+                self.assertNotIn(proibido, texto)
+
+    def test_criar_grava_log_criar_sem_dados_pessoais(self):
+        logs = self._logs()
+
+        self.assertEqual(len(logs), 1)
+        self.assertEqual(logs[0].acao, "CRIAR")
+        self.assertEqual(logs[0].usuario_id, 10)
+        self.assertEqual(logs[0].entidade, "motorista")
+        self.assertEqual(logs[0].entidade_id, self.criado["id"])
+        self.assertIsNone(logs[0].valor_anterior)
+        self.assertEqual(logs[0].valor_novo, "ativo")
+        self.assertIsNotNone(logs[0].criado_em)
+        self._assert_sem_dados_pessoais(logs)
+
+    def test_editar_registra_apenas_os_campos_efetivamente_alterados(self):
+        casos = [
+            ({"nome": "Novo Nome"}, "nome"),
+            ({"telefone": "88912345678"}, "telefone"),
+            ({"nome": "Outro Nome", "telefone": "88987654321"}, "nome,telefone"),
+        ]
+        for indice, (campos, esperado) in enumerate(casos, start=2):
+            with self.subTest(campos=list(campos)):
+                self.repository.atualizar(
+                    self.criado["id"], usuario_executor_id=20 + indice, **campos
+                )
+                logs = self._logs()
+                self.assertEqual(len(logs), indice)
+                self.assertEqual(logs[-1].acao, "EDITAR")
+                self.assertEqual(logs[-1].usuario_id, 20 + indice)
+                self.assertEqual(logs[-1].entidade_id, self.criado["id"])
+                self.assertIsNone(logs[-1].valor_anterior)
+                self.assertEqual(logs[-1].valor_novo, esperado)
+                self.assertIsNotNone(logs[-1].criado_em)
+        self._assert_sem_dados_pessoais(self._logs())
+
+    def test_editar_so_um_campo_com_o_outro_reenviado_igual(self):
+        self.repository.atualizar(
+            self.criado["id"],
+            nome=self.NOME,
+            telefone="88912345678",
+            usuario_executor_id=10,
+        )
+
+        self.assertEqual(self._logs()[-1].valor_novo, "telefone")
+
+    def test_editar_sem_mudanca_efetiva_nao_grava_log(self):
+        casos = [
+            {"nome": self.NOME},
+            {"nome": f"  {self.NOME}  "},
+            {"telefone": self.TELEFONE},
+            {"nome": self.NOME, "telefone": f" {self.TELEFONE} "},
+        ]
+        for campos in casos:
+            with self.subTest(campos=campos):
+                resultado = self.repository.atualizar(
+                    self.criado["id"], usuario_executor_id=10, **campos
+                )
+                self.assertEqual(resultado, self.criado)
+                self.assertEqual(len(self._logs()), 1)
+
+    def test_trocar_so_a_mascara_do_telefone_conta_como_edicao(self):
+        resultado = self.repository.atualizar(
+            self.criado["id"], telefone="(88) 99811-2233", usuario_executor_id=10
+        )
+
+        self.assertEqual(resultado["telefone"], "(88) 99811-2233")
+        logs = self._logs()
+        self.assertEqual(len(logs), 2)
+        self.assertEqual(logs[-1].acao, "EDITAR")
+        self.assertEqual(logs[-1].valor_novo, "telefone")
+        self._assert_sem_dados_pessoais(logs)
+
+    def test_telefone_duplicado_nao_grava_log_nem_altera(self):
+        outro = self.repository.criar("Antônio Lima", "88970001122", 10)
+        total = len(self._logs())
+
+        with self.assertRaises(MotoristaTelefoneEmUsoError):
+            self.repository.criar("Terceiro", "(88) 99811-2233", 10)
+        with self.assertRaises(MotoristaTelefoneEmUsoError):
+            self.repository.atualizar(
+                outro["id"],
+                nome="Novo Nome",
+                telefone="(88) 99811-2233",
+                usuario_executor_id=10,
+            )
+
+        self.assertEqual(len(self._logs()), total)
+        self.assertEqual(self.repository.buscar(outro["id"])["nome"], "Antônio Lima")
+        self.assertEqual(len(self.repository.listar()), 2)
+
+    def test_motorista_inexistente_nao_grava_log(self):
+        self.assertIsNone(
+            self.repository.atualizar(99, nome="Novo Nome", usuario_executor_id=10)
+        )
+        self.assertEqual(len(self._logs()), 1)
+
+    def test_falha_de_commit_no_cadastro_nao_deixa_log_orfao(self):
+        def falhar():
+            raise RuntimeError("falha de persistência")
+
+        self.session.commit = falhar
+        with self.assertRaisesRegex(RuntimeError, "falha de persistência"):
+            self.repository.criar("Ana Lima", "88955554444", 10)
+        del self.session.commit
+
+        self.assertEqual(len(self._logs()), 1)
+        self.assertEqual(len(self.repository.listar()), 1)
+
+    def test_falha_de_commit_na_edicao_nao_deixa_log_orfao(self):
+        def falhar():
+            raise RuntimeError("falha de persistência")
+
+        self.session.commit = falhar
+        with self.assertRaisesRegex(RuntimeError, "falha de persistência"):
+            self.repository.atualizar(
+                self.criado["id"], nome="Novo Nome", usuario_executor_id=10
+            )
+        del self.session.commit
+
+        self.assertEqual(len(self._logs()), 1)
+        self.assertEqual(self.repository.buscar(self.criado["id"])["nome"], self.NOME)
+
+    def test_inativar_e_reativar_continuam_com_o_mesmo_log(self):
+        self.repository.inativar(self.criado["id"], 11)
+        self.repository.reativar(self.criado["id"], 12)
+
+        inativar, reativar = self._logs()[1:]
+        self.assertEqual(
+            (inativar.acao, inativar.usuario_id, inativar.valor_anterior, inativar.valor_novo),
+            ("INATIVAR", 11, "ativo", "inativo"),
+        )
+        self.assertEqual(
+            (reativar.acao, reativar.usuario_id, reativar.valor_anterior, reativar.valor_novo),
+            ("REATIVAR", 12, "inativo", "ativo"),
+        )
+
+    def test_ciclo_completo_gera_quatro_entradas_na_ordem(self):
+        self.repository.atualizar(
+            self.criado["id"], nome="Novo Nome", usuario_executor_id=10
+        )
+        self.repository.inativar(self.criado["id"], 10)
+        self.repository.reativar(self.criado["id"], 10)
+
+        logs = self._logs()
+        self.assertEqual(
+            [(log.acao, log.valor_anterior, log.valor_novo) for log in logs],
+            [
+                ("CRIAR", None, "ativo"),
+                ("EDITAR", None, "nome"),
+                ("INATIVAR", "ativo", "inativo"),
+                ("REATIVAR", "inativo", "ativo"),
+            ],
+        )
+        self._assert_sem_dados_pessoais(logs)
+
+
+if __name__ == "__main__":
+    unittest.main()
