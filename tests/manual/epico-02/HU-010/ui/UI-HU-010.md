@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 3 | 3 | 0 | 7 |
+| 🔄 Em andamento | 13 | 4 | 3 | 0 | 6 |
 
 ## Pré-condições
 
@@ -51,7 +51,7 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU010-UI-007 | Editar nome e telefone sem trocar o motorista | Edição válida e colisão de telefone | Sucesso persistido; duplicidade bloqueada sem alteração parcial | ⏳ PENDENTE | Não executado. |
+| CT-HU010-UI-007 | Editar nome e telefone sem trocar o motorista | Edição válida e colisão de telefone | Sucesso persistido; duplicidade bloqueada sem alteração parcial | ✅ PASSOU | A edição válida do Francisco foi gravada no mesmo registro (id 1) e o Antônio ficou intacto. A tentativa de colisão com o telefone do Antônio foi relatada como barrada, mas não aparece no log. |
 | CT-HU010-UI-008 | Cancelar inativação sem alterar dados nem auditoria | Abrir modal e cancelar | Ativo mantido e nenhum novo log | ⏳ PENDENTE | Não executado. |
 | CT-HU010-UI-009 | Inativar motorista sem alocação futura | Confirmar inativação sem alocação real | Sucesso e soft delete; código tende a 503 ou bloqueio fictício | ⏳ PENDENTE | Falha esperada no código; não executado. |
 | CT-HU010-UI-010 | Mostrar inativos e reativar com persistência | Ligar chave; cancelar e confirmar reativação | Inativo identificado; reativação persistida; erro visível se falhar | ⏳ PENDENTE | Não executado. |
@@ -250,8 +250,11 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Edição válida:** `PATCH /motoristas/1` com `200`. No banco, o id 1 passou a `Francisco Alves QA`, com o telefone `(31) 76244-3333` (o testador usou esse número em vez de `(88) 99600-7788` do plano). Mesmo id, nenhum registro novo.
+- **Antônio Lima** (id 3) continua `(88) 3412-5566`, ativo e com o nome original.
+- **Colisão com o telefone do Antônio (passo 3):** o testador relatou o bloqueio, e o nome `Não deve salvar` não está em nenhum registro do banco. Porém o log da API não registrou nenhum `PATCH` com `409` para essa tentativa (o último `PATCH` é o `200` da edição válida). Fica sem comprovação em log; vale repetir se for preciso uma evidência firme.
+- A edição não gerou registro em `log_auditoria` (já aberto na suíte de API, [#233](https://github.com/GOUOCE/GOUCE-app/issues/233)). A mensagem de sucesso é a barra preta já descrita no CT-002.
+- Status: ✅ Passou (dados corretos); defeitos da mensagem e da auditoria seguem nas issues próprias.
 
 ---
 
