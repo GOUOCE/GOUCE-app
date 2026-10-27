@@ -1,0 +1,2473 @@
+{
+  "case_id": "CT-HU011-API-004",
+  "run_id": "20261027T174349Z",
+  "environment": {
+    "base_url": "http://127.0.0.1:18811",
+    "branch": "feat/front-hu011",
+    "application_commit": "671a6e0df3d00016e87477deb326dfdb7c33b364",
+    "plan_commit": "939921e3",
+    "database": "PostgreSQL 15 isolado; migrations reais",
+    "transport": "HTTP localhost via urllib.request; sem mocks",
+    "python": "3.12.3",
+    "feature_head_before_execution": "3429ab7a00791f2e7bf3251b556a0993e80e14e7",
+    "integration_base": "939921e3",
+    "integration_commit": "671a6e0df3d00016e87477deb326dfdb7c33b364"
+  },
+  "started_at": "2026-10-27T17:43:50.787764+00:00",
+  "checks": [
+    {
+      "description": "/rotas-principais: recusa não altera rotas/vínculos",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-principais: recusa sem auditoria",
+      "expected": 0,
+      "actual": 0,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "POST /rotas-principais: HTTP",
+      "expected": 409,
+      "actual": 409,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "envelope de erro padronizado",
+      "expected": "CONFLICT",
+      "actual": "CONFLICT",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-principais: recusa não altera rotas/vínculos",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-principais: recusa sem auditoria",
+      "expected": 0,
+      "actual": 0,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "POST /rotas-principais: HTTP",
+      "expected": 409,
+      "actual": 409,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "envelope de erro padronizado",
+      "expected": "CONFLICT",
+      "actual": "CONFLICT",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-principais: recusa não altera rotas/vínculos",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-principais: recusa sem auditoria",
+      "expected": 0,
+      "actual": 0,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "POST /rotas-principais: HTTP",
+      "expected": 409,
+      "actual": 409,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "envelope de erro padronizado",
+      "expected": "CONFLICT",
+      "actual": "CONFLICT",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-principais/3: recusa não altera rotas/vínculos",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-principais/3: recusa sem auditoria",
+      "expected": 0,
+      "actual": 0,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "PATCH /rotas-principais/3: HTTP",
+      "expected": 409,
+      "actual": 409,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "envelope de erro padronizado",
+      "expected": "CONFLICT",
+      "actual": "CONFLICT",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "PATCH /rotas-principais/1: HTTP",
+      "expected": 200,
+      "actual": 200,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "nome de principal inativa: recusa não altera rotas/vínculos",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "nome de principal inativa: recusa sem auditoria",
+      "expected": 0,
+      "actual": 0,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "nome de principal inativa",
+      "expected": 409,
+      "actual": 409,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "envelope de erro padronizado",
+      "expected": "CONFLICT",
+      "actual": "CONFLICT",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "nome já usado pela complementar inativa",
+      "expected": 409,
+      "actual": 201,
+      "passed": false,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "PATCH /rotas-principais/7/inativar: HTTP",
+      "expected": 200,
+      "actual": 200,
+      "passed": true,
+      "severity_if_failed": "failure"
+    }
+  ],
+  "requests": [
+    {
+      "sequence": 23,
+      "timestamp": "2026-10-27T17:43:50.789979+00:00",
+      "label": "",
+      "duration_ms": 16.28,
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18811/rotas-principais",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "Rota Centro - UFC",
+          "horario_saida": "06:30",
+          "horario_retorno": "17:30",
+          "bairros_ids": [
+            1
+          ],
+          "faculdades_ida_ids": [
+            1
+          ],
+          "faculdades_volta_ids": [
+            1
+          ]
+        }
+      },
+      "response": {
+        "status": 409,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "CONFLICT",
+            "message": "Já existe uma rota com este nome."
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.604528+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Integrada",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.687124+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Centro - Faculdades",
+            "horario_saida": "06:20:00",
+            "horario_retorno": "22:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.738744+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 2
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 3
+          }
+        ],
+        "rota_complementar": []
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.604528+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Integrada",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.687124+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Centro - Faculdades",
+            "horario_saida": "06:20:00",
+            "horario_retorno": "22:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.738744+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 2
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 3
+          }
+        ],
+        "rota_complementar": []
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 24,
+      "timestamp": "2026-10-27T17:43:50.810360+00:00",
+      "label": "",
+      "duration_ms": 15.59,
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18811/rotas-principais",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "rota centro - ufc",
+          "horario_saida": "06:30",
+          "horario_retorno": "17:30",
+          "bairros_ids": [
+            1
+          ],
+          "faculdades_ida_ids": [
+            1
+          ],
+          "faculdades_volta_ids": [
+            1
+          ]
+        }
+      },
+      "response": {
+        "status": 409,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "CONFLICT",
+            "message": "Já existe uma rota com este nome."
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.604528+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Integrada",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.687124+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Centro - Faculdades",
+            "horario_saida": "06:20:00",
+            "horario_retorno": "22:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.738744+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 2
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 3
+          }
+        ],
+        "rota_complementar": []
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.604528+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Integrada",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.687124+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Centro - Faculdades",
+            "horario_saida": "06:20:00",
+            "horario_retorno": "22:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.738744+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 2
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 3
+          }
+        ],
+        "rota_complementar": []
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 25,
+      "timestamp": "2026-10-27T17:43:50.829921+00:00",
+      "label": "",
+      "duration_ms": 15.6,
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18811/rotas-principais",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "   ROTA CENTRO - UFC ",
+          "horario_saida": "06:30",
+          "horario_retorno": "17:30",
+          "bairros_ids": [
+            1
+          ],
+          "faculdades_ida_ids": [
+            1
+          ],
+          "faculdades_volta_ids": [
+            1
+          ]
+        }
+      },
+      "response": {
+        "status": 409,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "CONFLICT",
+            "message": "Já existe uma rota com este nome."
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.604528+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Integrada",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.687124+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Centro - Faculdades",
+            "horario_saida": "06:20:00",
+            "horario_retorno": "22:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.738744+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 2
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 3
+          }
+        ],
+        "rota_complementar": []
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.604528+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Integrada",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.687124+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Centro - Faculdades",
+            "horario_saida": "06:20:00",
+            "horario_retorno": "22:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.738744+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 2
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 3
+          }
+        ],
+        "rota_complementar": []
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 26,
+      "timestamp": "2026-10-27T17:43:50.849822+00:00",
+      "label": "",
+      "duration_ms": 35.18,
+      "actor": "admin",
+      "request": {
+        "method": "PATCH",
+        "url": "http://127.0.0.1:18811/rotas-principais/3",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "Rota Centro - UFC"
+        }
+      },
+      "response": {
+        "status": 409,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "CONFLICT",
+            "message": "Já existe uma rota com este nome."
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.604528+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Integrada",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.687124+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Centro - Faculdades",
+            "horario_saida": "06:20:00",
+            "horario_retorno": "22:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.738744+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 2
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 3
+          }
+        ],
+        "rota_complementar": []
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.604528+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Integrada",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.687124+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Centro - Faculdades",
+            "horario_saida": "06:20:00",
+            "horario_retorno": "22:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.738744+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 2
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 3
+          }
+        ],
+        "rota_complementar": []
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 27,
+      "timestamp": "2026-10-27T17:43:50.890055+00:00",
+      "label": "",
+      "duration_ms": 32.3,
+      "actor": "admin",
+      "request": {
+        "method": "PATCH",
+        "url": "http://127.0.0.1:18811/rotas-principais/1",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "Rota Centro - UFC"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": true,
+          "message": "Operação realizada com sucesso",
+          "data": {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30",
+            "horario_retorno": "17:30",
+            "ativo": true,
+            "bairros": [
+              {
+                "id": 1,
+                "nome": "Centro"
+              }
+            ],
+            "faculdades_ida": [
+              {
+                "id": 1,
+                "nome": "UFC",
+                "campus": "Campus Quixadá"
+              }
+            ],
+            "faculdades_volta": [
+              {
+                "id": 1,
+                "nome": "UFC",
+                "campus": "Campus Quixadá"
+              }
+            ]
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.604528+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Integrada",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.687124+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Centro - Faculdades",
+            "horario_saida": "06:20:00",
+            "horario_retorno": "22:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.738744+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 2
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 3
+          }
+        ],
+        "rota_complementar": []
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.604528+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Integrada",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.687124+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Centro - Faculdades",
+            "horario_saida": "06:20:00",
+            "horario_retorno": "22:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.738744+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 2
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 3
+          }
+        ],
+        "rota_complementar": []
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 93,
+      "timestamp": "2026-10-27T17:43:52.534637+00:00",
+      "label": "nome de principal inativa",
+      "duration_ms": 15.67,
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18811/rotas-principais",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "Rota Integrada",
+          "horario_saida": "06:30",
+          "horario_retorno": "17:30",
+          "bairros_ids": [
+            1
+          ],
+          "faculdades_ida_ids": [
+            1
+          ],
+          "faculdades_volta_ids": [
+            1
+          ]
+        }
+      },
+      "response": {
+        "status": 409,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:51 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "CONFLICT",
+            "message": "Já existe uma rota com este nome."
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC Manhã",
+            "horario_saida": "06:00:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.604528+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Integrada",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.687124+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Centro - Faculdades",
+            "horario_saida": "06:20:00",
+            "horario_retorno": "22:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.738744+00:00"
+          },
+          {
+            "id": 4,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.183064+00:00"
+          },
+          {
+            "id": 5,
+            "nome": "Controle horário válido 00:00",
+            "horario_saida": "00:00:00",
+            "horario_retorno": "23:59:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.554745+00:00"
+          },
+          {
+            "id": 6,
+            "nome": "Controle horário válido 13:15",
+            "horario_saida": "13:15:00",
+            "horario_retorno": "13:16:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.639521+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 4,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 5,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 6,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 4,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 5,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 6,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 4,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 5,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 6,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": []
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC Manhã",
+            "horario_saida": "06:00:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.604528+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Integrada",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.687124+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Centro - Faculdades",
+            "horario_saida": "06:20:00",
+            "horario_retorno": "22:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.738744+00:00"
+          },
+          {
+            "id": 4,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.183064+00:00"
+          },
+          {
+            "id": 5,
+            "nome": "Controle horário válido 00:00",
+            "horario_saida": "00:00:00",
+            "horario_retorno": "23:59:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.554745+00:00"
+          },
+          {
+            "id": 6,
+            "nome": "Controle horário válido 13:15",
+            "horario_saida": "13:15:00",
+            "horario_retorno": "13:16:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.639521+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 4,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 5,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 6,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 4,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 5,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 6,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 4,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 5,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 6,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": []
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 107,
+      "timestamp": "2026-10-27T17:43:52.874220+00:00",
+      "label": "nome já usado pela complementar inativa",
+      "duration_ms": 26.95,
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18811/rotas-principais",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "Van Trevo",
+          "horario_saida": "06:30",
+          "horario_retorno": "17:30",
+          "bairros_ids": [
+            1
+          ],
+          "faculdades_ida_ids": [
+            1
+          ],
+          "faculdades_volta_ids": [
+            1
+          ]
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:52 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": true,
+          "message": "Operação realizada com sucesso",
+          "data": {
+            "id": 7,
+            "nome": "Van Trevo",
+            "horario_saida": "06:30",
+            "horario_retorno": "17:30",
+            "ativo": true,
+            "bairros": [
+              {
+                "id": 1,
+                "nome": "Centro"
+              }
+            ],
+            "faculdades_ida": [
+              {
+                "id": 1,
+                "nome": "UFC",
+                "campus": "Campus Quixadá"
+              }
+            ],
+            "faculdades_volta": [
+              {
+                "id": 1,
+                "nome": "UFC",
+                "campus": "Campus Quixadá"
+              }
+            ]
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC Manhã",
+            "horario_saida": "06:00:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.604528+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Integrada",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.687124+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Centro - Faculdades",
+            "horario_saida": "06:20:00",
+            "horario_retorno": "22:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.738744+00:00"
+          },
+          {
+            "id": 4,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.183064+00:00"
+          },
+          {
+            "id": 5,
+            "nome": "Controle horário válido 00:00",
+            "horario_saida": "00:00:00",
+            "horario_retorno": "23:59:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.554745+00:00"
+          },
+          {
+            "id": 6,
+            "nome": "Controle horário válido 13:15",
+            "horario_saida": "13:15:00",
+            "horario_retorno": "13:16:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.639521+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 4,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 5,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 6,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 4,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 5,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 6,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 4,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 5,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 6,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van Trevo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:52.714699+00:00"
+          }
+        ]
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC Manhã",
+            "horario_saida": "06:00:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.604528+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Integrada",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.687124+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Centro - Faculdades",
+            "horario_saida": "06:20:00",
+            "horario_retorno": "22:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.738744+00:00"
+          },
+          {
+            "id": 4,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.183064+00:00"
+          },
+          {
+            "id": 5,
+            "nome": "Controle horário válido 00:00",
+            "horario_saida": "00:00:00",
+            "horario_retorno": "23:59:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.554745+00:00"
+          },
+          {
+            "id": 6,
+            "nome": "Controle horário válido 13:15",
+            "horario_saida": "13:15:00",
+            "horario_retorno": "13:16:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.639521+00:00"
+          },
+          {
+            "id": 7,
+            "nome": "Van Trevo",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:52.892669+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 4,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 5,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 6,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 7,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 4,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 5,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 6,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 7,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 4,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 5,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 6,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 7,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van Trevo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:52.714699+00:00"
+          }
+        ]
+      },
+      "database_unchanged": false,
+      "audit_delta": [
+        {
+          "id": 22,
+          "usuario_id": 1,
+          "acao": "CRIAR",
+          "entidade": "rota_principal",
+          "entidade_id": "7",
+          "valor_anterior": null,
+          "valor_novo": "{\"ativo\": true, \"bairros_ids\": [1], \"faculdades_ida_ids\": [1], \"faculdades_volta_ids\": [1], \"horario_retorno\": \"17:30\", \"horario_saida\": \"06:30\", \"nome\": \"Van Trevo\"}",
+          "criado_em": "2026-10-27T17:43:52.895081+00:00"
+        }
+      ]
+    },
+    {
+      "sequence": 108,
+      "timestamp": "2026-10-27T17:43:52.907686+00:00",
+      "label": "",
+      "duration_ms": 37.16,
+      "actor": "admin",
+      "request": {
+        "method": "PATCH",
+        "url": "http://127.0.0.1:18811/rotas-principais/7/inativar",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:52 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": true,
+          "message": "Operação realizada com sucesso",
+          "data": {
+            "id": 7,
+            "nome": "Van Trevo",
+            "horario_saida": "06:30",
+            "horario_retorno": "17:30",
+            "ativo": false,
+            "bairros": [
+              {
+                "id": 1,
+                "nome": "Centro"
+              }
+            ],
+            "faculdades_ida": [
+              {
+                "id": 1,
+                "nome": "UFC",
+                "campus": "Campus Quixadá"
+              }
+            ],
+            "faculdades_volta": [
+              {
+                "id": 1,
+                "nome": "UFC",
+                "campus": "Campus Quixadá"
+              }
+            ]
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC Manhã",
+            "horario_saida": "06:00:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.604528+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Integrada",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.687124+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Centro - Faculdades",
+            "horario_saida": "06:20:00",
+            "horario_retorno": "22:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.738744+00:00"
+          },
+          {
+            "id": 4,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.183064+00:00"
+          },
+          {
+            "id": 5,
+            "nome": "Controle horário válido 00:00",
+            "horario_saida": "00:00:00",
+            "horario_retorno": "23:59:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.554745+00:00"
+          },
+          {
+            "id": 6,
+            "nome": "Controle horário válido 13:15",
+            "horario_saida": "13:15:00",
+            "horario_retorno": "13:16:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.639521+00:00"
+          },
+          {
+            "id": 7,
+            "nome": "Van Trevo",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:52.892669+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 4,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 5,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 6,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 7,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 4,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 5,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 6,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 7,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 4,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 5,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 6,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 7,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van Trevo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:52.714699+00:00"
+          }
+        ]
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC Manhã",
+            "horario_saida": "06:00:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.604528+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Integrada",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.687124+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Centro - Faculdades",
+            "horario_saida": "06:20:00",
+            "horario_retorno": "22:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.738744+00:00"
+          },
+          {
+            "id": 4,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.183064+00:00"
+          },
+          {
+            "id": 5,
+            "nome": "Controle horário válido 00:00",
+            "horario_saida": "00:00:00",
+            "horario_retorno": "23:59:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.554745+00:00"
+          },
+          {
+            "id": 6,
+            "nome": "Controle horário válido 13:15",
+            "horario_saida": "13:15:00",
+            "horario_retorno": "13:16:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.639521+00:00"
+          },
+          {
+            "id": 7,
+            "nome": "Van Trevo",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:52.892669+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 4,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 5,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 6,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 7,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 4,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 5,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 6,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 7,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 3
+          },
+          {
+            "rota_id": 4,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 5,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 6,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 7,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van Trevo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:52.714699+00:00"
+          }
+        ]
+      },
+      "database_unchanged": false,
+      "audit_delta": [
+        {
+          "id": 23,
+          "usuario_id": 1,
+          "acao": "INATIVAR",
+          "entidade": "rota_principal",
+          "entidade_id": "7",
+          "valor_anterior": "ativo",
+          "valor_novo": "inativo",
+          "criado_em": "2026-10-27T17:43:52.939685+00:00"
+        }
+      ]
+    }
+  ],
+  "database_checks": [],
+  "notes": [
+    "Principal indevida com nome duplicado foi inativada por HTTP para não contaminar os próximos casos."
+  ],
+  "dependencies": [],
+  "status": "FAIL",
+  "finished_at": "2026-10-27T17:43:53.694722+00:00",
+  "issues": [
+    {
+      "number": 309,
+      "url": "https://github.com/GOUOCE/GOUCE-app/issues/309"
+    }
+  ]
+}

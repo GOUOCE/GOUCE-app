@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Em execução | 14 | 3 | 0 | 0 | 0 | 11 |
+| ⏳ Em execução | 14 | 3 | 1 | 0 | 0 | 10 |
 
 ## Pré-condições
 
@@ -41,7 +41,7 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 | CT-HU011-API-001 | Listar, filtrar e consultar rotas | Sem filtro; `incluir_inativos=true`; `nome`; `GET /{id}`; `/opcoes` | HTTP 200; padrão só ativas; inativas com o filtro; opções só com base ativa | ✅ APROVADO | Lista vazia retornou 200/[]; filtros por nome respeitam maiúsculas/minúsculas, padrão oculta inativas e /opcoes exclui B0/F0. Consulta por id existente/inativo e 404 conferidos. [JSON](evidencias/CT-HU011-API-001.json) |
 | CT-HU011-API-002 | Cadastrar rota principal válida | RP1: `Rota Centro - UFC`, 06:30/17:30, B1, F1 na ida e na volta | HTTP 201 “Operação realizada com sucesso”; ativa; vínculos e horários corretos | ✅ APROVADO | RP1 criada ativa, nome normalizado, 06:30/17:30 preservados e os três vínculos conferidos no GET e PostgreSQL. [JSON](evidencias/CT-HU011-API-002.json) |
 | CT-HU011-API-003 | Vários vínculos e volta independente da ida | RP2: B1+B2, ida F1+F2+F3, volta F1; RP3: ida F1+F2, volta F3 | HTTP 201; cada lista gravada como enviada, sem copiar a ida na volta | ✅ APROVADO | RP2 gravou dois bairros, três faculdades na ida e uma na volta; RP3 voltou por F3 sem copiá-la da ida. RP1 permaneceu inalterada. [JSON](evidencias/CT-HU011-API-003.json) |
-| CT-HU011-API-004 | Nome único entre todas as rotas (#208) | Nome igual; maiúsculas/espaços; nome de rota inativa; nome de complementar; edição para nome em uso | HTTP 409; nada criado nem alterado | ⏳ PENDENTE | Não executado. |
+| CT-HU011-API-004 | Nome único entre todas as rotas (#208) | Nome igual; maiúsculas/espaços; nome de rota inativa; nome de complementar; edição para nome em uso | HTTP 409; nada criado nem alterado | ❌ FALHOU | Duplicidades no mesmo tipo foram recusadas, inclusive com case/trim e rota inativa. Porém, criar principal Van Trevo, nome já usado por complementar inativa, retornou 201 e persistiu o nome duplicado entre tabelas; esperado 409. [JSON](evidencias/CT-HU011-API-004.json) [#309](https://github.com/GOUOCE/GOUCE-app/issues/309) |
 | CT-HU011-API-005 | Obrigatórios, listas vazias e limites | Sem cada campo; nome em branco; listas `[]`; nome com 151 caracteres; edição esvaziando lista | HTTP 422 com campo e mensagem em português; nada gravado | ⏳ PENDENTE | Não executado. |
 | CT-HU011-API-006 | Formato e ordem dos horários (#208) | `6:30`, `24:00`, `06:60`, `06:30:00`, texto; retorno igual e anterior à saída; 00:00/23:59 | Fora de `HH:MM` ou retorno ≤ saída: 422; sem faixa mínima/máxima | ⏳ PENDENTE | Não executado. |
 | CT-HU011-API-007 | Vínculo com bairro ou faculdade inativo ou inexistente | B0; F0 na ida e na volta; id inexistente; ids repetidos; id `0`, negativo e texto | HTTP 422 no campo da lista; nenhuma rota nem vínculo inválido gravado | ⏳ PENDENTE | Não executado. |
@@ -163,8 +163,11 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Duplicidades no mesmo tipo foram recusadas, inclusive com case/trim e rota inativa. Porém, criar principal Van Trevo, nome já usado por complementar inativa, retornou 201 e persistiu o nome duplicado entre tabelas; esperado 409.
+- 8 chamadas HTTP; 23 verificações registradas. Status observados: 200 (2×), 201 (1×), 409 (5×).
+- Evidência: [CT-HU011-API-004.json](evidencias/CT-HU011-API-004.json), com corpos reais, sequência/horário, verificações e consultas de persistência/auditoria.
+- Defeito(s): [#309](https://github.com/GOUOCE/GOUCE-app/issues/309).
+- Status: ❌ FALHOU.
 
 ---
 
