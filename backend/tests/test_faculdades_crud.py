@@ -24,6 +24,12 @@ from src.modulos.crud_basicos.interface.http.faculdade_routes import (
     router as faculdade_router,
 )
 from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
+from src.modulos.rotas.model.entities.rota_principal import (
+    RotaPrincipalORM,
+    rota_principal_bairro,
+    rota_principal_faculdade_ida,
+    rota_principal_faculdade_volta,
+)
 from src.shared.auth.dependencies import require_roles
 from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.infrastructure.audit_model import LogAuditoriaORM
@@ -236,7 +242,14 @@ class FaculdadesApiHttpTest(unittest.IsolatedAsyncioTestCase):
         self.engine = create_engine("sqlite:///:memory:")
         Base.metadata.create_all(
             self.engine,
-            tables=[FaculdadeORM.__table__, LogAuditoriaORM.__table__],
+            tables=[
+                FaculdadeORM.__table__,
+                LogAuditoriaORM.__table__,
+                RotaPrincipalORM.__table__,
+                rota_principal_bairro,
+                rota_principal_faculdade_ida,
+                rota_principal_faculdade_volta,
+            ],
         )
         self.Session = sessionmaker(bind=self.engine)
         self.session = self.Session()
@@ -261,7 +274,14 @@ class FaculdadesApiHttpTest(unittest.IsolatedAsyncioTestCase):
         self.session.close()
         Base.metadata.drop_all(
             self.engine,
-            tables=[FaculdadeORM.__table__, LogAuditoriaORM.__table__],
+            tables=[
+                FaculdadeORM.__table__,
+                LogAuditoriaORM.__table__,
+                RotaPrincipalORM.__table__,
+                rota_principal_bairro,
+                rota_principal_faculdade_ida,
+                rota_principal_faculdade_volta,
+            ],
         )
 
     async def asgi_request(self, path, payload=None, method="GET", query_string=b""):
@@ -440,6 +460,47 @@ class FaculdadesApiHttpTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(log.acao, "ATIVAR")
         self.assertEqual(log.valor_anterior, "inativo")
         self.assertEqual(log.valor_novo, "ativo")
+
+    async def test_repetir_status_retorna_409_sem_duplicar_auditoria(self):
+        _, resposta = await self.asgi_request(
+            "/faculdades",
+            payload={"nome": "UFC", "campus": "Quixadá"},
+            method="POST",
+        )
+        faculdade_id = resposta["data"]["id_faculdade"]
+
+        for acao, esperado, total_logs, ativo in (
+            ("ativar", 409, 0, True),
+            ("inativar", 200, 1, False),
+            ("inativar", 409, 1, False),
+            ("ativar", 200, 2, True),
+            ("ativar", 409, 2, True),
+            ("inativar", 200, 3, False),
+            ("inativar", 409, 3, False),
+        ):
+            with self.subTest(acao=acao, esperado=esperado, total_logs=total_logs):
+                status, body = await self.asgi_request(
+                    f"/faculdades/{faculdade_id}/{acao}", method="PATCH"
+                )
+                self.assertEqual(status, esperado)
+                if esperado == 409:
+                    self.assertFalse(body["success"])
+                    self.assertEqual(body["error"]["code"], "CONFLICT")
+                    self.assertEqual(
+                        body["error"]["message"],
+                        "Faculdade já ativada." if ativo else "Faculdade já desativada.",
+                    )
+
+                self.session.expire_all()
+                self.assertEqual(self.session.get(FaculdadeORM, faculdade_id).ativo, ativo)
+                logs = self.session.query(LogAuditoriaORM).filter(
+                    LogAuditoriaORM.entidade == "faculdade",
+                    LogAuditoriaORM.entidade_id == faculdade_id,
+                ).order_by(LogAuditoriaORM.id).all()
+                self.assertEqual(len(logs), total_logs)
+
+        self.assertEqual([log.acao for log in logs], ["INATIVAR", "ATIVAR", "INATIVAR"])
+        self.assertTrue(all(log.usuario_id == 1 for log in logs))
 
     async def test_listar_faculdades_com_e_sem_filtro(self):
         await self.asgi_request("/faculdades", payload={"nome": "F1", "campus": "C1"}, method="POST")

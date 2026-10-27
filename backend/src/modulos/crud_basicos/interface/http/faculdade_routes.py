@@ -19,9 +19,15 @@ from src.modulos.crud_basicos.application.services.faculdade_service import (
     FaculdadeValidationError,
 )
 from src.modulos.crud_basicos.infrastructure.repositories.faculdade_repository import (
+    FaculdadeComRotaAtivaError,
+    FaculdadeJaAtivadaError,
     FaculdadeJaCadastradaError,
+    FaculdadeJaDesativadaError,
     FaculdadeNaoEncontradaError,
     FaculdadeRepository,
+)
+from src.modulos.rotas.infrastructure.rota_ativa_checkers import (
+    faculdade_em_rota_ativa,
 )
 from src.shared.auth.dependencies import get_optional_current_user, require_roles
 from src.shared.enums.cargo_enum import CargoEnum
@@ -89,7 +95,9 @@ router = APIRouter(
 
 
 def get_repository(session: Annotated[Session, Depends(get_session)]) -> FaculdadeRepository:
-    return FaculdadeRepository(session)
+    return FaculdadeRepository(
+        session, rota_ativa_checker=faculdade_em_rota_ativa(session)
+    )
 
 
 def get_service(
@@ -213,7 +221,7 @@ async def atualizar_faculdade(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Faculdade não encontrada.",
         )
-    except FaculdadeJaCadastradaError as error:
+    except (FaculdadeJaCadastradaError, FaculdadeComRotaAtivaError) as error:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error))
     except FaculdadeValidationError as error:
         raise HTTPException(
@@ -249,6 +257,8 @@ async def ativar_faculdade(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Faculdade não encontrada.",
         )
+    except FaculdadeJaAtivadaError as error:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error))
     except FaculdadeValidationError as error:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -278,6 +288,8 @@ async def inativar_faculdade(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Faculdade não encontrada.",
         )
+    except (FaculdadeComRotaAtivaError, FaculdadeJaDesativadaError) as error:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error))
     except FaculdadeValidationError as error:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

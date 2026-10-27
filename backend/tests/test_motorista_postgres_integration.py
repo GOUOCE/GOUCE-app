@@ -14,6 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlparse
 from uuid import uuid4
 
+from alembic.script import ScriptDirectory
 from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -39,7 +40,6 @@ if INTEGRATION_DATABASE_URL:
     os.environ.setdefault("SECRET_KEY_JWT", "hu010-integration-only-secret")
 
     from src.modulos.motoristas.infrastructure.repositories.motorista_repository import (
-        AlocacoesFuturasNaoVerificadasError,
         MotoristaTelefoneEmUsoError,
         MotoristaRepository,
     )
@@ -87,7 +87,10 @@ class MotoristaPostgreSQLIntegrationTest(unittest.TestCase):
         try:
             cleanup_session.query(LogAuditoriaORM).filter(
                 LogAuditoriaORM.entidade == "motorista",
-                LogAuditoriaORM.entidade_id.in_(self.created_ids),
+                # A migration 72 tornou log_auditoria.entidade_id VARCHAR.
+                LogAuditoriaORM.entidade_id.in_(
+                    [str(motorista_id) for motorista_id in self.created_ids]
+                ),
             ).delete(synchronize_session=False)
             cleanup_session.query(MotoristaORM).filter(
                 MotoristaORM.id.in_(self.created_ids),
@@ -138,7 +141,16 @@ class MotoristaPostgreSQLIntegrationTest(unittest.TestCase):
         revision = self.session.execute(
             text("SELECT version_num FROM alembic_version")
         ).scalar_one()
-        self.assertEqual(revision, "68_create_motorista")
+        # A revision 68 deve fazer parte do histórico aplicado, mesmo que
+        # migrations posteriores já tenham sido adicionadas.
+        script = ScriptDirectory(
+            os.path.join(os.path.dirname(__file__), "..", "migrations")
+        )
+        aplicadas = {
+            item.revision
+            for item in script.walk_revisions(base="base", head=revision)
+        }
+        self.assertIn("68_create_motorista", aplicadas)
 
     def test_crud_criptografia_busca_edicao_e_telefone_unico_normalizado(self):
         primeiro = self._criar("Primeiro", "(85) 99999-0000")
@@ -171,11 +183,7 @@ class MotoristaPostgreSQLIntegrationTest(unittest.TestCase):
         self.assertEqual(recuperado["nome"], f"{self.prefix} Atualizado")
 
         executor_id = self._executor_id()
-        self.repository.inativar(
-            primeiro["id"],
-            executor_id,
-            alocacoes_futuras_verificadas=True,
-        )
+        self.repository.inativar(primeiro["id"], executor_id)
         with self.assertRaises(MotoristaTelefoneEmUsoError):
             self.repository.criar("Terceiro", "(85) 99999-0000")
 
@@ -231,33 +239,24 @@ class MotoristaPostgreSQLIntegrationTest(unittest.TestCase):
         ).count()
         self.assertEqual(quantidade, 1)
 
-    def test_inativacao_bloqueada_e_status_auditado_em_cenario_controlado(self):
+    def test_inativacao_e_reativacao_com_status_auditado(self):
         motorista = self._criar("Status")
         executor_id = self._executor_id()
 
-        with self.assertRaises(AlocacoesFuturasNaoVerificadasError):
-            self.repository.inativar(motorista["id"], executor_id)
-
-        self.assertTrue(self.repository.buscar(motorista["id"])["ativo"])
-
-        # Este é um cenário interno de persistência. A rota de produção não
-        # fornece essa autorização enquanto a verificação de alocações não
-        # estiver integrada.
-        inativado = self.repository.inativar(
-            motorista["id"],
-            executor_id,
-            alocacoes_futuras_verificadas=True,
-        )
+        inativado = self.repository.inativar(motorista["id"], executor_id)
         self.assertFalse(inativado["ativo"])
 
         log_inativacao = self.session.query(LogAuditoriaORM).filter_by(
             entidade="motorista",
-            entidade_id=motorista["id"],
+            entidade_id=str(motorista["id"]),
             acao="INATIVAR",
         ).one()
         self.assertEqual(log_inativacao.usuario_id, executor_id)
         self.assertEqual(log_inativacao.valor_anterior, "ativo")
         self.assertEqual(log_inativacao.valor_novo, "inativo")
+        self.assertIsNotNone(log_inativacao.criado_em)
+        # Soft delete: o registro continua no banco após a inativação.
+        self.assertIsNotNone(self.repository.buscar(motorista["id"]))
 
         inativos = self.repository.listar(ativo=False, nome=self.prefix)
         self.assertEqual([item["id"] for item in inativos], [motorista["id"]])
@@ -266,10 +265,11 @@ class MotoristaPostgreSQLIntegrationTest(unittest.TestCase):
         self.assertTrue(reativado["ativo"])
         log_reativacao = self.session.query(LogAuditoriaORM).filter_by(
             entidade="motorista",
-            entidade_id=motorista["id"],
+            entidade_id=str(motorista["id"]),
             acao="REATIVAR",
         ).one()
         self.assertEqual(log_reativacao.usuario_id, executor_id)
+        self.assertIsNotNone(log_reativacao.criado_em)
 
     def test_rollback_de_falha_de_persistencia_preserva_dado(self):
         motorista = self._criar("Rollback")

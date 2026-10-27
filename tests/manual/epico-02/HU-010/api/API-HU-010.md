@@ -9,26 +9,26 @@
 | Camada | API |
 | Tipo de teste | Funcional manual — suíte essencial (baseada em risco) |
 | Endpoints | `GET /motoristas`, `GET /motoristas/{id}`, `POST /motoristas`, `PATCH /motoristas/{id}`, `PATCH /motoristas/{id}/inativar` e `PATCH /motoristas/{id}/reativar`. Escrita em `application/json`, com `nome` e `telefone`; todas as rotas exigem administrador. |
-| Ambiente | A preencher — URL, branch e commit da implementação realmente testada |
+| Ambiente | Docker local isolado, (execução inicial em `http://127.0.0.1:60910`; falhas reproduzidas em `http://localhost:8001`); branch `feature/testes-api-hu-010`; código `5e7301a0`; PostgreSQL 15 e migrations até 75; workaround de bootstrap documentado na issue existente #215 |
 | Total de casos | 13 |
-| Última execução | Não realizada |
-| Testador | Cauan Ricardo — execução com apoio de IA (Claude Code) |
+| Última execução | 2026-10-25  |
+| Testador | Execução via terminal com apoio do Codex; validação de Cauan Ricardo pendente |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 13 | 0 | 0 | 0 | 0 | 13 |
+| ❌ Executada com falhas e bloqueios | 13 | 5 | 4 | 0 | 4 | 0 |
 
 ## Pré-condições
 
 | ID | Descrição |
 | --- | --- |
-| PC-01 | Na execução futura, stack isolada com banco limpo, API disponível e Postman/Insomnia ou Swagger em `/docs`. Não executar os comandos de stack durante o planejamento. |
+| PC-01 | Ambiente exclusivo com banco inicialmente vazio. Inicialização padrão falhou na migration 69; evidência preservada e issue existente #215 vinculada. Para prosseguir, aplicada antecipação de faculdade.sigla apenas no banco descartável e depois migrations originais até 75. Ver evidências. |
 | PC-02 | Token de administrador A via `POST /auth/login`, usando o administrador do seed; anotar id do executor e horários para auditoria. |
 | PC-03 | Token de aluno ativo e representante; sem login funcional de representante, bloquear só essa parte e registrar a causa. |
-| PC-04 | Depois da lista vazia, preparar Raimundo Costa inativo, telefone `88998223344`, por API/banco local. Como a inativação atual retorna 503, registrar a preparação no banco e não contá-la como sucesso da rota. Anotar seu id. |
-| PC-05 | **Apoio da IA (Claude Code)** para executar chamadas e conferir dados, status, hashes e logs na API/banco, com validação de Cauan. Tabelas `motorista` e `log_auditoria`; telefone/nome cifrados devem ser lidos pela API ou ORM. |
+| PC-04 | **Não atendida para inativo:** Raimundo Costa foi criado pela API, mas a inativação retorna 503. Por orientação do responsável, não foi alterado seu estado no banco; casos/partes que dependem disso estão bloqueados para revisão posterior. |
+| PC-05 | **Apoio da IA (Codex nesta execução)** para executar chamadas e conferir dados, status, hashes e logs na API/banco, com validação de Cauan. Tabelas `motorista` e `log_auditoria`; telefone/nome cifrados devem ser lidos pela API ou ORM. |
 | PC-06 | CT-002 cria M1 (Francisco/`88998112233`) e M2 (Antônio/`8834125566`); CT-003 cria M3 (homônimo/`88997004455`) e M4 (`88999999999`). Guardar ids; CT-007 muda telefone de M1 para `88996007788`. Para tentativas inválidas, não reaproveitar telefone aceito indevidamente sem registrar a falha. |
 | PC-07 | CT-013: HU-017 e registros históricos disponíveis; identificar rotas reais da escalação em `/docs`. Sem suporte, marcar a parte dependente como 🚫 na execução, sem inventar endpoint nem simular alocação como prova. |
 
@@ -38,19 +38,19 @@ Executar na ordem abaixo. São **13 casos essenciais**. CT-001 começa pela list
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU010-API-001 | Listar motoristas, consultar e buscar por nome | Lista vazia; filtros de status e nome; id inexistente | 200 com dados corretos; busca por nome; 404 no inexistente | ⏳ PENDENTE | Não executado. |
-| CT-HU010-API-002 | Cadastrar celular e telefone fixo válidos | Celular mascarado e fixo de 10 dígitos | 201; sucesso, ativo e valores persistidos | ⏳ PENDENTE | Não executado. |
-| CT-HU010-API-003 | Permitir homônimos e telefone presente apenas nos exemplos do app | Mesmo nome/telefone diferente; número dos exemplos ausente no banco | 201; homônimos distintos e número legítimo aceito | ⏳ PENDENTE | Não executado. |
-| CT-HU010-API-004 | Bloquear telefone duplicado no cadastro e na edição | Ativo/inativo; máscara; edição com nome e telefone conflitante | 409; mensagem de duplicidade; nenhuma alteração parcial | ⏳ PENDENTE | Não executado. |
-| CT-HU010-API-005 | Exigir nome e telefone no cadastro e impedir esvaziamento | Omissões, vazio, espaços e null no POST; vazio na edição | 422 com campo e motivo; nada gravado | ⏳ PENDENTE | Não executado. |
-| CT-HU010-API-006 | Validar quantidade de dígitos e conteúdo do telefone | 3/9/12/15 dígitos; letras; mistura de letras e dígitos | 422 “Informe um telefone válido com DDD”; dados mantidos | ⏳ PENDENTE | Não executado. |
-| CT-HU010-API-007 | Editar parcialmente e preservar id e dados não enviados | Nome e telefone isolados; mesmo número com máscara; inexistente | 200 sem falso conflito; mesmo id; 404 no inexistente | ⏳ PENDENTE | Não executado. |
-| CT-HU010-API-008 | Inativar sem alocação futura e manter o registro | Inativação válida sem alocação; inexistente | 200 e soft delete; implementação atual tende a 503 | ⏳ PENDENTE | Falha esperada no código; não executado. |
-| CT-HU010-API-009 | Reativar inativo e repetir sem duplicar auditoria | Inativo → ativo; repetição; inexistente; rota do app | 200 com persistência; repetição sem novo log; inexistente 404 | ⏳ PENDENTE | Não executado. |
-| CT-HU010-API-010 | Auditar todas as escritas efetivas | Cadastro/edição/status e tentativas recusadas | Um log por escrita efetiva; usuário, ação e timestamp | ⏳ PENDENTE | Não executado. |
-| CT-HU010-API-011 | Rejeitar campos fora do contrato e PATCH vazio | extra=forbid; mudança indireta de status; atualização sem campos | 422; sem alteração nem desvio da inativação | ⏳ PENDENTE | Não executado. |
-| CT-HU010-API-012 | Negar todas as rotas a aluno, representante e não autenticado | Três credenciais × seis rotas; inclusive leitura | 403 para aluno/representante; 401 sem autenticação | ⏳ PENDENTE | Não executado. |
-| CT-HU010-API-013 | Bloqueio por alocação futura, seleção e histórico | Sem alocação × passado × futuro; nova escala com inativo | 409 na futura; passado preservado; inativo fora da nova escala | ⏳ PENDENTE | Depende da HU-017 e de histórico; marcar 🚫 se ausentes. |
+| CT-HU010-API-001 | Listar motoristas, consultar e buscar por nome | Lista vazia; filtros de status e nome; id inexistente | 200 com dados corretos; busca por nome; 404 no inexistente | 🚫 BLOQUEADO | Lista/busca/detalhe executados; filtro inativo só retornou vazio. Parte com inativo bloqueada por decisão do responsável. |
+| CT-HU010-API-002 | Cadastrar celular e telefone fixo válidos | Celular mascarado e fixo de 10 dígitos | 201; sucesso, ativo e valores persistidos | ✅ PASSOU | 201 para celular e fixo; nome sem espaços e dados persistidos com ativo=true. |
+| CT-HU010-API-003 | Permitir homônimos e telefone presente apenas nos exemplos do app | Mesmo nome/telefone diferente; número dos exemplos ausente no banco | 201; homônimos distintos e número legítimo aceito | ✅ PASSOU | Homônimos com telefones diferentes e número dos exemplos aceitos; ids distintos. |
+| CT-HU010-API-004 | Bloquear telefone duplicado no cadastro e na edição | Ativo/inativo; máscara; edição com nome e telefone conflitante | 409; mensagem de duplicidade; nenhuma alteração parcial | 🚫 BLOQUEADO | Duplicidade de ativo com/sem máscara bloqueada (409), sem alteração parcial; variação de inativo bloqueada. |
+| CT-HU010-API-005 | Exigir nome e telefone no cadastro e impedir esvaziamento | Omissões, vazio, espaços e null no POST; vazio na edição | 422 com campo e motivo; nada gravado | ❌ FALHOU | Entradas ausentes/vazias recusadas (422), mas telefone obrigatório retorna “Valor inválido.” sem motivo. |
+| CT-HU010-API-006 | Validar quantidade de dígitos e conteúdo do telefone | 3/9/12/15 dígitos; letras; mistura de letras e dígitos | 422 “Informe um telefone válido com DDD”; dados mantidos | ❌ FALHOU | 3/9/12/15 dígitos e letras com dígitos aceitos no cadastro; edição inválida também aceita e persistida. |
+| CT-HU010-API-007 | Editar parcialmente e preservar id e dados não enviados | Nome e telefone isolados; mesmo número com máscara; inexistente | 200 sem falso conflito; mesmo id; 404 no inexistente | ✅ PASSOU | 200 nas edições parciais/próprio telefone; mesmo id, campos preservados; inexistente 404. |
+| CT-HU010-API-008 | Inativar sem alocação futura e manter o registro | Inativação válida sem alocação; inexistente | 200 e soft delete; implementação atual tende a 503 | ❌ FALHOU | 503 na inativação de existente sem alocação; motorista continua ativo. Inexistente 404. |
+| CT-HU010-API-009 | Reativar inativo e repetir sem duplicar auditoria | Inativo → ativo; repetição; inexistente; rota do app | 200 com persistência; repetição sem novo log; inexistente 404 | 🚫 BLOQUEADO | Reativação bloqueada: API não produz motorista inativo e o responsável pediu para manter a pendência. /ativar deu 404 apenas no diagnóstico. |
+| CT-HU010-API-010 | Auditar todas as escritas efetivas | Cadastro/edição/status e tentativas recusadas | Um log por escrita efetiva; usuário, ação e timestamp | ❌ FALHOU | Cadastro e edições efetivas sem log. Auditoria de inativação/reativação não concluída por impedimentos registrados. |
+| CT-HU010-API-011 | Rejeitar campos fora do contrato e PATCH vazio | extra=forbid; mudança indireta de status; atualização sem campos | 422; sem alteração nem desvio da inativação | ✅ PASSOU | 422 em extras, ativo indevido e PATCH vazio/nulos; nenhum desvio de status. |
+| CT-HU010-API-012 | Negar todas as rotas a aluno, representante e não autenticado | Três credenciais × seis rotas; inclusive leitura | 403 para aluno/representante; 401 sem autenticação | ✅ PASSOU | 403 aluno/representante e 401 sem autenticação nas seis rotas; estado do banco preservado. |
+| CT-HU010-API-013 | Bloqueio por alocação futura, seleção e histórico | Sem alocação × passado × futuro; nova escala com inativo | 409 na futura; passado preservado; inativo fora da nova escala | 🚫 BLOQUEADO | HU-017 e contratos de alocação/histórico ausentes; partes dependentes não executadas. |
 
 ## Detalhamento dos casos
 
@@ -72,8 +72,9 @@ Executar na ordem abaixo. São **13 casos essenciais**. CT-001 começa pela list
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Lista/busca/detalhe executados; filtro inativo só retornou vazio. Parte com inativo bloqueada por decisão do responsável.
+- 🚫 Por orientação explícita do responsável, manter bloqueadas as partes que dependem de decisão/preparo de motorista inativo. Raimundo foi criado pela API, mas continua ativo; nenhum UPDATE de estado foi executado no banco. Checks de partes já executadas são preservados como evidência e não aprovam o caso inteiro.
+- Status: 🚫 BLOQUEADO.
 
 ---
 
@@ -94,8 +95,8 @@ Executar na ordem abaixo. São **13 casos essenciais**. CT-001 começa pela list
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- 201 para celular e fixo; nome sem espaços e dados persistidos com ativo=true.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -116,8 +117,8 @@ Executar na ordem abaixo. São **13 casos essenciais**. CT-001 começa pela list
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Homônimos com telefones diferentes e número dos exemplos aceitos; ids distintos.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -139,8 +140,9 @@ Executar na ordem abaixo. São **13 casos essenciais**. CT-001 começa pela list
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Duplicidade de ativo com/sem máscara bloqueada (409), sem alteração parcial; variação de inativo bloqueada.
+- 🚫 Por orientação explícita do responsável, manter bloqueadas as partes que dependem de decisão/preparo de motorista inativo. Raimundo foi criado pela API, mas continua ativo; nenhum UPDATE de estado foi executado no banco. Checks de partes já executadas são preservados como evidência e não aprovam o caso inteiro.
+- Status: 🚫 BLOQUEADO.
 
 ---
 
@@ -161,8 +163,9 @@ Executar na ordem abaixo. São **13 casos essenciais**. CT-001 começa pela list
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Entradas ausentes/vazias recusadas (422), mas telefone obrigatório retorna “Valor inválido.” sem motivo.
+- Defeitos: [BUG-HU010-API-004](issues/BUG-HU010-API-004-validacao-obrigatorios-mensagem-generica.md) ([#234](https://github.com/GOUOCE/GOUCE-app/issues/234)), [BUG-HU010-API-004](issues/BUG-HU010-API-004-validacao-obrigatorios-mensagem-generica.md) ([#234](https://github.com/GOUOCE/GOUCE-app/issues/234))
+- Status: ❌ FALHOU.
 
 ---
 
@@ -184,8 +187,9 @@ Executar na ordem abaixo. São **13 casos essenciais**. CT-001 começa pela list
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- 3/9/12/15 dígitos e letras com dígitos aceitos no cadastro; edição inválida também aceita e persistida.
+- Defeitos: [BUG-HU010-API-001](issues/BUG-HU010-API-001-telefone-invalido-aceito.md) ([#231](https://github.com/GOUOCE/GOUCE-app/issues/231)), [BUG-HU010-API-001](issues/BUG-HU010-API-001-telefone-invalido-aceito.md) ([#231](https://github.com/GOUOCE/GOUCE-app/issues/231))
+- Status: ❌ FALHOU.
 
 ---
 
@@ -206,8 +210,8 @@ Executar na ordem abaixo. São **13 casos essenciais**. CT-001 começa pela list
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- 200 nas edições parciais/próprio telefone; mesmo id, campos preservados; inexistente 404.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -229,8 +233,9 @@ Executar na ordem abaixo. São **13 casos essenciais**. CT-001 começa pela list
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- 503 na inativação de existente sem alocação; motorista continua ativo. Inexistente 404.
+- Defeitos: [BUG-HU010-API-002](issues/BUG-HU010-API-002-inativacao-indisponivel-sem-alocacao.md) ([#232](https://github.com/GOUOCE/GOUCE-app/issues/232)), [BUG-HU010-API-002](issues/BUG-HU010-API-002-inativacao-indisponivel-sem-alocacao.md) ([#232](https://github.com/GOUOCE/GOUCE-app/issues/232))
+- Status: ❌ FALHOU.
 
 ---
 
@@ -252,8 +257,9 @@ Executar na ordem abaixo. São **13 casos essenciais**. CT-001 começa pela list
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Reativação bloqueada: API não produz motorista inativo e o responsável pediu para manter a pendência. /ativar deu 404 apenas no diagnóstico.
+- 🚫 Por orientação explícita do responsável, manter bloqueadas as partes que dependem de decisão/preparo de motorista inativo. Raimundo foi criado pela API, mas continua ativo; nenhum UPDATE de estado foi executado no banco. Checks de partes já executadas são preservados como evidência e não aprovam o caso inteiro.
+- Status: 🚫 BLOQUEADO.
 
 ---
 
@@ -275,8 +281,10 @@ Executar na ordem abaixo. São **13 casos essenciais**. CT-001 começa pela list
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Cadastro e edições efetivas sem log. Auditoria de inativação/reativação não concluída por impedimentos registrados.
+- 🚫 Auditoria de inativacao indisponivel: operacao retornou 503; reativacao depende de massa inativa autorizada.
+- Defeitos: [BUG-HU010-API-003](issues/BUG-HU010-API-003-cadastro-edicao-sem-auditoria.md) ([#233](https://github.com/GOUOCE/GOUCE-app/issues/233)), [BUG-HU010-API-003](issues/BUG-HU010-API-003-cadastro-edicao-sem-auditoria.md) ([#233](https://github.com/GOUOCE/GOUCE-app/issues/233))
+- Status: ❌ FALHOU.
 
 ---
 
@@ -297,8 +305,8 @@ Executar na ordem abaixo. São **13 casos essenciais**. CT-001 começa pela list
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- 422 em extras, ativo indevido e PATCH vazio/nulos; nenhum desvio de status.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -319,8 +327,8 @@ Executar na ordem abaixo. São **13 casos essenciais**. CT-001 começa pela list
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- 403 aluno/representante e 401 sem autenticação nas seis rotas; estado do banco preservado.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -343,8 +351,9 @@ Executar na ordem abaixo. São **13 casos essenciais**. CT-001 começa pela list
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- HU-017 e contratos de alocação/histórico ausentes; partes dependentes não executadas.
+- 🚫 HU-017 e endpoints de alocacao/escala/historico ausentes do OpenAPI. Sem alocacao/historico reais para exercer bloqueio por futuro, selecao e preservacao; nao foram fabricadas dependencias.
+- Status: 🚫 BLOQUEADO.
 
 ## Rastreabilidade
 
@@ -369,7 +378,11 @@ Executar na ordem abaixo. São **13 casos essenciais**. CT-001 começa pela list
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-006 | API de motoristas aceita telefone curto, longo e com letras no cadastro e na edição | [#231](https://github.com/GOUOCE/GOUCE-app/issues/231) |
+| CT-008 | Não é possível inativar motorista sem alocações futuras: API retorna 503 | [#232](https://github.com/GOUOCE/GOUCE-app/issues/232) |
+| CT-010 | Cadastro e edição de motorista não geram registro de auditoria | [#233](https://github.com/GOUOCE/GOUCE-app/issues/233) |
+| CT-005 | Validação de motorista devolve “Valor inválido.” para telefone obrigatório | [#234](https://github.com/GOUOCE/GOUCE-app/issues/234) |
+| PC-01 | Banco vazio não inicia: migration 69 usa sigla antes da criação | [#215](https://github.com/GOUOCE/GOUCE-app/issues/215) |
 
 ## Observações gerais
 
@@ -388,7 +401,12 @@ Executar na ordem abaixo. São **13 casos essenciais**. CT-001 começa pela list
   - RF-009 exige número/categoria da CNH, mas ACs, BDD e código usam nome/telefone e não têm CNH. Os casos seguem o recorte da HU; a cobertura de CNH está **pendente de decisão**, não implementada nem aprovada por este planejamento.
   - O BDD ainda comenta FA-002 com CNH/CPF e mensagem de telefone sem definição; o requisito atual já define unicidade por telefone e “Informe um telefone válido com DDD”. Seguir o requisito e manter a divergência documental anotada.
   - API permite nome de 1 caractere e o frontend exige pelo menos 3; não há esse mínimo nos critérios. Confirmar o contrato antes de classificar nome curto apenas por essa diferença.
-  - A issue #185 continua aberta, sem comentários na consulta de 24/10/2026. Aprovação das regras de telefone, duplicidade com inativos e seleção de inativos segue **pendente**, conforme orientação do responsável; os casos usam os requisitos atuais como referência provisória.
-- A execução futura será na branch da própria implementação/correção, antes de ir para develop. Estes arquivos ficam na branch `test/casos-api-ui-epico-02`; nenhuma troca de branch ou execução foi feita neste planejamento.
-- Todos os casos estão pendentes. “Falha esperada” significa risco confirmado por leitura estática, não defeito já reproduzido. Quando executar, marcar falhas e bloqueios por parte, sem transformar 503 ou massa preparada em aprovação de funcionalidade.
+  - A issue #185 foi encerrada; as decisões de produto agora estão na [#207](https://github.com/GOUOCE/GOUCE-app/issues/207), aberta e sem respostas na consulta desta execução. Regras de formato, limites e inativos continuam provisórias conforme indicado nela.
+- Execução realizada em worktree próprio da branch `feature/testes-api-hu-010`, com base `5e7301a0`, sem alterar o checkout em uso ou o código da aplicação.
+- Os status desta suíte foram atualizados pela execução de API. Bloqueios correspondem às dependências/decisões discriminadas; falhas exigem reteste após correção. Os casos de UI não foram executados.
 - Suíte complementar: [UI-HU-010.md](../ui/UI-HU-010.md). O cancelamento do modal é verificado na UI; não existe requisição funcional de cancelar na API.
+
+### Registro desta execução
+
+- **Reteste dos defeitos (2026-10-25):** as falhas foram reproduzidas por Cauan Ricardo (com apoio do Claude Code) em stack Docker isolada, `http://localhost:8001`, commit `5e7301a0`; a requisição, a resposta e a conferência no banco de cada uma estão na issue correspondente. Os casos 🚫 dependem da inativação (503, #232) ou das HU-017 e não foram reexecutados. Em banco vazio a migration 69 falha ([#215](https://github.com/GOUOCE/GOUCE-app/issues/215)); foi usada uma cópia temporária da migration 68 com a coluna `sigla`, sem alterar o repositório.
+- Resultados esperados originais preservados. Decisões de produto ainda pendentes não foram aprovadas por este teste; as divergências são relatadas contra o documento publicado.
