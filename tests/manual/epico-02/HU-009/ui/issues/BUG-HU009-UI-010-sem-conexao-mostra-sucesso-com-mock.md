@@ -5,7 +5,7 @@
 | **Tipo** | Bug funcional |
 | **Severidade** | 🔴 Alta (bloqueante) |
 | **Ambiente** | Desenvolvimento — app web (`http://localhost:3000`), API local (`http://localhost:8000`), branch `test/manual-ui-hu-009` a partir da `develop` (`1edaf2aa`) |
-| **Issue** | A definir |
+| **Issue** | [#283](https://github.com/GOUOCE/GOUCE-app/issues/283) |
 | **Caso relacionado** | `CT-HU009-UI-007`, `CT-HU009-UI-012` |
 | **Documentação** | [HU-009 — Testes manuais de UI](https://github.com/GOUOCE/GOUCE-app/blob/test/manual-ui-hu-009/tests/manual/epico-02/HU-009/ui/UI-HU-009.md#ct-hu009-ui-012--falha-de-conexao-sem-sucesso-falso) |
 | **Issue relacionada** | [#249](https://github.com/GOUOCE/GOUCE-app/issues/249) (bairros) e [#263](https://github.com/GOUOCE/GOUCE-app/issues/263) (faculdades) |

@@ -472,19 +472,17 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| CT-001 | Com o banco vazio a lista mostra ônibus de exemplo (`OCR-1234`, `OCR-5521`, `OCR-8890`) | Issue a abrir ao final da suíte |
-| CT-001 | Chave “Mostrar inativos” já vem ligada na listagem de frota | Issue a abrir ao final da suíte (mesma causa de [#257](https://github.com/GOUOCE/GOUCE-app/issues/257)) |
-| CT-002, CT-008, CT-009, CT-010 | Mensagens de sucesso em barra preta, fora do padrão de pop-up e com texto diferente do requisito | Issue a abrir ao final da suíte (mesma causa de [#260](https://github.com/GOUOCE/GOUCE-app/issues/260)) |
-| CT-001 | Telas de frota não recriadas: a seta volta ao Painel e Cadastrar/Editar reabrem com dados anteriores | Issue a abrir ao final da suíte (mesma causa de [#256](https://github.com/GOUOCE/GOUCE-app/issues/256)) |
-| CT-003 | Cadastro de `OCR-1234`, `OCR-5521` e `OCR-8890` bloqueado pelo app com “Este veículo já está registrado.”, sem chamar a API, por causa da lista de exemplo | Issue a abrir ao final da suíte (mesma causa de [#258](https://github.com/GOUOCE/GOUCE-app/issues/258)) |
-| CT-003 | Melhoria: campo da placa sem limite de 7 caracteres e sem bloqueio de emoji e caracteres especiais na digitação | Issue a abrir ao final da suíte (não bloqueante) |
-| CT-005 | Capacidade em pé vazia (ou só com espaços) é aceita e gravada como `0`, no cadastro e na edição (sobrescreve o valor anterior), contrariando o AC-08 | Issue a abrir ao final da suíte; decisão de produto pendente (manter `0` automático ou exigir preenchimento), relacionada à [#226](https://github.com/GOUOCE/GOUCE-app/issues/226) |
-| CT-006 | Símbolos na placa são apagados em silêncio e a placa inválida `GHI@3J45` é aceita como `GHI3J45`; é o mesmo ponto da melhoria de limitar a 7 caracteres e bloquear símbolos (CT-003) | Issue a abrir ao final da suíte (mesma da melhoria do CT-003); relacionada às [#225](https://github.com/GOUOCE/GOUCE-app/issues/225) e [#227](https://github.com/GOUOCE/GOUCE-app/issues/227) |
-| CT-007 | Decimais (`4.5`, `2.5`) em assentos e capacidade em pé passam pela validação do app; só a API recusa | Issue a abrir ao final da suíte (Front) |
-| CT-007 | Erro de campo numérico da API sai sem o nome do campo e a mesma frase se repete quando os dois campos são inválidos | Issue a abrir ao final da suíte (Front) |
-| CT-007 | Número acima do limite do banco (ex.: `883833333333`) causa `500`, sem CORS, na criação e na edição; no cadastro o app mostra sucesso falso (ônibus só na memória) | Issue a abrir ao final da suíte (Back + Front, mesma família da [#249](https://github.com/GOUOCE/GOUCE-app/issues/249) e [#263](https://github.com/GOUOCE/GOUCE-app/issues/263)) |
-| CT-009, CT-010 | Inativar e reativar ônibus falham com `404` (“Request failed with status code 404”): o app envia o número da linha em vez da placa (`/onibus/7/inativar`); a reativação usa o mesmo caminho. **Bloqueante** | Issue a abrir ao final da suíte (Front; bloqueante) |
-| CT-001, CT-007, CT-012 | A frota usa a lista de exemplo (`ONIBUS_MOCK`) como dado real: mostra exemplos na lista e devolve sucesso falso no cadastro, na edição e na mudança de status quando a API não responde (ou responde 500 sem CORS) | Issue a abrir ao final da suíte (Front; mesma família da [#249](https://github.com/GOUOCE/GOUCE-app/issues/249) e [#263](https://github.com/GOUOCE/GOUCE-app/issues/263)) |
+| CT-009, CT-010 | Inativar e reativar ônibus falham com `404`: o app envia o número da linha em vez da placa. **Bloqueante** | [#274](https://github.com/GOUOCE/GOUCE-app/issues/274) |
+| CT-001, CT-002 | Telas de frota não recriadas: a seta volta ao Painel e Cadastrar/Editar reabrem com dados anteriores | [#275](https://github.com/GOUOCE/GOUCE-app/issues/275) |
+| CT-001 | Chave “Mostrar inativos” já vem ligada na listagem | [#276](https://github.com/GOUOCE/GOUCE-app/issues/276) |
+| CT-001, CT-003 | Com o banco vazio a lista mostra ônibus de exemplo, e `OCR-1234`, `OCR-5521` e `OCR-8890` não podem ser cadastradas. **Bloqueante** | [#277](https://github.com/GOUOCE/GOUCE-app/issues/277) |
+| CT-002, CT-008 | Mensagens de sucesso em barra preta, fora do padrão de pop-up e com texto diferente do requisito | [#278](https://github.com/GOUOCE/GOUCE-app/issues/278) |
+| CT-005 | Capacidade em pé vazia (ou só com espaços) é aceita e gravada como `0`, no cadastro e na edição (decisão de produto pendente) | [#279](https://github.com/GOUOCE/GOUCE-app/issues/279) |
+| CT-003, CT-006 | Campo da placa sem limite de 7 caracteres e sem bloqueio de símbolos; `GHI@3J45` é aceita como `GHI3J45` | [#280](https://github.com/GOUOCE/GOUCE-app/issues/280) |
+| CT-007 | Decimais passam pela validação do app; o erro da API sai sem o nome do campo e repetido | [#281](https://github.com/GOUOCE/GOUCE-app/issues/281) |
+| CT-007 | Número acima do limite do banco causa `500` sem CORS na criação e na edição (Back + Front) | [#282](https://github.com/GOUOCE/GOUCE-app/issues/282) |
+| CT-001, CT-007, CT-012 | Sem resposta da API (ou com `500`), o app mostra sucesso falso e usa a lista de exemplo como dado real. **Bloqueante** | [#283](https://github.com/GOUOCE/GOUCE-app/issues/283) |
+| CT-011 | Representante não consegue entrar (“Perfil incompatível”) | Já registrado na [#190](https://github.com/GOUOCE/GOUCE-app/issues/190), reaberta, com comentário de que o problema persiste |
 
 ## Observações gerais
 

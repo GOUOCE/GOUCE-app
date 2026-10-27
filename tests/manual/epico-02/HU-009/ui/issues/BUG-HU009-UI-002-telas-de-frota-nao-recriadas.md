@@ -5,7 +5,7 @@
 | **Tipo** | Bug de UX |
 | **Severidade** | 🟡 Média |
 | **Ambiente** | Desenvolvimento — app web (`http://localhost:3000`), API local (`http://localhost:8000`), branch `test/manual-ui-hu-009` a partir da `develop` (`1edaf2aa`) |
-| **Issue** | A definir |
+| **Issue** | [#275](https://github.com/GOUOCE/GOUCE-app/issues/275) |
 | **Caso relacionado** | `CT-HU009-UI-001`, `CT-HU009-UI-002` |
 | **Documentação** | [HU-009 — Testes manuais de UI](https://github.com/GOUOCE/GOUCE-app/blob/test/manual-ui-hu-009/tests/manual/epico-02/HU-009/ui/UI-HU-009.md#ct-hu009-ui-001--abrir-a-frota-buscar-e-conferir-lista-vazia) |
 | **Issue relacionada** | [#245](https://github.com/GOUOCE/GOUCE-app/issues/245) (bairros) e [#256](https://github.com/GOUOCE/GOUCE-app/issues/256) (faculdades) |

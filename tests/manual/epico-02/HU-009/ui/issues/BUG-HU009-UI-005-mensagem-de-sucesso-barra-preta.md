@@ -5,7 +5,7 @@
 | **Tipo** | Bug de UX / requisito |
 | **Severidade** | 🟢 Baixa |
 | **Ambiente** | Desenvolvimento — app web (`http://localhost:3000`), API local (`http://localhost:8000`), branch `test/manual-ui-hu-009` a partir da `develop` (`1edaf2aa`) |
-| **Issue** | A definir |
+| **Issue** | [#278](https://github.com/GOUOCE/GOUCE-app/issues/278) |
 | **Caso relacionado** | `CT-HU009-UI-002`, `CT-HU009-UI-008` |
 | **Documentação** | [HU-009 — Testes manuais de UI](https://github.com/GOUOCE/GOUCE-app/blob/test/manual-ui-hu-009/tests/manual/epico-02/HU-009/ui/UI-HU-009.md#ct-hu009-ui-002--cadastrar-e-conferir-persistencia) |
 | **Issue relacionada** | [#260](https://github.com/GOUOCE/GOUCE-app/issues/260) (faculdades) e AC-07 da HU-009 |

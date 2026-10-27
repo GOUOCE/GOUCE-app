@@ -5,7 +5,7 @@
 | **Tipo** | Bug de validação / UX |
 | **Severidade** | 🟡 Média |
 | **Ambiente** | Desenvolvimento — app web (`http://localhost:3000`), API local (`http://localhost:8000`), branch `test/manual-ui-hu-009` a partir da `develop` (`1edaf2aa`) |
-| **Issue** | A definir |
+| **Issue** | [#281](https://github.com/GOUOCE/GOUCE-app/issues/281) |
 | **Caso relacionado** | `CT-HU009-UI-007` |
 | **Documentação** | [HU-009 — Testes manuais de UI](https://github.com/GOUOCE/GOUCE-app/blob/test/manual-ui-hu-009/tests/manual/epico-02/HU-009/ui/UI-HU-009.md#ct-hu009-ui-007--validar-fronteiras-e-inteiros-das-capacidades) |
 | **Issue relacionada** | AC-10 da HU-009; [#229](https://github.com/GOUOCE/GOUCE-app/issues/229) (mensagem genérica na API) |

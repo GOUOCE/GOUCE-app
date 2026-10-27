@@ -5,7 +5,7 @@
 | **Tipo** | Bug de validação / melhoria |
 | **Severidade** | 🟡 Média |
 | **Ambiente** | Desenvolvimento — app web (`http://localhost:3000`), API local (`http://localhost:8000`), branch `test/manual-ui-hu-009` a partir da `develop` (`1edaf2aa`) |
-| **Issue** | A definir |
+| **Issue** | [#280](https://github.com/GOUOCE/GOUCE-app/issues/280) |
 | **Caso relacionado** | `CT-HU009-UI-003`, `CT-HU009-UI-006` |
 | **Documentação** | [HU-009 — Testes manuais de UI](https://github.com/GOUOCE/GOUCE-app/blob/test/manual-ui-hu-009/tests/manual/epico-02/HU-009/ui/UI-HU-009.md#ct-hu009-ui-006--rejeitar-formato-invalido-de-placa) |
 | **Issue relacionada** | [#261](https://github.com/GOUOCE/GOUCE-app/issues/261) (faculdades), [#225](https://github.com/GOUOCE/GOUCE-app/issues/225) e [#227](https://github.com/GOUOCE/GOUCE-app/issues/227) (API) e AC-09 da HU-009 |

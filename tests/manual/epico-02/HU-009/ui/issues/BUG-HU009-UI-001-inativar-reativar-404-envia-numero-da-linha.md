@@ -5,7 +5,7 @@
 | **Tipo** | Bug funcional |
 | **Severidade** | 🔴 Alta (bloqueante) |
 | **Ambiente** | Desenvolvimento — app web (`http://localhost:3000`), API local (`http://localhost:8000`), branch `test/manual-ui-hu-009` a partir da `develop` (`1edaf2aa`) |
-| **Issue** | A definir |
+| **Issue** | [#274](https://github.com/GOUOCE/GOUCE-app/issues/274) |
 | **Caso relacionado** | `CT-HU009-UI-009`, `CT-HU009-UI-010` |
 | **Documentação** | [HU-009 — Testes manuais de UI](https://github.com/GOUOCE/GOUCE-app/blob/test/manual-ui-hu-009/tests/manual/epico-02/HU-009/ui/UI-HU-009.md#ct-hu009-ui-009--cancelar-e-confirmar-inativacao-do-onibus-correto) |
 | **Issue relacionada** | AC-05 e AC-12 da HU-009 |

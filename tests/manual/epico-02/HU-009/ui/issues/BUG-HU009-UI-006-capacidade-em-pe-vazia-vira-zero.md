@@ -5,7 +5,7 @@
 | **Tipo** | Bug de requisito (decisão de produto) |
 | **Severidade** | 🟡 Média |
 | **Ambiente** | Desenvolvimento — app web (`http://localhost:3000`), API local (`http://localhost:8000`), branch `test/manual-ui-hu-009` a partir da `develop` (`1edaf2aa`) |
-| **Issue** | A definir |
+| **Issue** | [#279](https://github.com/GOUOCE/GOUCE-app/issues/279) |
 | **Caso relacionado** | `CT-HU009-UI-005` |
 | **Documentação** | [HU-009 — Testes manuais de UI](https://github.com/GOUOCE/GOUCE-app/blob/test/manual-ui-hu-009/tests/manual/epico-02/HU-009/ui/UI-HU-009.md#ct-hu009-ui-005--obrigatorios-no-cadastro-e-na-edicao) |
 | **Issue relacionada** | [#226](https://github.com/GOUOCE/GOUCE-app/issues/226) (API assume 0 quando o campo não vem) e AC-08/AC-10 da HU-009 |
