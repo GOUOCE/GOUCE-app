@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Em execução | 13 | 0 | 0 | 0 | 0 | 13 |
+| ⏳ Em execução | 13 | 1 | 0 | 0 | 0 | 12 |
 
 ## Pré-condições
 
@@ -38,7 +38,7 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU012-API-001 | Listar, filtrar e consultar complementares | Sem filtro; `incluir_inativos=true`; `nome`; `rota_principal_id`; `GET /{id}`; `/opcoes` | HTTP 200; padrão só ativas; filtros respeitados; opções só com principais ativas | ⏳ PENDENTE | Não executado. |
+| CT-HU012-API-001 | Listar, filtrar e consultar complementares | Sem filtro; `incluir_inativos=true`; `nome`; `rota_principal_id`; `GET /{id}`; `/opcoes` | HTTP 200; padrão só ativas; filtros respeitados; opções só com principais ativas | ✅ APROVADO | Lista vazia 200/[]; padrão só ativas, filtro de inativos, nome e principal conferidos; filtro com id 0 retornou 422. Consultas ativa/inativa e 404 conferidos; /opcoes só oferece RP1/RP2 ativas. [JSON](evidencias/CT-HU012-API-001.json) |
 | CT-HU012-API-002 | Cadastrar rota complementar válida | RC1 ligada a RP1; RC2 ligada a RP2, com espaços nas pontas | HTTP 201 “Operação realizada com sucesso”; ativa; vínculo e dados corretos | ⏳ PENDENTE | Não executado. |
 | CT-HU012-API-003 | Horário de retorno da complementar (#208) | `horario_saida` e `horario_retorno`; retorno igual e anterior à saída | Retorno aceito e gravado; retorno ≤ saída recusado com 422 | ⏳ PENDENTE | Não executado. |
 | CT-HU012-API-004 | Nome único entre todas as rotas (#208) | Nome de RC1 com variações; de complementar inativa; de rota principal; edição para nome em uso | HTTP 409; nada criado nem alterado | ⏳ PENDENTE | Não executado. |
@@ -74,8 +74,10 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Lista vazia 200/[]; padrão só ativas, filtro de inativos, nome e principal conferidos; filtro com id 0 retornou 422. Consultas ativa/inativa e 404 conferidos; /opcoes só oferece RP1/RP2 ativas.
+- 11 chamadas HTTP; 22 verificações registradas. Status observados: 200 (9×), 404 (1×), 422 (1×).
+- Evidência: [CT-HU012-API-001.json](evidencias/CT-HU012-API-001.json), com corpos reais, sequência/horário, verificações e consultas de persistência/auditoria.
+- Status: ✅ APROVADO.
 
 ---
 

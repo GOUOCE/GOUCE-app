@@ -1,0 +1,653 @@
+{
+  "case_id": "CT-HU012-API-001",
+  "run_id": "20261027T174349Z",
+  "environment": {
+    "base_url": "http://127.0.0.1:18812",
+    "branch": "feat/front-hu012",
+    "application_commit": "23d1063f09f13cc195da7e45422581f73e2ae6da",
+    "plan_commit": "939921e3",
+    "database": "PostgreSQL 15 isolado; migrations reais",
+    "transport": "HTTP localhost via urllib.request; sem mocks",
+    "python": "3.12.3",
+    "feature_head_before_execution": "23d1063f09f13cc195da7e45422581f73e2ae6da"
+  },
+  "started_at": "2026-10-27T17:43:50.680052+00:00",
+  "checks": [
+    {
+      "description": "GET /rotas-complementares: HTTP",
+      "expected": 200,
+      "actual": 200,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "lista inicial vazia",
+      "expected": [],
+      "actual": [],
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "GET /rotas-complementares: HTTP",
+      "expected": 200,
+      "actual": 200,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "padrão apenas ativas",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "RC3 fora padrão",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "GET /rotas-complementares?incluir_inativos=true: HTTP",
+      "expected": 200,
+      "actual": 200,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "RC3 presente com inativos",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "GET /rotas-complementares?nome=van: HTTP",
+      "expected": 200,
+      "actual": 200,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "GET /rotas-complementares?nome=VAN%202: HTTP",
+      "expected": 200,
+      "actual": 200,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "filtro parcial case insensitive",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "GET /rotas-complementares?rota_principal_id=1: HTTP",
+      "expected": 200,
+      "actual": 200,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "filtro por principal",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "GET /rotas-complementares?rota_principal_id=0: HTTP",
+      "expected": 422,
+      "actual": 422,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "envelope de erro padronizado",
+      "expected": "REQUEST_VALIDATION_ERROR",
+      "actual": "REQUEST_VALIDATION_ERROR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "erro identifica rota_principal_id",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "mensagem de rota_principal_id",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "GET /rotas-complementares/1: HTTP",
+      "expected": 200,
+      "actual": 200,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "GET /rotas-complementares/6: HTTP",
+      "expected": 200,
+      "actual": 200,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "GET /rotas-complementares/999999: HTTP",
+      "expected": 404,
+      "actual": 404,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "envelope de erro padronizado",
+      "expected": "RESOURCE_NOT_FOUND",
+      "actual": "RESOURCE_NOT_FOUND",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "GET /rotas-complementares/opcoes: HTTP",
+      "expected": 200,
+      "actual": 200,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "opções só principais ativas",
+      "expected": [
+        1,
+        2
+      ],
+      "actual": [
+        1,
+        2
+      ],
+      "passed": true,
+      "severity_if_failed": "failure"
+    }
+  ],
+  "requests": [
+    {
+      "sequence": 17,
+      "timestamp": "2026-10-27T17:43:50.680058+00:00",
+      "label": "",
+      "duration_ms": 18.98,
+      "actor": "admin",
+      "request": {
+        "method": "GET",
+        "url": "http://127.0.0.1:18812/rotas-complementares",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": []
+      }
+    },
+    {
+      "sequence": 80,
+      "timestamp": "2026-10-27T17:43:52.142654+00:00",
+      "label": "",
+      "duration_ms": 16.13,
+      "actor": "admin",
+      "request": {
+        "method": "GET",
+        "url": "http://127.0.0.1:18812/rotas-complementares",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:51 GMT",
+          "content-type": "application/json"
+        },
+        "json": [
+          {
+            "id": 1,
+            "nome": "Van 2 - Bairro Novo Manhã",
+            "horario_saida": "05:50",
+            "ponto_conexao": "Praça do Bairro Novo",
+            "ativo": true,
+            "rota_principal": {
+              "id": 1,
+              "nome": "Rota Centro - UFC",
+              "ativo": true
+            }
+          },
+          {
+            "id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "rota_principal": {
+              "id": 2,
+              "nome": "Rota Campo Velho - IFCE",
+              "ativo": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "sequence": 81,
+      "timestamp": "2026-10-27T17:43:52.158819+00:00",
+      "label": "",
+      "duration_ms": 17.12,
+      "actor": "admin",
+      "request": {
+        "method": "GET",
+        "url": "http://127.0.0.1:18812/rotas-complementares?incluir_inativos=true",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:51 GMT",
+          "content-type": "application/json"
+        },
+        "json": [
+          {
+            "id": 4,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "rota_principal": {
+              "id": 1,
+              "nome": "Rota Centro - UFC",
+              "ativo": true
+            }
+          },
+          {
+            "id": 5,
+            "nome": "Controle limite ponto_conexao150",
+            "horario_saida": "06:00",
+            "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "ativo": false,
+            "rota_principal": {
+              "id": 1,
+              "nome": "Rota Centro - UFC",
+              "ativo": true
+            }
+          },
+          {
+            "id": 3,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "rota_principal": {
+              "id": 1,
+              "nome": "Rota Centro - UFC",
+              "ativo": true
+            }
+          },
+          {
+            "id": 1,
+            "nome": "Van 2 - Bairro Novo Manhã",
+            "horario_saida": "05:50",
+            "ponto_conexao": "Praça do Bairro Novo",
+            "ativo": true,
+            "rota_principal": {
+              "id": 1,
+              "nome": "Rota Centro - UFC",
+              "ativo": true
+            }
+          },
+          {
+            "id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "rota_principal": {
+              "id": 2,
+              "nome": "Rota Campo Velho - IFCE",
+              "ativo": true
+            }
+          },
+          {
+            "id": 6,
+            "nome": "Van Sítio",
+            "horario_saida": "05:40",
+            "ponto_conexao": "Entrada do Sítio Riacho",
+            "ativo": false,
+            "rota_principal": {
+              "id": 2,
+              "nome": "Rota Campo Velho - IFCE",
+              "ativo": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "sequence": 82,
+      "timestamp": "2026-10-27T17:43:52.175982+00:00",
+      "label": "",
+      "duration_ms": 21.82,
+      "actor": "admin",
+      "request": {
+        "method": "GET",
+        "url": "http://127.0.0.1:18812/rotas-complementares?nome=van",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:51 GMT",
+          "content-type": "application/json"
+        },
+        "json": [
+          {
+            "id": 1,
+            "nome": "Van 2 - Bairro Novo Manhã",
+            "horario_saida": "05:50",
+            "ponto_conexao": "Praça do Bairro Novo",
+            "ativo": true,
+            "rota_principal": {
+              "id": 1,
+              "nome": "Rota Centro - UFC",
+              "ativo": true
+            }
+          },
+          {
+            "id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "rota_principal": {
+              "id": 2,
+              "nome": "Rota Campo Velho - IFCE",
+              "ativo": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "sequence": 83,
+      "timestamp": "2026-10-27T17:43:52.197831+00:00",
+      "label": "",
+      "duration_ms": 17.58,
+      "actor": "admin",
+      "request": {
+        "method": "GET",
+        "url": "http://127.0.0.1:18812/rotas-complementares?nome=VAN%202",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:51 GMT",
+          "content-type": "application/json"
+        },
+        "json": [
+          {
+            "id": 1,
+            "nome": "Van 2 - Bairro Novo Manhã",
+            "horario_saida": "05:50",
+            "ponto_conexao": "Praça do Bairro Novo",
+            "ativo": true,
+            "rota_principal": {
+              "id": 1,
+              "nome": "Rota Centro - UFC",
+              "ativo": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "sequence": 84,
+      "timestamp": "2026-10-27T17:43:52.215436+00:00",
+      "label": "",
+      "duration_ms": 17.68,
+      "actor": "admin",
+      "request": {
+        "method": "GET",
+        "url": "http://127.0.0.1:18812/rotas-complementares?rota_principal_id=1",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:51 GMT",
+          "content-type": "application/json"
+        },
+        "json": [
+          {
+            "id": 1,
+            "nome": "Van 2 - Bairro Novo Manhã",
+            "horario_saida": "05:50",
+            "ponto_conexao": "Praça do Bairro Novo",
+            "ativo": true,
+            "rota_principal": {
+              "id": 1,
+              "nome": "Rota Centro - UFC",
+              "ativo": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "sequence": 85,
+      "timestamp": "2026-10-27T17:43:52.233142+00:00",
+      "label": "",
+      "duration_ms": 17.97,
+      "actor": "admin",
+      "request": {
+        "method": "GET",
+        "url": "http://127.0.0.1:18812/rotas-complementares?rota_principal_id=0",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": null
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:51 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "REQUEST_VALIDATION_ERROR",
+            "message": "Requisição inválida",
+            "details": [
+              {
+                "field": "rota_principal_id",
+                "message": "Informe um ID de rota principal válido."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "sequence": 86,
+      "timestamp": "2026-10-27T17:43:52.251160+00:00",
+      "label": "",
+      "duration_ms": 16.97,
+      "actor": "admin",
+      "request": {
+        "method": "GET",
+        "url": "http://127.0.0.1:18812/rotas-complementares/1",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:51 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "id": 1,
+          "nome": "Van 2 - Bairro Novo Manhã",
+          "horario_saida": "05:50",
+          "ponto_conexao": "Praça do Bairro Novo",
+          "ativo": true,
+          "rota_principal": {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "ativo": true
+          }
+        }
+      }
+    },
+    {
+      "sequence": 87,
+      "timestamp": "2026-10-27T17:43:52.268169+00:00",
+      "label": "",
+      "duration_ms": 16.53,
+      "actor": "admin",
+      "request": {
+        "method": "GET",
+        "url": "http://127.0.0.1:18812/rotas-complementares/6",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:51 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "id": 6,
+          "nome": "Van Sítio",
+          "horario_saida": "05:40",
+          "ponto_conexao": "Entrada do Sítio Riacho",
+          "ativo": false,
+          "rota_principal": {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "ativo": true
+          }
+        }
+      }
+    },
+    {
+      "sequence": 88,
+      "timestamp": "2026-10-27T17:43:52.284718+00:00",
+      "label": "",
+      "duration_ms": 17.11,
+      "actor": "admin",
+      "request": {
+        "method": "GET",
+        "url": "http://127.0.0.1:18812/rotas-complementares/999999",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": null
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:51 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "RESOURCE_NOT_FOUND",
+            "message": "Rota complementar não encontrada."
+          }
+        }
+      }
+    },
+    {
+      "sequence": 89,
+      "timestamp": "2026-10-27T17:43:52.301858+00:00",
+      "label": "",
+      "duration_ms": 15.71,
+      "actor": "admin",
+      "request": {
+        "method": "GET",
+        "url": "http://127.0.0.1:18812/rotas-complementares/opcoes",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:51 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "rotas_principais": [
+            {
+              "id": 2,
+              "nome": "Rota Campo Velho - IFCE",
+              "horario_saida": "06:40",
+              "horario_retorno": "18:00"
+            },
+            {
+              "id": 1,
+              "nome": "Rota Centro - UFC",
+              "horario_saida": "06:30",
+              "horario_retorno": "17:30"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "database_checks": [],
+  "notes": [],
+  "dependencies": [],
+  "status": "PASS",
+  "finished_at": "2026-10-27T17:43:53.071940+00:00",
+  "issues": []
+}
