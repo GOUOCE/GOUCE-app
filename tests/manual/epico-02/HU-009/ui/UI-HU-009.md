@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 1 | 5 | 0 | 7 |
+| 🔄 Em andamento | 13 | 1 | 6 | 0 | 6 |
 
 ## Pré-condições
 
@@ -46,7 +46,7 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 | CT-HU009-UI-004 | Bloquear duplicidade de placa ativa e inativa | `QXD2E45` e variações; `XYZ9K87` inativo | “Este veículo já está registrado.”; nenhum novo registro | ✅ PASSOU | As seis tentativas (`QXD2E45`, `qxd2e45`, `QXD-2E45`, com espaços, `XYZ9K87`, `xyz-9k87`) foram barradas pelo servidor (`409`). Nenhum registro novo. |
 | CT-HU009-UI-005 | Obrigatórios no cadastro e na edição | Cada campo vazio; placa só com espaços; capacidade em pé apagada versus zero | Destaque e bloqueio; apagar não vira zero; dados anteriores preservados | ❌ FALHOU | Placa e assentos vazios são destacados e barrados, mas a capacidade em pé vazia (ou só com espaços) é aceita e gravada como `0`, no cadastro e na edição. Na edição, `QXD2E45` passou de 20 para 0 em pé sem aviso. |
 | CT-HU009-UI-006 | Rejeitar formato inválido de placa | Letras, números, tamanho, posição e símbolo incorretos | “Placa inválida.”; sem cadastro nem edição | ❌ FALHOU | `ABCDEFG`, `1234567`, `AB1234`, `ABC12345`, `A1C1D23` e `ABC@1D2` foram barradas, mas `GHI@3J45` foi aceita e gravada como `GHI3J45`: o app apagou o `@` e transformou a placa inválida em outra válida. |
-| CT-HU009-UI-007 | Validar fronteiras e inteiros das capacidades | Assentos −1/0/1; em pé −1/0/1; texto e decimal | Inválidos bloqueados no campo; 1 assento/0 em pé aceitos | ⏳ PENDENTE | Não executado. |
+| CT-HU009-UI-007 | Validar fronteiras e inteiros das capacidades | Assentos −1/0/1; em pé −1/0/1; texto e decimal | Inválidos bloqueados no campo; 1 assento/0 em pé aceitos | ❌ FALHOU | Decimais (`4.5`, `2.5`) passam pelo app e só a API recusa, com mensagem sem o nome do campo (repetida quando os dois campos são inválidos). Número grande (`883833333333`) causa erro 500 na API sem CORS e o app mostra sucesso falso. |
 
 ### Seção B — Edição, inativação e reativação
 
@@ -259,8 +259,21 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+*Visto na tela (cadastro)*
+
+- Assentos `0`/negativo e capacidade em pé negativa são barrados pelo app (`frotaSchema.ts`: “A quantidade de assentos deve ser maior que zero” e “A capacidade em pé não pode ser negativa”).
+- **Decimal passa pelo app:** o `frotaSchema` não exige inteiro (sem `.int()`). Com `4.5` em assentos ou `2.5` em pé, o app aceita, abre a confirmação e envia; quem recusa é a API (`422`). O requisito (AC-10) pede que o campo seja destacado como inválido na tela.
+- **Mensagem sem o campo:** a API devolve `{"field":"assentos","message":"Informe um número válido."}`, mas `getErrorMessage` (`utils/errorUtils.ts`) exibe só o texto no pop-up “Aviso”, sem dizer qual campo está errado. Com os dois campos inválidos, a mesma frase aparece **duas vezes**. Reproduzido também chamando a API direto.
+- **Número grande, `883833333333` em pé:** a API responde `500 Internal Server Error` (`psycopg2.errors.NumericValueOutOfRange: integer out of range`; as colunas são `integer`) e a resposta de 500 sai **sem cabeçalho CORS**, então o navegador entrega “Network Error” ao app. `frotaService.criarOnibus` trata “sem resposta” como API fora do ar, cria o ônibus só na memória (`ONIBUS_MOCK.unshift`) e **mostra a barra preta de sucesso**. O ônibus não foi gravado (conferido no banco) e não aparece na listagem após recarregar. O mesmo 500 acontece com assentos grandes.
+- **Número gigante, `333333333333333333333353`:** a API recusa com `422` e o app mostra o pop-up “Informe um número válido.” (mesma falta de nome do campo).
+- Cadastro `LIM1A01` com 1 assento e 10 em pé: `201`. Em seguida o testador editou a mesma placa para 0 em pé: `PATCH /onibus/LIM1A01` com `200`, e o banco ficou com 1 assento e 0 em pé (fronteira válida aceita e persistida). O cadastro direto com 1/0 não foi repetido na tela; pelo código usa o mesmo schema (assentos ≥ 1, em pé ≥ 0).
+
+*Confirmado pela API e pelo código (não repetido na tela)*
+
+- **Edição:** `editar.tsx` usa o mesmo `frotaSchema`, então decimais passam pelo app. Chamando `PATCH /onibus/LIM1A01` com assentos `0`, `-1`, `4.5` e em pé `-1`, `2.5`, a API responde `422` e o banco permanece 1/0 (nada foi alterado). Com em pé `883833333333` responde `500`; como `atualizarOnibus` só cai no exemplo interno quando o ônibus está na lista de exemplo, a tela deve mostrar erro de conexão enganoso, e não sucesso.
+- A edição para em pé `1` não foi executada.
+- Não foi criada regra de limite máximo: o que falta é tratar o estouro e devolver erro claro (`422`) em vez de `500`.
+- Status: ❌ Falhou.
 
 ### Seção B — Edição, inativação e reativação
 
@@ -444,6 +457,9 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 | CT-003 | Melhoria: campo da placa sem limite de 7 caracteres e sem bloqueio de emoji e caracteres especiais na digitação | Issue a abrir ao final da suíte (não bloqueante) |
 | CT-005 | Capacidade em pé vazia (ou só com espaços) é aceita e gravada como `0`, no cadastro e na edição (sobrescreve o valor anterior), contrariando o AC-08 | Issue a abrir ao final da suíte; decisão de produto pendente (manter `0` automático ou exigir preenchimento), relacionada à [#226](https://github.com/GOUOCE/GOUCE-app/issues/226) |
 | CT-006 | Símbolos na placa são apagados em silêncio e a placa inválida `GHI@3J45` é aceita como `GHI3J45`; é o mesmo ponto da melhoria de limitar a 7 caracteres e bloquear símbolos (CT-003) | Issue a abrir ao final da suíte (mesma da melhoria do CT-003); relacionada às [#225](https://github.com/GOUOCE/GOUCE-app/issues/225) e [#227](https://github.com/GOUOCE/GOUCE-app/issues/227) |
+| CT-007 | Decimais (`4.5`, `2.5`) em assentos e capacidade em pé passam pela validação do app; só a API recusa | Issue a abrir ao final da suíte (Front) |
+| CT-007 | Erro de campo numérico da API sai sem o nome do campo e a mesma frase se repete quando os dois campos são inválidos | Issue a abrir ao final da suíte (Front) |
+| CT-007 | Número acima do limite do banco (ex.: `883833333333`) causa `500`, sem CORS, na criação e na edição; no cadastro o app mostra sucesso falso (ônibus só na memória) | Issue a abrir ao final da suíte (Back + Front, mesma família da [#249](https://github.com/GOUOCE/GOUCE-app/issues/249) e [#263](https://github.com/GOUOCE/GOUCE-app/issues/263)) |
 
 ## Observações gerais
 
