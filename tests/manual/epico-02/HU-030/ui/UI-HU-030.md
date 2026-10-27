@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 1 | 0 | 0 | 12 |
+| 🔄 Em andamento | 13 | 2 | 0 | 0 | 11 |
 
 ## Pré-condições
 
@@ -60,7 +60,7 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 | --- | --- | --- | --- | --- | --- |
 | CT-HU030-UI-009 | Entrar como representante e como aluno com a mesma conta | Sou representante e Sou aluno após promoção | Ambos os acessos funcionam; dados originais e menus corretos | ✅ PASSOU | Com o PR #195, a mesma conta entra como representante (“Sou representante”) e como aluno (“Sou aluno”). |
 | CT-HU030-UI-010 | Perder funções de representante após revogação | Sessão existente e novo login após revogação | Sem funções de representante; aluno continua acessando | ⏳ PENDENTE | Não executado. |
-| CT-HU030-UI-011 | Ocultar gestão a aluno e representante e bloquear links diretos | Menus e links para não administradores | Sem menu de gestão; Acesso Negado; sem privilégios administrativos | ⏳ PENDENTE | Não executado. |
+| CT-HU030-UI-011 | Ocultar gestão a aluno e representante e bloquear links diretos | Menus e links para não administradores | Sem menu de gestão; Acesso Negado; sem privilégios administrativos | ✅ PASSOU | Aluno e representante foram levados a Acesso Negado em todos os links de gestão, sem abrir nenhuma tela administrativa. |
 | CT-HU030-UI-012 | Falha de conexão sem exemplos nem atribuição/revogação falsa | Listas e escritas sem resposta da API | Erro visível; sem exemplos; estado reconciliado com o banco | ⏳ PENDENTE | Não executado. |
 | CT-HU030-UI-013 | Ver somente sua universidade e registrar presença real | Consulta/presença da própria instituição e de outra | Só próprios alunos; presença persiste; outra instituição bloqueada | ⏳ PENDENTE | Depende das HU-018/021; marcar 🚫 se ausentes. |
 
@@ -329,8 +329,10 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Contas usadas: `qa.hu007.aluno` (aluno) e `qa.hu007.rep` (representante, com “Sou representante”). O testador relatou que todos os links de gestão (`/representantes`, `/representantes/cadastrar` e os de outras gestões) mostraram **Acesso Negado** (erro 403).
+- O console do app registrou quatro redirecionamentos para `acesso-negado`, dois com o perfil `MOTORISTA` e dois com `ALUNO`, e nenhuma abertura de tela administrativa (`representantes`, `frota` ou `motoristas`) por esses perfis. O log da API não registra chamada de gestão feita por eles.
+- Também aparece no console uma tentativa de entrar com a conta do representante escolhendo “Sou administrador”, que o app recusou.
+- Status: ✅ Passou.
 
 ---
 
