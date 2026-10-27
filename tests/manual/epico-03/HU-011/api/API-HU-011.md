@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Em execução | 14 | 7 | 1 | 0 | 0 | 6 |
+| ⏳ Em execução | 14 | 8 | 1 | 0 | 0 | 5 |
 
 ## Pré-condições
 
@@ -46,7 +46,7 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 | CT-HU011-API-006 | Formato e ordem dos horários (#208) | `6:30`, `24:00`, `06:60`, `06:30:00`, texto; retorno igual e anterior à saída; 00:00/23:59 | Fora de `HH:MM` ou retorno ≤ saída: 422; sem faixa mínima/máxima | ✅ APROVADO | Formatos inválidos e retorno igual/anterior recusados; edição parcial usa o horário salvo. 00:00/23:59 e 13:15/13:16 aceitos sem conversão de fuso; controles inativados via API. [JSON](evidencias/CT-HU011-API-006.json) |
 | CT-HU011-API-007 | Vínculo com bairro ou faculdade inativo ou inexistente | B0; F0 na ida e na volta; id inexistente; ids repetidos; id `0`, negativo e texto | HTTP 422 no campo da lista; nenhuma rota nem vínculo inválido gravado | ✅ APROVADO | Bairro/faculdade inativos ou inexistentes, IDs repetidos, zero, negativo e string foram recusados com 422. A edição com nome + vínculo inválido permaneceu atômica; nome e vínculos originais preservados. [JSON](evidencias/CT-HU011-API-007.json) |
 | CT-HU011-API-008 | Editar dados e vínculos da rota | RP1: só nome; só horários; trocar listas; `{}`; campo `ativo`; id inexistente | HTTP 200 no mesmo id; 422 sem campo ou com campo extra; 404 inexistente | ✅ APROVADO | Nome, horários e listas editados no mesmo id; listas substituíram as antigas. Corpo vazio/campo ativo retornaram 422 e id inexistente 404. RP2/RP3 não mudaram. [JSON](evidencias/CT-HU011-API-008.json) |
-| CT-HU011-API-009 | Inativar e reativar (soft delete) | RP2: inativar, repetir, reativar, repetir; id inexistente | HTTP 200 nas válidas; registro e vínculos mantidos; 409 nas repetidas; 404 | ⏳ PENDENTE | Não executado. |
+| CT-HU011-API-009 | Inativar e reativar (soft delete) | RP2: inativar, repetir, reativar, repetir; id inexistente | HTTP 200 nas válidas; registro e vínculos mantidos; 409 nas repetidas; 404 | ✅ APROVADO | Inativar/reativar retornaram 200; repetições 409 e inexistente 404. Linha e vínculos preservados no PostgreSQL; RP2 foi deixada inativa. [JSON](evidencias/CT-HU011-API-009.json) |
 | CT-HU011-API-010 | Bloquear inativação com complementar ativa (#208) | RP1 com RC1 ativa; depois RC1 inativada | HTTP 409 com a mensagem do PO; rota segue ativa; sem RC1 ativa, inativa | ⏳ PENDENTE | Não executado. |
 | CT-HU011-API-011 | Bairro e faculdade em rota ativa (#208) | Inativar B1 e F1 usados por RP3 ativa; inativar RP3 e repetir; reativar RP3 | 409 com as mensagens da HU-007 e do PO; liberados com a rota inativa | ⏳ PENDENTE | Não executado. |
 | CT-HU011-API-012 | Auditoria das operações de escrita | Operações dos CT-002, 008 e 009; recusas dos CT-004 a 011 | Um registro por escrita efetiva; nenhum para recusa ou edição sem mudança | ⏳ PENDENTE | Não executado. |
@@ -323,8 +323,10 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Inativar/reativar retornaram 200; repetições 409 e inexistente 404. Linha e vínculos preservados no PostgreSQL; RP2 foi deixada inativa.
+- 8 chamadas HTTP; 18 verificações registradas. Status observados: 200 (5×), 404 (1×), 409 (2×).
+- Evidência: [CT-HU011-API-009.json](evidencias/CT-HU011-API-009.json), com corpos reais, sequência/horário, verificações e consultas de persistência/auditoria.
+- Status: ✅ APROVADO.
 
 ---
 
