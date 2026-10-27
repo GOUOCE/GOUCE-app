@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Em execução | 13 | 2 | 1 | 0 | 0 | 10 |
+| ⏳ Em execução | 13 | 2 | 2 | 0 | 0 | 9 |
 
 ## Pré-condições
 
@@ -41,7 +41,7 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 | CT-HU012-API-001 | Listar, filtrar e consultar complementares | Sem filtro; `incluir_inativos=true`; `nome`; `rota_principal_id`; `GET /{id}`; `/opcoes` | HTTP 200; padrão só ativas; filtros respeitados; opções só com principais ativas | ✅ APROVADO | Lista vazia 200/[]; padrão só ativas, filtro de inativos, nome e principal conferidos; filtro com id 0 retornou 422. Consultas ativa/inativa e 404 conferidos; /opcoes só oferece RP1/RP2 ativas. [JSON](evidencias/CT-HU012-API-001.json) |
 | CT-HU012-API-002 | Cadastrar rota complementar válida | RC1 ligada a RP1; RC2 ligada a RP2, com espaços nas pontas | HTTP 201 “Operação realizada com sucesso”; ativa; vínculo e dados corretos | ✅ APROVADO | RC1/RC2 criadas ativas, nome/ponto normalizados e vínculos persistidos; GET e PostgreSQL conferidos. As principais não foram alteradas. [JSON](evidencias/CT-HU012-API-002.json) |
 | CT-HU012-API-003 | Horário de retorno da complementar (#208) | `horario_saida` e `horario_retorno`; retorno igual e anterior à saída | Retorno aceito e gravado; retorno ≤ saída recusado com 422 | ❌ FALHOU | Cadastro com retorno 17:40 e edição de retorno 17:45 retornaram 422/Campo não permitido., em vez de 201/200. Retorno igual/anterior também cai no erro de campo desconhecido; consulta não devolve horario_retorno. [JSON](evidencias/CT-HU012-API-003.json) [#310](https://github.com/GOUOCE/GOUCE-app/issues/310) |
-| CT-HU012-API-004 | Nome único entre todas as rotas (#208) | Nome de RC1 com variações; de complementar inativa; de rota principal; edição para nome em uso | HTTP 409; nada criado nem alterado | ⏳ PENDENTE | Não executado. |
+| CT-HU012-API-004 | Nome único entre todas as rotas (#208) | Nome de RC1 com variações; de complementar inativa; de rota principal; edição para nome em uso | HTTP 409; nada criado nem alterado | ❌ FALHOU | Duplicidade dentro das complementares funcionou, inclusive case/trim e inativa. Porém, cadastrar complementar Rota Centro - UFC, nome de uma principal existente, retornou 201; esperado 409. O registro indevido foi inativado via API após preservar a evidência. [JSON](evidencias/CT-HU012-API-004.json) [#309](https://github.com/GOUOCE/GOUCE-app/issues/309) |
 | CT-HU012-API-005 | Obrigatórios, formato e limites | Sem cada campo; em branco; 151 caracteres; horário fora de `HH:MM`; edição com `null` | HTTP 422 com campo e mensagem em português; nada gravado | ⏳ PENDENTE | Não executado. |
 | CT-HU012-API-006 | Vínculo com rota principal inativa ou inexistente | RP0 inativa; id inexistente; id `0`, negativo e texto; cadastro e edição | HTTP 422 no `rota_principal_id`; nenhum vínculo inválido | ⏳ PENDENTE | Não executado. |
 | CT-HU012-API-007 | Editar dados e trocar a rota principal | RC1: só nome; horário e ponto; trocar para RP2; `{}`; campo `ativo`; id inexistente | HTTP 200 no mesmo id; 422 sem campo ou com campo extra; 404 inexistente | ⏳ PENDENTE | Não executado. |
@@ -160,8 +160,11 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Duplicidade dentro das complementares funcionou, inclusive case/trim e inativa. Porém, cadastrar complementar Rota Centro - UFC, nome de uma principal existente, retornou 201; esperado 409. O registro indevido foi inativado via API após preservar a evidência.
+- 8 chamadas HTTP; 23 verificações registradas. Status observados: 200 (2×), 201 (1×), 409 (5×).
+- Evidência: [CT-HU012-API-004.json](evidencias/CT-HU012-API-004.json), com corpos reais, sequência/horário, verificações e consultas de persistência/auditoria.
+- Defeito(s): [#309](https://github.com/GOUOCE/GOUCE-app/issues/309).
+- Status: ❌ FALHOU.
 
 ---
 
