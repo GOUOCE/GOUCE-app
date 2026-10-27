@@ -10,7 +10,7 @@ class CriarFaculdadeDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     nome: str = Field(..., alias="nome_faculdade", min_length=3, max_length=150)
-    sigla: str = Field(..., alias="sigla_faculdade", min_length=2, max_length=20)
+    sigla: Optional[str] = Field(default=None, alias="sigla_faculdade", max_length=20)
     campus: str = Field(..., alias="campus_faculdade", min_length=2, max_length=100)
 
     @field_validator("nome", mode="before")
@@ -29,9 +29,9 @@ class CriarFaculdadeDTO(BaseModel):
 
     @field_validator("sigla", mode="before")
     @classmethod
-    def validar_sigla(cls, valor: object) -> str:
-        if valor is None:
-            raise ValueError("Informe a sigla do nome (ex.: UFC)")
+    def validar_sigla(cls, valor: object) -> Optional[str]:
+        if valor is None or str(valor).strip() == "":
+            return None
         valor_str = str(valor).strip()
         if len(valor_str) < 2:
             raise ValueError("Informe a sigla do nome (ex.: UFC)")
@@ -81,7 +81,7 @@ class AtualizarFaculdadeDTO(BaseModel):
     @field_validator("sigla", mode="before")
     @classmethod
     def validar_sigla_opcional(cls, valor: object) -> Optional[str]:
-        if valor is None:
+        if valor is None or str(valor).strip() == "":
             return None
         valor_str = str(valor).strip()
         if len(valor_str) < 2:
@@ -108,11 +108,11 @@ class AtualizarFaculdadeDTO(BaseModel):
 
 
 class FaculdadeResponseDTO(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id_faculdade: int
     nome_faculdade: str
-    sigla: Optional[str] = Field(default=None, validation_alias="sigla")
+    sigla: Optional[str] = Field(default=None, validation_alias="sigla", serialization_alias="sigla")
     campus_faculdade: str
     ativo: bool
 
