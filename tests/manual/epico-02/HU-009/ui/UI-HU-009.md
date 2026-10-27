@@ -8,8 +8,8 @@
 | Funcionalidade | HU-009 — Gerenciamento de Frota (Ônibus) |
 | Camada | UI |
 | Tipo de teste | Funcional manual — suíte essencial (baseada em risco) |
-| Tela | Painel do administrador → aba **Cadastros** → **Frota**; **Cadastrar Ônibus** e **Editar Ônibus**. Implementação consultada no PR #179, ainda aberto. |
-| Ambiente | Desenvolvimento — app no celular (Expo Go) ou web (`http://localhost:3000`); preencher branch e commit realmente executados |
+| Tela | Painel do administrador → aba **Cadastros** → **Frota**; **Cadastrar Ônibus** e **Editar Ônibus**. Implementação do PR #179 (mesclado em 26/10/2026). |
+| Ambiente | Desenvolvimento — versão web (`http://localhost:3000`), API e banco locais em Docker; branch `test/manual-ui-hu-009` criada a partir da `develop` no commit `1edaf2aa` |
 | Total de casos | 13 |
 | Última execução | 2026-10-26 |
 | Testador | Cauan Ricardo |
@@ -18,13 +18,13 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 2 | 10 | 0 | 1 |
+| ❌ Concluída com falhas | 13 | 2 | 10 | 1 | 0 |
 
 ## Pré-condições
 
 | ID | Descrição |
 | --- | --- |
-| PC-01 | **Antes da execução, confirmar se a tela está disponível.** Em 24/10/2026, `gh pr view 179` indicou `OPEN`, branch `feat/front-hu009`, commit `63fe38e466a7b5a39af88854b5c66b17a47f81fb`. A branch de planejamento não contém `frontend/src/app/(administrador)/frota/`; o card atual aponta para `/cadastros/frota`, sem tela correspondente. Executar os casos completos somente em ambiente que contenha a implementação do PR, por merge ou checkout preparado para execução. Sem a tela, registrar o impedimento e marcar os casos dependentes como 🚫; não tratar rota ausente como acesso negado aprovado. Nenhum checkout é feito por este planejamento. |
+| PC-01 | **Antes da execução, confirmar se a tela está disponível.** Em 24/10/2026, `gh pr view 179` indicou `OPEN`, branch `feat/front-hu009`, commit `63fe38e466a7b5a39af88854b5c66b17a47f81fb`. A branch de planejamento não contém `frontend/src/app/(administrador)/frota/`; o card atual aponta para `/cadastros/frota`, sem tela correspondente. Executar os casos completos somente em ambiente que contenha a implementação do PR, por merge ou checkout preparado para execução. Sem a tela, registrar o impedimento e marcar os casos dependentes como 🚫; não tratar rota ausente como acesso negado aprovado. Nenhum checkout é feito por este planejamento. **Confirmado na execução (26/10/2026):** o PR #179 foi mesclado (`9801dc53`) e as telas de frota estão na `develop`. |
 | PC-02 | App, API e banco de teste disponíveis, administrador A logado; celular com Expo Go ou web. Começar com banco sem ônibus para a parte vazia do CT-001. |
 | PC-03 | Credenciais de aluno ativo e representante, para o CT-011. Se o representante não conseguir entrar, registrar o motivo e bloquear só a parte dependente. Sessão vencida: entrar novamente e repetir o passo. |
 | PC-04 | Depois de conferir a lista vazia no CT-001, pedir à IA para preparar `ABC1D23` ativo (44 assentos/20 em pé) e `XYZ9K87` inativo (32/0), sem alocações futuras. CT-002 cria `QXD2E45`; CT-003 cria placas distintas. Se a UI não permitir montar o cenário, preparar via API/banco local, registrar a origem da massa e não contar isso como sucesso da função testada. |
@@ -62,7 +62,7 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 | --- | --- | --- | --- | --- | --- |
 | CT-HU009-UI-011 | Impedir acesso de aluno e representante | Menus e links diretos de lista/cadastro/edição | Sem menu; Acesso Negado; sem dados ou ações administrativas | ✅ PASSOU | Aluno: o testador relatou que o menu Frota não aparece e que os links diretos levam a Acesso Negado. Representante: não foi possível entrar (“Perfil incompatível”); essa parte ficou bloqueada e é registrada à parte, a pedido do testador. |
 | CT-HU009-UI-012 | Falha de conexão sem sucesso falso | Abrir lista, cadastrar, editar e mudar status com API inacessível | Mensagem clara; sem exemplos nem sucesso não persistido; recuperação consistente | ❌ FALHOU | Reprovado pela leitura do código (não derrubado na tela, a pedido do testador): sem API a lista mostra os exemplos como dados reais e o cadastro devolve sucesso falso criando o ônibus só na memória. O sucesso falso do cadastro já foi visto na tela no CT-007. |
-| CT-HU009-UI-013 | Bloquear alocação futura, excluir inativos da seleção e preservar histórico | Alocação amanhã; só histórico passado; ônibus inativo | Bloqueio correto na futura; passado preservado; inativo fora de nova escala | ⏳ PENDENTE | HU-016/017 e histórico; marcar 🚫 se indisponíveis. |
+| CT-HU009-UI-013 | Bloquear alocação futura, excluir inativos da seleção e preservar histórico | Alocação amanhã; só histórico passado; ônibus inativo | Bloqueio correto na futura; passado preservado; inativo fora de nova escala | 🚫 BLOQUEADO | Sem escalação nem alocação no ambiente (HU-016/017 não implementadas), a regra de alocação futura e a seleção de ônibus na escalação não podem ser exercitadas pela tela. |
 
 ## Detalhamento dos casos
 
@@ -444,8 +444,10 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Dependências (passo 1):** o banco local não tem tabela de escalação, alocação ou viagem ligada a ônibus (só `rota_principal*`, da HU-011, sem coluna de ônibus), a aplicação não tem tela de escalação (HU-016/017) e o `onibus_service.py` não consulta alocações antes de inativar. Sem esses elementos não há como montar o ônibus A (alocação para amanhã), o B (só passado) nem a seleção real de ônibus.
+- A inativação pela tela também está quebrada para ônibus reais (CT-009: `404`), então o bloqueio de alocação nem seria alcançado. O `alocacoes_pendentes` dos exemplos não vale como prova (regra do caso).
+- Os itens A, B e C ficam sem verificação: a regra AC-06/FA-001 e o AC-13/RN-004 não foram testados.
+- Status: 🚫 Bloqueado. Executar de novo quando as HU-016/017 existirem e a inativação funcionar.
 
 ## Rastreabilidade
 
@@ -487,6 +489,7 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 ## Observações gerais
 
 - Referências: [HU-009, seção 7.3.3](../../../../../docs/requisitos.md), [BDD](../../../../../bdd/features/epico-02/HU-009.feature), [README do BDD](../../../../../bdd/features/epico-02/README.md), [API](../api/API-HU-009.md), [PR #179](https://github.com/GOUOCE/GOUCE-app/pull/179) e [issue #185](https://github.com/GOUOCE/GOUCE-app/issues/185).
+- **Atualização (26/10/2026):** o PR #179 foi mesclado e a suíte foi executada na `develop`. O texto abaixo registra a situação da época do planejamento.
 - **Situação confirmada em 24/10/2026:** PR #179 aberto (`mergedAt=null`). A referência local `origin/feat/front-hu009` corresponde ao head consultado no GitHub, `63fe38e466a7b5a39af88854b5c66b17a47f81fb`; as telas foram lidas com `git show`, sem checkout, merge ou execução. A suíte descreve essa implementação como preparação para a execução futura, não como tela entregue na branch atual.
 - Técnicas: **partição de equivalência** de placas e perfis (CT-003, 004, 006, 011), **valor-limite** (CT-007), **transição de estado** com cancelamento/confirmação (CT-009, 010) e **tabela de decisão** sem alocação / passado / futuro (CT-009, 013). Persistência com apoio da IA evita aprovar sucesso apenas visual.
 - **Riscos mapeados no código** do PR #179 (`frontend/src/services/frotaService.ts`, `schemas/frotaSchema.ts` e telas `frota/`):
@@ -499,4 +502,4 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
   - O service envia JSON, mas o backend atual o adapta para Form. Isso é um ponto de integração a conferir, **não uma incompatibilidade confirmada**; ver CT-HU009-API-002.
   - A hipótese de erro na auditoria depende do schema efetivo: ORM Integer, com migration tentando converter para VARCHAR. Não inferir causa de uma falha apenas pela leitura do modelo (CT-009, 010 e suíte API).
 - **Dúvidas/divergências para alinhamento:** os casos seguem os requisitos atuais, embora a issue #185 mantenha pendentes a aprovação das regras de placa, capacidades, unicidade com inativos e seleção de novos vínculos. O comentário do BDD sobre mensagem de placa indefinida está desatualizado em relação ao AC-09; texto exato de erro numérico segue sem definição. Confirmar qual versão com a tela do PR será usada na execução.
-- Todos os casos permanecem pendentes neste planejamento; não há execução, defeito reproduzido ou bloqueio de execução contabilizado. Ao executar, registrar os impedimentos de PC-01/PC-07 e não marcar verificação dependente como aprovada. Ocultar credenciais e dados pessoais nas evidências.
+- **Execução (26/10/2026):** 2 casos passaram (CT-004 e CT-011, este só para o aluno), 10 falharam e 1 ficou bloqueado (CT-013). CT-012 foi avaliado pelo código, sem derrubar a API. Representante não conseguiu entrar (perfil incompatível), ver CT-011. Defeitos e issues na seção “Defeitos encontrados”. Credenciais e dados pessoais foram omitidos das evidências.
