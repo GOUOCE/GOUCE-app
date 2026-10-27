@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 6 | 4 | 0 | 3 |
+| 🔄 Em andamento | 13 | 7 | 6 | 0 | 0 |
 
 ## Pré-condições
 
@@ -60,9 +60,9 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU010-UI-011 | Aluno e representante sem acesso à gestão | Menus e links diretos para aluno/representante | Sem menu; Acesso Negado sem exposição de dados | ⏳ PENDENTE | Não executado. |
-| CT-HU010-UI-012 | Falha de conexão sem exemplos nem sucesso falso | Lista, cadastro, edição e status sem resposta da API | Erro claro; sem dados inventados nem sucesso apenas local | ⏳ PENDENTE | Não executado. |
-| CT-HU010-UI-013 | Alocação futura, seleção de inativos e histórico | Futuro × passado; seleção da escalação | Bloqueio real na futura; histórico mantido; inativo fora da seleção | ⏳ PENDENTE | Depende da HU-017 e de histórico; marcar 🚫 se ausentes. |
+| CT-HU010-UI-011 | Aluno e representante sem acesso à gestão | Menus e links diretos para aluno/representante | Sem menu; Acesso Negado sem exposição de dados | ✅ PASSOU | Aluno: os três links diretos levaram a Acesso Negado, sem abrir a lista nem o formulário e sem chamar a API de motoristas. Representante: 🚫 bloqueado, pois o login dele não funciona (“Perfil incompatível”, #190). |
+| CT-HU010-UI-012 | Falha de conexão sem exemplos nem sucesso falso | Lista, cadastro, edição e status sem resposta da API | Erro claro; sem dados inventados nem sucesso apenas local | ❌ FALHOU | Reprovado pela leitura do código (a API não foi derrubada): sem conexão a lista mostra motoristas de exemplo como reais e o cadastro, a edição e a mudança de status devolvem sucesso falso. |
+| CT-HU010-UI-013 | Alocação futura, seleção de inativos e histórico | Futuro × passado; seleção da escalação | Bloqueio real na futura; histórico mantido; inativo fora da seleção | ❌ FALHOU | Reprovado pela leitura do código, sem execução: o app usa a lista de exemplo para o bloqueio de alocação e não há escalação nem alocação reais no ambiente. |
 
 ## Detalhamento dos casos
 
@@ -354,8 +354,9 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Aluno** (`qa.hu007.aluno@teste.com`): os links `/motoristas`, `/motoristas/cadastrar` e `/motoristas/editar?id=1` levaram à tela **Acesso Negado**, com o texto “Erro 403 - Forbidden” (`acesso-negado.tsx`). O console do Expo registrou três redirecionamentos do perfil `ALUNO` para `acesso-negado` e nenhuma abertura de tela de motoristas, e o log da API não tem nenhuma chamada a `/motoristas` do aluno: a lista e o formulário não foram exibidos.
+- **Representante** (`qa.hu007.rep@teste.com`): 🚫 **bloqueado**. O login com “Sou representante” é recusado com “Perfil incompatível” porque o login da conta devolve `role: "aluno"` (ver [#190](https://github.com/GOUOCE/GOUCE-app/issues/190), reaberta, com comentário de que persiste). A verificação desse perfil não foi feita e não é substituída pela conta de aluno.
+- Status: ✅ Passou para o aluno; representante 🚫 bloqueado, pendente de nova execução.
 
 ---
 
@@ -378,8 +379,12 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Não foi derrubada a API.** O código de `frontend/src/services/motoristaService.ts` (com o PR #243) usa a lista de exemplo (`MOTORISTAS_MOCK`) nos caminhos de escrita, e o resultado seria sucesso falso. O caso foi avaliado pela leitura do código. Nada foi alterado no banco por este caso.
+- **Listagem:** em `listarMotoristas`, o `catch` devolve `MOTORISTAS_MOCK` (José Almeida, Ana Souza, Paulo Ferreira) sem aviso, como se fossem os motoristas reais. O PR #243 também faz isso quando a API responde com lista vazia (CT-001).
+- **Cadastro:** em `criarMotorista`, sem resposta da API (`!error.response`), o app faz `MOTORISTAS_MOCK.unshift(novoMotorista)` e devolve sucesso; a tela mostra “Motorista cadastrado com sucesso” sem nada gravado.
+- **Edição, inativação e reativação:** `atualizarMotorista`, `inativarMotorista` e `reativarMotorista` alteram o item de exemplo de mesmo `id` e retornam sem erro. Como os ids 1 a 3 do exemplo coincidem com os primeiros motoristas reais, essas três ações dariam sucesso falso para eles. Para os demais ids o app lança o erro de conexão.
+- A mesma família já aparece na frota ([#283](https://github.com/GOUOCE/GOUCE-app/issues/283)), nas faculdades ([#263](https://github.com/GOUOCE/GOUCE-app/issues/263)) e nos bairros ([#249](https://github.com/GOUOCE/GOUCE-app/issues/249)).
+- Status: ❌ Falhou (por análise do código).
 
 ---
 
@@ -401,8 +406,11 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Não executado na tela**, a pedido do testador, porque o app usa exemplos no lugar da regra real.
+- **Dependências (passo 1):** o banco não tem tabela de escalação, alocação ou viagem ligada a motoristas, e o app não tem tela de escalação (HU-016/017). Não há como montar os motoristas A, B e C reais.
+- **Regra de alocação:** o app decide por `alocacoes_pendentes` do `MOTORISTAS_MOCK` (a mesma fictícia do CT-009, que bloqueia o id 1 sem alocação alguma), e o backend só inativa; ele não consulta alocações futuras antes de inativar, apesar do critério AC-06.
+- A regra AC-06/FA-001 e o AC-12/RN-004 não foram verificados.
+- Status: ❌ Falhou (por análise do código; a parte real fica para quando as HU-016/017 existirem).
 
 ## Rastreabilidade
 
