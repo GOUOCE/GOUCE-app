@@ -17,6 +17,8 @@ from sqlalchemy.exc import IntegrityError
 from src.modulos.crud_basicos.domain.entities.bairro import BairroORM
 from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
 from src.modulos.rotas.infrastructure.repositories.rota_principal_repository import (
+    MENSAGEM_ROTA_COM_COMPLEMENTARES_ATIVAS,
+    RotaComComplementaresAtivasError,
     RotaPrincipalNomeEmUsoError,
     RotaPrincipalRepository,
     RotaReferenciaInvalidaError,
@@ -362,6 +364,10 @@ class AtualizarTest(RepositoryUnitBase):
 
 
 class StatusEAuditoriaTest(RepositoryUnitBase):
+    def setUp(self):
+        super().setUp()
+        self.patch_repo("possui_complementares_ativas", return_value=False)
+
     def test_inativar_grava_um_log_e_altera_o_estado(self):
         rota = rota_em_memoria(ativo=True)
         self.patch_repo("_buscar_orm", return_value=rota)
@@ -415,6 +421,79 @@ class StatusEAuditoriaTest(RepositoryUnitBase):
             self.repository.inativar(1, ADMIN_ID)
 
         self.session.rollback.assert_called_once_with()
+
+
+class InativacaoSerializadaTest(RepositoryUnitBase):
+    """A inativação trava a linha da rota e recheca as complementares na mesma transação."""
+
+    def setUp(self):
+        super().setUp()
+        self.rota = rota_em_memoria(ativo=True)
+        self.eventos = []
+        self.complementares_ativas = False
+        self.patch_repo("_buscar_orm", return_value=self.rota)
+        self.patch_repo("_ler_para_atualizar", side_effect=self.travar)
+        self.patch_repo("possui_complementares_ativas", side_effect=self.conferir)
+        self.session.commit.side_effect = lambda: self.eventos.append("commit")
+
+    def travar(self, rota_id):
+        self.eventos.append(("travar", rota_id))
+
+    def conferir(self, rota_id):
+        self.eventos.append(("conferir", rota_id))
+        return self.complementares_ativas
+
+    def test_trava_a_linha_antes_de_conferir_as_complementares_e_de_gravar(self):
+        self.repository.inativar(1, ADMIN_ID)
+
+        self.assertEqual(self.eventos, [("travar", 1), ("conferir", 1), "commit"])
+        self.assertFalse(self.rota.ativo)
+
+    def test_complementar_ativa_confirmada_apos_a_checagem_antecipada_bloqueia_sem_gravar(self):
+        self.complementares_ativas = True
+
+        with self.assertRaises(RotaComComplementaresAtivasError) as ctx:
+            self.repository.inativar(1, ADMIN_ID)
+
+        self.assertEqual(str(ctx.exception), MENSAGEM_ROTA_COM_COMPLEMENTARES_ATIVAS)
+        self.assertEqual(self.eventos, [("travar", 1), ("conferir", 1)])
+        self.assertTrue(self.rota.ativo)
+        self.session.add.assert_not_called()
+        self.session.commit.assert_not_called()
+        self.session.rollback.assert_called_once_with()
+
+    def test_reativar_nao_trava_nem_confere_complementares(self):
+        self.rota.ativo = False
+
+        self.repository.reativar(1, ADMIN_ID)
+
+        self.assertEqual(self.eventos, ["commit"])
+        self.assertTrue(self.rota.ativo)
+
+    def test_rota_inativada_por_outra_transacao_enquanto_esperava_o_lock_nao_grava(self):
+        def travar_e_encontrar_inativa(rota_id):
+            self.eventos.append(("travar", rota_id))
+            self.rota.ativo = False  # o populate_existing traz o estado já confirmado
+
+        self.patch_repo("_ler_para_atualizar", side_effect=travar_e_encontrar_inativa)
+
+        resultado = self.repository.inativar(1, ADMIN_ID)
+
+        self.assertFalse(resultado["ativo"])
+        self.assertEqual(self.eventos, [("travar", 1)])
+        self.session.add.assert_not_called()
+        self.session.commit.assert_not_called()
+
+    def test_leitura_travada_usa_for_update_e_atualiza_a_instancia_carregada(self):
+        repository = RotaPrincipalRepository(MagicMock())
+        consulta = repository.session.query.return_value.filter.return_value
+        consulta.with_for_update.return_value.populate_existing.return_value.first.return_value = "linha"
+
+        self.assertEqual(repository._ler_para_atualizar(7), "linha")
+
+        repository.session.query.assert_called_once_with(RotaPrincipalORM)
+        consulta.with_for_update.assert_called_once_with()
+        consulta.with_for_update.return_value.populate_existing.assert_called_once_with()
 
 
 class ResolucaoDeVinculosTest(RepositoryUnitBase):
