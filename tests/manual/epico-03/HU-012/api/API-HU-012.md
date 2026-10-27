@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Em execução | 13 | 7 | 2 | 2 | 0 | 2 |
+| ⏳ Em execução | 13 | 8 | 2 | 2 | 0 | 1 |
 
 ## Pré-condições
 
@@ -49,7 +49,7 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 | CT-HU012-API-009 | Complementar ativa protege a principal | RP2 com RC2 ativa; trocar RC2 para RP1; inativar RP2 | Com RC2 ativa, 409; depois de trocar o vínculo, 200 | ⚠️ PARCIAL | Principal com RC2 ativa foi protegida com 409; depois de trocar RC2 para RP1, RP2 pôde ser inativada mesmo com RC3 inativa. Mensagem de bloqueio diverge da #208; mesma causa do CT-HU011-API-010. [JSON](evidencias/CT-HU012-API-009.json) [#311](https://github.com/GOUOCE/GOUCE-app/issues/311) |
 | CT-HU012-API-010 | Reativar complementar com principal inativa (#208) | RC3 inativa ligada a RP2; RP2 inativada; reativar RC3; trocar para RP1 e reativar | HTTP 409 com a mensagem do PO; depois de trocar o vínculo, 200 | ⚠️ PARCIAL | RC3 não foi reativada enquanto RP2 estava inativa (409); após trocar para RP1, edição e reativação concluíram com 200. Mensagem recebida: “A rota principal vinculada está inativa. Reative-a ou altere o vínculo antes.”; diferente da mensagem do PO. [JSON](evidencias/CT-HU012-API-010.json) [#312](https://github.com/GOUOCE/GOUCE-app/issues/312) |
 | CT-HU012-API-011 | Auditoria das operações de escrita | Operações dos CT-002, 007 e 008; recusas dos CT-004 a 009 | Um registro por escrita efetiva; nenhum para recusa ou edição sem mudança | ✅ APROVADO | Uma linha por escrita efetiva com executor/ação/id/data corretos; snapshots incluem a troca de principal. Recusas e reenvio sem mudança não criaram auditoria. [JSON](evidencias/CT-HU012-API-011.json) |
-| CT-HU012-API-012 | Acesso sem privilégio | Token de aluno; token de representante; sem token | HTTP 403 (aluno e representante) e 401 (sem token) em todas as rotas | ⏳ PENDENTE | Não executado. |
+| CT-HU012-API-012 | Acesso sem privilégio | Token de aluno; token de representante; sem token | HTTP 403 (aluno e representante) e 401 (sem token) em todas as rotas | ✅ APROVADO | As sete operações negaram 403 à conta de aluno e à conta ativa de representante, e 401 sem token; nenhum efeito nas rotas/auditoria. A conta de representante autentica com roles legados aluno/supervisor; o contrato real foi preservado e não houve teste de UI nem JWT forjado. [JSON](evidencias/CT-HU012-API-012.json) |
 | CT-HU012-API-013 | Agendamentos futuros e complementar inativa no agendamento | Complementar com aluno agendado para amanhã; complementar inativa na agenda | HTTP 409 “Esta rota possui agendamentos pendentes e não pode ser inativada no momento.”; inativa fora da agenda | ⏳ PENDENTE | Depende da HU-013. Sem ela, marcar 🚫. |
 
 ## Detalhamento dos casos
@@ -382,8 +382,10 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- As sete operações negaram 403 à conta de aluno e à conta ativa de representante, e 401 sem token; nenhum efeito nas rotas/auditoria. A conta de representante autentica com roles legados aluno/supervisor; o contrato real foi preservado e não houve teste de UI nem JWT forjado.
+- 21 chamadas HTTP; 68 verificações registradas. Status observados: 401 (7×), 403 (14×).
+- Evidência: [CT-HU012-API-012.json](evidencias/CT-HU012-API-012.json), com corpos reais, sequência/horário, verificações e consultas de persistência/auditoria.
+- Status: ✅ APROVADO.
 
 ---
 
