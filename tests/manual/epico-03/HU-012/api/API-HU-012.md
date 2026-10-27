@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Em execução | 13 | 6 | 2 | 0 | 0 | 5 |
+| ⏳ Em execução | 13 | 6 | 2 | 1 | 0 | 4 |
 
 ## Pré-condições
 
@@ -46,7 +46,7 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 | CT-HU012-API-006 | Vínculo com rota principal inativa ou inexistente | RP0 inativa; id inexistente; id `0`, negativo e texto; cadastro e edição | HTTP 422 no `rota_principal_id`; nenhum vínculo inválido | ✅ APROVADO | Principal inativa/inexistente e IDs zero/negativo/string recusados com 422; edição com nome + vínculo inválido não aplicou nenhuma alteração. [JSON](evidencias/CT-HU012-API-006.json) |
 | CT-HU012-API-007 | Editar dados e trocar a rota principal | RC1: só nome; horário e ponto; trocar para RP2; `{}`; campo `ativo`; id inexistente | HTTP 200 no mesmo id; 422 sem campo ou com campo extra; 404 inexistente | ✅ APROVADO | Nome, horário/ponto e troca de principal refletidos no mesmo id e no filtro; corpo vazio/ativo retornaram 422 e inexistente 404. Vínculo restaurado a RP1. [JSON](evidencias/CT-HU012-API-007.json) |
 | CT-HU012-API-008 | Inativar e reativar (soft delete) | RC3: inativar, repetir, reativar, repetir; id inexistente | HTTP 200 nas válidas; registro mantido; 409 nas repetidas; 404 | ✅ APROVADO | Inativar/reativar 200, repetições 409, inexistente 404; linha preservada. RC3 foi deixada inativa para os casos dependentes e reativada no CT-010. [JSON](evidencias/CT-HU012-API-008.json) |
-| CT-HU012-API-009 | Complementar ativa protege a principal | RP2 com RC2 ativa; trocar RC2 para RP1; inativar RP2 | Com RC2 ativa, 409; depois de trocar o vínculo, 200 | ⏳ PENDENTE | Não executado. |
+| CT-HU012-API-009 | Complementar ativa protege a principal | RP2 com RC2 ativa; trocar RC2 para RP1; inativar RP2 | Com RC2 ativa, 409; depois de trocar o vínculo, 200 | ⚠️ PARCIAL | Principal com RC2 ativa foi protegida com 409; depois de trocar RC2 para RP1, RP2 pôde ser inativada mesmo com RC3 inativa. Mensagem de bloqueio diverge da #208; mesma causa do CT-HU011-API-010. [JSON](evidencias/CT-HU012-API-009.json) [#311](https://github.com/GOUOCE/GOUCE-app/issues/311) |
 | CT-HU012-API-010 | Reativar complementar com principal inativa (#208) | RC3 inativa ligada a RP2; RP2 inativada; reativar RC3; trocar para RP1 e reativar | HTTP 409 com a mensagem do PO; depois de trocar o vínculo, 200 | ⏳ PENDENTE | Não executado. |
 | CT-HU012-API-011 | Auditoria das operações de escrita | Operações dos CT-002, 007 e 008; recusas dos CT-004 a 009 | Um registro por escrita efetiva; nenhum para recusa ou edição sem mudança | ⏳ PENDENTE | Não executado. |
 | CT-HU012-API-012 | Acesso sem privilégio | Token de aluno; token de representante; sem token | HTTP 403 (aluno e representante) e 401 (sem token) em todas as rotas | ⏳ PENDENTE | Não executado. |
@@ -306,8 +306,11 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Principal com RC2 ativa foi protegida com 409; depois de trocar RC2 para RP1, RP2 pôde ser inativada mesmo com RC3 inativa. Mensagem de bloqueio diverge da #208; mesma causa do CT-HU011-API-010.
+- 4 chamadas HTTP; 8 verificações registradas. Status observados: 200 (3×), 409 (1×).
+- Evidência: [CT-HU012-API-009.json](evidencias/CT-HU012-API-009.json), com corpos reais, sequência/horário, verificações e consultas de persistência/auditoria.
+- Defeito(s): [#311](https://github.com/GOUOCE/GOUCE-app/issues/311).
+- Status: ⚠️ PARCIAL.
 
 ---
 
