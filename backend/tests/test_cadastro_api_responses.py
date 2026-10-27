@@ -24,6 +24,26 @@ from src.modulos.usuarios.infrastructure.repositories.usuario_repository import 
 from src.modulos.usuarios.model.entities.aluno import AlunoORM
 from src.modulos.usuarios.model.entities.usuario import UsuarioORM
 
+from src.modulos.usuarios.interface.http.usuario_routes import (
+    get_arquivo_repository,
+    get_bairro_repository,
+    get_faculdade_repository,
+    get_hasher,
+    get_repository,
+    get_token_service,
+    get_storage_service,
+    router,
+)
+
+class FakeBairroRepository:
+    def buscar_por_id(self, bairro_id):
+        return SimpleNamespace(id=bairro_id, ativo=True)
+
+
+class FakeFaculdadeRepository:
+    def buscar_por_id(self, faculdade_id):
+        return SimpleNamespace(id=faculdade_id, ativo=True)
+
 
 class FakeRepository:
     def __init__(self, email_exists=False, internal_error=None):
@@ -130,6 +150,8 @@ class CadastroApiResponsesTest(unittest.IsolatedAsyncioTestCase):
         self.app.dependency_overrides[get_token_service] = lambda: object()
         self.storage_service = FakeStorageService()
         self.app.dependency_overrides[get_storage_service] = lambda: self.storage_service
+        self.app.dependency_overrides[get_bairro_repository] = FakeBairroRepository
+        self.app.dependency_overrides[get_faculdade_repository] = FakeFaculdadeRepository
 
     @staticmethod
     def payload(**updates):
@@ -139,7 +161,7 @@ class CadastroApiResponsesTest(unittest.IsolatedAsyncioTestCase):
             "senha": "Senha123",
             "telefone": "85999990000",
             "faculdade_id": 1,
-            "bairro_id": "Centro",
+            "bairro_id": 1,
             "identificacao_genero": "Mulher",
             "transgenero": "Não",
             "tem_filhos": False,

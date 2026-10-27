@@ -461,6 +461,47 @@ class FaculdadesApiHttpTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(log.valor_anterior, "inativo")
         self.assertEqual(log.valor_novo, "ativo")
 
+    async def test_repetir_status_retorna_409_sem_duplicar_auditoria(self):
+        _, resposta = await self.asgi_request(
+            "/faculdades",
+            payload={"nome": "UFC", "campus": "Quixadá"},
+            method="POST",
+        )
+        faculdade_id = resposta["data"]["id_faculdade"]
+
+        for acao, esperado, total_logs, ativo in (
+            ("ativar", 409, 0, True),
+            ("inativar", 200, 1, False),
+            ("inativar", 409, 1, False),
+            ("ativar", 200, 2, True),
+            ("ativar", 409, 2, True),
+            ("inativar", 200, 3, False),
+            ("inativar", 409, 3, False),
+        ):
+            with self.subTest(acao=acao, esperado=esperado, total_logs=total_logs):
+                status, body = await self.asgi_request(
+                    f"/faculdades/{faculdade_id}/{acao}", method="PATCH"
+                )
+                self.assertEqual(status, esperado)
+                if esperado == 409:
+                    self.assertFalse(body["success"])
+                    self.assertEqual(body["error"]["code"], "CONFLICT")
+                    self.assertEqual(
+                        body["error"]["message"],
+                        "Faculdade já ativada." if ativo else "Faculdade já desativada.",
+                    )
+
+                self.session.expire_all()
+                self.assertEqual(self.session.get(FaculdadeORM, faculdade_id).ativo, ativo)
+                logs = self.session.query(LogAuditoriaORM).filter(
+                    LogAuditoriaORM.entidade == "faculdade",
+                    LogAuditoriaORM.entidade_id == faculdade_id,
+                ).order_by(LogAuditoriaORM.id).all()
+                self.assertEqual(len(logs), total_logs)
+
+        self.assertEqual([log.acao for log in logs], ["INATIVAR", "ATIVAR", "INATIVAR"])
+        self.assertTrue(all(log.usuario_id == 1 for log in logs))
+
     async def test_listar_faculdades_com_e_sem_filtro(self):
         await self.asgi_request("/faculdades", payload={"nome": "F1", "campus": "C1"}, method="POST")
         _, res2 = await self.asgi_request("/faculdades", payload={"nome": "F2", "campus": "C2"}, method="POST")

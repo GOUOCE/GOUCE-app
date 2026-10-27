@@ -35,8 +35,10 @@ from src.modulos.crud_basicos.infrastructure.repositories.ponto_parada_repositor
 from src.modulos.rotas.application.use_cases.gerenciar_rotas_principais_use_case import (
     GerenciarRotasPrincipaisUseCase,
     RotaComAgendamentosPendentesError,
+    RotaComComplementaresAtivasError,
     RotaComVinculoInativoError,
 )
+from src.modulos.rotas.model.entities.rota_complementar import RotaComplementarORM
 from src.modulos.rotas.infrastructure.repositories.rota_principal_repository import (
     RotaPrincipalNomeEmUsoError,
     RotaPrincipalRepository,
@@ -442,6 +444,52 @@ class BloqueioPorAgendamentoTest(RotaPrincipalRepositoryTestBase):
 
         self.assertEqual(consultados, [rota["id"]])
         self.assertFalse(resultado["ativo"])
+        self.assertEqual([l.acao for l in self.logs()], ["CRIAR", "INATIVAR"])
+
+
+class ComplementaresAtivasTest(RotaPrincipalRepositoryTestBase):
+    def complementar(self, rota_id, nome, ativo=True):
+        self.session.add(
+            RotaComplementarORM(
+                rota_principal_id=rota_id, nome=nome, horario_saida=time(6, 0),
+                ponto_conexao="Trevo", ativo=ativo,
+            )
+        )
+        self.session.commit()
+
+    def test_rota_sem_complementares_nao_bloqueia(self):
+        rota = self.criar()
+
+        self.assertFalse(self.repository.possui_complementares_ativas(rota["id"]))
+
+    def test_complementar_ativa_bloqueia_somente_a_propria_rota(self):
+        rota = self.criar()
+        outra = self.criar(nome="Rota Integrada")
+        self.complementar(rota["id"], "Van 1")
+
+        self.assertTrue(self.repository.possui_complementares_ativas(rota["id"]))
+        self.assertFalse(self.repository.possui_complementares_ativas(outra["id"]))
+
+    def test_complementar_inativa_nao_bloqueia(self):
+        rota = self.criar()
+        self.complementar(rota["id"], "Van Antiga", ativo=False)
+
+        self.assertFalse(self.repository.possui_complementares_ativas(rota["id"]))
+
+    def test_inativar_bloqueado_nao_altera_nem_grava_log_e_libera_depois(self):
+        use_case = GerenciarRotasPrincipaisUseCase(self.repository)
+        rota = self.criar()
+        self.complementar(rota["id"], "Van 1")
+
+        with self.assertRaises(RotaComComplementaresAtivasError):
+            use_case.inativar(rota["id"], ADMIN_ID)
+
+        self.assertTrue(self.repository.buscar(rota["id"])["ativo"])
+        self.assertEqual([l.acao for l in self.logs()], ["CRIAR"])
+
+        self.session.query(RotaComplementarORM).update({"ativo": False})
+        self.session.commit()
+        self.assertFalse(use_case.inativar(rota["id"], ADMIN_ID)["ativo"])
         self.assertEqual([l.acao for l in self.logs()], ["CRIAR", "INATIVAR"])
 
 

@@ -20,7 +20,9 @@ from src.modulos.crud_basicos.application.services.faculdade_service import (
 )
 from src.modulos.crud_basicos.infrastructure.repositories.faculdade_repository import (
     FaculdadeComRotaAtivaError,
+    FaculdadeJaAtivadaError,
     FaculdadeJaCadastradaError,
+    FaculdadeJaDesativadaError,
     FaculdadeNaoEncontradaError,
     FaculdadeRepository,
 )
@@ -255,6 +257,8 @@ async def ativar_faculdade(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Faculdade não encontrada.",
         )
+    except FaculdadeJaAtivadaError as error:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error))
     except FaculdadeValidationError as error:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -284,7 +288,7 @@ async def inativar_faculdade(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Faculdade não encontrada.",
         )
-    except FaculdadeComRotaAtivaError as error:
+    except (FaculdadeComRotaAtivaError, FaculdadeJaDesativadaError) as error:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error))
     except FaculdadeValidationError as error:
         raise HTTPException(

@@ -176,6 +176,19 @@ class NomeDTOTest(unittest.TestCase):
 
         self.assertEqual(len(dto.nome), 150)
 
+    def test_nul_no_nome_e_recusado_como_texto_invalido(self):
+        for valor in ("a\x00b", "\x00", "abc\x00", "\x00abc", " \x00 "):
+            with self.subTest(valor=valor):
+                with self.assertRaises(ValidationError) as ctx:
+                    CriarRotaPrincipalDTO(**dados_rota(nome=valor))
+                self.assertEqual(campos_com_erro(ctx), {"nome"})
+                self.assertEqual([e["type"] for e in ctx.exception.errors()], ["string_type"])
+
+    def test_patch_com_nul_no_nome_e_recusado(self):
+        with self.assertRaises(ValidationError) as ctx:
+            AtualizarRotaPrincipalDTO(nome="a\x00b")
+        self.assertEqual(campos_com_erro(ctx), {"nome"})
+
     def test_patch_com_nome_longo_demais_ou_vazio(self):
         for invalido in ("a" * 151, "", "   "):
             with self.subTest(valor=invalido):

@@ -42,6 +42,8 @@ from src.modulos.usuarios.application.use_cases.criar_usuario_use_case import (
     CriarUsuarioUseCase,
     EmailAlreadyRegisteredError,
 )
+from src.modulos.crud_basicos.infrastructure.repositories.bairro_repository import BairroRepository
+from src.modulos.crud_basicos.infrastructure.repositories.faculdade_repository import FaculdadeRepository
 from src.modulos.usuarios.application.use_cases.listar_usuarios_use_case import ListarUsuariosUseCase
 from src.modulos.usuarios.application.use_cases.aprovar_aluno_use_case import AprovarAlunoUseCase
 from src.modulos.usuarios.application.use_cases.obter_perfil_aluno_use_case import ObterPerfilAlunoUseCase
@@ -236,6 +238,14 @@ def get_storage_service():
     return MinioStorageService()
 
 
+def get_bairro_repository(session: Annotated[Session, Depends(get_session)]) -> BairroRepository:
+    return BairroRepository(session)
+
+
+def get_faculdade_repository(session: Annotated[Session, Depends(get_session)]) -> FaculdadeRepository:
+    return FaculdadeRepository(session)
+
+
 def get_email_service():
     return SMTPEmailService()
 
@@ -329,6 +339,8 @@ async def cadastrar_usuario_com_arquivos(
     hasher=Depends(get_hasher),
     token_service=Depends(get_token_service),
     storage_service=Depends(get_storage_service),
+    repository_faculdade: Annotated[FaculdadeRepository, Depends(get_faculdade_repository)] = None,
+    repository_bairro: Annotated[BairroRepository, Depends(get_bairro_repository)] = None,
 ):
     cadastro_concluido = False
     salvar_arquivo_uc = None
@@ -413,7 +425,7 @@ async def cadastrar_usuario_com_arquivos(
                 details=_validation_details(error.errors()),
             )
 
-        use_case = CriarUsuarioUseCase(repository, hasher, token_service, arquivo_repository=arquivo_repository)
+        use_case = CriarUsuarioUseCase(repository, hasher, token_service, repository_faculdade=repository_faculdade, repository_bairro=repository_bairro, arquivo_repository=arquivo_repository)
         resposta = use_case.execute(dto)
         cadastro_concluido = True
         return resposta
@@ -480,9 +492,11 @@ async def cadastrar_usuario_json(
     arquivo_repository=Depends(get_arquivo_repository),
     hasher=Depends(get_hasher),
     token_service=Depends(get_token_service),
+    repository_faculdade: Annotated[FaculdadeRepository, Depends(get_faculdade_repository)] = None,
+    repository_bairro: Annotated[BairroRepository, Depends(get_bairro_repository)] = None,
 ):
     try:
-        use_case = CriarUsuarioUseCase(repository, hasher, token_service, arquivo_repository=arquivo_repository)
+        use_case = CriarUsuarioUseCase(repository, hasher, token_service, repository_faculdade=repository_faculdade, repository_bairro=repository_bairro, arquivo_repository=arquivo_repository)
         return use_case.execute(data)
     except EmailAlreadyRegisteredError:
         return _error_response(

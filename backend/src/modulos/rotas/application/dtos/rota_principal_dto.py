@@ -3,10 +3,24 @@ from datetime import time
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic_core import PydanticCustomError
 
 _PADRAO_HORARIO = re.compile(r"^([01][0-9]|2[0-3]):([0-5][0-9])$")
 
 IdPositivo = Annotated[int, Field(gt=0, strict=True)]
+
+
+def contem_nul(valor: object) -> bool:
+    """O PostgreSQL recusa NUL (``\\x00``) em texto e a consulta falharia com erro 500."""
+    return isinstance(valor, str) and "\x00" in valor
+
+
+def recusar_nul(valor: object) -> object:
+    """Validador "before" dos textos livres: NUL é tratado como texto inválido."""
+    if contem_nul(valor):
+        # Mesmo código de "não é um texto válido": reaproveita a mensagem de campo.
+        raise PydanticCustomError("string_type", "Texto não pode conter o caractere NUL.")
+    return valor
 
 
 def interpretar_horario(valor: object) -> time:
@@ -34,6 +48,11 @@ class _RotaPrincipalBaseDTO(BaseModel):
         if valor is None:
             return valor
         return interpretar_horario(valor)
+
+    @field_validator("nome", mode="before", check_fields=False)
+    @classmethod
+    def validar_nome(cls, valor: object) -> object:
+        return recusar_nul(valor)
 
 
 class CriarRotaPrincipalDTO(_RotaPrincipalBaseDTO):

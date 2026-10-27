@@ -57,7 +57,7 @@ class CadastroUsuarioDTO(BaseModel):
     senha: str = Field(min_length=8, max_length=128)
     telefone: str = Field(min_length=1, max_length=20)
     faculdade_id: int
-    bairro_id: int | str = Field(min_length=1, max_length=20)
+    bairro_id: int 
     id_comprovante_matricula: str = Field(default="", max_length=255)
     id_comprovante_residencia: str = Field(default="", max_length=255)
     data_nascimento: str | int | float | date | datetime | None = None
