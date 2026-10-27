@@ -90,7 +90,7 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 - **Lista vazia, com o PR #243 carregado:** o log passou a registrar `GET /motoristas?incluir_inativos=true` e, na busca, `...&nome=a`, `nome=aa` e `nome=aaa`, todas com `200` e lista vazia (o banco tinha 0 motoristas). Mesmo assim, a tela exibiu motoristas de teste. Eles vêm do `MOTORISTAS_MOCK` do app (José Almeida, Ana Souza e Paulo Ferreira): o PR trocou `response.data` por `listaApi.length > 0 ? listaApi : MOTORISTAS_MOCK` em `listarMotoristas`. É um erro novo do PR, pois na `develop` a lista vazia era respeitada.
 - **Chave “Mostrar inativos”:** vem **ligada** ao abrir a tela (`index.tsx`: `useState(true)`), contrariando o esperado “chave desligada”.
 - **Consulta:** o app pede sempre `incluir_inativos=true` e filtra os inativos na tela; a chave não muda a chamada à API.
-- Busca com `Francisco`, `FRANCISCO` e `SEMRESULTADO` e a seta de voltar com dados reais: ver a nota ao final do CT-003.
+- **Busca com dados reais** (`Francisco`, `FRANCISCO` e `SEMRESULTADO`), com Francisco ativo e Raimundo inativo na lista, e a seta de voltar: o testador relatou que a busca, o filtro e o comportamento estavam corretos. O log da API não registrou nenhuma busca por esses termos (só `nome=a`, `aa` e `aaa`, feitas com o banco vazio), então esse trecho fica como relato do testador, sem comprovação em log.
 - Status: ❌ Falhou.
 
 ---
