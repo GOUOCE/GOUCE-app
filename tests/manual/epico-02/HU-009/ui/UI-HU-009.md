@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 1 | 3 | 0 | 9 |
+| 🔄 Em andamento | 13 | 1 | 4 | 0 | 8 |
 
 ## Pré-condições
 
@@ -44,7 +44,7 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 | CT-HU009-UI-002 | Cadastrar e conferir persistência | `QXD2E45`, 44 assentos, 20 em pé | Confirmação, sucesso, listagem atualizada e registro na API após reabrir | ❌ FALHOU | Cancelar não grava e confirmar cria o ônibus corretamente, mas a mensagem de sucesso é uma barra preta, fora do padrão de pop-up, e o texto difere do requisito. |
 | CT-HU009-UI-003 | Normalizar placa e evitar duplicidade contra exemplos | `ABC-1234`, `def-2g34`, `OCR-1234` inexistentes no banco | Maiúsculas/sem hífen; formatos aceitos; exemplo interno não bloqueia cadastro legítimo | ❌ FALHOU | `ABC-1234` e `def-2g34` são gravadas sem hífen e em maiúsculas, mas `OCR-1234` é bloqueada pelo app com “Este veículo já está registrado.” por causa da lista de exemplo, sem chamar a API. |
 | CT-HU009-UI-004 | Bloquear duplicidade de placa ativa e inativa | `QXD2E45` e variações; `XYZ9K87` inativo | “Este veículo já está registrado.”; nenhum novo registro | ✅ PASSOU | As seis tentativas (`QXD2E45`, `qxd2e45`, `QXD-2E45`, com espaços, `XYZ9K87`, `xyz-9k87`) foram barradas pelo servidor (`409`). Nenhum registro novo. |
-| CT-HU009-UI-005 | Obrigatórios no cadastro e na edição | Cada campo vazio; placa só com espaços; capacidade em pé apagada versus zero | Destaque e bloqueio; apagar não vira zero; dados anteriores preservados | ⏳ PENDENTE | Não executado. |
+| CT-HU009-UI-005 | Obrigatórios no cadastro e na edição | Cada campo vazio; placa só com espaços; capacidade em pé apagada versus zero | Destaque e bloqueio; apagar não vira zero; dados anteriores preservados | ❌ FALHOU | Placa e assentos vazios são destacados e barrados, mas a capacidade em pé vazia (ou só com espaços) é aceita e gravada como `0`, no cadastro e na edição. Na edição, `QXD2E45` passou de 20 para 0 em pé sem aviso. |
 | CT-HU009-UI-006 | Rejeitar formato inválido de placa | Letras, números, tamanho, posição e símbolo incorretos | “Placa inválida.”; sem cadastro nem edição | ⏳ PENDENTE | Não executado. |
 | CT-HU009-UI-007 | Validar fronteiras e inteiros das capacidades | Assentos −1/0/1; em pé −1/0/1; texto e decimal | Inválidos bloqueados no campo; 1 assento/0 em pé aceitos | ⏳ PENDENTE | Não executado. |
 
@@ -199,8 +199,12 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Cadastro (parte A):** com placa vazia, assentos vazios, placa só com espaços e tudo vazio, o testador relatou os campos obrigatórios destacados e o salvamento bloqueado. Com a **capacidade em pé vazia** (placa `HDO0009`, 33 assentos), o app **aceitou**, mostrou o pop-up de confirmação e criou o ônibus: `POST /onibus` com `201` e, no banco, `HDO0009` com 33 assentos e **0 em pé**.
+- **Edição (parte B):** apagar placa e assentos foi barrado, segundo o testador. Apagar a **capacidade em pé** (ou deixá-la só com espaços) salvou: o log tem `PATCH /onibus/QXD2E45` com `200` e `QXD2E45` passou de **20 para 0** em pé no banco, sem nenhum aviso. Foram dois `PATCH` com `200` no log, e não foi possível separar qual variação gerou cada um.
+- **Causa:** `frotaSchema.ts` usa `z.coerce.number()` na capacidade em pé, que converte o campo vazio (e `"  "`) em `0`, e `0` é um valor válido. O formulário nunca vê o campo como vazio. Cadastro e edição usam o mesmo schema. Na API, `Form(0, ...)` (`onibus_routes.py:224`) também assume `0` quando o campo não vem ([#226](https://github.com/GOUOCE/GOUCE-app/issues/226)).
+- **Divergência com o requisito:** o AC-08 e o resultado esperado deste caso pedem campo vazio destacado e salvamento bloqueado; apagar não pode virar `0` sozinho. O testador considera o comportamento coerente (vazio = 0, a listagem mostra `0`), mas ele não foi aprovado pelo requisito atual. Fica como decisão de produto: manter o `0` automático e ajustar o AC-08, ou exigir o campo preenchido.
+- A mensagem de sucesso da edição e do cadastro é a barra preta fora do padrão (defeito já registrado no CT-002).
+- Status: ❌ Falhou.
 
 ---
 
@@ -435,6 +439,7 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 | CT-001 | Telas de frota não recriadas: a seta volta ao Painel e Cadastrar/Editar reabrem com dados anteriores | Issue a abrir ao final da suíte (mesma causa de [#256](https://github.com/GOUOCE/GOUCE-app/issues/256)) |
 | CT-003 | Cadastro de `OCR-1234`, `OCR-5521` e `OCR-8890` bloqueado pelo app com “Este veículo já está registrado.”, sem chamar a API, por causa da lista de exemplo | Issue a abrir ao final da suíte (mesma causa de [#258](https://github.com/GOUOCE/GOUCE-app/issues/258)) |
 | CT-003 | Melhoria: campo da placa sem limite de 7 caracteres e sem bloqueio de emoji e caracteres especiais na digitação | Issue a abrir ao final da suíte (não bloqueante) |
+| CT-005 | Capacidade em pé vazia (ou só com espaços) é aceita e gravada como `0`, no cadastro e na edição (sobrescreve o valor anterior), contrariando o AC-08 | Issue a abrir ao final da suíte; decisão de produto pendente (manter `0` automático ou exigir preenchimento), relacionada à [#226](https://github.com/GOUOCE/GOUCE-app/issues/226) |
 
 ## Observações gerais
 
