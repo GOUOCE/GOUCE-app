@@ -9,16 +9,16 @@
 | Camada | UI |
 | Tipo de teste | Funcional manual — suíte essencial (baseada em risco) |
 | Tela | Painel do administrador → Cadastros → **Motoristas**; **Cadastrar Motorista** e **Editar Motorista** |
-| Ambiente | Celular (Expo Go) ou web em `http://localhost:3000`; preencher branch/commit da implementação em execução |
+| Ambiente 
 | Total de casos | 13 |
-| Última execução | Não realizada |
+| Última execução | 2026-10-27 |
 | Testador | Cauan Ricardo |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 13 | 0 | 0 | 0 | 0 | 13 |
+| 🔄 Em andamento | 13 | 0 | 2 | 0 | 11 |
 
 ## Pré-condições
 
@@ -40,8 +40,8 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU010-UI-001 | Abrir listagem e buscar por nome | Lista vazia; ativos; capacidades de pesquisa e inativos | Só ativos por padrão; nome/telefone corretos; busca e vazio reais | ⏳ PENDENTE | Não executado. |
-| CT-HU010-UI-002 | Cadastrar celular e conferir persistência | Celular válido, confirmação e reabertura | Sucesso; máscara; ativo persistido na API | ⏳ PENDENTE | Não executado. |
+| CT-HU010-UI-001 | Abrir listagem e buscar por nome | Lista vazia; ativos; capacidades de pesquisa e inativos | Só ativos por padrão; nome/telefone corretos; busca e vazio reais | ❌ FALHOU | Com o código do PR #243, a lista vazia mostra motoristas de exemplo que não existem no banco, e a chave “Mostrar inativos” vem ligada. Com o código antigo da `develop` a lista vazia estava correta. |
+| CT-HU010-UI-002 | Cadastrar celular e conferir persistência | Celular válido, confirmação e reabertura | Sucesso; máscara; ativo persistido na API | ❌ FALHOU | O cadastro funciona e persiste (`Francisco Alves`, `(88) 99811-2233`, ativo, um único `POST`), mas a mensagem de sucesso é uma barra preta fora do padrão. |
 | CT-HU010-UI-003 | Cadastrar fixo, homônimo e número dos exemplos | Fixo; mesmo nome; telefone presente só nos exemplos | Todos aceitos; ids distintos; nenhum bloqueio por exemplo | ⏳ PENDENTE | Não executado. |
 | CT-HU010-UI-004 | Bloquear telefone duplicado de ativo e inativo | Duplicidade com máscara e sem máscara, ativo/inativo | “Este profissional já está registrado.”; nada criado | ⏳ PENDENTE | Não executado. |
 | CT-HU010-UI-005 | Campos obrigatórios no cadastro e na edição | Nome/telefone ausentes ou esvaziados | Campo destacado; português; nenhum salvamento | ⏳ PENDENTE | Não executado. |
@@ -86,8 +86,12 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Lista vazia, código antigo da `develop` (sem o PR):** o banco estava vazio e a tela mostrou “Nenhum motorista ativo encontrado”, como esperado. Nessa execução o navegador ainda usava o pacote antigo do app (as chamadas no log não tinham parâmetros), e foi preciso reiniciar o Expo para carregar o PR.
+- **Lista vazia, com o PR #243 carregado:** o log passou a registrar `GET /motoristas?incluir_inativos=true` e, na busca, `...&nome=a`, `nome=aa` e `nome=aaa`, todas com `200` e lista vazia (o banco tinha 0 motoristas). Mesmo assim, a tela exibiu motoristas de teste. Eles vêm do `MOTORISTAS_MOCK` do app (José Almeida, Ana Souza e Paulo Ferreira): o PR trocou `response.data` por `listaApi.length > 0 ? listaApi : MOTORISTAS_MOCK` em `listarMotoristas`. É um erro novo do PR, pois na `develop` a lista vazia era respeitada.
+- **Chave “Mostrar inativos”:** vem **ligada** ao abrir a tela (`index.tsx`: `useState(true)`), contrariando o esperado “chave desligada”.
+- **Consulta:** o app pede sempre `incluir_inativos=true` e filtra os inativos na tela; a chave não muda a chamada à API.
+- Busca com `Francisco`, `FRANCISCO` e `SEMRESULTADO` e a seta de voltar com dados reais: ver a nota ao final do CT-003.
+- Status: ❌ Falhou.
 
 ---
 
@@ -110,8 +114,13 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Cancelar:** o log não registrou `POST /motoristas` entre o cancelamento e a confirmação.
+- **Confirmar:** `POST /motoristas` com `201`. No banco e na API, `Francisco Alves` (id 1) ativo, com o telefone guardado como `(88) 99811-2233`. Foi criado um único registro; a lista foi atualizada, e o motorista continua após recarregar a página.
+- A máscara do telefone digitado e o comportamento do cancelar na tela não foram detalhados pelo testador; o valor gravado mostra a máscara correta para 11 dígitos.
+- **Defeito:** o sucesso aparece como **barra preta** (toast) que some rápido, e o testador não conseguiu ler o texto. Pelo código (`motoristas/cadastrar.tsx`) é “Motorista cadastrado com sucesso”, fora do padrão de pop-up de sucesso do app e sem o texto do requisito (“Operação realizada com sucesso”). Mesmo defeito da [#278](https://github.com/GOUOCE/GOUCE-app/issues/278) (frota) e da [#260](https://github.com/GOUOCE/GOUCE-app/issues/260) (faculdades). Edição, inativação e reativação usam o mesmo toast.
+- O cadastro não gerou registro em `log_auditoria`, já aberto na suíte de API ([#233](https://github.com/GOUOCE/GOUCE-app/issues/233)).
+- Observação: o telefone guardado pela tela vem com máscara, e o guardado pela API direta (`88998223344`, Raimundo Costa) vem sem máscara.
+- Status: ❌ Falhou.
 
 ---
 
