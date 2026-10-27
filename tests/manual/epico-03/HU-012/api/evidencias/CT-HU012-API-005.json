@@ -1,0 +1,5678 @@
+{
+  "case_id": "CT-HU012-API-005",
+  "run_id": "20261027T174349Z",
+  "environment": {
+    "base_url": "http://127.0.0.1:18812",
+    "branch": "feat/front-hu012",
+    "application_commit": "23d1063f09f13cc195da7e45422581f73e2ae6da",
+    "plan_commit": "939921e3",
+    "database": "PostgreSQL 15 isolado; migrations reais",
+    "transport": "HTTP localhost via urllib.request; sem mocks",
+    "python": "3.12.3",
+    "feature_head_before_execution": "23d1063f09f13cc195da7e45422581f73e2ae6da"
+  },
+  "started_at": "2026-10-27T17:43:51.056457+00:00",
+  "checks": [
+    {
+      "description": "/rotas-complementares: recusa não altera rotas/vínculos",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa sem auditoria",
+      "expected": 0,
+      "actual": 0,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "POST /rotas-complementares: HTTP",
+      "expected": 422,
+      "actual": 422,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "envelope de erro padronizado",
+      "expected": "REQUEST_VALIDATION_ERROR",
+      "actual": "REQUEST_VALIDATION_ERROR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "erro identifica nome",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "mensagem de nome",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa não altera rotas/vínculos",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa sem auditoria",
+      "expected": 0,
+      "actual": 0,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "POST /rotas-complementares: HTTP",
+      "expected": 422,
+      "actual": 422,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "envelope de erro padronizado",
+      "expected": "REQUEST_VALIDATION_ERROR",
+      "actual": "REQUEST_VALIDATION_ERROR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "erro identifica horario_saida",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "mensagem de horario_saida",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa não altera rotas/vínculos",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa sem auditoria",
+      "expected": 0,
+      "actual": 0,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "POST /rotas-complementares: HTTP",
+      "expected": 422,
+      "actual": 422,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "envelope de erro padronizado",
+      "expected": "REQUEST_VALIDATION_ERROR",
+      "actual": "REQUEST_VALIDATION_ERROR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "erro identifica ponto_conexao",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "mensagem de ponto_conexao",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa não altera rotas/vínculos",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa sem auditoria",
+      "expected": 0,
+      "actual": 0,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "POST /rotas-complementares: HTTP",
+      "expected": 422,
+      "actual": 422,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "envelope de erro padronizado",
+      "expected": "REQUEST_VALIDATION_ERROR",
+      "actual": "REQUEST_VALIDATION_ERROR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "erro identifica rota_principal_id",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "mensagem de rota_principal_id",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa não altera rotas/vínculos",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa sem auditoria",
+      "expected": 0,
+      "actual": 0,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "POST /rotas-complementares: HTTP",
+      "expected": 422,
+      "actual": 422,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "envelope de erro padronizado",
+      "expected": "REQUEST_VALIDATION_ERROR",
+      "actual": "REQUEST_VALIDATION_ERROR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "corpo vazio: quatro campos",
+      "expected": [
+        "horario_saida",
+        "nome",
+        "ponto_conexao",
+        "rota_principal_id"
+      ],
+      "actual": [
+        "horario_saida",
+        "nome",
+        "ponto_conexao",
+        "rota_principal_id"
+      ],
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa não altera rotas/vínculos",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa sem auditoria",
+      "expected": 0,
+      "actual": 0,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "POST /rotas-complementares: HTTP",
+      "expected": 422,
+      "actual": 422,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "envelope de erro padronizado",
+      "expected": "REQUEST_VALIDATION_ERROR",
+      "actual": "REQUEST_VALIDATION_ERROR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "erro identifica nome",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "mensagem de nome",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "POST /rotas-complementares: HTTP",
+      "expected": 201,
+      "actual": 201,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "PATCH /rotas-complementares/4/inativar: HTTP",
+      "expected": 200,
+      "actual": 200,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa não altera rotas/vínculos",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa sem auditoria",
+      "expected": 0,
+      "actual": 0,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "POST /rotas-complementares: HTTP",
+      "expected": 422,
+      "actual": 422,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "envelope de erro padronizado",
+      "expected": "REQUEST_VALIDATION_ERROR",
+      "actual": "REQUEST_VALIDATION_ERROR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "erro identifica nome",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "mensagem de nome",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa não altera rotas/vínculos",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa sem auditoria",
+      "expected": 0,
+      "actual": 0,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "POST /rotas-complementares: HTTP",
+      "expected": 422,
+      "actual": 422,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "envelope de erro padronizado",
+      "expected": "REQUEST_VALIDATION_ERROR",
+      "actual": "REQUEST_VALIDATION_ERROR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "erro identifica ponto_conexao",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "mensagem de ponto_conexao",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "POST /rotas-complementares: HTTP",
+      "expected": 201,
+      "actual": 201,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "PATCH /rotas-complementares/5/inativar: HTTP",
+      "expected": 200,
+      "actual": 200,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa não altera rotas/vínculos",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa sem auditoria",
+      "expected": 0,
+      "actual": 0,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "POST /rotas-complementares: HTTP",
+      "expected": 422,
+      "actual": 422,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "envelope de erro padronizado",
+      "expected": "REQUEST_VALIDATION_ERROR",
+      "actual": "REQUEST_VALIDATION_ERROR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "erro identifica ponto_conexao",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "mensagem de ponto_conexao",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa não altera rotas/vínculos",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa sem auditoria",
+      "expected": 0,
+      "actual": 0,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "POST /rotas-complementares: HTTP",
+      "expected": 422,
+      "actual": 422,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "envelope de erro padronizado",
+      "expected": "REQUEST_VALIDATION_ERROR",
+      "actual": "REQUEST_VALIDATION_ERROR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "erro identifica horario_saida",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "mensagem de horario_saida",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa não altera rotas/vínculos",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa sem auditoria",
+      "expected": 0,
+      "actual": 0,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "POST /rotas-complementares: HTTP",
+      "expected": 422,
+      "actual": 422,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "envelope de erro padronizado",
+      "expected": "REQUEST_VALIDATION_ERROR",
+      "actual": "REQUEST_VALIDATION_ERROR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "erro identifica horario_saida",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "mensagem de horario_saida",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa não altera rotas/vínculos",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa sem auditoria",
+      "expected": 0,
+      "actual": 0,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "POST /rotas-complementares: HTTP",
+      "expected": 422,
+      "actual": 422,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "envelope de erro padronizado",
+      "expected": "REQUEST_VALIDATION_ERROR",
+      "actual": "REQUEST_VALIDATION_ERROR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "erro identifica horario_saida",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "mensagem de horario_saida",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa não altera rotas/vínculos",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares: recusa sem auditoria",
+      "expected": 0,
+      "actual": 0,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "POST /rotas-complementares: HTTP",
+      "expected": 422,
+      "actual": 422,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "envelope de erro padronizado",
+      "expected": "REQUEST_VALIDATION_ERROR",
+      "actual": "REQUEST_VALIDATION_ERROR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "erro identifica horario_saida",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "mensagem de horario_saida",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares/1: recusa não altera rotas/vínculos",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares/1: recusa sem auditoria",
+      "expected": 0,
+      "actual": 0,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "PATCH /rotas-complementares/1: HTTP",
+      "expected": 422,
+      "actual": 422,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "envelope de erro padronizado",
+      "expected": "REQUEST_VALIDATION_ERROR",
+      "actual": "REQUEST_VALIDATION_ERROR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares/1: recusa não altera rotas/vínculos",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "/rotas-complementares/1: recusa sem auditoria",
+      "expected": 0,
+      "actual": 0,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "PATCH /rotas-complementares/1: HTTP",
+      "expected": 422,
+      "actual": 422,
+      "passed": true,
+      "severity_if_failed": "failure"
+    },
+    {
+      "description": "envelope de erro padronizado",
+      "expected": "REQUEST_VALIDATION_ERROR",
+      "actual": "REQUEST_VALIDATION_ERROR",
+      "passed": true,
+      "severity_if_failed": "failure"
+    }
+  ],
+  "requests": [
+    {
+      "sequence": 34,
+      "timestamp": "2026-10-27T17:43:51.058429+00:00",
+      "label": "",
+      "duration_ms": 15.06,
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18812/rotas-complementares",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "horario_saida": "06:00",
+          "ponto_conexao": "Trevo do Bairro Novo",
+          "rota_principal_id": 1
+        }
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "REQUEST_VALIDATION_ERROR",
+            "message": "Requisição inválida",
+            "details": [
+              {
+                "field": "nome",
+                "message": "Nome da rota complementar é obrigatório."
+              }
+            ]
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          }
+        ]
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          }
+        ]
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 35,
+      "timestamp": "2026-10-27T17:43:51.078266+00:00",
+      "label": "",
+      "duration_ms": 14.64,
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18812/rotas-complementares",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "Controle ausente horario_saida",
+          "ponto_conexao": "Trevo do Bairro Novo",
+          "rota_principal_id": 1
+        }
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "REQUEST_VALIDATION_ERROR",
+            "message": "Requisição inválida",
+            "details": [
+              {
+                "field": "horario_saida",
+                "message": "Horário de saída é obrigatório."
+              }
+            ]
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          }
+        ]
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          }
+        ]
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 36,
+      "timestamp": "2026-10-27T17:43:51.097806+00:00",
+      "label": "",
+      "duration_ms": 15.12,
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18812/rotas-complementares",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "Controle ausente ponto_conexao",
+          "horario_saida": "06:00",
+          "rota_principal_id": 1
+        }
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "REQUEST_VALIDATION_ERROR",
+            "message": "Requisição inválida",
+            "details": [
+              {
+                "field": "ponto_conexao",
+                "message": "Ponto de conexão é obrigatório."
+              }
+            ]
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          }
+        ]
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          }
+        ]
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 37,
+      "timestamp": "2026-10-27T17:43:51.117571+00:00",
+      "label": "",
+      "duration_ms": 15.29,
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18812/rotas-complementares",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "Controle ausente rota_principal_id",
+          "horario_saida": "06:00",
+          "ponto_conexao": "Trevo do Bairro Novo"
+        }
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "REQUEST_VALIDATION_ERROR",
+            "message": "Requisição inválida",
+            "details": [
+              {
+                "field": "rota_principal_id",
+                "message": "Rota principal vinculada é obrigatória."
+              }
+            ]
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          }
+        ]
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          }
+        ]
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 38,
+      "timestamp": "2026-10-27T17:43:51.138295+00:00",
+      "label": "",
+      "duration_ms": 16.51,
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18812/rotas-complementares",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {}
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "REQUEST_VALIDATION_ERROR",
+            "message": "Requisição inválida",
+            "details": [
+              {
+                "field": "nome",
+                "message": "Nome da rota complementar é obrigatório."
+              },
+              {
+                "field": "horario_saida",
+                "message": "Horário de saída é obrigatório."
+              },
+              {
+                "field": "ponto_conexao",
+                "message": "Ponto de conexão é obrigatório."
+              },
+              {
+                "field": "rota_principal_id",
+                "message": "Rota principal vinculada é obrigatória."
+              }
+            ]
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          }
+        ]
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          }
+        ]
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 39,
+      "timestamp": "2026-10-27T17:43:51.159070+00:00",
+      "label": "",
+      "duration_ms": 16.93,
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18812/rotas-complementares",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "   ",
+          "horario_saida": "06:00",
+          "ponto_conexao": "Trevo do Bairro Novo",
+          "rota_principal_id": 1
+        }
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "REQUEST_VALIDATION_ERROR",
+            "message": "Requisição inválida",
+            "details": [
+              {
+                "field": "nome",
+                "message": "Nome da rota complementar é obrigatório."
+              }
+            ]
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          }
+        ]
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          }
+        ]
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 40,
+      "timestamp": "2026-10-27T17:43:51.180169+00:00",
+      "label": "",
+      "duration_ms": 26.0,
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18812/rotas-complementares",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "horario_saida": "06:00",
+          "ponto_conexao": "Trevo do Bairro Novo",
+          "rota_principal_id": 1
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": true,
+          "message": "Operação realizada com sucesso",
+          "data": {
+            "id": 4,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "rota_principal": {
+              "id": 1,
+              "nome": "Rota Centro - UFC",
+              "ativo": true
+            }
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          }
+        ]
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          }
+        ]
+      },
+      "database_unchanged": false,
+      "audit_delta": [
+        {
+          "id": 11,
+          "usuario_id": 1,
+          "acao": "CRIAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "4",
+          "valor_anterior": null,
+          "valor_novo": "{\"ativo\": true, \"horario_saida\": \"06:00\", \"nome\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\", \"ponto_conexao\": \"Trevo do Bairro Novo\", \"rota_principal_id\": 1}",
+          "criado_em": "2026-10-27T17:43:51.201931+00:00"
+        }
+      ]
+    },
+    {
+      "sequence": 41,
+      "timestamp": "2026-10-27T17:43:51.211654+00:00",
+      "label": "",
+      "duration_ms": 30.2,
+      "actor": "admin",
+      "request": {
+        "method": "PATCH",
+        "url": "http://127.0.0.1:18812/rotas-complementares/4/inativar",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": true,
+          "message": "Operação realizada com sucesso",
+          "data": {
+            "id": 4,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "rota_principal": {
+              "id": 1,
+              "nome": "Rota Centro - UFC",
+              "ativo": true
+            }
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          }
+        ]
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          }
+        ]
+      },
+      "database_unchanged": false,
+      "audit_delta": [
+        {
+          "id": 12,
+          "usuario_id": 1,
+          "acao": "INATIVAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "4",
+          "valor_anterior": "ativo",
+          "valor_novo": "inativo",
+          "criado_em": "2026-10-27T17:43:51.236607+00:00"
+        }
+      ]
+    },
+    {
+      "sequence": 42,
+      "timestamp": "2026-10-27T17:43:51.247987+00:00",
+      "label": "",
+      "duration_ms": 22.77,
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18812/rotas-complementares",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "horario_saida": "06:00",
+          "ponto_conexao": "Trevo do Bairro Novo",
+          "rota_principal_id": 1
+        }
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "REQUEST_VALIDATION_ERROR",
+            "message": "Requisição inválida",
+            "details": [
+              {
+                "field": "nome",
+                "message": "Nome da rota complementar deve ter no máximo 150 caracteres."
+              }
+            ]
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          }
+        ]
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          }
+        ]
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 43,
+      "timestamp": "2026-10-27T17:43:51.281165+00:00",
+      "label": "",
+      "duration_ms": 31.47,
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18812/rotas-complementares",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "Controle branco ponto_conexao",
+          "horario_saida": "06:00",
+          "ponto_conexao": "   ",
+          "rota_principal_id": 1
+        }
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "REQUEST_VALIDATION_ERROR",
+            "message": "Requisição inválida",
+            "details": [
+              {
+                "field": "ponto_conexao",
+                "message": "Ponto de conexão é obrigatório."
+              }
+            ]
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          }
+        ]
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          }
+        ]
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 44,
+      "timestamp": "2026-10-27T17:43:51.320405+00:00",
+      "label": "",
+      "duration_ms": 30.2,
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18812/rotas-complementares",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "Controle limite ponto_conexao150",
+          "horario_saida": "06:00",
+          "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "rota_principal_id": 1
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": true,
+          "message": "Operação realizada com sucesso",
+          "data": {
+            "id": 5,
+            "nome": "Controle limite ponto_conexao150",
+            "horario_saida": "06:00",
+            "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "ativo": true,
+            "rota_principal": {
+              "id": 1,
+              "nome": "Rota Centro - UFC",
+              "ativo": true
+            }
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          }
+        ]
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          },
+          {
+            "id": 5,
+            "rota_principal_id": 1,
+            "nome": "Controle limite ponto_conexao150",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:51.345239+00:00"
+          }
+        ]
+      },
+      "database_unchanged": false,
+      "audit_delta": [
+        {
+          "id": 13,
+          "usuario_id": 1,
+          "acao": "CRIAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "5",
+          "valor_anterior": null,
+          "valor_novo": "{\"ativo\": true, \"horario_saida\": \"06:00\", \"nome\": \"Controle limite ponto_conexao150\", \"ponto_conexao\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\", \"rota_principal_id\": 1}",
+          "criado_em": "2026-10-27T17:43:51.346441+00:00"
+        }
+      ]
+    },
+    {
+      "sequence": 45,
+      "timestamp": "2026-10-27T17:43:51.358625+00:00",
+      "label": "",
+      "duration_ms": 26.84,
+      "actor": "admin",
+      "request": {
+        "method": "PATCH",
+        "url": "http://127.0.0.1:18812/rotas-complementares/5/inativar",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": true,
+          "message": "Operação realizada com sucesso",
+          "data": {
+            "id": 5,
+            "nome": "Controle limite ponto_conexao150",
+            "horario_saida": "06:00",
+            "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "ativo": false,
+            "rota_principal": {
+              "id": 1,
+              "nome": "Rota Centro - UFC",
+              "ativo": true
+            }
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          },
+          {
+            "id": 5,
+            "rota_principal_id": 1,
+            "nome": "Controle limite ponto_conexao150",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:51.345239+00:00"
+          }
+        ]
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          },
+          {
+            "id": 5,
+            "rota_principal_id": 1,
+            "nome": "Controle limite ponto_conexao150",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.345239+00:00"
+          }
+        ]
+      },
+      "database_unchanged": false,
+      "audit_delta": [
+        {
+          "id": 14,
+          "usuario_id": 1,
+          "acao": "INATIVAR",
+          "entidade": "rota_complementar",
+          "entidade_id": "5",
+          "valor_anterior": "ativo",
+          "valor_novo": "inativo",
+          "criado_em": "2026-10-27T17:43:51.382431+00:00"
+        }
+      ]
+    },
+    {
+      "sequence": 46,
+      "timestamp": "2026-10-27T17:43:51.390443+00:00",
+      "label": "",
+      "duration_ms": 17.33,
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18812/rotas-complementares",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "Controle limite ponto_conexao151",
+          "horario_saida": "06:00",
+          "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "rota_principal_id": 1
+        }
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "REQUEST_VALIDATION_ERROR",
+            "message": "Requisição inválida",
+            "details": [
+              {
+                "field": "ponto_conexao",
+                "message": "Ponto de conexão deve ter no máximo 150 caracteres."
+              }
+            ]
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          },
+          {
+            "id": 5,
+            "rota_principal_id": 1,
+            "nome": "Controle limite ponto_conexao150",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.345239+00:00"
+          }
+        ]
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          },
+          {
+            "id": 5,
+            "rota_principal_id": 1,
+            "nome": "Controle limite ponto_conexao150",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.345239+00:00"
+          }
+        ]
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 47,
+      "timestamp": "2026-10-27T17:43:51.413414+00:00",
+      "label": "",
+      "duration_ms": 20.45,
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18812/rotas-complementares",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "Controle hora 6:00",
+          "horario_saida": "6:00",
+          "ponto_conexao": "Trevo do Bairro Novo",
+          "rota_principal_id": 1
+        }
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "REQUEST_VALIDATION_ERROR",
+            "message": "Requisição inválida",
+            "details": [
+              {
+                "field": "horario_saida",
+                "message": "Horário deve estar no formato HH:MM."
+              }
+            ]
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          },
+          {
+            "id": 5,
+            "rota_principal_id": 1,
+            "nome": "Controle limite ponto_conexao150",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.345239+00:00"
+          }
+        ]
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          },
+          {
+            "id": 5,
+            "rota_principal_id": 1,
+            "nome": "Controle limite ponto_conexao150",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.345239+00:00"
+          }
+        ]
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 48,
+      "timestamp": "2026-10-27T17:43:51.439545+00:00",
+      "label": "",
+      "duration_ms": 17.12,
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18812/rotas-complementares",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "Controle hora 24:00",
+          "horario_saida": "24:00",
+          "ponto_conexao": "Trevo do Bairro Novo",
+          "rota_principal_id": 1
+        }
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "REQUEST_VALIDATION_ERROR",
+            "message": "Requisição inválida",
+            "details": [
+              {
+                "field": "horario_saida",
+                "message": "Horário deve estar no formato HH:MM."
+              }
+            ]
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          },
+          {
+            "id": 5,
+            "rota_principal_id": 1,
+            "nome": "Controle limite ponto_conexao150",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.345239+00:00"
+          }
+        ]
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          },
+          {
+            "id": 5,
+            "rota_principal_id": 1,
+            "nome": "Controle limite ponto_conexao150",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.345239+00:00"
+          }
+        ]
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 49,
+      "timestamp": "2026-10-27T17:43:51.461381+00:00",
+      "label": "",
+      "duration_ms": 18.83,
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18812/rotas-complementares",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "Controle hora 06:60",
+          "horario_saida": "06:60",
+          "ponto_conexao": "Trevo do Bairro Novo",
+          "rota_principal_id": 1
+        }
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "REQUEST_VALIDATION_ERROR",
+            "message": "Requisição inválida",
+            "details": [
+              {
+                "field": "horario_saida",
+                "message": "Horário deve estar no formato HH:MM."
+              }
+            ]
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          },
+          {
+            "id": 5,
+            "rota_principal_id": 1,
+            "nome": "Controle limite ponto_conexao150",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.345239+00:00"
+          }
+        ]
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          },
+          {
+            "id": 5,
+            "rota_principal_id": 1,
+            "nome": "Controle limite ponto_conexao150",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.345239+00:00"
+          }
+        ]
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 50,
+      "timestamp": "2026-10-27T17:43:51.484544+00:00",
+      "label": "",
+      "duration_ms": 16.95,
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18812/rotas-complementares",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "Controle hora manhã",
+          "horario_saida": "manhã",
+          "ponto_conexao": "Trevo do Bairro Novo",
+          "rota_principal_id": 1
+        }
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "REQUEST_VALIDATION_ERROR",
+            "message": "Requisição inválida",
+            "details": [
+              {
+                "field": "horario_saida",
+                "message": "Horário deve estar no formato HH:MM."
+              }
+            ]
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          },
+          {
+            "id": 5,
+            "rota_principal_id": 1,
+            "nome": "Controle limite ponto_conexao150",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.345239+00:00"
+          }
+        ]
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          },
+          {
+            "id": 5,
+            "rota_principal_id": 1,
+            "nome": "Controle limite ponto_conexao150",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.345239+00:00"
+          }
+        ]
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 51,
+      "timestamp": "2026-10-27T17:43:51.506253+00:00",
+      "label": "",
+      "duration_ms": 19.39,
+      "actor": "admin",
+      "request": {
+        "method": "PATCH",
+        "url": "http://127.0.0.1:18812/rotas-complementares/1",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "ponto_conexao": null
+        }
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "REQUEST_VALIDATION_ERROR",
+            "message": "Requisição inválida",
+            "details": [
+              {
+                "field": "ponto_conexao",
+                "message": "Ponto de conexão é obrigatório."
+              }
+            ]
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          },
+          {
+            "id": 5,
+            "rota_principal_id": 1,
+            "nome": "Controle limite ponto_conexao150",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.345239+00:00"
+          }
+        ]
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          },
+          {
+            "id": 5,
+            "rota_principal_id": 1,
+            "nome": "Controle limite ponto_conexao150",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.345239+00:00"
+          }
+        ]
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 52,
+      "timestamp": "2026-10-27T17:43:51.529895+00:00",
+      "label": "",
+      "duration_ms": 17.14,
+      "actor": "admin",
+      "request": {
+        "method": "PATCH",
+        "url": "http://127.0.0.1:18812/rotas-complementares/1",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "rota_principal_id": null
+        }
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "REQUEST_VALIDATION_ERROR",
+            "message": "Requisição inválida",
+            "details": [
+              {
+                "field": "rota_principal_id",
+                "message": "Rota principal vinculada é obrigatória."
+              }
+            ]
+          }
+        }
+      },
+      "database_before": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          },
+          {
+            "id": 5,
+            "rota_principal_id": 1,
+            "nome": "Controle limite ponto_conexao150",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.345239+00:00"
+          }
+        ]
+      },
+      "database_after": {
+        "rota_principal": [
+          {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.557108+00:00"
+          },
+          {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "horario_saida": "06:40:00",
+            "horario_retorno": "18:00:00",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.596340+00:00"
+          },
+          {
+            "id": 3,
+            "nome": "Rota Antiga",
+            "horario_saida": "06:30:00",
+            "horario_retorno": "17:30:00",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.624284+00:00"
+          }
+        ],
+        "rota_principal_bairro": [
+          {
+            "rota_id": 1,
+            "bairro_id": 1
+          },
+          {
+            "rota_id": 2,
+            "bairro_id": 2
+          },
+          {
+            "rota_id": 3,
+            "bairro_id": 1
+          }
+        ],
+        "rota_principal_faculdade_ida": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_principal_faculdade_volta": [
+          {
+            "rota_id": 1,
+            "faculdade_id": 1
+          },
+          {
+            "rota_id": 2,
+            "faculdade_id": 2
+          },
+          {
+            "rota_id": 3,
+            "faculdade_id": 1
+          }
+        ],
+        "rota_complementar": [
+          {
+            "id": 1,
+            "rota_principal_id": 1,
+            "nome": "Van 2 - Bairro Novo",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.720288+00:00"
+          },
+          {
+            "id": 2,
+            "rota_principal_id": 2,
+            "nome": "Van 5 - Trevo da BR",
+            "horario_saida": "06:10:00",
+            "ponto_conexao": "Posto da BR-122",
+            "ativo": true,
+            "data_criacao": "2026-10-27T17:43:50.767033+00:00"
+          },
+          {
+            "id": 3,
+            "rota_principal_id": 1,
+            "nome": "Rota Centro - UFC",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:50.981053+00:00"
+          },
+          {
+            "id": 4,
+            "rota_principal_id": 1,
+            "nome": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "Trevo do Bairro Novo",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.200884+00:00"
+          },
+          {
+            "id": 5,
+            "rota_principal_id": 1,
+            "nome": "Controle limite ponto_conexao150",
+            "horario_saida": "06:00:00",
+            "ponto_conexao": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "ativo": false,
+            "data_criacao": "2026-10-27T17:43:51.345239+00:00"
+          }
+        ]
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    }
+  ],
+  "database_checks": [],
+  "notes": [
+    "Controle positivo do limite de nome inativado por HTTP após consulta de persistência.",
+    "Controle positivo do limite de ponto_conexao inativado por HTTP após consulta de persistência."
+  ],
+  "dependencies": [],
+  "status": "PASS",
+  "finished_at": "2026-10-27T17:43:53.077394+00:00",
+  "issues": []
+}
