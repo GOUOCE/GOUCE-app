@@ -57,6 +57,80 @@ Mensagem constante no backend de rotas difere da decisão oficial da #208.
 
 ### 📎 Evidência
 
-Reproduzido em 2026-10-27, HTTP real e PostgreSQL isolado. [CT-HU012-API-010 JSON](https://github.com/GOUOCE/GOUCE-app/blob/feat/front-hu012/tests/manual/epico-03/HU-012/api/evidencias/CT-HU012-API-010.json). Respostas e consultas de persistência/auditoria estão preservadas; evidências entram nos PRs #194/#182 conforme a HU.
+Reproduzido em 2026-10-27 por HTTP real e PostgreSQL isolado. Abaixo estão os JSONs das chamadas que comprovam este defeito, extraídos da execução original. Senhas, tokens e contatos foram omitidos.
+
+**CT-HU012-API-010**
+
+```json
+{
+  "case_id": "CT-HU012-API-010",
+  "application_commit": "23d1063f09f13cc195da7e45422581f73e2ae6da",
+  "requests": [
+    {
+      "sequence": 95,
+      "timestamp": "2026-10-27T17:43:52.475368+00:00",
+      "actor": "admin",
+      "request": {
+        "method": "PATCH",
+        "url": "http://127.0.0.1:18812/rotas-complementares/6/reativar",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": null
+      },
+      "response": {
+        "status": 409,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:51 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "CONFLICT",
+            "message": "A rota principal vinculada está inativa. Reative-a ou altere o vínculo antes."
+          }
+        }
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 96,
+      "timestamp": "2026-10-27T17:43:52.494672+00:00",
+      "actor": "admin",
+      "request": {
+        "method": "GET",
+        "url": "http://127.0.0.1:18812/rotas-complementares/6",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:51 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "id": 6,
+          "nome": "Van Sítio",
+          "horario_saida": "05:40",
+          "ponto_conexao": "Entrada do Sítio Riacho",
+          "ativo": false,
+          "rota_principal": {
+            "id": 2,
+            "nome": "Rota Campo Velho - IFCE",
+            "ativo": false
+          }
+        }
+      }
+    }
+  ]
+}
+```
 
 Issue no GitHub: https://github.com/GOUOCE/GOUCE-app/issues/312

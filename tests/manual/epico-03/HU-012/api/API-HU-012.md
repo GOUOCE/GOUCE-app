@@ -11,7 +11,7 @@
 | Endpoints | `GET /rotas-complementares`, `GET /rotas-complementares/opcoes`, `GET /rotas-complementares/{id}`, `POST /rotas-complementares`, `PATCH /rotas-complementares/{id}`, `PATCH /rotas-complementares/{id}/inativar` e `PATCH /rotas-complementares/{id}/reativar` — `application/json`. Corpo: `{"nome": "...", "horario_saida": "HH:MM", "ponto_conexao": "...", "rota_principal_id": 1}` |
 | Ambiente | HTTP local `http://127.0.0.1:18812`; PostgreSQL 15/MinIO QA isolados; branch `feat/front-hu012`, aplicação `23d1063f09f13cc195da7e45422581f73e2ae6da`; plano `939921e3` |
 | Total de casos | 13 |
-| Última execução | 2026-10-27 — HTTP real com evidências JSON e consultas ao PostgreSQL |
+| Última execução | 2026-10-27 — HTTP real e consultas ao PostgreSQL; JSONs dos defeitos nas issues |
 | Testador | Cauan Ricardo — execução com apoio do Codex |
 
 ## Resultado geral
@@ -38,19 +38,19 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU012-API-001 | Listar, filtrar e consultar complementares | Sem filtro; `incluir_inativos=true`; `nome`; `rota_principal_id`; `GET /{id}`; `/opcoes` | HTTP 200; padrão só ativas; filtros respeitados; opções só com principais ativas | ✅ APROVADO | Lista vazia 200/[]; padrão só ativas, filtro de inativos, nome e principal conferidos; filtro com id 0 retornou 422. Consultas ativa/inativa e 404 conferidos; /opcoes só oferece RP1/RP2 ativas. [JSON](evidencias/CT-HU012-API-001.json) |
-| CT-HU012-API-002 | Cadastrar rota complementar válida | RC1 ligada a RP1; RC2 ligada a RP2, com espaços nas pontas | HTTP 201 “Operação realizada com sucesso”; ativa; vínculo e dados corretos | ✅ APROVADO | RC1/RC2 criadas ativas, nome/ponto normalizados e vínculos persistidos; GET e PostgreSQL conferidos. As principais não foram alteradas. [JSON](evidencias/CT-HU012-API-002.json) |
-| CT-HU012-API-003 | Horário de retorno da complementar (#208) | `horario_saida` e `horario_retorno`; retorno igual e anterior à saída | Retorno aceito e gravado; retorno ≤ saída recusado com 422 | ❌ FALHOU | Cadastro com retorno 17:40 e edição de retorno 17:45 retornaram 422/Campo não permitido., em vez de 201/200. Retorno igual/anterior também cai no erro de campo desconhecido; consulta não devolve horario_retorno. [JSON](evidencias/CT-HU012-API-003.json) [#310](https://github.com/GOUOCE/GOUCE-app/issues/310) |
-| CT-HU012-API-004 | Nome único entre todas as rotas (#208) | Nome de RC1 com variações; de complementar inativa; de rota principal; edição para nome em uso | HTTP 409; nada criado nem alterado | ❌ FALHOU | Duplicidade dentro das complementares funcionou, inclusive case/trim e inativa. Porém, cadastrar complementar Rota Centro - UFC, nome de uma principal existente, retornou 201; esperado 409. O registro indevido foi inativado via API após preservar a evidência. [JSON](evidencias/CT-HU012-API-004.json) [#309](https://github.com/GOUOCE/GOUCE-app/issues/309) |
-| CT-HU012-API-005 | Obrigatórios, formato e limites | Sem cada campo; em branco; 151 caracteres; horário fora de `HH:MM`; edição com `null` | HTTP 422 com campo e mensagem em português; nada gravado | ✅ APROVADO | Obrigatórios, corpo vazio, campos em branco, 151 caracteres, horários inválidos e edição com null foram recusados com 422/campo/mensagem. Controles de 150 aceitos, persistidos e depois inativados via API. [JSON](evidencias/CT-HU012-API-005.json) |
-| CT-HU012-API-006 | Vínculo com rota principal inativa ou inexistente | RP0 inativa; id inexistente; id `0`, negativo e texto; cadastro e edição | HTTP 422 no `rota_principal_id`; nenhum vínculo inválido | ✅ APROVADO | Principal inativa/inexistente e IDs zero/negativo/string recusados com 422; edição com nome + vínculo inválido não aplicou nenhuma alteração. [JSON](evidencias/CT-HU012-API-006.json) |
-| CT-HU012-API-007 | Editar dados e trocar a rota principal | RC1: só nome; horário e ponto; trocar para RP2; `{}`; campo `ativo`; id inexistente | HTTP 200 no mesmo id; 422 sem campo ou com campo extra; 404 inexistente | ✅ APROVADO | Nome, horário/ponto e troca de principal refletidos no mesmo id e no filtro; corpo vazio/ativo retornaram 422 e inexistente 404. Vínculo restaurado a RP1. [JSON](evidencias/CT-HU012-API-007.json) |
-| CT-HU012-API-008 | Inativar e reativar (soft delete) | RC3: inativar, repetir, reativar, repetir; id inexistente | HTTP 200 nas válidas; registro mantido; 409 nas repetidas; 404 | ✅ APROVADO | Inativar/reativar 200, repetições 409, inexistente 404; linha preservada. RC3 foi deixada inativa para os casos dependentes e reativada no CT-010. [JSON](evidencias/CT-HU012-API-008.json) |
-| CT-HU012-API-009 | Complementar ativa protege a principal | RP2 com RC2 ativa; trocar RC2 para RP1; inativar RP2 | Com RC2 ativa, 409; depois de trocar o vínculo, 200 | ⚠️ PARCIAL | Principal com RC2 ativa foi protegida com 409; depois de trocar RC2 para RP1, RP2 pôde ser inativada mesmo com RC3 inativa. Mensagem de bloqueio diverge da #208; mesma causa do CT-HU011-API-010. [JSON](evidencias/CT-HU012-API-009.json) [#311](https://github.com/GOUOCE/GOUCE-app/issues/311) |
-| CT-HU012-API-010 | Reativar complementar com principal inativa (#208) | RC3 inativa ligada a RP2; RP2 inativada; reativar RC3; trocar para RP1 e reativar | HTTP 409 com a mensagem do PO; depois de trocar o vínculo, 200 | ⚠️ PARCIAL | RC3 não foi reativada enquanto RP2 estava inativa (409); após trocar para RP1, edição e reativação concluíram com 200. Mensagem recebida: “A rota principal vinculada está inativa. Reative-a ou altere o vínculo antes.”; diferente da mensagem do PO. [JSON](evidencias/CT-HU012-API-010.json) [#312](https://github.com/GOUOCE/GOUCE-app/issues/312) |
-| CT-HU012-API-011 | Auditoria das operações de escrita | Operações dos CT-002, 007 e 008; recusas dos CT-004 a 009 | Um registro por escrita efetiva; nenhum para recusa ou edição sem mudança | ✅ APROVADO | Uma linha por escrita efetiva com executor/ação/id/data corretos; snapshots incluem a troca de principal. Recusas e reenvio sem mudança não criaram auditoria. [JSON](evidencias/CT-HU012-API-011.json) |
-| CT-HU012-API-012 | Acesso sem privilégio | Token de aluno; token de representante; sem token | HTTP 403 (aluno e representante) e 401 (sem token) em todas as rotas | ✅ APROVADO | As sete operações negaram 403 à conta de aluno e à conta ativa de representante, e 401 sem token; nenhum efeito nas rotas/auditoria. A conta de representante autentica com roles legados aluno/supervisor; o contrato real foi preservado e não houve teste de UI nem JWT forjado. [JSON](evidencias/CT-HU012-API-012.json) |
-| CT-HU012-API-013 | Agendamentos futuros e complementar inativa no agendamento | Complementar com aluno agendado para amanhã; complementar inativa na agenda | HTTP 409 “Esta rota possui agendamentos pendentes e não pode ser inativada no momento.”; inativa fora da agenda | 🚫 BLOQUEADO | HU-013 ausente: sem endpoints de agendamento e com checker TODO. Agenda futura, exclusão das opções e preservação de histórico ficaram bloqueadas, sem inserir agenda pelo banco. [JSON](evidencias/CT-HU012-API-013.json) |
+| CT-HU012-API-001 | Listar, filtrar e consultar complementares | Sem filtro; `incluir_inativos=true`; `nome`; `rota_principal_id`; `GET /{id}`; `/opcoes` | HTTP 200; padrão só ativas; filtros respeitados; opções só com principais ativas | ✅ APROVADO | Lista vazia 200/[]; padrão só ativas, filtro de inativos, nome e principal conferidos; filtro com id 0 retornou 422. Consultas ativa/inativa e 404 conferidos; /opcoes só oferece RP1/RP2 ativas.  |
+| CT-HU012-API-002 | Cadastrar rota complementar válida | RC1 ligada a RP1; RC2 ligada a RP2, com espaços nas pontas | HTTP 201 “Operação realizada com sucesso”; ativa; vínculo e dados corretos | ✅ APROVADO | RC1/RC2 criadas ativas, nome/ponto normalizados e vínculos persistidos; GET e PostgreSQL conferidos. As principais não foram alteradas.  |
+| CT-HU012-API-003 | Horário de retorno da complementar (#208) | `horario_saida` e `horario_retorno`; retorno igual e anterior à saída | Retorno aceito e gravado; retorno ≤ saída recusado com 422 | ❌ FALHOU | Cadastro com retorno 17:40 e edição de retorno 17:45 retornaram 422/Campo não permitido., em vez de 201/200. Retorno igual/anterior também cai no erro de campo desconhecido; consulta não devolve horario_retorno. [Evidência na issue](issues/BUG-HU012-API-001-horario-retorno-ausente.md) [#310](https://github.com/GOUOCE/GOUCE-app/issues/310) |
+| CT-HU012-API-004 | Nome único entre todas as rotas (#208) | Nome de RC1 com variações; de complementar inativa; de rota principal; edição para nome em uso | HTTP 409; nada criado nem alterado | ❌ FALHOU | Duplicidade dentro das complementares funcionou, inclusive case/trim e inativa. Porém, cadastrar complementar Rota Centro - UFC, nome de uma principal existente, retornou 201; esperado 409. O registro indevido foi inativado via API após preservar a evidência. [Evidência na issue](issues/BUG-HU012-API-002-nome-unico-entre-tipos.md) [#309](https://github.com/GOUOCE/GOUCE-app/issues/309) |
+| CT-HU012-API-005 | Obrigatórios, formato e limites | Sem cada campo; em branco; 151 caracteres; horário fora de `HH:MM`; edição com `null` | HTTP 422 com campo e mensagem em português; nada gravado | ✅ APROVADO | Obrigatórios, corpo vazio, campos em branco, 151 caracteres, horários inválidos e edição com null foram recusados com 422/campo/mensagem. Controles de 150 aceitos, persistidos e depois inativados via API.  |
+| CT-HU012-API-006 | Vínculo com rota principal inativa ou inexistente | RP0 inativa; id inexistente; id `0`, negativo e texto; cadastro e edição | HTTP 422 no `rota_principal_id`; nenhum vínculo inválido | ✅ APROVADO | Principal inativa/inexistente e IDs zero/negativo/string recusados com 422; edição com nome + vínculo inválido não aplicou nenhuma alteração.  |
+| CT-HU012-API-007 | Editar dados e trocar a rota principal | RC1: só nome; horário e ponto; trocar para RP2; `{}`; campo `ativo`; id inexistente | HTTP 200 no mesmo id; 422 sem campo ou com campo extra; 404 inexistente | ✅ APROVADO | Nome, horário/ponto e troca de principal refletidos no mesmo id e no filtro; corpo vazio/ativo retornaram 422 e inexistente 404. Vínculo restaurado a RP1.  |
+| CT-HU012-API-008 | Inativar e reativar (soft delete) | RC3: inativar, repetir, reativar, repetir; id inexistente | HTTP 200 nas válidas; registro mantido; 409 nas repetidas; 404 | ✅ APROVADO | Inativar/reativar 200, repetições 409, inexistente 404; linha preservada. RC3 foi deixada inativa para os casos dependentes e reativada no CT-010.  |
+| CT-HU012-API-009 | Complementar ativa protege a principal | RP2 com RC2 ativa; trocar RC2 para RP1; inativar RP2 | Com RC2 ativa, 409; depois de trocar o vínculo, 200 | ⚠️ PARCIAL | Principal com RC2 ativa foi protegida com 409; depois de trocar RC2 para RP1, RP2 pôde ser inativada mesmo com RC3 inativa. Mensagem de bloqueio diverge da #208; mesma causa do CT-HU011-API-010. [Evidência na issue](issues/BUG-HU012-API-003-mensagem-complementar-ativa.md) [#311](https://github.com/GOUOCE/GOUCE-app/issues/311) |
+| CT-HU012-API-010 | Reativar complementar com principal inativa (#208) | RC3 inativa ligada a RP2; RP2 inativada; reativar RC3; trocar para RP1 e reativar | HTTP 409 com a mensagem do PO; depois de trocar o vínculo, 200 | ⚠️ PARCIAL | RC3 não foi reativada enquanto RP2 estava inativa (409); após trocar para RP1, edição e reativação concluíram com 200. Mensagem recebida: “A rota principal vinculada está inativa. Reative-a ou altere o vínculo antes.”; diferente da mensagem do PO. [Evidência na issue](issues/BUG-HU012-API-004-mensagem-principal-inativa.md) [#312](https://github.com/GOUOCE/GOUCE-app/issues/312) |
+| CT-HU012-API-011 | Auditoria das operações de escrita | Operações dos CT-002, 007 e 008; recusas dos CT-004 a 009 | Um registro por escrita efetiva; nenhum para recusa ou edição sem mudança | ✅ APROVADO | Uma linha por escrita efetiva com executor/ação/id/data corretos; snapshots incluem a troca de principal. Recusas e reenvio sem mudança não criaram auditoria.  |
+| CT-HU012-API-012 | Acesso sem privilégio | Token de aluno; token de representante; sem token | HTTP 403 (aluno e representante) e 401 (sem token) em todas as rotas | ✅ APROVADO | As sete operações negaram 403 à conta de aluno e à conta ativa de representante, e 401 sem token; nenhum efeito nas rotas/auditoria. A conta de representante autentica com roles legados aluno/supervisor; o contrato real foi preservado e não houve teste de UI nem JWT forjado.  |
+| CT-HU012-API-013 | Agendamentos futuros e complementar inativa no agendamento | Complementar com aluno agendado para amanhã; complementar inativa na agenda | HTTP 409 “Esta rota possui agendamentos pendentes e não pode ser inativada no momento.”; inativa fora da agenda | 🚫 BLOQUEADO | HU-013 ausente: sem endpoints de agendamento e com checker TODO. Agenda futura, exclusão das opções e preservação de histórico ficaram bloqueadas, sem inserir agenda pelo banco.  |
 
 ## Detalhamento dos casos
 
@@ -76,7 +76,7 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 - Lista vazia 200/[]; padrão só ativas, filtro de inativos, nome e principal conferidos; filtro com id 0 retornou 422. Consultas ativa/inativa e 404 conferidos; /opcoes só oferece RP1/RP2 ativas.
 - 11 chamadas HTTP; 22 verificações registradas. Status observados: 200 (9×), 404 (1×), 422 (1×).
-- Evidência: [CT-HU012-API-001.json](evidencias/CT-HU012-API-001.json), com corpos reais, sequência/horário, verificações e consultas de persistência/auditoria.
+
 - Status: ✅ APROVADO.
 
 ---
@@ -103,7 +103,7 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 - RC1/RC2 criadas ativas, nome/ponto normalizados e vínculos persistidos; GET e PostgreSQL conferidos. As principais não foram alteradas.
 - 4 chamadas HTTP; 17 verificações registradas. Status observados: 200 (2×), 201 (2×).
-- Evidência: [CT-HU012-API-002.json](evidencias/CT-HU012-API-002.json), com corpos reais, sequência/horário, verificações e consultas de persistência/auditoria.
+
 - Status: ✅ APROVADO.
 
 ---
@@ -131,7 +131,7 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 - Cadastro com retorno 17:40 e edição de retorno 17:45 retornaram 422/Campo não permitido., em vez de 201/200. Retorno igual/anterior também cai no erro de campo desconhecido; consulta não devolve horario_retorno.
 - 5 chamadas HTTP; 21 verificações registradas. Status observados: 200 (1×), 422 (4×).
-- Evidência: [CT-HU012-API-003.json](evidencias/CT-HU012-API-003.json), com corpos reais, sequência/horário, verificações e consultas de persistência/auditoria.
+- Evidência JSON: [requisição e resposta na issue](issues/BUG-HU012-API-001-horario-retorno-ausente.md).
 - Defeito(s): [#310](https://github.com/GOUOCE/GOUCE-app/issues/310).
 - Status: ❌ FALHOU.
 
@@ -162,7 +162,7 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 - Duplicidade dentro das complementares funcionou, inclusive case/trim e inativa. Porém, cadastrar complementar Rota Centro - UFC, nome de uma principal existente, retornou 201; esperado 409. O registro indevido foi inativado via API após preservar a evidência.
 - 8 chamadas HTTP; 23 verificações registradas. Status observados: 200 (2×), 201 (1×), 409 (5×).
-- Evidência: [CT-HU012-API-004.json](evidencias/CT-HU012-API-004.json), com corpos reais, sequência/horário, verificações e consultas de persistência/auditoria.
+- Evidência JSON: [requisição e resposta na issue](issues/BUG-HU012-API-002-nome-unico-entre-tipos.md).
 - Defeito(s): [#309](https://github.com/GOUOCE/GOUCE-app/issues/309).
 - Status: ❌ FALHOU.
 
@@ -197,7 +197,7 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 - Obrigatórios, corpo vazio, campos em branco, 151 caracteres, horários inválidos e edição com null foram recusados com 422/campo/mensagem. Controles de 150 aceitos, persistidos e depois inativados via API.
 - 19 chamadas HTTP; 89 verificações registradas. Status observados: 200 (2×), 201 (2×), 422 (15×).
-- Evidência: [CT-HU012-API-005.json](evidencias/CT-HU012-API-005.json), com corpos reais, sequência/horário, verificações e consultas de persistência/auditoria.
+
 - Status: ✅ APROVADO.
 
 ---
@@ -226,7 +226,7 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 - Principal inativa/inexistente e IDs zero/negativo/string recusados com 422; edição com nome + vínculo inválido não aplicou nenhuma alteração.
 - 7 chamadas HTTP; 36 verificações registradas. Status observados: 200 (1×), 422 (6×).
-- Evidência: [CT-HU012-API-006.json](evidencias/CT-HU012-API-006.json), com corpos reais, sequência/horário, verificações e consultas de persistência/auditoria.
+
 - Status: ✅ APROVADO.
 
 ---
@@ -258,7 +258,7 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 - Nome, horário/ponto e troca de principal refletidos no mesmo id e no filtro; corpo vazio/ativo retornaram 422 e inexistente 404. Vínculo restaurado a RP1.
 - 12 chamadas HTTP; 41 verificações registradas. Status observados: 200 (9×), 404 (1×), 422 (2×).
-- Evidência: [CT-HU012-API-007.json](evidencias/CT-HU012-API-007.json), com corpos reais, sequência/horário, verificações e consultas de persistência/auditoria.
+
 - Status: ✅ APROVADO.
 
 ---
@@ -285,7 +285,7 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 - Inativar/reativar 200, repetições 409, inexistente 404; linha preservada. RC3 foi deixada inativa para os casos dependentes e reativada no CT-010.
 - 7 chamadas HTTP; 16 verificações registradas. Status observados: 200 (3×), 201 (1×), 404 (1×), 409 (2×).
-- Evidência: [CT-HU012-API-008.json](evidencias/CT-HU012-API-008.json), com corpos reais, sequência/horário, verificações e consultas de persistência/auditoria.
+
 - Status: ✅ APROVADO.
 
 ---
@@ -308,7 +308,7 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 - Principal com RC2 ativa foi protegida com 409; depois de trocar RC2 para RP1, RP2 pôde ser inativada mesmo com RC3 inativa. Mensagem de bloqueio diverge da #208; mesma causa do CT-HU011-API-010.
 - 4 chamadas HTTP; 8 verificações registradas. Status observados: 200 (3×), 409 (1×).
-- Evidência: [CT-HU012-API-009.json](evidencias/CT-HU012-API-009.json), com corpos reais, sequência/horário, verificações e consultas de persistência/auditoria.
+- Evidência JSON: [requisição e resposta na issue](issues/BUG-HU012-API-003-mensagem-complementar-ativa.md).
 - Defeito(s): [#311](https://github.com/GOUOCE/GOUCE-app/issues/311).
 - Status: ⚠️ PARCIAL.
 
@@ -334,7 +334,7 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 - RC3 não foi reativada enquanto RP2 estava inativa (409); após trocar para RP1, edição e reativação concluíram com 200. Mensagem recebida: “A rota principal vinculada está inativa. Reative-a ou altere o vínculo antes.”; diferente da mensagem do PO.
 - 6 chamadas HTTP; 11 verificações registradas. Status observados: 200 (5×), 409 (1×).
-- Evidência: [CT-HU012-API-010.json](evidencias/CT-HU012-API-010.json), com corpos reais, sequência/horário, verificações e consultas de persistência/auditoria.
+- Evidência JSON: [requisição e resposta na issue](issues/BUG-HU012-API-004-mensagem-principal-inativa.md).
 - Defeito(s): [#312](https://github.com/GOUOCE/GOUCE-app/issues/312).
 - Status: ⚠️ PARCIAL.
 
@@ -360,7 +360,7 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 - Uma linha por escrita efetiva com executor/ação/id/data corretos; snapshots incluem a troca de principal. Recusas e reenvio sem mudança não criaram auditoria.
 - 2 chamadas HTTP; 129 verificações registradas. Status observados: 200 (2×).
-- Evidência: [CT-HU012-API-011.json](evidencias/CT-HU012-API-011.json), com corpos reais, sequência/horário, verificações e consultas de persistência/auditoria.
+
 - Status: ✅ APROVADO.
 
 ---
@@ -384,7 +384,7 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 - As sete operações negaram 403 à conta de aluno e à conta ativa de representante, e 401 sem token; nenhum efeito nas rotas/auditoria. A conta de representante autentica com roles legados aluno/supervisor; o contrato real foi preservado e não houve teste de UI nem JWT forjado.
 - 21 chamadas HTTP; 68 verificações registradas. Status observados: 401 (7×), 403 (14×).
-- Evidência: [CT-HU012-API-012.json](evidencias/CT-HU012-API-012.json), com corpos reais, sequência/horário, verificações e consultas de persistência/auditoria.
+
 - Status: ✅ APROVADO.
 
 ---
@@ -409,7 +409,7 @@ Executar na ordem abaixo. São **13 casos essenciais**. Todas as chamadas usam o
 
 - HU-013 ausente: sem endpoints de agendamento e com checker TODO. Agenda futura, exclusão das opções e preservação de histórico ficaram bloqueadas, sem inserir agenda pelo banco.
 - 1 chamadas HTTP; 1 verificações registradas. Status observados: 200 (1×).
-- Evidência: [CT-HU012-API-013.json](evidencias/CT-HU012-API-013.json), com corpos reais, sequência/horário, verificações e consultas de persistência/auditoria.
+
 - Impedimento: HU-013 não implementada nesta versão: sem entidade/endpoints de agendamentos. Não foi criada agenda diretamente no banco e não houve simulação do checker.
 - Status: 🚫 BLOQUEADO.
 

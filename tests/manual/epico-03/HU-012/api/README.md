@@ -1,32 +1,14 @@
-# Execução dos testes manuais de API — HU-012
+# Como executar os testes manuais de API
 
 ## Execução de 27/10/2026
 
-Resultados em [API-HU-012.md](API-HU-012.md), evidências por caso em [evidencias](evidencias/) e índice verificável em [execucao.json](evidencias/execucao.json). Execução HTTP real assistida pelo Codex, comparando respostas e PostgreSQL; sem mocks de endpoints, autenticação ou auditoria.
+13 casos: 8 aprovados, 2 falharam, 2 parciais e 1 bloqueado. Resultados completos em [API-HU-012.md](API-HU-012.md). As evidências JSON de requisição/resposta estão diretamente nas [issues dos defeitos](issues/), também publicadas no GitHub. Os demais casos mantêm seus resultados na suíte.
 
-- Branch: `feat/front-hu012`; commit de aplicação: `23d1063f09f13cc195da7e45422581f73e2ae6da`.
-- API: `http://127.0.0.1:18812`; PostgreSQL 15 e MinIO exclusivos de QA. Nenhum dado do banco habitual foi alterado.
-- HU-011: a branch foi integrada à `develop` `939921e3` antes da execução, trazendo a API complementar e as correções de migration. O commit anterior era `3429ab7a`.
-- HU-012: código exato `23d1063f`; o roteiro atualizado do planejamento `939921e3` foi aplicado como documentação, sem alterar o código da funcionalidade.
-- Os controles positivos de limites e os registros criados indevidamente por defeito foram inativados via API; os registros foram preservados.
-- A conta de representante é ativa em `representante` e `usuario_tipo`; o login desta versão devolve `roles: ["aluno", "supervisor"]`. A negativa de acesso foi conferida com essa sessão real. A seleção visual de perfil e o contrato canônico `representante` não foram retestados aqui (histórico: #190/PR #195).
-- Casos da HU-013 permanecem bloqueados; não foram criados agendamentos diretamente no banco.
+Execução HTTP real com login e PostgreSQL/MinIO isolados; sem mocks. Foram registradas 123 chamadas HTTP, incluindo a preparação da massa. O caso de agendamentos ficou bloqueado pela ausência da HU-013. A conta ativa de representante foi autenticada com os perfis legados `aluno/supervisor`, conforme registrado no resultado do caso de acesso.
 
-### Reproduzir
-
-Use ambiente descartável e banco sem rotas, aplique as migrations e inicie `uvicorn main:app` com PostgreSQL/MinIO e segredos próprios de QA. Instale `backend/requirements.txt`. Configure externamente `DATABASE_URL`, `QA_BASE_URL`, `QA_ADMIN_EMAIL`, `QA_ADMIN_PASSWORD`, `QA_HU=012` e `QA_ACCOUNTS_FILE` (fora do Git). Opcionalmente defina `QA_SEED_ACCOUNTS` com o caminho absoluto de [suporte/preparar_contas.py](suporte/preparar_contas.py), que cria apenas usuários/perfis/documentos sintéticos para autenticação; não cria rotas/agendas.
-
-Execute da raiz do repositório:
-
-```bash
-python3 tests/manual/epico-03/HU-012/api/executar_api.py
-```
-
-O executor usa a API para massa de bairros/faculdades/rotas, faz login real e consulta o banco para comprovar persistência e auditoria. Não execute contra banco de uso cotidiano. Credenciais/tokens/contatos são omitidos das evidências; os corpos JSON funcionais são preservados. `manifesto-sha256.json` permite conferir integridade dos arquivos e do executor. A cronologia de subpassos dependentes de casos posteriores é dada por `sequence`/`timestamp`, conforme o roteiro.
+O commit da aplicação testada foi `23d1063f09f13cc195da7e45422581f73e2ae6da`; o roteiro veio do planejamento `939921e3`.
 
 ---
-
-# Como executar os testes manuais de API
 
 Passo a passo para executar a suíte, registrar os resultados e reportar falhas. Os exemplos usam
 a HU-012; troque pelo número da HU que você está testando.

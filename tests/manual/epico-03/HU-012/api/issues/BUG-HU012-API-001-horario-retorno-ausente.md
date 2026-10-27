@@ -72,6 +72,218 @@ A migration 77, a entidade e os DTOs da complementar possuem apenas `horario_sai
 
 ### 📎 Evidência
 
-Reproduzido em 2026-10-27 por HTTP real com PostgreSQL isolado, commit `23d1063f09f13cc195da7e45422581f73e2ae6da`. [Evidência JSON](https://github.com/GOUOCE/GOUCE-app/blob/feat/front-hu012/tests/manual/epico-03/HU-012/api/evidencias/CT-HU012-API-003.json), incluindo as quatro variações e a leitura posterior. Sem mock nem alteração de DTO para acomodar o teste.
+Reproduzido em 2026-10-27 por HTTP real e PostgreSQL isolado. Abaixo estão os JSONs das chamadas que comprovam este defeito, extraídos da execução original. Senhas, tokens e contatos foram omitidos.
+
+**CT-HU012-API-003**
+
+```json
+{
+  "case_id": "CT-HU012-API-003",
+  "application_commit": "23d1063f09f13cc195da7e45422581f73e2ae6da",
+  "requests": [
+    {
+      "sequence": 22,
+      "timestamp": "2026-10-27T17:43:50.791810+00:00",
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18812/rotas-complementares",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "Van Retorno 17:40",
+          "horario_saida": "06:00",
+          "ponto_conexao": "Trevo do Bairro Novo",
+          "rota_principal_id": 1,
+          "horario_retorno": "17:40"
+        }
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "REQUEST_VALIDATION_ERROR",
+            "message": "Requisição inválida",
+            "details": [
+              {
+                "field": "horario_retorno",
+                "message": "Campo não permitido."
+              }
+            ]
+          }
+        }
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 23,
+      "timestamp": "2026-10-27T17:43:50.811333+00:00",
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18812/rotas-complementares",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "Van Retorno 06:00",
+          "horario_saida": "06:00",
+          "ponto_conexao": "Trevo do Bairro Novo",
+          "rota_principal_id": 1,
+          "horario_retorno": "06:00"
+        }
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "REQUEST_VALIDATION_ERROR",
+            "message": "Requisição inválida",
+            "details": [
+              {
+                "field": "horario_retorno",
+                "message": "Campo não permitido."
+              }
+            ]
+          }
+        }
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 24,
+      "timestamp": "2026-10-27T17:43:50.830201+00:00",
+      "actor": "admin",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:18812/rotas-complementares",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "nome": "Van Retorno 05:30",
+          "horario_saida": "06:00",
+          "ponto_conexao": "Trevo do Bairro Novo",
+          "rota_principal_id": 1,
+          "horario_retorno": "05:30"
+        }
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "REQUEST_VALIDATION_ERROR",
+            "message": "Requisição inválida",
+            "details": [
+              {
+                "field": "horario_retorno",
+                "message": "Campo não permitido."
+              }
+            ]
+          }
+        }
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 25,
+      "timestamp": "2026-10-27T17:43:50.849233+00:00",
+      "actor": "admin",
+      "request": {
+        "method": "PATCH",
+        "url": "http://127.0.0.1:18812/rotas-complementares/1",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": {
+          "horario_retorno": "17:45"
+        }
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "success": false,
+          "error": {
+            "code": "REQUEST_VALIDATION_ERROR",
+            "message": "Requisição inválida",
+            "details": [
+              {
+                "field": "horario_retorno",
+                "message": "Campo não permitido."
+              }
+            ]
+          }
+        }
+      },
+      "database_unchanged": true,
+      "audit_delta": []
+    },
+    {
+      "sequence": 26,
+      "timestamp": "2026-10-27T17:43:50.881549+00:00",
+      "actor": "admin",
+      "request": {
+        "method": "GET",
+        "url": "http://127.0.0.1:18812/rotas-complementares/1",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "[REDACTED]"
+        },
+        "json": null
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 17:43:50 GMT",
+          "content-type": "application/json"
+        },
+        "json": {
+          "id": 1,
+          "nome": "Van 2 - Bairro Novo",
+          "horario_saida": "06:00",
+          "ponto_conexao": "Trevo do Bairro Novo",
+          "ativo": true,
+          "rota_principal": {
+            "id": 1,
+            "nome": "Rota Centro - UFC",
+            "ativo": true
+          }
+        }
+      }
+    }
+  ]
+}
+```
 
 Issue no GitHub: https://github.com/GOUOCE/GOUCE-app/issues/310
