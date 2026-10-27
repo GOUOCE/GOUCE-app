@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 3 | 2 | 0 | 8 |
+| 🔄 Em andamento | 13 | 3 | 3 | 0 | 7 |
 
 ## Pré-condições
 
@@ -45,7 +45,7 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 | CT-HU010-UI-003 | Cadastrar fixo, homônimo e número dos exemplos | Fixo; mesmo nome; telefone presente só nos exemplos | Todos aceitos; ids distintos; nenhum bloqueio por exemplo | ✅ PASSOU | Os três cadastros foram aceitos (fixo, homônimo e o telefone dos exemplos), com ids distintos e máscara correta. Observação: a tela de cadastro reabre com dados da vez anterior. |
 | CT-HU010-UI-004 | Bloquear telefone duplicado de ativo e inativo | Duplicidade com máscara e sem máscara, ativo/inativo | “Este profissional já está registrado.”; nada criado | ✅ PASSOU | As quatro tentativas (celular do Francisco com e sem máscara; telefone do Raimundo inativo com e sem máscara) foram barradas pelo servidor (`409`). Nenhum registro novo. |
 | CT-HU010-UI-005 | Campos obrigatórios no cadastro e na edição | Nome/telefone ausentes ou esvaziados | Campo destacado; português; nenhum salvamento | ✅ PASSOU | Nome e telefone vazios ou só com espaços foram destacados e bloqueados no cadastro e na edição, e nenhum dado foi alterado. O testador também apontou que o campo Nome aceita números, emoji e símbolos (vai para a issue). |
-| CT-HU010-UI-006 | Máscara e validação de telefone por dígitos | 3/9/12/15 dígitos; letras; fixo/celular e máscara | “Informe um telefone válido com DDD”; inválidos bloqueados | ⏳ PENDENTE | Não executado. |
+| CT-HU010-UI-006 | Máscara e validação de telefone por dígitos | 3/9/12/15 dígitos; letras; fixo/celular e máscara | “Informe um telefone válido com DDD”; inválidos bloqueados | ❌ FALHOU | O app barra só telefones com menos de 10 caracteres. Telefones de 12 e 15 dígitos e com letras são aceitos no cadastro e na edição, e o valor original do Francisco foi sobrescrito. Só texto sem nenhum número é barrado, e pela API, com mensagem fora do requisito. |
 
 ### Seção B — Edição, inativação e reativação
 
@@ -219,8 +219,13 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Barrados pelo app:** `123` e `998112233` (menos de 10 caracteres); o log não registrou chamada para eles.
+- **Aceitos no cadastro** (`POST /motoristas` com `201`): `889981122334` (12 dígitos, motorista id 7), `889981122334455` (15 dígitos, id 8) e `aaaaaaaaaw33333` (letras e números, id 9). A máscara só formata quando há exatamente 10 ou 11 dígitos e devolve o texto original nos demais casos; o schema do app conta caracteres e não dígitos (`motoristaSchema.ts`: `min(10)`, `max(20)`).
+- **A5, `abcdefghijk`:** o app deixou enviar e a API respondeu `422` com a mensagem “Telefone deve conter ao menos um dígito.”, exibida no pop-up de aviso. Segundo o testador, a mensagem não corresponde ao requisito (“Informe um telefone válido com DDD”) e confunde, porque a regra real é DDD de 2 dígitos mais 8 ou 9 dígitos. O testador também relatou que o texto vermelho abaixo do campo aparece distorcido nessa tentativa; isso foi observado na tela e não foi reproduzido na conferência.
+- **A API só exige um dígito** (`_validar_telefone` verifica apenas `normalizar_telefone`), o que explica a aceitação de 12 e 15 dígitos e de texto misturado ([#234](https://github.com/GOUOCE/GOUCE-app/issues/234), aberta na suíte de API).
+- **Edição:** o log registrou três `PATCH /motoristas/1`, dois com `409` (telefones que já pertenciam a outros motoristas) e um com `200`. O `200` gravou no Francisco o telefone `88998112233422` (14 dígitos), perdendo o `(88) 99811-2233`. Dado inválido sobrescreve um dado correto.
+- **Preparo posterior (PC-05):** o telefone do Francisco foi restaurado pela API (`PATCH /motoristas/1` com `(88) 99811-2233`, `200`) para os próximos casos. Os motoristas de teste id 6 a 9 permanecem no banco.
+- Status: ❌ Falhou.
 
 ---
 
