@@ -1,6 +1,6 @@
 import re
 from typing import Optional
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, AliasChoices, field_validator
 
 REGEX_TEXTO_LIVRE = re.compile(r"^[A-Za-z0-9À-ÖØ-öø-ÿ'’\-. ]+$")
 REGEX_SIGLA = re.compile(r"^[A-Za-z0-9]+$")
@@ -9,9 +9,26 @@ REGEX_SIGLA = re.compile(r"^[A-Za-z0-9]+$")
 class CriarFaculdadeDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    nome: str = Field(..., alias="nome_faculdade", min_length=3, max_length=150)
-    sigla: Optional[str] = Field(default=None, alias="sigla_faculdade", max_length=20)
-    campus: str = Field(..., alias="campus_faculdade", min_length=2, max_length=100)
+    nome: str = Field(
+        ...,
+        validation_alias=AliasChoices("nome", "nome_faculdade"),
+        serialization_alias="nome_faculdade",
+        min_length=3,
+        max_length=150,
+    )
+    sigla: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("sigla", "sigla_faculdade"),
+        serialization_alias="sigla",
+        max_length=20,
+    )
+    campus: str = Field(
+        ...,
+        validation_alias=AliasChoices("campus", "campus_faculdade"),
+        serialization_alias="campus_faculdade",
+        min_length=2,
+        max_length=100,
+    )
 
     @field_validator("nome", mode="before")
     @classmethod
@@ -59,9 +76,24 @@ class CriarFaculdadeDTO(BaseModel):
 class AtualizarFaculdadeDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    nome: Optional[str] = Field(default=None, alias="nome_faculdade", max_length=150)
-    sigla: Optional[str] = Field(default=None, alias="sigla_faculdade", max_length=20)
-    campus: Optional[str] = Field(default=None, alias="campus_faculdade", max_length=100)
+    nome: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("nome", "nome_faculdade"),
+        serialization_alias="nome_faculdade",
+        max_length=150,
+    )
+    sigla: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("sigla", "sigla_faculdade"),
+        serialization_alias="sigla",
+        max_length=20,
+    )
+    campus: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("campus", "campus_faculdade"),
+        serialization_alias="campus_faculdade",
+        max_length=100,
+    )
     ativo: Optional[bool] = None
 
     @field_validator("nome", mode="before")
