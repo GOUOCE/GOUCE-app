@@ -5,6 +5,7 @@
 | **Tipo** | Bug funcional / divergência de requisito |
 | **Severidade** | 🟠 Alta |
 | **Ambiente** | Branch `feature/testes-api-hu-027-hu-031` — Docker local isolado, `http://localhost:8001`, commit `4bf26d55` |
+| **Issue** | [#319](https://github.com/GOUOCE/GOUCE-app/issues/319) |
 | **Caso relacionado** | `CT-HU031-API-001` e `CT-HU031-API-008` |
 | **Documentação** | [HU-031 — Testes manuais de API](../API-HU-031.md#ct-hu031-api-001--login-e-status-de-cada-situação) |
 

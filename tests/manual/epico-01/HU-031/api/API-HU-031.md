@@ -36,14 +36,14 @@ Executar na ordem abaixo. São **8 casos essenciais**. Cada chamada usa o token 
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU031-API-001 | Login e status de cada situação | Login de R1, P1 e AP | Os três entram e recebem o status do cadastro | ❌ FALHOU | R1 e AP entram; P1 recebe 401 “Sua conta está pendente de aprovação pela coordenação.”. [BUG-HU031-API-001](issues/BUG-HU031-API-001-aluno-pendente-nao-consegue-ver-o-status.md) |
+| CT-HU031-API-001 | Login e status de cada situação | Login de R1, P1 e AP | Os três entram e recebem o status do cadastro | ❌ FALHOU | R1 e AP entram; P1 recebe 401 “Sua conta está pendente de aprovação pela coordenação.”. [BUG-HU031-API-001](issues/BUG-HU031-API-001-aluno-pendente-nao-consegue-ver-o-status.md) · [#319](https://github.com/GOUOCE/GOUCE-app/issues/319) |
 | CT-HU031-API-002 | Documentos reprovados e motivos | `GET /usuarios/reenvio_documento` e `GET /usuarios/me` com R1 | Só os documentos reprovados, cada um com o motivo do administrador | ✅ PASSOU | Só os dois documentos reprovados, com os motivos exatos. `/usuarios/me` dá 403 para rejeitado (observação para a UI). |
 | CT-HU031-API-003 | Sem pendências | `GET /usuarios/reenvio_documento` com AP e P1 | Lista vazia, sem erro | ⚠️ PARCIAL | AP recebe `[]`; a parte do P1 ficou 🚫 (sem login, CT-001). |
 | CT-HU031-API-004 | Reenviar documentos reprovados | R1: novos comprovantes de matrícula e residência | HTTP 200; status `pendente`; arquivos novos gravados; volta à fila | ✅ PASSOU | 200 com a mensagem do código; `pendente`; comprovantes novos; volta ao fim da fila. |
 | CT-HU031-API-005 | Impedir troca de documento não reprovado | R2: enviar comprovante; enviar nada; enviar foto + comprovante | Recusado com a mensagem do código; nenhum arquivo trocado | ✅ PASSOU | Três recusas 400 com as mensagens do código; nenhum documento nem arquivo trocado. |
 | CT-HU031-API-006 | Falha no envio | R2: foto de 6 MB, `.txt` e vazia | Recusado; R2 continua rejeitado; nenhum arquivo sem dono | ✅ PASSOU | 6 MB, `.txt` e vazio recusados em português; R2 segue rejeitado; sem arquivo órfão. |
 | CT-HU031-API-007 | Reenvio fora da situação de reprovado | P1, AP, administrador e sem token; R1 de novo depois do CT-004 | 403 com a mensagem do código; 401 sem token | ⚠️ PARCIAL | AP 403 com a mensagem do código, admin 403, sem token 401; P1 🚫 e R1 só com 401 de sessão. |
-| CT-HU031-API-008 | Situação depois do reenvio | R1 depois do CT-004: chamadas com o token, novo login, fila e detalhes no admin | Aluno vê “Pendente de Aprovação”; admin vê os documentos novos | ❌ FALHOU | Depois do reenvio o token dá 401 e o novo login é recusado; admin vê os documentos novos. [BUG-HU031-API-001](issues/BUG-HU031-API-001-aluno-pendente-nao-consegue-ver-o-status.md) |
+| CT-HU031-API-008 | Situação depois do reenvio | R1 depois do CT-004: chamadas com o token, novo login, fila e detalhes no admin | Aluno vê “Pendente de Aprovação”; admin vê os documentos novos | ❌ FALHOU | Depois do reenvio o token dá 401 e o novo login é recusado; admin vê os documentos novos. [BUG-HU031-API-001](issues/BUG-HU031-API-001-aluno-pendente-nao-consegue-ver-o-status.md) · [#319](https://github.com/GOUOCE/GOUCE-app/issues/319) |
 
 ## Detalhamento dos casos
 
@@ -280,8 +280,8 @@ Executar na ordem abaixo. São **8 casos essenciais**. Cada chamada usa o token 
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| CT-HU031-API-001, 008 | O aluno pendente não consegue logar nem ver o status, e perde a sessão logo depois do reenvio | [BUG-HU031-API-001](issues/BUG-HU031-API-001-aluno-pendente-nao-consegue-ver-o-status.md) |
-| Ambiente | A `develop` não sobe em banco vazio (duas heads de migration) | [BUG-HU027-API-006](../../HU-027/api/issues/BUG-HU027-API-006-develop-nao-sobe-em-banco-vazio-duas-heads.md) |
+| CT-HU031-API-001, 008 | O aluno pendente não consegue logar nem ver o status, e perde a sessão logo depois do reenvio | [BUG-HU031-API-001](issues/BUG-HU031-API-001-aluno-pendente-nao-consegue-ver-o-status.md) · [#319](https://github.com/GOUOCE/GOUCE-app/issues/319) |
+| Ambiente | A `develop` não sobe em banco vazio (duas heads de migration) | [BUG-HU027-API-006](../../HU-027/api/issues/BUG-HU027-API-006-develop-nao-sobe-em-banco-vazio-duas-heads.md) · [#318](https://github.com/GOUOCE/GOUCE-app/issues/318) |
 
 ## Observações gerais
 
