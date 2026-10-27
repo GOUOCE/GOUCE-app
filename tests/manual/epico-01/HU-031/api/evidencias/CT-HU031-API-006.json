@@ -1,0 +1,155 @@
+[
+  {
+    "passo": "0",
+    "descricao": "R2 antes: status | documentos_reenvio | foto | linhas em arquivos | objetos no MinIO",
+    "resultado": "rejeitado | [{\"tipo\": \"foto_perfil\", \"motivo\": \"Foto com baixa resolu\\u00e7\\u00e3o.\"}] | 8122dbe1-5561-4840-96b1-53d7b9e1911f | arquivos=29 | objetos_minio=(não contado: container sem grep; ver passo 5)"
+  },
+  {
+    "passo": "1",
+    "descricao": "Foto com PDF de 6 MB",
+    "data_hora_utc": "2026-10-27T17:53:19Z",
+    "requisicao": {
+      "metodo": "PUT",
+      "rota": "/usuarios/reenvio_documento",
+      "credencial": "r2",
+      "corpo": {
+        "foto_perfil": "doc_6mb.pdf (6 MB)"
+      }
+    },
+    "resposta": {
+      "status": 400,
+      "corpo": {
+        "success": false,
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "Não foi possível enviar o documento. O arquivo 'doc_6mb.pdf' excede o tamanho máximo permitido de 5MB"
+        }
+      }
+    }
+  },
+  {
+    "passo": "2",
+    "descricao": "Foto com arquivo .txt",
+    "data_hora_utc": "2026-10-27T17:53:20Z",
+    "requisicao": {
+      "metodo": "PUT",
+      "rota": "/usuarios/reenvio_documento",
+      "credencial": "r2",
+      "corpo": {
+        "foto_perfil": "texto.txt"
+      }
+    },
+    "resposta": {
+      "status": 400,
+      "corpo": {
+        "success": false,
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "Não foi possível enviar o documento. Formato de arquivo inválido. Apenas arquivos PDF e Imagens (PNG, JPG, JPEG, WEBP) são permitidos."
+        }
+      }
+    }
+  },
+  {
+    "passo": "3",
+    "descricao": "Foto com arquivo vazio",
+    "data_hora_utc": "2026-10-27T17:53:20Z",
+    "requisicao": {
+      "metodo": "PUT",
+      "rota": "/usuarios/reenvio_documento",
+      "credencial": "r2",
+      "corpo": {
+        "foto_perfil": "vazio.pdf (0 bytes)"
+      }
+    },
+    "resposta": {
+      "status": 400,
+      "corpo": {
+        "success": false,
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "Não foi possível enviar o documento. O arquivo enviado está vazio"
+        }
+      }
+    }
+  },
+  {
+    "passo": "4",
+    "descricao": "R2 depois: status | documentos_reenvio | foto | linhas em arquivos | objetos no MinIO",
+    "resultado": "rejeitado | [{\"tipo\": \"foto_perfil\", \"motivo\": \"Foto com baixa resolu\\u00e7\\u00e3o.\"}] | 8122dbe1-5561-4840-96b1-53d7b9e1911f | arquivos=29 | objetos_minio=(não contado: container sem grep; ver passo 5)"
+  },
+  {
+    "passo": "5a",
+    "descricao": "Repetição com contagem do MinIO: foto com doc_6mb.pdf",
+    "data_hora_utc": "2026-10-27T17:53:53Z",
+    "requisicao": {
+      "metodo": "PUT",
+      "rota": "/usuarios/reenvio_documento",
+      "credencial": "r2",
+      "corpo": {
+        "foto_perfil": "doc_6mb.pdf"
+      }
+    },
+    "resposta": {
+      "status": 400,
+      "corpo": {
+        "success": false,
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "Não foi possível enviar o documento. O arquivo 'doc_6mb.pdf' excede o tamanho máximo permitido de 5MB"
+        }
+      }
+    }
+  },
+  {
+    "passo": "5b",
+    "descricao": "Repetição com contagem do MinIO: foto com texto.txt",
+    "data_hora_utc": "2026-10-27T17:53:53Z",
+    "requisicao": {
+      "metodo": "PUT",
+      "rota": "/usuarios/reenvio_documento",
+      "credencial": "r2",
+      "corpo": {
+        "foto_perfil": "texto.txt"
+      }
+    },
+    "resposta": {
+      "status": 400,
+      "corpo": {
+        "success": false,
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "Não foi possível enviar o documento. Formato de arquivo inválido. Apenas arquivos PDF e Imagens (PNG, JPG, JPEG, WEBP) são permitidos."
+        }
+      }
+    }
+  },
+  {
+    "passo": "5c",
+    "descricao": "Repetição com contagem do MinIO: foto com vazio.pdf",
+    "data_hora_utc": "2026-10-27T17:53:53Z",
+    "requisicao": {
+      "metodo": "PUT",
+      "rota": "/usuarios/reenvio_documento",
+      "credencial": "r2",
+      "corpo": {
+        "foto_perfil": "vazio.pdf"
+      }
+    },
+    "resposta": {
+      "status": 400,
+      "corpo": {
+        "success": false,
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "Não foi possível enviar o documento. O arquivo enviado está vazio"
+        }
+      }
+    }
+  },
+  {
+    "passo": "6",
+    "descricao": "Objetos no bucket smp-fotos (ls -1 /data/smp-fotos | wc -l) antes e depois dos passos 5a-5c; linhas em arquivos",
+    "resultado": "antes=29 depois=29 arquivos=29"
+  }
+]

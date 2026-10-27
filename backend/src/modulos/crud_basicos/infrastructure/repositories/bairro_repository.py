@@ -100,20 +100,6 @@ class BairroRepository:
 
         return query.first() is not None
 
-    def ponto_existe_no_sistema(
-        self,
-        nome_ponto: str,
-        ignorar_ponto_ids: Optional[list[int]] = None,
-    ) -> bool:
-        """Verifica se já existe ponto de parada com este nome no sistema (ativo ou inativo)."""
-        nome_limpo = nome_ponto.strip().lower()
-        query = self.session.query(PontoDeParadaORM.ponto_id).filter(
-            func.lower(func.trim(PontoDeParadaORM.nome)) == nome_limpo
-        )
-        if ignorar_ponto_ids:
-            query = query.filter(PontoDeParadaORM.ponto_id.notin_(ignorar_ponto_ids))
-        return query.first() is not None
-
     def validar_pontos(
         self,
         pontos_de_parada: list[str],
@@ -140,7 +126,7 @@ class BairroRepository:
 
             if nome_normalizado in nomes_encontrados:
                 raise PontoDeParadaJaCadastradoError(
-                    "Esta localidade já está cadastrada."
+                    f"O ponto de parada '{nome_limpo}' está repetido neste bairro."
                 )
 
             nomes_encontrados.add(nome_normalizado)
@@ -169,12 +155,6 @@ class BairroRepository:
 
         pontos_limpos = self.validar_pontos(pontos_de_parada)
 
-        for ponto_nome in pontos_limpos:
-            if self.ponto_existe_no_sistema(ponto_nome):
-                raise PontoDeParadaJaCadastradoError(
-                    "Esta localidade já está cadastrada."
-                )
-
         bairro = BairroORM(
             nome=nome_limpo,
             ativo=True,
@@ -194,8 +174,12 @@ class BairroRepository:
 
             return self.buscar_por_id(bairro.bairro_id)
 
-        except IntegrityError:
+        except IntegrityError as exc:
             self.session.rollback()
+            if "ponto_de_parada" in str(exc.orig).lower():
+                raise PontoDeParadaJaCadastradoError(
+                    "Existem pontos de parada repetidos neste bairro."
+                )
             raise BairroJaCadastradoError(
                 "Esta localidade já está cadastrada."
             )
@@ -234,15 +218,6 @@ class BairroRepository:
         if pontos_de_parada is not None:
             pontos_limpos = self.validar_pontos(pontos_de_parada)
 
-            # Validar unicidade dos pontos com outros no sistema que não pertencem a este bairro
-            ids_atuais = [p.ponto_id for p in bairro.pontos_de_parada if p.ponto_id is not None]
-            for ponto_nome in pontos_limpos:
-                if self.ponto_existe_no_sistema(ponto_nome, ignorar_ponto_ids=ids_atuais):
-                    raise PontoDeParadaJaCadastradoError(
-                        "Esta localidade já está cadastrada."
-                    )
-
-            # Sincronizar pontos de parada do bairro com soft delete (preservando registros e IDs)
             pontos_existentes_map = {
                 ponto.nome.strip().casefold(): ponto
                 for ponto in list(bairro.pontos_de_parada)
@@ -275,8 +250,12 @@ class BairroRepository:
 
             return self.buscar_por_id(bairro.bairro_id)
 
-        except IntegrityError:
+        except IntegrityError as exc:
             self.session.rollback()
+            if "ponto_de_parada" in str(exc.orig).lower():
+                raise PontoDeParadaJaCadastradoError(
+                    "Existem pontos de parada repetidos neste bairro."
+                )
             raise BairroJaCadastradoError(
                 "Esta localidade já está cadastrada."
             )

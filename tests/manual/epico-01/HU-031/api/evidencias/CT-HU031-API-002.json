@@ -1,0 +1,49 @@
+[
+  {
+    "passo": "1",
+    "descricao": "R1 consulta as pendências",
+    "data_hora_utc": "2026-10-27T17:52:08Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/usuarios/reenvio_documento",
+      "credencial": "r1",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "documentos": [
+          {
+            "tipo": "comprovante_matricula",
+            "motivo": "Comprovante de matrícula desatualizado."
+          },
+          {
+            "tipo": "comprovante_residencia",
+            "motivo": "Comprovante com mais de 3 meses."
+          }
+        ]
+      }
+    }
+  },
+  {
+    "passo": "2",
+    "descricao": "R1 consulta o perfil (rota usada pelo app)",
+    "data_hora_utc": "2026-10-27T17:52:08Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/usuarios/me",
+      "credencial": "r1",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 403,
+      "corpo": {
+        "success": false,
+        "error": {
+          "code": "FORBIDDEN",
+          "message": "Acesso negado"
+        }
+      }
+    }
+  }
+]

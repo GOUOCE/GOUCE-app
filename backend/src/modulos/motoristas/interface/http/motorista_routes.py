@@ -19,6 +19,9 @@ from src.modulos.motoristas.application.use_cases.gerenciar_motoristas_use_case 
     MotoristaNaoEncontradoError,
     MotoristaValidationError,
 )
+from src.modulos.motoristas.application.validators.telefone_validator import (
+    MENSAGEM_TELEFONE_INVALIDO,
+)
 from src.modulos.motoristas.infrastructure.repositories.motorista_repository import (
     MotoristaRepository,
     MotoristaTelefoneEmUsoError,
@@ -65,7 +68,7 @@ def _mensagem_campo_motorista(error: dict, field: str | None) -> str | None:
     if error_type == "string_type":
         return f"{rotulo} deve ser um texto válido."
     if error_type == "value_error" and field == "telefone":
-        return "Telefone deve conter ao menos um dígito."
+        return MENSAGEM_TELEFONE_INVALIDO
     return None
 
 
@@ -159,10 +162,14 @@ async def listar_motoristas(
 async def criar_motorista(
     dados: CriarMotoristaDTO,
     use_case: GerenciarMotoristasUseCase = Depends(get_use_case),
-    _: dict = Depends(require_roles(CargoEnum.ADMINISTRADOR.value)),
+    current_user: dict = Depends(require_roles(CargoEnum.ADMINISTRADOR.value)),
 ):
     try:
-        resultado = use_case.criar(dados.nome, dados.telefone)
+        resultado = use_case.criar(
+            dados.nome,
+            dados.telefone,
+            int(current_user["current_user_id"]),
+        )
         return {
             "message": "Motorista cadastrado com sucesso.",
             "data": resultado,
@@ -194,13 +201,14 @@ async def atualizar_motorista(
     motorista_id: int,
     dados: AtualizarMotoristaDTO,
     use_case: GerenciarMotoristasUseCase = Depends(get_use_case),
-    _: dict = Depends(require_roles(CargoEnum.ADMINISTRADOR.value)),
+    current_user: dict = Depends(require_roles(CargoEnum.ADMINISTRADOR.value)),
 ):
     try:
         resultado = use_case.atualizar(
             motorista_id,
             dados.nome,
             dados.telefone,
+            usuario_executor_id=int(current_user["current_user_id"]),
         )
         return {
             "message": "Motorista alterado com sucesso.",
