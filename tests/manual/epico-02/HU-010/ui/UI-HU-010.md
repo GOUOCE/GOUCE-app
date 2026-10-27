@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 5 | 3 | 0 | 5 |
+| 🔄 Em andamento | 13 | 5 | 4 | 0 | 4 |
 
 ## Pré-condições
 
@@ -53,7 +53,7 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 | --- | --- | --- | --- | --- | --- |
 | CT-HU010-UI-007 | Editar nome e telefone sem trocar o motorista | Edição válida e colisão de telefone | Sucesso persistido; duplicidade bloqueada sem alteração parcial | ✅ PASSOU | A edição válida do Francisco foi gravada no mesmo registro (id 1) e o Antônio ficou intacto. A tentativa de colisão com o telefone do Antônio foi relatada como barrada, mas não aparece no log. |
 | CT-HU010-UI-008 | Cancelar inativação sem alterar dados nem auditoria | Abrir modal e cancelar | Ativo mantido e nenhum novo log | ✅ PASSOU | Cancelar a inativação manteve o Francisco ativo, sem chamada de inativação e sem registro novo na auditoria. |
-| CT-HU010-UI-009 | Inativar motorista sem alocação futura | Confirmar inativação sem alocação real | Sucesso e soft delete; código tende a 503 ou bloqueio fictício | ⏳ PENDENTE | Falha esperada no código; não executado. |
+| CT-HU010-UI-009 | Inativar motorista sem alocação futura | Confirmar inativação sem alocação real | Sucesso e soft delete; código tende a 503 ou bloqueio fictício | ❌ FALHOU | O Francisco (id 1) não pode ser inativado: o app o bloqueia com uma regra fictícia de “alocações pendentes” antes de chamar a API. O Antônio (id 3) foi inativado normalmente, com sucesso em barra preta. |
 | CT-HU010-UI-010 | Mostrar inativos e reativar com persistência | Ligar chave; cancelar e confirmar reativação | Inativo identificado; reativação persistida; erro visível se falhar | ⏳ PENDENTE | Não executado. |
 
 ### Seção C — Integração, acesso e robustez
@@ -301,8 +301,10 @@ São **13 casos essenciais**, em três seções, executados na ordem abaixo. CT-
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Francisco Alves QA (id 1):** ao confirmar **Inativar**, o app mostra o pop-up “Inativação Bloqueada” com “Este profissional possui alocações pendentes e não pode ser inativado no momento.” O log da API **não registrou nenhum `PATCH /motoristas/1/inativar`** e o banco mantém o id 1 ativo. Não existe alocação real alguma (o banco nem tem tabela de alocação de motoristas): a mensagem vem do exemplo interno do app. `inativarMotorista` procura o id 1 no `MOTORISTAS_MOCK`, encontra “José Almeida” com `alocacoes_pendentes: true` e lança o erro. Como o primeiro motorista cadastrado em qualquer banco recebe o id 1, ele nunca poderá ser inativado pela tela.
+- **Antônio Lima (id 3):** `PATCH /motoristas/3/inativar` com `200`; no banco, `ativo = false`, e a auditoria ganhou o registro `INATIVAR` do id 3 (id 36 do log). O testador relatou o sucesso e uma barra preta com o texto “Motorista inativado” (`motoristas/index.tsx`), fora do padrão de pop-up e diferente do requisito (“Operação realizada com sucesso”).
+- O backend atual **não** devolve mais o 503 citado no plano: inativa e audita. O caso não depende mais dessa falha.
+- Status: ❌ Falhou (bloqueio fictício no id 1 e mensagem fora do padrão).
 
 ---
 
