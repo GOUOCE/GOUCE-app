@@ -33,7 +33,7 @@ jest.mock('../../api/api', () => ({
     post: jest.fn((...args: any[]) => {
       const url = args[0];
       const body = args[1];
-      if (url === '/motoristas' && body?.telefone === '88999999999') {
+      if (url === '/motoristas' && (body?.telefone?.includes('9999') || body?.telefone === '(88) 9 9999-9999' || body?.telefone === '88999999999')) {
         const error: any = new Error('Este profissional já está registrado.');
         (error as any).response = { status: 409 };
         return Promise.reject(error);
