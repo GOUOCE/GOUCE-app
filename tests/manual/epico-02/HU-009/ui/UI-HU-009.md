@@ -18,7 +18,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 🔄 Em andamento | 13 | 2 | 9 | 0 | 2 |
+| 🔄 Em andamento | 13 | 2 | 10 | 0 | 1 |
 
 ## Pré-condições
 
@@ -61,7 +61,7 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU009-UI-011 | Impedir acesso de aluno e representante | Menus e links diretos de lista/cadastro/edição | Sem menu; Acesso Negado; sem dados ou ações administrativas | ✅ PASSOU | Aluno: o testador relatou que o menu Frota não aparece e que os links diretos levam a Acesso Negado. Representante: não foi possível entrar (“Perfil incompatível”); essa parte ficou bloqueada e é registrada à parte, a pedido do testador. |
-| CT-HU009-UI-012 | Falha de conexão sem sucesso falso | Abrir lista, cadastrar, editar e mudar status com API inacessível | Mensagem clara; sem exemplos nem sucesso não persistido; recuperação consistente | ⏳ PENDENTE | Não executado. |
+| CT-HU009-UI-012 | Falha de conexão sem sucesso falso | Abrir lista, cadastrar, editar e mudar status com API inacessível | Mensagem clara; sem exemplos nem sucesso não persistido; recuperação consistente | ❌ FALHOU | Reprovado pela leitura do código (não derrubado na tela, a pedido do testador): sem API a lista mostra os exemplos como dados reais e o cadastro devolve sucesso falso criando o ônibus só na memória. O sucesso falso do cadastro já foi visto na tela no CT-007. |
 | CT-HU009-UI-013 | Bloquear alocação futura, excluir inativos da seleção e preservar histórico | Alocação amanhã; só histórico passado; ônibus inativo | Bloqueio correto na futura; passado preservado; inativo fora de nova escala | ⏳ PENDENTE | HU-016/017 e histórico; marcar 🚫 se indisponíveis. |
 
 ## Detalhamento dos casos
@@ -414,8 +414,13 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Não foi derrubada a API.** O testador pediu para não gastar tempo, porque o código da frota usa a lista de exemplo (`ONIBUS_MOCK`) nos caminhos de escrita e o resultado seria sucesso falso. O caso foi avaliado pela leitura de `frontend/src/services/frotaService.ts`. Nada foi alterado no banco; o estado antes é o do teste (`OFF1A01` inexistente, `QXD2E46` 40/15 ativo, `LIM1A01` 1/0 ativo, `XYZ9K87` 32/0 inativo).
+- **Listagem:** em `listarOnibus`, o `catch` devolve `ONIBUS_MOCK` (`OCR-1234`, `OCR-5521`, `OCR-8890`) sem aviso, como se fossem os ônibus reais. Não há mensagem de falha de conexão.
+- **Cadastro:** em `criarOnibus`, se a chamada não tem resposta (`!error.response`), o app faz `ONIBUS_MOCK.unshift(novoOnibus)` e devolve sucesso; a tela mostra “Ônibus cadastrado com sucesso”. O ônibus só existe na memória. Esse caminho já foi visto na tela no CT-007, quando um erro 500 da API (sem CORS) foi lido como “sem resposta”: sucesso na tela e nada no banco.
+- **Edição:** em `atualizarOnibus`, sem resposta o app altera o item de exemplo e devolve sucesso quando o ônibus é encontrado no exemplo por `id` ou placa. Como a listagem numera as linhas de 1 em diante e o exemplo usa os ids 1 a 3, as três primeiras linhas da lista real coincidem com ele (pelo código, sucesso falso). Para as demais linhas, o app lança erro, e a mensagem de conexão aparece.
+- **Inativar e reativar:** `inativarOnibus` e `reativarOnibus` têm o mesmo desenho (sem resposta, o exemplo muda para inativo/ativo e retorna sem erro). Valem para as três primeiras linhas; nas outras, erro de conexão. Observação: `OCR-1234` do exemplo tem `alocacoes_pendentes: true`, o que gera a mensagem de alocação pendente sem vínculo real (o caso trata isso como falha).
+- **Conclusão:** o requisito de “não informar sucesso de escrita sem confirmação da API” não é atendido (mesma família da [#249](https://github.com/GOUOCE/GOUCE-app/issues/249) e da [#263](https://github.com/GOUOCE/GOUCE-app/issues/263)).
+- Status: ❌ Falhou (por análise do código).
 
 ---
 
@@ -477,6 +482,7 @@ Executar na ordem abaixo, respeitando PC-01. São **13 casos essenciais**, em tr
 | CT-007 | Erro de campo numérico da API sai sem o nome do campo e a mesma frase se repete quando os dois campos são inválidos | Issue a abrir ao final da suíte (Front) |
 | CT-007 | Número acima do limite do banco (ex.: `883833333333`) causa `500`, sem CORS, na criação e na edição; no cadastro o app mostra sucesso falso (ônibus só na memória) | Issue a abrir ao final da suíte (Back + Front, mesma família da [#249](https://github.com/GOUOCE/GOUCE-app/issues/249) e [#263](https://github.com/GOUOCE/GOUCE-app/issues/263)) |
 | CT-009, CT-010 | Inativar e reativar ônibus falham com `404` (“Request failed with status code 404”): o app envia o número da linha em vez da placa (`/onibus/7/inativar`); a reativação usa o mesmo caminho. **Bloqueante** | Issue a abrir ao final da suíte (Front; bloqueante) |
+| CT-001, CT-007, CT-012 | A frota usa a lista de exemplo (`ONIBUS_MOCK`) como dado real: mostra exemplos na lista e devolve sucesso falso no cadastro, na edição e na mudança de status quando a API não responde (ou responde 500 sem CORS) | Issue a abrir ao final da suíte (Front; mesma família da [#249](https://github.com/GOUOCE/GOUCE-app/issues/249) e [#263](https://github.com/GOUOCE/GOUCE-app/issues/263)) |
 
 ## Observações gerais
 
