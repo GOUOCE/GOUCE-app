@@ -56,8 +56,7 @@ Funcionalidade: Gerenciamento de Faculdades
 
 
     # FA-002 - Cadastro duplicado (AC-03)
-    # Observação: o AC-03 considera registros ativos ou inativos; o FA-002 cita apenas ativos.
-    # Os cenários seguem o AC-03, que é mais restritivo.
+    # A duplicidade vale contra registros ativos ou inativos (decisão do PO na #207, item 2)
     @fluxo_infeliz @FA002 @prioridade_alta
     Esquema do Cenário: Sistema bloqueia o cadastro de faculdade com nome e campus já existentes
       Dado que já existe a faculdade "UFC" no campus "Quixadá" com status "<status_existente>"
@@ -258,6 +257,31 @@ Funcionalidade: Gerenciamento de Faculdades
       E a faculdade "UFC" permanece ativa
 
 
+    # FA-004 - Inativação de faculdade vinculada a rota ativa (AC-12, RNF-012, decisão do PO na #207, item 9)
+    @fluxo_infeliz @FA004 @RNF012 @prioridade_alta @depende_de_HU011
+    Esquema do Cenário: Sistema bloqueia a inativação de faculdade atendida por uma rota ativa
+      Dado que a faculdade "UFC" no campus "Quixadá" é atendida <trecho> da rota ativa "Rota Centro - UFC"
+      Quando o administrador tenta inativar a faculdade "UFC"
+      Então o sistema exibe a mensagem "Esta faculdade não pode ser inativada pois pertence a uma rota ativa. Remova-a da rota antes de continuar."
+      E a faculdade "UFC" permanece ativa
+
+      Exemplos:
+        | trecho   |
+        | na ida   |
+        | na volta |
+
+
+    # AC-12 - Faculdade vinculada apenas a rota inativa pode ser inativada
+    @fluxo_feliz @RF014 @prioridade_media @depende_de_HU011
+    Cenário: Administrador inativa uma faculdade vinculada apenas a rotas inativas
+      Dado que a faculdade "Unicatólica" no campus "Quixadá" é atendida apenas pela rota inativa "Rota Antiga"
+      E a faculdade "Unicatólica" não possui alunos agendados para datas futuras
+      Quando o administrador seleciona a ação "Inativar" para "Unicatólica"
+      E confirma a inativação
+      Então o sistema exibe a mensagem "Operação realizada com sucesso"
+      E a faculdade "Unicatólica" deixa de ser exibida na listagem de ativas
+
+
     # AC-09 - Visualização de registros inativos
     @fluxo_feliz @prioridade_media
     Cenário: Administrador visualiza faculdades inativas ao ativar "Mostrar inativos"
@@ -294,7 +318,7 @@ Funcionalidade: Gerenciamento de Faculdades
 
   Regra: Faculdades inativas ficam indisponíveis para novos vínculos
 
-    # AC-11 - Faculdade inativa fora das opções de seleção
+    # AC-11 - Faculdade inativa fora das opções de seleção do cadastro de aluno
     @regra_negocio @prioridade_media @depende_de_HU001
     Cenário: Faculdade inativa não é exibida na seleção de faculdade do cadastro de aluno
       Dado que existe a faculdade inativa "Unicatólica" no campus "Quixadá"
