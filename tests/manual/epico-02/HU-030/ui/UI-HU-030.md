@@ -89,7 +89,8 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 - **Banco não estava vazio:** já havia dois representantes reais (Cauan Ricardo e QA Teste Representante Sete); o trecho de lista vazia não foi executado. Antes do caso foi promovida pela API a conta `qa.hu007.aluno` (id 14) para servir de representante a revogar (auditoria `PROMOVER`, id 39).
 - **Dados reais e busca:** o testador relatou que a lista mostrou os representantes certos, sem exemplos fictícios, e que a busca por nome funcionou. O PR #195 removeu os exemplos de `representanteService.ts`.
 - **Revogados:** após a revogação do CT-007, a API continua devolvendo o QA Teste Aluno Sete com `ativo = false`, mas a tela não o mostra: `representantes/index.tsx` faz `setRepresentantes(lista.filter((r) => r.ativo))`. O AC-01 pede a listagem dos representantes ativos **e** dos que tiveram a função revogada, identificados.
-- Inventados quando a API não envia o campo: `UFC`, `Campus Quixadá`, `Engenharia de Software` e `2023.1` (`representanteService.ts`); não se manifestaram nesta execução, pois a API enviou os campos.
+- **Visto na tela** (print do testador, 2026-10-27 02:25) em **Cadastrar Representante**: a tela abriu com a instituição **IFCE - Campus Quixadá** e o discente **QA Teste Aluno Sete** já selecionados, dados da vez anterior (telas não recriadas), e o cartão do discente mostra “Engenharia de Software | 2024.1”, que a API não envia (`/usuarios/alunos` não traz curso nem semestre): os valores vêm dos padrões fixos de `representanteService.ts` (`curso || 'Engenharia de Software'`, `periodo_ingresso || '2024.1'`). Na mesma tela, os rótulos do cartão e o botão “Tornar representante” aparecem com fonte serifada, diferente do restante (causa não investigada).
+- O testador relatou também que a seta de voltar leva ao **Painel** (`router.back()` em todas as telas de gestão).
 - Status: ❌ Falhou (revogados fora da lista). O testador considerou o caso aprovado pelos itens de busca e dados reais.
 
 ---
@@ -423,7 +424,8 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 | CT-001, CT-007 | Representantes revogados somem da lista (a tela filtra só os ativos), contrariando o AC-01 | Issue a abrir (Front) |
 | CT-003, CT-004, CT-008 | A instituição escolhida é ignorada: a atribuição usa sempre a faculdade 1, e a lista de instituições é fixa. **Bloqueante** | Issue a abrir (Front) |
 | CT-007 | Mensagens de sucesso em barra preta, fora do padrão de pop-up | Issue a abrir (Front) |
-| CT-012 | Falha da lista e da revogação sem erro visível; valores inventados quando a API não envia o campo | Issue a abrir (Front) |
+| CT-001, CT-007 | Telas não recriadas: Cadastrar reabre com instituição e discente da vez anterior (print) e a seta volta ao Painel | Issue a abrir (Front) |
+| CT-001, CT-012 | Falha da lista e da revogação sem erro visível; curso e semestre inventados no cartão do discente (print) | Issue a abrir (Front) |
 | CT-009 | Login de aluno promovido a representante, que dava “Perfil incompatível” | Corrigido pelo PR #195 ([#190](https://github.com/GOUOCE/GOUCE-app/issues/190)) |
 
 ## Observações gerais
