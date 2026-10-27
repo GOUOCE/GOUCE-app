@@ -180,7 +180,7 @@ class MotoristaRepository:
     def possui_alocacoes_futuras(self, motorista_id: int) -> bool:
         """Indica se o motorista está escalado em rotas de dias futuros.
 
-        TODO(HU-010): a entidade de escalas/alocações de rotas ainda não existe.
+        TODO(HU-017): a entidade de escalas/alocações de rotas ainda não existe.
         Quando ela for criada, substituir este retorno por uma consulta real às
         escalas do motorista com data posterior a hoje (ou injetar essa
         consulta via ``alocacoes_futuras_checker``). Até lá a verificação
