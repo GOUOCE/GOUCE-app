@@ -9,16 +9,16 @@
 | Camada | API |
 | Tipo de teste | Funcional manual — suíte essencial (baseada em risco) |
 | Endpoints | `GET /rotas-principais`, `GET /rotas-principais/opcoes`, `GET /rotas-principais/{id}`, `POST /rotas-principais`, `PATCH /rotas-principais/{id}`, `PATCH /rotas-principais/{id}/inativar` e `PATCH /rotas-principais/{id}/reativar` — `application/json`. Corpo: `{"nome": "...", "horario_saida": "HH:MM", "horario_retorno": "HH:MM", "bairros_ids": [..], "faculdades_ida_ids": [..], "faculdades_volta_ids": [..]}` |
-| Ambiente | A preencher — URL, branch e commit testados (planejado sobre a `develop` `7c3d72d8`) |
+| Ambiente | HTTP local `http://127.0.0.1:18811`; PostgreSQL 15/MinIO QA isolados; branch `feat/front-hu011`, aplicação `671a6e0df3d00016e87477deb326dfdb7c33b364`; plano `939921e3` |
 | Total de casos | 14 |
-| Última execução | Não realizada |
-| Testador | Cauan Ricardo — execução com apoio de IA (Claude Code) |
+| Última execução | 2026-10-27 — HTTP real com evidências JSON e consultas ao PostgreSQL |
+| Testador | Cauan Ricardo — execução com apoio do Codex |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 14 | 0 | 0 | 0 | 0 | 14 |
+| ⏳ Em execução | 14 | 0 | 0 | 0 | 0 | 14 |
 
 ## Pré-condições
 

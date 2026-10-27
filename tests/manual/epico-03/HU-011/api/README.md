@@ -1,3 +1,31 @@
+# Execução dos testes manuais de API — HU-011
+
+## Execução de 27/10/2026
+
+Resultados em [API-HU-011.md](API-HU-011.md), evidências por caso em [evidencias](evidencias/) e índice verificável em [execucao.json](evidencias/execucao.json). Execução HTTP real assistida pelo Codex, comparando respostas e PostgreSQL; sem mocks de endpoints, autenticação ou auditoria.
+
+- Branch: `feat/front-hu011`; commit de aplicação: `671a6e0df3d00016e87477deb326dfdb7c33b364`.
+- API: `http://127.0.0.1:18811`; PostgreSQL 15 e MinIO exclusivos de QA. Nenhum dado do banco habitual foi alterado.
+- HU-011: a branch foi integrada à `develop` `939921e3` antes da execução, trazendo a API complementar e as correções de migration. O commit anterior era `3429ab7a`.
+- HU-012: código exato `23d1063f`; o roteiro atualizado do planejamento `939921e3` foi aplicado como documentação, sem alterar o código da funcionalidade.
+- Os controles positivos de limites e os registros criados indevidamente por defeito foram inativados via API; os registros foram preservados.
+- A conta de representante é ativa em `representante` e `usuario_tipo`; o login desta versão devolve `roles: ["aluno", "supervisor"]`. A negativa de acesso foi conferida com essa sessão real. A seleção visual de perfil e o contrato canônico `representante` não foram retestados aqui (histórico: #190/PR #195).
+- Casos da HU-013 permanecem bloqueados; não foram criados agendamentos diretamente no banco.
+
+### Reproduzir
+
+Use ambiente descartável e banco sem rotas, aplique as migrations e inicie `uvicorn main:app` com PostgreSQL/MinIO e segredos próprios de QA. Instale `backend/requirements.txt`. Configure externamente `DATABASE_URL`, `QA_BASE_URL`, `QA_ADMIN_EMAIL`, `QA_ADMIN_PASSWORD`, `QA_HU=011` e `QA_ACCOUNTS_FILE` (fora do Git). Opcionalmente defina `QA_SEED_ACCOUNTS` com o caminho absoluto de [suporte/preparar_contas.py](suporte/preparar_contas.py), que cria apenas usuários/perfis/documentos sintéticos para autenticação; não cria rotas/agendas.
+
+Execute da raiz do repositório:
+
+```bash
+python3 tests/manual/epico-03/HU-011/api/executar_api.py
+```
+
+O executor usa a API para massa de bairros/faculdades/rotas, faz login real e consulta o banco para comprovar persistência e auditoria. Não execute contra banco de uso cotidiano. Credenciais/tokens/contatos são omitidos das evidências; os corpos JSON funcionais são preservados. `manifesto-sha256.json` permite conferir integridade dos arquivos e do executor. A cronologia de subpassos dependentes de casos posteriores é dada por `sequence`/`timestamp`, conforme o roteiro.
+
+---
+
 # Como executar os testes manuais de API
 
 Passo a passo para executar a suíte, registrar os resultados e reportar falhas. Os exemplos usam
