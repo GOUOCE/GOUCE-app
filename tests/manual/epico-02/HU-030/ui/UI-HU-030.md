@@ -9,16 +9,16 @@
 | Camada | UI |
 | Tipo de teste | Funcional manual — suíte essencial (baseada em risco) |
 | Tela | Administrador → Cadastros → **Representantes** → **+ Novo** / **Cadastrar Representante**; login Sou representante/Sou aluno e área de representante |
-| Ambiente | Celular (Expo Go) ou web em `http://localhost:3000`; preencher branch/commit da implementação testada |
+| Ambiente | Versão web (`http://localhost:3000`), API e banco locais em Docker; branch `test/manual-ui-hu-030` a partir da `develop` (`88eb19dc`), com as mudanças do [PR #195](https://github.com/GOUOCE/GOUCE-app/pull/195) (`fix/issues-hu030`, `12aae7c3`) aplicadas na execução |
 | Total de casos | 13 |
-| Última execução | Não realizada |
+| Última execução | 2026-10-27 |
 | Testador | Cauan Ricardo |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 13 | 0 | 0 | 0 | 0 | 13 |
+| 🔄 Em andamento | 13 | 1 | 0 | 0 | 12 |
 
 ## Pré-condições
 
@@ -58,7 +58,7 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU030-UI-009 | Entrar como representante e como aluno com a mesma conta | Sou representante e Sou aluno após promoção | Ambos os acessos funcionam; dados originais e menus corretos | ⏳ PENDENTE | Não executado. |
+| CT-HU030-UI-009 | Entrar como representante e como aluno com a mesma conta | Sou representante e Sou aluno após promoção | Ambos os acessos funcionam; dados originais e menus corretos | ✅ PASSOU | Com o PR #195, a mesma conta entra como representante (“Sou representante”) e como aluno (“Sou aluno”). |
 | CT-HU030-UI-010 | Perder funções de representante após revogação | Sessão existente e novo login após revogação | Sem funções de representante; aluno continua acessando | ⏳ PENDENTE | Não executado. |
 | CT-HU030-UI-011 | Ocultar gestão a aluno e representante e bloquear links diretos | Menus e links para não administradores | Sem menu de gestão; Acesso Negado; sem privilégios administrativos | ⏳ PENDENTE | Não executado. |
 | CT-HU030-UI-012 | Falha de conexão sem exemplos nem atribuição/revogação falsa | Listas e escritas sem resposta da API | Erro visível; sem exemplos; estado reconciliado com o banco | ⏳ PENDENTE | Não executado. |
@@ -278,8 +278,12 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Conta usada:** a conta de teste que é aluno e representante (`qa.hu007.rep`), no lugar da Larissa do plano.
+- **API:** `POST /auth/login` devolve `role: "aluno"` e `roles: ["aluno", "representante", "supervisor"]` (o PR #195 passou a enviar o array `roles` no backend). Conta só de aluno devolve `roles: ["aluno"]`.
+- **“Sou representante”:** o login foi aceito. O console do app registrou o perfil `MOTORISTA` indo para `(representante)/home` e `(representante)/perfil`. O testador relatou que o caso passou.
+- **“Sou aluno”:** o login com a mesma conta foi aceito, com o perfil `ALUNO` em `(aluno)/home` e `(aluno)/perfil`.
+- É a correção da [#190](https://github.com/GOUOCE/GOUCE-app/issues/190) (login de aluno promovido a representante), que antes dava “Perfil incompatível”.
+- Status: ✅ Passou.
 
 ---
 
