@@ -9,16 +9,16 @@
 | Camada | API |
 | Tipo de teste | Funcional manual — suíte essencial (baseada em risco) |
 | Endpoints | `GET /usuarios/alunos?status=&ordem=` (fila), `GET /alunos/{id}` (detalhes), `GET /arquivos/{id}/view` (documento), `PATCH /usuarios/alunos/{id}/aprovar` e `PATCH /usuarios/alunos/{id}/status` — `application/json`. Corpo da reprovação: `{"status_cadastro": "rejeitado", "motivo_reprovacao": "...", "documentos_reenvio": [{"tipo": "comprovante_matricula", "motivo": "..."}]}` |
-| Ambiente | A preencher — URL, branch e commit testados (planejado sobre a `develop` `939921e3`) |
+| Ambiente | Branch `feature/testes-api-hu-027-hu-031` — Docker local isolado (projeto `atu-api`), `http://localhost:8001`, Mailpit em `http://localhost:58025`, `develop` no commit `4bf26d55`, com o contorno das migrations descrito nas [observações](#observações-gerais) |
 | Total de casos | 10 |
-| Última execução | Não realizada |
+| Última execução | 27/10/2026 |
 | Testador | Cauan Ricardo — execução com apoio de IA (Claude Code) |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 10 | 0 | 0 | 0 | 0 | 10 |
+| ❌ Reprovada | 10 | 5 | 5 | 0 | 0 | 0 |
 
 ## Pré-condições
 
@@ -36,16 +36,16 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU027-API-001 | Fila de solicitações pendentes | `status=pendente` com e sem `ordem=asc`; `status=xyz` | Só pendentes, do envio mais antigo para o mais recente; status inválido recusado | ⏳ PENDENTE | Não executado. |
-| CT-HU027-API-002 | Dados e documentos do aluno | `GET /alunos/{A1}`; `GET /arquivos/{id}/view` dos comprovantes; id inexistente | Dados pessoais e acadêmicos completos; documentos abrem; 404 | ⏳ PENDENTE | Não executado. |
-| CT-HU027-API-003 | Aprovar solicitação | `PATCH /usuarios/alunos/{A1}/aprovar` | HTTP 200; status `ativado`; sai da fila; aluno consegue logar | ⏳ PENDENTE | Não executado. |
-| CT-HU027-API-004 | Notificar o aluno da aprovação | Caixa do A1 no Mailpit depois do CT-003 | E-mail informando a liberação do acesso | ⏳ PENDENTE | Não executado. |
-| CT-HU027-API-005 | Reprovar com motivo por documento | A2: matrícula e residência com motivos diferentes | HTTP 200; status `rejeitado`; motivos gravados; sai da fila; e-mail com cada motivo | ⏳ PENDENTE | Não executado. |
-| CT-HU027-API-006 | Motivo obrigatório na reprovação | Sem motivo; motivo em branco; tipo inválido; 256 caracteres | Recusado com mensagem clara; status do aluno não muda | ⏳ PENDENTE | Não executado. |
-| CT-HU027-API-007 | Avaliar quem não está na fila | Aprovar/reprovar aluno já ativo, já rejeitado e inexistente; repetir a aprovação | Recusado (fora da fila) ou 404; nada alterado | ⏳ PENDENTE | Não executado. |
-| CT-HU027-API-008 | Reprovação deixa o aluno conseguir corrigir | A3 reprovado só com `motivo_reprovacao`, sem documentos | Recusado, ou o aluno recebe ao menos um documento para reenviar | ⏳ PENDENTE | Não executado. |
-| CT-HU027-API-009 | Auditoria da avaliação | Operações dos CT-003, 005 e 007 | Um registro por avaliação, com o administrador, status anterior e novo | ⏳ PENDENTE | Não executado. |
-| CT-HU027-API-010 | Acesso sem privilégio | Token de aluno, de representante e sem token | 403 (aluno e representante) e 401 (sem token); nada alterado | ⏳ PENDENTE | Não executado. |
+| CT-HU027-API-001 | Fila de solicitações pendentes | `status=pendente` com e sem `ordem=asc`; `status=xyz` | Só pendentes, do envio mais antigo para o mais recente; status inválido recusado | ✅ PASSOU | Fila só com pendentes, do envio mais antigo para o mais recente, com e sem `ordem`; `xyz` dá 400. |
+| CT-HU027-API-002 | Dados e documentos do aluno | `GET /alunos/{A1}`; `GET /arquivos/{id}/view` dos comprovantes; id inexistente | Dados pessoais e acadêmicos completos; documentos abrem; 404 | ✅ PASSOU | Dados completos, os dois PDFs abrem, 404 para inexistente; sem senha nem token. |
+| CT-HU027-API-003 | Aprovar solicitação | `PATCH /usuarios/alunos/{A1}/aprovar` | HTTP 200; status `ativado`; sai da fila; aluno consegue logar | ✅ PASSOU | 200; A1 `ativado`, fora da fila, login OK e validade de 6 meses. |
+| CT-HU027-API-004 | Notificar o aluno da aprovação | Caixa do A1 no Mailpit depois do CT-003 | E-mail informando a liberação do acesso | ❌ FALHOU | Nenhum e-mail ao A1; o SMTP funciona (o e-mail da reprovação chegou). [BUG-HU027-API-001](issues/BUG-HU027-API-001-aprovacao-nao-notifica-o-aluno.md) |
+| CT-HU027-API-005 | Reprovar com motivo por documento | A2: matrícula e residência com motivos diferentes | HTTP 200; status `rejeitado`; motivos gravados; sai da fila; e-mail com cada motivo | ✅ PASSOU | 200; motivos por documento gravados; A2 fora da fila; e-mail com cada motivo. |
+| CT-HU027-API-006 | Motivo obrigatório na reprovação | Sem motivo; motivo em branco; tipo inválido; 256 caracteres | Recusado com mensagem clara; status do aluno não muda | ❌ FALHOU | Bloqueia os 6 itens planejados, mas aceita documento com motivo só de espaços e o descarta; 3 recusas em inglês. [BUG-002](issues/BUG-HU027-API-002-reprovacao-aceita-documento-com-motivo-em-branco.md), [BUG-005](issues/BUG-HU027-API-005-mensagens-de-validacao-em-ingles.md) |
+| CT-HU027-API-007 | Avaliar quem não está na fila | Aprovar/reprovar aluno já ativo, já rejeitado e inexistente; repetir a aprovação | Recusado (fora da fila) ou 404; nada alterado | ❌ FALHOU | Aprovou e reprovou o AP ativo, aprovou o A2 rejeitado e renovou a validade do A1. [BUG-HU027-API-003](issues/BUG-HU027-API-003-avaliacao-aceita-aluno-fora-da-fila.md) |
+| CT-HU027-API-008 | Reprovação deixa o aluno conseguir corrigir | A3 reprovado só com `motivo_reprovacao`, sem documentos | Recusado, ou o aluno recebe ao menos um documento para reenviar | ❌ FALHOU | Sem documento é recusado (422), mas pelo atalho do CT-006 o A3 fica rejeitado sem nada para reenviar. [BUG-HU027-API-002](issues/BUG-HU027-API-002-reprovacao-aceita-documento-com-motivo-em-branco.md) |
+| CT-HU027-API-009 | Auditoria da avaliação | Operações dos CT-003, 005 e 007 | Um registro por avaliação, com o administrador, status anterior e novo | ❌ FALHOU | Os 13 registros gravam o id do aluno como usuário e o status anterior igual ao novo. [BUG-HU027-API-004](issues/BUG-HU027-API-004-auditoria-grava-o-aluno-e-o-status-errado.md) |
+| CT-HU027-API-010 | Acesso sem privilégio | Token de aluno, de representante e sem token | 403 (aluno e representante) e 401 (sem token); nada alterado | ✅ PASSOU | 403 para aluno e representante, 401 sem token; documento de outro aluno dá 404; A4 segue pendente. |
 
 ## Detalhamento dos casos
 
@@ -69,8 +69,13 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Evidência: [`CT-HU027-API-001.json`](evidencias/CT-HU027-API-001.json). Massa criada pelo fluxo real (`POST /usuarios/cadastrar`): A1 = id 2 (Zuleide), A2 = 3 (Bruno), A3 = 4 (Marta), A4 = 5 (Ana), enviados entre 17:47:39 e 17:48:01 UTC ([preparação](evidencias/00-preparacao-massa.json)).
+- `status=pendente` com e sem `ordem=asc`: HTTP `200`, só os quatro pendentes, na ordem 2, 3, 4, 5 (do envio mais antigo para o mais recente). Cada item traz `id`, `nome`, `email`, faculdade, `campus` e `data_hora_envio_analise`.
+- `status=xyz`: HTTP `400` “Status inválido. Informe um dos valores: analise_renovacao, ativado, inativado, pendente, rejeitado”.
+- Sem filtro: devolve também os aprovados (ids 6 e 7), como esperado.
+- Depois dos CT-003 e CT-005, A1 e A2 saíram da fila (passo 2 das evidências desses casos).
+- Observação: sem `ordem`, o repository ordena por `nome_completo`, que está **criptografado** (Fernet). O texto cifrado começa com a hora da criptografia, por isso a ordem bateu com a do envio. É coincidência, não uma regra: o app não deve depender dela (ele ordena a lista sozinho).
+- Status: ✅ Passou.
 
 ---
 
@@ -93,8 +98,12 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Evidência: [`CT-HU027-API-002.json`](evidencias/CT-HU027-API-002.json).
+- `GET /alunos/2`: HTTP `200` com nome, e-mail, telefone, data de nascimento, bairro (`Centro`), faculdade (`Universidade Federal do Ceará`, `UFC`, `Campus Quixadá`), curso, semestre, turno, período de ingresso e os ids dos dois comprovantes e da foto. Nenhum campo de senha, hash ou token.
+- `/arquivos/{id}/view` dos dois comprovantes: HTTP `200`, `application/pdf`, conteúdo `%PDF-1.4` (o arquivo enviado).
+- `GET /alunos/999999`: HTTP `404` “Aluno não encontrado”.
+- Observações: `data_nascimento` vem como número (`20020510`), não como data; o bairro vem só pelo nome, sem `bairro_id`. Isso afeta a tela (ver UI-HU-027, CT-002).
+- Status: ✅ Passou.
 
 ---
 
@@ -118,8 +127,12 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Evidência: [`CT-HU027-API-003.json`](evidencias/CT-HU027-API-003.json).
+- `PATCH /usuarios/alunos/2/aprovar`: HTTP `200` `{"status_cadastro": "ativado", "mensagem": "Cadastro do aluno aprovado com sucesso!"}`. O texto do AC-08 (“Solicitação avaliada com sucesso”) é da tela; anotado para a UI.
+- Fila depois: ids 3, 4, 5 (A1 saiu).
+- Login do A1: HTTP `200` com `status_cadastro` `ativado`.
+- Banco: `validade_acesso` = `2027-04-27 17:49:18+00`, 6 meses depois da aprovação (RN-013).
+- Status: ✅ Passou.
 
 ---
 
@@ -138,8 +151,11 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Evidência: [`CT-HU027-API-004.json`](evidencias/CT-HU027-API-004.json). A caixa do Mailpit foi limpa logo antes da aprovação do CT-003.
+- Mailpit depois da aprovação: `{"total": 0, "mensagens": []}`. Nenhum e-mail para o A1.
+- Controle: na mesma stack, a reprovação do A2 (CT-005) chegou ao Mailpit. O SMTP funciona; a rota de aprovação é que não chama o serviço de e-mail.
+- Defeito: [BUG-HU027-API-001](issues/BUG-HU027-API-001-aprovacao-nao-notifica-o-aluno.md).
+- Status: ❌ Falhou.
 
 ---
 
@@ -163,8 +179,13 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Evidência: [`CT-HU027-API-005.json`](evidencias/CT-HU027-API-005.json).
+- `PATCH /usuarios/alunos/3/status`: HTTP `200`, `status_cadastro` `rejeitado`, `mensagem` “Documentos rejeitados e marcados para reenvio.” e os dois documentos com **os seus próprios motivos**.
+- Fila depois: ids 4 e 5 (A2 saiu).
+- E-mail ao A2 (“Documentos pendentes para reenvio - GOUCE”): lista “Comprovante Matricula: Comprovante de matrícula desatualizado.” e “Comprovante Residencia: Comprovante com mais de 3 meses.”.
+- Banco: `motivo_reprovacao`, `documentos_reenvio` gravados; os ids dos comprovantes continuam os antigos.
+- Observação: o e-mail não traz o motivo geral, e os nomes dos documentos saem sem acento (“Matricula”, “Residencia”).
+- Status: ✅ Passou.
 
 ---
 
@@ -192,8 +213,16 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Evidência: [`CT-HU027-API-006.json`](evidencias/CT-HU027-API-006.json). A3 = id 4.
+- Itens 1, 2 e 3b (sem motivo, motivo geral `"   "`, documento com motivo `"   "` sem motivo geral): HTTP `422` “Value error, motivo_reprovacao é obrigatório quando status_cadastro é rejeitado.”.
+- Item 3a (motivo do documento `""`): HTTP `422` “String should have at least 1 character”.
+- Item 4 (`tipo` `rg`): HTTP `422` “Input should be 'comprovante_matricula', 'comprovante_residencia' or 'foto_perfil'”.
+- Item 5 (256 caracteres): HTTP `422` “String should have at most 255 characters”.
+- Em todos esses, o A3 continuou `pendente`, sem motivo nem documentos.
+- **Item 3c**, motivo geral válido e documento com motivo `"   "` (alvo A4, id 5): HTTP `200`, `rejeitado`, `documentos_reenvio: null`. O documento foi descartado sem aviso e o aluno ficou sem nada para reenviar (consequência no CT-008). A4 voltou para `pendente` pela API depois (PREP-11).
+- Três das recusas estão em inglês e duas começam com “Value error,”.
+- Defeitos: [BUG-HU027-API-002](issues/BUG-HU027-API-002-reprovacao-aceita-documento-com-motivo-em-branco.md) (item 3c) e [BUG-HU027-API-005](issues/BUG-HU027-API-005-mensagens-de-validacao-em-ingles.md) (mensagens).
+- Status: ❌ Falhou.
 
 ---
 
@@ -220,8 +249,14 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Evidência: [`CT-HU027-API-007.json`](evidencias/CT-HU027-API-007.json).
+- Item 1: aprovar o AP já ativo deu HTTP `200`; reprovar o AP deu HTTP `200` e o deixou **rejeitado**.
+- Item 2: aprovar o A2 rejeitado, sem reenvio, deu HTTP `200` e o deixou `ativado`.
+- Item 3: aprovar o A1 de novo deu HTTP `200` e renovou a `validade_acesso` (de `17:49:18` para `17:50:44`).
+- Item 4: HTTP `404` “Aluno não encontrado”.
+- Massa restaurada pela API depois (AP aprovado de novo e A2 reprovado de novo; PREP-12 e PREP-13).
+- Defeito: [BUG-HU027-API-003](issues/BUG-HU027-API-003-avaliacao-aceita-aluno-fora-da-fila.md).
+- Status: ❌ Falhou.
 
 ---
 
@@ -244,8 +279,12 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Evidência: [`CT-HU027-API-008.json`](evidencias/CT-HU027-API-008.json).
+- Reprovação do A3 só com `motivo_reprovacao`: HTTP `422` “Value error, documentos_reenvio é obrigatório quando status_cadastro é rejeitado.”. O caminho direto está protegido.
+- Pelo atalho do CT-006 (item 3c), com documento de motivo `"   "`: HTTP `200`, A3 `rejeitado` com `documentos_reenvio` vazio.
+- O A3 loga (`rejeitado`), `GET /usuarios/reenvio_documento` devolve `{"documentos": []}` e cada reenvio (matrícula, residência, foto) dá HTTP `400` “Este documento não foi solicitado pelo administrador: …”. O aluno fica preso como rejeitado (RN-012).
+- Defeito: [BUG-HU027-API-002](issues/BUG-HU027-API-002-reprovacao-aceita-documento-com-motivo-em-branco.md).
+- Status: ❌ Falhou.
 
 ---
 
@@ -265,8 +304,12 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Evidência: [`CT-HU027-API-009.json`](evidencias/CT-HU027-API-009.json).
+- `log_auditoria` (`entidade = 'aluno'`): 13 registros com a ação `UPDATE_STATUS`, um por avaliação aceita; nenhum para as recusas.
+- Em todos, `usuario_id` é o **id do próprio aluno** (ex.: registro 4 da aprovação do A1 com `usuario_id` 2), e não o do administrador A (id 1).
+- Em todos, `valor_anterior` é igual a `valor_novo` (ex.: aprovação do A1: `ativado | ativado`, quando o anterior era `pendente`).
+- Defeito: [BUG-HU027-API-004](issues/BUG-HU027-API-004-auditoria-grava-o-aluno-e-o-status-errado.md).
+- Status: ❌ Falhou.
 
 ---
 
@@ -289,8 +332,12 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Evidência: [`CT-HU027-API-010.json`](evidencias/CT-HU027-API-010.json). Representante criada pela API (aluna 7 aprovada e promovida em `POST /representantes/promover`; perfis `aluno` e `supervisor`).
+- AP e representante: HTTP `403` na fila, nos detalhes, na aprovação e na reprovação.
+- Comprovante do A4 com o token do AP ou da representante: HTTP `404` “Arquivo não encontrado”.
+- Sem token: HTTP `401` em todas.
+- O A4 continuou `pendente`.
+- Status: ✅ Passou.
 
 ## Rastreabilidade
 
@@ -311,7 +358,12 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| Ambiente | A `develop` não sobe em banco vazio: duas heads de migration | [BUG-HU027-API-006](issues/BUG-HU027-API-006-develop-nao-sobe-em-banco-vazio-duas-heads.md) |
+| CT-HU027-API-004 | A aprovação não envia e-mail ao aluno | [BUG-HU027-API-001](issues/BUG-HU027-API-001-aprovacao-nao-notifica-o-aluno.md) |
+| CT-HU027-API-006, 008 | Reprovação aceita documento com motivo em branco e deixa o aluno sem nada para reenviar | [BUG-HU027-API-002](issues/BUG-HU027-API-002-reprovacao-aceita-documento-com-motivo-em-branco.md) |
+| CT-HU027-API-007 | Avaliação aceita aluno que não está na fila | [BUG-HU027-API-003](issues/BUG-HU027-API-003-avaliacao-aceita-aluno-fora-da-fila.md) |
+| CT-HU027-API-009 | Auditoria grava o aluno como usuário e o status anterior igual ao novo | [BUG-HU027-API-004](issues/BUG-HU027-API-004-auditoria-grava-o-aluno-e-o-status-errado.md) |
+| CT-HU027-API-006 | Mensagens de validação da reprovação em inglês | [BUG-HU027-API-005](issues/BUG-HU027-API-005-mensagens-de-validacao-em-ingles.md) |
 
 ## Observações gerais
 
@@ -324,5 +376,7 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
   - a auditoria grava o `id` do aluno como usuário e o status anterior igual ao novo (CT-009);
   - o e-mail de reprovação monta o HTML com o motivo sem escapar caracteres; um motivo com `<b>` aparece formatado (anotar no CT-005, se notado).
 - Renovações de vínculo (`analise_renovacao`) entram na mesma fila do app, mas são testadas na HU-028.
-- Ao final, deixar A1 aprovado, A2 rejeitado e A3 e A4 conforme o resultado, sem apagar registros.
+- **Ambiente da execução (27/10/2026):** banco novo na stack isolada `atu-api`. A `develop` (`4bf26d55`) não sobe em banco vazio porque tem duas heads de migration (`76_ponto_unico_por_bairro` e `77_create_rota_complementar`): ver [evidência](evidencias/00-ambiente-migrations.json) e [BUG-HU027-API-006](issues/BUG-HU027-API-006-develop-nao-sobe-em-banco-vazio-duas-heads.md). Contorno usado só na stack: cópia das migrations com uma migration de merge vazia. O banco novo também não tem faculdade: a UFC foi criada pela API (PREP-01).
+- **Resultado da leitura de código × execução:** confirmados os riscos da aprovação sem e-mail, da avaliação sem conferir o status e da auditoria. Não se confirmou que a reprovação aceite motivo geral em branco nem sem documentos (o DTO recusa os dois); o defeito real é o motivo do documento em branco, descartado sem aviso.
+- Estado final: A1 (2) `ativado`, A2 (3) `rejeitado`, A3 (4) `rejeitado` sem documentos (CT-008), A4 (5) `pendente`, AP (6) `ativado` e representante (7) ativa, sem apagar registros.
 - Ocultar senhas, tokens e dados pessoais nas evidências.

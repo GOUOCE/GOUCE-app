@@ -1,0 +1,289 @@
+[
+  {
+    "passo": "fila-ap",
+    "descricao": "Fila",
+    "data_hora_utc": "2026-10-27T17:51:40Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/usuarios/alunos?status=pendente",
+      "credencial": "ap",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 403,
+      "corpo": {
+        "detail": "Acesso negado"
+      }
+    }
+  },
+  {
+    "passo": "det-ap",
+    "descricao": "Detalhes do A4",
+    "data_hora_utc": "2026-10-27T17:51:40Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/alunos/5",
+      "credencial": "ap",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 403,
+      "corpo": {
+        "detail": "Acesso negado"
+      }
+    }
+  },
+  {
+    "passo": "aprovar-ap",
+    "descricao": "Aprovar A4",
+    "data_hora_utc": "2026-10-27T17:51:40Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/5/aprovar",
+      "credencial": "ap",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 403,
+      "corpo": {
+        "detail": "Acesso negado"
+      }
+    }
+  },
+  {
+    "passo": "status-ap",
+    "descricao": "Reprovar A4",
+    "data_hora_utc": "2026-10-27T17:51:40Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/5/status",
+      "credencial": "ap",
+      "corpo": {
+        "status_cadastro": "rejeitado",
+        "motivo_reprovacao": "Teste de acesso.",
+        "documentos_reenvio": [
+          {
+            "tipo": "comprovante_matricula",
+            "motivo": "Teste."
+          }
+        ]
+      }
+    },
+    "resposta": {
+      "status": 403,
+      "corpo": {
+        "detail": "Acesso negado"
+      }
+    }
+  },
+  {
+    "passo": "arquivo-ap",
+    "descricao": "Abrir comprovante de matrícula do A4",
+    "data_hora_utc": "2026-10-27T17:51:40Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/arquivos/8add7983-0b41-4125-85fb-b47b79bbac7a/view",
+      "credencial": "ap",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 404,
+      "corpo": {
+        "detail": "Arquivo não encontrado"
+      }
+    }
+  },
+  {
+    "passo": "fila-rp",
+    "descricao": "Fila",
+    "data_hora_utc": "2026-10-27T17:51:40Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/usuarios/alunos?status=pendente",
+      "credencial": "rp",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 403,
+      "corpo": {
+        "detail": "Acesso negado"
+      }
+    }
+  },
+  {
+    "passo": "det-rp",
+    "descricao": "Detalhes do A4",
+    "data_hora_utc": "2026-10-27T17:51:40Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/alunos/5",
+      "credencial": "rp",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 403,
+      "corpo": {
+        "detail": "Acesso negado"
+      }
+    }
+  },
+  {
+    "passo": "aprovar-rp",
+    "descricao": "Aprovar A4",
+    "data_hora_utc": "2026-10-27T17:51:40Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/5/aprovar",
+      "credencial": "rp",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 403,
+      "corpo": {
+        "detail": "Acesso negado"
+      }
+    }
+  },
+  {
+    "passo": "status-rp",
+    "descricao": "Reprovar A4",
+    "data_hora_utc": "2026-10-27T17:51:40Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/5/status",
+      "credencial": "rp",
+      "corpo": {
+        "status_cadastro": "rejeitado",
+        "motivo_reprovacao": "Teste de acesso.",
+        "documentos_reenvio": [
+          {
+            "tipo": "comprovante_matricula",
+            "motivo": "Teste."
+          }
+        ]
+      }
+    },
+    "resposta": {
+      "status": 403,
+      "corpo": {
+        "detail": "Acesso negado"
+      }
+    }
+  },
+  {
+    "passo": "arquivo-rp",
+    "descricao": "Abrir comprovante de matrícula do A4",
+    "data_hora_utc": "2026-10-27T17:51:40Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/arquivos/8add7983-0b41-4125-85fb-b47b79bbac7a/view",
+      "credencial": "rp",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 404,
+      "corpo": {
+        "detail": "Arquivo não encontrado"
+      }
+    }
+  },
+  {
+    "passo": "fila--",
+    "descricao": "Fila",
+    "data_hora_utc": "2026-10-27T17:51:40Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/usuarios/alunos?status=pendente",
+      "credencial": "-",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 401,
+      "corpo": {
+        "detail": "Não autenticado"
+      }
+    }
+  },
+  {
+    "passo": "det--",
+    "descricao": "Detalhes do A4",
+    "data_hora_utc": "2026-10-27T17:51:40Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/alunos/5",
+      "credencial": "-",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 401,
+      "corpo": {
+        "detail": "Não autenticado"
+      }
+    }
+  },
+  {
+    "passo": "aprovar--",
+    "descricao": "Aprovar A4",
+    "data_hora_utc": "2026-10-27T17:51:40Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/5/aprovar",
+      "credencial": "-",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 401,
+      "corpo": {
+        "detail": "Não autenticado"
+      }
+    }
+  },
+  {
+    "passo": "status--",
+    "descricao": "Reprovar A4",
+    "data_hora_utc": "2026-10-27T17:51:40Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/5/status",
+      "credencial": "-",
+      "corpo": {
+        "status_cadastro": "rejeitado",
+        "motivo_reprovacao": "Teste de acesso.",
+        "documentos_reenvio": [
+          {
+            "tipo": "comprovante_matricula",
+            "motivo": "Teste."
+          }
+        ]
+      }
+    },
+    "resposta": {
+      "status": 401,
+      "corpo": {
+        "detail": "Não autenticado"
+      }
+    }
+  },
+  {
+    "passo": "arquivo--",
+    "descricao": "Abrir comprovante de matrícula do A4",
+    "data_hora_utc": "2026-10-27T17:51:40Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/arquivos/8add7983-0b41-4125-85fb-b47b79bbac7a/view",
+      "credencial": "-",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 401,
+      "corpo": {
+        "detail": "Não autenticado"
+      }
+    }
+  },
+  {
+    "passo": "final",
+    "descricao": "Banco: status do A4 depois das chamadas",
+    "resultado": "pendente"
+  }
+]

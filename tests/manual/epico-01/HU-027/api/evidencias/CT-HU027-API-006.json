@@ -1,0 +1,299 @@
+[
+  {
+    "passo": "1",
+    "descricao": "Sem motivo e sem documentos",
+    "data_hora_utc": "2026-10-27T17:49:53Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/4/status",
+      "credencial": "admin",
+      "corpo": {
+        "status_cadastro": "rejeitado"
+      }
+    },
+    "resposta": {
+      "status": 422,
+      "corpo": {
+        "detail": [
+          {
+            "type": "value_error",
+            "loc": [
+              "body"
+            ],
+            "msg": "Value error, motivo_reprovacao é obrigatório quando status_cadastro é rejeitado.",
+            "input": {
+              "status_cadastro": "rejeitado"
+            },
+            "ctx": {
+              "error": {}
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "passo": "1-banco",
+    "descricao": "Banco A3 depois da chamada: status | motivo | documentos",
+    "resultado": "pendente | ∅ | ∅"
+  },
+  {
+    "passo": "2",
+    "descricao": "Motivo geral só com espaços, sem documentos",
+    "data_hora_utc": "2026-10-27T17:49:53Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/4/status",
+      "credencial": "admin",
+      "corpo": {
+        "status_cadastro": "rejeitado",
+        "motivo_reprovacao": "   "
+      }
+    },
+    "resposta": {
+      "status": 422,
+      "corpo": {
+        "detail": [
+          {
+            "type": "value_error",
+            "loc": [
+              "body"
+            ],
+            "msg": "Value error, motivo_reprovacao é obrigatório quando status_cadastro é rejeitado.",
+            "input": {
+              "status_cadastro": "rejeitado",
+              "motivo_reprovacao": "   "
+            },
+            "ctx": {
+              "error": {}
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "passo": "2-banco",
+    "descricao": "Banco A3 depois da chamada: status | motivo | documentos",
+    "resultado": "pendente | ∅ | ∅"
+  },
+  {
+    "passo": "3a",
+    "descricao": "Documento com motivo vazio",
+    "data_hora_utc": "2026-10-27T17:49:54Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/4/status",
+      "credencial": "admin",
+      "corpo": {
+        "status_cadastro": "rejeitado",
+        "documentos_reenvio": [
+          {
+            "tipo": "comprovante_matricula",
+            "motivo": ""
+          }
+        ]
+      }
+    },
+    "resposta": {
+      "status": 422,
+      "corpo": {
+        "detail": [
+          {
+            "type": "string_too_short",
+            "loc": [
+              "body",
+              "documentos_reenvio",
+              0,
+              "motivo"
+            ],
+            "msg": "String should have at least 1 character",
+            "input": "",
+            "ctx": {
+              "min_length": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "passo": "3a-banco",
+    "descricao": "Banco A3 depois da chamada: status | motivo | documentos",
+    "resultado": "pendente | ∅ | ∅"
+  },
+  {
+    "passo": "3b",
+    "descricao": "Documento com motivo só com espaços",
+    "data_hora_utc": "2026-10-27T17:49:54Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/4/status",
+      "credencial": "admin",
+      "corpo": {
+        "status_cadastro": "rejeitado",
+        "documentos_reenvio": [
+          {
+            "tipo": "comprovante_matricula",
+            "motivo": "   "
+          }
+        ]
+      }
+    },
+    "resposta": {
+      "status": 422,
+      "corpo": {
+        "detail": [
+          {
+            "type": "value_error",
+            "loc": [
+              "body"
+            ],
+            "msg": "Value error, motivo_reprovacao é obrigatório quando status_cadastro é rejeitado.",
+            "input": {
+              "status_cadastro": "rejeitado",
+              "documentos_reenvio": [
+                {
+                  "tipo": "comprovante_matricula",
+                  "motivo": "   "
+                }
+              ]
+            },
+            "ctx": {
+              "error": {}
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "passo": "3b-banco",
+    "descricao": "Banco A3 depois da chamada: status | motivo | documentos",
+    "resultado": "pendente | ∅ | ∅"
+  },
+  {
+    "passo": "4",
+    "descricao": "Tipo de documento inválido (rg)",
+    "data_hora_utc": "2026-10-27T17:49:54Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/4/status",
+      "credencial": "admin",
+      "corpo": {
+        "status_cadastro": "rejeitado",
+        "documentos_reenvio": [
+          {
+            "tipo": "rg",
+            "motivo": "RG ilegível."
+          }
+        ]
+      }
+    },
+    "resposta": {
+      "status": 422,
+      "corpo": {
+        "detail": [
+          {
+            "type": "enum",
+            "loc": [
+              "body",
+              "documentos_reenvio",
+              0,
+              "tipo"
+            ],
+            "msg": "Input should be 'comprovante_matricula', 'comprovante_residencia' or 'foto_perfil'",
+            "input": "rg",
+            "ctx": {
+              "expected": "'comprovante_matricula', 'comprovante_residencia' or 'foto_perfil'"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "passo": "4-banco",
+    "descricao": "Banco A3 depois da chamada: status | motivo | documentos",
+    "resultado": "pendente | ∅ | ∅"
+  },
+  {
+    "passo": "5",
+    "descricao": "Motivo geral com 256 caracteres",
+    "data_hora_utc": "2026-10-27T17:49:54Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/4/status",
+      "credencial": "admin",
+      "corpo": {
+        "status_cadastro": "rejeitado",
+        "motivo_reprovacao": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "documentos_reenvio": [
+          {
+            "tipo": "comprovante_matricula",
+            "motivo": "Ilegível."
+          }
+        ]
+      }
+    },
+    "resposta": {
+      "status": 422,
+      "corpo": {
+        "detail": [
+          {
+            "type": "string_too_long",
+            "loc": [
+              "body",
+              "motivo_reprovacao"
+            ],
+            "msg": "String should have at most 255 characters",
+            "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "ctx": {
+              "max_length": 255
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "passo": "5-banco",
+    "descricao": "Banco A3 depois da chamada: status | motivo | documentos",
+    "resultado": "pendente | ∅ | ∅"
+  },
+  {
+    "passo": "3c",
+    "descricao": "Motivo geral válido e documento com motivo só com espaços (alvo A4)",
+    "data_hora_utc": "2026-10-27T17:50:11Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/5/status",
+      "credencial": "admin",
+      "corpo": {
+        "status_cadastro": "rejeitado",
+        "motivo_reprovacao": "Documentos precisam ser revistos.",
+        "documentos_reenvio": [
+          {
+            "tipo": "comprovante_matricula",
+            "motivo": "   "
+          }
+        ]
+      }
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "aluno_id": 5,
+        "status_cadastro": "rejeitado",
+        "motivo_reprovacao": "Documentos precisam ser revistos.",
+        "documentos_reenvio": null,
+        "mensagem": "Documentos rejeitados e marcados para reenvio."
+      }
+    }
+  },
+  {
+    "passo": "3c-banco",
+    "descricao": "Banco A4 depois da chamada: status | motivo | documentos",
+    "resultado": "rejeitado | Documentos precisam ser revistos. | ∅"
+  }
+]

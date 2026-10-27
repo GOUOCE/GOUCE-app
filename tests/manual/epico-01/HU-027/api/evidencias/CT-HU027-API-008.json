@@ -1,0 +1,162 @@
+[
+  {
+    "passo": "1",
+    "descricao": "Reprovar A3 só com motivo geral, sem documentos",
+    "data_hora_utc": "2026-10-27T17:51:02Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/4/status",
+      "credencial": "admin",
+      "corpo": {
+        "status_cadastro": "rejeitado",
+        "motivo_reprovacao": "Cadastro com dados inconsistentes."
+      }
+    },
+    "resposta": {
+      "status": 422,
+      "corpo": {
+        "detail": [
+          {
+            "type": "value_error",
+            "loc": [
+              "body"
+            ],
+            "msg": "Value error, documentos_reenvio é obrigatório quando status_cadastro é rejeitado.",
+            "input": {
+              "status_cadastro": "rejeitado",
+              "motivo_reprovacao": "Cadastro com dados inconsistentes."
+            },
+            "ctx": {
+              "error": {}
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "passo": "1-obs",
+    "descricao": "A reprovação sem documentos_reenvio foi recusada. Os passos abaixo usam o atalho achado no CT-HU027-API-006 (item 3c): documento com motivo só com espaços."
+  },
+  {
+    "passo": "2",
+    "descricao": "Reprovar A3 com documento de motivo só com espaços",
+    "data_hora_utc": "2026-10-27T17:51:16Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/4/status",
+      "credencial": "admin",
+      "corpo": {
+        "status_cadastro": "rejeitado",
+        "motivo_reprovacao": "Cadastro com dados inconsistentes.",
+        "documentos_reenvio": [
+          {
+            "tipo": "comprovante_matricula",
+            "motivo": "   "
+          }
+        ]
+      }
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "aluno_id": 4,
+        "status_cadastro": "rejeitado",
+        "motivo_reprovacao": "Cadastro com dados inconsistentes.",
+        "documentos_reenvio": null,
+        "mensagem": "Documentos rejeitados e marcados para reenvio."
+      }
+    }
+  },
+  {
+    "passo": "3",
+    "descricao": "A3 consulta as pendências",
+    "data_hora_utc": "2026-10-27T17:51:17Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/usuarios/reenvio_documento",
+      "credencial": "a3",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "documentos": []
+      }
+    }
+  },
+  {
+    "passo": "4-comprovante_matricula",
+    "descricao": "A3 tenta reenviar comprovante_matricula",
+    "data_hora_utc": "2026-10-27T17:51:17Z",
+    "requisicao": {
+      "metodo": "PUT",
+      "rota": "/usuarios/reenvio_documento",
+      "credencial": "a3",
+      "corpo": {
+        "comprovante_matricula": "arquivo"
+      }
+    },
+    "resposta": {
+      "status": 400,
+      "corpo": {
+        "success": false,
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "Este documento não foi solicitado pelo administrador: comprovante_matricula"
+        }
+      }
+    }
+  },
+  {
+    "passo": "4-comprovante_residencia",
+    "descricao": "A3 tenta reenviar comprovante_residencia",
+    "data_hora_utc": "2026-10-27T17:51:17Z",
+    "requisicao": {
+      "metodo": "PUT",
+      "rota": "/usuarios/reenvio_documento",
+      "credencial": "a3",
+      "corpo": {
+        "comprovante_residencia": "arquivo"
+      }
+    },
+    "resposta": {
+      "status": 400,
+      "corpo": {
+        "success": false,
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "Este documento não foi solicitado pelo administrador: comprovante_residencia"
+        }
+      }
+    }
+  },
+  {
+    "passo": "4-foto_perfil",
+    "descricao": "A3 tenta reenviar foto_perfil",
+    "data_hora_utc": "2026-10-27T17:51:17Z",
+    "requisicao": {
+      "metodo": "PUT",
+      "rota": "/usuarios/reenvio_documento",
+      "credencial": "a3",
+      "corpo": {
+        "foto_perfil": "arquivo"
+      }
+    },
+    "resposta": {
+      "status": 400,
+      "corpo": {
+        "success": false,
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "Este documento não foi solicitado pelo administrador: foto_perfil"
+        }
+      }
+    }
+  },
+  {
+    "passo": "5",
+    "descricao": "Banco A3: status | motivo | documentos_reenvio",
+    "resultado": "rejeitado | Cadastro com dados inconsistentes. | ∅"
+  }
+]

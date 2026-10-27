@@ -1,0 +1,121 @@
+[
+  {
+    "passo": "0",
+    "descricao": "Banco antes: aluno_id | status | validade_acesso (A1=2, A2=3, AP=6)",
+    "resultado": "2 | ativado | 2027-04-27 17:49:18.310393+00;3 | rejeitado | ;6 | ativado | 2027-04-27 17:48:02.857287+00;"
+  },
+  {
+    "passo": "1a",
+    "descricao": "Aprovar AP (já ativo)",
+    "data_hora_utc": "2026-10-27T17:50:44Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/6/aprovar",
+      "credencial": "admin",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "aluno_id": 6,
+        "status_cadastro": "ativado",
+        "mensagem": "Cadastro do aluno aprovado com sucesso!"
+      }
+    }
+  },
+  {
+    "passo": "1b",
+    "descricao": "Reprovar AP (já ativo)",
+    "data_hora_utc": "2026-10-27T17:50:44Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/6/status",
+      "credencial": "admin",
+      "corpo": {
+        "status_cadastro": "rejeitado",
+        "motivo_reprovacao": "Teste de reprovação de aluno ativo.",
+        "documentos_reenvio": [
+          {
+            "tipo": "comprovante_matricula",
+            "motivo": "Ilegível."
+          }
+        ]
+      }
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "aluno_id": 6,
+        "status_cadastro": "rejeitado",
+        "motivo_reprovacao": "Teste de reprovação de aluno ativo.",
+        "documentos_reenvio": [
+          {
+            "tipo": "comprovante_matricula",
+            "motivo": "Ilegível."
+          }
+        ],
+        "mensagem": "Documentos rejeitados e marcados para reenvio."
+      }
+    }
+  },
+  {
+    "passo": "2",
+    "descricao": "Aprovar A2 (rejeitado, sem reenvio)",
+    "data_hora_utc": "2026-10-27T17:50:44Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/3/aprovar",
+      "credencial": "admin",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "aluno_id": 3,
+        "status_cadastro": "ativado",
+        "mensagem": "Cadastro do aluno aprovado com sucesso!"
+      }
+    }
+  },
+  {
+    "passo": "3",
+    "descricao": "Aprovar A1 de novo (já aprovado no CT-003)",
+    "data_hora_utc": "2026-10-27T17:50:44Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/2/aprovar",
+      "credencial": "admin",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "aluno_id": 2,
+        "status_cadastro": "ativado",
+        "mensagem": "Cadastro do aluno aprovado com sucesso!"
+      }
+    }
+  },
+  {
+    "passo": "4",
+    "descricao": "Aprovar aluno inexistente",
+    "data_hora_utc": "2026-10-27T17:50:44Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/999999/aprovar",
+      "credencial": "admin",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 404,
+      "corpo": {
+        "detail": "Aluno não encontrado"
+      }
+    }
+  },
+  {
+    "passo": "5",
+    "descricao": "Banco depois: aluno_id | status | validade_acesso",
+    "resultado": "2 | ativado | 2027-04-27 17:50:44.767628+00;3 | ativado | 2027-04-27 17:50:44.725814+00;6 | rejeitado | 2027-04-27 17:50:44.582336+00;"
+  }
+]

@@ -1,0 +1,412 @@
+[
+  {
+    "passo": "PREP-01",
+    "descricao": "Criar faculdade UFC (banco novo sem faculdade)",
+    "data_hora_utc": "2026-10-27T17:47:30Z",
+    "requisicao": {
+      "metodo": "POST",
+      "rota": "/faculdades",
+      "credencial": "admin",
+      "corpo": {
+        "nome_faculdade": "Universidade Federal do Ceará",
+        "sigla": "UFC",
+        "campus_faculdade": "Campus Quixadá"
+      }
+    },
+    "resposta": {
+      "status": 201,
+      "corpo": {
+        "success": true,
+        "message": "Operação realizada com sucesso",
+        "data": {
+          "id_faculdade": 1,
+          "nome_faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus_faculdade": "Campus Quixadá",
+          "ativo": true
+        }
+      }
+    }
+  },
+  {
+    "passo": "PREP-02",
+    "descricao": "Cadastrar aluno Zuleide Ramos Costa pelo fluxo real (multipart)",
+    "data_hora_utc": "2026-10-27T17:47:39Z",
+    "requisicao": {
+      "metodo": "POST",
+      "rota": "/usuarios/cadastrar",
+      "credencial": "-",
+      "corpo": {
+        "nome": "Zuleide Ramos Costa",
+        "email": "a1.zuleide@qa.gouce.app",
+        "senha": "***",
+        "faculdade_id": 1,
+        "bairro_id": 1,
+        "curso": "Ciência da Computação",
+        "arquivos": [
+          "comprovante_matricula=doc.pdf",
+          "comprovante_residencia=doc.pdf",
+          "foto_perfil=foto.png"
+        ]
+      }
+    },
+    "resposta": {
+      "status": 201,
+      "corpo": {
+        "success": true,
+        "message": "Cadastro enviado para análise da coordenação",
+        "data": {
+          "id": 2,
+          "nome": "Zuleide Ramos Costa",
+          "email": "a1.zuleide@qa.gouce.app",
+          "status_cadastro": "pendente"
+        }
+      }
+    }
+  },
+  {
+    "passo": "PREP-03",
+    "descricao": "Cadastrar aluno Bruno Alves Lima pelo fluxo real (multipart)",
+    "data_hora_utc": "2026-10-27T17:47:55Z",
+    "requisicao": {
+      "metodo": "POST",
+      "rota": "/usuarios/cadastrar",
+      "credencial": "-",
+      "corpo": {
+        "nome": "Bruno Alves Lima",
+        "email": "a2.bruno@qa.gouce.app",
+        "senha": "***",
+        "faculdade_id": 1,
+        "bairro_id": 1,
+        "curso": "Ciência da Computação",
+        "arquivos": [
+          "comprovante_matricula=doc.pdf",
+          "comprovante_residencia=doc.pdf",
+          "foto_perfil=foto.png"
+        ]
+      }
+    },
+    "resposta": {
+      "status": 201,
+      "corpo": {
+        "success": true,
+        "message": "Cadastro enviado para análise da coordenação",
+        "data": {
+          "id": 3,
+          "nome": "Bruno Alves Lima",
+          "email": "a2.bruno@qa.gouce.app",
+          "status_cadastro": "pendente"
+        }
+      }
+    }
+  },
+  {
+    "passo": "PREP-04",
+    "descricao": "Cadastrar aluno Marta Sousa Neri pelo fluxo real (multipart)",
+    "data_hora_utc": "2026-10-27T17:47:58Z",
+    "requisicao": {
+      "metodo": "POST",
+      "rota": "/usuarios/cadastrar",
+      "credencial": "-",
+      "corpo": {
+        "nome": "Marta Sousa Neri",
+        "email": "a3.marta@qa.gouce.app",
+        "senha": "***",
+        "faculdade_id": 1,
+        "bairro_id": 1,
+        "curso": "Ciência da Computação",
+        "arquivos": [
+          "comprovante_matricula=doc.pdf",
+          "comprovante_residencia=doc.pdf",
+          "foto_perfil=foto.png"
+        ]
+      }
+    },
+    "resposta": {
+      "status": 201,
+      "corpo": {
+        "success": true,
+        "message": "Cadastro enviado para análise da coordenação",
+        "data": {
+          "id": 4,
+          "nome": "Marta Sousa Neri",
+          "email": "a3.marta@qa.gouce.app",
+          "status_cadastro": "pendente"
+        }
+      }
+    }
+  },
+  {
+    "passo": "PREP-05",
+    "descricao": "Cadastrar aluno Ana Paula Freitas pelo fluxo real (multipart)",
+    "data_hora_utc": "2026-10-27T17:48:01Z",
+    "requisicao": {
+      "metodo": "POST",
+      "rota": "/usuarios/cadastrar",
+      "credencial": "-",
+      "corpo": {
+        "nome": "Ana Paula Freitas",
+        "email": "a4.ana@qa.gouce.app",
+        "senha": "***",
+        "faculdade_id": 1,
+        "bairro_id": 1,
+        "curso": "Ciência da Computação",
+        "arquivos": [
+          "comprovante_matricula=doc.pdf",
+          "comprovante_residencia=doc.pdf",
+          "foto_perfil=foto.png"
+        ]
+      }
+    },
+    "resposta": {
+      "status": 201,
+      "corpo": {
+        "success": true,
+        "message": "Cadastro enviado para análise da coordenação",
+        "data": {
+          "id": 5,
+          "nome": "Ana Paula Freitas",
+          "email": "a4.ana@qa.gouce.app",
+          "status_cadastro": "pendente"
+        }
+      }
+    }
+  },
+  {
+    "passo": "PREP-06",
+    "descricao": "Cadastrar aluno Pedro Aprovado Silva pelo fluxo real (multipart)",
+    "data_hora_utc": "2026-10-27T17:48:02Z",
+    "requisicao": {
+      "metodo": "POST",
+      "rota": "/usuarios/cadastrar",
+      "credencial": "-",
+      "corpo": {
+        "nome": "Pedro Aprovado Silva",
+        "email": "ap.pedro@qa.gouce.app",
+        "senha": "***",
+        "faculdade_id": 1,
+        "bairro_id": 1,
+        "curso": "Ciência da Computação",
+        "arquivos": [
+          "comprovante_matricula=doc.pdf",
+          "comprovante_residencia=doc.pdf",
+          "foto_perfil=foto.png"
+        ]
+      }
+    },
+    "resposta": {
+      "status": 201,
+      "corpo": {
+        "success": true,
+        "message": "Cadastro enviado para análise da coordenação",
+        "data": {
+          "id": 6,
+          "nome": "Pedro Aprovado Silva",
+          "email": "ap.pedro@qa.gouce.app",
+          "status_cadastro": "pendente"
+        }
+      }
+    }
+  },
+  {
+    "passo": "PREP-07",
+    "descricao": "Aprovar AP (aluno aprovado da PC-04)",
+    "data_hora_utc": "2026-10-27T17:48:02Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/6/aprovar",
+      "credencial": "admin",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "aluno_id": 6,
+        "status_cadastro": "ativado",
+        "mensagem": "Cadastro do aluno aprovado com sucesso!"
+      }
+    }
+  },
+  {
+    "passo": "PREP-08",
+    "descricao": "Cadastrar aluno Rita Representante Melo pelo fluxo real (multipart)",
+    "data_hora_utc": "2026-10-27T17:48:18Z",
+    "requisicao": {
+      "metodo": "POST",
+      "rota": "/usuarios/cadastrar",
+      "credencial": "-",
+      "corpo": {
+        "nome": "Rita Representante Melo",
+        "email": "rp.rita@qa.gouce.app",
+        "senha": "***",
+        "faculdade_id": 1,
+        "bairro_id": 1,
+        "curso": "Ciência da Computação",
+        "arquivos": [
+          "comprovante_matricula=doc.pdf",
+          "comprovante_residencia=doc.pdf",
+          "foto_perfil=foto.png"
+        ]
+      }
+    },
+    "resposta": {
+      "status": 201,
+      "corpo": {
+        "success": true,
+        "message": "Cadastro enviado para análise da coordenação",
+        "data": {
+          "id": 7,
+          "nome": "Rita Representante Melo",
+          "email": "rp.rita@qa.gouce.app",
+          "status_cadastro": "pendente"
+        }
+      }
+    }
+  },
+  {
+    "passo": "PREP-09",
+    "descricao": "Aprovar aluna que será representante",
+    "data_hora_utc": "2026-10-27T17:48:18Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/7/aprovar",
+      "credencial": "admin",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "aluno_id": 7,
+        "status_cadastro": "ativado",
+        "mensagem": "Cadastro do aluno aprovado com sucesso!"
+      }
+    }
+  },
+  {
+    "passo": "PREP-10",
+    "descricao": "Promover a aluna 7 a representante",
+    "data_hora_utc": "2026-10-27T17:48:31Z",
+    "requisicao": {
+      "metodo": "POST",
+      "rota": "/representantes/promover",
+      "credencial": "admin",
+      "corpo": {
+        "aluno_id": 7,
+        "faculdade_id": 1
+      }
+    },
+    "resposta": {
+      "status": 201,
+      "corpo": {
+        "success": true,
+        "message": "Operação realizada com sucesso",
+        "data": {
+          "id": 7,
+          "aluno_id": 7,
+          "nome": "Rita Representante Melo",
+          "email": "rp.rita@qa.gouce.app",
+          "ativo": true,
+          "faculdade_id": 1,
+          "faculdade": {
+            "id_faculdade": 1,
+            "nome_faculdade": "Universidade Federal do Ceará",
+            "sigla": null,
+            "campus_faculdade": "Campus Quixadá",
+            "ativo": true
+          },
+          "instituicao": "Universidade Federal do Ceará",
+          "campus": "Campus Quixadá",
+          "curso": "Ciência da Computação",
+          "periodo_ingresso": "2025.1",
+          "id_foto_aluno": "af676a13-7803-4e68-9ea3-6a3f6636826f",
+          "criado_em": "2026-10-27T17:48:18.351344Z"
+        }
+      }
+    }
+  },
+  {
+    "passo": "PREP-11",
+    "descricao": "Restaurar A4 para pendente depois do CT-006 item 3c",
+    "data_hora_utc": "2026-10-27T17:50:27Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/5/status",
+      "credencial": "admin",
+      "corpo": {
+        "status_cadastro": "pendente"
+      }
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "aluno_id": 5,
+        "status_cadastro": "pendente",
+        "motivo_reprovacao": "Documentos precisam ser revistos.",
+        "documentos_reenvio": null,
+        "mensagem": "Status do cadastro alterado para pendente."
+      }
+    }
+  },
+  {
+    "passo": "PREP-12",
+    "descricao": "Restaurar AP para ativado depois do CT-007",
+    "data_hora_utc": "2026-10-27T17:50:53Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/6/aprovar",
+      "credencial": "admin",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "aluno_id": 6,
+        "status_cadastro": "ativado",
+        "mensagem": "Cadastro do aluno aprovado com sucesso!"
+      }
+    }
+  },
+  {
+    "passo": "PREP-13",
+    "descricao": "Restaurar A2 para rejeitado depois do CT-007",
+    "data_hora_utc": "2026-10-27T17:50:53Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/3/status",
+      "credencial": "admin",
+      "corpo": {
+        "status_cadastro": "rejeitado",
+        "motivo_reprovacao": "Documentos precisam ser reenviados.",
+        "documentos_reenvio": [
+          {
+            "tipo": "comprovante_matricula",
+            "motivo": "Comprovante de matrícula desatualizado."
+          },
+          {
+            "tipo": "comprovante_residencia",
+            "motivo": "Comprovante com mais de 3 meses."
+          }
+        ]
+      }
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "aluno_id": 3,
+        "status_cadastro": "rejeitado",
+        "motivo_reprovacao": "Documentos precisam ser reenviados.",
+        "documentos_reenvio": [
+          {
+            "tipo": "comprovante_matricula",
+            "motivo": "Comprovante de matrícula desatualizado."
+          },
+          {
+            "tipo": "comprovante_residencia",
+            "motivo": "Comprovante com mais de 3 meses."
+          }
+        ],
+        "mensagem": "Documentos rejeitados e marcados para reenvio."
+      }
+    }
+  }
+]
