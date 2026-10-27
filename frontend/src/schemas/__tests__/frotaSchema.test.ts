@@ -57,7 +57,7 @@ jest.mock('../../api/api', () => ({
     }),
     patch: jest.fn((...args: any[]) => {
       const url = args[0];
-      if (url === '/onibus/1/inativar' || url === '/onibus/OCR1234/inativar') {
+      if (url.includes('1/inativar') || url.includes('OCR1234') || url.includes('OCR-1234')) {
         const error: any = new Error('Este veículo possui alocações pendentes e não pode ser inativado no momento.');
         (error as any).response = {
           status: 409,
