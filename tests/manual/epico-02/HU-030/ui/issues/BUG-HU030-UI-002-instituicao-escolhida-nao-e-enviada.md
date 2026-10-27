@@ -5,7 +5,7 @@
 | **Tipo** | Bug funcional |
 | **Severidade** | 🔴 Alta (bloqueante) |
 | **Ambiente** | Desenvolvimento — app web (`http://localhost:3000`), API local (`http://localhost:8000`), branch `test/manual-ui-hu-030` a partir da `develop` (`88eb19dc`), com as mudanças do PR #195 aplicadas |
-| **Issue** | A definir |
+| **Issue** | [#298](https://github.com/GOUOCE/GOUCE-app/issues/298) |
 | **Caso relacionado** | `CT-HU030-UI-003`, `CT-HU030-UI-004`, `CT-HU030-UI-008` |
 | **Documentação** | [HU-030 — Testes manuais de UI](https://github.com/GOUOCE/GOUCE-app/blob/test/manual-ui-hu-030/tests/manual/epico-02/HU-030/ui/UI-HU-030.md#ct-hu030-ui-003--atribuir-a-instituição-escolhida-e-preservar-cadastro-de-aluno) |
 | **Issue relacionada** | [#262](https://github.com/GOUOCE/GOUCE-app/issues/262) (lista de instituições fixa), AC-03/AC-12 da HU-030 |

@@ -5,7 +5,7 @@
 | **Tipo** | Bug de UX |
 | **Severidade** | 🟡 Média |
 | **Ambiente** | Desenvolvimento — app web (`http://localhost:3000`), API local (`http://localhost:8000`), branch `test/manual-ui-hu-030` a partir da `develop` (`88eb19dc`), com as mudanças do PR #195 aplicadas |
-| **Issue** | A definir |
+| **Issue** | [#301](https://github.com/GOUOCE/GOUCE-app/issues/301) |
 | **Caso relacionado** | `CT-HU030-UI-001`, `CT-HU030-UI-007` |
 | **Documentação** | [HU-030 — Testes manuais de UI](https://github.com/GOUOCE/GOUCE-app/blob/test/manual-ui-hu-030/tests/manual/epico-02/HU-030/ui/UI-HU-030.md#ct-hu030-ui-001--listar-ativos-e-revogados-sem-representantes-fictícios) |
 | **Issue relacionada** | [#288](https://github.com/GOUOCE/GOUCE-app/issues/288) (motoristas), [#275](https://github.com/GOUOCE/GOUCE-app/issues/275) (frota), [#256](https://github.com/GOUOCE/GOUCE-app/issues/256) (faculdades) e [#245](https://github.com/GOUOCE/GOUCE-app/issues/245) (bairros) |

@@ -421,11 +421,11 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| CT-001, CT-007 | Representantes revogados somem da lista (a tela filtra só os ativos), contrariando o AC-01 | Issue a abrir (Front) |
-| CT-003, CT-004, CT-008 | A instituição escolhida é ignorada: a atribuição usa sempre a faculdade 1, e a lista de instituições é fixa. **Bloqueante** | Issue a abrir (Front) |
-| CT-007 | Mensagens de sucesso em barra preta, fora do padrão de pop-up | Issue a abrir (Front) |
-| CT-001, CT-007 | Telas não recriadas: Cadastrar reabre com instituição e discente da vez anterior (print) e a seta volta ao Painel | Issue a abrir (Front) |
-| CT-001, CT-012 | Falha da lista e da revogação sem erro visível; curso e semestre inventados no cartão do discente (print) | Issue a abrir (Front) |
+| CT-001, CT-007 | Representantes revogados somem da lista (a tela filtra só os ativos), contrariando o AC-01 | [#297](https://github.com/GOUOCE/GOUCE-app/issues/297) |
+| CT-003, CT-004, CT-008 | A instituição escolhida é ignorada: a atribuição usa sempre a faculdade 1, e a lista de instituições é fixa. **Bloqueante** | [#298](https://github.com/GOUOCE/GOUCE-app/issues/298) |
+| CT-007 | Mensagens de sucesso em barra preta, fora do padrão de pop-up | [#299](https://github.com/GOUOCE/GOUCE-app/issues/299) |
+| CT-001, CT-007 | Telas não recriadas: Cadastrar reabre com instituição e discente da vez anterior (print) e a seta volta ao Painel | [#301](https://github.com/GOUOCE/GOUCE-app/issues/301) |
+| CT-001, CT-012 | Falha da lista e da revogação sem erro visível; curso e semestre inventados no cartão do discente (print) | [#300](https://github.com/GOUOCE/GOUCE-app/issues/300) |
 | CT-009 | Login de aluno promovido a representante, que dava “Perfil incompatível” | Corrigido pelo PR #195 ([#190](https://github.com/GOUOCE/GOUCE-app/issues/190)) |
 
 ## Observações gerais

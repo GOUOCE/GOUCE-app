@@ -5,7 +5,7 @@
 | **Tipo** | Bug de UX |
 | **Severidade** | 🟢 Baixa |
 | **Ambiente** | Desenvolvimento — app web (`http://localhost:3000`), API local (`http://localhost:8000`), branch `test/manual-ui-hu-030` a partir da `develop` (`88eb19dc`), com as mudanças do PR #195 aplicadas |
-| **Issue** | A definir |
+| **Issue** | [#299](https://github.com/GOUOCE/GOUCE-app/issues/299) |
 | **Caso relacionado** | `CT-HU030-UI-007` |
 | **Documentação** | [HU-030 — Testes manuais de UI](https://github.com/GOUOCE/GOUCE-app/blob/test/manual-ui-hu-030/tests/manual/epico-02/HU-030/ui/UI-HU-030.md#ct-hu030-ui-007--cancelar-e-confirmar-revogação-mantendo-aluno-e-revogado-na-lista) |
 | **Issue relacionada** | [#289](https://github.com/GOUOCE/GOUCE-app/issues/289) (motoristas), [#278](https://github.com/GOUOCE/GOUCE-app/issues/278) (frota) e [#260](https://github.com/GOUOCE/GOUCE-app/issues/260) (faculdades) |

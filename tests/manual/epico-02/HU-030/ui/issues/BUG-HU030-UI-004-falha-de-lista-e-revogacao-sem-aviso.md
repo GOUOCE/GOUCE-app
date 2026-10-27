@@ -5,7 +5,7 @@
 | **Tipo** | Bug de UX |
 | **Severidade** | 🟡 Média |
 | **Ambiente** | Desenvolvimento — app web (`http://localhost:3000`), API local (`http://localhost:8000`), branch `test/manual-ui-hu-030` a partir da `develop` (`88eb19dc`), com as mudanças do PR #195 aplicadas |
-| **Issue** | A definir |
+| **Issue** | [#300](https://github.com/GOUOCE/GOUCE-app/issues/300) |
 | **Caso relacionado** | `CT-HU030-UI-001`, `CT-HU030-UI-012` |
 | **Documentação** | [HU-030 — Testes manuais de UI](https://github.com/GOUOCE/GOUCE-app/blob/test/manual-ui-hu-030/tests/manual/epico-02/HU-030/ui/UI-HU-030.md#ct-hu030-ui-012--falha-de-conexão-sem-exemplos-nem-atribuiçãorevogação-falsa) |
 | **Issue relacionada** | [#263](https://github.com/GOUOCE/GOUCE-app/issues/263) (faculdades) e [#283](https://github.com/GOUOCE/GOUCE-app/issues/283) (frota) |
