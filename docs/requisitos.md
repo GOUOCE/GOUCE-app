@@ -95,67 +95,66 @@ Quixadá \- CE
 
 [7.2.8 HU-028 \- Renovação de Vínculo Institucional 36](#7.2.8-hu-028---renovação-de-vínculo-institucional)
 
-[7.2.9 HU-029 \- Carteirinha Digital do Aluno 39](#7.2.9-hu-029---carteirinha-digital-do-aluno)
-
-[7.2.10 HU-031 \- Consultar Pendência de Cadastro 41](#7.2.10-hu-031---consultar-pendência-de-cadastro)
+[7.2.9 HU-031 \- Consultar Pendência de Cadastro 41](#7.2.9-hu-031---consultar-pendência-de-cadastro)
 
 [7.3 EP-002 \- Gestão de Cadastros Base 42](#7.3-ep-002---gestão-de-cadastros-base)
 
 [7.3.1 HU-007 \- Gerenciamento de Bairros/Pontos de Parada 43](#7.3.1-hu-007---gerenciamento-de-bairros/pontos-de-parada)
 
-[7.3.2 HU-008 \- Gerenciamento de Faculdades 45](#7.3.2-hu-008---gerenciamento-de-faculdades)
+[7.3.2 HU-008 \- Gerenciamento de Faculdades 46](#7.3.2-hu-008---gerenciamento-de-faculdades)
 
-[7.3.3 HU-009 \- Gerenciamento de Frota (Ônibus) 47](<#7.3.3-hu-009---gerenciamento-de-frota-(ônibus)>)
+[7.3.3 HU-009 \- Gerenciamento de Frota (Ônibus) 48](<#7.3.3-hu-009---gerenciamento-de-frota-(ônibus)>)
 
-[7.3.4 HU-010 \- Gerenciamento de Motoristas 49](#7.3.4-hu-010---gerenciamento-de-motoristas)
+[7.3.4 HU-010 \- Gerenciamento de Motoristas 51](#7.3.4-hu-010---gerenciamento-de-motoristas)
 
-[7.3.5 HU-030 \- Gerenciamento de Representantes 52](#7.3.5-hu-030---gerenciamento-de-representantes)
+[7.3.5 HU-030 \- Gerenciamento de Representantes 53](#7.3.5-hu-030---gerenciamento-de-representantes)
 
-[7.4 EP-003 \- Gestão de Rotas e Horários 55](#7.4-ep-003---gestão-de-rotas-e-horários)
+[7.4 EP-003 \- Gestão de Rotas e Horários 56](#7.4-ep-003---gestão-de-rotas-e-horários)
 
-[7.4.1 HU-011 \- Gerenciamento de Rotas Principais e Horários 55](#7.4.1-hu-011---gerenciamento-de-rotas-principais-e-horários)
+[7.4.1 HU-011 \- Gerenciamento de Rotas Principais e Horários 56](#7.4.1-hu-011---gerenciamento-de-rotas-principais-e-horários)
 
-[7.4.2 HU-012 \- Gerenciamento de Rotas Complementares 57](#7.4.2-hu-012---gerenciamento-de-rotas-complementares)
+[7.4.2 HU-012 \- Gerenciamento de Rotas Complementares 59](#7.4.2-hu-012---gerenciamento-de-rotas-complementares)
 
-[7.5 EP-004 \- Agendamento de Transporte (Aluno) 59](<#7.5-ep-004---agendamento-de-transporte-(aluno)>)
+[7.5 EP-004 \- Agendamento de Transporte (Aluno) 61](<#7.5-ep-004---agendamento-de-transporte-(aluno)>)
 
-[7.5.1 HU-013 \- Agendamento de Transporte 60](#7.5.1-hu-013---agendamento-de-transporte)
+[7.5.1 HU-013 \- Agendamento de Transporte 62](#7.5.1-hu-013---agendamento-de-transporte)
 
-[7.5.2 HU-014 \- Cancelamento de Agendamento 63](#7.5.2-hu-014---cancelamento-de-agendamento)
+[7.5.2 HU-014 \- Visualização e Cancelamento de Agendamentos (Meus Agendamentos) 65](#heading=h.cfwd9bcfpfm)
 
-[7.5.3 HU-015 \- Consulta de Rota Complementar e Transferência 65](#7.5.3-hu-015---consulta-de-rota-complementar-e-transferência)
+[7.5.3 HU-015 \- Consulta de Rota Complementar e Transferência 67](#7.5.3-hu-015---consulta-de-rota-complementar-e-transferência)
 
-[7.6 EP-005 \- Alocação e Distribuição Logística 67](#7.6-ep-005---alocação-e-distribuição-logística)
+[7.6 EP-005 \- Alocação e Distribuição Logística 69](#7.6-ep-005---alocação-e-distribuição-logística)
 
-[7.6.1 HU-016 \- Distribuição de Alunos nos Ônibus 67](#7.6.1-hu-016---distribuição-de-alunos-nos-ônibus)
+[7.6.1 HU-016 \- Distribuição de Alunos nos Ônibus 69](#7.6.1-hu-016---distribuição-de-alunos-nos-ônibus)
 
-[7.6.2 HU-017 \- Alocação de Motoristas às Rotas 70](#7.6.2-hu-017---alocação-de-motoristas-às-rotas)
+[7.6.2 HU-017 \- Alocação de Motoristas às Rotas 72](#7.6.2-hu-017---alocação-de-motoristas-às-rotas)
 
-[7.6.3 HU-018 \- Visualização da Lista de Embarque 72](#7.6.3-hu-018---visualização-da-lista-de-embarque)
+[7.6.3 HU-018 \- Visualização da Lista de Embarque 74](#7.6.3-hu-018---visualização-da-lista-de-embarque)
 
-[7.6.4 HU-019 \- Consulta de Alocação Diária 74](#7.6.4-hu-019---consulta-de-alocação-diária)
+[7.6.4 HU-019 \- Consulta de Alocação Diária 76](#7.6.4-hu-019---consulta-de-alocação-diária)
 
-[7.6.5 HU-020 \- Rotatividade Inteligente / Rodízio Semanal 76](#7.6.5-hu-020---rotatividade-inteligente-/-rodízio-semanal)
+[7.6.5 HU-020 \- Rotatividade Inteligente / Rodízio Semanal 78](#7.6.5-hu-020---rotatividade-inteligente-/-rodízio-semanal)
 
-[7.7 EP-006 \- Frequência e Relatórios Gerenciais 78](#7.7-ep-006---frequência-e-relatórios-gerenciais)
+[7.7 EP-006 \- Frequência e Relatórios Gerenciais 80](#7.7-ep-006---frequência-e-relatórios-gerenciais)
 
-[7.7.1 HU-021 \- Registro de Embarque e Frequência 79](#7.7.1-hu-021---registro-de-embarque-e-frequência)
+[7.7.1 HU-021 \- Registro de Embarque e Frequência 81](#7.7.1-hu-021---registro-de-embarque-e-frequência)
 
-[7.7.2 HU-022 \- Geração de Relatórios Quantitativos 81](#7.7.2-hu-022---geração-de-relatórios-quantitativos)
+[7.7.2 HU-022 \- Geração de Relatórios Quantitativos 83](#7.7.2-hu-022---geração-de-relatórios-quantitativos)
 
-[7.8 EP-007 \- Comunicação e Mural de Avisos 83](#7.8-ep-007---comunicação-e-mural-de-avisos)
+[7.8 EP-007 \- Comunicação e Mural de Avisos 85](#7.8-ep-007---comunicação-e-mural-de-avisos)
 
-[7.8.1 HU-023 \- Publicação de Avisos 84](#7.8.1-hu-023---publicação-de-avisos)
+[7.8.1 HU-023 \- Publicação de Avisos 86](#7.8.1-hu-023---publicação-de-avisos)
 
-[7.8.2 HU-024 \- Recebimento de Notificações Push 85](#7.8.2-hu-024---recebimento-de-notificações-push)
+[7.8.2 HU-024 \- Recebimento de Notificações Push 87](#7.8.2-hu-024---recebimento-de-notificações-push)
 
-[**8 GLOSSÁRIO 87**](#8-glossário)
+[**8 GLOSSÁRIO 89**](#8-glossário)
 
-| Versão  | Data           | Autor              | Descrição                                       |
-| :------ | :------------- | :----------------- | :---------------------------------------------- |
-| **0.1** | **16/08/2026** | **Clidenor Lopes** | **Iniciando escopo do projeto**                 |
-| **0.2** | **17/08/2026** | **Clidenor Lopes** | **Elicitando requisitos do projeto legado web** |
-| **1.0** | **25/08/2026** | **Clidenor Lopes** | **Terminando Épicos e HUs**                     |
+| Versão  | Data           | Autor              | Descrição                                                                                                                                     |
+| :------ | :------------- | :----------------- | :-------------------------------------------------------------------------------------------------------------------------------------------- |
+| **0.1** | **16/08/2026** | **Clidenor Lopes** | **Iniciando escopo do projeto**                                                                                                               |
+| **0.2** | **17/08/2026** | **Clidenor Lopes** | **Elicitando requisitos do projeto legado web**                                                                                               |
+| **1.0** | **25/08/2026** | **Clidenor Lopes** | **Terminando Épicos e HUs**                                                                                                                   |
+| **2.0** | **26/10/2026** | **Clidenor Lopes** | **Adição do perfil Representante, fluxo de avaliação documental, controle de passageiros em pé e refinamento geral dos critérios de aceite.** |
 
 # **1 INTRODUÇÃO** {#1-introdução}
 
@@ -196,7 +195,7 @@ O sistema possui os seguintes objetivos:
 - Automatizar o processo de agendamento de uso do transporte e o controle de presença (frequência) dos estudantes.
 - Otimizar a alocação logística de veículos e motoristas de forma inteligente, mitigando a superlotação e a ociosidade dos ônibus.
 - Melhorar a experiência do usuário final, fornecendo informações claras e em tempo real sobre qual veículo, rota e motorista foram designados para ele naquele dia específico.
-- Centralizar a comunicação oficial entre a coordenação de transportes e os estudantes por meio de um mural de avisos integrado ao aplicado.
+- Centralizar a comunicação oficial entre a coordenação de transportes e os estudantes por meio de um mural de avisos integrado ao aplicativo.
 - Disponibilizar dados precisos sobre a ocupação de rotas e quilometragem dos motoristas para apoiar a tomada de decisão gerencial e garantir rodízios justos.
 
 ## **2.3 Perfis de Usuário** {#2.3-perfis-de-usuário}
@@ -236,40 +235,39 @@ Os requisitos funcionais descrevem as funcionalidades e os comportamentos espera
 
 **Tabela 3 \- Requisitos Funcionais**
 
-| ID         | Nome                                  | Descrição                                                                                                                                                                                                                                                                                                                    | Prioridade | Status    |
-| :--------- | :------------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------- | :-------- |
-| **RF-001** | Autenticação (Login)                  | O sistema deve permitir o login de alunos, representantes e administradores com credenciais válidas.                                                                                                                                                                                                                         | Alta       | A definir |
-| **RF-002** | Recuperação de Senha                  | O sistema deve permitir que os usuários redefinam suas senhas esquecidas de forma segura (ex: via e-mail ou código SMS).                                                                                                                                                                                                     | Alta       | A definir |
-| **RF-003** | Controle de Acesso por Perfil         | O sistema deve restringir o acesso a menus e funções com base no perfil logado (Aluno, Representante ou Administrador).                                                                                                                                                                                                      | Alta       | A definir |
-| **RF-004** | Aceite de Termos de Uso               | O sistema deve exigir que o aluno leia e aceite os termos de uso e política de privacidade no momento do cadastro.                                                                                                                                                                                                           | Alta       | A definir |
-| **RF-005** | Cadastro de Aluno                     | O sistema deve permitir que os estudantes realizem uma solicitação de cadastro no aplicativo, informando seus dados e anexando os documentos obrigatórios (comprovante de residência e matrícula).                                                                                                                           | Alta       | A definir |
-| **RF-006** | Edição de Perfil                      | O sistema deve permitir que o aluno logado edite seus dados pessoais, como telefone e bairro de residência.                                                                                                                                                                                                                  | Média      | A definir |
-| **RF-007** | Gerenciamento de Administradores      | O sistema deve permitir criar, editar e inativar perfis com privilégios administrativos.                                                                                                                                                                                                                                     | Alta       | A definir |
-| **RF-008** | Gerenciamento de Frota                | O sistema deve permitir ao administrador cadastrar, editar e inativar ônibus, informando sua placa, quantidade de assentos e capacidade máxima de alunos em pé.                                                                                                                                                              | Alta       | A definir |
-| **RF-009** | Gerenciamento de Motoristas           | O sistema deve permitir ao administrador cadastrar, editar e inativar motoristas, registrando nome completo, telefone, número da CNH e categoria da CNH.                                                                                                                                                                     | Alta       | A definir |
-| **RF-010** | Gerenciamento de Faculdades           | O sistema deve permitir ao administrador cadastrar, editar e inativar as faculdades de destino.                                                                                                                                                                                                                              | Alta       | A definir |
-| **RF-011** | Gerenciamento de Bairros e Pontos     | O sistema deve permitir ao administrador cadastrar e manter os bairros e seus respectivos pontos de parada.                                                                                                                                                                                                                  | Alta       | A definir |
-| **RF-012** | Definição de Rotas e Bairros          | O sistema deve permitir ao administrador estruturar as rotas, vinculando os bairros correspondentes.                                                                                                                                                                                                                         | Alta       | A definir |
-| **RF-013** | Gerenciamento de Horários             | O sistema deve permitir ao administrador definir os horários de saída e retorno associados a cada rota.                                                                                                                                                                                                                      | Alta       | A definir |
-| **RF-014** | Inativação de Entidades (Soft Delete) | O sistema deve permitir inativar cadastros (ônibus, motoristas, etc.) sem apagá-los do banco de dados, preservando relatórios antigos, e permitir que o administrador visualize os registros inativos quando necessário.                                                                                                     | Alta       | A definir |
-| **RF-015** | Agendamento de Transporte             | O sistema deve permitir que o aluno realize o agendamento do transporte para um ou mais dias da semana, informando, para cada dia selecionado, se utilizará o transporte, o horário, o ponto de embarque, a instituição de ensino de destino, a rota complementar, quando aplicável, e as informações referentes ao retorno. | Alta       | A definir |
-| **RF-016** | Cancelamento de Agendamento           | O sistema deve permitir que o aluno cancele seu agendamento de utilização do transporte para determinado dia.                                                                                                                                                                                                                | Alta       | A definir |
-| **RF-017** | Distribuição de Alunos                | O sistema deve permitir a distribuição dos alunos confirmados nos ônibus disponíveis, considerando a capacidade de cada veículo e permitindo a realocação de alunos para outro ônibus quando a capacidade máxima for atingida.                                                                                               | Alta       | A definir |
-| **RF-018** | Alocação de Motoristas                | O sistema deve permitir ao administrador definir qual motorista fará qual rota no dia.                                                                                                                                                                                                                                       | Alta       | A definir |
-| **RF-019** | Consulta de Alocação Diária           | O sistema deve exibir para o aluno qual ônibus, motorista, rota, letreiro e placa do ônibus foram designados para ele no dia.                                                                                                                                                                                                | Alta       | A definir |
-| **RF-020** | Visualização da Lista de Embarque     | O sistema deve permitir ao administrador visualizar a lista detalhada de alunos distribuídos por cada ônibus/rota, e permitir ao **representante** visualizar exclusivamente a lista de embarque referente aos alunos da universidade sob sua responsabilidade.                                                              | Alta       | A definir |
-| **RF-021** | Acompanhamento de Frequência          | O sistema deve permitir ao **representante** registrar a presença (check-in) dos estudantes no momento do embarque, e permitir ao administrador visualizar esse controle em tempo real.                                                                                                                                      | Alta       | A definir |
-| **RF-022** | Geração de Relatórios                 | O sistema deve gerar relatórios quantitativos e gerenciais sobre a utilização do transporte, incluindo quantidade de agendamentos, embarques, taxa de comparecimento, quantidade de alunos por dia, faculdade e localidade, demanda das rotas e informações sobre os dias trabalhados pelos motoristas.                      | Média      | A definir |
-| **RF-023** | Rotatividade Inteligente              | O sistema deve permitir ao administrador planejar e gerenciar o rodízio semanal dos ônibus entre diferentes rotas, considerando a quilometragem percorrida e permitindo visualizar previamente a alocação dos veículos para as próximas semanas.                                                                             | Média      | A definir |
-| **RF-024** | Publicação de Avisos                  | O sistema deve permitir ao administrador criar e publicar comunicados no mural de avisos.                                                                                                                                                                                                                                    | Média      | A definir |
-| **RF-025** | Recebimento de Notificações Push      | O sistema móvel deve receber e exibir alertas push no celular do aluno sempre que houver aviso urgente ou alteração de rota.                                                                                                                                                                                                 | Média      | A definir |
-| **RF-028** | Gerenciamento de Rotas Complementares | O sistema deve permitir ao administrador cadastrar e manter as rotas complementares e suas respectivas opções de utilização, horários e pontos de conexão com as rotas principais.                                                                                                                                           | Alta       | A definir |
-| **RF-029** | Consulta de Rota Complementar         | O sistema deve permitir que o aluno consulte, quando aplicável, a rota complementar que deverá utilizar e as informações necessárias para realizar a transferência para a rota principal.                                                                                                                                    | Alta       | A definir |
-| **RF-030** | Upload de Comprovantes                | O sistema deve permitir que o aluno envie arquivos (PDF ou imagem) referentes aos comprovantes de vínculo institucional e residência.                                                                                                                                                                                        | Alta       | A definir |
-| **RF-031** | Avaliação de Solicitação de Cadastro  | O sistema deve permitir ao administrador visualizar a fila de solicitações pendentes, consultar os documentos anexados pelo aluno e aprovar ou reprovar o cadastro.                                                                                                                                                          | Alta       | A Definir |
-| **RF-032** | Emissão de Carterinha Digital         | O sistema deve gerar automaticamente uma carteirinha de identificação digital para os alunos com status 'Aprovado', exibindo foto, dados do aluno, instituição e QR Code.                                                                                                                                                    | Alta       | A Definir |
-| **RF-033** | Renovação Semestral                   | O sistema deve bloquear o agendamento de transporte no início de cada semestre letivo até que o aluno envie um novo comprovante de matrícula para revalidação.                                                                                                                                                               | Alta       | A Definir |
-| **RF-034** | Gerenciamento de Representantes       | O sistema deve permitir ao administrador cadastrar, editar e inativar representantes das universidades responsáveis pelo acompanhamento da frequência dos alunos.                                                                                                                                                            | Alta       | A Definir |
+| ID         | Nome                                   | Descrição                                                                                                                                                                                                                                                                                                                    | Prioridade | Status    |
+| :--------- | :------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------- | :-------- |
+| **RF-001** | Autenticação (Login)                   | O sistema deve permitir o login de alunos, representantes e administradores com credenciais válidas.                                                                                                                                                                                                                         | Alta       | A definir |
+| **RF-002** | Recuperação de Senha                   | O sistema deve permitir que os usuários redefinam suas senhas esquecidas de forma segura (ex: via e-mail ou código SMS).                                                                                                                                                                                                     | Alta       | A definir |
+| **RF-003** | Controle de Acesso por Perfil          | O sistema deve restringir o acesso a menus e funções com base no perfil logado (Aluno, Representante ou Administrador).                                                                                                                                                                                                      | Alta       | A definir |
+| **RF-004** | Aceite de Termos de Uso                | O sistema deve exigir que o aluno leia e aceite os termos de uso e política de privacidade no momento do cadastro.                                                                                                                                                                                                           | Alta       | A definir |
+| **RF-005** | Cadastro de Aluno                      | O sistema deve permitir que os estudantes realizem uma solicitação de cadastro no aplicativo, informando seus dados e anexando os documentos obrigatórios (comprovante de residência e matrícula).                                                                                                                           | Alta       | A definir |
+| **RF-006** | Edição de Perfil                       | O sistema deve permitir que o aluno logado edite seus dados pessoais, como telefone e bairro de residência.                                                                                                                                                                                                                  | Média      | A definir |
+| **RF-007** | Gerenciamento de Administradores       | O sistema deve permitir criar, editar e inativar perfis com privilégios administrativos.                                                                                                                                                                                                                                     | Alta       | A definir |
+| **RF-008** | Gerenciamento de Frota                 | O sistema deve permitir ao administrador cadastrar, editar e inativar ônibus, informando sua placa, quantidade de assentos e capacidade máxima de alunos em pé.                                                                                                                                                              | Alta       | A definir |
+| **RF-009** | Gerenciamento de Motoristas            | O sistema deve permitir ao administrador cadastrar, editar e inativar motoristas, registrando nome completo e telefone.                                                                                                                                                                                                      | Alta       | A definir |
+| **RF-010** | Gerenciamento de Faculdades            | O sistema deve permitir ao administrador cadastrar, editar e inativar as faculdades de destino.                                                                                                                                                                                                                              | Alta       | A definir |
+| **RF-011** | Gerenciamento de Bairros e Pontos      | O sistema deve permitir ao administrador cadastrar e manter os bairros e seus respectivos pontos de parada.                                                                                                                                                                                                                  | Alta       | A definir |
+| **RF-012** | Definição de Rotas e Bairros           | O sistema deve permitir ao administrador estruturar as rotas, vinculando os bairros correspondentes.                                                                                                                                                                                                                         | Alta       | A definir |
+| **RF-013** | Gerenciamento de Horários              | O sistema deve permitir ao administrador definir os horários de saída e retorno associados a cada rota.                                                                                                                                                                                                                      | Alta       | A definir |
+| **RF-014** | Inativação de Entidades (Soft Delete)  | O sistema deve permitir inativar cadastros (ônibus, motoristas, etc.) sem apagá-los do banco de dados, preservando relatórios antigos, e permitir que o administrador visualize os registros inativos quando necessário.                                                                                                     | Alta       | A definir |
+| **RF-015** | Agendamento de Transporte              | O sistema deve permitir que o aluno realize o agendamento do transporte para um ou mais dias da semana, informando, para cada dia selecionado, se utilizará o transporte, o horário, o ponto de embarque, a instituição de ensino de destino, a rota complementar, quando aplicável, e as informações referentes ao retorno. | Alta       | A definir |
+| **RF-016** | Consulta e Cancelamento de Agendamento | O sistema deve permitir que o aluno visualize seus agendamentos ativos no calendário ("Meus agendamentos") e cancele seu agendamento de utilização do transporte para determinado dia futuro.                                                                                                                                | Alta       | A definir |
+| **RF-017** | Distribuição de Alunos                 | O sistema deve permitir a distribuição dos alunos confirmados nos ônibus disponíveis, considerando a capacidade de cada veículo e permitindo a realocação de alunos para outro ônibus quando a capacidade máxima for atingida.                                                                                               | Alta       | A definir |
+| **RF-018** | Alocação de Motoristas                 | O sistema deve permitir ao administrador definir qual motorista fará qual rota no dia.                                                                                                                                                                                                                                       | Alta       | A definir |
+| **RF-019** | Consulta de Alocação Diária            | O sistema deve exibir para o aluno qual ônibus, motorista, rota, letreiro e placa do ônibus foram designados para ele no dia.                                                                                                                                                                                                | Alta       | A definir |
+| **RF-020** | Visualização da Lista de Embarque      | O sistema deve permitir ao administrador visualizar a lista detalhada de alunos distribuídos por cada ônibus/rota, e permitir ao **representante** visualizar exclusivamente a lista de embarque referente aos alunos da universidade sob sua responsabilidade.                                                              | Alta       | A definir |
+| **RF-021** | Acompanhamento de Frequência           | O sistema deve permitir ao **representante** registrar a presença (check-in) dos estudantes no momento do embarque, e permitir ao administrador visualizar esse controle em tempo real.                                                                                                                                      | Alta       | A definir |
+| **RF-022** | Geração de Relatórios                  | O sistema deve gerar relatórios quantitativos e gerenciais sobre a utilização do transporte, incluindo quantidade de agendamentos, embarques, taxa de comparecimento, quantidade de alunos por dia, faculdade e localidade, demanda das rotas e informações sobre os dias trabalhados pelos motoristas.                      | Média      | A definir |
+| **RF-023** | Rotatividade Inteligente               | O sistema deve permitir ao administrador planejar e gerenciar o rodízio semanal dos ônibus entre diferentes rotas, considerando a quilometragem percorrida e permitindo visualizar previamente a alocação dos veículos para as próximas semanas.                                                                             | Média      | A definir |
+| **RF-024** | Publicação de Avisos                   | O sistema deve permitir ao administrador criar e publicar comunicados no mural de avisos.                                                                                                                                                                                                                                    | Média      | A definir |
+| **RF-025** | Recebimento de Notificações Push       | O sistema móvel deve receber e exibir alertas push no celular do aluno sempre que houver aviso ou alteração de rota.                                                                                                                                                                                                         | Média      | A definir |
+| **RF-028** | Gerenciamento de Rotas Complementares  | O sistema deve permitir ao administrador cadastrar e manter as rotas complementares e suas respectivas opções de utilização, horários e pontos de conexão com as rotas principais.                                                                                                                                           | Alta       | A definir |
+| **RF-029** | Consulta de Rota Complementar          | O sistema deve permitir que o aluno consulte, quando aplicável, a rota complementar que deverá utilizar e as informações necessárias para realizar a transferência para a rota principal.                                                                                                                                    | Alta       | A definir |
+| **RF-030** | Upload de Comprovantes                 | O sistema deve permitir que o aluno envie arquivos (PDF ou imagem) referentes aos comprovantes de vínculo institucional e residência.                                                                                                                                                                                        | Alta       | A definir |
+| **RF-031** | Avaliação de Solicitação de Cadastro   | O sistema deve permitir ao administrador visualizar a fila de solicitações pendentes, consultar os documentos anexados pelo aluno e aprovar ou reprovar o cadastro.                                                                                                                                                          | Alta       | A Definir |
+| **RF-033** | Renovação Semestral                    | O sistema deve bloquear o agendamento de transporte no início de cada semestre letivo até que o aluno envie um novo comprovante de matrícula para revalidação.                                                                                                                                                               | Alta       | A Definir |
+| **RF-034** | Gerenciamento de Representantes        | O sistema deve permitir ao administrador cadastrar, editar e inativar representantes das universidades responsáveis pelo acompanhamento da frequência dos alunos.                                                                                                                                                            | Alta       | A Definir |
 
 Fonte: Elaborado pelo Clidenor(2026).
 
@@ -322,9 +320,9 @@ As regras de negócio representam políticas, restrições e condições que dev
 | **RN-008** | Rodízio de Ônibus                   | O rodízio deve ocorrer entre os ônibus e as diferentes rotas ao longo das semanas, buscando equilibrar a quilometragem percorrida pelos veículos.                                                                                                                                                                                                                                                                   | RF-023                         |
 | **RN-009** | Informações de Alocação Atualizadas | O sistema deve atualizar as informações de ônibus, motorista, rota e placa apresentadas ao aluno sempre que houver alteração em sua alocação.                                                                                                                                                                                                                                                                       | RF-019, RF-024                 |
 | **RN-010** | Rotas Complementares                | Quando o aluno utilizar uma rota complementar, o sistema deve considerar a rota, o horário, o ponto de conexão e o veículo definido para aquela operação, permitindo que o veículo utilizado seja alterado conforme a programação do dia.                                                                                                                                                                           | RF-015, RF-028, RF-029         |
-| **RN-011** | Status de Cadastro Pedente          | Um aluno cuja solicitação de cadastro (ou renovação semestral) ainda não foi aprovada pelo Administrador não poderá acessar o menu de agendamento de rotas.                                                                                                                                                                                                                                                         | RF-005                         |
+| **RN-011** | Status de Cadastro Pendente         | Um aluno cuja solicitação de cadastro (ou renovação semestral) ainda não foi aprovada pelo Administrador não poderá acessar o menu de agendamento de rotas.                                                                                                                                                                                                                                                         | RF-005                         |
 | **RN-012** | Reprovação de Cadastro              | Caso a solicitação de cadastro do aluno seja reprovada, o sistema deve exigir que o administrador informe o motivo (ex: documento ilegível) e permitir que o aluno edite sua solicitação original e reenvie os documentos para uma nova avaliação.                                                                                                                                                                  | RF-031                         |
-| **RN-013** | Validade do Vínculo Institucional   | status de 'Aprovado' possui validade atrelada ao semestre acadêmico. Ao término do período configurado pela administração, a conta do aluno volta ao status 'Pendente', exigindo a etapa de Renovação Semestral.                                                                                                                                                                                                    | RF-033                         |
+| **RN-013** | Validade do Vínculo Institucional   | O status de 'Aprovado' possui validade atrelada ao semestre acadêmico. Ao término do período configurado pela administração, a conta do aluno volta ao status 'Pendente', exigindo a etapa de Renovação Semestral.                                                                                                                                                                                                  | RF-033                         |
 | **RN-014** | Restrição de Check-in               | O registro de presença (check-in) na lista de embarque só pode ser habilitado e realizado no dia exato em que a viagem está agendada.                                                                                                                                                                                                                                                                               | RF-021                         |
 | **RN-015** | Atuação do Representante            | O representante poderá visualizar a lista de embarque e registrar a presença dos alunos vinculados ao transporte da universidade sob sua responsabilidade, não possuindo acesso às funcionalidades administrativas exclusivas do administrador.                                                                                                                                                                     | RF-001, RF-003, RF-020, RF-021 |
 | **RN-016** | Agendamento Semanal                 | O sistema deve permitir que o aluno realize, em uma única operação, o agendamento do transporte para múltiplos dias da semana, mantendo as informações de utilização específicas de cada dia.                                                                                                                                                                                                                       | RF-015, RF-016, RF-017         |
@@ -437,7 +435,7 @@ Como aluno, quero solicitar meu cadastro no aplicativo informando meus dados e *
 
 23. RNF-002 (Segurança \- Armazenamento de senha com hash)
 24. RNF \- 003 (Segurança \- HTTPs)
-25. RNF-010(Privacidade e Proteção de Dados \- LDPD
+25. RNF-010(Privacidade e Proteção de Dados \- LGPD
 
 **Protótipo da Interface:**  
 **\[**A inserir\]
@@ -554,7 +552,7 @@ Como administrador do sistema, quero que o aplicativo restrinja o acesso a menus
 16. RN-006
 17. RN-015
 
-    **Requisitos Relacionados:**  
+    **Requisitos Relacionados:**   
      **FUNCIONAIS:**
 
 18. RF-003
@@ -621,7 +619,7 @@ Como usuário com conta previamente cadastrada, quero solicitar a recuperação 
 
     **Regras de Negócio Relacionadas:**
 
-    **Requisitos Relacionados:**  
+    **Requisitos Relacionados:**   
      **FUNCIONAIS:**
 
 23. RF-002
@@ -682,7 +680,7 @@ Como aluno autenticado no aplicativo, quero acessar e editar os dados do meu per
 
     **Regras de Negócio Relacionadas:**
 
-    **Requisitos Relacionados:**  
+    **Requisitos Relacionados:**   
      **FUNCIONAIS:**
 
 19. RF-006  
@@ -708,17 +706,17 @@ Como administrador logado, quero acessar um painel para criar, visualizar, edita
 
 **Critérios de Aceite:**
 
-1. Administrador acessa o menu "Gestão de Administradores" no painel gerencial e visualiza a listagem de perfis administrativos cadastrados (ativos e inativos).
-2. Administrador consegue criar um novo perfil administrativo preenchendo nome e e-mail no formulário, ou procurando um aluno já cadastrado no sistema pelo email; o sistema valida se o e-mail é único.
-3. E-mail duplicado (já utilizado por aluno ou outro administrador) bloqueia a criação e exibe mensagem: "Este e-mail já está em uso por outro usuário no sistema."
-4. Administrador consegue editar dados de um perfil administrativo existente (nome, e-mail e demais informações).
-5. Administrador consegue inativar (soft delete) um registro ativo ou reativar um registro previamente inativado, sem apagar o registro do banco de dados; tanto a operação de inativação quanto a de reativação são registradas no log de auditoria (usuário, ação, timestamp).
-6. Tentativa de auto-inativação (administrador tenta inativar sua própria conta logada) é bloqueada com mensagem: "Não é possível inativar a conta atualmente em uso."
-7. Inativação bem-sucedida exibe mensagem de confirmação ("Operação realizada com sucesso") e atualiza a listagem.
-8. Administrador consegue visualizar perfis inativos na listagem quando necessário.
-9. Acesso ao menu "Gestão de Administradores" é restrito a usuários com perfil de Administrador; tentativa de acesso sem privilégios retorna erro 403 (Acesso Negado) e redireciona para fora da área.
+1.  Administrador acessa o menu "Gestão de Administradores" no painel gerencial e visualiza a listagem de perfis administrativos cadastrados (ativos e inativos).
+2.  Administrador consegue criar um novo perfil administrativo preenchendo nome e e-mail no formulário, ou procurando um aluno já cadastrado no sistema pelo email; o sistema valida se o e-mail é único.
+3.  E-mail duplicado (já utilizado por aluno ou outro administrador) bloqueia a criação e exibe mensagem: "Este e-mail já está em uso por outro usuário no sistema."
+4.  Administrador consegue editar dados de um perfil administrativo existente (nome, e-mail e demais informações).
+5.  Administrador consegue inativar (soft delete) um registro ativo ou reativar um registro previamente inativado, sem apagar o registro do banco de dados; tanto a operação de inativação quanto a de reativação são registradas no log de auditoria (usuário, ação, timestamp).
+6.  Tentativa de auto-inativação (administrador tenta inativar sua própria conta logada) é bloqueada com mensagem: "Não é possível inativar a conta atualmente em uso."
+7.  Inativação bem-sucedida exibe mensagem de confirmação ("Operação realizada com sucesso") e atualiza a listagem.
+8.  Administrador consegue visualizar perfis inativos na listagem quando necessário.
+9.  Acesso ao menu "Gestão de Administradores" é restrito a usuários com perfil de Administrador; tentativa de acesso sem privilégios retorna erro 403 (Acesso Negado) e redireciona para fora da área.
 
-   **Fluxo Principal:**
+    **Fluxo Principal:**
 
 10. O administrador acessa o menu de "Gestão de Administradores" no painel gerencial.
 11. O sistema exibe uma listagem com os perfis administrativos cadastrados (ativos e inativos).
@@ -742,13 +740,18 @@ Como administrador logado, quero acessar um painel para criar, visualizar, edita
 
     **Regras de Negócio Relacionadas:**
 
-20. RN-001
-21. RN-003
+20. RN-004
+21. RN-006
 
     **Requisitos Relacionados:**
 
-22. RF-001
-23. RNF-003
+22. RF-007
+23. RF-014
+
+        **NÃO FUNCIONAIS:**
+
+24. RNF-009
+25. RNF-013
 
 **Protótipo da Interface:**  
 **\[**Inserir imagem, print do figma ou Wireframe\]
@@ -870,46 +873,7 @@ Como aluno com cadastro previamente aprovado, quero renovar meu vínculo institu
 **Protótipo da Interface:**  
 **\[A inserir\]**
 
-### **7.2.9 HU-029 \- Carteirinha Digital do Aluno** {#7.2.9-hu-029---carteirinha-digital-do-aluno}
-
-**Tabela 14 \- Informações da História**
-
-| ID     | Épico  | Prioridade | Complexidade | Story Points | Sprint | Status    |
-| :----- | :----- | :--------- | :----------- | :----------- | :----- | :-------- |
-| HU-029 | EP-001 | ALTA       | FÁCIL        | 2            | S2     | A definir |
-
-Fonte: Elaborado pelo autor (2026).
-
-**História de Usuário:**  
-Como aluno com status aprovado, quero acessar minha carteirinha digital diretamente no aplicativo, exibindo minha foto, dados e um QR Code, para comprovar minha identidade e meu direito de utilizar o ônibus no momento do embarque.
-
-**Critérios de Aceite:**
-
-1. Aluno com status "Aprovado" acessa a opção "Carteirinha Digital" e visualiza a interface do documento contendo obrigatoriamente: foto de perfil do aluno, dados de identificação (ex: nome completo, curso, instituição) e o QR Code gerado.
-2. Tentativa de acesso à carteirinha por um aluno que não possua o status "Aprovado" (ex: status "Em Análise" da HU-028, ou "Inativo") oculta o documento e exibe uma mensagem informativa (ex: "Carteirinha indisponível. Seu cadastro está inativo ou em análise.").
-3. (FA-001) Se o aluno acessar a funcionalidade sem conexão com a internet (offline), o sistema não deve exibir erro de conexão; em vez disso, deve carregar instantaneamente a versão em cache da carteirinha (salva na última conexão válida), exibindo normalmente a foto, dados e o QR Code.
-4. O QR Code exibido na tela deve possuir nitidez, tamanho e contraste adequados para garantir a leitura/escaneamento pelos validadores físicos (câmeras/celulares) no momento do embarque, mesmo no modo offline.
-5. O tempo de carregamento e renderização da carteirinha na tela (quando online) deve ser rápido, não travando a navegação do usuário no momento em que ele estiver na fila de embarque.  
-   **Fluxo Principal:**
-6. O aluno aprovado acessa o aplicativo.
-7. No menu principal ou tela inicial, o aluno seleciona "Carteirinha Digital".
-8. O sistema carrega e exibe a interface gráfica da carteirinha com os dados do aluno.  
-   **Fluxos Alternativos:**
-9. **FA-001 \- Consulta de Carteirinha Offline**
-   1. O aluno tenta acessar a carteirinha no momento do embarque sem conexão de internet.
-   2. O sistema exibe a versão em cache da carteirinha gerada na última conexão válida.
-
-   **Regras de Negócio Relacionadas:**
-
-10. Nenhuma restritiva  
-    **Requisitos Relacionados:**  
-     **FUNCIONAIS:**
-11. RF-032
-
-**Protótipo da Interface:**  
-**\[A inserir\]**
-
-### **7.2.10 HU-031 \- Consultar Pendência de Cadastro** {#7.2.10-hu-031---consultar-pendência-de-cadastro}
+### **7.2.9 HU-031 \- Consultar Pendência de Cadastro** {#7.2.9-hu-031---consultar-pendência-de-cadastro}
 
 **Tabela 15 \- Informações da História**
 
@@ -980,43 +944,52 @@ Este épico reúne todas as funcionalidades relacionadas ao cadastro e manutenç
 Fonte: Elaborado pelo Clidenor(2026).
 
 **História de Usuário:**  
-Como administrador, quero acessar um painel para cadastrar, visualizar, editar, inativar e reativar bairros e seus respectivos pontos de parada, para estruturar a base geográfica de embarque e desembarque dos estudantes.
+Como administrador, quero acessar um painel para cadastrar, visualizar, editar e inativar bairros e seus respectivos pontos de parada, para estruturar a base geográfica de embarque e desembarque dos estudantes.
 
 **Critérios de Aceite:**
 
 1.  Administrador acessa o menu "Bairros e Pontos de Parada" e visualiza a listagem dos bairros ativos com seus respectivos pontos de parada ativos.
+
 2.  Administrador consegue criar um novo bairro preenchendo o nome e adicionando ao menos um ponto de parada; o nome do bairro deve ser único no sistema e o nome do ponto de parada deve ser único dentro do mesmo bairro (o mesmo nome de ponto pode existir em bairros diferentes).
+
 3.  No cadastro ou na edição, bairro com nome já existente no sistema, ou ponto de parada com nome já existente no mesmo bairro (ativo ou inativo), bloqueia o salvamento e exibe a mensagem: "Esta localidade já está cadastrada." A comparação de nomes desconsidera diferenças entre letras maiúsculas e minúsculas e espaços no início e no fim.
-4.  Administrador consegue editar os dados de um bairro existente (nome do bairro; adicionar, renomear ou inativar pontos de parada associados).
-5.  Administrador consegue inativar (soft delete) um bairro ou um ponto de parada ativo, ou reativar um registro previamente inativado, sem apagar o registro do banco de dados. Enquanto um bairro estiver inativo, seus pontos de parada também ficam indisponíveis para uso.
-6.  Tentativa de inativar um bairro ou ponto de parada vinculado a uma rota ativa é bloqueada com a mensagem: "Este bairro não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar." (para bairro) ou "Este ponto de parada não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar." (para ponto de parada).
+
+4.  O administrador consegue editar os dados de um bairro existente (nome do bairro; adicionar, renomear ou inativar pontos de parada associados).
+
+5.  O administrador consegue inativar (soft delete) um bairro ou um ponto de parada ativo, ou reativar um registro previamente inativado, sem apagar o registro do banco de dados. Enquanto um bairro estiver inativo, seus pontos de parada também ficam indisponíveis para uso.
+
+6.  A tentativa de inativar um bairro ou ponto de parada vinculado a uma rota ativa é bloqueada com a mensagem: "Este bairro não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar." (para bairro) ou "Este ponto de parada não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar." (para ponto de parada).
+
 7.  Toda operação bem-sucedida (cadastro, edição, inativação ou reativação) exibe a mensagem de confirmação "Operação realizada com sucesso" e atualiza a listagem.
+
 8.  Campos obrigatórios (nome do bairro e ao menos um ponto de parada ativo) são destacados se vazios; o sistema bloqueia o salvamento até o preenchimento, inclusive na edição, quando o administrador tenta remover ou inativar o último ponto de parada ativo do bairro.
-9.  Administrador consegue visualizar os bairros e pontos de parada inativos ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.
+
+9.  O administrador consegue visualizar os bairros e pontos de parada inativos ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.
+
 10. Todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
+
 11. Bairros e pontos de parada inativos não são exibidos para seleção em novos cadastros (ex.: cadastro de aluno e montagem de rotas); alunos e rotas já vinculados a eles mantêm o vínculo (RN-004).
-12. Os nomes são validados no cadastro e na edição. **Nome do bairro:** de 3 a 100 caracteres, apenas letras (com acento), espaços, hífen, apóstrofo e ponto, mesmo conjunto do cadastro do aluno; números, emoji e outros símbolos bloqueiam o salvamento com a mensagem "Use apenas letras, espaços, hífen ou apóstrofo". **Nome do ponto de parada:** de 2 a 100 caracteres, apenas letras (com acento), números, espaços, hífen, apóstrofo e ponto (ex.: "Parada 12", "BR-116"); emoji e outros símbolos bloqueiam o salvamento com a mensagem "Use apenas letras, números, espaços, hífen, apóstrofo ou ponto". Abaixo do tamanho mínimo, o salvamento é bloqueado com "Informe o nome do bairro com pelo menos 3 caracteres" (bairro) e "Informe um nome válido com pelo menos 2 caracteres." (ponto de parada). A regra vale na tela e na API.
 
     **Fluxo Principal:**
 
 12. O administrador acessa o menu de "Bairros e Pontos de Parada".
-13. O sistema exibe a listagem dos bairros ativos e seus respectivos pontos de parada ativos.
-14. O administrador seleciona a ação: "Novo Cadastro", "Editar", "Inativar" ou "Reativar" em um registro existente.
+13. O sistema exibe a listagem dos bairros já cadastrados e seus respectivos pontos de parada ativos.
+14. O administrador seleciona a ação: "Novo Cadastro", "Editar", "Inativar" ou “Reativar” em um registro existente.
 15. O administrador preenche as informações (nome do bairro, nome/referência do ponto de parada) ou confirma a inativação/reativação.
-16. O sistema valida os dados e aplica a operação no banco de dados (em caso de inativação, executando o _soft delete_ para ocultar o registro sem apagá-lo definitivamente).
+16. O sistema valida os dados e aplica a operação no banco de dados (em caso de inativação, executando o soft delete para ocultar o registro sem apagá-lo definitivamente).
 17. O sistema registra a operação no log de auditoria.
 18. O sistema exibe uma mensagem de sucesso e recarrega a listagem atualizada.
 
     **Fluxos Alternativos:**
 
 19. **FA-001 \- Inativação de bairro/ponto vinculado a uma rota ativa.**
-    1. O administrador tenta inativar um bairro ou um ponto de parada que está atualmente associado a uma rota ativa.
-    2. O sistema bloqueia a inativação e exibe o alerta correspondente definido no critério de aceite 6.
+    1. O administrador tenta inativar um bairro que está atualmente associado a uma rota estruturada.
+    2. O sistema bloqueia a inativação temporariamente e exibe um alerta: "Este bairro não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar."
 20. **FA-002 \- Cadastro duplicado.**
-    1. O administrador tenta salvar, no cadastro ou na edição, um bairro com nome idêntico ao de outro bairro, ou um ponto de parada com nome idêntico ao de outro ponto do mesmo bairro, já existente (ativo ou inativo).
+    1. O administrador tenta salvar, no cadastro ou na edição, um bairro ou ponto de parada com um nome idêntico a um registro já existente (ativo ou inativo).
     2. O sistema bloqueia o salvamento e informa que a localidade já está cadastrada.
 21. **FA-003 \- Campos obrigatórios ausentes.**
-    1. O administrador tenta salvar o formulário sem inserir o nome do bairro, sem definir ao menos um ponto de parada ou removendo/inativando o último ponto de parada ativo do bairro.
+    1. O administrador tenta salvar o formulário sem inserir o nome do bairro ou sem definir ao menos um ponto de parada.
     2. O sistema destaca os campos pendentes e impede a conclusão.
 
     **Regras de Negócio Relacionadas:**
@@ -1024,7 +997,7 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar, 
 22. RN-004
 23. RN-006
 
-    **Requisitos Relacionados:**  
+    **Requisitos Relacionados:**   
      **FUNCIONAIS:**
 
 24. RF-011
@@ -1048,7 +1021,7 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar, 
 
 Fonte: Elaborado pelo autor (2026).  
 **História de Usuário:**  
-Como administrador, quero acessar um painel para cadastrar, visualizar, editar, inativar e reativar as faculdades de destino, para organizar as instituições de ensino que são atendidas pelas rotas de transporte.  
+Como administrador, quero acessar um painel para cadastrar, visualizar, editar e inativar as faculdades de destino, para organizar as instituições de ensino que são atendidas pelas rotas de transporte.  
 **Critérios de Aceite:**
 
 1. Administrador acessa o menu "Faculdades" e visualiza a listagem das faculdades ativas cadastradas.
@@ -1061,8 +1034,8 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar, 
 8. Campos obrigatórios (nome e campus da instituição) são destacados se vazios; sistema bloqueia salvamento até preenchimento, inclusive na edição.
 9. Administrador consegue visualizar as faculdades inativas ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.
 10. Todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
-11. Faculdades inativas não são exibidas para seleção em novos cadastros (ex.: cadastro de aluno); alunos já vinculados a elas mantêm o vínculo (RN-004).
-12. Os campos são validados no cadastro e na edição. **Nome da instituição:** de 3 a 150 caracteres, apenas letras (com acento), números, espaços, hífen, apóstrofo e ponto (ex.: "Faculdade 7 de Setembro"); emoji e outros símbolos bloqueiam o salvamento com a mensagem "Use apenas letras, números, espaços, hífen, apóstrofo ou ponto". **Sigla:** de 2 a 20 caracteres, apenas letras e números, sem espaços (ex.: "UFC", "UNI7"); qualquer outro caractere bloqueia o salvamento com a mensagem "Use apenas letras e números na sigla, sem espaços". **Campus:** de 2 a 100 caracteres, mesmo conjunto de caracteres do nome da instituição. Abaixo do tamanho mínimo, o salvamento é bloqueado com "Informe o nome da instituição com pelo menos 3 caracteres", "Informe a sigla do nome (ex.: UFC)" e "Informe o campus da instituição"; acima do máximo, com "O nome da instituição deve ter no máximo 150 caracteres", "A sigla deve ter no máximo 20 caracteres" e "O campus deve ter no máximo 100 caracteres". A sigla é gravada e exibida junto da faculdade. A regra vale na tela e na API.
+11. Faculdades inativas não são exibidas para seleção em novos cadastros (ex.: cadastro de aluno e montagem de rotas); alunos e rotas já vinculados a elas mantêm o vínculo (RN-004).
+12. A tentativa de inativar uma faculdade vinculada a uma rota ativa (na ida ou na volta) é bloqueada com a mensagem: "Esta faculdade não pode ser inativada pois pertence a uma rota ativa. Remova-a da rota antes de continuar."
 
 **Fluxo Principal:**
 
@@ -1085,6 +1058,9 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar, 
 3. FA-003 \- Campos obrigatórios ausentes.
    1. O administrador tenta salvar o formulário sem preencher os dados principais da instituição.
    2. O sistema sinaliza os campos vazios e impede o salvamento.
+4. FA-004 \- Inativação de faculdade vinculada a uma rota ativa.
+   1. O administrador tenta inativar uma faculdade atendida por uma rota ativa, na ida ou na volta.
+   2. O sistema bloqueia a inativação e exibe o alerta: "Esta faculdade não pode ser inativada pois pertence a uma rota ativa. Remova-a da rota antes de continuar."
 
 **Regras de Negócio Relacionadas:**
 
@@ -1112,7 +1088,7 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar, 
 
 Fonte: Elaborado pelo Clidenor(2026).  
 **História de Usuário:**  
-Como administrador, quero acessar um painel para cadastrar, visualizar, editar, inativar e reativar os ônibus, informando sua placa, quantidade de assentos e capacidade máxima de alunos em pé, para gerenciar os veículos disponíveis para o transporte universitário e seus limites de ocupação.  
+Como administrador, quero acessar um painel para cadastrar, visualizar, editar e inativar os ônibus, informando sua placa, quantidade de assentos e capacidade máxima de alunos em pé, para gerenciar os veículos disponíveis para o transporte universitário e seus limites de ocupação.  
 **Critérios de Aceite:**
 
 1. Administrador acessa o menu "Frota" ou "Ônibus" e visualiza a listagem dos veículos ativos cadastrados com informações de placa, quantidade de assentos e capacidade máxima de alunos em pé.
@@ -1124,42 +1100,44 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar, 
 7. Toda operação bem-sucedida (cadastro, edição, inativação ou reativação) exibe mensagem de confirmação ("Operação realizada com sucesso") e atualiza a listagem.
 8. Campos obrigatórios (placa e capacidade máxima(de assentos e em pé)) são destacados se vazios; sistema bloqueia salvamento até preenchimento, inclusive na edição.
 9. A placa deve estar em formato Mercosul (ABC1D23) ou antigo (ABC1234); placa em outro formato bloqueia o salvamento com a mensagem "Placa inválida."
-10. A quantidade de assentos deve ser um número inteiro maior ou igual a 1 e a capacidade de alunos em pé um número inteiro maior ou igual a 0; valores fora dessa regra (zero ou negativo nos assentos, negativo, decimal ou texto) bloqueiam o salvamento, o campo é destacado como inválido e é exibida a mensagem "A quantidade de assentos deve ser maior que zero" ou "A capacidade em pé não pode ser negativa", conforme o campo.
+10. A quantidade de assentos deve ser um número inteiro maior ou igual a 1 e a capacidade de alunos em pé um número inteiro maior ou igual a 0; valores fora dessa regra (zero ou negativo nos assentos, negativo, decimal ou texto) bloqueiam o salvamento , o campo é destacado como inválido e é exibida a mensagem "Quantidade de assentos inválida." ou "Capacidade de alunos em pé inválida.", conforme o campo.
 11. Administrador consegue visualizar os ônibus inativos ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.
 12. Todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
-13. Ônibus inativos não são exibidos para seleção na escalação de rotas; rotas, alocações e relatórios anteriores mantêm o vínculo (RN-004).  
-   **Fluxo Principal:**
-10. O administrador acessa o menu de "Frota" ou "Ônibus".
-11. O sistema exibe a listagem dos veículos cadastrados, detalhando informações como placa e capacidade (apenas ativos).
-12. O administrador seleciona a ação: "Novo Cadastro", "Editar", ou "Inativar" ou “Reativar” em um registro existente.
-13. O administrador preenche as informações do veículo (placa, capacidade máxima de assentos e em pé, etc.) ou confirma a inativação do registro.
-14. O sistema valida os dados e aplica a operação no banco de dados (executando o soft delete em caso de inativação).
-15. O sistema registra a operação no log de auditoria.
-16. O sistema exibe uma mensagem de sucesso e atualiza a listagem na tela.  
+13. Ônibus inativos não são exibidos para seleção na escalação de rotas; rotas, alocações e relatórios anteriores mantêm o vínculo (RN-004).
+
+    **Fluxo Principal:**
+
+14. O administrador acessa o menu de "Frota" ou "Ônibus".
+15. O sistema exibe a listagem dos veículos cadastrados, detalhando informações como placa e capacidade (apenas ativos).
+16. O administrador seleciona a ação: "Novo Cadastro", "Editar", ou "Inativar" ou “Reativar” em um registro existente.
+17. O administrador preenche as informações do veículo (placa, capacidade máxima de assentos e em pé, etc.) ou confirma a inativação do registro.
+18. O sistema valida os dados e aplica a operação no banco de dados (executando o soft delete em caso de inativação).
+19. O sistema registra a operação no log de auditoria.
+20. O sistema exibe uma mensagem de sucesso e atualiza a listagem na tela.  
     **Fluxos Alternativos:**
-17. FA-001 \- Inativação de ônibus alocado em rota futura.
+21. FA-001 \- Inativação de ônibus alocado em rota futura.
     1. O administrador tenta inativar um veículo que já está escalado para realizar uma rota em um dia futuro.
     2. O sistema bloqueia a inativação e exibe um alerta informando que o veículo possui alocações pendentes.
-18. FA-002 \- Placa de veículo duplicada.
+22. FA-002 \- Placa de veículo duplicada.
     1. O administrador tenta cadastrar ou editar um ônibus inserindo uma placa que já existe (ativa ou inativa) no sistema.
     2. O sistema bloqueia o salvamento e informa que o veículo já está registrado.
-19. FA-003 \- Campos obrigatórios ausentes.
+23. FA-003 \- Campos obrigatórios ausentes.
     1. O administrador tenta salvar o formulário sem preencher a placa, a quantidade de assentos ou a capacidade de alunos em pé do ônibus.
     2. O sistema sinaliza os campos vazios e impede o salvamento.
 
     **Regras de Negócio Relacionadas:**
 
-20. RN-004
-21. RN-006  
+24. RN-004
+25. RN-006  
     **Requisitos Relacionados:**  
      **FUNCIONAIS:**
-22. RF-008
-23. RF-014
+26. RF-008
+27. RF-014
 
     **NÃO FUNCIONAIS:**
 
-24. RNF-012
-25. RNF-013  
+28. RNF-012
+29. RNF-013  
     **Protótipo da Interface:**  
     **\[A inserir\]**
 
@@ -1177,50 +1155,51 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, buscar, 
 **Critérios de Aceite:**
 
 1. Administrador acessa a tela "Motoristas" e visualiza a listagem dos motoristas ativos cadastrados (exibindo nome e telefone), podendo filtrá-los através da barra de pesquisa "Buscar por nome".
-2. Administrador consegue criar um novo motorista clicando em "+ Novo" e preenchendo os campos obrigatórios **Nome Completo** e **Telefone** na tela "Cadastrar Motorista"; o sistema valida se o número de telefone informado é único e se está em formato válido. Motoristas com o mesmo nome são permitidos, desde que tenham telefones diferentes.
-3. No cadastro ou na edição, número de telefone já existente no sistema (ativo ou inativo) bloqueia o salvamento e exibe a mensagem: _"Este profissional já está registrado."_ A comparação considera apenas os dígitos, desconsiderando a máscara (ex.: "(88) 99811-2233" e "88998112233" são o mesmo telefone).
-4. Administrador consegue editar os dados de um motorista existente clicando no ícone de edição (lápis), alterando o **Nome Completo** ou **Telefone** na tela "Editar Motorista" e clicando em "Salvar alterações".
-5. Administrador consegue inativar (_soft delete_) um registro ativo clicando no ícone de lixeira (mediante modal de confirmação) ou reativar um registro previamente inativado clicando no ícone de restauração (seta de retorno), sem apagar o registro do banco de dados. Cancelar a inativação no modal mantém o motorista ativo e não gera registro de auditoria.
-6. Tentativa de inativar um motorista que está escalado para realizar rotas em dias futuros é bloqueada com a mensagem: _"Este profissional possui alocações pendentes e não pode ser inativado no momento."_
-7. Operações bem-sucedidas (cadastro, edição, inativação ou reativação) exibem uma notificação de confirmação (ex: _"Motorista alterado com sucesso"_) e atualizam a listagem.
-8. Os campos obrigatórios (**Nome Completo** e **Telefone**) são destacados se estiverem vazios; o sistema bloqueia o salvamento até o devido preenchimento, inclusive na edição.
-9. O administrador consegue visualizar a seção de motoristas "Inativos" na listagem ao ativar a chave seletora (_switch_) "Mostrar inativos"; os registros inativos são identificados como inativos.
-10. O telefone deve ter DDD seguido de 8 dígitos (fixo) ou 9 dígitos (celular), pois o motorista pode ter apenas telefone fixo. O formulário aplica a máscara automaticamente, `(DD) 9XXXX-XXXX` para celular e `(DD) XXXX-XXXX` para fixo, aceita apenas números (letras, emoji e símbolos digitados não entram no campo) e limita a 11 dígitos. Telefone incompleto (sem DDD ou com poucos dígitos) bloqueia o salvamento com a mensagem _"Informe um telefone válido com DDD"_. A mesma regra vale na API, que recusa telefone com letras ou com menos de 10 ou mais de 11 dígitos (desconsiderada a máscara) com a mesma mensagem, e o telefone é gravado sempre no mesmo formato.
-11. Todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, _timestamp_).
-12. Motoristas inativos não são exibidos para seleção na escalação de rotas; rotas, alocações e relatórios anteriores mantêm o vínculo (RN-004).  
-13. O **Nome Completo** é validado no cadastro e na edição, depois de remover espaços nas pontas e juntar espaços repetidos: de 3 a 150 caracteres, apenas letras (com acento), espaços, hífen e apóstrofo, mesmo conjunto do cadastro do aluno (ex.: "João D'Ávila", "Ana-Clara Souza"); números, emoji e outros símbolos bloqueiam o salvamento com a mensagem _"Use apenas letras, espaços, hífen ou apóstrofo"_, e o nome precisa ter pelo menos nome e sobrenome (duas partes com 2 letras ou mais), com a mensagem _"Informe nome e sobrenome completos"_. Abaixo do tamanho mínimo, o salvamento é bloqueado com _"Informe o nome completo com pelo menos 3 caracteres"_; acima do máximo, com _"O nome deve ter no máximo 150 caracteres"_. A regra vale na tela e na API.
-   **Fluxo Principal:**
-10. O administrador acessa a tela de "Motoristas".
-11. O sistema exibe a listagem dos motoristas ativos (e os inativos, caso a opção "Mostrar inativos" esteja habilitada).
-12. O administrador seleciona a ação desejada: "+ Novo" (para cadastrar), ícone de lápis (para editar), ícone de lixeira (para inativar) ou ícone de restauração (para reativar) em um registro existente.
-13. O administrador preenche ou altera as informações do motorista (**Nome Completo** e **Telefone**) e clica em "Finalizar cadastro" / "Salvar alterações", ou confirma a inativação/reativação no modal exibido.
-14. O sistema valida os dados e aplica a operação no banco de dados (executando o _soft delete_ em caso de inativação).
-15. O sistema registra a operação no log de auditoria.
-16. O sistema exibe uma mensagem de confirmação no topo da tela e atualiza a listagem de motoristas.  
+2. Administrador consegue criar um novo motorista clicando em "+ Novo" e preenchendo os campos obrigatórios Nome Completo e Telefone na tela "Cadastrar Motorista"; o sistema valida se o número de telefone informado é único e se está em formato válido. Motoristas com o mesmo nome são permitidos, desde que tenham telefones diferentes.
+3. No cadastro ou na edição, número de telefone já existente no sistema (ativo ou inativo) bloqueia o salvamento e exibe a mensagem: "Este profissional já está registrado." A comparação considera apenas os dígitos, desconsiderando a máscara (ex.: "(88) 99811-2233" e "88998112233" são o mesmo telefone).
+4. Administrador consegue editar os dados de um motorista existente clicando no ícone de edição (lápis), alterando o Nome Completo ou Telefone na tela "Editar Motorista" e clicando em "Salvar alterações".
+5. Administrador consegue inativar (soft delete) um registro ativo clicando no ícone de lixeira (mediante modal de confirmação) ou reativar um registro previamente inativado clicando no ícone de restauração (seta de retorno), sem apagar o registro do banco de dados. Cancelar a inativação no modal mantém o motorista ativo e não gera registro de auditoria.
+6. Tentativa de inativar um motorista que está escalado para realizar rotas em dias futuros é bloqueada com a mensagem: "Este profissional possui alocações pendentes e não pode ser inativado no momento." Enquanto a escala de motoristas (HU-017) não estiver implementada, ou quando não houver alocação futura registrada para o motorista, o sistema considera que não há pendências e permite a inativação.
+7. Operações bem-sucedidas (cadastro, edição, inativação ou reativação) exibem uma notificação de confirmação (ex: "Motorista alterado com sucesso") e atualizam a listagem.
+8. Os campos obrigatórios (Nome Completo e Telefone) são destacados se estiverem vazios; o sistema bloqueia o salvamento até o devido preenchimento, inclusive na edição.
+9. O administrador consegue visualizar a seção de motoristas "Inativos" na listagem ao ativar a chave seletora (switch) "Mostrar inativos"; os registros inativos são identificados como inativos.
+10. O telefone deve ter DDD seguido de 8 dígitos (fixo) ou 9 dígitos (celular), pois o motorista pode ter apenas telefone fixo; o formulário aplica a máscara automaticamente. Telefone incompleto (sem DDD ou com poucos dígitos) bloqueia o salvamento com a mensagem "Informe um telefone válido com DDD".
+11. Todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
+12. Motoristas inativos não são exibidos para seleção na escalação de rotas; rotas, alocações e relatórios anteriores mantêm o vínculo (RN-004).
+
+    **Fluxo Principal:**
+
+13. O administrador acessa a tela de "Motoristas".
+14. O sistema exibe a listagem dos motoristas ativos (e os inativos, caso a opção "Mostrar inativos" esteja habilitada).
+15. O administrador seleciona a ação desejada: "+ Novo" (para cadastrar), ícone de lápis (para editar), ícone de lixeira (para inativar) ou ícone de restauração (para reativar) em um registro existente.
+16. O administrador preenche ou altera as informações do motorista (**Nome Completo** e **Telefone**) e clica em "Finalizar cadastro" / "Salvar alterações", ou confirma a inativação/reativação no modal exibido.
+17. O sistema valida os dados e aplica a operação no banco de dados (executando o _soft delete_ em caso de inativação).
+18. O sistema registra a operação no log de auditoria.
+19. O sistema exibe uma mensagem de confirmação no topo da tela e atualiza a listagem de motoristas.  
     **Fluxos Alternativos:**
-17. FA-001 \- Inativação de motorista com alocação futura.
+20. FA-001 \- Inativação de motorista com alocação futura.
     1. O administrador tenta inativar um motorista que já está escalado para realizar rotas em dias futuros.
     2. O sistema bloqueia a inativação e exibe um alerta informando que o profissional possui alocações pendentes.
-18. FA-002 \- Cadastro duplicado.
+21. FA-002 \- Cadastro duplicado.
     1. O administrador tenta cadastrar um motorista , no cadastro ou na edição, com um telefone que já existe (ativo ou inativo) no sistema.
-    2. O sistema bloqueia o salvamento e informa que o profissional já está registrado.
-19. FA-003 \- Campos obrigatórios ausentes.
+    2. O sistema bloqueia o cadastro e informa que o profissional já está registrado.
+22. FA-003 \- Campos obrigatórios ausentes.
     1. O administrador tenta salvar o formulário sem preencher os dados principais do motorista.
     2. O sistema sinaliza os campos vazios e impede o salvamento.
 
     **Regras de Negócio Relacionadas:**
 
-20. RN-004
-21. RN-006  
+23. RN-004
+24. RN-006  
     **Requisitos Relacionados:**  
      **FUNCIONAIS:**
-22. RF-009
-23. RF-014
+25. RF-009
+26. RF-014
 
     **NÃO FUNCIONAIS:**
 
-24. RNF-012
-25. RNF-013  
+27. RNF-012
+28. RNF-013  
     **Protótipo da Interface:**  
     **\[A inserir\]**
 
@@ -1250,20 +1229,20 @@ Como administrador, quero atribuir ou revogar a função de representante de um 
 9. O representante não poderá acessar funcionalidades administrativas exclusivas do administrador.
 10. O sistema deve registrar as alterações de atribuição e revogação da função no log de auditoria, identificando o administrador responsável e o momento da operação.
 11. Um aluno que já possua a função de representante ativa não poderá receber a mesma função novamente.
-12. Ao atribuir a função, o administrador deve selecionar a instituição de ensino sob responsabilidade do representante; o campo é obrigatório e a atribuição é bloqueada enquanto estiver vazio.
+12. Ao atribuir a função, o administrador deve selecionar a instituição de ensino sob responsabilidade do representante; o campo é obrigatório e a atribuição é bloqueada enquanto estiver vazio. A instituição é escolhida livremente pelo administrador e pode ser diferente da instituição da matrícula do aluno.
 13. Um aluno que teve a função de representante revogada pode receber a função novamente, voltando a constar como representante ativo na listagem.  
     **Fluxo Principal:**
-12. O administrador acessa o menu **"Representantes"**.
-13. O sistema exibe os alunos que possuem a função de representante.
-14. O administrador seleciona a opção **"Adicionar Representante"**.
-15. O administrador pesquisa e seleciona um aluno já cadastrado no sistema.
-16. O sistema valida se o aluno possui cadastro aprovado e ativo.
-17. O administrador confirma a atribuição da função.
-18. O sistema atribui o perfil de representante ao aluno.
-19. O sistema registra a operação no log de auditoria.
-20. O sistema exibe uma mensagem de sucesso e atualiza a listagem.  
+14. O administrador acessa o menu **"Representantes"**.
+15. O sistema exibe os alunos que possuem a função de representante.
+16. O administrador seleciona a opção **"Adicionar Representante"**.
+17. O administrador pesquisa e seleciona um aluno já cadastrado no sistema.
+18. O sistema valida se o aluno possui cadastro aprovado e ativo.
+19. O administrador confirma a atribuição da função.
+20. O sistema atribui o perfil de representante ao aluno.
+21. O sistema registra a operação no log de auditoria.
+22. O sistema exibe uma mensagem de sucesso e atualiza a listagem.  
     **Fluxos Alternativos:**
-21. FA-001 \- Revogação do cargo de “Representante”.
+23. FA-001 \- Revogação do cargo de “Representante”.
     1. O administrador acessa a listagem de representantes.
     2. Seleciona um representante ativo.
     3. Escolhe a opção **"Revogar Representante"**.
@@ -1272,30 +1251,30 @@ Como administrador, quero atribuir ou revogar a função de representante de um 
     6. O cadastro do aluno permanece ativo e suas demais permissões são mantidas.
     7. O sistema registra a operação no log de auditoria.
     8. O sistema atualiza a listagem e exibe uma mensagem de sucesso.
-22. FA-002 \- Aluno não aprovado ou com cadastro desatualizado.
+24. FA-002 \- Aluno não aprovado ou com cadastro desatualizado.
     1. O administrador tenta atribuir a função de representante a um aluno cujo cadastro não esteja aprovado ou atualizado.
-    2. O sistema bloqueia a operação e exibe a mensagem: "Aluno não aprovado ou inativo."
-23. FA-003 \- Aluno já é representante
+    2. O sistema bloqueia a operação e exibe a mensagem: "Somente alunos aprovados podem ser representantes.
+25. FA-003 \- Aluno já é representante
     1. O administrador seleciona um aluno que já possui a função de representante.
-    2. O sistema impede uma nova atribuição e exibe a mensagem: "Este aluno já é um representante ativo."
-24. FA-004 \- Aluno não encontrado.
+    2. O sistema impede uma nova atribuição e exibe a mensagem: "Este aluno já é representante..
+26. FA-004 \- Aluno não encontrado.
     1. O administrador realiza uma pesquisa pelo aluno.
     2. O sistema não encontra nenhum aluno correspondente.
-    3. O sistema exibe a mensagem: "Nenhum aluno encontrado."
+    3. O sistema exibe a mensagem: "Nenhum aluno encontrado.
 
     **Regras de Negócio Relacionadas:**
 
-25. RN-006
-26. RN-015  
+27. RN-006
+28. RN-015  
     **Requisitos Relacionados:**  
      **FUNCIONAIS:**
-27. RF-034
-28. RF-003
+29. RF-034
+30. RF-003
 
     **NÃO FUNCIONAIS:**
 
-29. RNF-012
-30. RNF-013  
+31. RNF-012
+32. RNF-013  
     **Protótipo da Interface:**  
     **\[A inserir\]**
 
@@ -1324,42 +1303,60 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar e
 5. Administrador consegue inativar (soft delete) ou reativar uma rota, sem apagar o registro do banco de dados; todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
 6. Tentativa de inativar uma rota que possui agendamentos futuros de alunos é bloqueada com a mensagem: "Esta rota possui agendamentos pendentes e não pode ser inativada no momento."
 7. Toda operação bem-sucedida (cadastro, edição, inativação ou reativação) exibe a mensagem de confirmação "Operação realizada com sucesso" e atualiza a listagem.
-8. Campos obrigatórios (nome, horários, ao menos uma faculdade vinculada e ao menos um bairro vinculado) são destacados se vazios; sistema bloqueia salvamento até preenchimento.
+8. Campos obrigatórios (nome, horário de saída, horário de retorno, ao menos um bairro vinculado, ao menos uma faculdade na ida e ao menos uma faculdade na volta) são destacados se vazios; sistema bloqueia salvamento até preenchimento, inclusive na edição.
 9. Administrador consegue visualizar as rotas inativas ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.
-10. O sistema deve permitir que as faculdades atendidas na volta (origem) sejam configuradas de forma independente das faculdades atendidas na ida (destino), sem exigir que o ônibus passe exatamente pelas mesmas instituições nos dois turnos (ex: caso não haja alunos agendados para retornar de uma determinada faculdade naquele dia/rota).  
+10. O sistema deve permitir que as faculdades atendidas na volta (origem) sejam configuradas de forma independente das faculdades atendidas na ida (destino), sem exigir que o ônibus passe exatamente pelas mesmas instituições nos dois turnos; ida e volta exigem, cada uma, ao menos uma faculdade. A dispensa de parada em uma instituição sem alunos agendados naquele dia/turno ocorre apenas na alocação diária (HU-016).
+11. O nome da rota deve ser único entre todas as rotas do sistema, principais e complementares, ativas ou inativas. No cadastro ou na edição, nome já existente bloqueia o salvamento e exibe a mensagem: "Já existe uma rota com este nome." A comparação desconsidera diferenças entre letras maiúsculas e minúsculas e espaços no início e no fim.
+12. Os horários devem estar no formato `HH:mm`, sem horário mínimo ou máximo; horário em formato inválido bloqueia o salvamento com a mensagem "Horário deve estar no formato HH:MM.". O horário de retorno deve ser estritamente posterior ao horário de saída; retorno igual ou anterior à saída bloqueia o salvamento, destaca o campo e exibe a mensagem "Horário de retorno deve ser maior que o horário de saída."
+13. Tentativa de inativar uma rota principal que possui rotas complementares ativas vinculadas é bloqueada com a mensagem: "Esta rota possui rotas complementares ativas vinculadas. Inative ou desvincule as rotas complementares antes de continuar."
+14. Rotas inativas não são exibidas como opção em novos agendamentos dos alunos (HU-013); agendamentos, alocações e relatórios anteriores mantêm o vínculo (RN-004).  
+15. Tentativa de reativar uma rota vinculada a um bairro ou faculdade inativo é bloqueada com a mensagem: "Esta rota possui bairro ou faculdade inativo e não pode ser reativada. Atualize os vínculos antes." (RNF-012).
+16. O nome da rota aceita no máximo 150 caracteres; nome maior bloqueia o salvamento com a mensagem "Nome da rota deve ter no máximo 150 caracteres."  
     **Fluxo Principal:**
-11. O administrador acessa o menu de "Rotas".
-12. O sistema exibe a listagem das rotas ativas cadastradas com seus horários de saída e retorno.
-13. O administrador seleciona a ação: "Nova Rota", "Editar", ou "Inativar" ou “Reativar” em um registro existente.
-14. O administrador preenche as informações da rota (nome, faculdades atendidas na ida e na volta, horários de saída e retorno) e vincula os bairros/pontos de parada previamente cadastrados.
-15. O sistema valida os dados e aplica a operação no banco de dados (executando o soft delete em caso de inativação).
-16. O sistema registra a operação no log de auditoria.
-17. O sistema exibe uma mensagem de sucesso e atualiza a listagem na tela.  
+17. O administrador acessa o menu de "Rotas".
+18. O sistema exibe a listagem das rotas ativas cadastradas com seus horários de saída e retorno.
+19. O administrador seleciona a ação: "Nova Rota", "Editar", ou "Inativar" ou “Reativar” em um registro existente.
+20. O administrador preenche as informações da rota (nome, faculdades atendidas na ida e na volta, horários de saída e retorno) e vincula os bairros/pontos de parada previamente cadastrados.
+21. O sistema valida os dados e aplica a operação no banco de dados (executando o soft delete em caso de inativação).
+22. O sistema registra a operação no log de auditoria.
+23. O sistema exibe uma mensagem de sucesso e atualiza a listagem na tela.  
     **Fluxos Alternativos:**
-18. FA-001 \- Inativação de rota com agendamentos futuros.
+24. FA-001 \- Inativação de rota com agendamentos futuros.
     1. O administrador tenta inativar uma rota que já possui alunos agendados para viagens em datas futuras.
     2. O sistema bloqueia a inativação temporariamente e exibe um alerta informando que a rota possui agendamentos pendentes.
-19. FA-002 \- Entidade de base inativa ou inexistente.
+25. FA-002 \- Entidade de base inativa ou inexistente.
     1. O administrador tenta criar ou editar uma rota vinculando um bairro ou faculdade que foi inativado.
     2. O sistema não exibe as opções inativas nos campos de seleção, impedindo o vínculo inválido.
-20. FA-003 \- Campos obrigatórios ausentes.
-    1. O administrador tenta salvar o formulário sem definir o nome, os horários, ao menos uma faculdade ou sem vincular ao menos um bairro.
+26. FA-003 \- Campos obrigatórios ausentes.
+    1. O administrador tenta salvar o formulário sem definir o nome, os horários, ao menos um bairro, ao menos uma faculdade na ida ou ao menos uma faculdade na volta.
     2. O sistema sinaliza os campos vazios e impede o salvamento.
+27. FA-004 \- Inativação de rota principal com rotas complementares ativas.
+    1. O administrador tenta inativar uma rota principal que possui rotas complementares ativas vinculadas.
+    2. O sistema bloqueia a inativação e exibe o alerta: "Esta rota possui rotas complementares ativas vinculadas. Inative ou desvincule as rotas complementares antes de continuar."
+28. FA-005 \- Nome de rota duplicado.
+    1. O administrador tenta salvar, no cadastro ou na edição, uma rota com o nome de outra rota principal ou complementar já existente (ativa ou inativa).
+    2. O sistema bloqueia o salvamento e informa que já existe uma rota com este nome.
+29. FA-006 \- Horário de retorno inválido.
+    1. O administrador informa um horário de retorno igual ou anterior ao horário de saída.
+    2. O sistema destaca o campo, informa que o horário de retorno deve ser maior que o de saída e impede o salvamento.
+30. FA-007 \- Reativação de rota com bairro ou faculdade inativo.
+    1. O administrador tenta reativar uma rota vinculada a um bairro ou faculdade que foi inativado depois da inativação da rota.
+    2. O sistema bloqueia a reativação e orienta a atualizar os vínculos da rota antes.
 
     **Regras de Negócio Relacionadas:**
 
-21. RN-004
-22. RN-006  
+31. RN-004
+32. RN-006  
     **Requisitos Relacionados:**  
      **FUNCIONAIS:**
-23. RF-012
-24. RF-013
-25. RF-014
+33. RF-012
+34. RF-013
+35. RF-014
 
     **NÃO FUNCIONAIS:**
 
-26. RNF-012
-27. RNF-013  
+36. RNF-012
+37. RNF-013  
     **Protótipo da Interface:**  
     **\[A inserir\]**
 
@@ -1377,46 +1374,61 @@ Como administrador, quero acessar um painel para cadastrar, visualizar, editar e
 
 **Critérios de Aceite:**
 
-1. Administrador acessa o menu "Rotas Complementares" e visualiza a listagem das rotas complementares ativas cadastradas.
-2. Administrador consegue criar uma nova rota complementar preenchendo nome, horários e ponto de conexão, vinculando-a a uma rota principal já existente.
-3. Campo de seleção de rota principal exibe apenas rotas ativas; rota principal inativada não aparece como opção, impedindo vínculo inválido.
-4. Administrador consegue editar dados de uma rota complementar existente (nome, horários, ponto de conexão, rota principal vinculada).
-5. Administrador consegue inativar (soft delete) ou reativar uma rota complementar, sem apagar o registro do banco de dados; todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
-6. Tentativa de inativar uma rota complementar que possui agendamentos futuros de alunos é bloqueada com a mensagem: "Esta rota possui agendamentos pendentes e não pode ser inativada no momento."
-7. Toda operação bem-sucedida (cadastro, edição, inativação ou reativação) exibe a mensagem de confirmação "Operação realizada com sucesso" e atualiza a listagem.
-8. Campos obrigatórios (nome, horários, ponto de conexão, rota principal vinculada) são destacados se vazios; sistema bloqueia salvamento até preenchimento.
-9. Administrador consegue visualizar as rotas complementares inativas ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.  
-   **Fluxo Principal:**
-10. O administrador acessa o menu de "Rotas Complementares".
-11. O sistema exibe a listagem das rotas complementares ativas cadastradas.
-12. O administrador seleciona a ação: "Nova Rota", "Editar", ou "Inativar" ou “Reativar” em um registro existente.
-13. O administrador preenche as informações da rota (nome, horários, pontos de conexão) e a vincula a uma rota principal já existente.
-14. O sistema valida os dados e aplica a operação no banco de dados (executando o soft delete em caso de inativação).
-15. O sistema registra a operação no log de auditoria.
-16. O sistema exibe uma mensagem de sucesso e atualiza a listagem na tela.  
+1.  Administrador acessa o menu "Rotas Complementares" e visualiza a listagem das rotas complementares ativas cadastradas, com horário de saída, horário de retorno, ponto de conexão e rota principal vinculada.
+2.  Administrador consegue criar uma nova rota complementar preenchendo nome, horário de saída, horário de retorno e ponto de conexão, vinculando-a a uma rota principal já existente.
+3.  Campo de seleção de rota principal exibe apenas rotas ativas; rota principal inativada não aparece como opção, impedindo vínculo inválido.
+4.  Administrador consegue editar dados de uma rota complementar existente (nome, horários de saída e retorno, ponto de conexão, rota principal vinculada).
+5.  Administrador consegue inativar (soft delete) ou reativar uma rota complementar, sem apagar o registro do banco de dados; todas as operações de escrita (cadastro, edição, inativação e reativação) são registradas no log de auditoria (usuário, ação, timestamp).
+6.  Tentativa de inativar uma rota complementar que possui agendamentos futuros de alunos é bloqueada com a mensagem: "Esta rota possui agendamentos pendentes e não pode ser inativada no momento."
+7.  Toda operação bem-sucedida (cadastro, edição, inativação ou reativação) exibe a mensagem de confirmação "Operação realizada com sucesso" e atualiza a listagem.
+8.  Campos obrigatórios (nome, horário de saída, horário de retorno, ponto de conexão, rota principal vinculada) são destacados se vazios; sistema bloqueia salvamento até preenchimento, inclusive na edição.
+9.  Administrador consegue visualizar as rotas complementares inativas ao ativar a chave "Mostrar inativos"; os registros inativos são identificados como inativos.
+10. Cada rota complementar possui exatamente 1 ponto de conexão, 1 horário de saída (ida) e 1 horário de retorno (volta), pois o aluno pode vincular a rota complementar tanto no turno de ida quanto no de volta (HU-013).
+11. O nome da rota complementar deve ser único entre todas as rotas do sistema, principais e complementares, ativas ou inativas. No cadastro ou na edição, nome já existente bloqueia o salvamento e exibe a mensagem: "Já existe uma rota com este nome." A comparação desconsidera diferenças entre letras maiúsculas e minúsculas e espaços no início e no fim.
+12. Os horários devem estar no formato `HH:mm`, sem horário mínimo ou máximo; horário em formato inválido bloqueia o salvamento com a mensagem "Horário deve estar no formato HH:MM.". O horário de retorno deve ser estritamente posterior ao horário de saída; retorno igual ou anterior à saída bloqueia o salvamento, destaca o campo e exibe a mensagem "Horário de retorno deve ser maior que o horário de saída."
+13. Tentativa de reativar uma rota complementar cuja rota principal vinculada está inativa é bloqueada com a mensagem: "Não é possível reativar esta rota complementar pois a rota principal vinculada está inativa."
+14. Rotas complementares inativas não são exibidas como opção em novos agendamentos dos alunos (HU-013); agendamentos, alocações e relatórios anteriores mantêm o vínculo (RN-004).  
+15. O nome da rota complementar e o ponto de conexão aceitam no máximo 150 caracteres cada; valor maior bloqueia o salvamento com a mensagem "Nome da rota complementar deve ter no máximo 150 caracteres." ou "Ponto de conexão deve ter no máximo 150 caracteres.", conforme o campo.  
+    **Fluxo Principal:**
+16. O administrador acessa o menu de "Rotas Complementares".
+17. O sistema exibe a listagem das rotas complementares ativas cadastradas.
+18. O administrador seleciona a ação: "Nova Rota", "Editar", ou "Inativar" ou “Reativar” em um registro existente.
+19. O administrador preenche as informações da rota (nome, horários de saída e retorno e ponto de conexão) e a vincula a uma rota principal já existente.
+20. O sistema valida os dados e aplica a operação no banco de dados (executando o soft delete em caso de inativação).
+21. O sistema registra a operação no log de auditoria.
+22. O sistema exibe uma mensagem de sucesso e atualiza a listagem na tela.  
     **Fluxos Alternativos:**
-17. FA-001 \- Inativação de rota complementar com agendamentos futuros.  
+23. FA-001 \- Inativação de rota complementar com agendamentos futuros.  
     1.1. O administrador tenta inativar uma rota complementar que já possui alunos agendados para viagens em datas futuras.  
     1.2. O sistema bloqueia a inativação temporariamente e exibe um alerta informando que a rota possui agendamentos pendentes.
-18. FA-002 \- Rota principal inválida ou inativa.  
+24. FA-002 \- Rota principal inválida ou inativa.  
     2.1. O administrador tenta vincular a rota complementar a uma rota principal que foi inativada.  
     2.2. O sistema não exibe rotas principais inativas no campo de seleção, impedindo um vínculo que impossibilitaria a transferência do aluno.
-19. FA-003 \- Campos obrigatórios ausentes.  
-    3.1. O administrador tenta salvar o formulário sem definir os horários, o ponto de conexão ou sem vincular a rota principal.  
-    3.2. O sistema sinaliza os campos vazios e impede o salvamento.  
+25. FA-003 \- Campos obrigatórios ausentes.  
+    3.1. O administrador tenta salvar o formulário sem definir o nome, o horário de saída, o horário de retorno, o ponto de conexão ou sem vincular a rota principal.  
+    3.2. O sistema sinaliza os campos vazios e impede o salvamento.
+26. FA-004 \- Reativação de rota complementar com rota principal inativa.  
+    4.1. O administrador tenta reativar uma rota complementar cuja rota principal vinculada está inativa.  
+    4.2. O sistema bloqueia a reativação e exibe o alerta: "Não é possível reativar esta rota complementar pois a rota principal vinculada está inativa."
+27. FA-005 \- Nome de rota duplicado.  
+    5.1. O administrador tenta salvar, no cadastro ou na edição, uma rota complementar com o nome de outra rota principal ou complementar já existente (ativa ou inativa).  
+    5.2. O sistema bloqueia o salvamento e informa que já existe uma rota com este nome.
+28. FA-006 \- Horário de retorno inválido.  
+    6.1. O administrador informa um horário de retorno igual ou anterior ao horário de saída.  
+    6.2. O sistema destaca o campo, informa que o horário de retorno deve ser maior que o de saída e impede o salvamento.  
     **Regras de Negócio Relacionadas:**
-20. RN-004
-21. RN-006
-22. RN-010  
+29. RN-004
+30. RN-006
+31. RN-010  
     **Requisitos Relacionados:**  
      **FUNCIONAIS:**
-23. RF-028
-24. RF-014
+32. RF-028
+33. RF-014
 
     **NÃO FUNCIONAIS:**
 
-25. RNF-012
-26. RNF-013  
+34. RNF-012
+35. RNF-013  
     **Protótipo da Interface:**  
     **\[A inserir\]**
 
@@ -1497,55 +1509,60 @@ Como aluno, quero acessar um formulário inteligente no aplicativo para agendar 
     **Protótipo da Interface:**  
     **\[A inserir\]**
 
-### **7.5.2 HU-014 \- Cancelamento de Agendamento** {#7.5.2-hu-014---cancelamento-de-agendamento}
+### **7.5.2 HU-014 \- Visualização e Cancelamento de Agendamentos (Meus Agendamentos)**
 
 **Tabela 20 \- Informações da História**
 
-| ID     | Épico  | Prioridade | Complexidade | Story Points | Sprint | Status |
-| :----- | :----- | :--------- | :----------- | :----------- | :----- | :----- |
-| HU-014 | EP-004 |            |              |              |        |        |
+| ID     | Épico  | Prioridade | Complexidade | Story Points | Sprint | Status  |
+| :----- | :----- | :--------- | :----------- | :----------- | :----- | :------ |
+| HU-014 | EP-004 |            |              |              |        | A fazer |
 
-Fonte: Elaborado pelo autor (2026).
-
+Fonte: Elaborado pelo autor (2026).  
 **História de Usuário:**  
-Como aluno, quero poder cancelar um agendamento de transporte previamente realizado, para avisar a coordenação de que não utilizarei a vaga em determinado dia e liberá-la para a logística.  
+Como aluno, quero acessar a tela "Meus agendamentos" para visualizar minhas viagens programadas no calendário e poder remover um agendamento futuro quando necessário, para acompanhar meu limite mensal de vagas e liberar minha vaga para a logística caso eu não vá utilizar o transporte.  
 **Critérios de Aceite:**
 
-1. O aluno acessa o calendário mensal e seleciona um dia que possua o status visual de "Agendado".
-2. Aluno consegue acionar o botão "Cancelar" em um agendamento futuro específico.
-3. Ao acionar "Cancelar", o sistema exibe alerta de confirmação ("Tem certeza que deseja cancelar o transporte para este dia?") antes de efetivar a ação.
-4. Cancelamento pode ser feito sem exigência de horário limite (não há prazo mínimo de antecedência, conforme RN-005).
-5. Confirmação do cancelamento remove a alocação do aluno para aquele veículo/dia no banco de dados.
-6. Cancelamento bem-sucedido exibe mensagem de sucesso e a lista de agendamentos é recarregada, refletindo o status atualizado.
-7. Botão de "Cancelar" não é exibido para agendamentos de datas já passadas, impedindo alteração do histórico de frequência.
+1. O aluno acessa a aba "Agenda" ("Meus agendamentos") e visualiza o calendário mensal interativo destacando os dias com status "Agendado", "Indisponível para agendamento" e "Feriado", além do contador de limite mensal ("X de 22 agendamentos ativos").
+2. Caso o aluno não possua nenhum agendamento ativo para datas futuras, o sistema exibe a tela em estado vazio com a mensagem: "Você ainda não possui agendamentos futuros."
+3. Ao selecionar um dia com status "Agendado" no calendário, o sistema exibe um menu de opções contendo as ações: "Ver detalhes", "Editar agendamento" e "Remover agendamento".
+4. Ao acionar a opção "Remover agendamento" em uma data futura, o sistema exibe um modal de confirmação com o título "Cancelar agendamento?", o aviso "Esta ação não poderá ser desfeita." e os botões "Cancelar" e "Confirmar".
+5. O cancelamento pode ser feito sem exigência de horário limite (não há prazo mínimo de antecedência, conforme RN-005).
+6. Ao confirmar no modal, o sistema remove o agendamento e a alocação do aluno para aquele veículo/dia no banco de dados, exibe mensagem de sucesso e recarrega a calendário e o contador de agendamentos ativos.
+7. A opção "Remover agendamento" não é exibida para agendamentos de datas já passadas, impedindo alteração do histórico de frequência.
 8. Falha de comunicação com a API no momento da confirmação exibe mensagem de erro orientando verificar a conexão, e mantém o agendamento ativo (sem cancelamento parcial) até que a requisição seja concluída com sucesso.  
    **Fluxo Principal:**
-9. O aluno acessa a área de "Meus Agendamentos" no aplicativo.
-10. O sistema exibe a lista de dias em que o aluno possui viagens agendadas e ativas.
-11. O aluno aciona o botão de "Cancelar" no agendamento desejado.
-12. O sistema exibe um alerta de confirmação ("Tem certeza que deseja cancelar o transporte para este dia?").
-13. O aluno confirma o cancelamento.
+9. O aluno acessa a aba "Agenda" ("Meus agendamentos") no aplicativo.
+10. O sistema exibe o calendário mensal com os dias agendados e o contador de agendamentos ativos.
+11. O aluno seleciona um dia agendado no calendário e aciona a opção "Remover agendamento" no menu exibido.
+12. O sistema exibe um modal de confirmação ("Cancelar agendamento? Esta ação não poderá ser desfeita.").
+13. O aluno aciona o botão "Confirmar".
 14. O sistema atualiza o status do agendamento no banco de dados (removendo a alocação do aluno para aquele veículo/dia).
-15. O sistema exibe uma mensagem de sucesso e recarrega a lista de agendamentos atualizada.  
+15. O sistema exibe uma mensagem de sucesso e atualiza o calendário e a contagem de agendamentos ativos.  
     **Fluxos Alternativos:**
-16. **FA-001 \- Tentativa de cancelamento de viagem passada.**
+16. **FA-001 \- Aluno sem agendamentos futuros.**
+    1. O aluno acessa a tela "Meus agendamentos", mas não possui nenhuma viagem futura reservada.
+    2. O sistema exibe a tela em estado vazio com a mensagem "Você ainda não possui agendamentos futuros."
+17. **FA-002 \- Desistência do cancelamento no modal.**
+    1. O aluno aciona "Remover agendamento", mas clica em "Cancelar" no modal de confirmação.
+    2. O sistema fecha o modal e mantém o agendamento ativo sem alterações.
+18. **FA-003 \- Tentativa de cancelamento de viagem passada.**
     1. O aluno tenta cancelar um agendamento de um dia que já passou.
-    2. O sistema não exibe o botão de cancelamento para datas no passado, impedindo alterações no histórico de frequência.
-17. **FA-002 \- Falha na comunicação com a API.**
+    2. O sistema não exibe a opção de cancelamento para datas no passado, impedindo alterações no histórico de frequência.
+19. **FA-004 \- Falha na comunicação com a API.**
     1. O aplicativo perde a conexão com a internet no momento da confirmação do cancelamento.
     2. O sistema exibe uma mensagem de erro ("Não foi possível processar o cancelamento. Verifique sua conexão e tente novamente") e mantém o agendamento ativo até que a requisição seja concluída.
 
     **Regras de Negócio Relacionadas:**
 
-18. RN-005  
+20. RN-005  
     **Requisitos Relacionados:**  
      **FUNCIONAIS:**
-19. RF-016
+21. RF-016
 
     **NÃO FUNCIONAIS:**
 
-20. RNF-001
-21. RNF-012  
+22. RNF-001
+23. RNF-012  
     **Protótipo da Interface:**  
     **\[A inserir\]**
 
@@ -1713,49 +1730,53 @@ Como administrador, quero alocar os motoristas aos ônibus que farão as rotas d
 
 **Tabela 24 \- Informações da História**
 
-| ID     | Épico  | Prioridade | Complexidade | Story Points | Sprint | Status |
-| :----- | :----- | :--------- | :----------- | :----------- | :----- | :----- |
-| HU-018 | EP-005 |            |              |              |        |        |
+| ID     | Épico  | Prioridade | Complexidade | Story Points | Sprint | Status  |
+| :----- | :----- | :--------- | :----------- | :----------- | :----- | :------ |
+| HU-018 | EP-005 |            |              |              |        | A fazer |
 
-Fonte: Elaborado pelo Clidenor(2026).
+Fonte: Elaborado pelo Clidenor (2026).
 
 **História de Usuário:**  
 Como administrador ou representante, quero visualizar a lista de embarque consolidada para os ônibus do dia, contendo a relação de alunos alocados, para conferir a distribuição logística e realizar a conferência no momento da viagem.  
 **Critérios de Aceite:**
 
-1. Administrador acessa 'Listas de Embarque' e visualiza todas as rotas e alunos do dia. Usuário com perfil 'Representante' visualiza as viagens do dia contendo apenas a relação de alunos vinculados à universidade (IES) sob sua responsabilidade.
-2. Ao selecionar um ônibus/rota específico, o sistema exibe a lista completa de alunos alocados, ordenada e detalhando nome, destino (IES) e ponto de embarque.
-3. Rota/ônibus sem alunos alocados exibe mensagem "Não há alunos alocados para este veículo nesta data" e desabilita as opções de exportação/impressão.
-4. Administrador consegue exportar/imprimir a lista de embarque para uso físico (prancheta do motorista/monitor).
-5. Se um aluno cancelar o agendamento (HU-014) ou for realocado manualmente enquanto a lista está sendo visualizada, o sistema atualiza a lista automaticamente (adicionando/removendo o aluno) e recalcula o total de assentos ocupados.
-6. Atualização em tempo real da lista exibe um indicativo visual sinalizando que a lista mudou desde a última visualização.
-7. Acesso aos dados pessoais dos alunos na lista de embarque é restrito a usuários com perfil de Administrador e ao Representante daquela rota específica (RNF-010).  
-   **Fluxo Principal:**
-8. O administrador acessa o menu de "Listas de Embarque" ou seleciona uma rota já alocada no painel logístico.
-9. O sistema exibe as rotas do dia e os respectivos ônibus designados.
-10. O administrador seleciona um ônibus/rota específico.
-11. O sistema apresenta a lista completa de alunos alocados para aquele veículo, ordenada e detalhando informações como nome, destino (IES) e ponto de embarque.
+1. Ao acessar a tela "Lista de Embarque" pelo menu geral, o administrador visualiza a data da operação e um campo seletor obrigatório ("Rota \*") para escolher qual rota/ônibus deseja consultar.
+2. Caso o administrador acesse a lista diretamente a partir dos detalhes de uma rota já selecionada no painel logístico (ou quando acessada pelo Representante vinculado), o sistema exibe a tela "Lista de Embarque" já carregada diretamente na rota correspondente (com o nome da linha fixo na tela, sem exibir o campo seletor de troca de rota). Usuário com perfil "Representante" visualiza apenas a relação de alunos vinculados à universidade (IES) sob sua responsabilidade.
+3. Ao carregar uma rota com alunos, o sistema exibe o contador total (ex: "38 alunos alocados") e a lista ordenada de estudantes detalhando: nome do aluno, ponto de embarque/desembarque e faculdade (IES) com indicação visual dos turnos agendados (ida e volta na mesma IES, apenas ida, apenas volta, ou IES distintas na ida e na volta).
+4. Rota sem alunos alocados exibe a mensagem "Essa rota não possui nenhum aluno alocado para este dia." e mantém o botão "Imprimir lista" desabilitado.
+5. Quando houver alunos alocados, o botão "Imprimir lista" fica habilitado, permitindo exportar/imprimir a lista de embarque para uso físico (prancheta do motorista/monitor).
+6. Se um aluno cancelar o agendamento (HU-014) ou for realocado manualmente enquanto a lista está sendo visualizada, o sistema atualiza a lista automaticamente (adicionando/removendo o aluno), recalcula o total de alunos alocados e exibe na parte inferior o indicador de tempo da última sincronização (ex: "Atualizado há 1 min").
+7. Acesso aos dados pessoais dos alunos na lista de embarque é restrito a usuários com perfil de Administrador e ao Representante daquela rota/IES específica (RNF-010).  
+   **Fluxo Principal (Acesso via Menu com Seleção de Rota):**
+8. O administrador acessa o menu "Lista de Embarque".
+9. O sistema exibe a tela com a data do dia e o campo seletor "Rota \*".
+10. O administrador seleciona a rota desejada no campo seletor.
+11. O sistema apresenta a quantidade total de alunos alocados e a lista completa de estudantes daquele veículo, detalhando nome, ponto de embarque/desembarque, destino (IES) e sentido da viagem (ida/volta).
 12. O administrador realiza a conferência dos dados.
-13. Opcionalmente, o administrador aciona a funcionalidade de exportação/impressão para gerar um documento físico (caso o motorista ou monitor necessite da prancheta manual).  
+13. Opcionalmente, o administrador aciona o botão "Imprimir lista" para gerar o documento de conferência.  
     **Fluxos Alternativos:**
-14. **FA-001 \- Rota sem alunos alocados.**
-    1. O administrador acessa a lista de embarque de uma rota ou ônibus que, por algum motivo, não teve alunos distribuídos.
-    2. O sistema exibe a mensagem "Não há alunos alocados para este veículo nesta data" e desabilita as opções de exportação/impressão.
-15. **FA-002 \- Alteração de última hora (Atualização em tempo real).**
-    1. O administrador visualiza a lista de embarque, mas um aluno cancela o agendamento (HU-014) ou há uma realocação manual no sistema.
-    2. O sistema atualiza a lista automaticamente, removendo/adicionando o aluno e recalculando o total de assentos ocupados, exibindo um indicativo visual de que a lista foi atualizada.
+14. **FA-001 \- Acesso direto por uma rota específica no Painel Logístico ou pelo Representante.**
+    1. O administrador clica para ver a lista de embarque a partir de uma rota específica no painel de alocação (ou o representante acessa a lista da sua rota/IES).
+    2. O sistema abre a tela "Lista de Embarque" exibindo diretamente o título da rota e a listagem dos alunos alocados, ocultando o campo seletor de rotas.
+15. **FA-002 \- Rota sem alunos alocados.**
+    1. O usuário seleciona ou acessa uma rota que não possui alunos distribuídos para a data.
+    2. O sistema exibe a mensagem "Essa rota não possui nenhum aluno alocado para este dia." e mantém o botão "Imprimir lista" desabilitado.
+16. **FA-003 \- Alteração de última hora (Atualização em tempo real).**
+    1. Enquanto a lista de embarque está aberta, um aluno cancela o agendamento (HU-014) ou ocorre uma realocação manual no sistema.
+    2. O sistema atualiza a listagem automaticamente, recalcula o contador de alunos alocados e atualiza o indicador inferior ("Atualizado há X min").
 
     **Regras de Negócio Relacionadas:**
 
-16. RN-001
-17. RN-007  
+17. RN-001
+18. RN-007
+19. RN-015  
     **Requisitos Relacionados:**  
      **FUNCIONAIS:**
-18. RF-019
-19. RF-020  
+20. RF-019
+21. RF-020  
      **NÃO FUNCIONAIS:**
-20. RNF-010
-21. RNF-012  
+22. RNF-010
+23. RNF-012  
     **Protótipo da Interface:**  
     **\[A inserir\]**
 
@@ -1888,13 +1909,13 @@ Como representante da universidade logado no aplicativo, quero utilizar a lista 
 12. O sistema salva o status no banco de dados imediatamente a cada marcação.
 13. O administrador consegue visualizar o painel gerencial refletindo esses números em tempo real.  
     **Fluxos Alternativos:**
-14. **FA-001 \- Tentativa de check-in fora da data permitida (Motorista)** 1.1.
+14. **FA-001 \- Tentativa de check-in fora da data permitida (Representante)**
     1. O representante tenta acessar a lista de embarque de uma data passada ou futura para realizar ou alterar presenças. 1.2.
     2. O sistema identifica a restrição de data (RN-014), exibe a lista em modo "somente leitura" e desabilita os botões de "Presente/Falta", exibindo um alerta de que a chamada só pode ser realizada no dia exato da viagem.
-15. **FA-002 \- Aluno não listado tenta embarcar (Motorista)**
+15. **FA-002 \- Aluno não listado tenta embarcar (Representante)**
     1. Um estudante tenta embarcar no veículo, mas o representante procura e não encontra o nome dele na lista de embarque gerada para aquele dia.
     2. . O sistema não exibe o aluno (pois ele não agendou, foi reprovado ou alocado em outro ônibus) e não permite a adição manual de passageiros na hora. O motorista barra o embarque com base na lista do sistema.
-16. **FA-003 \- Perda de conexão durante o check-in (Motorista)**
+16. **FA-003 \- Perda de conexão durante o check-in (Representante)**
     1. O aplicativo do representante perde o sinal de internet (área de sombra/zona rural) enquanto ele está registrando a entrada dos alunos.
     2. O sistema não trava; ele armazena as marcações de "Presente/Falta" localmente no celular (cache) e exibe um ícone de "Sincronização Pendente".
     3. Assim que a conexão for restabelecida, o aplicativo envia os dados automaticamente em segundo plano para o back-end, atualizando o painel do administrador.
@@ -1905,12 +1926,14 @@ Como representante da universidade logado no aplicativo, quero utilizar a lista 
     **Regras de Negócio Relacionadas:**
 
 18. RN-005
-19. RN-006  
+19. RN-006
+20. RN-014
+21. RN-015  
     **Requisitos Relacionados:**  
      **FUNCIONAIS:**
-20. RF-021  
+22. RF-021  
      **NÃO FUNCIONAIS:**
-21. RNF-012  
+23. RNF-012  
     **Protótipo da Interface:**  
     **\[A inserir\]**
 
@@ -1966,7 +1989,7 @@ Como administrador, quero gerar relatórios quantitativos filtrados por dia, fac
 
 ## **7.8 EP-007 \- Comunicação e Mural de Avisos** {#7.8-ep-007---comunicação-e-mural-de-avisos}
 
-Este épico centraliza todas as funcionalidades destinadas à comunicação oficial entre a coordenação de transportes e os usuários do sistema, eliminando a dependência de aplicativos de mensagens de terceiros e evitando ruídos na transmissão de informações. Ele abrange a criação e gestão de um mural de avisos pelo administrador, a visualização desses comunicados por alunos e visitantes, e o envio de notificações móveis (push) para alertas urgentes ou alterações de rotas, garantindo que todos os envolvidos tenham acesso rápido e claro às atualizações da operação diária.
+Este épico centraliza todas as funcionalidades destinadas à comunicação oficial entre a coordenação de transportes e os usuários do sistema, eliminando a dependência de aplicativos de mensagens de terceiros e evitando ruídos na transmissão de informações. Ele abrange a criação e gestão de um mural de avisos pelo administrador, a visualização desses comunicados por alunos, e o envio de notificações móveis (push) para alertas ou alterações de rotas, garantindo que todos os envolvidos tenham acesso rápido e claro às atualizações da operação diária.
 
 ### **7.8.1 HU-023 \- Publicação de Avisos** {#7.8.1-hu-023---publicação-de-avisos}
 
@@ -1995,14 +2018,14 @@ Como administrador, quero criar, editar e inativar comunicados em um mural de av
 10. O administrador preenche os dados.
 11. O administrador aciona o botão "Publicar" (ou "Salvar").
 12. O sistema valida os campos obrigatórios e salva o registro no banco de dados, associando-o ao administrador logado (autor).
-13. O sistema exibe uma mensagem de sucesso ("Aviso publicado com sucesso") e o comunicado passa a ser exibido no mural público do aplicativo.  
+13. O sistema exibe uma mensagem de sucesso ("Aviso publicado com sucesso") e o comunicado passa a ser exibido no mural do aplicativo.  
     **Fluxos Alternativos:**
 14. FA-001 \- Campos obrigatórios ausentes.
-    1. 1.1. O administrador tenta publicar o aviso sem preencher o título ou o corpo da mensagem.
-    2. 1.2. O sistema bloqueia a publicação, destacando os campos vazios e exigindo o preenchimento.
+    1. O administrador tenta publicar o aviso sem preencher o título ou o corpo da mensagem.
+    2. O sistema bloqueia a publicação, destacando os campos vazios e exigindo o preenchimento.
 15. FA-002 \- Edição ou inativação de aviso.
-    1. 2.1. O administrador acessa a lista de avisos já publicados e seleciona a opção de editar ou excluir (inativar) um comunicado.
-    2. 2.2. O sistema processa a alteração ou remoção, refletindo a mudança imediatamente no mural do aplicativo para evitar a disseminação de informações desatualizadas.
+    1. O administrador acessa a lista de avisos já publicados e seleciona a opção de editar ou excluir (inativar) um comunicado.
+    2. O sistema processa a alteração ou remoção, refletindo a mudança imediatamente no mural do aplicativo para evitar a disseminação de informações desatualizadas.
 
     **Regras de Negócio Relacionadas:**
 
@@ -2027,17 +2050,17 @@ Como administrador, quero criar, editar e inativar comunicados em um mural de av
 Fonte: Elaborado pelo autor (2026).
 
 **História de Usuário:**  
-Como aluno, quero receber notificações (push) no meu smartphone sempre que houver um aviso urgente ou alteração na minha rota, para ser informado imediatamente sobre imprevistos sem precisar abrir o aplicativo constantemente.  
+Como aluno, quero receber notificações (push) no meu smartphone sempre que houver um aviso ou alteração na minha rota, para ser informado imediatamente sobre imprevistos sem precisar abrir o aplicativo constantemente.  
 **Critérios de Aceite:**
 
-1. Publicação de um aviso urgente (HU-023) ou alteração de última hora na alocação do aluno (ônibus/rota) dispara automaticamente uma notificação push para o dispositivo do aluno afetado.
+1. Publicação de um aviso (HU-023) ou alteração de última hora na alocação do aluno (ônibus/rota) dispara automaticamente uma notificação push para o dispositivo do aluno afetado.
 2. Notificação é exibida no smartphone do aluno mesmo com o aplicativo fechado ou em segundo plano.
 3. Ao tocar na notificação, o aplicativo abre diretamente na tela correspondente ao evento (Mural de Avisos, para avisos; Consulta de Alocação, para mudanças de rota/ônibus).
 4. Se o dispositivo do aluno estiver offline no momento do envio, a notificação é retida pelo serviço de mensageria (Firebase/APNS) e entregue assim que a conexão for restabelecida.
 5. Se o aluno tiver desativado as permissões de notificação nas configurações do sistema operacional, a notificação não é exibida; o aluno só verá a atualização ao abrir o app manualmente e consultar o Mural de Avisos.
 6. Dados apresentados ao aluno (ônibus, motorista, rota, placa) são sempre atualizados sempre que houver alteração em sua alocação, garantindo que a notificação não fique desatualizada (RN-009).  
    **Fluxo Principal:**
-7. Um evento gatilho ocorre no sistema (ex: o administrador publica um aviso classificado como urgente na HU-023 ou há uma alteração de última hora no ônibus/alocação do aluno).
+7. Um evento gatilho ocorre no sistema (ex: o administrador publica um aviso classificado na HU-023 ou há uma alteração de última hora no ônibus/alocação do aluno).
 8. A API (back-end) processa o evento e monta o payload (mensagem) da notificação.
 9. A API envia a requisição de disparo para o serviço de mensageria nativo configurado (ex: Firebase Cloud Messaging ou APNS).
 10. O serviço de mensageria roteia e entrega a notificação ao dispositivo móvel do aluno.
@@ -2045,11 +2068,11 @@ Como aluno, quero receber notificações (push) no meu smartphone sempre que hou
 12. O aluno toca na notificação e o aplicativo é aberto diretamente na tela correspondente (Mural de Avisos ou Consulta de Alocação).  
     **Fluxos Alternativos:**
 13. FA-001 \- Dispositivo offline.
-    1. 1.1. O sistema envia a notificação, mas o smartphone do aluno está sem conexão com a internet no momento.
-    2. 1.2. O serviço provedor (Firebase/APNS) retém a mensagem e realiza a entrega assim que o dispositivo recuperar a conexão com a rede.
+    1. O sistema envia a notificação, mas o smartphone do aluno está sem conexão com a internet no momento.
+    2. O serviço provedor (Firebase/APNS) retém a mensagem e realiza a entrega assim que o dispositivo recuperar a conexão com a rede.
 14. FA-002 \- Permissões de notificação desativadas.
-    1. 2.1. O aluno desativou as permissões de notificação push para o aplicativo nas configurações do sistema operacional.
-    2. 2.2. A notificação não é exibida na tela do celular. O aluno dependerá de abrir o aplicativo ativamente para ver as atualizações no Mural de Avisos, conforme estratégia de mitigação de risco definida.
+    1. O aluno desativou as permissões de notificação push para o aplicativo nas configurações do sistema operacional.
+    2. A notificação não é exibida na tela do celular. O aluno dependerá de abrir o aplicativo ativamente para ver as atualizações no Mural de Avisos, conforme estratégia de mitigação de risco definida.
 
     **Regras de Negócio Relacionadas:**
 

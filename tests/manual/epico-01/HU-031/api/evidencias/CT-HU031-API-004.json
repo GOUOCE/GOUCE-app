@@ -1,0 +1,107 @@
+[
+  {
+    "passo": "0",
+    "descricao": "Banco R1 antes: status | matrícula | residência | foto | data_hora_envio_analise",
+    "resultado": "rejeitado | 575c40c8-d7cb-4645-8ae4-2095f239ec10 | c03a9d72-8dfc-4a23-bfbc-39becbd79985 | a1514883-c949-40cd-8d0d-fe9bdade528a | 2026-10-27 17:51:59.669071+00"
+  },
+  {
+    "passo": "1",
+    "descricao": "R1 reenvia matrícula (PDF 1 MB) e residência (PNG)",
+    "data_hora_utc": "2026-10-27T17:52:54Z",
+    "requisicao": {
+      "metodo": "PUT",
+      "rota": "/usuarios/reenvio_documento",
+      "credencial": "r1",
+      "corpo": {
+        "comprovante_matricula": "doc_1mb.pdf",
+        "comprovante_residencia": "foto.png"
+      }
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "mensagem": "Documentos enviados com sucesso! Seu cadastro foi encaminhado para análise.",
+        "status": "pendente",
+        "documentos_reenvio": [
+          {
+            "tipo": "comprovante_matricula",
+            "motivo": "Comprovante de matrícula desatualizado."
+          },
+          {
+            "tipo": "comprovante_residencia",
+            "motivo": "Comprovante com mais de 3 meses."
+          }
+        ]
+      }
+    }
+  },
+  {
+    "passo": "2",
+    "descricao": "Banco R1 depois: status | matrícula | residência | foto | data_hora_envio_analise",
+    "resultado": "pendente | 7b01e315-216b-4bfd-8b9b-89aed9bac5da | 0a3e38d9-b378-4b40-95c7-145466c3b037 | a1514883-c949-40cd-8d0d-fe9bdade528a | 2026-10-27 17:52:54.145425+00"
+  },
+  {
+    "passo": "3",
+    "descricao": "Fila do administrador",
+    "data_hora_utc": "2026-10-27T17:52:54Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/usuarios/alunos?status=pendente&ordem=asc",
+      "credencial": "admin",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": [
+        {
+          "id": 5,
+          "nome": "Ana Paula Freitas",
+          "email": "a4.ana@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:50:27.061825Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": "Documentos precisam ser revistos.",
+          "documentos_reenvio": null
+        },
+        {
+          "id": 10,
+          "nome": "Paulo Pendente Um",
+          "email": "p1.paulo@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:51:59.910803Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        },
+        {
+          "id": 8,
+          "nome": "Rafael Reprovado Um",
+          "email": "r1.rafael@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:52:54.145425Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": "Documentos precisam ser reenviados.",
+          "documentos_reenvio": [
+            {
+              "tipo": "comprovante_matricula",
+              "motivo": "Comprovante de matrícula desatualizado."
+            },
+            {
+              "tipo": "comprovante_residencia",
+              "motivo": "Comprovante com mais de 3 meses."
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

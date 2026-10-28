@@ -68,8 +68,7 @@ Funcionalidade: Gerenciamento de Frota (Ônibus)
 
 
     # FA-002 - Placa duplicada no cadastro (AC-03)
-    # Observação: o AC-03 considera registros ativos ou inativos; o FA-002 cita apenas ativos.
-    # Os cenários seguem o AC-03, que é mais restritivo.
+    # A duplicidade vale contra registros ativos ou inativos (decisão do PO na #207, item 2)
     @fluxo_infeliz @FA002 @prioridade_alta
     Esquema do Cenário: Sistema bloqueia o cadastro de ônibus com placa já existente
       Dado que já existe o ônibus de placa "ABC1D23" com status "<status_existente>"
@@ -137,8 +136,7 @@ Funcionalidade: Gerenciamento de Frota (Ônibus)
 
 
     # AC-09 - Formato da placa (Mercosul ABC1D23 ou antigo ABC1234)
-    # Observação: o texto da mensagem não está definido no requisito; os cenários seguem
-    # "Placa inválida." e devem ser alinhados com o time.
+    # Formatos e mensagem confirmados pelo PO na #207, item 3
     @fluxo_infeliz @validacao_campos @prioridade_alta
     Esquema do Cenário: Sistema bloqueia o salvamento de ônibus com placa em formato inválido
       Quando o administrador seleciona "Novo Cadastro"

@@ -41,3 +41,16 @@ coverage/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Cache do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Cache do Pytest
+.pytest_cache/
+
+# Cache de ferramentas
+.mypy_cache/
+.ruff_cache/

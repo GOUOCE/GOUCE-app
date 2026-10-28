@@ -1,0 +1,96 @@
+[
+  {
+    "passo": "1",
+    "descricao": "Detalhes do A1",
+    "data_hora_utc": "2026-10-27T17:49:02Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/alunos/2",
+      "credencial": "admin",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "id": 2,
+        "nome": "Zuleide Ramos Costa",
+        "email": "a1.zuleide@qa.gouce.app",
+        "telefone": "88999990000",
+        "data_criacao": "2026-10-27T17:47:39.154848Z",
+        "status_cadastro": "pendente",
+        "faculdade_id": 1,
+        "faculdade": "Universidade Federal do Ceará",
+        "nome_faculdade": "Universidade Federal do Ceará",
+        "sigla": "UFC",
+        "sigla_faculdade": "UFC",
+        "campus": "Campus Quixadá",
+        "bairro": "Centro",
+        "curso": "Ciência da Computação",
+        "semestre_atual": 3,
+        "periodo_ingresso": "2025.1",
+        "turno_curso": "Noturno",
+        "data_nascimento": 20020510,
+        "identificacao_genero": "Mulher",
+        "transgenero": "Não",
+        "raca": "Pardo",
+        "identificacao_sexual": "Heterossexual",
+        "tem_filhos": false,
+        "id_foto_aluno": "9fe3e044-53ac-4267-b6ca-6d8dcbf0e9df",
+        "validade_acesso": null,
+        "acesso_expirado": false,
+        "motivo_reprovacao": null,
+        "id_comprovante_matricula": "2f807a36-9e7b-4c54-adb1-906f41b4e0f1",
+        "id_comprovante_residencia": "c5d382d2-4367-435b-8198-1fc5e8adec4f",
+        "nome_comprovante_matricula": "doc.pdf",
+        "nome_comprovante_residencia": "doc.pdf",
+        "documentos_reenvio": null,
+        "data_hora_envio_analise": "2026-10-27T17:47:39.155681Z",
+        "data_hora_ultima_renovacao_matricula": null,
+        "termos_de_uso": true,
+        "consentimento_lgpd_em": "2026-10-27T17:47:39.154077Z",
+        "versao_termos": "1.0"
+      }
+    }
+  },
+  {
+    "passo": "2-matricula",
+    "descricao": "Abrir comprovante de matricula (binário; registrado status, content-type e tamanho)",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/arquivos/2f807a36-9e7b-4c54-adb1-906f41b4e0f1/view",
+      "credencial": "admin"
+    },
+    "resposta": {
+      "status_content_type_bytes": "200 application/pdf 193"
+    }
+  },
+  {
+    "passo": "2-residencia",
+    "descricao": "Abrir comprovante de residencia (binário; registrado status, content-type e tamanho)",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/arquivos/c5d382d2-4367-435b-8198-1fc5e8adec4f/view",
+      "credencial": "admin"
+    },
+    "resposta": {
+      "status_content_type_bytes": "200 application/pdf 193"
+    }
+  },
+  {
+    "passo": "3",
+    "descricao": "Aluno inexistente",
+    "data_hora_utc": "2026-10-27T17:49:02Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/alunos/999999",
+      "credencial": "admin",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 404,
+      "corpo": {
+        "detail": "Aluno não encontrado"
+      }
+    }
+  }
+]

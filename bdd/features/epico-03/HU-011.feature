@@ -90,6 +90,102 @@ Funcionalidade: Gerenciamento de Rotas Principais e Horários
       E a rota "Rota Centro - Faculdades" atende na volta apenas "UFC - Campus Quixadá"
 
 
+    # FA-005 - Nome de rota duplicado (AC-11, decisão do PO na #208, item 1)
+    @fluxo_infeliz @FA005 @prioridade_alta
+    Esquema do Cenário: Sistema bloqueia o cadastro de rota com nome já usado por outra rota
+      Dado que existe a <tipo_existente> "<nome_existente>" com status "<status_existente>"
+      Quando o administrador seleciona "Nova Rota"
+      E preenche o campo "Nome" com "<nome_informado>"
+      E preenche os demais campos obrigatórios corretamente
+      E clica no botão "Salvar"
+      Então o sistema exibe a mensagem "Já existe uma rota com este nome."
+      E a rota "<nome_informado>" não é cadastrada
+
+      Exemplos:
+        | tipo_existente    | nome_existente      | status_existente | nome_informado      |
+        | rota principal    | Rota Centro - UFC   | ativa            | Rota Centro - UFC   |
+        | rota principal    | Rota Centro - UFC   | ativa            | rota centro - ufc   |
+        | rota principal    | Rota Centro - UFC   | ativa            | ROTA CENTRO - UFC   |
+        | rota principal    | Rota Antiga         | inativa          | Rota Antiga         |
+        | rota complementar | Van 2 - Bairro Novo | ativa            | Van 2 - Bairro Novo |
+        | rota complementar | Van Antiga          | inativa          | van antiga          |
+
+
+    # FA-005 - Nome de rota duplicado na edição (AC-11)
+    @fluxo_infeliz @FA005 @prioridade_media
+    Cenário: Sistema bloqueia a edição de rota para um nome já usado por outra rota
+      Dado que existem as rotas ativas "Rota Centro - UFC" e "Rota Integrada"
+      Quando o administrador seleciona a ação "Editar" para "Rota Integrada"
+      E altera o campo "Nome" para "Rota Centro - UFC"
+      E clica no botão "Salvar"
+      Então o sistema exibe a mensagem "Já existe uma rota com este nome."
+      E a rota "Rota Integrada" mantém os dados originais
+
+
+    # FA-006 - Horário de retorno igual ou anterior à saída (AC-12, decisão do PO na #208, item 2)
+    @fluxo_infeliz @FA006 @validacao_campos @prioridade_alta
+    Esquema do Cenário: Sistema bloqueia rota com horário de retorno que não é posterior ao de saída
+      Quando o administrador seleciona "Nova Rota"
+      E preenche o campo "Horário de saída" com "<saida>"
+      E preenche o campo "Horário de retorno" com "<retorno>"
+      E preenche os demais campos obrigatórios corretamente
+      E clica no botão "Salvar"
+      Então o sistema destaca o campo "Horário de retorno" como inválido
+      E exibe a mensagem "Horário de retorno deve ser maior que o horário de saída."
+      E a rota não é cadastrada
+
+      Exemplos:
+        | saida | retorno |
+        | 06:30 | 06:30   |
+        | 06:30 | 06:29   |
+
+
+    # AC-12 - Horários aceitos sem faixa mínima ou máxima (decisão do PO na #208, item 2)
+    @fluxo_feliz @validacao_campos @prioridade_media
+    Esquema do Cenário: Administrador cadastra rota com qualquer horário válido em que o retorno é posterior à saída
+      Quando o administrador seleciona "Nova Rota"
+      E preenche o campo "Nome" com "<nome>"
+      E preenche o campo "Horário de saída" com "<saida>"
+      E preenche o campo "Horário de retorno" com "<retorno>"
+      E preenche os demais campos obrigatórios corretamente
+      E clica no botão "Salvar"
+      Então o sistema exibe a mensagem "Operação realizada com sucesso"
+      E a listagem exibe a rota "<nome>" com saída às "<saida>" e retorno às "<retorno>"
+
+      Exemplos:
+        | nome           | saida | retorno |
+        | Rota Um Minuto | 06:30 | 06:31   |
+        | Rota Madrugada | 00:00 | 23:59   |
+
+
+    # AC-12 - Formato do horário
+    @fluxo_infeliz @validacao_campos @teste_api @nao_automatizavel_via_appium @prioridade_media
+    Esquema do Cenário: API rejeita horário fora do formato HH:mm
+      Quando o administrador envia uma requisição para cadastrar uma rota com o "<campo>" igual a "<valor>"
+      Então a API responde com o status "422 Unprocessable Entity"
+      E a resposta informa a mensagem "Horário deve estar no formato HH:MM."
+      E a rota não é cadastrada
+
+      Exemplos:
+        | campo           | valor |
+        | horario_saida   | 24:00 |
+        | horario_saida   | 6h30  |
+        | horario_retorno | 17:60 |
+
+
+    # AC-16 - Tamanho máximo do nome (valor-limite)
+    @validacao_campos @teste_api @nao_automatizavel_via_appium @prioridade_media
+    Esquema do Cenário: API valida o tamanho máximo do nome da rota
+      Quando o administrador envia uma requisição para cadastrar uma rota com nome de <tamanho> caracteres
+      Então a API responde com o status "<status>"
+      E <resultado>
+
+      Exemplos:
+        | tamanho | status                   | resultado                                                                       |
+        | 150     | 201 Created              | a rota é cadastrada                                                             |
+        | 151     | 422 Unprocessable Entity | a resposta informa a mensagem "Nome da rota deve ter no máximo 150 caracteres." |
+
+
     # FA-003 - Campos obrigatórios ausentes no cadastro (AC-08)
     @fluxo_infeliz @FA003 @validacao_campos @prioridade_alta
     Esquema do Cenário: Sistema bloqueia o cadastro quando um campo obrigatório não é preenchido
@@ -101,12 +197,13 @@ Funcionalidade: Gerenciamento de Rotas Principais e Horários
       E a rota não é cadastrada
 
       Exemplos:
-        | campo_obrigatorio  |
-        | Nome               |
-        | Horário de saída   |
-        | Horário de retorno |
-        | Bairros            |
-        | Faculdades da ida  |
+        | campo_obrigatorio   |
+        | Nome                |
+        | Horário de saída    |
+        | Horário de retorno  |
+        | Bairros             |
+        | Faculdades da ida   |
+        | Faculdades da volta |
 
 
     # FA-003 - Campos obrigatórios ausentes na edição (AC-08)
@@ -120,12 +217,13 @@ Funcionalidade: Gerenciamento de Rotas Principais e Horários
       E a rota "Rota Centro - UFC" mantém os dados originais
 
       Exemplos:
-        | campo_obrigatorio  |
-        | Nome               |
-        | Horário de saída   |
-        | Horário de retorno |
-        | Bairros            |
-        | Faculdades da ida  |
+        | campo_obrigatorio   |
+        | Nome                |
+        | Horário de saída    |
+        | Horário de retorno  |
+        | Bairros             |
+        | Faculdades da ida   |
+        | Faculdades da volta |
 
 
     # FA-002 - Entidade de base inativa fora das opções de seleção (AC-03)
@@ -180,6 +278,22 @@ Funcionalidade: Gerenciamento de Rotas Principais e Horários
       E a rota "Rota Antiga" volta a ser exibida na listagem de ativas
 
 
+    # FA-007 - Reativação de rota com bairro ou faculdade inativo (AC-15, RNF-012)
+    @fluxo_infeliz @FA007 @RNF012 @prioridade_media
+    Esquema do Cenário: Sistema bloqueia a reativação de rota vinculada a <entidade> inativo
+      Dado que existe a rota inativa "Rota Antiga" vinculada ao <entidade> "<nome>"
+      E o <entidade> "<nome>" foi inativado depois da inativação da rota
+      Quando o administrador ativa a chave "Mostrar inativos"
+      E tenta reativar a rota "Rota Antiga"
+      Então o sistema exibe a mensagem "Esta rota possui bairro ou faculdade inativo e não pode ser reativada. Atualize os vínculos antes."
+      E a rota "Rota Antiga" permanece inativa
+
+      Exemplos:
+        | entidade  | nome                  |
+        | bairro    | Alto São Francisco    |
+        | faculdade | Unicatólica - Quixadá |
+
+
     # FA-001 - Inativação de rota com agendamentos futuros (AC-06, RNF-012)
     @fluxo_infeliz @FA001 @RNF012 @prioridade_alta @depende_de_HU013
     Cenário: Sistema bloqueia a inativação de rota com alunos agendados para datas futuras
@@ -187,6 +301,27 @@ Funcionalidade: Gerenciamento de Rotas Principais e Horários
       Quando o administrador tenta inativar a rota "Rota Centro - UFC"
       Então o sistema exibe a mensagem "Esta rota possui agendamentos pendentes e não pode ser inativada no momento."
       E a rota "Rota Centro - UFC" permanece ativa
+
+
+    # FA-004 - Inativação de rota principal com rotas complementares ativas (AC-13, decisão do PO na #208, item 5)
+    @fluxo_infeliz @FA004 @RNF012 @prioridade_alta
+    Cenário: Sistema bloqueia a inativação de rota principal com rotas complementares ativas vinculadas
+      Dado que a rota ativa "Rota Centro - UFC" possui a rota complementar ativa "Van 2 - Bairro Novo" vinculada
+      Quando o administrador tenta inativar a rota "Rota Centro - UFC"
+      Então o sistema exibe a mensagem "Esta rota possui rotas complementares ativas vinculadas. Inative ou desvincule as rotas complementares antes de continuar."
+      E a rota "Rota Centro - UFC" permanece ativa
+      E a rota complementar "Van 2 - Bairro Novo" permanece ativa
+
+
+    # AC-13 - Rota principal com complementares apenas inativas pode ser inativada
+    @fluxo_feliz @RF014 @prioridade_media
+    Cenário: Administrador inativa uma rota principal cujas rotas complementares estão todas inativas
+      Dado que a rota ativa "Rota Centro - UFC" possui apenas a rota complementar inativa "Van Antiga" vinculada
+      E a rota "Rota Centro - UFC" não possui alunos agendados para datas futuras
+      Quando o administrador seleciona a ação "Inativar" para "Rota Centro - UFC"
+      E confirma a inativação
+      Então o sistema exibe a mensagem "Operação realizada com sucesso"
+      E a rota "Rota Centro - UFC" deixa de ser exibida na listagem de ativas
 
 
     # AC-09 - Visualização de registros inativos
@@ -233,9 +368,7 @@ Funcionalidade: Gerenciamento de Rotas Principais e Horários
       Então os registros de alocação e relatórios de períodos anteriores permanecem inalterados
 
 
-    # Rota inativa fora das opções de agendamento do aluno
-    # Observação: o requisito não descreve esse comportamento de forma explícita; ele decorre da
-    # finalidade da rota (oferecer trajetos para o agendamento) e deve ser confirmado com o time.
+    # AC-14 - Rota inativa fora das opções de agendamento do aluno (decisão do PO na #208, item 8)
     @regra_negocio @prioridade_media @depende_de_HU013
     Cenário: Rota inativa não é exibida como opção de agendamento para o aluno
       Dado que existe a rota inativa "Rota Antiga"

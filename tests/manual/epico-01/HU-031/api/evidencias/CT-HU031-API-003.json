@@ -1,0 +1,23 @@
+[
+  {
+    "passo": "1",
+    "descricao": "AP (aprovado) consulta as pendências",
+    "data_hora_utc": "2026-10-27T17:52:36Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/usuarios/reenvio_documento",
+      "credencial": "ap",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "documentos": []
+      }
+    }
+  },
+  {
+    "passo": "2",
+    "descricao": "P1 (pendente) não tem token: login recusado no CT-HU031-API-001. Parte do P1 bloqueada."
+  }
+]

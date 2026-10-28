@@ -81,8 +81,7 @@ Funcionalidade: Gerenciamento de Motoristas
 
 
     # FA-002 - Telefone duplicado no cadastro (AC-03)
-    # Observação: o AC-02/AC-03 usam o telefone como identificador único; o FA-002 cita CNH ou CPF
-    # e o RF-009 cita número e categoria da CNH. Os cenários seguem os ACs (telefone).
+    # O telefone é o identificador único do motorista; o cadastro não tem CNH (decisão do PO na #207, item 1)
     @fluxo_infeliz @FA002 @prioridade_alta
     Esquema do Cenário: Sistema bloqueia o cadastro de motorista com telefone já existente
       Dado que já existe um motorista com o telefone "(88) 99811-2233" e status "<status_existente>"
