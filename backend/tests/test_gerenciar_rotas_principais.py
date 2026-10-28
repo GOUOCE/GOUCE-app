@@ -5,7 +5,9 @@ from tests.rota_principal_support import ADMIN_ID
 
 from src.modulos.rotas.application.use_cases.gerenciar_rotas_principais_use_case import (
     GerenciarRotasPrincipaisUseCase,
+    MENSAGEM_ROTA_COM_COMPLEMENTARES_ATIVAS,
     RotaComAgendamentosPendentesError,
+    RotaComComplementaresAtivasError,
     RotaComVinculoInativoError,
     RotaPrincipalNaoEncontradaError,
     RotaPrincipalStatusInalteradoError,
@@ -33,6 +35,7 @@ class FakeRepository:
         }
         self.com_agendamentos = set()
         self.com_vinculo_inativo = set()
+        self.com_complementares_ativas = set()
         self.chamadas = []
 
     def listar(self, ativo=None, nome=None):
@@ -57,6 +60,10 @@ class FakeRepository:
     def possui_agendamentos_futuros(self, rota_id):
         self.chamadas.append(("possui_agendamentos_futuros", rota_id))
         return rota_id in self.com_agendamentos
+
+    def possui_complementares_ativas(self, rota_id):
+        self.chamadas.append(("possui_complementares_ativas", rota_id))
+        return rota_id in self.com_complementares_ativas
 
     def possui_vinculo_inativo(self, rota_id):
         self.chamadas.append(("possui_vinculo_inativo", rota_id))
@@ -283,6 +290,17 @@ class MensagensDeValidacaoTest(CasoDeUsoTestBase):
             with self.subTest(alteracao=alteracao):
                 self.assert_validacao("nome", mensagem, self.use_case.criar, **argumentos(**alteracao))
 
+    def test_nul_no_nome_e_recusado_como_texto_invalido_na_criacao_e_na_edicao(self):
+        self.assert_validacao(
+            "nome", "Nome da rota deve ser um texto válido.",
+            self.use_case.criar, **argumentos(nome="a\x00b"),
+        )
+        self.assert_validacao(
+            "nome", "Nome da rota deve ser um texto válido.",
+            self.use_case.atualizar, 1, {"nome": "a\x00b"}, ADMIN_ID,
+        )
+        self.assertEqual([c for c in self.repository.chamadas if c[0] in ("criar", "atualizar")], [])
+
     def test_nome_no_limite_de_150_e_aceito(self):
         self.use_case.criar(**argumentos(nome="x" * 150))
 
@@ -355,6 +373,13 @@ class MensagensDeValidacaoTest(CasoDeUsoTestBase):
 
     def test_mensagem_de_listagem_com_nome_que_nao_e_texto(self):
         self.assert_validacao("nome", "Nome deve ser um texto válido.", self.use_case.listar, nome=10)
+
+    def test_nome_com_nul_na_listagem_e_recusado_sem_consultar_o_repository(self):
+        self.repository.chamadas.clear()
+
+        self.assert_validacao("nome", "Nome deve ser um texto válido.", self.use_case.listar, nome="a\x00b")
+
+        self.assertEqual(self.repository.chamadas, [])
 
     def test_mensagem_de_edicao_sem_campos_e_de_campos_nulos(self):
         self.assert_validacao("rota", "Informe ao menos um campo para atualização.", self.use_case.atualizar, 1, {}, ADMIN_ID)
@@ -502,15 +527,45 @@ class OrdemDasRegrasTest(CasoDeUsoTestBase):
         self.repository.com_agendamentos.add(1)
         with self.assertRaises(RotaComAgendamentosPendentesError):
             self.use_case.inativar(1, ADMIN_ID)
-        self.assertEqual(self.repository.chamadas, [("buscar", 1), ("possui_agendamentos_futuros", 1)])
+        self.assertEqual(
+            self.repository.chamadas,
+            [("buscar", 1), ("possui_complementares_ativas", 1), ("possui_agendamentos_futuros", 1)],
+        )
 
         self.repository.chamadas.clear()
         self.repository.com_agendamentos.clear()
         self.use_case.inativar(1, ADMIN_ID)
         self.assertEqual(
             self.repository.chamadas,
-            [("buscar", 1), ("possui_agendamentos_futuros", 1), ("inativar", 1, ADMIN_ID)],
+            [
+                ("buscar", 1),
+                ("possui_complementares_ativas", 1),
+                ("possui_agendamentos_futuros", 1),
+                ("inativar", 1, ADMIN_ID),
+            ],
         )
+
+    def test_inativar_com_complementares_ativas_bloqueia_antes_dos_agendamentos(self):
+        self.repository.com_complementares_ativas.add(1)
+        self.repository.com_agendamentos.add(1)
+
+        with self.assertRaises(RotaComComplementaresAtivasError) as contexto:
+            self.use_case.inativar(1, ADMIN_ID)
+
+        self.assertEqual(str(contexto.exception), MENSAGEM_ROTA_COM_COMPLEMENTARES_ATIVAS)
+        self.assertEqual(
+            self.repository.chamadas, [("buscar", 1), ("possui_complementares_ativas", 1)]
+        )
+        self.assertEqual(self.escritas(), [])
+        self.assertTrue(self.repository.rotas[1]["ativo"])
+
+    def test_rota_ja_inativa_responde_estado_inalterado_sem_consultar_complementares(self):
+        self.repository.com_complementares_ativas.add(2)
+
+        with self.assertRaises(RotaPrincipalStatusInalteradoError):
+            self.use_case.inativar(2, ADMIN_ID)
+
+        self.assertNotIn(("possui_complementares_ativas", 2), self.repository.chamadas)
 
     def test_reativar_ordem_executor_existencia_estado_vinculo_escrita(self):
         with self.assertRaises(RotaPrincipalValidationError):

@@ -53,6 +53,16 @@ class FileRepository:
         return None
 
 
+class FakeBairroRepository:
+    def buscar_por_id(self, bairro_id):
+        return SimpleNamespace(id=bairro_id, ativo=True)
+
+
+class FakeFaculdadeRepository:
+    def buscar_por_id(self, faculdade_id):
+        return SimpleNamespace(id=faculdade_id, ativo=True)
+
+
 class ContextRepository:
     def __init__(self, contexto):
         self.contexto = contexto
@@ -169,6 +179,13 @@ class TokenSessionSecurityHttpTests(unittest.TestCase):
         self.app.dependency_overrides[usuario_routes.get_token_service] = (
             lambda: self.access_token_service
         )
+        # Evita acesso ao Postgres real nas validações de bairro e faculdade.
+        self.app.dependency_overrides[usuario_routes.get_bairro_repository] = (
+            lambda: FakeBairroRepository()
+        )
+        self.app.dependency_overrides[usuario_routes.get_faculdade_repository] = (
+            lambda: FakeFaculdadeRepository()
+        )
         self.app.dependency_overrides[arquivo_routes.get_repository] = (
             lambda: self.file_repository
         )
@@ -211,14 +228,14 @@ class TokenSessionSecurityHttpTests(unittest.TestCase):
                 "transgenero": "Não",
                 "tem_filhos": False,
                 "raca": "Pardo",
-                "data_nascimento": "2000-01-01",
+                "data_nascimento": "15/03/2002",
                 "id_comprovante_matricula": "arquivo-1",
                 "id_comprovante_residencia": "arquivo-2",
                 "termos_de_uso": True,
             },
         )
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, 201, response.json())
         self.assertEqual(response.json()["data"]["status_cadastro"], "pendente")
 
     def test_student_cannot_reach_admin_route_through_http(self):

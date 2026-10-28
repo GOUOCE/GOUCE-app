@@ -9,16 +9,16 @@
 | Camada | UI |
 | Tipo de teste | Funcional manual — suíte essencial (baseada em risco) |
 | Tela | Administrador → Cadastros → **Representantes** → **+ Novo** / **Cadastrar Representante**; login Sou representante/Sou aluno e área de representante |
-| Ambiente | Celular (Expo Go) ou web em `http://localhost:3000`; preencher branch/commit da implementação testada |
+| Ambiente | Versão web (`http://localhost:3000`), API e banco locais em Docker; branch `test/manual-ui-hu-030` a partir da `develop` (`88eb19dc`), com as mudanças do [PR #195](https://github.com/GOUOCE/GOUCE-app/pull/195) (`fix/issues-hu030`, `12aae7c3`) aplicadas na execução |
 | Total de casos | 13 |
-| Última execução | Não realizada |
+| Última execução | 2026-10-27 |
 | Testador | Cauan Ricardo |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 13 | 0 | 0 | 0 | 0 | 13 |
+| ❌ Concluída com falhas | 13 | 3 | 6 | 0 | 4 |
 
 ## Pré-condições
 
@@ -40,29 +40,29 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU030-UI-001 | Listar ativos e revogados sem representantes fictícios | Lista vazia; ativos/revogados reais | Sem exemplos; ambos os status identificados e dados reais | ⏳ PENDENTE | Não executado. |
-| CT-HU030-UI-002 | Localizar aluno real e tratar pesquisa sem resultado | Busca real, nomes semelhantes e lista de elegíveis vazia | Aluno correto; vazio informado; sem João/Clara fictícios | ⏳ PENDENTE | Não executado. |
-| CT-HU030-UI-003 | Atribuir a instituição escolhida e preservar cadastro de aluno | Promover Larissa para F2 ≠ 1; confirmação e persistência | Sucesso; F2 correta no banco; mesmo aluno | ⏳ PENDENTE | Não executado. |
-| CT-HU030-UI-004 | Exigir instituição válida e impedir seleção inativa | Instituição vazia/inativa; seleção válida | Bloqueio compreensível; nenhum perfil ou instituição padrão indevida | ⏳ PENDENTE | Não executado. |
-| CT-HU030-UI-005 | Impedir atribuição nos quatro estados inelegíveis | Quatro estados do BDD, inclusive validade vencida | Sem promoção; orientação de somente aprovados/ativos | ⏳ PENDENTE | Não executado. |
-| CT-HU030-UI-006 | Impedir atribuição repetida ao representante ativo | Já representante; tentativa repetida e resposta 409 | Bloqueio por função ativa; sem duplicação nem troca de instituição | ⏳ PENDENTE | Não executado. |
+| CT-HU030-UI-001 | Listar ativos e revogados sem representantes fictícios | Lista vazia; ativos/revogados reais | Sem exemplos; ambos os status identificados e dados reais | ❌ FALHOU | A lista mostra representantes reais e a busca funciona, mas os representantes revogados não aparecem na tela, contrariando o AC-01. |
+| CT-HU030-UI-002 | Localizar aluno real e tratar pesquisa sem resultado | Busca real, nomes semelhantes e lista de elegíveis vazia | Aluno correto; vazio informado; sem João/Clara fictícios | ⏳ NÃO EXECUTADO | Fora do recorte reduzido desta execução. |
+| CT-HU030-UI-003 | Atribuir a instituição escolhida e preservar cadastro de aluno | Promover Larissa para F2 ≠ 1; confirmação e persistência | Sucesso; F2 correta no banco; mesmo aluno | ❌ FALHOU | Reprovado pela leitura do código (não executado na tela): a instituição escolhida não é enviada, e a atribuição sempre usa a faculdade 1. |
+| CT-HU030-UI-004 | Exigir instituição válida e impedir seleção inativa | Instituição vazia/inativa; seleção válida | Bloqueio compreensível; nenhum perfil ou instituição padrão indevida | ❌ FALHOU | Reprovado pela leitura do código (não executado na tela): a lista de instituições é fixa e nunca fica vazia nem trata instituição inativa. |
+| CT-HU030-UI-005 | Impedir atribuição nos quatro estados inelegíveis | Quatro estados do BDD, inclusive validade vencida | Sem promoção; orientação de somente aprovados/ativos | ⏳ NÃO EXECUTADO | Fora do recorte reduzido desta execução. |
+| CT-HU030-UI-006 | Impedir atribuição repetida ao representante ativo | Já representante; tentativa repetida e resposta 409 | Bloqueio por função ativa; sem duplicação nem troca de instituição | ⏳ NÃO EXECUTADO | Fora do recorte reduzido desta execução. |
 
 ### Seção B — Revogação e reatribuição
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU030-UI-007 | Cancelar e confirmar revogação mantendo aluno e revogado na lista | Modal cancelar/confirmar; função revogada, aluno preservado | Cancelar não grava; confirmar revoga só a função e mantém linha visível | ⏳ PENDENTE | Não executado. |
-| CT-HU030-UI-008 | Reatribuir ao revogado em instituição diferente | Revogada → ativa; responsabilidade F2 → F1 | Sucesso; mesma identidade; nova instituição correta | ⏳ PENDENTE | Não executado. |
+| CT-HU030-UI-007 | Cancelar e confirmar revogação mantendo aluno e revogado na lista | Modal cancelar/confirmar; função revogada, aluno preservado | Cancelar não grava; confirmar revoga só a função e mantém linha visível | ❌ FALHOU | Cancelar não revoga e confirmar revoga só a função, com auditoria, mas o revogado some da lista em vez de ficar visível como revogado. |
+| CT-HU030-UI-008 | Reatribuir ao revogado em instituição diferente | Revogada → ativa; responsabilidade F2 → F1 | Sucesso; mesma identidade; nova instituição correta | ❌ FALHOU | Reprovado pela leitura do código (não executado na tela): depende da instituição escolhida, que é ignorada. |
 
 ### Seção C — Perfis, acesso e robustez
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU030-UI-009 | Entrar como representante e como aluno com a mesma conta | Sou representante e Sou aluno após promoção | Ambos os acessos funcionam; dados originais e menus corretos | ⏳ PENDENTE | Não executado. |
-| CT-HU030-UI-010 | Perder funções de representante após revogação | Sessão existente e novo login após revogação | Sem funções de representante; aluno continua acessando | ⏳ PENDENTE | Não executado. |
-| CT-HU030-UI-011 | Ocultar gestão a aluno e representante e bloquear links diretos | Menus e links para não administradores | Sem menu de gestão; Acesso Negado; sem privilégios administrativos | ⏳ PENDENTE | Não executado. |
-| CT-HU030-UI-012 | Falha de conexão sem exemplos nem atribuição/revogação falsa | Listas e escritas sem resposta da API | Erro visível; sem exemplos; estado reconciliado com o banco | ⏳ PENDENTE | Não executado. |
-| CT-HU030-UI-013 | Ver somente sua universidade e registrar presença real | Consulta/presença da própria instituição e de outra | Só próprios alunos; presença persiste; outra instituição bloqueada | ⏳ PENDENTE | Depende das HU-018/021; marcar 🚫 se ausentes. |
+| CT-HU030-UI-009 | Entrar como representante e como aluno com a mesma conta | Sou representante e Sou aluno após promoção | Ambos os acessos funcionam; dados originais e menus corretos | ✅ PASSOU | Com o PR #195, a mesma conta entra como representante (“Sou representante”) e como aluno (“Sou aluno”). |
+| CT-HU030-UI-010 | Perder funções de representante após revogação | Sessão existente e novo login após revogação | Sem funções de representante; aluno continua acessando | ✅ PASSOU | Revogada a função, “Sou representante” é recusado com “Perfil incompatível” e “Sou aluno” entra normalmente. |
+| CT-HU030-UI-011 | Ocultar gestão a aluno e representante e bloquear links diretos | Menus e links para não administradores | Sem menu de gestão; Acesso Negado; sem privilégios administrativos | ✅ PASSOU | Aluno e representante foram levados a Acesso Negado em todos os links de gestão, sem abrir nenhuma tela administrativa. |
+| CT-HU030-UI-012 | Falha de conexão sem exemplos nem atribuição/revogação falsa | Listas e escritas sem resposta da API | Erro visível; sem exemplos; estado reconciliado com o banco | ❌ FALHOU | Reprovado pela leitura do código: o PR removeu os exemplos, mas a falha da lista e da revogação não mostra erro na tela. |
+| CT-HU030-UI-013 | Ver somente sua universidade e registrar presença real | Consulta/presença da própria instituição e de outra | Só próprios alunos; presença persiste; outra instituição bloqueada | ⏳ NÃO EXECUTADO | Fora do recorte reduzido desta execução. |
 
 ## Detalhamento dos casos
 
@@ -86,8 +86,12 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Banco não estava vazio:** já havia dois representantes reais (Cauan Ricardo e QA Teste Representante Sete); o trecho de lista vazia não foi executado. Antes do caso foi promovida pela API a conta `qa.hu007.aluno` (id 14) para servir de representante a revogar (auditoria `PROMOVER`, id 39).
+- **Dados reais e busca:** o testador relatou que a lista mostrou os representantes certos, sem exemplos fictícios, e que a busca por nome funcionou. O PR #195 removeu os exemplos de `representanteService.ts`.
+- **Revogados:** após a revogação do CT-007, a API continua devolvendo o QA Teste Aluno Sete com `ativo = false`, mas a tela não o mostra: `representantes/index.tsx` faz `setRepresentantes(lista.filter((r) => r.ativo))`. O AC-01 pede a listagem dos representantes ativos **e** dos que tiveram a função revogada, identificados.
+- **Visto na tela** (print do testador, 2026-10-27 02:25) em **Cadastrar Representante**: a tela abriu com a instituição **IFCE - Campus Quixadá** e o discente **QA Teste Aluno Sete** já selecionados, dados da vez anterior (telas não recriadas), e o cartão do discente mostra “Engenharia de Software | 2024.1”, que a API não envia (`/usuarios/alunos` não traz curso nem semestre): os valores vêm dos padrões fixos de `representanteService.ts` (`curso || 'Engenharia de Software'`, `periodo_ingresso || '2024.1'`). Na mesma tela, os rótulos do cartão e o botão “Tornar representante” aparecem com fonte serifada, diferente do restante (causa não investigada).
+- O testador relatou também que a seta de voltar leva ao **Painel** (`router.back()` em todas as telas de gestão).
+- Status: ❌ Falhou (revogados fora da lista). O testador considerou o caso aprovado pelos itens de busca e dados reais.
 
 ---
 
@@ -109,8 +113,8 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Não executado.** A execução foi reduzida aos casos principais do PR #195; este caso (busca de aluno elegível) ficou fora do recorte, a pedido do testador, e não foi avaliado.
+- Status: ⏳ Não executado.
 
 ---
 
@@ -133,8 +137,11 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Não executado na tela**, a pedido do testador, pela evidência no código.
+- `representantes/cadastrar.tsx` chama `representanteService.atribuirRepresentante(alunoSelecionado.aluno_id || alunoSelecionado.id)`, **sem passar a instituição**; o serviço usa `faculdadeId = 1` como padrão e envia `faculdade_id: 1` em `POST /representantes/promover`. Qualquer instituição escolhida na tela vira a faculdade 1, e a F2 do plano nunca seria gravada.
+- A lista de instituições da tela é fixa (`UFC - Campus Quixadá`, `IFCE - Campus Quixadá` e `UECE - Campus Quixadá`), e a seleção inicial é `UFC - Campus Quixadá`; ela não vem da API.
+- Relacionado à [#262](https://github.com/GOUOCE/GOUCE-app/issues/262) (lista fixa de instituições no cadastro).
+- Status: ❌ Falhou (por análise do código).
 
 ---
 
@@ -157,8 +164,9 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Não executado na tela.** A seleção da instituição em `cadastrar.tsx` usa uma lista fixa de três itens, sempre com `UFC - Campus Quixadá` pré-selecionada. Não há estado de instituição vazia, instituição inativa nem consulta às faculdades cadastradas, então o bloqueio pedido pelo caso não existe.
+- Como a instituição escolhida também não é enviada à API (CT-003), a validação por instituição não acontece em nenhum ponto da tela.
+- Status: ❌ Falhou (por análise do código).
 
 ---
 
@@ -181,8 +189,8 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Não executado.** A execução foi reduzida aos casos principais do PR #195; este caso (alunos inelegíveis) ficou fora do recorte, a pedido do testador, e não foi avaliado.
+- Status: ⏳ Não executado.
 
 ---
 
@@ -204,8 +212,8 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Não executado.** A execução foi reduzida aos casos principais do PR #195; este caso (atribuição repetida) ficou fora do recorte, a pedido do testador, e não foi avaliado.
+- Status: ⏳ Não executado.
 
 ---
 
@@ -230,8 +238,13 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Representante revogado: `QA Teste Aluno Sete` (aluno id 14, promovido pela API antes do CT-001).
+- **Cancelar:** o log da API não registrou chamada de revogação nessa etapa.
+- **Confirmar:** `PATCH /representantes/14/revogar` com `200`. No banco, `is_representante_ativo = false` para o id 14 e os outros dois representantes seguem ativos; a auditoria ganhou `REVOGAR` (id 40, de `{"faculdade_id":1,"ativo":true}` para `{"faculdade_id":1,"ativo":false}`).
+- **Lista:** o testador relatou que o QA Teste Aluno Sete não aparece mais, nem depois de atualizar a página. Pelo código, a tela filtra `ativo` (ver CT-001), então o revogado não fica visível como revogado, como o caso e o AC-01 pedem.
+- Mensagem de sucesso (pelo código): barra preta “Representante revogado” (`index.tsx`, `Snackbar`), fora do padrão de pop-up; o pop-up de confirmação é “Revogar representação?”. Se a revogação falhar, o código só faz `console.error`, sem aviso na tela.
+- A permanência do aluno ativo e dos dados originais é conferida no CT-010 (login como aluno).
+- Status: ❌ Falhou (revogado não permanece visível).
 
 ---
 
@@ -252,8 +265,9 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Não executado na tela.** O caso reatribui um representante revogado a uma instituição diferente. Como a instituição escolhida não é enviada à API e a promoção usa sempre a faculdade 1 (CT-003), a nova responsabilidade não seria gravada.
+- Pelo código, o aluno revogado volta a aparecer entre os elegíveis (o filtro exclui só os representantes ativos), então a reatribuição para a mesma faculdade 1 é possível.
+- Status: ❌ Falhou (por análise do código).
 
 ---
 
@@ -278,8 +292,12 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Conta usada:** a conta de teste que é aluno e representante (`qa.hu007.rep`), no lugar da Larissa do plano.
+- **API:** `POST /auth/login` devolve `role: "aluno"` e `roles: ["aluno", "representante", "supervisor"]` (o PR #195 passou a enviar o array `roles` no backend). Conta só de aluno devolve `roles: ["aluno"]`.
+- **“Sou representante”:** o login foi aceito. O console do app registrou o perfil `MOTORISTA` indo para `(representante)/home` e `(representante)/perfil`. O testador relatou que o caso passou.
+- **“Sou aluno”:** o login com a mesma conta foi aceito, com o perfil `ALUNO` em `(aluno)/home` e `(aluno)/perfil`.
+- É a correção da [#190](https://github.com/GOUOCE/GOUCE-app/issues/190) (login de aluno promovido a representante), que antes dava “Perfil incompatível”.
+- Status: ✅ Passou.
 
 ---
 
@@ -302,8 +320,10 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Conta `qa.hu007.aluno`, revogada no CT-007. O testador relatou que **“Sou representante”** deu “Perfil incompatível” e que **“Sou aluno”** entrou normalmente.
+- **Conferido:** o login dessa conta passou a devolver `roles: ["aluno"]`, o usuário continua ativo no banco e o console do app registrou apenas a entrada com `ALUNO` em `(aluno)/home`, sem nenhuma entrada de representante. O login com a escolha de representante foi recusado antes de abrir a sessão.
+- **Não coberto:** a sessão antiga já aberta durante a revogação (passo 1 e 2 do plano) e a lista ou presença reais do representante (HU-018/021); nesses pontos o caso fica sem verificação.
+- Status: ✅ Passou (login). Sessão antiga e funções reais do representante: 🚫 sem a funcionalidade.
 
 ---
 
@@ -325,8 +345,10 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Contas usadas: `qa.hu007.aluno` (aluno) e `qa.hu007.rep` (representante, com “Sou representante”). O testador relatou que todos os links de gestão (`/representantes`, `/representantes/cadastrar` e os de outras gestões) mostraram **Acesso Negado** (erro 403).
+- O console do app registrou quatro redirecionamentos para `acesso-negado`, dois com o perfil `MOTORISTA` e dois com `ALUNO`, e nenhuma abertura de tela administrativa (`representantes`, `frota` ou `motoristas`) por esses perfis. O log da API não registra chamada de gestão feita por eles.
+- Também aparece no console uma tentativa de entrar com a conta do representante escolhendo “Sou administrador”, que o app recusou.
+- Status: ✅ Passou.
 
 ---
 
@@ -348,8 +370,10 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Não foi derrubada a API.** Avaliado pela leitura de `representanteService.ts` e das telas.
+- **Melhoria do PR #195:** o serviço não tem mais lista de exemplo nem sucesso falso; se a chamada falha, o erro é propagado.
+- **Falta:** em `representantes/index.tsx`, a falha ao carregar só faz `console.warn` e a revogação só faz `console.error`. A tela mostra “Nenhum representante cadastrado.” quando a lista não carrega, sem mensagem de erro de conexão, e a falha da revogação não é avisada. Na atribuição, o erro aparece no pop-up “Aviso” com a mensagem do erro.
+- Status: ❌ Falhou (por análise do código).
 
 ---
 
@@ -372,8 +396,8 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- **Não executado.** A execução foi reduzida aos casos principais do PR #195; este caso (presença real, que depende da HU-018/021) ficou fora do recorte, a pedido do testador, e não foi avaliado.
+- Status: ⏳ Não executado.
 
 ## Rastreabilidade
 
@@ -397,7 +421,12 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-001, CT-007 | Representantes revogados somem da lista (a tela filtra só os ativos), contrariando o AC-01 | [#297](https://github.com/GOUOCE/GOUCE-app/issues/297) |
+| CT-003, CT-004, CT-008 | A instituição escolhida é ignorada: a atribuição usa sempre a faculdade 1, e a lista de instituições é fixa. **Bloqueante** | [#298](https://github.com/GOUOCE/GOUCE-app/issues/298) |
+| CT-007 | Mensagens de sucesso em barra preta, fora do padrão de pop-up | [#299](https://github.com/GOUOCE/GOUCE-app/issues/299) |
+| CT-001, CT-007 | Telas não recriadas: Cadastrar reabre com instituição e discente da vez anterior (print) e a seta volta ao Painel | [#301](https://github.com/GOUOCE/GOUCE-app/issues/301) |
+| CT-001, CT-012 | Falha da lista e da revogação sem erro visível; curso e semestre inventados no cartão do discente (print) | [#300](https://github.com/GOUOCE/GOUCE-app/issues/300) |
+| CT-009 | Login de aluno promovido a representante, que dava “Perfil incompatível” | Corrigido pelo PR #195 ([#190](https://github.com/GOUOCE/GOUCE-app/issues/190)) |
 
 ## Observações gerais
 
@@ -421,7 +450,5 @@ São **13 casos essenciais**, em três seções e na ordem abaixo. CT-003 promov
   - FA-002, FA-003 e FA-004 não fixam texto literal. Conferir o sentido da mensagem; “Aluno não aprovado ou inativo.” não é falha apenas por não repetir outra frase. Vínculo vencido aceito, por outro lado, contraria o cenário expresso do BDD.
   - O requisito não diz que a instituição sob responsabilidade tem de ser igual à matrícula do aluno; o backend permite que difiram. **Confirmar essa regra** antes de exigir bloqueio de atribuição entre faculdades. Os casos conferem a instituição escolhida e a preservação da matrícula, sem criar restrição nova.
   - O requisito não exige seletor inicialmente vazio; o AC-12 exige instituição válida e preenchida. Se a UI não deixa limpar a seleção, registrar a variação vazia como não exercitável nela e usar o caso de API, sem presumir validação aprovada.
-- Todos os casos permanecem pendentes; riscos estáticos não são defeitos reproduzidos. Marcar dependências 🚫 somente durante a execução, distinguir falha da versão e impedimento de massa/funcionalidade e registrar cada variação. Não alterar o resultado esperado para aprovar o código atual.
+- **Execução (27/10/2026), recorte reduzido a pedido do testador:** 3 casos passaram (CT-009, 010 e 011), 6 falharam (CT-001 e 007 na tela; CT-003, 004, 008 e 012 reprovados pela leitura do código, sem executar) e 4 não foram executados (CT-002, 005, 006 e 013). O PR #195 corrigiu o login de representante promovido e removeu os exemplos do serviço, mas não mexeu na tela de representantes (revogados ocultos, instituição ignorada).
 - Suíte complementar: [API-HU-030.md](../api/API-HU-030.md). Os passos de persistência e auditoria usam PC-05; Cauan não precisa fazer consultas de banco manualmente.
-- Se uma falha anterior impedir promoção/revogação pela UI, a IA pode preparar o estado requerido para testar outro caso independente, registrando a origem e mantendo a falha anterior. Se o estado não puder ser preparado, marcar o dependente como 🚫.
-- Ocultar senhas, tokens e dados pessoais nas evidências.

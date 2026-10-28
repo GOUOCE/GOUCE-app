@@ -7,10 +7,10 @@
 | Módulo | Gestão de Rotas e Horários (EP-003) |
 | Funcionalidade | HU-011 — Gerenciamento de Rotas Principais e Horários |
 | Camada | API |
-| Tipo de teste | Funcional manual — suíte essencial (baseada em risco), planejada antes da implementação |
-| Endpoints | Ainda não publicados na base analisada. Operações lógicas OP-LISTAR, OP-CONSULTAR, OP-CADASTRAR, OP-EDITAR, OP-INATIVAR e OP-REATIVAR devem ser mapeadas para o contrato real em [api/README.md](README.md) antes da execução. |
-| Ambiente | A preencher — URL, branch e commit da implementação em execução |
-| Total de casos | 13 |
+| Tipo de teste | Funcional manual — suíte essencial (baseada em risco) |
+| Endpoints | `GET /rotas-principais`, `GET /rotas-principais/opcoes`, `GET /rotas-principais/{id}`, `POST /rotas-principais`, `PATCH /rotas-principais/{id}`, `PATCH /rotas-principais/{id}/inativar` e `PATCH /rotas-principais/{id}/reativar` — `application/json`. Corpo: `{"nome": "...", "horario_saida": "HH:MM", "horario_retorno": "HH:MM", "bairros_ids": [..], "faculdades_ida_ids": [..], "faculdades_volta_ids": [..]}` |
+| Ambiente | A preencher — URL, branch e commit testados (planejado sobre a `develop` `7c3d72d8`) |
+| Total de casos | 14 |
 | Última execução | Não realizada |
 | Testador | Cauan Ricardo — execução com apoio de IA (Claude Code) |
 
@@ -18,58 +18,61 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 13 | 0 | 0 | 0 | 0 | 13 |
+| ⏳ Não executada | 14 | 0 | 0 | 0 | 0 | 14 |
 
 ## Pré-condições
 
 | ID | Descrição |
 | --- | --- |
-| PC-01 | A implementação da camada deve existir na branch escolhida para execução; na base `5554bc90` ela ainda não foi identificada. Este é só planejamento, sem stack/testes. Na execução futura, usar ambiente isolado com banco de teste; sem a funcionalidade, marcar a parte dependente como 🚫, não como falha reproduzida nesta rodada. |
-| PC-02 | Administrador A do seed; autenticação por `POST /auth/login`, guardando id e horário do executor para auditoria. Usar Postman/Insomnia ou Swagger em /docs. |
-| PC-03 | Credenciais de aluno aprovado/ativo e representante ativo para autorização. Se não conseguir autenticar representante, registrar motivo e bloquear só essa parte; sessão vencida exige novo login antes de repetir. |
-| PC-04 | Massa local de teste, com ids registrados: B1 Centro ativo/P1 Praça José de Barros; B2 Campo Velho ativo/P2 Escola Coronel Virgílio Távora; B0 Alto São Francisco inativo; F1 UFC/Quixadá, F2 IFCE/Quixadá e F3 UECE/Quixadá ativas; F0 Unicatólica/Quixadá inativa. RP0 Rota Antiga inativa sem complementar vinculada; RP1 criada no CT-002, RP2 no CT-003 e RP3 no CT-004. Em falha anterior, a IA pode preparar estado independente por API/banco local, registrando origem e sem aprovar a ação que falhou. |
-| PC-05 | **Apoio da IA (Claude Code)** para executar chamadas com validação de Cauan e conferir na API/banco os dados realmente gravados, vínculos e auditoria, e preparar massa quando a UI/API não permitir. Comparar entidades pelos ids reais, não apenas pelo nome exibido. |
-| PC-06 | Antes de executar, preencher métodos/URLs, Content-Type, campos, ids, formato de horário, respostas e consultas de auditoria em api/README.md usando a implementação e /docs. Nenhum nome de operação lógica é endpoint real. |
-| PC-07 | HU-013 para agenda futura e novos agendamentos; dados/módulos históricos para RN-004. Registrar datas/fuso. Regra de seleção de inativa e demais decisões abertas devem ser confirmadas antes de julgar a parte correspondente; ausência de decisão é impedimento documentado. |
+| PC-01 | API e banco disponíveis em **stack isolada com banco limpo** (ver [README](README.md)). Usar Postman, Insomnia ou Swagger em `/docs`. |
+| PC-02 | Token do **administrador A** (executor): `POST /auth/login` com o administrador padrão do seed. Anotar o `id` dele para conferir a auditoria. |
+| PC-03 | Token de um **aluno aprovado e ativo** e de um **representante ativo**, para o CT-013. Se o login do representante não funcionar, executar só o aluno e marcar a outra parte como 🚫. |
+| PC-04 | Acesso de leitura ao banco: tabelas `rota_principal`, `rota_principal_bairro`, `rota_principal_faculdade_ida`, `rota_principal_faculdade_volta`, `rota_complementar` e `log_auditoria`. |
+| PC-05 | Massa de base preparada pela IA via API antes do CT-001 (anotar os ids reais): **B1 Centro** (seed) e **B2 Campo Velho** ativos; **B0 Alto São Francisco** criado e inativado; **F1 UFC / Campus Quixadá** (seed), **F2 IFCE / Quixadá** e **F3 UECE / Quixadá** ativas; **F0 Unicatólica / Quixadá** criada e inativada. |
+| PC-06 | Massa de rotas criada pela própria suíte: **RP1 Rota Centro - UFC** (CT-002), **RP2 Rota Integrada** e **RP3 Rota Centro - Faculdades** (CT-003). O CT-010 cria a complementar **RC1 Van Trevo** pela API da HU-012. |
+| PC-07 | Agendamento de alunos (HU-013) **não existe** na base analisada: o CT-014 fica 🚫 até a agenda estar na `develop`. |
 
 ## Resumo da execução
 
-São **13 casos essenciais**. Registrar cada variação. CT-001 começa pelo vazio e repete consultas após a massa. Massa criada diretamente pela IA não aprova a operação que se pretende testar. Chamadas administrativas usam a credencial A, exceto no CT-012. Não executar nenhum caso com método/URL/campo presumido.
+Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o token do administrador A, exceto onde indicado; itens que dependem de um caso posterior trazem essa indicação no próprio caso. As regras marcadas com **#208** vêm das decisões do PO na [issue #208](https://github.com/GOUOCE/GOUCE-app/issues/208).
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU011-API-001 | Listar rotas e consultar horários e vínculos | Lista vazia; RP1 ativa; RP0 inativa; consulta individual | Sucesso de leitura; dados corretos; ativas/inativas acessíveis | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-002 | Cadastrar rota principal mínima e confirmar persistência | RP1: Rota Centro - UFC; 06:30/17:30; B1; F1 na ida e na volta | Criação efetiva, ativa, com horários e vínculos corretos | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-003 | Vincular vários bairros e faculdades sem perder seleções | RP2: Rota Integrada; 06:30/17:30; B1+B2; F1+F2 na ida e volta | Todos os vínculos persistidos uma vez, sem sobrescrever os anteriores | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-004 | Configurar faculdades da volta de forma independente | RP3: ida F1+F2, volta só F1; depois ida F1, volta F3 ativa | Conjuntos distintos preservados; sem cópia automática ou restrição de subconjunto | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-005 | Exigir campos e cardinalidade mínima no cadastro e na edição | Nome/saída/retorno ausentes ou vazios; bairros/ida sem itens; controle com 1 item | Recusa por campo; nenhum cadastro incompleto nem edição parcial | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-006 | Impedir novos vínculos com base inativa ou inexistente | Bairro B0 inativo; faculdade F0 inativa na ida/volta; ids inexistentes; edição válida+referência inválida | Erro de referência; nenhuma associação inválida ou gravação parcial | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-007 | Conferir formato e fronteiras do horário sem criar regra de turno | 06:30/17:30; hora com minuto 60; texto; 00:00/23:59; retorno 01:00 com saída 23:00 | Formato consistente; entradas impossíveis recusadas; cronologia pendente | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-008 | Editar dados e substituir vínculos da rota correta | RP1: novo nome; 06:00/18:00; adicionar B2, retirar B1; ida F2 e volta F3 | Mesmo id; alterações persistidas; outras rotas e base preservadas | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-009 | Inativar e reativar sem agendamento futuro, sem apagar a rota | RP1 sem futuro; RP0 inativa para reativação independente; repetir operações | Soft delete, reativação, mesmos dados/id e nenhuma exclusão | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-010 | Auditar cadastro, edição, inativação e reativação | Operações de RP1 nos CT-002/008/009; administrador e horários | Rastro de cada escrita efetiva com usuário, ação e timestamp | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-011 | Bloquear inativação com agendamento futuro e permitir sem futuro | Rota A agendada amanhã; B sem agenda; C só com agenda passada; datas/fuso | Futuro bloqueia; sem futuro permite; nenhum estado parcial | ⏳ PENDENTE | HU-013 necessária para a parte com agenda; não executado. |
-| CT-HU011-API-012 | Negar escrita a aluno, representante e não autenticado | Aluno; representante; sem credencial em cadastro/edição/inativação/reativação | 403 para perfis sem privilégio; autenticação exigida; nada alterado | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-013 | Preservar histórico e conferir rota inativa no agendamento | Rota H só com histórico; rota I inativa; dependências de agenda/alocação/relatório | Histórico preservado; seleção de inativa é hipótese BDD a confirmar | ⏳ PENDENTE | RN-004 depende de histórico real; seleção depende da HU-013 e de decisão. |
+| CT-HU011-API-001 | Listar, filtrar e consultar rotas | Sem filtro; `incluir_inativos=true`; `nome`; `GET /{id}`; `/opcoes` | HTTP 200; padrão só ativas; inativas com o filtro; opções só com base ativa | ⏳ PENDENTE | Não executado. |
+| CT-HU011-API-002 | Cadastrar rota principal válida | RP1: `Rota Centro - UFC`, 06:30/17:30, B1, F1 na ida e na volta | HTTP 201 “Operação realizada com sucesso”; ativa; vínculos e horários corretos | ⏳ PENDENTE | Não executado. |
+| CT-HU011-API-003 | Vários vínculos e volta independente da ida | RP2: B1+B2, ida F1+F2+F3, volta F1; RP3: ida F1+F2, volta F3 | HTTP 201; cada lista gravada como enviada, sem copiar a ida na volta | ⏳ PENDENTE | Não executado. |
+| CT-HU011-API-004 | Nome único entre todas as rotas (#208) | Nome igual; maiúsculas/espaços; nome de rota inativa; nome de complementar; edição para nome em uso | HTTP 409; nada criado nem alterado | ⏳ PENDENTE | Não executado. |
+| CT-HU011-API-005 | Obrigatórios, listas vazias e limites | Sem cada campo; nome em branco; listas `[]`; nome com 151 caracteres; edição esvaziando lista | HTTP 422 com campo e mensagem em português; nada gravado | ⏳ PENDENTE | Não executado. |
+| CT-HU011-API-006 | Formato e ordem dos horários (#208) | `6:30`, `24:00`, `06:60`, `06:30:00`, texto; retorno igual e anterior à saída; 00:00/23:59 | Fora de `HH:MM` ou retorno ≤ saída: 422; sem faixa mínima/máxima | ⏳ PENDENTE | Não executado. |
+| CT-HU011-API-007 | Vínculo com bairro ou faculdade inativo ou inexistente | B0; F0 na ida e na volta; id inexistente; ids repetidos; id `0`, negativo e texto | HTTP 422 no campo da lista; nenhuma rota nem vínculo inválido gravado | ⏳ PENDENTE | Não executado. |
+| CT-HU011-API-008 | Editar dados e vínculos da rota | RP1: só nome; só horários; trocar listas; `{}`; campo `ativo`; id inexistente | HTTP 200 no mesmo id; 422 sem campo ou com campo extra; 404 inexistente | ⏳ PENDENTE | Não executado. |
+| CT-HU011-API-009 | Inativar e reativar (soft delete) | RP2: inativar, repetir, reativar, repetir; id inexistente | HTTP 200 nas válidas; registro e vínculos mantidos; 409 nas repetidas; 404 | ⏳ PENDENTE | Não executado. |
+| CT-HU011-API-010 | Bloquear inativação com complementar ativa (#208) | RP1 com RC1 ativa; depois RC1 inativada | HTTP 409 com a mensagem do PO; rota segue ativa; sem RC1 ativa, inativa | ⏳ PENDENTE | Não executado. |
+| CT-HU011-API-011 | Bairro e faculdade em rota ativa (#208) | Inativar B1 e F1 usados por RP3 ativa; inativar RP3 e repetir; reativar RP3 | 409 com as mensagens da HU-007 e do PO; liberados com a rota inativa | ⏳ PENDENTE | Não executado. |
+| CT-HU011-API-012 | Auditoria das operações de escrita | Operações dos CT-002, 008 e 009; recusas dos CT-004 a 011 | Um registro por escrita efetiva; nenhum para recusa ou edição sem mudança | ⏳ PENDENTE | Não executado. |
+| CT-HU011-API-013 | Acesso sem privilégio | Token de aluno; token de representante; sem token | HTTP 403 (aluno e representante) e 401 (sem token) em todas as rotas | ⏳ PENDENTE | Não executado. |
+| CT-HU011-API-014 | Agendamentos futuros e rota inativa no agendamento | Rota com aluno agendado para amanhã; rota inativa na agenda do aluno | HTTP 409 “Esta rota possui agendamentos pendentes e não pode ser inativada no momento.”; inativa fora da agenda | ⏳ PENDENTE | Depende da HU-013. Sem ela, marcar 🚫. |
 
 ## Detalhamento dos casos
 
-### CT-HU011-API-001 — Listar rotas e consultar horários e vínculos
+### CT-HU011-API-001 — Listar, filtrar e consultar rotas
 
-**Dados de entrada:** Lista vazia; RP1 ativa; RP0 inativa; consulta individual.
+**Dados de entrada:** `GET /rotas-principais`; `GET /rotas-principais?incluir_inativos=true`; `GET /rotas-principais?nome=centro` e `?nome=CENTRO`; `GET /rotas-principais/{id}` de RP1, de RP2 inativa e de id `999999`; `GET /rotas-principais/opcoes`.
 
 **Passos**
 
-1. Após mapear o contrato em PC-06, usar OP-LISTAR antes da massa; preparar RP0 e executar CT-002 para obter RP1.
-2. Repetir a listagem; usar filtros de status somente se existirem no contrato e consultar RP1/RP0 pelo identificador real.
-3. Pedir à IA para comparar horários, bairros e faculdades de ida/volta com os registros persistidos (PC-05).
+1. Antes do CT-002, enviar `GET /rotas-principais` com o banco sem rotas.
+2. Executar de novo depois do CT-009 (RP1 ativa e RP2 inativa) e enviar as demais chamadas.
+3. Conferir `GET /rotas-principais/opcoes` com a massa da PC-05 (B0 e F0 inativos).
 
 **Resultado esperado**
 
-- Resposta de sucesso conforme contrato; vazio real sem registros inventados. Placa, motorista e veículo não são campos obrigatórios desta HU.
-- Administrador consegue consultar rotas ativas e inativas com saída e retorno corretos (AC-01, AC-09).
-- O requisito inclui ambas na listagem; o BDD usa Mostrar inativos. Registrar a forma de exposição e a divergência de padrão inicial, sem aprovar/reprovar esse padrão antes de alinhamento.
-- Se filtros não forem implementados, registrar a ausência do recurso técnico sem inventá-lo como critério; a visibilidade dos dois estados continua obrigatória.
+- Banco sem rotas: HTTP `200` com lista vazia `[]`.
+- Sem filtro: só rotas **ativas**, cada uma com `id`, `nome`, `horario_saida`, `horario_retorno` (`HH:MM`), `ativo`, `bairros`, `faculdades_ida` e `faculdades_volta` (AC-01).
+- `incluir_inativos=true`: ativas e inativas, com `ativo` indicando o estado (AC-09).
+- `nome` filtra por parte do nome, sem diferenciar maiúsculas.
+- `GET /{id}` devolve a rota ativa ou inativa; id inexistente: HTTP `404` “Rota não encontrada.”.
+- `/opcoes` lista só **bairros e faculdades ativos** (B0 e F0 ausentes), que são as escolhas válidas do formulário (AC-03, FA-002).
 
 **Resultado obtido**
 
@@ -78,22 +81,22 @@ São **13 casos essenciais**. Registrar cada variação. CT-001 começa pelo vaz
 
 ---
 
-### CT-HU011-API-002 — Cadastrar rota principal mínima e confirmar persistência
+### CT-HU011-API-002 — Cadastrar rota principal válida
 
-**Dados de entrada:** RP1: Rota Centro - UFC; 06:30/17:30; B1; F1 na ida e na volta.
+**Dados de entrada:** `{"nome": "  Rota Centro - UFC  ", "horario_saida": "06:30", "horario_retorno": "17:30", "bairros_ids": [B1], "faculdades_ida_ids": [F1], "faculdades_volta_ids": [F1]}`.
 
 **Passos**
 
-1. Preparar uma requisição válida de OP-CADASTRAR usando os campos reais do contrato: nome Rota Centro - UFC, saída 06:30, retorno 17:30, bairro Centro e faculdade UFC/Quixadá nos dois sentidos.
-2. Se o contrato exigir seleção de pontos, mapear o ponto P1 do Centro; não inventar campo obrigatório de ponto quando o contrato não estiver definido.
-3. Registrar id/horário da operação e pedir à IA para conferir consulta, linha da rota e associações após uma nova leitura (PC-05).
+1. Enviar `POST /rotas-principais` e anotar o `id` (RP1).
+2. Conferir em `GET /rotas-principais/{id}`.
+3. Pedir à IA para conferir a linha em `rota_principal` e as três tabelas de vínculo.
 
 **Resultado esperado**
 
-- Sucesso de criação (HTTP de sucesso definido no contrato), rota ativa e exatamente um registro funcional novo (AC-02).
-- Nome, horários, bairro e faculdades gravados no sentido correto; o id da rota é estável e as entidades-base não são alteradas.
-- Confirmação de sucesso conforme fluxo principal/BDD; o BDD usa “Operação realizada com sucesso”. AC-07 fixa esse texto para inativação; padronização das demais mensagens deve ser alinhada.
-- Dados de entrada são valores de negócio, não nomes de chaves JSON aprovados. As duas listas de faculdades não podem ser inferidas uma da outra.
+- HTTP `201` com `success: true`, `message` “Operação realizada com sucesso” e a rota em `data` (AC-02, AC-07).
+- Rota criada **ativa**, com o nome sem os espaços das pontas e horários `06:30` / `17:30`.
+- Um vínculo de bairro (B1), um de ida (F1) e um de volta (F1), cada um na sua tabela.
+- Bairros e faculdades da base não são alterados.
 
 **Resultado obtido**
 
@@ -102,21 +105,25 @@ São **13 casos essenciais**. Registrar cada variação. CT-001 começa pelo vaz
 
 ---
 
-### CT-HU011-API-003 — Vincular vários bairros e faculdades sem perder seleções
+### CT-HU011-API-003 — Vários vínculos e volta independente da ida
 
-**Dados de entrada:** RP2: Rota Integrada; 06:30/17:30; B1+B2; F1+F2 na ida e volta.
+**Dados de entrada:**
+
+1. RP2: `Rota Integrada`, 06:40/18:00, `bairros_ids` [B1, B2], `faculdades_ida_ids` [F1, F2, F3], `faculdades_volta_ids` [F1].
+2. RP3: `Rota Centro - Faculdades`, 06:20/22:00, [B1], ida [F1, F2], volta [F3].
 
 **Passos**
 
-1. Cadastrar RP2 com Centro e Campo Velho e com UFC/IFCE nos dois sentidos, usando OP-CADASTRAR.
-2. Pedir à IA para conferir a rota e todas as associações persistidas, comparando os ids das entidades da massa (PC-05).
-3. Reler RP1 para confirmar que o cadastro de RP2 não alterou seus vínculos.
+1. Cadastrar RP2 e RP3.
+2. Conferir cada uma em `GET /rotas-principais/{id}` e pedir à IA para conferir as tabelas de vínculo.
+3. Reler RP1 para confirmar que não mudou.
 
 **Resultado esperado**
 
-- Rota com mais de um bairro e mais de uma faculdade aceita (AC-02 e cenário BDD de vários vínculos).
-- As seleções completas são mantidas, sem guardar apenas o último item, cruzar ida/volta ou duplicar a mesma associação.
-- RP1 e os cadastros de bairros/faculdades permanecem anteriores; não exigir ordem de passagem ainda não definida nos requisitos.
+- HTTP `201` nas duas (AC-02).
+- Todos os vínculos gravados uma única vez, sem guardar só o último item.
+- **Ida e volta independentes** (AC-10; #208, item 3): RP2 com três faculdades na ida e só F1 na volta; RP3 com volta em F3, que não está na ida. A API não copia nem restringe uma lista pela outra.
+- RP1 continua como no CT-002.
 
 **Resultado obtido**
 
@@ -125,21 +132,28 @@ São **13 casos essenciais**. Registrar cada variação. CT-001 começa pelo vaz
 
 ---
 
-### CT-HU011-API-004 — Configurar faculdades da volta de forma independente
+### CT-HU011-API-004 — Nome único entre todas as rotas (#208)
 
-**Dados de entrada:** RP3: ida F1+F2, volta só F1; depois ida F1, volta F3 ativa.
+**Dados de entrada:**
+
+1. Cadastro com o nome `Rota Centro - UFC` (igual a RP1) e os demais dados válidos.
+2. Cadastro com `rota centro - ufc` e com `"   ROTA CENTRO - UFC "`.
+3. Depois do CT-009 (RP2 inativa): cadastro com o nome `Rota Integrada`.
+4. Depois do CT-010 (RC1 existe): cadastro de rota principal com o nome `Van Trevo`.
+5. Edição de RP3 com `{"nome": "Rota Centro - UFC"}`; edição de RP1 com o próprio nome.
 
 **Passos**
 
-1. Cadastrar RP3 com nome Rota Centro - Faculdades, horários 06:30/17:30, B1, ida UFC+IFCE e volta só UFC; conferir com apoio da IA (PC-05).
-2. Editar RP3 para ida somente UFC e volta somente UECE (F3 ativa); manter os demais dados.
-3. Reler a rota e pedir à IA para conferir cada sentido no banco (PC-05).
+1. Enviar cada chamada.
+2. Pedir à IA para conferir que nenhuma rota nova foi criada e que RP3 manteve o nome.
 
 **Resultado esperado**
 
-- Configuração de ida/volta independente, conforme AC-10. A variação de subconjunto reproduz o BDD; a volta com instituição exclusiva deriva da independência expressa no requisito.
-- Alterar um sentido não preenche, esvazia nem sobrescreve o outro.
-- A obrigatoriedade de ao menos uma faculdade na volta está pendente: não executar volta vazia como caso de aprovação/reprovação sem decisão. Ambas as entradas deste caso têm volta preenchida.
+- Itens 1 a 3 e edição de RP3: HTTP `409` com `error.code` `CONFLICT` e mensagem informando que o nome já está em uso. Comparação **sem diferenciar maiúsculas, sem os espaços das pontas e contra rotas ativas e inativas** (#208, item 1).
+- Item 4: HTTP `409`. O nome é único **entre rotas principais e complementares** (#208, item 1).
+- Edição de RP1 com o próprio nome: HTTP `200` (não conflita consigo mesma).
+- Nenhuma rota nova; RP3 mantém o nome.
+- Registrar o texto exato da mensagem. A API usa “Já existe uma rota com este nome.” e o app troca por “Esta rota já está cadastrada.”: anotar a diferença, sem reprovar por ela (o requisito não define o texto).
 
 **Resultado obtido**
 
@@ -148,22 +162,32 @@ São **13 casos essenciais**. Registrar cada variação. CT-001 começa pelo vaz
 
 ---
 
-### CT-HU011-API-005 — Exigir campos e cardinalidade mínima no cadastro e na edição
+### CT-HU011-API-005 — Obrigatórios, listas vazias e limites
 
-**Dados de entrada:** Nome/saída/retorno ausentes ou vazios; bairros/ida sem itens; controle com 1 item.
+**Dados de entrada:** a partir do corpo válido do CT-002, com outro nome:
+
+1. Sem `nome`; com `nome` `"   "`; com `nome` `null`.
+2. Sem `horario_saida`; sem `horario_retorno`.
+3. `bairros_ids: []`; `faculdades_ida_ids: []`; `faculdades_volta_ids: []`; cada lista ausente.
+4. Corpo `{}`.
+5. Nome com 150 caracteres (controle) e com 151.
+6. Edição de RP1 com `{"bairros_ids": []}` e com `{"faculdades_volta_ids": []}`.
 
 **Passos**
 
-1. Em OP-CADASTRAR, omitir um obrigatório por tentativa: nome, saída, retorno, bairros ou faculdade da ida. Testar vazio/nulo e nome só com espaços conforme representações suportadas.
-2. Testar listas de bairros/ida com zero e um item. O controle de um item é o CT-002; na edição de RP1, tentar retirar o último bairro e a última faculdade da ida, sem esvaziar a volta.
-3. Pedir à IA para conferir ausência de registros novos e preservação integral de RP1 após cada recusa (PC-05).
+1. Enviar cada variação, uma por vez.
+2. Pedir à IA para conferir que nenhuma rota foi criada e que RP1 manteve os vínculos.
 
 **Resultado esperado**
 
-- Cadastro/edição sem obrigatórios é recusado com erro de cliente e indicação do campo, conforme contrato (AC-08, FA-003).
-- Os mínimos confirmados são um bairro e uma faculdade; o BDD posiciona a faculdade obrigatória na ida. Registrar essa interpretação e a pendência da volta sem torná-la obrigatória por suposição.
-- Esvaziamento explícito não se confunde com campo omitido em edição parcial: aplicar a semântica que o contrato documentar, sem presumir PATCH.
-- Uma tentativa inválida não pode alterar outros campos válidos enviados na mesma operação.
+- HTTP `422` com `error.code` `REQUEST_VALIDATION_ERROR` e `error.details` indicando o campo, com mensagens em português (AC-08, FA-003):
+  - “Nome da rota é obrigatório.”;
+  - “Horário de saída é obrigatório.” / “Horário de retorno é obrigatório.”;
+  - “Vincule ao menos um bairro.”, “Informe ao menos uma faculdade na ida.” e “Informe ao menos uma faculdade na volta.” (volta obrigatória: #208, item 3);
+  - 151 caracteres: “Nome da rota deve ter no máximo 150 caracteres.”
+- Corpo `{}`: um erro para cada campo obrigatório, sem erro interno.
+- 150 caracteres: HTTP `201`.
+- Edição esvaziando lista: HTTP `422`; RP1 mantém os vínculos.
 
 **Resultado obtido**
 
@@ -172,22 +196,26 @@ São **13 casos essenciais**. Registrar cada variação. CT-001 começa pelo vaz
 
 ---
 
-### CT-HU011-API-006 — Impedir novos vínculos com base inativa ou inexistente
+### CT-HU011-API-006 — Formato e ordem dos horários (#208)
 
-**Dados de entrada:** Bairro B0 inativo; faculdade F0 inativa na ida/volta; ids inexistentes; edição válida+referência inválida.
+**Dados de entrada:** cadastros com outro nome e os demais dados válidos:
+
+1. `horario_saida` `6:30`, `24:00`, `06:60`, `06:30:00`, `manhã` e o número `630`.
+2. Saída `07:00` e retorno `07:00`; saída `23:00` e retorno `01:00`.
+3. Saída `00:00` e retorno `23:59`; saída `13:15` e retorno `13:16`.
+4. Edição de RP1 (06:30/17:30) com só `{"horario_retorno": "06:00"}` e com só `{"horario_saida": "18:00"}`.
 
 **Passos**
 
-1. Com os outros dados válidos, tentar cadastrar rota trocando somente o bairro por B0; repetir com F0 na ida e depois na volta.
-2. Repetir com identificador inexistente de bairro/faculdade confirmado pela IA. Em RP1, tentar mudar nome e incluir referência inválida na mesma edição.
-3. Se o contrato expuser bairro e ponto separadamente, conferir também a coerência do ponto com seu bairro; se a granularidade não estiver definida, registrar essa verificação como pendente de contrato.
-4. Pedir à IA para conferir rota e associações depois de cada tentativa (PC-05).
+1. Enviar cada variação.
+2. Conferir em `GET /rotas-principais/{id}` as rotas aceitas e que RP1 não mudou nas recusas.
 
 **Resultado esperado**
 
-- Não criar vínculo com entidade-base inativa ou inexistente (AC-03, FA-002, RNF-012); erros de cliente compreensíveis, sem erro interno ou órfãos.
-- A proteção deve valer em chamada direta, além do filtro da UI. Referência inválida em uma lista não pode salvar as demais partes da operação silenciosamente.
-- RP1 mantém dados anteriores à tentativa inválida. Não inferir a política para uma entidade que ficou inativa depois de um vínculo já existente: essa decisão é separada.
+- Item 1: HTTP `422` no campo, com “Horário deve estar no formato HH:MM.” (#208, item 2b).
+- Item 2: HTTP `422` no `horario_retorno`, com “Horário de retorno deve ser maior que o horário de saída.”: o retorno precisa ser **estritamente depois** da saída (#208, item 2a).
+- Item 3: HTTP `201`. Não há horário mínimo nem máximo (#208, item 2b); os horários voltam iguais aos enviados, sem conversão de fuso.
+- Item 4: HTTP `422`. A ordem é conferida com o horário já salvo quando só um dos dois é editado.
 
 **Resultado obtido**
 
@@ -196,22 +224,28 @@ São **13 casos essenciais**. Registrar cada variação. CT-001 começa pelo vaz
 
 ---
 
-### CT-HU011-API-007 — Conferir formato e fronteiras do horário sem criar regra de turno
+### CT-HU011-API-007 — Vínculo com bairro ou faculdade inativo ou inexistente
 
-**Dados de entrada:** 06:30/17:30; hora com minuto 60; texto; 00:00/23:59; retorno 01:00 com saída 23:00.
+**Dados de entrada:** cadastros com outro nome e os demais dados válidos:
+
+1. `bairros_ids: [B0]`; `faculdades_ida_ids: [F0]`; `faculdades_volta_ids: [F0]`.
+2. `bairros_ids: [B1, 999999]`.
+3. `bairros_ids: [B1, B1]`; `faculdades_ida_ids: [F1, F1]`.
+4. `bairros_ids: [0]`, `[-1]` e `["1"]`.
+5. Edição de RP1 com `{"nome": "Rota Centro - UFC Editada", "faculdades_ida_ids": [F0]}`.
 
 **Passos**
 
-1. Usar o formato de hora confirmado no contrato para cadastrar/editar horários válidos; representar 06:30/17:30 nesse formato.
-2. Enviar separadamente minuto 60 e texto não interpretável como hora; pedir à IA para conferir que a rota não foi alterada (PC-05).
-3. Caracterizar 00:00 e 23:59 e a viagem 23:00 → 01:00, sem concluir que cruza o dia ou que deve ser bloqueada; anotar o retorno para alinhamento.
-4. Reler uma rota salva e comparar a hora local exibida ao valor persistido, registrando eventual conversão indevida de fuso/dia.
+1. Enviar cada variação.
+2. Pedir à IA para conferir que nenhuma rota nova nem vínculo com B0/F0 foi gravado e que RP1 manteve nome e vínculos.
 
 **Resultado esperado**
 
-- Horários bem formados são preservados sem troca entre saída/retorno, arredondamento ou conversão silenciosa (RF-013).
-- Valores impossíveis para o formato documentado devem ser recusados com identificação do campo, sem gravação parcial.
-- Os limites do relógio são técnica de caracterização, não horário mínimo/máximo de operação. Ordem saída/retorno, pernoite e faixa permitida não estão definidos; manter essa parte pendente de decisão.
+- Itens 1 e 2: HTTP `422` no campo da lista, com “Bairro inativo ou inexistente (ids: …).” ou “Faculdade inativa ou inexistente (ids: …).” (AC-03, FA-002, RNF-012).
+- Item 3: HTTP `422` informando o item duplicado (cada bairro e faculdade só uma vez por lista).
+- Item 4: HTTP `422` com “Informe IDs válidos (números inteiros positivos).”
+- Item 5: HTTP `422`; **nada** da edição é aplicado (nem o nome).
+- Nenhum erro `500`.
 
 **Resultado obtido**
 
@@ -220,22 +254,29 @@ São **13 casos essenciais**. Registrar cada variação. CT-001 começa pelo vaz
 
 ---
 
-### CT-HU011-API-008 — Editar dados e substituir vínculos da rota correta
+### CT-HU011-API-008 — Editar dados e vínculos da rota
 
-**Dados de entrada:** RP1: novo nome; 06:00/18:00; adicionar B2, retirar B1; ida F2 e volta F3.
+**Dados de entrada:** em RP1:
+
+1. `{"nome": "Rota Centro - UFC Manhã"}`.
+2. `{"horario_saida": "06:00", "horario_retorno": "18:00"}`.
+3. `{"bairros_ids": [B2], "faculdades_ida_ids": [F2], "faculdades_volta_ids": [F3]}`.
+4. `{}`.
+5. `{"ativo": false}`.
+6. `PATCH /rotas-principais/999999` com `{"nome": "Qualquer"}`.
 
 **Passos**
 
-1. Registrar RP1/RP2 antes da edição; em OP-EDITAR de RP1, trocar nome para Rota Campo Velho - IFCE, horários para 06:00/18:00, bairro para B2 e faculdades para ida F2/volta F3.
-2. Reler RP1 e pedir à IA para conferir todos os vínculos atuais e o id (PC-05).
-3. Conferir RP2 e os cadastros-base; tentar editar id de rota inexistente com dados válidos.
+1. Enviar cada edição e conferir em `GET /rotas-principais/{id}` depois de cada uma.
+2. Pedir à IA para conferir as tabelas de vínculo depois do item 3 e reler RP2 e RP3.
 
 **Resultado esperado**
 
-- Alteração persistida no mesmo registro, com confirmação e atualização da listagem (AC-04 e fluxo principal).
-- Na configuração atual da rota, associações retiradas não ficam ativas indevidamente; não apagar os bairros/faculdades nem alterar RP2.
-- Rota inexistente gera resposta de cliente coerente com o contrato; nenhum registro novo. Não fixar 404 antes da publicação do contrato.
-- Preservação de vínculos/relatórios antigos deve ser verificada no CT-013, sem presumir que nomes históricos são snapshots ou leituras dinâmicas.
+- Itens 1 a 3: HTTP `200` “Operação realizada com sucesso”, no **mesmo id** (AC-04, AC-07). Só os campos enviados mudam; listas enviadas **substituem** as anteriores (B1 e F1 saem de RP1).
+- Item 4: HTTP `422` “Informe ao menos um campo para atualização.”
+- Item 5: HTTP `422` “Campo não permitido.”; a rota continua ativa. O status só muda pelas rotas de inativar/reativar.
+- Item 6: HTTP `404` “Rota não encontrada.”
+- RP2, RP3 e a base não mudam.
 
 **Resultado obtido**
 
@@ -244,22 +285,24 @@ São **13 casos essenciais**. Registrar cada variação. CT-001 começa pelo vaz
 
 ---
 
-### CT-HU011-API-009 — Inativar e reativar sem agendamento futuro, sem apagar a rota
+### CT-HU011-API-009 — Inativar e reativar (soft delete)
 
-**Dados de entrada:** RP1 sem futuro; RP0 inativa para reativação independente; repetir operações.
+**Dados de entrada:** RP2 (sem complementar e sem agendamentos): `PATCH /rotas-principais/{id}/inativar` duas vezes, `PATCH /rotas-principais/{id}/reativar` duas vezes; `PATCH /rotas-principais/999999/inativar`.
 
 **Passos**
 
-1. Conferir ausência de agendamentos futuros de RP1; usar OP-INATIVAR e reler como administrador.
-2. Pedir à IA para conferir linha, vínculos e log (PC-05); usar OP-REATIVAR e conferir novamente.
-3. Repetir cada operação no mesmo estado e registrar o contrato de repetição; se inativar falhar, usar RP0 preparada para isolar reativação, mantendo a falha anterior.
+1. Inativar RP2 e conferir `GET /rotas-principais` (sem filtro e com `incluir_inativos=true`).
+2. Pedir à IA para conferir que a linha e os vínculos continuam no banco.
+3. Repetir a inativação; reativar; repetir a reativação.
+4. Ao final, deixar RP2 **inativa** para os CT-001 e CT-004.
 
 **Resultado esperado**
 
-- Inativação válida mantém rota e associações no banco, altera somente o estado e retorna “Operação realizada com sucesso” (AC-05, AC-07, RF-014).
-- Reativação devolve a mesma rota às ativas, com dados e vínculos corretos; prevista no fluxo principal e BDD.
-- Repetição não pode excluir registro nem duplicar vínculos. Idempotência versus conflito e códigos exatos ainda dependem do contrato; não importar o 409 de outras HUs.
-- Este caso usa rota principal sem complementar ativa vinculada; efeito sobre complementares é decisão pendente, não comportamento presumido.
+- Inativar e reativar: HTTP `200` “Operação realizada com sucesso”, com `data.ativo` `false` / `true` (AC-05, AC-07, RF-014).
+- Rota inativa sai da listagem padrão e aparece com `incluir_inativos=true` (AC-09).
+- Linha e vínculos **mantidos** no banco (soft delete).
+- Repetição: HTTP `409` “Rota já está inativa.” / “Rota já está ativa.”, sem nova auditoria.
+- Id inexistente: HTTP `404` “Rota não encontrada.”
 
 **Resultado obtido**
 
@@ -268,21 +311,22 @@ São **13 casos essenciais**. Registrar cada variação. CT-001 começa pelo vaz
 
 ---
 
-### CT-HU011-API-010 — Auditar cadastro, edição, inativação e reativação
+### CT-HU011-API-010 — Bloquear inativação com complementar ativa (#208)
 
-**Dados de entrada:** Operações de RP1 nos CT-002/008/009; administrador e horários.
+**Dados de entrada:** criar RC1 pela API da HU-012: `POST /rotas-complementares` com `{"nome": "Van Trevo", "horario_saida": "06:00", "ponto_conexao": "Trevo do Bairro Novo", "rota_principal_id": RP1}`. Depois: `PATCH /rotas-principais/{RP1}/inativar`; `PATCH /rotas-complementares/{RC1}/inativar`; de novo `PATCH /rotas-principais/{RP1}/inativar`.
 
 **Passos**
 
-1. Pedir à IA para localizar os registros de auditoria da rota, usando a entidade/id definidos pela implementação e o intervalo de execução (PC-05).
-2. Relacionar as quatro escritas efetivas com os logs e comparar dados anteriores/novos quando o contrato os expuser.
-3. Conferir recusas por validação, autorização e agendamento; separar eventos de tentativa de eventos de escrita bem-sucedida.
+1. Criar RC1 e tentar inativar RP1.
+2. Conferir que RP1 segue ativa.
+3. Inativar RC1 e tentar inativar RP1 de novo.
+4. Ao final, reativar RP1 (deixar RC1 inativa).
 
 **Resultado esperado**
 
-- Cadastro, edição, inativação e reativação efetivas rastreáveis com executor, ação e timestamp (fluxo principal, RNF-013 e BDD).
-- Não registrar operação recusada como alteração concluída. Um log de tentativa, se previsto na política, não pode ser confundido com sucesso.
-- AC-05 menciona explicitamente a inativação; a cobertura das quatro operações se apoia no fluxo principal e no BDD. Nomes de ações e entidade ainda devem ser mapeados, não copiados de outro módulo.
+- Com RC1 ativa: HTTP `409` com a mensagem definida pelo PO: “Esta rota possui rotas complementares ativas vinculadas. Inative ou desvincule as rotas complementares antes de continuar.” (#208, item 5; RNF-012). RP1 continua ativa e sem auditoria de inativação.
+- Com RC1 inativa: HTTP `200`; RP1 inativada.
+- Registrar o texto exato: se o bloqueio acontecer com outro texto, o caso é ⚠️ (regra certa, mensagem diferente da decisão).
 
 **Resultado obtido**
 
@@ -291,23 +335,25 @@ São **13 casos essenciais**. Registrar cada variação. CT-001 começa pelo vaz
 
 ---
 
-### CT-HU011-API-011 — Bloquear inativação com agendamento futuro e permitir sem futuro
+### CT-HU011-API-011 — Bairro e faculdade em rota ativa (#208)
 
-**Dados de entrada:** Rota A agendada amanhã; B sem agenda; C só com agenda passada; datas/fuso.
+**Dados de entrada:** RP3 ativa com B1, ida F1/F2 e volta F3:
+
+1. `PATCH /bairros/{B1}/inativar`; `PATCH /faculdades/{F3}/inativar` (F3 só está na volta de RP3).
+2. Inativar RP1 e RP3 (RP2 já inativa); repetir as duas inativações do item 1.
+3. `PATCH /rotas-principais/{RP3}/reativar` com F3 inativa.
+4. Reativar F3 e B1; reativar RP3 e RP1.
 
 **Passos**
 
-1. Conferir HU-013 em execução. Sem agenda real, registrar 🚫 na parte dependente, sem fabricar endpoint ou chamar exemplo local de agendamento.
-2. Pedir à IA para preparar e registrar as três condições e tentar OP-INATIVAR em cada uma (PC-05).
-3. Se houver outro caminho de mudar o estado (por exemplo campo de edição), verificar a mesma proteção; se não houver, registrar que não se aplica.
-4. Conferir estado, vínculos e auditoria após as tentativas.
+1. Enviar as chamadas na ordem e conferir o status de B1, F3 e RP3 depois de cada uma.
 
 **Resultado esperado**
 
-- Agendamento futuro bloqueia com mensagem sobre agendamentos pendentes; rota continua ativa (AC-06, FA-001). Texto literal e código de erro dependem do contrato.
-- Ausência de futuro não pode disparar esse bloqueio; histórico passado sozinho não equivale a agendamento futuro.
-- Nenhum sucesso/auditoria de inativação concluída para a tentativa bloqueada e nenhum atalho para contornar a regra.
-- Erro genérico de servidor ou indisponibilidade não comprova o bloqueio correto.
+- Item 1 (rota ativa usando a base): HTTP `409`, com “Este bairro não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar.” (HU-007, CA 6) e “Esta faculdade não pode ser inativada pois pertence a uma rota ativa. Remova-a da rota antes de continuar.” (#208, item 7). A faculdade é bloqueada por estar na volta, não só na ida.
+- Item 2 (nenhuma rota ativa usando a base): HTTP `200`.
+- Item 3: a rota não volta a ficar ativa ligada a faculdade inativa. A API responde HTTP `409` “Esta rota possui bairro ou faculdade inativo e não pode ser reativada. Atualize os vínculos antes.” (regra do código, coerente com RNF-012; registrar como comportamento observado).
+- Item 4: HTTP `200` em todas.
 
 **Resultado obtido**
 
@@ -316,21 +362,21 @@ São **13 casos essenciais**. Registrar cada variação. CT-001 começa pelo vaz
 
 ---
 
-### CT-HU011-API-012 — Negar escrita a aluno, representante e não autenticado
+### CT-HU011-API-012 — Auditoria das operações de escrita
 
-**Dados de entrada:** Aluno; representante; sem credencial em cadastro/edição/inativação/reativação.
+**Dados de entrada:** operações efetivas dos CT-002 (cadastro), CT-008 (edições) e CT-009 (inativação e reativação); recusas dos CT-004 a CT-011; edição de RP1 reenviando o mesmo nome.
 
 **Passos**
 
-1. Enviar OP-CADASTRAR, OP-EDITAR, OP-INATIVAR e OP-REATIVAR com cada perfil; usar corpo válido e alvo existente para isolar autorização.
-2. Na variação sem autenticação, remover também cookie e parâmetros de token, conforme mecanismo real.
-3. Pedir à IA para conferir ausência de escrita e de log de sucesso (PC-05); registrar separadamente a política de leitura quando o contrato estiver disponível.
+1. Pedir à IA para consultar `log_auditoria` com `entidade = 'rota_principal'` no intervalo da execução.
+2. Relacionar cada operação efetiva com um registro.
+3. Enviar a edição sem mudança e consultar de novo.
 
 **Resultado esperado**
 
-- Aluno e representante recebem `403 Forbidden` nas operações administrativas (RN-006 e BDD). Ausência de autenticação deve ser recusada; o mecanismo compartilhado atual usa 401.
-- Não confundir leitura de rotas para agendamento com permissão de gestão. Os requisitos não definem aqui se a leitura será pública ou restrita: não impor regra de GET antes do contrato.
-- Nenhuma rota criada, editada ou com status alterado indevidamente. Se o login de representante estiver indisponível, bloquear só essa variação.
+- Um registro por cadastro, edição, inativação e reativação efetiva, com o `id` do administrador A, a ação (`CRIAR`, `EDITAR`, `INATIVAR`, `REATIVAR`), o id da rota e a data/hora (AC-05, RNF-013).
+- Cadastro e edição guardam o valor anterior e o novo (nome, horários e ids dos vínculos).
+- Nenhum registro para operação recusada (409, 422, 404) nem para edição que não muda nada.
 
 **Resultado obtido**
 
@@ -339,22 +385,43 @@ São **13 casos essenciais**. Registrar cada variação. CT-001 começa pelo vaz
 
 ---
 
-### CT-HU011-API-013 — Preservar histórico e conferir rota inativa no agendamento
+### CT-HU011-API-013 — Acesso sem privilégio
 
-**Dados de entrada:** Rota H só com histórico; rota I inativa; dependências de agenda/alocação/relatório.
+**Dados de entrada:** as sete rotas da HU com o token do aluno, com o token do representante e sem o cabeçalho `Authorization`. Corpo válido e alvo RP1 nas escritas.
 
 **Passos**
 
-1. Conferir disponibilidade de dados históricos reais; pedir à IA para registrar ids/vínculos e valores dos registros anteriores de H (PC-05).
-2. Inativar H sem agendamento futuro e comparar vínculos/relatórios; conferir também se edição da configuração atual mantém os registros anteriores.
-3. Com HU-013 disponível, verificar se I aparece na seleção do aluno e, após decisão da regra, tentar novo vínculo direto com I pelo endpoint real.
-4. Sem módulo/histórico ou decisão, marcar a parte correspondente como 🚫, preservando o resultado das partes independentes.
+1. Enviar cada chamada com cada credencial.
+2. Pedir à IA para conferir que RP1 não mudou e que não há auditoria nova.
 
 **Resultado esperado**
 
-- Inativação não apaga nem rompe registros antigos de alocações/relatórios (RN-004), nem apaga a rota principal.
-- BDD propõe inativa fora de novo agendamento, mas registra essa regra como inferida: manter avaliação dessa parte pendente de confirmação, mesmo com a funcionalidade disponível.
-- Não inventar a política para agendamentos existentes ou para complementares vinculadas; registrar as pendências para discussão.
+- Aluno e representante: HTTP `403` em todas as rotas, inclusive as de leitura e `/opcoes` (RN-006).
+- Sem token: HTTP `401`.
+- Nenhuma rota criada, editada ou com status alterado.
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
+
+### CT-HU011-API-014 — Agendamentos futuros e rota inativa no agendamento
+
+**Dados de entrada:** rota A com aluno agendado para amanhã; rota B só com agendamento passado; rota C inativa.
+
+**Passos**
+
+1. Conferir se a HU-013 (agendamento) está na `develop`. Se não estiver, marcar 🚫 e não preparar agenda pelo banco.
+2. Com a agenda disponível: tentar inativar A e B.
+3. Consultar as opções de agendamento do aluno e procurar a rota C.
+
+**Resultado esperado**
+
+- Rota A: HTTP `409` “Esta rota possui agendamentos pendentes e não pode ser inativada no momento.”; continua ativa (AC-06, FA-001).
+- Rota B: agendamento passado não bloqueia; HTTP `200`.
+- Rota C não aparece nas opções de novo agendamento; agendamentos antigos dela continuam no histórico (#208, item 8; RN-004).
 
 **Resultado obtido**
 
@@ -365,21 +432,24 @@ São **13 casos essenciais**. Registrar cada variação. CT-001 começa pelo vaz
 
 | Critério | Cenário BDD | Casos |
 | --- | --- | --- |
-| AC-01 / AC-09 — listagem e inativas | Visualiza ativas com horários; visualiza inativas | CT-001, CT-009; padrão inicial pendente |
-| AC-02 — cadastro e múltiplos vínculos | Cadastra rota; vários bairros/faculdades | CT-002, CT-003; granularidade de pontos a confirmar |
-| AC-03 / FA-002 — base ativa | Não oferece bairro/faculdade inativos | CT-006; filtro visual na suíte UI |
-| AC-04 — edição | Edita nome, horários e bairros; faculdades pelo AC-04 | CT-008, CT-004 |
-| AC-05 / RF-014 — soft delete | Inativa; registro permanece no banco | CT-009 |
-| Fluxo principal — reativação | Reativa rota previamente inativada | CT-009 |
-| AC-06 / FA-001 — agenda futura | Bloqueia inativação com agendamentos futuros | CT-011 — HU-013 |
-| AC-07 — confirmação da inativação | Inativa com mensagem e atualiza lista | CT-009; demais sucessos seguem fluxo/BDD |
+| AC-01 — listagem de ativas com horários | Visualiza as rotas ativas com horários | CT-001 |
+| AC-02 — cadastro com vários vínculos | Cadastra rota; vários bairros e faculdades | CT-002, CT-003 |
+| AC-03 / FA-002 — só base ativa | Não oferece bairro/faculdade inativos | CT-001 (`/opcoes`), CT-007 |
+| AC-04 — edição | Edita nome, horários, faculdades e bairros | CT-008 |
+| AC-05 / RF-014 — inativar e reativar (soft delete) | Inativa; reativa; registro permanece | CT-009 |
+| AC-06 / FA-001 — agendamentos futuros | Bloqueia inativação com alunos agendados | CT-014 (depende da HU-013) |
+| AC-07 — mensagem de sucesso | Cenários de sucesso | CT-002, CT-008, CT-009 |
 | AC-08 / FA-003 — obrigatórios | Cadastro sem obrigatório; edição esvaziando | CT-005 |
-| AC-10 — volta independente | Configura faculdades da volta diferentes da ida | CT-004 |
-| RF-013 — formato e persistência do horário | Horários de cadastro/edição; fronteiras sem cenário BDD específico | CT-007 — cronologia operacional pendente |
-| RNF-013 / fluxo principal — auditoria | Registra cada operação de escrita | CT-010 |
-| RN-004 — histórico | Inativação preserva registros anteriores | CT-013 — histórico real |
-| Regra inferida de seleção | Inativa fora do agendamento do aluno | CT-013 — HU-013 e decisão |
-| RN-006 — exclusividade administrativa | API nega gestão a aluno/representante | CT-012 |
+| AC-09 — inativas | Mostrar inativos | CT-001, CT-009 |
+| AC-10 — volta independente | Configura faculdades da volta diferentes da ida | CT-003 |
+| AC-05 / RNF-013 — auditoria | Registra cada operação de escrita | CT-012 |
+| RF-013 / #208 item 2 — horários | — (decisão do PO) | CT-006 |
+| #208 item 1 — nome único | — (decisão do PO) | CT-004 |
+| #208 item 3 — volta obrigatória | — (decisão do PO) | CT-005 |
+| #208 item 5 / RNF-012 — complementar ativa | — (decisão do PO) | CT-010 |
+| #208 item 7 — base em rota ativa | — (decisão do PO; HU-007 CA 6) | CT-011 |
+| #208 item 8 / RN-004 — inativa fora do agendamento | Inativa fora do agendamento do aluno | CT-014 (depende da HU-013) |
+| RN-006 — exclusividade administrativa | API nega gestão a outros perfis | CT-013 |
 
 ## Defeitos encontrados
 
@@ -389,21 +459,15 @@ São **13 casos essenciais**. Registrar cada variação. CT-001 começa pelo vaz
 
 ## Observações gerais
 
-- Fontes: [requisitos, seção 7.4.1](../../../../../docs/requisitos.md), [HU-011.feature](../../../../../bdd/features/epico-03/HU-011.feature) e [README do BDD](../../../../../bdd/features/epico-03/README.md), nesta ordem de autoridade. Nenhum requisito ou BDD foi alterado.
-- **Riscos mapeados no código** — base `5554bc90`, conferida em 24/10/2026:
-  - [backend/main.py](../../../../../backend/main.py) ainda não registra router de gestão de rotas principais/complementares. Não foram identificados contrato HTTP, DTO, service ou schema de gestão dessas HUs em `backend/src`. URLs, métodos, chaves e tabelas da rota são **a confirmar**; não presumir `/rotas`, JSON ou PATCH por semelhança com outro módulo.
-  - [cadastros.tsx](../../../../../frontend/src/app/%28administrador%29/cadastros.tsx) tem o card Rotas principais apontando para `/(administrador)/cadastros/rotas-principais`, mas a tela de gestão correspondente não foi identificada. O alvo de navegação não comprova implementação.
-  - As entidades-base já possuem status e consultas administrativas que podem incluir inativos. Conferir seleção e validação final de referência; filtro de UI sozinho não protege escrita direta.
-  - Como a implementação não foi entregue, riscos de perda de vínculos, mistura de ida/volta, gravação parcial, horários convertidos, auditoria omitida e sucesso apenas local são **preventivos**, não bugs constatados.
-- Técnicas: **partição de equivalência** (base ativa/inativa/inexistente; perfis; campos válidos/vazios), **valor-limite** (zero/um bairro e faculdade; hora válida/inválida), **transição de estado** (ativa → inativa → ativa) e **tabela de decisão** (sem agenda / só passado / futuro). Prioridade em integridade de vínculos, independência da volta e proteção de estado.
-- **Dúvidas/divergências para alinhamento**:
-  - AC-01/fluxo pedem listagem com ativas e inativas; BDD propõe ativas inicialmente e chave Mostrar inativos. Garantir acesso a ambos os estados; mecanismo e padrão inicial aguardam decisão.
-  - AC-05 cita auditoria da inativação; fluxo principal/BDD registram as quatro escritas. Esta suíte cobre todas com base nesses trechos, sem impor nomes de ação ainda inexistentes.
-  - AC-02 permite várias faculdades e volta independente; fluxo/FA-003 usam singular. Os casos seguem o AC-02/AC-10 e o BDD; **mínimo obrigatório na volta** continua sem definição.
-  - O AC-02/fluxo mencionam bairros/pontos; o BDD detalha bairros. Confirmar granularidade, seleção de pontos e pertencimento antes de mapear o contrato; não fingir cobertura de campos ainda não definidos.
-  - Nome único, ordem dos vínculos, faixa de horários, retorno posterior à saída e pernoite não estão definidos. Não criar bloqueio de duplicidade, mínimo/máximo de texto ou regra temporal por conta própria.
-  - Efeito de inativar principal com complementares ativas, reativar complementar com principal inativa e base inativada depois do vínculo salvo: não definidos; registrar decisão antes de exigir cascata/bloqueio.
-  - Inativa fora de novo agendamento é cenário **inferido e a confirmar** no BDD; sem decisão, a parte não pode receber aprovação/reprovação.
-- Nenhuma suíte foi executada, nenhuma stack foi iniciada e nenhum defeito foi reproduzido. Os 13 casos desta camada permanecem pendentes. Na execução futura, marcar 🚫 por ausência de implementação, contrato, massa ou decisão; registrar partes independentes e não alterar o esperado para adaptar ao código.
-- Não vincular veículo/motorista como obrigatório nesta HU: alocações operacionais pertencem a outras histórias. Preservar dados antigos e ocultar credenciais/tokens nas evidências.
-- Suíte complementar: [UI-HU-011.md](../ui/UI-HU-011.md). Cancelamento visual e filtros de seleção são verificados na UI; validação final e persistência são verificadas aqui.
+- Referências: [HU-011, seção 7.4.1](../../../../../docs/requisitos.md), [cenários BDD](../../../../../bdd/features/epico-03/HU-011.feature), [decisões do PO (#208)](https://github.com/GOUOCE/GOUCE-app/issues/208), [decisões do épico 02 (#207)](https://github.com/GOUOCE/GOUCE-app/issues/207) e [suíte de UI](../ui/UI-HU-011.md).
+- **O que mudou desde o planejamento anterior** (base `5554bc90`, 24/10/2026): o PO respondeu a #208 e confirmou todas as sugestões; os requisitos passaram a listar só ativas com a chave “Mostrar inativos”, auditoria das quatro operações, nome obrigatório e a mensagem de bloqueio por agendamentos; e o backend de rotas entrou na `develop`. Os casos agora usam o contrato real e as regras decididas, sem “a confirmar”.
+- **Riscos mapeados no código** (backend em `backend/src/modulos/rotas/`, `develop` `7c3d72d8`), que orientaram a escolha dos casos:
+  - o nome é conferido só entre **rotas principais**; uma principal com o nome de uma complementar é aceita, o que contraria o item 1 da #208 (CT-004);
+  - a mensagem de bloqueio por complementar ativa é “Esta rota possui rotas complementares ativas e não pode ser inativada. Inative ou reassocie as complementares antes.”, diferente do texto definido pelo PO (CT-010);
+  - a checagem de agendamentos futuros sempre responde “sem agendamentos” até a HU-013 existir (`TODO(HU-013)` no repository): o bloqueio do AC-06 nunca dispara hoje (CT-014);
+  - a reativação de rota com bairro ou faculdade inativo é bloqueada; a regra não está no requisito, mas evita vínculo inválido (CT-011);
+  - na edição, vínculos que já existiam podem ser mantidos mesmo que a base tenha sido inativada depois; só vínculos novos exigem registro ativo (CT-007, CT-008);
+  - a rota vincula **bairros**, não pontos de parada; o ponto é considerado “em rota ativa” pelo bairro dele.
+- Diferente do épico 02, a API **recusa** o campo `ativo` na edição (`extra="forbid"`): o CT-008 confirma isso.
+- Ao final, deixar RP1 e RP3 ativas, RP2 e RC1 inativas e a base (B1, F1, F3) ativa, sem apagar registros.
+- Ocultar senhas e tokens nas evidências.

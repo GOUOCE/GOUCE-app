@@ -1,0 +1,28 @@
+[
+  {
+    "passo": "1",
+    "descricao": "Banco: log_auditoria da entidade aluno depois dos CT-003 a 008 e das restaurações de massa",
+    "consulta_sql": "select id, usuario_id, acao, entidade, entidade_id, valor_anterior, valor_novo, criado_em from log_auditoria where entidade='aluno' order by id",
+    "resultado": [
+      "1 | 6 | UPDATE_STATUS | aluno | 6 | ativado | ativado | 2026-10-27 17:48:02.859452+00",
+      "2 | 7 | UPDATE_STATUS | aluno | 7 | ativado | ativado | 2026-10-27 17:48:18.399203+00",
+      "4 | 2 | UPDATE_STATUS | aluno | 2 | ativado | ativado | 2026-10-27 17:49:18.31162+00",
+      "5 | 3 | UPDATE_STATUS | aluno | 3 | rejeitado | rejeitado | 2026-10-27 17:49:38.531749+00",
+      "6 | 5 | UPDATE_STATUS | aluno | 5 | rejeitado | rejeitado | 2026-10-27 17:50:11.517894+00",
+      "7 | 5 | UPDATE_STATUS | aluno | 5 | pendente | pendente | 2026-10-27 17:50:27.062143+00",
+      "8 | 6 | UPDATE_STATUS | aluno | 6 | ativado | ativado | 2026-10-27 17:50:44.583571+00",
+      "9 | 6 | UPDATE_STATUS | aluno | 6 | rejeitado | rejeitado | 2026-10-27 17:50:44.632359+00",
+      "10 | 3 | UPDATE_STATUS | aluno | 3 | ativado | ativado | 2026-10-27 17:50:44.727084+00",
+      "11 | 2 | UPDATE_STATUS | aluno | 2 | ativado | ativado | 2026-10-27 17:50:44.769036+00",
+      "12 | 6 | UPDATE_STATUS | aluno | 6 | ativado | ativado | 2026-10-27 17:50:53.043797+00",
+      "13 | 3 | UPDATE_STATUS | aluno | 3 | rejeitado | rejeitado | 2026-10-27 17:50:53.093062+00",
+      "14 | 4 | UPDATE_STATUS | aluno | 4 | rejeitado | rejeitado | 2026-10-27 17:51:16.98851+00"
+    ]
+  },
+  {
+    "passo": "2",
+    "descricao": "Id do administrador A (executor de todas as avaliações)",
+    "consulta_sql": "select u.id from usuario u join administrador a on a.administrador_id=u.id",
+    "resultado": "1"
+  }
+]

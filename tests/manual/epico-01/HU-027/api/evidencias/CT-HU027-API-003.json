@@ -1,0 +1,119 @@
+[
+  {
+    "passo": "1",
+    "descricao": "Aprovar A1",
+    "data_hora_utc": "2026-10-27T17:49:18Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/2/aprovar",
+      "credencial": "admin",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "aluno_id": 2,
+        "status_cadastro": "ativado",
+        "mensagem": "Cadastro do aluno aprovado com sucesso!"
+      }
+    }
+  },
+  {
+    "passo": "2",
+    "descricao": "Fila depois da aprovação",
+    "data_hora_utc": "2026-10-27T17:49:18Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/usuarios/alunos?status=pendente&ordem=asc",
+      "credencial": "admin",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": [
+        {
+          "id": 3,
+          "nome": "Bruno Alves Lima",
+          "email": "a2.bruno@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:47:55.397834Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        },
+        {
+          "id": 4,
+          "nome": "Marta Sousa Neri",
+          "email": "a3.marta@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:47:58.528458Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        },
+        {
+          "id": 5,
+          "nome": "Ana Paula Freitas",
+          "email": "a4.ana@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:48:01.672455Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        }
+      ]
+    }
+  },
+  {
+    "passo": "3",
+    "descricao": "Login do A1 aprovado",
+    "requisicao": {
+      "metodo": "POST",
+      "rota": "/auth/login",
+      "corpo": {
+        "email": "a1.zuleide@qa.gouce.app",
+        "senha": "***"
+      }
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "token_acesso": "***",
+        "token_atualizacao": "***",
+        "tipo_token": "***",
+        "usuario": {
+          "id": 2,
+          "nome": "Zuleide Ramos Costa",
+          "email": "a1.zuleide@qa.gouce.app",
+          "telefone": "88999990000",
+          "role": "aluno",
+          "roles": [
+            "aluno"
+          ],
+          "status_cadastro": "ativado",
+          "acesso_expirado": false,
+          "curso": "Ciência da Computação",
+          "faculdade": 1,
+          "periodo_ingresso": "2025.1",
+          "turno": "Noturno",
+          "foto_perfil": "9fe3e044-53ac-4267-b6ca-6d8dcbf0e9df"
+        }
+      }
+    }
+  },
+  {
+    "passo": "4",
+    "descricao": "Banco: aluno_id | status_cadastro | validade_acesso",
+    "consulta_sql": "select aluno_id, status_cadastro, validade_acesso from aluno where aluno_id=2",
+    "resultado": "2 | ativado | 2027-04-27 17:49:18.310393+00"
+  }
+]

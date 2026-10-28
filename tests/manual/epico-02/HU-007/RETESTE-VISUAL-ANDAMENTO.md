@@ -39,3 +39,11 @@ Removidos contador e orientação permanente do modal de ponto em cadastro e edi
 ## Descarte do rascunho do modal de ponto
 
 Usuário informou aprovação dos ajustes anteriores, permanecendo o cenário da #210 bloqueado. Encontrou texto não salvo preservado após cancelar/voltar no modal. Ajuste local em cadastro e edição: abrir limpa o campo e seu erro; Cancelar e o fechamento pelo sistema (voltar/Escape, via onRequestClose) descartam o rascunho. Retestar digitando sem adicionar, cancelando/fechando e reabrindo.
+
+## Integração com o PR #253
+
+As correções foram integradas à versão `bd84ac5f` da branch `fix/issues-hu007`, que já contém as atualizações da `develop` (`9ce4bda9`). Os conflitos no DTO e no teste de cadastro foram resolvidos preservando a validação estrita de IDs e os casos de teste atuais.
+
+Essa versão do PR já traz mudanças para a #210, incluindo a unicidade do ponto por bairro e uma migration. Os testes de criação/edição com o mesmo nome de ponto em bairros distintos passam; o teste de edição foi ajustado para verificar apenas os pontos ativos e confirmar que os demais permanecem inativos. Isso não substitui o reteste visual nem a validação de migrations em PostgreSQL. A pendência da #210 anotada acima descreve o ambiente visual anterior à integração e não é uma conclusão sobre o código integrado.
+
+Validação após integrar: 210 testes de frontend (24 suítes), 53 testes de backend e 49 subcasos aprovados. TypeScript aprovado. Na primeira execução completa houve um timeout de 5 segundos em um teste de tela; a suíte completa passou com limite de 30 segundos por teste. Os testes de backend usam banco isolado em memória e substituem autenticação/armazenamento quando necessário; não executam aceitação visual nem migrations em PostgreSQL.
