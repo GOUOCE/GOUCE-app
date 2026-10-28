@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Switch, Snackbar } from 'react-native-paper';
+import { Text, TextInput, Switch } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, Plus, Search, Pencil, Trash2, RotateCcw, X } from 'lucide-react-native';
 
@@ -14,8 +14,6 @@ export default function BairrosListScreen() {
   const [busca, setBusca] = useState('');
   const [mostrarInativos, setMostrarInativos] = useState(false); // Inicia desligada por padrão (AC-01 / AC-09)
   const [bairros, setBairros] = useState<BairroItem[]>([]);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -74,8 +72,12 @@ export default function BairrosListScreen() {
         closePopup();
         try {
           await bairroService.inativarBairro(bairro.id);
-          setSnackbarMessage(`Bairro ${bairro.nome} inativado`);
-          setSnackbarVisivel(true);
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: `Bairro ${bairro.nome} inativado com sucesso.`,
+            confirmText: 'OK',
+          });
           carregarBairros();
         } catch (error: any) {
           showPopup({
@@ -100,8 +102,12 @@ export default function BairrosListScreen() {
         closePopup();
         try {
           await bairroService.reativarBairro(bairro.id);
-          setSnackbarMessage(`Bairro ${bairro.nome} reativado`);
-          setSnackbarVisivel(true);
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: `Bairro ${bairro.nome} reativado com sucesso.`,
+            confirmText: 'OK',
+          });
           carregarBairros();
         } catch (err) {
           const msg = getErrorMessage(err, 'Erro ao reativar bairro.');
@@ -255,19 +261,6 @@ export default function BairrosListScreen() {
         )}
       </ScrollView>
 
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
     </View>
   );
 }
@@ -365,11 +358,5 @@ const styles = StyleSheet.create({
     color: '#888',
     textAlign: 'center',
     marginVertical: 24,
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });

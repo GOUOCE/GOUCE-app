@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
-import { Text, TextInput, Button, Portal, Snackbar, ActivityIndicator } from 'react-native-paper';
+import { Text, TextInput, Button, Portal, ActivityIndicator } from 'react-native-paper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, Trash2, RotateCcw, X } from 'lucide-react-native';
+import { ChevronLeft, Trash2, RotateCcw } from 'lucide-react-native';
 
 import { bairroSchema, BairroFormData, pontoParadaSchema } from '@/schemas/bairroSchema';
 import { bairroService, PontoParadaItem } from '@/services/bairroService';
@@ -26,9 +26,6 @@ function EditarBairroForm({ id }: { id: string }) {
   const [erroPonto, setErroPonto] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Snackbar Toast
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -67,7 +64,6 @@ function EditarBairroForm({ id }: { id: string }) {
     React.useCallback(() => {
       let isMounted = true;
       setDadosCarregados(false);
-      setSnackbarVisivel(false);
       setPontos([]);
       reset({ nome: '', pontos: [] });
 
@@ -106,7 +102,6 @@ function EditarBairroForm({ id }: { id: string }) {
         setDadosCarregados(false);
         setPontos([]);
         reset({ nome: '', pontos: [] });
-        setSnackbarVisivel(false);
         setNovoPontoNome('');
         setErroPonto('');
         setModalPontoVisible(false);
@@ -227,11 +222,13 @@ function EditarBairroForm({ id }: { id: string }) {
     try {
       await bairroService.atualizarBairro(Number(id), dados.nome, pontos);
       setIsLoading(false);
-      setSnackbarMessage('Bairro alterado com sucesso');
-      setSnackbarVisivel(true);
-      setTimeout(() => {
-        voltarParaListagem();
-      }, 1200);
+      showPopup({
+        type: 'success',
+        title: 'Operação realizada com sucesso',
+        message: 'Bairro alterado com sucesso.',
+        confirmText: 'OK',
+        onConfirm: voltarParaListagem,
+      });
     } catch (error: any) {
       setIsLoading(false);
       const msg = getErrorMessage(error, 'Erro ao atualizar bairro.');
@@ -249,15 +246,6 @@ function EditarBairroForm({ id }: { id: string }) {
 
   const mensagemErroPontos = errors.pontos?.message || (Array.isArray(errors.pontos)
     ? errors.pontos.find((erro) => erro?.message)?.message : undefined);
-
-  const onInvalid = () => {
-    showPopup({
-      type: 'error',
-      title: 'Confira os dados do bairro',
-      message: 'Revise os campos destacados. O nome do bairro deve ter de 3 a 100 caracteres, e cada ponto deve ter de 2 a 100 caracteres válidos.',
-      confirmText: 'Entendido',
-    });
-  };
 
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
@@ -279,7 +267,7 @@ function EditarBairroForm({ id }: { id: string }) {
         cancelText={popup.cancelText}
         confirmColor={popup.confirmColor}
         onConfirm={popup.onConfirm}
-        onDismiss={closePopup}
+        onDismiss={popup.type === 'success' ? voltarParaListagem : closePopup}
       />
 
       {!dadosCarregados ? (
@@ -355,7 +343,7 @@ function EditarBairroForm({ id }: { id: string }) {
         {/* Botão Salvar Alterações */}
         <Button
           mode="contained"
-          onPress={handleSubmit(onSubmit, onInvalid)}
+          onPress={handleSubmit(onSubmit)}
           loading={isLoading}
           disabled={isLoading}
           style={styles.saveButton}
@@ -402,19 +390,6 @@ function EditarBairroForm({ id }: { id: string }) {
         </RNModal>
       </Portal>
 
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
     </View>
   );
 }
@@ -526,11 +501,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     gap: 12,
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });
