@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
 import { Text, Surface, Avatar, Button, TextInput, Snackbar, Portal } from 'react-native-paper';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, ExternalLink, X, CheckSquare, Square } from 'lucide-react-native';
 
 import { solicitacaoService, DetalhesSolicitacaoItem } from '@/services/solicitacaoService';
@@ -63,14 +63,30 @@ export default function AnalisarSolicitacaoScreen() {
     return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
   };
 
-  useEffect(() => {
-    async function carregarDetalhes() {
+  // A tela fica montada na aba: ao trocar de pessoa ela zera os dados da anterior antes de carregar os da atual
+  useFocusEffect(
+    React.useCallback(() => {
       if (!id) return;
+      let ativo = true;
+
+      const limparTela = () => {
+        setAluno(null);
+        setModalAprovarVisible(false);
+        setModalReprovarVisible(false);
+        setDocMatriculaChecked(false);
+        setDocResidenciaChecked(false);
+        setDocFotoChecked(false);
+        setMotivoRecusa('');
+        setErroMotivo(false);
+        setToastVisible(false);
+      };
+
+      limparTela();
       setIsLoading(true);
-      try {
-        const dados = await solicitacaoService.obterDetalhes(Number(id));
-        setAluno(dados);
-      } catch (error: any) {
+      solicitacaoService.obterDetalhes(Number(id)).then((dados) => {
+        if (ativo) setAluno(dados);
+      }).catch((error: any) => {
+        if (!ativo) return;
         const msg = getErrorMessage(error, 'Erro ao carregar detalhes do aluno.');
         showPopup({
           type: 'error',
@@ -79,12 +95,16 @@ export default function AnalisarSolicitacaoScreen() {
           confirmText: 'Voltar',
           onConfirm: () => { closePopup(); router.replace('/(administrador)/solicitacoes'); },
         });
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    carregarDetalhes();
-  }, [id, router]);
+      }).finally(() => {
+        if (ativo) setIsLoading(false);
+      });
+
+      return () => {
+        ativo = false;
+        limparTela();
+      };
+    }, [id, router])
+  );
 
   const handleAprovar = async () => {
     setModalAprovarVisible(false);

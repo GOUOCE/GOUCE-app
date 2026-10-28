@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, TextInput, Avatar, Chip, Snackbar, useTheme } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -65,14 +65,6 @@ export default function FilaSolicitacoesScreen() {
       carregarSolicitacoes();
     }, [])
   );
-
-  useEffect(() => {
-    let isMounted = true;
-    solicitacaoService.listarSolicitacoes().then((lista) => {
-      if (isMounted) setSolicitacoes(lista);
-    }).catch((err) => console.warn('Erro ao carregar solicitações:', err));
-    return () => { isMounted = false; };
-  }, []);
 
   const getIniciais = (nome: string) => {
     if (!nome) return 'AL';
