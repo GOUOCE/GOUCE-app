@@ -146,6 +146,11 @@ def get_storage_service() -> MinioStorageService:
 admin_required = require_roles(CargoEnum.ADMINISTRADOR.value)
 
 
+def _usuario_executor_id(current_user: dict) -> Optional[int]:
+    user_id = current_user.get("current_user_id") or current_user.get("sub")
+    return int(user_id) if user_id is not None else None
+
+
 def is_admin_user(user: Optional[dict]) -> bool:
     if not user:
         return False
@@ -228,7 +233,7 @@ async def criar_onibus(
     service: OnibusService = Depends(get_service),
     arquivo_repository: SQLAlchemyArquivoRepository = Depends(get_arquivo_repository),
     storage_service: MinioStorageService = Depends(get_storage_service),
-    _: dict = Depends(admin_required),
+    current_user: dict = Depends(admin_required),
 ):
     try:
 
@@ -266,6 +271,7 @@ async def criar_onibus(
             capacidade_maxima=dto.capacidade_em_pe,
             apelido=dto.apelido,
             id_foto_onibus=foto_id,
+            usuario_executor_id=_usuario_executor_id(current_user),
         )
         return _montar_resposta_operacao(onibus, "Operação realizada com sucesso")
     except OnibusJaCadastradoError as error:
@@ -305,7 +311,7 @@ async def atualizar_onibus(
     service: OnibusService = Depends(get_service),
     arquivo_repository: SQLAlchemyArquivoRepository = Depends(get_arquivo_repository),
     storage_service: MinioStorageService = Depends(get_storage_service),
-    _: dict = Depends(admin_required),
+    current_user: dict = Depends(admin_required),
 ):
     try:
         dto = AtualizarOnibusDTO(
@@ -337,6 +343,7 @@ async def atualizar_onibus(
             apelido=dto.apelido,
             ativo=dto.ativo,
             id_foto_onibus=foto_id,
+            usuario_executor_id=_usuario_executor_id(current_user),
         )
         return _montar_resposta_operacao(onibus, "Operação realizada com sucesso")
     except OnibusNaoEncontradoError:
@@ -375,7 +382,7 @@ async def upload_foto_onibus(
     service: OnibusService = Depends(get_service),
     arquivo_repository: SQLAlchemyArquivoRepository = Depends(get_arquivo_repository),
     storage_service: MinioStorageService = Depends(get_storage_service),
-    _: dict = Depends(admin_required),
+    current_user: dict = Depends(admin_required),
 ):
     try:
         conteudo_foto = await foto.read()
@@ -389,6 +396,7 @@ async def upload_foto_onibus(
         onibus = service.atualizar(
             placa_atual=placa,
             id_foto_onibus=res_foto.id,
+            usuario_executor_id=_usuario_executor_id(current_user),
         )
         return _montar_resposta_operacao(onibus, "Foto do ônibus enviada com sucesso")
     except OnibusNaoEncontradoError:
@@ -417,12 +425,13 @@ async def upload_foto_onibus(
 async def remover_foto_onibus(
     placa: str,
     service: OnibusService = Depends(get_service),
-    _: dict = Depends(admin_required),
+    current_user: dict = Depends(admin_required),
 ):
     try:
         onibus = service.atualizar(
             placa_atual=placa,
             remover_foto=True,
+            usuario_executor_id=_usuario_executor_id(current_user),
         )
         return _montar_resposta_operacao(onibus, "Foto do ônibus removida com sucesso")
     except OnibusNaoEncontradoError:
@@ -452,11 +461,9 @@ async def ativar_onibus(
     service: OnibusService = Depends(get_service),
 ):
     try:
-        user_id = current_user.get("current_user_id") or current_user.get("sub")
-        usuario_executor_id = int(user_id) if user_id is not None else None
         onibus = service.ativar(
             placa=placa,
-            usuario_executor_id=usuario_executor_id,
+            usuario_executor_id=_usuario_executor_id(current_user),
         )
         return _montar_resposta_operacao(onibus, "Operação realizada com sucesso")
     except OnibusNaoEncontradoError:
@@ -486,11 +493,9 @@ async def inativar_onibus(
     service: OnibusService = Depends(get_service),
 ):
     try:
-        user_id = current_user.get("current_user_id") or current_user.get("sub")
-        usuario_executor_id = int(user_id) if user_id is not None else None
         onibus = service.inativar(
             placa=placa,
-            usuario_executor_id=usuario_executor_id,
+            usuario_executor_id=_usuario_executor_id(current_user),
         )
         return _montar_resposta_operacao(onibus, "Operação realizada com sucesso")
     except OnibusNaoEncontradoError:
