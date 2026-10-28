@@ -7,8 +7,9 @@ import { bairroService, BairroItem } from '../../services/bairroService';
 
 const renderer = jest.requireActual<any>('react-test-renderer');
 let mockId = '1';
+const mockReplace = jest.fn();
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ replace: jest.fn() }),
+  useRouter: () => ({ replace: mockReplace }),
   useLocalSearchParams: () => ({ id: mockId }),
   useFocusEffect: (effect: () => void) => jest.requireActual<typeof React>('react').useEffect(effect, [effect]),
 }));
@@ -27,6 +28,7 @@ const obter = bairroService.obterBairroPorId as jest.MockedFunction<typeof bairr
 let responder: (bairro: BairroItem) => void;
 beforeEach(() => {
   mockId = '1';
+  mockReplace.mockClear();
   obter.mockReset();
   obter.mockImplementation(() => new Promise(resolve => { responder = resolve; }));
 });
@@ -114,14 +116,14 @@ for (const Screen of telas) {
     expect(root.root.findAllByType('Text').some((item: any) => item.children.join('') === nome)).toBe(true);
     await renderer.act(async () => root.unmount());
   });
-  it(`${Screen.name}: finalizar com bairro longo mostra aviso em vez de permanecer sem resposta`, async () => {
+  it(`${Screen.name}: finalizar com bairro longo mostra erro no campo sem pop-up`, async () => {
     const root = await abrirTela(Screen, [{ id: 1, nome: 'Praça', ativo: true }]);
     const campo = root.root.findAllByType('TextInput').find((input: any) => input.props.label === 'Nome do Bairro *');
     await renderer.act(async () => { campo.props.onChangeText(nomeLongo); });
     const texto = Screen === EditarBairroScreen ? 'Salvar alterações' : 'Finalizar cadastro';
     await renderer.act(async () => { await botao(root, texto).props.onPress(); });
-    expect(root.root.findByType('Popup').props.title).toBe('Confira os dados do bairro');
-    expect(root.root.findByType('Popup').props.visible).toBe(true);
+    expect(root.root.findByType('Popup').props.visible).toBe(false);
+    expect(root.root.findAllByType('Text').some((item: any) => item.children.join('').includes('no máximo 100 caracteres'))).toBe(true);
     await renderer.act(async () => root.unmount());
   });
 }
@@ -130,7 +132,38 @@ it('exibe o erro de um ponto já carregado acima do limite e bloqueia salvar', a
   await renderer.act(async () => { await botao(root, 'Salvar alterações').props.onPress(); });
   const alertas = root.root.findAllByType('Text').filter((item: any) => item.props.accessibilityRole === 'alert');
   expect(alertas.some((item: any) => item.children.join('').includes('no máximo 100 caracteres'))).toBe(true);
-  expect(root.root.findByType('Popup').props.visible).toBe(true);
+  expect(root.root.findByType('Popup').props.visible).toBe(false);
   expect(bairroService.atualizarBairro).not.toHaveBeenCalled();
   await renderer.act(async () => root.unmount());
 });
+
+for (const Screen of telas) {
+  it.each(['onConfirm', 'onDismiss'])(`${Screen.name}: sucesso em pop-up permite sair pelo %s`, async (acao) => {
+    const bairro = { id: 1, nome: 'Centro', ativo: true, pontos: [{ id: 1, nome: 'Praça', ativo: true }] };
+    (bairroService.criarBairro as jest.MockedFunction<typeof bairroService.criarBairro>).mockResolvedValue(bairro);
+    (bairroService.atualizarBairro as jest.MockedFunction<typeof bairroService.atualizarBairro>).mockResolvedValue(bairro);
+    const root = await abrirTela(Screen, bairro.pontos);
+    if (Screen === CadastrarBairroScreen) {
+      const campo = root.root.findAllByType('TextInput').find((input: any) => input.props.label === 'Nome do Bairro *');
+      await renderer.act(async () => { campo.props.onChangeText('Centro'); });
+      await renderer.act(async () => { botao(root, 'Adicionar ponto de parada').props.onPress(); });
+      const ponto = root.root.findAllByType('TextInput').find((input: any) => input.props.label === 'Nome do Ponto *');
+      await renderer.act(async () => { ponto.props.onChangeText('Praça'); });
+      await renderer.act(async () => { botao(root, 'Adicionar').props.onPress(); });
+    }
+    await renderer.act(async () => { await botao(root, Screen === CadastrarBairroScreen ? 'Finalizar cadastro' : 'Salvar alterações').props.onPress(); });
+    if (Screen === CadastrarBairroScreen) {
+      await renderer.act(async () => { await root.root.findByType('Popup').props.onConfirm(); });
+    }
+    const popup = root.root.findByType('Popup');
+    expect(popup.props.visible).toBe(true);
+    expect(popup.props.type).toBe('success');
+    expect(popup.props.title).toBe('Operação realizada com sucesso');
+    expect(popup.props.confirmText).toBe('OK');
+    expect(root.root.findAllByType('Snackbar')).toHaveLength(0);
+    expect(mockReplace).not.toHaveBeenCalled();
+    await renderer.act(async () => { popup.props[acao](); });
+    expect(mockReplace).toHaveBeenCalledWith('/(administrador)/bairros');
+    await renderer.act(async () => root.unmount());
+  });
+}

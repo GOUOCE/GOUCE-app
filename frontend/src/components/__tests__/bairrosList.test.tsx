@@ -20,7 +20,7 @@ jest.mock('lucide-react-native', () => ({
   Trash2: 'Trash2', RotateCcw: 'RotateCcw', X: 'X',
 }));
 jest.mock('../../services/bairroService', () => ({
-  bairroService: { listarBairros: jest.fn(), inativarBairro: jest.fn() },
+  bairroService: { listarBairros: jest.fn(), inativarBairro: jest.fn(), reativarBairro: jest.fn() },
 }));
 jest.mock('../ui/AppPopup', () => ({
   AppPopup: (props: any) => jest.requireActual<typeof React>('react').createElement('Popup', props),
@@ -74,4 +74,26 @@ describe('Listagem de bairros — regressões do PR #253', () => {
     expect(root.root.findByType('Popup').props.message).toContain('Erro de conexão com o servidor');
     await renderer.act(async () => { root.unmount(); });
   });
+});
+
+it.each([true, false])('exibe pop-up de sucesso sem Snackbar ao alterar bairro ativo=%s', async (ativo) => {
+  const item = { ...bairro, ativo };
+  (bairroService.inativarBairro as jest.MockedFunction<typeof bairroService.inativarBairro>).mockResolvedValue(undefined);
+  (bairroService.reativarBairro as jest.MockedFunction<typeof bairroService.reativarBairro>).mockResolvedValue(undefined);
+  await renderer.act(async () => { root = renderer.create(<BairrosListScreen />); });
+  await renderer.act(async () => { responder([item]); });
+  if (!ativo) await renderer.act(async () => { root.root.findByType('Switch').props.onValueChange(true); });
+  const botao = root.root.findAllByType(TouchableOpacity)
+    .find((element: any) => element.findAllByType(ativo ? 'Trash2' : 'RotateCcw').length === 1);
+  await renderer.act(async () => { botao.props.onPress(); });
+  await renderer.act(async () => { await root.root.findByType('Popup').props.onConfirm(); });
+  const popup = root.root.findByType('Popup');
+  expect(popup.props.type).toBe('success');
+  expect(popup.props.title).toBe('Operação realizada com sucesso');
+  expect(popup.props.confirmText).toBe('OK');
+  expect(root.root.findAllByType('Snackbar')).toHaveLength(0);
+  await renderer.act(async () => { responder([{ ...item, ativo: !ativo }]); });
+  await renderer.act(async () => { popup.props.onDismiss(); });
+  expect(root.root.findByType('Popup').props.visible).toBe(false);
+  await renderer.act(async () => root.unmount());
 });

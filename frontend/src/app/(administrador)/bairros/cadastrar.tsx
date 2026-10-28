@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
-import { Text, TextInput, Button, Snackbar, Portal } from 'react-native-paper';
+import { Text, TextInput, Button, Portal } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, Trash2, X } from 'lucide-react-native';
+import { ChevronLeft, Trash2 } from 'lucide-react-native';
 
 import { bairroSchema, BairroFormData, pontoParadaSchema } from '@/schemas/bairroSchema';
 import { bairroService } from '@/services/bairroService';
@@ -20,9 +20,6 @@ export default function CadastrarBairroScreen() {
   const [erroPonto, setErroPonto] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Snackbar Toast
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -145,11 +142,13 @@ export default function CadastrarBairroScreen() {
         try {
           await bairroService.criarBairro(dados.nome, pontos);
           setIsLoading(false);
-          setSnackbarMessage('Bairro cadastrado com sucesso');
-          setSnackbarVisivel(true);
-          setTimeout(() => {
-            voltarParaListagem();
-          }, 1200);
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: 'Bairro cadastrado com sucesso.',
+            confirmText: 'OK',
+            onConfirm: voltarParaListagem,
+          });
         } catch (error: any) {
           setIsLoading(false);
           const msg = getErrorMessage(error, 'Erro ao cadastrar bairro.');
@@ -166,15 +165,6 @@ export default function CadastrarBairroScreen() {
 
   const mensagemErroPontos = errors.pontos?.message || (Array.isArray(errors.pontos)
     ? errors.pontos.find((erro) => erro?.message)?.message : undefined);
-
-  const onInvalid = () => {
-    showPopup({
-      type: 'error',
-      title: 'Confira os dados do bairro',
-      message: 'Revise os campos destacados. O nome do bairro deve ter de 3 a 100 caracteres, e cada ponto deve ter de 2 a 100 caracteres válidos.',
-      confirmText: 'Entendido',
-    });
-  };
 
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
@@ -195,7 +185,7 @@ export default function CadastrarBairroScreen() {
         confirmText={popup.confirmText}
         cancelText={popup.cancelText}
         onConfirm={popup.onConfirm}
-        onDismiss={closePopup}
+        onDismiss={popup.type === 'success' ? voltarParaListagem : closePopup}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -248,7 +238,7 @@ export default function CadastrarBairroScreen() {
         {/* Botão Finalizar Cadastro */}
         <Button
           mode="contained"
-          onPress={handleSubmit(onSubmit, onInvalid)}
+          onPress={handleSubmit(onSubmit)}
           loading={isLoading}
           disabled={isLoading}
           style={styles.saveButton}
@@ -295,19 +285,6 @@ export default function CadastrarBairroScreen() {
         </RNModal>
       </Portal>
 
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
     </View>
   );
 }
@@ -410,11 +387,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     gap: 12,
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });
