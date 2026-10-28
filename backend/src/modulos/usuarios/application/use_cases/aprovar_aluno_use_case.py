@@ -22,6 +22,21 @@ class AvaliacaoCadastroError(ValueError):
     """Recusa de regra de negócio na avaliação do cadastro; a mensagem já é própria para o administrador."""
 
 
+class CadastroForaDaFilaError(AvaliacaoCadastroError):
+    """Aprovar ou reprovar um cadastro que não está aguardando avaliação."""
+
+
+# HU-027: só entra na avaliação quem está na fila de solicitações; a renovação (HU-028) chega como analise_renovacao.
+STATUS_NA_FILA = {StatusCadastroEnum.PENDENTE.value, StatusCadastroEnum.ANALISE_RENOVACAO.value}
+STATUS_AVALIACAO = {StatusCadastroEnum.ATIVADO.value, StatusCadastroEnum.REJEITADO.value}
+
+SITUACAO_FORA_DA_FILA = {
+    StatusCadastroEnum.ATIVADO.value: "Este aluno já está com o cadastro aprovado.",
+    StatusCadastroEnum.REJEITADO.value: "Este aluno está com o cadastro rejeitado, aguardando o reenvio dos documentos.",
+    StatusCadastroEnum.INATIVADO.value: "Este aluno está com o acesso inativado.",
+}
+
+
 class AprovarAlunoUseCase:
     """
     Caso de uso para aprovação ou alteração do status de cadastro de um aluno.
@@ -64,6 +79,15 @@ class AprovarAlunoUseCase:
         aluno_existente = self.repository.buscar_aluno_por_id(aluno_id)
         if not aluno_existente:
             raise ValueError(f"Aluno com ID {aluno_id} não encontrado")
+
+        if status_str in STATUS_AVALIACAO:
+            status_atual = getattr(aluno_existente.status_cadastro, "value", aluno_existente.status_cadastro)
+            status_atual = str(status_atual).lower().strip()
+            if status_atual not in STATUS_NA_FILA:
+                situacao = SITUACAO_FORA_DA_FILA.get(status_atual, "Este cadastro não está aguardando avaliação.")
+                raise CadastroForaDaFilaError(
+                    f"{situacao} Só é possível aprovar ou reprovar cadastros na fila de solicitações."
+                )
 
         if status_str == StatusCadastroEnum.REJEITADO.value:
             # RN-012: o aluno rejeitado precisa ter ao menos um documento para corrigir e reenviar.

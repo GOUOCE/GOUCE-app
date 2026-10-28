@@ -54,6 +54,7 @@ from src.modulos.usuarios.application.use_cases.listar_usuarios_use_case import 
 from src.modulos.usuarios.application.use_cases.aprovar_aluno_use_case import (
     AprovarAlunoUseCase,
     AvaliacaoCadastroError,
+    CadastroForaDaFilaError,
 )
 from src.modulos.usuarios.application.use_cases.obter_perfil_aluno_use_case import ObterPerfilAlunoUseCase
 from src.modulos.usuarios.application.use_cases.redefinir_email_use_case import (
@@ -636,6 +637,9 @@ async def aprovar_aluno(
     except HTTPException:
         raise
 
+    except CadastroForaDaFilaError as error:
+        raise HTTPException(status_code=409, detail=str(error))
+
     except AvaliacaoCadastroError as error:
         raise HTTPException(status_code=400, detail=str(error))
 
@@ -734,6 +738,9 @@ async def atualizar_status_aluno(
 
     except HTTPException:
         raise
+
+    except CadastroForaDaFilaError as error:
+        raise HTTPException(status_code=409, detail=str(error))
 
     except AvaliacaoCadastroError as error:
         raise HTTPException(status_code=400, detail=str(error))

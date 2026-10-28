@@ -15,6 +15,7 @@ from src.modulos.usuarios.application.dtos.usuario_dto import AtualizarStatusAlu
 from src.modulos.usuarios.application.use_cases.aprovar_aluno_use_case import (
     AprovarAlunoUseCase,
     AvaliacaoCadastroError,
+    CadastroForaDaFilaError,
 )
 from src.modulos.usuarios.infrastructure.repositories.usuario_repository import (
     SQLAlchemyUsuarioRepository,
@@ -93,6 +94,54 @@ class AvaliacaoCadastroUseCaseTest(unittest.TestCase):
             repositorio.chamadas[0]["documentos_reenvio"],
             [{"tipo": "comprovante_matricula", "motivo": "Ilegível."}],
         )
+
+
+    def test_avaliar_quem_nao_esta_na_fila_e_recusado_e_nada_e_gravado(self):
+        # HU-027 (AC-02, AC-04): aprovar de novo renovava a validade e reprovar um ativo tirava o acesso dele.
+        for status_atual in ("ativado", "rejeitado", "inativado"):
+            for novo_status in ("ativado", "rejeitado"):
+                with self.subTest(status_atual=status_atual, novo_status=novo_status):
+                    repositorio = FakeRepositorio(status_cadastro=status_atual)
+
+                    with self.assertRaises(CadastroForaDaFilaError) as contexto:
+                        AprovarAlunoUseCase(repositorio).execute(
+                            4,
+                            novo_status,
+                            motivo_reprovacao="Cadastro com dados inconsistentes." if novo_status == "rejeitado" else None,
+                            documentos_reenvio=[DOCUMENTO_VALIDO] if novo_status == "rejeitado" else None,
+                        )
+
+                    self.assertIn("fila de solicitações", str(contexto.exception))
+                    self.assertEqual(repositorio.chamadas, [])
+                    self.assertEqual(repositorio.aluno.status_cadastro, status_atual)
+
+    def test_mensagem_diz_a_situacao_do_aluno(self):
+        casos = {
+            "ativado": "já está com o cadastro aprovado",
+            "rejeitado": "aguardando o reenvio dos documentos",
+            "inativado": "acesso inativado",
+        }
+        for status_atual, trecho in casos.items():
+            with self.subTest(status_atual=status_atual):
+                with self.assertRaises(CadastroForaDaFilaError) as contexto:
+                    AprovarAlunoUseCase(FakeRepositorio(status_cadastro=status_atual)).execute(4, "ativado")
+
+                self.assertIn(trecho, str(contexto.exception))
+
+    def test_quem_esta_na_fila_pode_ser_aprovado_ou_reprovado(self):
+        # A renovação da HU-028 chega como analise_renovacao e passa pela mesma avaliação.
+        for status_atual in ("pendente", "analise_renovacao"):
+            with self.subTest(status_atual=status_atual, novo_status="ativado"):
+                repositorio = FakeRepositorio(status_cadastro=status_atual)
+                AprovarAlunoUseCase(repositorio).execute(4, "ativado")
+                self.assertEqual(repositorio.aluno.status_cadastro, "ativado")
+
+            with self.subTest(status_atual=status_atual, novo_status="rejeitado"):
+                repositorio = FakeRepositorio(status_cadastro=status_atual)
+                AprovarAlunoUseCase(repositorio).execute(
+                    4, "rejeitado", motivo_reprovacao="Dados inconsistentes.", documentos_reenvio=[DOCUMENTO_VALIDO]
+                )
+                self.assertEqual(repositorio.aluno.status_cadastro, "rejeitado")
 
 
 class AvaliacaoCadastroDTOTest(unittest.TestCase):
@@ -189,6 +238,43 @@ class AvaliacaoCadastroRotasTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(corpo["status_cadastro"], "rejeitado")
         self.assertEqual(corpo["documentos_reenvio"], [DOCUMENTO_VALIDO])
         email.return_value.enviar_documentos_rejeitados.assert_called_once()
+
+    async def test_aprovar_aluno_fora_da_fila_devolve_409_sem_alterar_nem_enviar_e_mail(self):
+        for status_atual in ("ativado", "rejeitado"):
+            with self.subTest(status_atual=status_atual):
+                self.repositorio = FakeRepositorio(status_cadastro=status_atual)
+                with patch(f"{ROTAS_USUARIO}.get_email_service") as email:
+                    status, corpo = await self.patch("/usuarios/alunos/4/aprovar")
+
+                self.assertEqual(status, 409)
+                self.assertIn("fila de solicitações", corpo["detail"])
+                self.assertEqual(self.repositorio.chamadas, [])
+                self.assertEqual(self.repositorio.aluno.status_cadastro, status_atual)
+                email.assert_not_called()
+
+    async def test_reprovar_aluno_ativo_devolve_409_e_mantem_o_acesso(self):
+        self.repositorio = FakeRepositorio(status_cadastro="ativado")
+
+        with patch(f"{ROTAS_USUARIO}.get_email_service") as email:
+            status, corpo = await self.patch(
+                "/usuarios/alunos/4/status",
+                {
+                    "status_cadastro": "rejeitado",
+                    "motivo_reprovacao": "Cadastro com dados inconsistentes.",
+                    "documentos_reenvio": [DOCUMENTO_VALIDO],
+                },
+            )
+
+        self.assertEqual(status, 409)
+        self.assertIn("já está com o cadastro aprovado", corpo["detail"])
+        self.assertEqual(self.repositorio.aluno.status_cadastro, "ativado")
+        email.assert_not_called()
+
+    async def test_aluno_inexistente_continua_devolvendo_404(self):
+        status, corpo = await self.patch("/usuarios/alunos/999999/aprovar")
+
+        self.assertEqual(status, 404)
+        self.assertEqual(corpo["detail"], "Aluno não encontrado")
 
 
 if __name__ == "__main__":
