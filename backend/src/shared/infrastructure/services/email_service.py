@@ -144,3 +144,43 @@ class SMTPEmailService(IEmailService):
         # Sem uma configuração explícita de simulação, SMTP incompleto é falha.
         logger.warning("E-mail de recuperação não enviado: configuração indisponível")
         return False
+
+
+    def enviar_aprovacao_aluno(
+        self,
+        email_destino: str,
+        nome_usuario: str,
+    ) -> bool:
+        assunto = "Cadastro aprovado - GOUCE"
+
+        conteudo_texto = (
+            f"Olá {nome_usuario},\n\n"
+            "Seu cadastro no GOUCE foi aprovado!\n\n"
+            "Você já pode acessar a plataforma utilizando suas credenciais.\n\n"
+            "Acesse a plataforma:\n"
+            f"{self.app_url.rstrip('/')}\n\n"
+            "Atenciosamente,\n"
+            "Equipe GOUCE"
+        )
+
+        conteudo_html = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;
+                        border: 1px solid #e0e0e0; border-radius: 8px;">
+            <h2 style="color: #198754;">Cadastro aprovado!</h2>
+            <p>Olá <strong>{nome_usuario}</strong>,</p>
+            <p>Seu cadastro no <strong>GOUCE</strong> foi aprovado!</p>
+            <p>Você já pode acessar a plataforma utilizando suas credenciais.</p>
+            <p>Atenciosamente,<br>Equipe GOUCE</p>
+            </div>
+        </body>
+        </html>
+        """
+
+        return self._enviar_mensagem(
+            email_destino,
+            assunto,
+            conteudo_texto,
+            conteudo_html,
+        )
