@@ -314,6 +314,32 @@ class OnibusApiHttpTest(unittest.IsolatedAsyncioTestCase):
 
         return start["status"], decoded_body
 
+    async def test_regressao_limites_post_patch_sem_alterar_registro(self):
+        base = {"placa": "QAQ3J45", "assentos": 40, "capacidade_em_pe": 10}
+        status, _ = await self.asgi_request("/onibus", payload=base, method="POST")
+        self.assertEqual(status, 201)
+        for campo in ("assentos", "capacidade_em_pe"):
+            for valor in (2.5, 101, 883833333333):
+                for method, path in (("POST", "/onibus"), ("PATCH", "/onibus/QAQ3J45")):
+                    with self.subTest(campo=campo, valor=valor, method=method):
+                        status, body = await self.asgi_request(path, payload={**base, campo: valor}, method=method)
+                        self.assertEqual(status, 422)
+                        self.assertTrue(body["error"]["details"])
+                        if valor >= 101:
+                            self.assertIn("no máximo 100", body["error"]["details"][0]["message"])
+        status, body = await self.asgi_request("/onibus/QAQ3J45")
+        self.assertEqual(status, 200)
+        self.assertEqual(body["assentos"], 40)
+        self.assertEqual(body["capacidade_em_pe"], 10)
+
+    async def test_limite_100_em_cada_campo_post_patch(self):
+        status, body = await self.asgi_request("/onibus", payload={"placa": "CEM1234", "assentos": 100, "capacidade_em_pe": 100}, method="POST")
+        self.assertEqual(status, 201)
+        status, body = await self.asgi_request("/onibus/CEM1234", payload={"assentos": 100, "capacidade_em_pe": 100}, method="PATCH")
+        self.assertEqual(status, 200)
+        self.assertEqual(body["data"]["assentos"], 100)
+        self.assertEqual(body["data"]["capacidade_em_pe"], 100)
+
     async def test_criar_onibus_api_201(self):
         payload = {
             "placa": "RIO-2A18",

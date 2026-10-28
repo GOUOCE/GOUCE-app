@@ -86,3 +86,12 @@ describe('getErrorMessage', () => {
     }
   });
 });
+
+it('identifica os campos de frota em português e remove repetições do mesmo campo', () => {
+  const message = getErrorMessage({ response: { data: { error: { details: [
+    { field: 'assentos', message: 'Informe um número válido.' },
+    { field: 'capacidade_em_pe', message: 'Informe um número válido.' },
+    { field: 'assentos', message: 'Informe um número válido.' },
+  ] } } } });
+  expect(message).toBe('Quantidade de assentos: Informe um número válido.\nCapacidade em pé: Informe um número válido.');
+});
