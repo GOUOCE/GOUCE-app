@@ -1,4 +1,12 @@
-def validation_details(errors: list[dict]) -> list[dict]:
+def validation_details(
+    errors: list[dict],
+    mensagens: dict[str, dict[str, str]] | None = None,
+) -> list[dict]:
+    """Traduz os erros do Pydantic.
+
+    ``mensagens`` permite a cada módulo definir o texto de um campo para um tipo
+    de erro (``{"campo": {"tipo_do_erro": "mensagem"}}``), antes das regras gerais.
+    """
     details = []
 
     aliases = {
@@ -21,17 +29,26 @@ def validation_details(errors: list[dict]) -> list[dict]:
 
         details.append({
             "field": field,
-            "message": validation_message(error, field),
+            "message": validation_message(error, field, mensagens),
         })
 
     return details
 
 
 
-def validation_message(error: dict, field: str | None) -> str:
+def validation_message(
+    error: dict,
+    field: str | None,
+    mensagens: dict[str, dict[str, str]] | None = None,
+) -> str:
     error_type = error.get("type")
     context = error.get("ctx") or {}
     msg_customizada = error.get("msg") or ""
+
+    # Mensagem definida pelo módulo para este campo e tipo de erro.
+    mensagem_do_modulo = ((mensagens or {}).get(field) or {}).get(error_type)
+    if mensagem_do_modulo:
+        return mensagem_do_modulo
 
     # Remove o prefixo adicionado pelo Pydantic aos ValueError.
     if msg_customizada.startswith("Value error, "):
