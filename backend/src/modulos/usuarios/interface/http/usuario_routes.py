@@ -51,7 +51,10 @@ from src.modulos.usuarios.application.use_cases.criar_usuario_use_case import (
 from src.modulos.crud_basicos.infrastructure.repositories.bairro_repository import BairroRepository
 from src.modulos.crud_basicos.infrastructure.repositories.faculdade_repository import FaculdadeRepository
 from src.modulos.usuarios.application.use_cases.listar_usuarios_use_case import ListarUsuariosUseCase
-from src.modulos.usuarios.application.use_cases.aprovar_aluno_use_case import AprovarAlunoUseCase
+from src.modulos.usuarios.application.use_cases.aprovar_aluno_use_case import (
+    AprovarAlunoUseCase,
+    AvaliacaoCadastroError,
+)
 from src.modulos.usuarios.application.use_cases.obter_perfil_aluno_use_case import ObterPerfilAlunoUseCase
 from src.modulos.usuarios.application.use_cases.redefinir_email_use_case import (
     RedefinirEmailUseCase,
@@ -633,6 +636,9 @@ async def aprovar_aluno(
     except HTTPException:
         raise
 
+    except AvaliacaoCadastroError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+
     except ValueError as error:
         if "não encontrado" in str(error).lower():
             raise HTTPException(
@@ -728,6 +734,9 @@ async def atualizar_status_aluno(
 
     except HTTPException:
         raise
+
+    except AvaliacaoCadastroError as error:
+        raise HTTPException(status_code=400, detail=str(error))
 
     except ValueError as error:
         if "não encontrado" in str(error).lower():

@@ -18,6 +18,10 @@ def somar_meses(data: datetime, meses: int) -> datetime:
     return data.replace(year=ano, month=mes, day=dia)
 
 
+class AvaliacaoCadastroError(ValueError):
+    """Recusa de regra de negócio na avaliação do cadastro; a mensagem já é própria para o administrador."""
+
+
 class AprovarAlunoUseCase:
     """
     Caso de uso para aprovação ou alteração do status de cadastro de um aluno.
@@ -62,9 +66,10 @@ class AprovarAlunoUseCase:
             raise ValueError(f"Aluno com ID {aluno_id} não encontrado")
 
         if status_str == StatusCadastroEnum.REJEITADO.value:
+            # RN-012: o aluno rejeitado precisa ter ao menos um documento para corrigir e reenviar.
             documentos = self.repository.normalizar_documentos_reenvio(documentos_reenvio)
-            if not documentos and not motivo_reprovacao:
-                raise ValueError("É necessário informar ao menos um documento para reenvio ou o motivo da rejeição.")
+            if not documentos:
+                raise AvaliacaoCadastroError("Informe ao menos um documento para o aluno reenviar, com o motivo.")
         else:
             documentos = None
 

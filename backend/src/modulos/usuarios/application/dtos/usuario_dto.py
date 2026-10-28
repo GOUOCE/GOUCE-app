@@ -106,7 +106,8 @@ class DocumentoReenvioRespostaDTO(BaseModel):
 
 
 class DocumentoReenvioSolicitadoDTO(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    # Sem o strip, um motivo só com espaços passava pelo min_length e era descartado em silêncio depois.
+    model_config = ConfigDict(populate_by_name=True, str_strip_whitespace=True)
 
     tipo: TipoDocumentoReenvioEnum = Field(
         description="Tipo do documento que deve ser reenviado pelo aluno.",
