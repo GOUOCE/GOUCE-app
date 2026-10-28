@@ -39,6 +39,20 @@ from src.shared.http.validation import validation_details
 from src.shared.infrastructure.db import get_session
 
 
+MENSAGENS_VALIDACAO = {
+    "placa": {"missing": "A placa do veículo é obrigatória."},
+    "assentos": {
+        "missing": "A quantidade de assentos é obrigatória.",
+        "greater_than": "A quantidade de assentos deve ser maior que zero.",
+        "greater_than_equal": "A quantidade de assentos deve ser maior que zero.",
+    },
+    "capacidade_em_pe": {
+        "missing": "A capacidade em pé é obrigatória.",
+        "greater_than_equal": "A capacidade em pé não pode ser negativa.",
+    },
+}
+
+
 def _error_response(status_code: int, code: str, message: str, details=None):
     error = {"code": code, "message": message}
     if details is not None:
@@ -92,7 +106,7 @@ class OnibusValidationRoute(APIRoute):
                     422,
                     "REQUEST_VALIDATION_ERROR",
                     "Requisição inválida",
-                    validation_details(error.errors()),
+                    validation_details(error.errors(), MENSAGENS_VALIDACAO),
                 )
             except HTTPException as error:
                 code_by_status = {

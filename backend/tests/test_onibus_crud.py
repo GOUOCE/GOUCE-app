@@ -458,6 +458,21 @@ class OnibusApiHttpTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual({log.usuario_id for log in logs}, {self.fake_admin["current_user_id"]})
 
+    async def test_validacao_de_frota_devolve_motivo_em_portugues(self):
+        base = {"placa": "VAL-1A11", "assentos": 30, "capacidade_em_pe": 10}
+        casos = [
+            ({**base, "assentos": -1}, "assentos", "A quantidade de assentos deve ser maior que zero."),
+            ({**base, "capacidade_em_pe": -1}, "capacidade_em_pe", "A capacidade em pé não pode ser negativa."),
+            ({k: v for k, v in base.items() if k != "placa"}, "placa", "A placa do veículo é obrigatória."),
+            ({k: v for k, v in base.items() if k != "assentos"}, "assentos", "A quantidade de assentos é obrigatória."),
+        ]
+        for payload, campo, mensagem in casos:
+            with self.subTest(campo=campo, mensagem=mensagem):
+                status, body = await self.asgi_request("/onibus", payload=payload, method="POST")
+                self.assertEqual(status, 422)
+                self.assertEqual(body["error"]["details"], [{"field": campo, "message": mensagem}])
+        self.assertEqual(self.session.query(OnibusORM).count(), 0)
+
     async def test_bloqueio_403_para_nao_admin(self):
         user_aluno = {
             "sub": "2",

@@ -256,6 +256,26 @@ class GerenciamentoRepresentantesTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(status, 422)
         self.assertIn("Aluno não aprovado ou inativo", body["error"]["message"])
 
+    async def test_promocao_validacao_devolve_motivo_em_portugues(self):
+        instituicao = "Informe a instituição de ensino."
+        aluno = "Informe o aluno que será promovido a representante."
+        casos = [
+            ({"aluno_id": 6}, "faculdade_id", instituicao),
+            ({"aluno_id": 6, "faculdade_id": None}, "faculdade_id", instituicao),
+            ({"aluno_id": 6, "faculdade_id": 0}, "faculdade_id", instituicao),
+            ({"aluno_id": 6, "faculdade_id": -1}, "faculdade_id", instituicao),
+            ({"faculdade_id": 1}, "aluno_id", aluno),
+            ({"aluno_id": None, "faculdade_id": 1}, "aluno_id", aluno),
+            ({"aluno_id": 0, "faculdade_id": 1}, "aluno_id", "Informe um aluno válido."),
+            ({"aluno_id": -1, "faculdade_id": 1}, "aluno_id", "Informe um aluno válido."),
+        ]
+        for payload, campo, mensagem in casos:
+            with self.subTest(payload=payload):
+                status, body = await self.asgi_request("/representantes/promover", payload=payload, method="POST")
+                self.assertEqual(status, 422)
+                self.assertEqual(body["error"]["details"], [{"field": campo, "message": mensagem}])
+        self.assertEqual(self.session.query(RepresentanteORM).count(), 0)
+
     async def test_promocao_aluno_com_validade_de_acesso_vencida(self):
         usuario, aluno = self._criar_aluno()
         aluno.validade_acesso = datetime.now(timezone.utc) - timedelta(days=30)
