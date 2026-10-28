@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, TextInput, Button, Snackbar } from 'react-native-paper';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft, Building2, X } from 'lucide-react-native';
@@ -26,6 +26,8 @@ export default function EditarFaculdadeScreen() {
     title: string;
     message: string;
     confirmText?: string;
+    cancelText?: string;
+    confirmColor?: string;
     onConfirm?: () => void;
   }>({
     visible: false,
@@ -41,7 +43,7 @@ export default function EditarFaculdadeScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const { control, handleSubmit, formState: { errors }, reset } = useForm<FaculdadeFormData>({
+  const { control, handleSubmit, formState: { errors, isDirty }, reset } = useForm<FaculdadeFormData>({
     resolver: zodResolver(faculdadeSchema),
     defaultValues: {
       nome: '',
@@ -50,24 +52,55 @@ export default function EditarFaculdadeScreen() {
     },
   });
 
-  useEffect(() => {
-    async function carregarDados() {
-      if (!id) return;
-      try {
-        const f = await faculdadeService.obterFaculdadePorId(Number(id));
-        if (f) {
-          reset({
-            nome: f.nome,
-            sigla: f.sigla,
-            campus: f.campus,
-          });
+  // Recarrega os dados oficiais do banco de dados ao ganhar foco e descarta alterações não salvas ao sair
+  useFocusEffect(
+    React.useCallback(() => {
+      let isMounted = true;
+
+      async function carregarDadosOficiais() {
+        if (!id) return;
+        try {
+          const f = await faculdadeService.obterFaculdadePorId(Number(id));
+          if (f && isMounted) {
+            reset({
+              nome: f.nome,
+              sigla: f.sigla,
+              campus: f.campus,
+            });
+          }
+        } catch (err) {
+          console.warn('Erro ao carregar dados da faculdade:', err);
         }
-      } catch (err) {
-        console.warn('Erro ao carregar dados da faculdade:', err);
       }
+
+      carregarDadosOficiais();
+
+      return () => {
+        isMounted = false;
+      };
+    }, [id, reset])
+  );
+
+  const voltarParaListagem = () => {
+    closePopup();
+    router.replace('/(administrador)/faculdades');
+  };
+
+  const handleBack = () => {
+    if (isDirty) {
+      showPopup({
+        type: 'warning',
+        title: 'Sair desta tela?',
+        message: 'As alterações não salvas serão perdidas.',
+        confirmText: 'Sim, sair',
+        cancelText: 'Continuar aqui',
+        confirmColor: '#B00020',
+        onConfirm: voltarParaListagem,
+      });
+    } else {
+      voltarParaListagem();
     }
-    carregarDados();
-  }, [id, reset]);
+  };
 
   const onSubmit = async (dados: FaculdadeFormData) => {
     if (!id) return;
@@ -78,7 +111,7 @@ export default function EditarFaculdadeScreen() {
       setSnackbarMessage('Faculdade alterada com sucesso');
       setSnackbarVisivel(true);
       setTimeout(() => {
-        router.replace('/(administrador)/faculdades');
+        voltarParaListagem();
       }, 1200);
     } catch (error: any) {
       setIsLoading(false);
@@ -96,7 +129,7 @@ export default function EditarFaculdadeScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={handleBack}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Editar Faculdade</Text>
@@ -109,6 +142,8 @@ export default function EditarFaculdadeScreen() {
         title={popup.title}
         message={popup.message}
         confirmText={popup.confirmText}
+        cancelText={popup.cancelText}
+        confirmColor={popup.confirmColor}
         onConfirm={popup.onConfirm}
         onDismiss={closePopup}
       />

@@ -26,7 +26,7 @@ def renovacao_dto() -> RenovacaoVinculoDTO:
         transgenero="Não",
         tem_filhos=False,
         telefone="85999990000",
-        bairro_id="Centro",
+        bairro_id="1",
         faculdade_id=1,
         curso="Engenharia de Software",
         periodo_ingresso="2024.1",

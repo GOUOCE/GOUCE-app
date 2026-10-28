@@ -6,6 +6,7 @@ from sqlalchemy import inspect, or_, text
 from src.modulos.usuarios.model.entities.aluno import AlunoORM
 from src.modulos.usuarios.model.entities.usuario import UsuarioORM
 from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
+from src.modulos.crud_basicos.domain.entities.bairro import BairroORM
 from src.modulos.usuarios.model.entities.tipo import TipoORM
 from src.modulos.usuarios.model.entities.usuario_tipo import UsuarioTipoORM
 from src.shared.enums.cargo_enum import CargoEnum
@@ -25,6 +26,16 @@ class EmailDuplicadoError(CadastroDuplicadoError):
 class SQLAlchemyUsuarioRepository:
     def __init__(self, session: Session):
         self.session = session
+
+    def bairro_ativo_existe(self, bairro_id: int) -> bool:
+        return self.session.query(BairroORM.bairro_id).filter(
+            BairroORM.bairro_id == bairro_id, BairroORM.ativo.is_(True)
+        ).first() is not None
+
+    def faculdade_ativa_existe(self, faculdade_id: int) -> bool:
+        return self.session.query(FaculdadeORM.id_faculdade).filter(
+            FaculdadeORM.id_faculdade == faculdade_id, FaculdadeORM.ativo.is_(True)
+        ).first() is not None
 
     @staticmethod
     def _normalizar_valor(valor) -> str | None:
