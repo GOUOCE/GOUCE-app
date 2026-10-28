@@ -77,7 +77,7 @@ export default function AnalisarSolicitacaoScreen() {
           title: 'Erro',
           message: msg,
           confirmText: 'Voltar',
-          onConfirm: () => { closePopup(); router.back(); },
+          onConfirm: () => { closePopup(); router.replace('/(administrador)/solicitacoes'); },
         });
       } finally {
         setIsLoading(false);
@@ -179,7 +179,7 @@ export default function AnalisarSolicitacaoScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.replace('/(administrador)/solicitacoes')}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Analisar Solicitação</Text>
@@ -230,7 +230,7 @@ export default function AnalisarSolicitacaoScreen() {
             <View style={styles.infoItem}>
               <Text variant="labelSmall" style={styles.infoLabel}>Instituição - Campus</Text>
               <Text variant="bodyMedium" style={styles.infoValue}>
-                {aluno?.faculdade_id || 'UFC'} - {aluno?.campus || 'Quixadá'}
+                {aluno?.instituicao || '-'}
               </Text>
             </View>
             <View style={styles.infoItem}>
