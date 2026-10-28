@@ -1,31 +1,69 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
-import { TextInput, Text, useTheme, Portal } from 'react-native-paper';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, TouchableOpacity, Modal, FlatList } from 'react-native';
+import { Text, TextInput, Portal } from 'react-native-paper';
 import { useFormContext, Controller } from 'react-hook-form';
-import { ChevronDown, Phone, School, GraduationCap, Search, X } from 'lucide-react-native';
+import { ChevronDown, Phone, School, Search, X } from 'lucide-react-native';
 import { formatarCelular } from '../../utils/formatarTelefone';
-import { abreviarParaLargura } from '../../utils/abreviarTexto';
+import { bairroService } from '../../services/bairroService';
+import { faculdadeService } from '../../services/faculdadeService';
 
-interface SelectInputProps {
+function abreviarParaLargura(texto: string, larguraTotal: number, espacoOutrosCampos: number): string {
+  if (!texto) return '';
+  const larguraDisponivel = larguraTotal - espacoOutrosCampos;
+  if (larguraDisponivel <= 0) return texto;
+  const limiteEstimado = Math.max(12, Math.floor(larguraDisponivel / 8.5));
+  if (texto.length <= limiteEstimado) return texto;
+
+  const substituicoes: [RegExp, string][] = [
+    [/Universidade Federal do Ceará/gi, 'UFC'],
+    [/Universidade Estadual do Ceará/gi, 'UECE'],
+    [/Instituto Federal do Ceará/gi, 'IFCE'],
+    [/Universidade da Integração Internacional da Lusofonia Afro-Brasileira/gi, 'UNILAB'],
+    [/Engenharia de Software/gi, 'Eng. de Software'],
+    [/Engenharia de Computação/gi, 'Eng. de Computação'],
+    [/Análise e Desenvolvimento de Sistemas/gi, 'ADS'],
+    [/Sistemas de Informação/gi, 'Sist. de Informação'],
+    [/Ciência da Computação/gi, 'Ciência da Comp.'],
+    [/Licenciatura em/gi, 'Lic.'],
+    [/Bacharelado em/gi, 'Bach.'],
+  ];
+
+  let r = texto;
+  for (const [padrao, sigla] of substituicoes) {
+    if (r.length <= limiteEstimado) break;
+    r = r.replace(padrao, sigla);
+  }
+
+  if (r.length <= limiteEstimado) return r;
+
+  const partes = r.split(' - ');
+  if (partes.length === 2 && partes[0].length > 15) {
+    r = `${partes[0].slice(0, 12)}... - ${partes[1]}`;
+  }
+
+  return r;
+}
+
+interface CustomSelectProps {
   label: string;
   value: string;
   options: string[];
-  onSelect: (val: string) => void;
+  onSelect: (value: string) => void;
   error?: boolean;
   leftIcon?: React.ReactNode;
   searchable?: boolean;
 }
 
-function CustomSelect({ label, value, options, onSelect, error, leftIcon, searchable }: SelectInputProps) {
+function CustomSelect({ label, value, options, onSelect, error, leftIcon, searchable = true }: CustomSelectProps) {
   const [visible, setVisible] = useState(false);
-  const [largura, setLargura] = useState(0);
-  const texto = value || 'Selecionar';
   const [searchQuery, setSearchQuery] = useState('');
-  const theme = useTheme();
+  const [largura, setLargura] = useState(0);
 
-  const filteredOptions = searchable && searchQuery.trim()
-    ? options.filter((opt) => opt.toLowerCase().includes(searchQuery.toLowerCase().trim()))
-    : options;
+  const optionsFiltradas = options.filter(opt =>
+    opt.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const texto = value || `Selecione ${label.replace(' *', '').toLowerCase()}`;
 
   return (
     <View style={styles.selectContainer}>
@@ -80,34 +118,27 @@ function CustomSelect({ label, value, options, onSelect, error, leftIcon, search
                 </View>
               )}
 
-              <ScrollView
-                style={styles.optionsScroll}
-                contentContainerStyle={styles.optionsScrollContent}
-                showsVerticalScrollIndicator={true}
-                keyboardShouldPersistTaps="handled"
-                nestedScrollEnabled={true}
-              >
-                {filteredOptions.length > 0 ? (
-                  filteredOptions.map((opt) => (
-                    <TouchableOpacity
-                      key={opt}
-                      style={styles.optionItem}
-                      onPress={() => { onSelect(opt); setVisible(false); setSearchQuery(''); }}
-                    >
-                      <Text variant="bodyLarge" style={[
-                        styles.optionText,
-                        value === opt && { color: theme.colors.primary, fontWeight: 'bold' }
-                      ]}>
-                        {opt}
-                      </Text>
-                    </TouchableOpacity>
-                  ))
-                ) : (
-                  <View style={styles.noResultsBox}>
-                    <Text variant="bodyMedium" style={{ color: '#888' }}>Nenhuma opção encontrada</Text>
-                  </View>
+              <FlatList
+                data={optionsFiltradas}
+                keyExtractor={(item) => item}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[styles.optionItem, item === value && styles.optionSelected]}
+                    onPress={() => {
+                      onSelect(item);
+                      setVisible(false);
+                      setSearchQuery('');
+                    }}
+                  >
+                    <Text style={[styles.optionText, item === value && styles.optionTextSelected]}>
+                      {item}
+                    </Text>
+                  </TouchableOpacity>
                 )}
-              </ScrollView>
+                ListEmptyComponent={
+                  <Text style={styles.emptyText}>Nenhuma opção encontrada.</Text>
+                }
+              />
             </TouchableOpacity>
           </TouchableOpacity>
         </Modal>
@@ -116,26 +147,26 @@ function CustomSelect({ label, value, options, onSelect, error, leftIcon, search
   );
 }
 
-const LISTA_DE_CURSOS = [
+const CURSOS_SUGERIDOS = [
   'Engenharia de Software',
+  'Engenharia de Computação',
+  'Análise e Desenvolvimento de Sistemas',
   'Sistemas de Informação',
   'Ciência da Computação',
-  'Engenharia de Computação',
   'Design Digital',
   'Redes de Computadores',
-  'Medicina',
-  'Enfermagem',
-  'Odontologia',
-  'Direito',
-  'Administração',
-  'Ciências Contábeis',
-  'Pedagogia',
-  'Psicologia',
-  'Agronomia',
-  'Zootecnia',
   'Engenharia Civil',
   'Engenharia Elétrica',
   'Engenharia Mecânica',
+  'Engenharia de Produção',
+  'Medicina',
+  'Enfermagem',
+  'Odontologia',
+  'Psicologia',
+  'Direito',
+  'Administração',
+  'Contabilidade',
+  'Pedagogia',
   'Licenciatura em Matemática',
   'Licenciatura em Física',
   'Licenciatura em Química',
@@ -150,14 +181,34 @@ const LISTA_DE_CURSOS = [
 
 export function Passo3ContatoVinculo() {
   const { control, formState: { errors }, watch, setValue } = useFormContext();
-  // Enquanto o campo está em foco, mostra só os dígitos (dá para apagar e editar
-  // em qualquer posição); a máscara é aplicada ao sair do campo. Reformatar a cada
-  // tecla impedia apagar no meio do número e fazia o cursor pular para o final.
   const [editandoTelefone, setEditandoTelefone] = useState(false);
+
+  const [bairrosOpcoes, setBairrosOpcoes] = useState<string[]>(['Centro', 'Bairro Novo', 'Outro']);
+  const [faculdadesOpcoes, setFaculdadesOpcoes] = useState<string[]>(['UFC - Campus Quixadá', 'IFCE - Campus Quixadá', 'Outra']);
 
   const cursoSelecionado = watch('curso');
   const instituicaoSelecionada = watch('instituicao');
   const bairroSelecionado = watch('bairro');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    bairroService.listarBairros().then((lista) => {
+      if (isMounted && lista && lista.length > 0) {
+        const ativas = lista.filter((b) => b.ativo !== false).map((b) => b.nome);
+        setBairrosOpcoes(Array.from(new Set([...ativas, 'Outro'])));
+      }
+    }).catch(() => {});
+
+    faculdadeService.listarFaculdades().then((lista) => {
+      if (isMounted && lista && lista.length > 0) {
+        const ativas = lista.filter((f) => f.ativo !== false).map((f) => `${f.sigla} - ${f.campus}`);
+        setFaculdadesOpcoes(Array.from(new Set([...ativas, 'Outra'])));
+      }
+    }).catch(() => {});
+
+    return () => { isMounted = false; };
+  }, []);
 
   const gerarPeriodosIngresso = () => {
     const anoAtual = new Date().getFullYear();
@@ -178,7 +229,7 @@ export function Passo3ContatoVinculo() {
           <CustomSelect
             label="Bairro / Localidade *"
             value={value}
-            options={['Centro', 'Croatá', 'Bairro Novo', 'Planalto', 'Serra', 'Outro']}
+            options={bairrosOpcoes}
             onSelect={(val) => {
               onChange(val);
               if (val !== 'Outro') setValue('bairroEspecifico', '');
@@ -239,7 +290,7 @@ export function Passo3ContatoVinculo() {
           <CustomSelect
             label="Instituição de Ensino *"
             value={value}
-            options={['UFC - Universidade Federal do Ceará', 'IFCE', 'UNILAB', 'Estácio', 'Outra']}
+            options={faculdadesOpcoes}
             onSelect={(val) => {
               onChange(val);
               if (val !== 'Outra') setValue('instituicaoEspecifica', '');
@@ -279,14 +330,12 @@ export function Passo3ContatoVinculo() {
           <CustomSelect
             label="Curso *"
             value={value}
-            options={LISTA_DE_CURSOS}
+            options={CURSOS_SUGERIDOS}
             onSelect={(val) => {
               onChange(val);
               if (val !== 'Outro') setValue('cursoEspecifico', '');
             }}
             error={!!errors.curso}
-            searchable={true}
-            leftIcon={<GraduationCap size={20} color="#666" />}
           />
         )}
       />
@@ -313,87 +362,77 @@ export function Passo3ContatoVinculo() {
         <Text style={styles.errorText}>{errors.cursoEspecifico.message as string}</Text>
       )}
 
-      <View style={styles.row}>
-        <View style={styles.half}>
-          <Controller
-            control={control}
-            name="campus"
-            render={({ field: { onChange, value } }) => (
-              <CustomSelect
-                label="Campus *"
-                value={value}
-                options={['Quixadá', 'Redenção', 'Fortaleza', 'Itapipoca', 'Russas']}
-                onSelect={onChange}
-                error={!!errors.campus}
-              />
-            )}
+      <Controller
+        control={control}
+        name="periodoIngresso"
+        render={({ field: { onChange, value } }) => (
+          <CustomSelect
+            label="Semestre / Ano de Ingresso *"
+            value={value}
+            options={gerarPeriodosIngresso()}
+            onSelect={onChange}
+            error={!!errors.periodoIngresso}
+            searchable={false}
           />
-          {errors.campus && <Text style={styles.errorText}>{errors.campus.message as string}</Text>}
-        </View>
-
-        <View style={styles.half}>
-          <Controller
-            control={control}
-            name="periodoIngresso"
-            render={({ field: { onChange, value } }) => (
-              <CustomSelect
-                label="Período de Ingresso *"
-                value={value}
-                options={gerarPeriodosIngresso()}
-                onSelect={onChange}
-                error={!!errors.periodoIngresso}
-              />
-            )}
-          />
-          {errors.periodoIngresso && <Text style={styles.errorText}>{errors.periodoIngresso.message as string}</Text>}
-        </View>
-      </View>
-
-      <View style={styles.row}>
-        <View style={styles.half}>
-          <Controller
-            control={control}
-            name="turno"
-            render={({ field: { onChange, value } }) => (
-              <CustomSelect
-                label="Turno do Curso *"
-                value={value}
-                options={['Matutino', 'Vespertino', 'Noturno', 'Integral']}
-                onSelect={onChange}
-                error={!!errors.turno}
-              />
-            )}
-          />
-          {errors.turno && <Text style={styles.errorText}>{errors.turno.message as string}</Text>}
-        </View>
-
-        <View style={styles.half}>
-          <Controller
-            control={control}
-            name="semestreAtual"
-            render={({ field: { onChange, value } }) => (
-              <CustomSelect
-                label="Semestre Atual *"
-                value={value}
-                options={['1º', '2º', '3º', '4º', '5º', '6º', '7º', '8º', '9º', '10º', '11º', '12º', '13º', '14º', '15º', '16º']}
-                onSelect={onChange}
-                error={!!errors.semestreAtual}
-              />
-            )}
-          />
-          {errors.semestreAtual && <Text style={styles.errorText}>{errors.semestreAtual.message as string}</Text>}
-        </View>
-      </View>
+        )}
+      />
+      {errors.periodoIngresso && <Text style={styles.errorText}>{errors.periodoIngresso.message as string}</Text>}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    gap: 12,
+    gap: 16,
   },
   selectContainer: {
-    marginBottom: 4,
+    width: '100%',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    width: '100%',
+    maxHeight: '80%',
+    padding: 16,
+  },
+  modalTitle: {
+    marginBottom: 12,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  searchBox: {
+    marginBottom: 12,
+  },
+  searchInput: {
+    backgroundColor: '#fff',
+  },
+  optionItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  optionSelected: {
+    backgroundColor: '#e3f2fd',
+  },
+  optionText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  optionTextSelected: {
+    color: '#1976d2',
+    fontWeight: 'bold',
+  },
+  emptyText: {
+    textAlign: 'center',
+    color: '#888',
+    marginVertical: 16,
   },
   input: {
     backgroundColor: '#fff',
@@ -401,63 +440,7 @@ const styles = StyleSheet.create({
   errorText: {
     color: 'red',
     fontSize: 12,
-    marginLeft: 4,
-    flexShrink: 1,
-    flexWrap: 'wrap',
-  },
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  half: {
-    flex: 1,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    width: '100%',
-    paddingTop: 16,
-    paddingBottom: 8,
-    maxHeight: '80%',
-    overflow: 'hidden',
-  },
-  modalTitle: {
-    paddingHorizontal: 24,
-    paddingBottom: 12,
-    fontWeight: 'bold',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  searchBox: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  searchInput: {
-    backgroundColor: '#FFF',
-  },
-  optionsScroll: {
-    flexGrow: 0,
-    flexShrink: 1,
-  },
-  optionsScrollContent: {
-    paddingBottom: 16,
-  },
-  optionItem: {
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-  },
-  optionText: {
-    color: '#333',
-  },
-  noResultsBox: {
-    padding: 24,
-    alignItems: 'center',
+    marginTop: -8,
+    marginBottom: 4,
   },
 });

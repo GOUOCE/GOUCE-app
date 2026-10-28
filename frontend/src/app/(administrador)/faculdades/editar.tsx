@@ -54,6 +54,7 @@ export default function EditarFaculdadeScreen() {
   useFocusEffect(
     React.useCallback(() => {
       let isMounted = true;
+      reset({ nome: '', sigla: '', campus: '' });
 
       async function carregarDadosOficiais() {
         if (!id) return;
@@ -81,6 +82,7 @@ export default function EditarFaculdadeScreen() {
 
       return () => {
         isMounted = false;
+        reset({ nome: '', sigla: '', campus: '' });
       };
     }, [id, reset])
   );

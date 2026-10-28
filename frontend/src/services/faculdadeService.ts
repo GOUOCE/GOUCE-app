@@ -17,12 +17,11 @@ export const faculdadeService = {
     const mapeados: FaculdadeItem[] = lista.map((f) => {
       const nomeCompleto = f.nome_faculdade || f.nome || '';
       const siglaDb = f.sigla || f.sigla_faculdade || '';
-      const siglaExtraida = siglaDb || (nomeCompleto.length <= 10 ? nomeCompleto : nomeCompleto.split(' ')[0]);
 
       return {
         id: f.id_faculdade || f.id,
         nome: nomeCompleto,
-        sigla: siglaExtraida,
+        sigla: siglaDb,
         campus: f.campus_faculdade || f.campus,
         ativo: f.ativo ?? true,
         viagens_programadas_pendentes: Boolean(f.viagens_programadas_pendentes),
@@ -46,12 +45,11 @@ export const faculdadeService = {
     if (f) {
       const nomeCompleto = f.nome_faculdade || f.nome || '';
       const siglaDb = f.sigla || f.sigla_faculdade || '';
-      const siglaExtraida = siglaDb || (nomeCompleto.length <= 10 ? nomeCompleto : nomeCompleto.split(' ')[0]);
 
       return {
         id: f.id_faculdade || f.id,
         nome: nomeCompleto,
-        sigla: siglaExtraida,
+        sigla: siglaDb,
         campus: f.campus_faculdade || f.campus,
         ativo: f.ativo ?? true,
         viagens_programadas_pendentes: Boolean(f.viagens_programadas_pendentes),
@@ -75,7 +73,7 @@ export const faculdadeService = {
       return {
         id: f.id_faculdade || f.id || Date.now(),
         nome: f.nome_faculdade || nomeLimpo,
-        sigla: f.sigla || f.sigla_faculdade || siglaLimpa || 'UNI',
+        sigla: f.sigla || f.sigla_faculdade || siglaLimpa,
         campus: f.campus_faculdade || campusLimpo,
         ativo: true,
       };
@@ -98,7 +96,7 @@ export const faculdadeService = {
       return {
         id: f.id_faculdade || id,
         nome: f.nome_faculdade || nome,
-        sigla: f.sigla || f.sigla_faculdade || sigla || 'UNI',
+        sigla: f.sigla || f.sigla_faculdade || sigla,
         campus: f.campus_faculdade || campus,
         ativo: true,
       };
@@ -114,8 +112,8 @@ export const faculdadeService = {
     try {
       await api.patch(`/faculdades/${id}/inativar`);
     } catch (error: any) {
-      const msg = error.response?.data?.detail || error.response?.data?.message || error.message;
-      if (error.response?.status === 409 || msg) {
+      if (error.response?.status === 409) {
+        const msg = error.response.data?.detail || error.response.data?.message;
         throw new Error(msg || 'Esta instituição possui viagens programadas pendentes. Não é possível inativar no momento.');
       }
       throw error;
