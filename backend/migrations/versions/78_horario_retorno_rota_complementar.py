@@ -8,7 +8,7 @@ Registros existentes recebem o retorno da rota principal vinculada, quando ele
 é posterior à saída da complementar; senão, 23:59, para manter a regra
 "retorno maior que a saída" (#208, item 2).
 
-Revision ID: 78_horario_retorno_rota_complementar
+Revision ID: 78_horario_retorno_rota_compl
 Revises: 76_ponto_unico_por_bairro, 77_create_rota_complementar
 Create Date: 2026-10-28
 
@@ -19,7 +19,7 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision: str = "78_horario_retorno_rota_complementar"
+revision: str = "78_horario_retorno_rota_compl"
 down_revision: Union[str, Sequence[str], None] = (
     "76_ponto_unico_por_bairro",
     "77_create_rota_complementar",
