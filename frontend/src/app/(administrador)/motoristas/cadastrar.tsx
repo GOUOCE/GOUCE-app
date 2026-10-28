@@ -41,7 +41,7 @@ export default function CadastrarMotoristaScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const { control, handleSubmit, formState: { errors }, reset } = useForm<MotoristaFormData>({
+  const { control, handleSubmit, formState: { errors, isSubmitted }, reset, setValue, clearErrors } = useForm<MotoristaFormData>({
     resolver: zodResolver(motoristaSchema),
     defaultValues: {
       nome: '',
@@ -65,6 +65,12 @@ export default function CadastrarMotoristaScreen() {
       };
     }, [reset])
   );
+
+  const atualizarCampo = (campo: 'nome' | 'telefone', valor: string) => {
+    const preenchido = valor.trim() !== '';
+    setValue(campo, valor, { shouldDirty: true, shouldValidate: preenchido && isSubmitted });
+    if (!preenchido) clearErrors(campo);
+  };
 
   const voltarParaListagem = () => {
     closePopup();
@@ -130,7 +136,7 @@ export default function CadastrarMotoristaScreen() {
         cancelText={popup.cancelText}
         confirmColor={popup.confirmColor}
         onConfirm={popup.onConfirm}
-        onDismiss={closePopup}
+        onDismiss={popup.type === 'success' ? voltarParaListagem : closePopup}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -139,13 +145,13 @@ export default function CadastrarMotoristaScreen() {
           <Controller
             control={control}
             name="nome"
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { value } }) => (
               <TextInput
                 label="Nome Completo *"
                 mode="outlined"
                 placeholder="Nome do motorista"
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(texto) => atualizarCampo('nome', texto)}
                 error={!!errors.nome}
                 left={<TextInput.Icon icon={() => <User size={20} color="#666" />} />}
                 style={styles.input}
@@ -160,18 +166,18 @@ export default function CadastrarMotoristaScreen() {
           <Controller
             control={control}
             name="telefone"
-            render={({ field: { onChange, onBlur, value } }) => (
+            render={({ field: { onBlur, value } }) => (
               <TextInput
                 label="Telefone *"
                 mode="outlined"
                 placeholder="(88) 9 9999-9999"
                 value={value}
-                onChangeText={(text) => onChange(formatarTelefone(text))}
+                onChangeText={(text) => atualizarCampo('telefone', formatarTelefone(text))}
                 onBlur={() => {
                   onBlur();
-                  if (value) onChange(formatarTelefone(value));
+                  if (value) atualizarCampo('telefone', formatarTelefone(value));
                 }}
-                maxLength={15}
+                maxLength={16}
                 keyboardType="phone-pad"
                 error={!!errors.telefone}
                 left={<TextInput.Icon icon={() => <Phone size={20} color="#666" />} />}

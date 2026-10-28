@@ -127,3 +127,15 @@ describe('Suíte de Testes Unitários - HU-010 (Gerenciamento de Motoristas)', (
     });
   });
 });
+
+describe('Regressões restauradas do reteste HU-010', () => {
+  it.each(['Maria da Silva', 'João D’Ávila', 'Ana-Clara Souza'])('aceita %s', (nome) => {
+    expect(motoristaSchema.safeParse({ nome, telefone: '88998112233' }).success).toBe(true);
+  });
+  it.each(['333333333333', 'Maria 😀', '-- Silva', 'João @Silva', 'A- Souza'])('rejeita nome inválido %s', (nome) => {
+    expect(motoristaSchema.safeParse({ nome, telefone: '88998112233' }).success).toBe(false);
+  });
+  it.each(['889981122334', 'a88998112233', '00998112233', '8899811223😀'])('rejeita telefone inválido %s', (telefone) => {
+    expect(motoristaSchema.safeParse({ nome: 'Maria Silva', telefone }).success).toBe(false);
+  });
+});

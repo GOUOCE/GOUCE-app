@@ -99,15 +99,7 @@ export const motoristaService = {
   },
 
   async inativarMotorista(id: number): Promise<void> {
-    try {
-      await api.patch(`/motoristas/${id}/inativar`);
-    } catch (error: any) {
-      const msg = error.response?.data?.detail || error.response?.data?.message || error.message;
-      if (error.response?.status === 409 || msg) {
-        throw new Error(msg || 'Este profissional possui alocações pendentes e não pode ser inativado no momento.');
-      }
-      throw error;
-    }
+    await api.patch(`/motoristas/${id}/inativar`);
   },
 
   async reativarMotorista(id: number): Promise<void> {

@@ -5,6 +5,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, Plus, Search, Pencil, Trash2, RotateCcw, X } from 'lucide-react-native';
 
 import { motoristaService, MotoristaItem } from '@/services/motoristaService';
+import { formatarTelefone } from '@/utils/formatarTelefone';
 import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
@@ -31,9 +32,9 @@ export default function MotoristasListScreen() {
     message: '',
   });
 
-  const showPopup = (config: Omit<typeof popup, 'visible'>) => {
+  const showPopup = React.useCallback((config: Omit<typeof popup, 'visible'>) => {
     setPopup({ ...config, visible: true });
-  };
+  }, []);
 
   const closePopup = () => {
     setPopup((prev) => ({ ...prev, visible: false }));
@@ -52,13 +53,18 @@ export default function MotoristasListScreen() {
         confirmText: 'Entendido',
       });
     }
-  }, [busca, mostrarInativos]);
+  }, [busca, mostrarInativos, showPopup]);
 
   useFocusEffect(
     React.useCallback(() => {
       carregarMotoristas();
     }, [carregarMotoristas])
   );
+
+  const fecharSucesso = () => {
+    closePopup();
+    carregarMotoristas();
+  };
 
   const handleInativar = (mot: MotoristaItem) => {
     showPopup({
@@ -77,10 +83,7 @@ export default function MotoristasListScreen() {
             title: 'Operação realizada com sucesso',
             message: 'O motorista foi inativado com sucesso.',
             confirmText: 'OK',
-            onConfirm: () => {
-              closePopup();
-              carregarMotoristas();
-            },
+            onConfirm: fecharSucesso,
           });
         } catch (error: any) {
           const msg = getErrorMessage(
@@ -114,10 +117,7 @@ export default function MotoristasListScreen() {
             title: 'Operação realizada com sucesso',
             message: 'O motorista foi reativado com sucesso.',
             confirmText: 'OK',
-            onConfirm: () => {
-              closePopup();
-              carregarMotoristas();
-            },
+            onConfirm: fecharSucesso,
           });
         } catch (err) {
           const msg = getErrorMessage(err, 'Erro ao reativar profissional.');
@@ -162,7 +162,7 @@ export default function MotoristasListScreen() {
         cancelText={popup.cancelText}
         confirmColor={popup.confirmColor}
         onConfirm={popup.onConfirm}
-        onDismiss={closePopup}
+        onDismiss={popup.type === 'success' ? fecharSucesso : closePopup}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -197,7 +197,7 @@ export default function MotoristasListScreen() {
             <View key={mot.id} style={styles.itemRow}>
               <View style={styles.itemInfo}>
                 <Text variant="bodyLarge" style={styles.itemName}>{mot.nome}</Text>
-                <Text variant="bodySmall" style={styles.itemSub}>{mot.telefone}</Text>
+                <Text variant="bodySmall" style={styles.itemSub}>{formatarTelefone(mot.telefone)}</Text>
               </View>
 
               <View style={styles.actionButtons}>
@@ -233,7 +233,7 @@ export default function MotoristasListScreen() {
               <View key={mot.id} style={styles.itemRow}>
                 <View style={styles.itemInfo}>
                   <Text variant="bodyLarge" style={styles.itemName}>{mot.nome}</Text>
-                  <Text variant="bodySmall" style={styles.itemSub}>{mot.telefone}</Text>
+                  <Text variant="bodySmall" style={styles.itemSub}>{formatarTelefone(mot.telefone)}</Text>
                 </View>
 
                 <TouchableOpacity onPress={() => handleReativar(mot)} style={styles.iconBtn}>

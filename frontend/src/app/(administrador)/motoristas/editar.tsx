@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Button } from 'react-native-paper';
+import { Text, TextInput, Button, ActivityIndicator } from 'react-native-paper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,9 +13,16 @@ import { formatarTelefone } from '@/utils/formatarTelefone';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function EditarMotoristaScreen() {
-  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const [tentativa, setTentativa] = useState(0);
+  const recarregar = React.useCallback(() => setTentativa((atual) => atual + 1), []);
+  return <EditarMotoristaForm key={`${id}-${tentativa}`} id={id} onRetry={recarregar} />;
+}
 
+function EditarMotoristaForm({ id, onRetry }: { id: string; onRetry: () => void }) {
+  const router = useRouter();
+
+  const [dadosCarregados, setDadosCarregados] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Pop-up Estilizado
@@ -34,15 +41,15 @@ export default function EditarMotoristaScreen() {
     message: '',
   });
 
-  const showPopup = (config: Omit<typeof popup, 'visible'>) => {
+  const showPopup = React.useCallback((config: Omit<typeof popup, 'visible'>) => {
     setPopup({ ...config, visible: true });
-  };
+  }, []);
 
   const closePopup = () => {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const { control, handleSubmit, formState: { errors, isDirty }, reset } = useForm<MotoristaFormData>({
+  const { control, handleSubmit, formState: { errors, isDirty, isSubmitted }, reset, setValue, clearErrors } = useForm<MotoristaFormData>({
     resolver: zodResolver(motoristaSchema),
     defaultValues: {
       nome: '',
@@ -54,24 +61,31 @@ export default function EditarMotoristaScreen() {
   useFocusEffect(
     React.useCallback(() => {
       let isMounted = true;
+      setDadosCarregados(false);
+      reset({ nome: '', telefone: '' });
 
       async function carregarDadosOficiais() {
         if (!id) return;
         try {
           const m = await motoristaService.obterMotoristaPorId(Number(id));
-          if (m && isMounted) {
+          if (!isMounted) return;
+          if (!m) throw new Error('Motorista não encontrado.');
+          if (m) {
             reset({
               nome: m.nome,
               telefone: formatarTelefone(m.telefone) || m.telefone,
             });
+            setDadosCarregados(true);
           }
         } catch (err) {
+          if (!isMounted) return;
           const msg = getErrorMessage(err, 'Erro ao carregar dados do motorista.');
           showPopup({
             type: 'error',
             title: 'Erro de Conexão',
             message: msg,
-            confirmText: 'Entendido',
+            confirmText: 'Tentar novamente',
+            onConfirm: () => { closePopup(); onRetry(); },
           });
         }
       }
@@ -80,9 +94,17 @@ export default function EditarMotoristaScreen() {
 
       return () => {
         isMounted = false;
+        setDadosCarregados(false);
+        reset({ nome: '', telefone: '' });
       };
-    }, [id, reset])
+    }, [id, reset, showPopup, onRetry])
   );
+
+  const atualizarCampo = (campo: 'nome' | 'telefone', valor: string) => {
+    const preenchido = valor.trim() !== '';
+    setValue(campo, valor, { shouldDirty: true, shouldValidate: preenchido && isSubmitted });
+    if (!preenchido) clearErrors(campo);
+  };
 
   const voltarParaListagem = () => {
     closePopup();
@@ -106,7 +128,7 @@ export default function EditarMotoristaScreen() {
   };
 
   const onSubmit = async (dados: MotoristaFormData) => {
-    if (!id) return;
+    if (!id || !dadosCarregados) return;
     setIsLoading(true);
     try {
       await motoristaService.atualizarMotorista(Number(id), dados.nome, dados.telefone);
@@ -155,22 +177,22 @@ export default function EditarMotoristaScreen() {
         cancelText={popup.cancelText}
         confirmColor={popup.confirmColor}
         onConfirm={popup.onConfirm}
-        onDismiss={closePopup}
+        onDismiss={popup.type === 'success' ? voltarParaListagem : closePopup}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      {!dadosCarregados ? <ActivityIndicator accessibilityLabel="Carregando motorista" /> : <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Nome Completo */}
         <View style={styles.inputBox}>
           <Controller
             control={control}
             name="nome"
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { value } }) => (
               <TextInput
                 label="Nome Completo *"
                 mode="outlined"
                 placeholder="Nome do motorista"
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(texto) => atualizarCampo('nome', texto)}
                 error={!!errors.nome}
                 left={<TextInput.Icon icon={() => <User size={20} color="#666" />} />}
                 style={styles.input}
@@ -185,18 +207,18 @@ export default function EditarMotoristaScreen() {
           <Controller
             control={control}
             name="telefone"
-            render={({ field: { onChange, onBlur, value } }) => (
+            render={({ field: { onBlur, value } }) => (
               <TextInput
                 label="Telefone *"
                 mode="outlined"
                 placeholder="(88) 9 9999-9999"
                 value={value}
-                onChangeText={(text) => onChange(formatarTelefone(text))}
+                onChangeText={(text) => atualizarCampo('telefone', formatarTelefone(text))}
                 onBlur={() => {
                   onBlur();
-                  if (value) onChange(formatarTelefone(value));
+                  if (value) atualizarCampo('telefone', formatarTelefone(value));
                 }}
-                maxLength={15}
+                maxLength={16}
                 keyboardType="phone-pad"
                 error={!!errors.telefone}
                 left={<TextInput.Icon icon={() => <Phone size={20} color="#666" />} />}
@@ -218,7 +240,7 @@ export default function EditarMotoristaScreen() {
         >
           Salvar alterações
         </Button>
-      </ScrollView>
+      </ScrollView>}
     </View>
   );
 }

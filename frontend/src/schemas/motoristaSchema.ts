@@ -14,17 +14,21 @@ export const motoristaSchema = z.object({
         .refine((v) => REGEX_NOME_PESSOA.test(v), 'Use apenas letras, espaços, hífen ou apóstrofo')
         .refine((v) => {
           const partes = v.split(' ').filter(Boolean);
-          return partes.length >= 2 && partes.every((p) => p.length >= 2);
+          const letras = (parte: string) => parte.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ]/g, '').length;
+          return partes.length >= 2 && letras(partes[0]) >= 2 && letras(partes[partes.length - 1]) >= 2;
         }, 'Informe nome e sobrenome completos')
     ),
   telefone: z
     .string()
-    .transform((v) => (v || '').replace(/\D/g, ''))
+    .trim()
+    .refine((v) => /^(?:\([0-9]{2}\)|[0-9])[0-9 \-]*$/.test(v), 'Informe um telefone válido com DDD')
+    .transform((v) => v.replace(/\D/g, ''))
     .pipe(
       z
         .string()
         .min(10, 'Informe um telefone válido com DDD')
         .max(11, 'Informe um telefone válido com DDD')
+        .refine((v) => Number(v.slice(0, 2)) >= 11, 'Informe um telefone válido com DDD')
     ),
 });
 
