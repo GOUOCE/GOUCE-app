@@ -207,6 +207,93 @@ class EdicaoPerfilValidationRoute(APIRoute):
         return custom_route_handler
 
 
+_ROTULOS_AVALIACAO = {
+    "status_cadastro": "O status do cadastro",
+    "motivo_reprovacao": "O motivo da reprovação",
+    "documentos_reenvio": "Os documentos para reenvio",
+    "tipo": "O tipo do documento",
+    "motivo": "O motivo do documento",
+    "aluno_id": "O ID do aluno",
+}
+
+
+def _opcoes(enum_cls) -> str:
+    valores = [item.value for item in enum_cls]
+    return f"{', '.join(valores[:-1])} ou {valores[-1]}"
+
+
+def _mensagem_validacao_avaliacao(error: dict, campo: str | None) -> str:
+    """Traduz as recusas estruturais da avaliação de cadastro para mensagens em português."""
+    tipo = error.get("type")
+    contexto = error.get("ctx") or {}
+    rotulo = _ROTULOS_AVALIACAO.get(campo, "O valor informado")
+
+    if tipo == "value_error":
+        return str(error.get("msg", "")).removeprefix("Value error, ") or "Valor inválido."
+    if tipo == "missing":
+        return f"{rotulo} é obrigatório."
+    if tipo == "string_too_short":
+        return {
+            "motivo": "Informe o motivo do documento.",
+            "motivo_reprovacao": "Informe o motivo da reprovação.",
+        }.get(campo, f"{rotulo} é curto demais.")
+    if tipo == "string_too_long":
+        return f"{rotulo} deve ter no máximo {contexto.get('max_length')} caracteres."
+    if tipo == "enum" and campo == "tipo":
+        return f"Tipo de documento inválido. Use {_opcoes(TipoDocumentoReenvioEnum)}."
+    if tipo == "enum" and campo == "status_cadastro":
+        return f"Status do cadastro inválido. Use {_opcoes(StatusCadastroEnum)}."
+    if tipo in {"int_parsing", "int_type", "int_from_float"}:
+        return f"{rotulo} deve ser um número inteiro."
+    if tipo == "string_type":
+        return f"{rotulo} deve ser um texto."
+    if tipo == "list_type":
+        return f"{rotulo} devem ser enviados em uma lista."
+    if tipo in {"json_invalid", "model_attributes_type", "dict_type"}:
+        return "Corpo da requisição inválido. Envie um JSON válido."
+    return f"{rotulo} é inválido."
+
+
+def _avaliacao_validation_details(errors: list[dict]) -> list[dict]:
+    details = []
+    for error in errors:
+        partes = [
+            str(parte)
+            for parte in error.get("loc", ())
+            if parte not in {"body", "path", "query", "form"}
+        ]
+        # JSON malformado aponta a posição do caractere, não um campo.
+        if error.get("type") == "json_invalid":
+            partes = []
+        campo = next((parte for parte in reversed(partes) if not parte.isdigit()), None)
+        details.append({
+            "field": ".".join(partes) or None,
+            "message": _mensagem_validacao_avaliacao(error, campo),
+        })
+    return details
+
+
+class AvaliacaoCadastroValidationRoute(APIRoute):
+    """Traduz e padroniza as recusas estruturais das rotas de avaliação de cadastro (HU-027)."""
+
+    def get_route_handler(self):
+        original_route_handler = super().get_route_handler()
+
+        @wraps(original_route_handler)
+        async def custom_route_handler(request: Request):
+            try:
+                return await original_route_handler(request)
+            except RequestValidationError as error:
+                return _error_response(
+                    status_code=422,
+                    code="REQUEST_VALIDATION_ERROR",
+                    message="Requisição inválida",
+                    details=_avaliacao_validation_details(error.errors()),
+                )
+
+        return custom_route_handler
+
+
 CADASTRO_ERROR_RESPONSES = {
     400: {"model": CadastroErrorResponseDTO},
     409: {"model": CadastroErrorResponseDTO},
@@ -218,6 +305,7 @@ CADASTRO_ERROR_RESPONSES = {
 router = APIRouter(prefix="/usuarios", tags=["Usuários e Alunos"])
 cadastro_router = APIRouter(route_class=CadastroValidationRoute)
 edicao_router = APIRouter(route_class=EdicaoPerfilValidationRoute)
+avaliacao_router = APIRouter(route_class=AvaliacaoCadastroValidationRoute)
 
 EDICAO_ERROR_RESPONSES = {
     400: {"model": CadastroErrorResponseDTO},
@@ -596,7 +684,7 @@ async def cadastrar_usuario_alias(
     return await cadastrar_usuario_json(data, repository, arquivo_repository, hasher, token_service)
 
 
-@router.patch(
+@avaliacao_router.patch(
     "/alunos/{aluno_id}/aprovar",
     response_model=AprovarAlunoResponseDTO,
 )
@@ -667,7 +755,7 @@ async def aprovar_aluno(
 
 
 
-@router.patch(
+@avaliacao_router.patch(
     "/alunos/{aluno_id}/status",
     response_model=AprovacaoAlunoResponseDTO,
     summary="Atualizar status e solicitar reenvio de documentos",
@@ -1049,3 +1137,4 @@ async def atualizar_meu_perfil(
 
 router.include_router(cadastro_router)
 router.include_router(edicao_router)
+router.include_router(avaliacao_router)

@@ -238,8 +238,9 @@ class AvaliacaoCadastroRotasTest(unittest.IsolatedAsyncioTestCase):
         self.app.dependency_overrides[get_repository] = lambda: self.repositorio
         self.app.dependency_overrides[get_current_user] = lambda: ADMIN
 
-    async def patch(self, caminho, corpo=None):
-        bruto = json.dumps(corpo).encode("utf-8") if corpo is not None else b""
+    async def patch(self, caminho, corpo=None, bruto=None):
+        if bruto is None:
+            bruto = json.dumps(corpo).encode("utf-8") if corpo is not None else b""
         mensagens = []
         recebido = False
 
@@ -356,6 +357,137 @@ class AvaliacaoCadastroRotasTest(unittest.IsolatedAsyncioTestCase):
         self.assertIn("já está com o cadastro aprovado", corpo["detail"])
         self.assertEqual(self.repositorio.aluno.status_cadastro, "ativado")
         email.assert_not_called()
+
+    async def recusa(self, corpo, caminho="/usuarios/alunos/4/status", bruto=None):
+        """Envia a requisição esperando 422 e devolve os detalhes por campo; o aluno não pode mudar."""
+        with patch(f"{ROTAS_USUARIO}.get_email_service") as email:
+            status, resposta = await self.patch(caminho, corpo, bruto=bruto)
+
+        self.assertEqual(status, 422)
+        self.assertEqual(resposta["success"], False)
+        self.assertEqual(resposta["error"]["code"], "REQUEST_VALIDATION_ERROR")
+        self.assertEqual(resposta["error"]["message"], "Requisição inválida")
+        self.assertEqual(self.repositorio.chamadas, [])
+        self.assertEqual(self.repositorio.aluno.status_cadastro, "pendente")
+        email.assert_not_called()
+
+        detalhes = {d["field"]: d["message"] for d in resposta["error"]["details"]}
+        for mensagem in detalhes.values():
+            # Nada de texto padrão do pydantic (inglês) nem do prefixo técnico.
+            self.assertNotIn("Value error", mensagem)
+            self.assertNotRegex(mensagem, r"\b(should|Input|String|valid)\b")
+        return detalhes
+
+    async def test_recusas_da_reprovacao_vem_em_portugues_no_formato_padrao(self):
+        # Os quatro payloads da issue #317.
+        motivo_vazio = await self.recusa({
+            "status_cadastro": "rejeitado",
+            "motivo_reprovacao": "Cadastro com dados inconsistentes.",
+            "documentos_reenvio": [{"tipo": "comprovante_matricula", "motivo": ""}],
+        })
+        self.assertEqual(motivo_vazio, {"documentos_reenvio.0.motivo": "Informe o motivo do documento."})
+
+        tipo_invalido = await self.recusa({
+            "status_cadastro": "rejeitado",
+            "motivo_reprovacao": "Cadastro com dados inconsistentes.",
+            "documentos_reenvio": [{"tipo": "rg", "motivo": "Ilegível."}],
+        })
+        self.assertEqual(
+            tipo_invalido,
+            {
+                "documentos_reenvio.0.tipo": (
+                    "Tipo de documento inválido. Use comprovante_matricula, comprovante_residencia ou foto_perfil."
+                )
+            },
+        )
+
+        motivo_longo = await self.recusa({
+            "status_cadastro": "rejeitado",
+            "motivo_reprovacao": "x" * 256,
+            "documentos_reenvio": [DOCUMENTO_VALIDO],
+        })
+        self.assertEqual(motivo_longo, {"motivo_reprovacao": "O motivo da reprovação deve ter no máximo 255 caracteres."})
+
+        sem_motivo = await self.recusa({
+            "status_cadastro": "rejeitado",
+            "documentos_reenvio": [DOCUMENTO_VALIDO],
+        })
+        self.assertEqual(sem_motivo, {"motivo_reprovacao": "Informe o motivo da reprovação."})
+
+    async def test_reprovar_sem_dados_indica_cada_campo_que_falta(self):
+        detalhes = await self.recusa({"status_cadastro": "rejeitado"})
+
+        self.assertEqual(
+            detalhes,
+            {
+                "motivo_reprovacao": "Informe o motivo da reprovação.",
+                "documentos_reenvio": "Informe ao menos um documento para o aluno reenviar, com o motivo.",
+            },
+        )
+
+    async def test_motivo_so_com_espacos_conta_como_vazio(self):
+        detalhes = await self.recusa({
+            "status_cadastro": "rejeitado",
+            "motivo_reprovacao": "   ",
+            "documentos_reenvio": [{"tipo": "comprovante_matricula", "motivo": "   "}],
+        })
+
+        self.assertEqual(
+            detalhes,
+            {
+                "motivo_reprovacao": "Informe o motivo da reprovação.",
+                "documentos_reenvio.0.motivo": "Informe o motivo do documento.",
+            },
+        )
+
+    async def test_dados_de_reprovacao_em_outro_status_indicam_o_campo(self):
+        detalhes = await self.recusa({
+            "status_cadastro": "ativado",
+            "motivo_reprovacao": "Sem motivo para isto.",
+            "documentos_reenvio": [DOCUMENTO_VALIDO],
+        })
+
+        self.assertEqual(
+            detalhes,
+            {
+                "motivo_reprovacao": "O motivo da reprovação só pode ser informado ao reprovar o cadastro.",
+                "documentos_reenvio": "Os documentos para reenvio só podem ser informados ao reprovar o cadastro.",
+            },
+        )
+
+    async def test_status_invalido_lista_as_opcoes_em_portugues(self):
+        detalhes = await self.recusa({"status_cadastro": "aprovadissimo"})
+
+        self.assertEqual(
+            detalhes,
+            {
+                "status_cadastro": (
+                    "Status do cadastro inválido. Use ativado, pendente, inativado, analise_renovacao ou rejeitado."
+                )
+            },
+        )
+
+    async def test_campo_obrigatorio_do_documento_e_tipo_errado_em_portugues(self):
+        detalhes = await self.recusa({
+            "status_cadastro": "rejeitado",
+            "motivo_reprovacao": "Dados inconsistentes.",
+            "documentos_reenvio": [{"tipo": "comprovante_matricula"}],
+        })
+        self.assertEqual(detalhes, {"documentos_reenvio.0.motivo": "O motivo do documento é obrigatório."})
+
+        detalhes = await self.recusa({
+            "status_cadastro": "rejeitado",
+            "motivo_reprovacao": "Dados inconsistentes.",
+            "documentos_reenvio": "comprovante_matricula",
+        })
+        self.assertEqual(detalhes, {"documentos_reenvio": "Os documentos para reenvio devem ser enviados em uma lista."})
+
+    async def test_id_do_aluno_nao_numerico_e_json_malformado_em_portugues(self):
+        detalhes = await self.recusa({"status_cadastro": "ativado"}, caminho="/usuarios/alunos/abc/status")
+        self.assertEqual(detalhes, {"aluno_id": "O ID do aluno deve ser um número inteiro."})
+
+        detalhes = await self.recusa(None, bruto=b"{status_cadastro: ")
+        self.assertEqual(detalhes, {None: "Corpo da requisição inválido. Envie um JSON válido."})
 
     async def test_aluno_inexistente_continua_devolvendo_404(self):
         status, corpo = await self.patch("/usuarios/alunos/999999/aprovar")
