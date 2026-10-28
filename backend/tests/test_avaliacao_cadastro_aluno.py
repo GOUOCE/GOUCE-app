@@ -489,6 +489,43 @@ class AvaliacaoCadastroRotasTest(unittest.IsolatedAsyncioTestCase):
         detalhes = await self.recusa(None, bruto=b"{status_cadastro: ")
         self.assertEqual(detalhes, {None: "Corpo da requisição inválido. Envie um JSON válido."})
 
+    async def test_aprovar_avisa_o_aluno_por_e_mail(self):
+        # HU-027, AC-04: o aluno aprovado precisa saber que o acesso foi liberado.
+        for caminho, corpo in (
+            ("/usuarios/alunos/4/aprovar", None),
+            ("/usuarios/alunos/4/status", {"status_cadastro": "ativado"}),
+        ):
+            with self.subTest(caminho=caminho):
+                self.repositorio = FakeRepositorio()
+                with patch(f"{ROTAS_USUARIO}.get_email_service", return_value=MagicMock()) as email:
+                    status, resposta = await self.patch(caminho, corpo)
+
+                self.assertEqual(status, 200)
+                self.assertEqual(resposta["status_cadastro"], "ativado")
+                email.return_value.enviar_aprovacao_aluno.assert_called_once_with(
+                    email_destino="aluno@example.com",
+                    nome_usuario="Aluno Teste",
+                )
+                email.return_value.enviar_documentos_rejeitados.assert_not_called()
+
+    async def test_falha_no_envio_do_e_mail_mantem_a_aprovacao_e_fica_no_log(self):
+        for caminho, corpo in (
+            ("/usuarios/alunos/4/aprovar", None),
+            ("/usuarios/alunos/4/status", {"status_cadastro": "ativado"}),
+        ):
+            with self.subTest(caminho=caminho):
+                self.repositorio = FakeRepositorio()
+                servico = MagicMock()
+                servico.enviar_aprovacao_aluno.return_value = False
+
+                with patch(f"{ROTAS_USUARIO}.get_email_service", return_value=servico):
+                    with self.assertLogs(ROTAS_USUARIO, level="WARNING") as registro:
+                        status, _ = await self.patch(caminho, corpo)
+
+                self.assertEqual(status, 200)
+                self.assertEqual(self.repositorio.aluno.status_cadastro, "ativado")
+                self.assertIn("E-mail de aprovação não enviado", registro.output[0])
+
     async def test_aluno_inexistente_continua_devolvendo_404(self):
         status, corpo = await self.patch("/usuarios/alunos/999999/aprovar")
 
