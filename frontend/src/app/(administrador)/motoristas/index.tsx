@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Switch, Snackbar } from 'react-native-paper';
+import { Text, TextInput, Switch } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, Plus, Search, Pencil, Trash2, RotateCcw, X } from 'lucide-react-native';
 
 import { motoristaService, MotoristaItem } from '@/services/motoristaService';
+import { formatarTelefone } from '@/utils/formatarTelefone';
+import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function MotoristasListScreen() {
   const router = useRouter();
 
   const [busca, setBusca] = useState('');
-  const [mostrarInativos, setMostrarInativos] = useState(true);
+  const [mostrarInativos, setMostrarInativos] = useState(false); // Inicia desligada por padrão (AC-01 / AC-09)
   const [motoristas, setMotoristas] = useState<MotoristaItem[]>([]);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -32,9 +32,9 @@ export default function MotoristasListScreen() {
     message: '',
   });
 
-  const showPopup = (config: Omit<typeof popup, 'visible'>) => {
+  const showPopup = React.useCallback((config: Omit<typeof popup, 'visible'>) => {
     setPopup({ ...config, visible: true });
-  };
+  }, []);
 
   const closePopup = () => {
     setPopup((prev) => ({ ...prev, visible: false }));
@@ -42,18 +42,29 @@ export default function MotoristasListScreen() {
 
   const carregarMotoristas = React.useCallback(async () => {
     try {
-      const lista = await motoristaService.listarMotoristas(busca);
+      const lista = await motoristaService.listarMotoristas(busca, mostrarInativos);
       setMotoristas(lista);
     } catch (err) {
-      console.warn('Erro ao carregar motoristas:', err);
+      const msg = getErrorMessage(err, 'Erro ao carregar listagem de motoristas.');
+      showPopup({
+        type: 'error',
+        title: 'Erro de Conexão',
+        message: msg,
+        confirmText: 'Entendido',
+      });
     }
-  }, [busca]);
+  }, [busca, mostrarInativos, showPopup]);
 
   useFocusEffect(
     React.useCallback(() => {
       carregarMotoristas();
     }, [carregarMotoristas])
   );
+
+  const fecharSucesso = () => {
+    closePopup();
+    carregarMotoristas();
+  };
 
   const handleInativar = (mot: MotoristaItem) => {
     showPopup({
@@ -67,16 +78,22 @@ export default function MotoristasListScreen() {
         closePopup();
         try {
           await motoristaService.inativarMotorista(mot.id);
-          setSnackbarMessage('Motorista inativado');
-          setSnackbarVisivel(true);
-          carregarMotoristas();
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: 'O motorista foi inativado com sucesso.',
+            confirmText: 'OK',
+            onConfirm: fecharSucesso,
+          });
         } catch (error: any) {
+          const msg = getErrorMessage(
+            error,
+            'Este profissional possui alocações pendentes e não pode ser inativado no momento.'
+          );
           showPopup({
             type: 'error',
             title: 'Inativação Bloqueada',
-            message:
-              error.message ||
-              'Este profissional possui alocações pendentes e não pode ser inativado no momento.',
+            message: msg,
             confirmText: 'Entendido',
           });
         }
@@ -95,11 +112,21 @@ export default function MotoristasListScreen() {
         closePopup();
         try {
           await motoristaService.reativarMotorista(mot.id);
-          setSnackbarMessage('Motorista reativado');
-          setSnackbarVisivel(true);
-          carregarMotoristas();
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: 'O motorista foi reativado com sucesso.',
+            confirmText: 'OK',
+            onConfirm: fecharSucesso,
+          });
         } catch (err) {
-          console.error('Erro ao reativar motorista:', err);
+          const msg = getErrorMessage(err, 'Erro ao reativar profissional.');
+          showPopup({
+            type: 'error',
+            title: 'Erro ao reativar',
+            message: msg,
+            confirmText: 'Entendido',
+          });
         }
       },
     });
@@ -112,7 +139,7 @@ export default function MotoristasListScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.replace('/(administrador)/cadastros')}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Motoristas</Text>
@@ -135,7 +162,7 @@ export default function MotoristasListScreen() {
         cancelText={popup.cancelText}
         confirmColor={popup.confirmColor}
         onConfirm={popup.onConfirm}
-        onDismiss={closePopup}
+        onDismiss={popup.type === 'success' ? fecharSucesso : closePopup}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -170,7 +197,7 @@ export default function MotoristasListScreen() {
             <View key={mot.id} style={styles.itemRow}>
               <View style={styles.itemInfo}>
                 <Text variant="bodyLarge" style={styles.itemName}>{mot.nome}</Text>
-                <Text variant="bodySmall" style={styles.itemSub}>{mot.telefone}</Text>
+                <Text variant="bodySmall" style={styles.itemSub}>{formatarTelefone(mot.telefone)}</Text>
               </View>
 
               <View style={styles.actionButtons}>
@@ -200,13 +227,13 @@ export default function MotoristasListScreen() {
 
         {/* Seção Inativos */}
         {mostrarInativos && inativos.length > 0 && (
-          <View style={styles.inativosSection}>
-            <Text variant="titleMedium" style={styles.inativosTitle}>Inativos</Text>
+          <View style={styles.inativasSection}>
+            <Text variant="titleMedium" style={styles.inativasTitle}>Inativas</Text>
             {inativos.map((mot) => (
               <View key={mot.id} style={styles.itemRow}>
                 <View style={styles.itemInfo}>
                   <Text variant="bodyLarge" style={styles.itemName}>{mot.nome}</Text>
-                  <Text variant="bodySmall" style={styles.itemSub}>{mot.telefone}</Text>
+                  <Text variant="bodySmall" style={styles.itemSub}>{formatarTelefone(mot.telefone)}</Text>
                 </View>
 
                 <TouchableOpacity onPress={() => handleReativar(mot)} style={styles.iconBtn}>
@@ -217,20 +244,6 @@ export default function MotoristasListScreen() {
           </View>
         )}
       </ScrollView>
-
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
     </View>
   );
 }
@@ -315,11 +328,11 @@ const styles = StyleSheet.create({
   iconBtn: {
     padding: 6,
   },
-  inativosSection: {
+  inativasSection: {
     marginTop: 32,
     gap: 8,
   },
-  inativosTitle: {
+  inativasTitle: {
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 8,
@@ -328,11 +341,5 @@ const styles = StyleSheet.create({
     color: '#888',
     textAlign: 'center',
     marginVertical: 24,
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });

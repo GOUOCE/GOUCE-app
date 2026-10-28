@@ -4,6 +4,64 @@ jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock')
 );
 
+jest.mock('../../api/api', () => ({
+  api: {
+    get: jest.fn((...args: any[]) => {
+      const url = args[0];
+      if (url === '/motoristas/2') {
+        return Promise.resolve({
+          data: {
+            id: 2,
+            nome: 'Ana Souza',
+            telefone: '88999999999',
+            ativo: false,
+          },
+        });
+      }
+      if (url === '/motoristas/3') {
+        return Promise.resolve({
+          data: {
+            id: 3,
+            nome: 'Paulo Ferreira',
+            telefone: '88999999999',
+            ativo: true,
+          },
+        });
+      }
+      return Promise.resolve({ data: [] });
+    }),
+    post: jest.fn((...args: any[]) => {
+      const url = args[0];
+      const body = args[1];
+      if (url === '/motoristas' && (body?.telefone?.includes('9999') || body?.telefone === '(88) 9 9999-9999' || body?.telefone === '88999999999')) {
+        const error: any = new Error('Este profissional já está registrado.');
+        (error as any).response = { status: 409 };
+        return Promise.reject(error);
+      }
+      return Promise.resolve({
+        data: {
+          id: 100,
+          nome: body?.nome || 'Motorista Teste',
+          telefone: body?.telefone || '88999999999',
+          ativo: true,
+        },
+      });
+    }),
+    patch: jest.fn((...args: any[]) => {
+      const url = args[0];
+      if (url.includes('1/inativar')) {
+        const error: any = new Error('Este profissional possui alocações pendentes e não pode ser inativado no momento.');
+        (error as any).response = {
+          status: 409,
+          data: { detail: 'Este profissional possui alocações pendentes e não pode ser inativado no momento.' },
+        };
+        return Promise.reject(error);
+      }
+      return Promise.resolve({ data: { success: true } });
+    }),
+  },
+}));
+
 import { motoristaSchema } from '../motoristaSchema';
 import { motoristaService } from '../../services/motoristaService';
 
@@ -48,7 +106,7 @@ describe('Suíte de Testes Unitários - HU-010 (Gerenciamento de Motoristas)', (
     });
 
     it('deve bloquear a inativação se o motorista possuir alocações pendentes para datas futuras', async () => {
-      // José Almeida (ID 1) possui alocações pendentes no MOCK
+      // José Almeida (ID 1) possui alocações pendentes
       await expect(
         motoristaService.inativarMotorista(1)
       ).rejects.toThrow('Este profissional possui alocações pendentes e não pode ser inativado no momento.');
@@ -67,5 +125,17 @@ describe('Suíte de Testes Unitários - HU-010 (Gerenciamento de Motoristas)', (
       const mot = await motoristaService.obterMotoristaPorId(3);
       expect(mot?.ativo).toBe(true);
     });
+  });
+});
+
+describe('Regressões restauradas do reteste HU-010', () => {
+  it.each(['Maria da Silva', 'João D’Ávila', 'Ana-Clara Souza'])('aceita %s', (nome) => {
+    expect(motoristaSchema.safeParse({ nome, telefone: '88998112233' }).success).toBe(true);
+  });
+  it.each(['333333333333', 'Maria 😀', '-- Silva', 'João @Silva', 'A- Souza'])('rejeita nome inválido %s', (nome) => {
+    expect(motoristaSchema.safeParse({ nome, telefone: '88998112233' }).success).toBe(false);
+  });
+  it.each(['889981122334', 'a88998112233', '00998112233', '8899811223😀'])('rejeita telefone inválido %s', (telefone) => {
+    expect(motoristaSchema.safeParse({ nome: 'Maria Silva', telefone }).success).toBe(false);
   });
 });
