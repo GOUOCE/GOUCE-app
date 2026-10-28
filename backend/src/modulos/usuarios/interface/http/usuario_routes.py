@@ -599,19 +599,61 @@ async def cadastrar_usuario_alias(
 async def aprovar_aluno(
     aluno_id: int,
     repository=Depends(get_repository),
-    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ADMINISTRADOR.value))] = None,
+    current_user: Annotated[
+        dict,
+        Depends(require_roles(CargoEnum.ADMINISTRADOR.value)),
+    ] = None,
 ):
     try:
         use_case = AprovarAlunoUseCase(repository)
-        return use_case.execute(aluno_id=aluno_id, novo_status=StatusCadastroEnum.ATIVADO)
+
+        resultado = use_case.execute(
+            aluno_id=aluno_id,
+            novo_status=StatusCadastroEnum.ATIVADO,
+        )
+
+        usuario, aluno = repository.buscar_com_detalhes_por_id(aluno_id)
+
+        if usuario and getattr(usuario, "email", None):
+            email_service = get_email_service()
+
+            enviado = email_service.enviar_aprovacao_aluno(
+                email_destino=usuario.email,
+                nome_usuario=usuario.nome_completo,
+            )
+
+            if not enviado:
+                logger.warning(
+                    "E-mail de aprovação não enviado para o aluno %s",
+                    aluno_id,
+                )
+
+        return resultado
+
     except HTTPException:
         raise
+
     except ValueError as error:
         if "não encontrado" in str(error).lower():
-            raise HTTPException(status_code=404, detail="Aluno não encontrado")
-        raise HTTPException(status_code=400, detail="Dados inválidos")
+            raise HTTPException(
+                status_code=404,
+                detail="Aluno não encontrado",
+            )
+        raise HTTPException(
+            status_code=400,
+            detail="Dados inválidos",
+        )
+
     except Exception:
-        raise HTTPException(status_code=500, detail="Erro interno ao aprovar o cadastro do aluno")
+        logger.exception(
+            "Erro interno ao aprovar o cadastro do aluno %s",
+            aluno_id,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Erro interno ao aprovar o cadastro do aluno",
+        )
+
 
 
 @router.patch(
@@ -630,10 +672,14 @@ async def atualizar_status_aluno(
     aluno_id: int,
     data: AtualizarStatusAlunoDTO,
     repository=Depends(get_repository),
-    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ADMINISTRADOR.value))] = None,
+    current_user: Annotated[
+        dict,
+        Depends(require_roles(CargoEnum.ADMINISTRADOR.value)),
+    ] = None,
 ):
     try:
         use_case = AprovarAlunoUseCase(repository)
+
         resultado = use_case.execute(
             aluno_id=aluno_id,
             novo_status=data.status_cadastro,
@@ -643,28 +689,66 @@ async def atualizar_status_aluno(
 
         if data.status_cadastro == StatusCadastroEnum.REJEITADO:
             usuario, aluno = repository.buscar_com_detalhes_por_id(aluno_id)
+
             if usuario and aluno and getattr(usuario, "email", None):
                 email_service = get_email_service()
+
                 enviado = email_service.enviar_documentos_rejeitados(
                     email_destino=usuario.email,
                     nome_usuario=usuario.nome_completo,
-                    documentos=repository.normalizar_documentos_reenvio(getattr(aluno, "documentos_reenvio", None)) or [],
+                    documentos=repository.normalizar_documentos_reenvio(
+                        getattr(aluno, "documentos_reenvio", None)
+                    ) or [],
                 )
+
                 if not enviado:
                     logger.warning(
                         "E-mail de rejeição não enviado para o aluno %s",
                         aluno_id,
                     )
 
+        elif data.status_cadastro == StatusCadastroEnum.ATIVADO:
+            usuario, aluno = repository.buscar_com_detalhes_por_id(aluno_id)
+
+            if usuario and getattr(usuario, "email", None):
+                email_service = get_email_service()
+
+                enviado = email_service.enviar_aprovacao_aluno(
+                    email_destino=usuario.email,
+                    nome_usuario=usuario.nome_completo,
+                )
+
+                if not enviado:
+                    logger.warning(
+                        "E-mail de aprovação não enviado para o aluno %s",
+                        aluno_id,
+                    )
+
         return resultado
+
     except HTTPException:
         raise
+
     except ValueError as error:
         if "não encontrado" in str(error).lower():
-            raise HTTPException(status_code=404, detail="Aluno não encontrado")
-        raise HTTPException(status_code=400, detail="Dados inválidos")
+            raise HTTPException(
+                status_code=404,
+                detail="Aluno não encontrado",
+            )
+        raise HTTPException(
+            status_code=400,
+            detail="Dados inválidos",
+        )
+
     except Exception:
-        raise HTTPException(status_code=500, detail="Erro interno ao atualizar o status do aluno")
+        logger.exception(
+            "Erro interno ao atualizar o status do aluno %s",
+            aluno_id,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Erro interno ao atualizar o status do aluno",
+        )
 
 
 @router.get(
