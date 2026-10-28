@@ -220,8 +220,8 @@ export function Passo3ContatoVinculo() {
           }}>Tentar novamente</Button>
         </View>
       )}
-      {!carregandoVinculos && !erroVinculos && (bairrosAtivos.length === 0 || faculdadesAtivas.length === 0) && (
-        <Text style={styles.errorText}>Não há bairros ou instituições ativos disponíveis. Entre em contato com a administração.</Text>
+      {!carregandoVinculos && !erroVinculos && bairrosAtivos.length === 0 && (
+        <Text style={styles.errorText}>Não há bairros ativos disponíveis. Entre em contato com a administração.</Text>
       )}
       <Controller
         control={control}
@@ -261,6 +261,9 @@ export function Passo3ContatoVinculo() {
       />
       {errors.whatsapp && <Text style={styles.errorText}>{errors.whatsapp.message as string}</Text>}
 
+      {!carregandoVinculos && !erroVinculos && faculdadesAtivas.length === 0 && (
+        <Text style={styles.errorText}>Não há instituições de ensino ativas disponíveis. Entre em contato com a administração.</Text>
+      )}
       <Controller
         control={control}
         name="instituicao"
@@ -278,6 +281,12 @@ export function Passo3ContatoVinculo() {
       />
       {errors.instituicao && <Text style={styles.errorText}>{errors.instituicao.message as string}</Text>}
 
+      {!carregandoVinculos && !erroVinculos && (bairrosAtivos.length === 0 || faculdadesAtivas.length === 0) && (
+        <Button onPress={() => {
+          setCarregandoVinculos(true);
+          setTentativa((atual) => atual + 1);
+        }}>Atualizar opções</Button>
+      )}
       <Controller
         control={control}
         name="curso"

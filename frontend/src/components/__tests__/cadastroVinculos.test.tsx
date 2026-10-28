@@ -72,9 +72,33 @@ describe('Seletores de vínculos do aluno', () => {
   it('mostra ausência de cadastros sem inserir bairros de exemplo', async () => {
     mockCarregar.mockResolvedValue({ bairros: [], faculdades: [] });
     await abrir();
-    expect(textos()).toContain('Não há bairros ou instituições ativos disponíveis');
+    expect(textos()).toContain('Não há bairros ativos disponíveis');
+    expect(textos()).toContain('Não há instituições de ensino ativas disponíveis');
     expect(textos()).not.toContain('Centro');
     expect(form.getValues('bairro')).toBe('');
+    await renderer.act(async () => root.unmount());
+  });
+
+  it('informa apenas a ausência de instituições quando os bairros estão disponíveis e permite atualizar', async () => {
+    mockCarregar.mockResolvedValueOnce({ bairros: opcoes.bairros, faculdades: [] }).mockResolvedValueOnce(opcoes);
+    await abrir();
+    expect(textos()).not.toContain('Não há bairros ativos');
+    expect(textos()).toContain('Não há instituições de ensino ativas disponíveis');
+    await selecionar('Bairro / Localidade *', 'Serra do Estêvão');
+    expect(form.getValues('bairro')).toBe('7');
+    await renderer.act(async () => { root.root.findByType('Button').props.onPress(); });
+    expect(textos()).not.toContain('Não há instituições');
+    expect(form.getValues('bairro')).toBe('7');
+    await selecionar('Instituição de Ensino *', 'UNI - Universidade (Quixadá)');
+    expect(form.getValues('instituicao')).toBe('9');
+    await renderer.act(async () => root.unmount());
+  });
+
+  it('informa apenas a ausência de bairros quando há instituições', async () => {
+    mockCarregar.mockResolvedValue({ bairros: [], faculdades: opcoes.faculdades });
+    await abrir();
+    expect(textos()).toContain('Não há bairros ativos disponíveis');
+    expect(textos()).not.toContain('Não há instituições');
     await renderer.act(async () => root.unmount());
   });
 
