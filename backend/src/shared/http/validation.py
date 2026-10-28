@@ -15,14 +15,23 @@ def validation_details(errors: list[dict]) -> list[dict]:
 
 
 def validation_message(error: dict, field: str | None) -> str:
+    error_type = error.get("type")
+    context = error.get("ctx") or {}
+
+    tipo_msg = {
+        "int_parsing": "Informe um número válido.",
+        "int_type": "Informe um número válido.",
+        "bool_parsing": "Informe um valor booleano válido.",
+        "string_type": "Informe um texto válido.",
+    }.get(error_type)
+    if tipo_msg:
+        return tipo_msg
+
     msg_customizada = error.get("msg")
     if msg_customizada and not msg_customizada.startswith("Value error,"):
         return msg_customizada
     if msg_customizada and msg_customizada.startswith("Value error, "):
         return msg_customizada.replace("Value error, ", "")
-
-    error_type = error.get("type")
-    context = error.get("ctx") or {}
 
     required_messages = {
         "comprovante_matricula": "Comprovante de matrícula é obrigatório.",
@@ -44,8 +53,4 @@ def validation_message(error: dict, field: str | None) -> str:
         maximum = context.get("le")
         return f"O valor informado excede o limite máximo permitido (máximo {maximum})."
 
-    return {
-        "int_parsing": "Informe um número válido.",
-        "bool_parsing": "Informe um valor booleano válido.",
-        "string_type": "Informe um texto válido.",
-    }.get(error_type, msg_customizada or "Valor inválido.")
+    return msg_customizada or "Valor inválido."
