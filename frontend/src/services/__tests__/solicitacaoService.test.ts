@@ -36,3 +36,21 @@ describe('solicitacaoService.listarSolicitacoes - fila do administrador (HU-028)
     expect(lista.map((item) => item.id)).toEqual([1]);
   });
 });
+
+describe('solicitacaoService.obterDetalhes - instituição do aluno (#192)', () => {
+  it('monta "SIGLA - Campus" com o nome que a API devolve, sem mostrar o id da faculdade', async () => {
+    mockGet.mockResolvedValue({
+      data: { id: 6, nome: 'Marcos Vinícius', status_cadastro: 'pendente', faculdade_id: 1, sigla_faculdade: 'UFC', nome_faculdade: 'Universidade Federal do Ceará', campus: 'Quixadá' },
+    });
+
+    const detalhes = await solicitacaoService.obterDetalhes(6);
+
+    expect(detalhes.instituicao).toBe('UFC - Quixadá');
+  });
+
+  it('deixa a instituição vazia quando a API não envia a faculdade, sem valor de exemplo', async () => {
+    mockGet.mockResolvedValue({ data: { id: 7, nome: 'Sem Faculdade', status_cadastro: 'pendente', faculdade_id: 1 } });
+
+    expect((await solicitacaoService.obterDetalhes(7)).instituicao).toBe('');
+  });
+});
