@@ -1,6 +1,9 @@
 /** @type {import('jest').Config} */
 module.exports = {
   preset: 'jest-expo',
+  // A primeira renderização carrega módulos nativos sob instrumentação de cobertura.
+  // No runner do CI isso pode ultrapassar os 5 segundos padrão do Jest.
+  testTimeout: 30_000,
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/frontend/src/$1',
   },
