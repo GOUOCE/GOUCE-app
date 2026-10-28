@@ -1,6 +1,7 @@
 import { api } from '../api/api';
 import { AlunoFormData } from '@/schemas/alunoSchema';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import { validarVinculosAluno } from './vinculoAlunoService';
 
 export interface CadastroResponse {
@@ -18,7 +19,7 @@ export interface CadastroResponse {
  * Converte com segurança qualquer tipo de objeto de arquivo (DocumentPicker, ImagePicker ou URI string)
  * em uma estrutura válida aceita pelo FormData do React Native ({ uri, name, type }).
  */
-function buildFilePart(file: any, defaultName: string, defaultType: string) {
+function buildFilePart(file: any, defaultName: string, defaultType: string): ParteArquivo | null {
   if (!file) return null;
 
   // Trata caso onde file seja um array ou contenha 'assets'
@@ -36,7 +37,8 @@ function buildFilePart(file: any, defaultName: string, defaultType: string) {
      !uri.startsWith('content:') &&
      !uri.startsWith('http:') &&
      !uri.startsWith('https:') &&
-     !uri.startsWith('data:'))
+     !uri.startsWith('data:') &&
+     !uri.startsWith('blob:'))
   ) {
     return null;
   }
@@ -44,11 +46,31 @@ function buildFilePart(file: any, defaultName: string, defaultType: string) {
   const name = (typeof target === 'object' && target.name) ? target.name : defaultName;
   const type = (typeof target === 'object' && (target.mimeType || target.type)) ? (target.mimeType || target.type) : defaultType;
 
+  // Na web o seletor devolve também o File escolhido (blob:), que é o que o FormData aceita
+  const arquivoWeb = typeof target === 'object' && target.file ? target.file : undefined;
+
   return {
     uri,
     name,
     type,
+    ...(arquivoWeb ? { file: arquivoWeb } : {}),
   };
+}
+
+type ParteArquivo = { uri: string; name: string; type: string; file?: Blob };
+
+/**
+ * Anexa o arquivo ao FormData. No celular o React Native aceita { uri, name, type }; na web o FormData só
+ * aceita File/Blob e o mesmo objeto viraria texto, deixando o campo sem arquivo na API (#192).
+ */
+async function anexarArquivo(formData: FormData, campo: string, parte: ParteArquivo | null) {
+  if (!parte) return;
+  if (Platform.OS === 'web') {
+    const arquivo = parte.file ?? (await (await fetch(parte.uri)).blob());
+    formData.append(campo, arquivo, parte.name);
+    return;
+  }
+  formData.append(campo, parte as any);
 }
 
 /**
@@ -162,20 +184,9 @@ export const userService = {
     formData.append('turno_curso', String(data.turno || ''));
 
     // Documentação (Arquivos do expo-document-picker ou expo-image-picker)
-    const matPart = buildFilePart(data.comprovanteMatricula, 'comprovante_matricula.pdf', 'application/pdf');
-    if (matPart) {
-      formData.append('comprovante_matricula', matPart as any);
-    }
-
-    const resPart = buildFilePart(data.comprovanteResidencia, 'comprovante_residencia.pdf', 'application/pdf');
-    if (resPart) {
-      formData.append('comprovante_residencia', resPart as any);
-    }
-
-    const fotoPart = buildFilePart(data.fotoPerfil, 'foto_perfil.jpg', 'image/jpeg');
-    if (fotoPart) {
-      formData.append('foto_perfil', fotoPart as any);
-    }
+    await anexarArquivo(formData, 'comprovante_matricula', buildFilePart(data.comprovanteMatricula, 'comprovante_matricula.pdf', 'application/pdf'));
+    await anexarArquivo(formData, 'comprovante_residencia', buildFilePart(data.comprovanteResidencia, 'comprovante_residencia.pdf', 'application/pdf'));
+    await anexarArquivo(formData, 'foto_perfil', buildFilePart(data.fotoPerfil, 'foto_perfil.jpg', 'image/jpeg'));
 
     formData.append('termos_de_uso', String(Boolean(data.aceitouTermos)));
 
@@ -212,14 +223,11 @@ export const userService = {
     formData.append('semestre_atual', semestre || '1');
 
     // Documentação
-    const matPart = buildFilePart(data.comprovanteMatricula, 'comprovante_matricula.pdf', 'application/pdf');
-    if (matPart) {
-      formData.append('comprovante_matricula', matPart as any);
-    }
+    await anexarArquivo(formData, 'comprovante_matricula', buildFilePart(data.comprovanteMatricula, 'comprovante_matricula.pdf', 'application/pdf'));
 
     const resPart = buildFilePart(data.comprovanteResidencia, 'comprovante_residencia.pdf', 'application/pdf');
     if (resPart) {
-      formData.append('comprovante_residencia', resPart as any);
+      await anexarArquivo(formData, 'comprovante_residencia', resPart);
     } else {
       // Se não enviou novo comprovante de residência na renovação, passa string vazia para o FastAPI manter o atual sem estourar erro de URI no React Native
       formData.append('comprovante_residencia', '');
@@ -228,7 +236,7 @@ export const userService = {
     // A foto atual vem como URL do servidor; só envia quando o aluno escolheu uma nova
     const fotoPart = buildFilePart(data.fotoPerfil, 'foto_perfil.jpg', 'image/jpeg');
     if (fotoPart && !/^https?:/i.test(fotoPart.uri)) {
-      formData.append('foto_perfil', fotoPart as any);
+      await anexarArquivo(formData, 'foto_perfil', fotoPart);
     }
 
     const endpoint = (api.defaults.baseURL || 'http://localhost:8000') + '/alunos/renovar-vinculo';
