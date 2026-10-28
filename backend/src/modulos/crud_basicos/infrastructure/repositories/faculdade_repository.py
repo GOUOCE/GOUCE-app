@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timezone
 from typing import Callable, Optional
 
@@ -7,6 +8,8 @@ from sqlalchemy.orm import Session
 
 from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
 from src.shared.infrastructure.audit_model import LogAuditoriaORM
+
+ENTIDADE_AUDITORIA = "faculdade"
 
 
 class FaculdadeJaCadastradaError(ValueError):
@@ -19,11 +22,11 @@ class FaculdadeNaoEncontradaError(ValueError):
     pass
 
 class FaculdadeJaAtivadaError(ValueError):
-    """Lançada quando a faculdade não é encontrada."""
+    """Lançada ao ativar uma faculdade que já está ativa."""
     pass
 
 class FaculdadeJaDesativadaError(ValueError):
-    """Lançada quando a faculdade não é encontrada."""
+    """Lançada ao inativar uma faculdade que já está inativa."""
     pass
 
 
@@ -94,7 +97,13 @@ class FaculdadeRepository:
             query = query.filter(FaculdadeORM.id_faculdade != ignorar_id)
         return query.first() is not None
 
-    def criar(self, nome: str, campus: str, sigla: Optional[str] = None) -> FaculdadeORM:
+    def criar(
+        self,
+        nome: str,
+        campus: str,
+        sigla: Optional[str] = None,
+        usuario_executor_id: Optional[int] = None,
+    ) -> FaculdadeORM:
         nome_limpo = nome.strip()
         campus_limpo = campus.strip()
         sigla_limpa = sigla.strip() if sigla is not None else None
@@ -110,13 +119,23 @@ class FaculdadeRepository:
         )
         try:
             self.session.add(faculdade)
+            self.session.flush()
+            self._registrar(
+                usuario_executor_id,
+                "CRIAR",
+                faculdade.id_faculdade,
+                None,
+                self._snapshot(faculdade),
+            )
             self.session.commit()
             self.session.refresh(faculdade)
             return faculdade
         except IntegrityError:
             self.session.rollback()
             raise FaculdadeJaCadastradaError("Esta faculdade já está cadastrada.")
-
+        except Exception:
+            self.session.rollback()
+            raise
 
     def atualizar(
         self,
@@ -128,137 +147,145 @@ class FaculdadeRepository:
         ativo: Optional[bool] = None,
     ) -> FaculdadeORM:
 
-        faculdade = self.buscar_por_id(faculdade_id)
-
-        if not faculdade:
-            raise FaculdadeNaoEncontradaError(
-                "Faculdade não encontrada."
-            )
-
-        nome_final = (
-            nome.strip() if nome is not None
-            else faculdade.nome_faculdade
-        )
-
-        campus_final = (
-            campus.strip() if campus is not None
-            else faculdade.campus_faculdade
-        )
-
-        sigla_final = (
-            sigla.strip() if sigla is not None
-            else faculdade.sigla
-        )
-
-        if self.existe_por_nome_e_campus(
-            nome_final,
-            campus_final,
-            ignorar_id=faculdade_id
-        ):
-            raise FaculdadeJaCadastradaError(
-                "Esta faculdade já está cadastrada."
-            )
-
-        if ativo is False and faculdade.ativo:
-            self._validar_sem_rota_ativa(faculdade_id)
-
         try:
-            if ativo is not None and ativo != faculdade.ativo:
+            faculdade = self._buscar_para_atualizar(faculdade_id)
+            if not faculdade:
+                raise FaculdadeNaoEncontradaError("Faculdade não encontrada.")
 
-                log = LogAuditoriaORM(
-                    usuario_id=usuario_executor_id,
-                    acao="ATIVAR" if ativo else "INATIVAR",
-                    entidade="faculdade",
-                    entidade_id=faculdade_id,
-                    valor_anterior=(
-                        "ativo" if faculdade.ativo else "inativo"
-                    ),
-                    valor_novo=(
-                        "ativo" if ativo else "inativo"
-                    ),
-                    criado_em=datetime.now(timezone.utc),
-                )
+            nome_final = nome.strip() if nome is not None else faculdade.nome_faculdade
+            campus_final = (
+                campus.strip() if campus is not None else faculdade.campus_faculdade
+            )
+            sigla_final = sigla.strip() if sigla is not None else faculdade.sigla
 
-                self.session.add(log)
+            if self.existe_por_nome_e_campus(
+                nome_final, campus_final, ignorar_id=faculdade_id
+            ):
+                raise FaculdadeJaCadastradaError("Esta faculdade já está cadastrada.")
+
+            antes = self._snapshot(faculdade)
 
             if nome is not None:
                 faculdade.nome_faculdade = nome_final
-
             if campus is not None:
                 faculdade.campus_faculdade = campus_final
-
             if sigla is not None:
                 faculdade.sigla = sigla_final
 
-            if ativo is not None:
-                faculdade.ativo = ativo
+            depois = self._snapshot(faculdade)
+            if depois != antes:
+                self._registrar(
+                    usuario_executor_id, "EDITAR", faculdade_id, antes, depois
+                )
+
+            if ativo is not None and bool(faculdade.ativo) != ativo:
+                self._aplicar_status(faculdade, ativo, usuario_executor_id)
 
             self.session.commit()
             self.session.refresh(faculdade)
-
             return faculdade
-
         except IntegrityError:
             self.session.rollback()
-            raise FaculdadeJaCadastradaError(
-                "Esta faculdade já está cadastrada."
-            )
-
+            raise FaculdadeJaCadastradaError("Esta faculdade já está cadastrada.")
+        except Exception:
+            self.session.rollback()
+            raise
 
     def ativar(
         self,
         faculdade_id: int,
         usuario_executor_id: Optional[int] = None,
     ) -> FaculdadeORM:
-        faculdade = self.buscar_por_id(faculdade_id)
-        if not faculdade:
-            raise FaculdadeNaoEncontradaError("Faculdade não encontrada.")
-
-        if faculdade.ativo:
-            raise FaculdadeJaAtivadaError("Faculdade já ativada.")
-
-        faculdade.ativo = True
-
-        log = LogAuditoriaORM(
-            usuario_id=usuario_executor_id,
-            acao="ATIVAR",
-            entidade="faculdade",
-            entidade_id=faculdade_id,
-            valor_anterior="inativo",
-            valor_novo="ativo",
-            criado_em=datetime.now(timezone.utc),
-        )
-        self.session.add(log)
-        self.session.commit()
-        self.session.refresh(faculdade)
-        return faculdade
+        return self._alterar_status(faculdade_id, True, usuario_executor_id)
 
     def inativar(
         self,
         faculdade_id: int,
         usuario_executor_id: Optional[int] = None,
     ) -> FaculdadeORM:
-        faculdade = self.buscar_por_id(faculdade_id)
-        if not faculdade:
-            raise FaculdadeNaoEncontradaError("Faculdade não encontrada.")
+        return self._alterar_status(faculdade_id, False, usuario_executor_id)
 
-        if not faculdade.ativo:
-            raise FaculdadeJaDesativadaError("Faculdade já desativada.")
+    def _alterar_status(
+        self,
+        faculdade_id: int,
+        ativo: bool,
+        usuario_executor_id: Optional[int],
+    ) -> FaculdadeORM:
+        try:
+            faculdade = self._buscar_para_atualizar(faculdade_id)
+            if not faculdade:
+                raise FaculdadeNaoEncontradaError("Faculdade não encontrada.")
+            if bool(faculdade.ativo) == ativo:
+                raise (
+                    FaculdadeJaAtivadaError("Faculdade já ativada.")
+                    if ativo
+                    else FaculdadeJaDesativadaError("Faculdade já desativada.")
+                )
+            self._aplicar_status(faculdade, ativo, usuario_executor_id)
+            self.session.commit()
+            self.session.refresh(faculdade)
+            return faculdade
+        except Exception:
+            self.session.rollback()
+            raise
 
-        self._validar_sem_rota_ativa(faculdade_id)
+    def _aplicar_status(
+        self,
+        faculdade: FaculdadeORM,
+        ativo: bool,
+        usuario_executor_id: Optional[int],
+    ) -> None:
 
-        faculdade.ativo = False
-
-        log = LogAuditoriaORM(
-            usuario_id=usuario_executor_id,
-            acao="INATIVAR",
-            entidade="faculdade",
-            entidade_id=faculdade_id,
-            valor_anterior="ativo",
-            valor_novo="inativo",
-            criado_em=datetime.now(timezone.utc),
+        if not ativo:
+            self._validar_sem_rota_ativa(faculdade.id_faculdade)
+        anterior = "ativo" if faculdade.ativo else "inativo"
+        faculdade.ativo = ativo
+        self._registrar(
+            usuario_executor_id,
+            "ATIVAR" if ativo else "INATIVAR",
+            faculdade.id_faculdade,
+            anterior,
+            "ativo" if ativo else "inativo",
         )
-        self.session.add(log)
-        self.session.commit()
-        self.session.refresh(faculdade)
-        return faculdade
+
+    def _buscar_para_atualizar(self, faculdade_id: int) -> Optional[FaculdadeORM]:
+        """Lê a faculdade travando a linha até o fim da transação."""
+        return (
+            self.session.query(FaculdadeORM)
+            .filter(FaculdadeORM.id_faculdade == faculdade_id)
+            .with_for_update()
+            .populate_existing()
+            .first()
+        )
+
+    def _registrar(
+        self,
+        usuario_id: Optional[int],
+        acao: str,
+        faculdade_id: int,
+        valor_anterior: Optional[str],
+        valor_novo: Optional[str],
+    ) -> None:
+        self.session.add(
+            LogAuditoriaORM(
+                usuario_id=usuario_id,
+                acao=acao,
+                entidade=ENTIDADE_AUDITORIA,
+                entidade_id=faculdade_id,
+                valor_anterior=valor_anterior,
+                valor_novo=valor_novo,
+                criado_em=datetime.now(timezone.utc),
+            )
+        )
+
+    @staticmethod
+    def _snapshot(faculdade: FaculdadeORM) -> str:
+        return json.dumps(
+            {
+                "nome": faculdade.nome_faculdade,
+                "campus": faculdade.campus_faculdade,
+                "sigla": faculdade.sigla,
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+        )
