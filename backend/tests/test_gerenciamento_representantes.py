@@ -1,6 +1,6 @@
 import json
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from fastapi import FastAPI
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -255,6 +255,28 @@ class GerenciamentoRepresentantesTest(unittest.IsolatedAsyncioTestCase):
         status, body = await self.asgi_request("/representantes/promover", payload={"aluno_id": usuario.id, "faculdade_id": self.faculdade_ativa_1.id_faculdade}, method="POST")
         self.assertEqual(status, 422)
         self.assertIn("Aluno não aprovado ou inativo", body["error"]["message"])
+
+    async def test_promocao_aluno_com_validade_de_acesso_vencida(self):
+        usuario, aluno = self._criar_aluno()
+        aluno.validade_acesso = datetime.now(timezone.utc) - timedelta(days=30)
+        self.session.commit()
+
+        status, body = await self.asgi_request("/representantes/promover", payload={"aluno_id": usuario.id, "faculdade_id": self.faculdade_ativa_1.id_faculdade}, method="POST")
+
+        self.assertEqual(status, 422)
+        self.assertIn("validade de acesso expirada", body["error"]["message"])
+        self.assertIsNone(self.session.query(RepresentanteORM).filter_by(administrador_id=usuario.id).first())
+        self.assertIsNone(self.session.query(UsuarioTipoORM).filter_by(id_usuario=usuario.id, id_tipo=self.tipo_representante.id).first())
+        self.assertIsNone(self.session.query(LogAuditoriaORM).filter_by(acao="PROMOVER").first())
+
+    async def test_promocao_aluno_com_validade_de_acesso_em_dia(self):
+        usuario, aluno = self._criar_aluno()
+        aluno.validade_acesso = datetime.now(timezone.utc) + timedelta(days=180)
+        self.session.commit()
+
+        status, _ = await self.asgi_request("/representantes/promover", payload={"aluno_id": usuario.id, "faculdade_id": self.faculdade_ativa_1.id_faculdade}, method="POST")
+
+        self.assertEqual(status, 201)
 
     async def test_promocao_duplicidade_ja_ativo(self):
         usuario, _ = self._criar_aluno()
