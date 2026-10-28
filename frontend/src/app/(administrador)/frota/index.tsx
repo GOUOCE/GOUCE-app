@@ -5,6 +5,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, Plus, Search, Pencil, Trash2, RotateCcw, X } from 'lucide-react-native';
 
 import { frotaService, OnibusItem } from '@/services/frotaService';
+import { formatarTituloOnibus } from '@/utils/formatarOnibus';
 import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
@@ -199,7 +200,7 @@ export default function FrotaListScreen() {
             <View key={item.placa || item.id} style={styles.itemRow}>
               <View style={styles.itemInfo}>
                 <Text variant="bodyLarge" style={styles.itemName}>
-                  {item.identificacao} - {item.placa}
+                  {formatarTituloOnibus(item.identificacao, item.placa)}
                 </Text>
                 <Text variant="bodySmall" style={styles.itemSub}>
                   {item.assentos} assentos | No máximo {item.capacidade_em_pe} em pé
@@ -239,7 +240,7 @@ export default function FrotaListScreen() {
               <View key={item.placa || item.id} style={styles.itemRow}>
                 <View style={styles.itemInfo}>
                   <Text variant="bodyLarge" style={styles.itemName}>
-                    {item.identificacao} - {item.placa}
+                    {formatarTituloOnibus(item.identificacao, item.placa)}
                   </Text>
                   <Text variant="bodySmall" style={styles.itemSub}>
                     {item.assentos} assentos | No máximo {item.capacidade_em_pe} em pé

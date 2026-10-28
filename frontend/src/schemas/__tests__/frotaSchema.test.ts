@@ -167,3 +167,22 @@ describe('Suíte de Testes BDD / Unitários - HU-009 (Gerenciamento da Frota / �
     });
   });
 });
+
+describe('Regressões técnicas do PR #303', () => {
+  const base = { placa: 'GHI3J45', assentos: '40', capacidadeEmPe: '0' };
+  it.each(['GHI@3J45', 'G-HI3J45', 'GHI--3J45', 'GHI3J45😀'])('rejeita placa sem corrigir silenciosamente: %s', (placa) => {
+    expect(frotaSchema.safeParse({ ...base, placa }).success).toBe(false);
+  });
+  it.each(['ghi3j45', 'GHI-3J45'])('normaliza apenas caixa e hífen de formato permitido: %s', (placa) => {
+    expect(frotaSchema.parse({ ...base, placa }).placa).toBe('GHI3J45');
+  });
+  it.each(['', ' ', '2.5', '883833333333'])('rejeita capacidade ausente, decimal ou acima do banco: %s', (capacidadeEmPe) => {
+    expect(frotaSchema.safeParse({ ...base, capacidadeEmPe }).success).toBe(false);
+  });
+  it.each(['assentos', 'capacidadeEmPe'])('aceita 100 e rejeita 101 em %s com mensagem explícita', (campo) => {
+    expect(frotaSchema.safeParse({ ...base, [campo]: '100' }).success).toBe(true);
+    const resultado = frotaSchema.safeParse({ ...base, [campo]: '101' });
+    expect(resultado.success).toBe(false);
+    if (!resultado.success) expect(resultado.error.issues[0].message).toContain('no máximo 100');
+  });
+});

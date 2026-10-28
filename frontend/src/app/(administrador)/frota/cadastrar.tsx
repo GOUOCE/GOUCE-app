@@ -148,7 +148,7 @@ export default function CadastrarOnibusScreen() {
                 placeholder="ex: OCR-1234"
                 value={value}
                 maxLength={8}
-                onChangeText={(t) => onChange(t.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 8))}
+                onChangeText={(t) => onChange(t.toUpperCase())}
                 autoCapitalize="characters"
                 error={!!errors.placa}
                 style={styles.input}

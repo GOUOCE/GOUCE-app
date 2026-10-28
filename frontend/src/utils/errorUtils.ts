@@ -20,6 +20,12 @@ export function getErrorMessage(error: any, defaultMessage: string = 'Erro ao pr
     return 'Este e-mail já está cadastrado na plataforma GOUOCE.';
   }
 
+  const campos: Record<string, string> = {
+    assentos: 'Quantidade de assentos', qtd_assentos: 'Quantidade de assentos',
+    capacidade_em_pe: 'Capacidade em pé', capacidade_maxima: 'Capacidade em pé',
+    placa: 'Placa', placa_onibus: 'Placa',
+  };
+
   // 1. Caso { detail: { erros: [...] } }
   if (data?.detail?.erros && Array.isArray(data.detail.erros)) {
     return data.detail.erros.join('\n');
@@ -28,7 +34,7 @@ export function getErrorMessage(error: any, defaultMessage: string = 'Erro ao pr
   // 2. Caso { error: { details: [...] } }
   if (data?.error?.details && Array.isArray(data.error.details)) {
     const mensagens = data.error.details
-      .map((d: any) => (typeof d === 'string' ? d : d.message || (d.field ? `${d.field}: ${d.message}` : JSON.stringify(d))))
+      .map((d: any) => (typeof d === 'string' ? d : (campos[d.field] && d.message ? `${campos[d.field]}: ${d.message}` : d.message || JSON.stringify(d))))
       .filter(Boolean);
     return Array.from(new Set(mensagens)).join('\n');
   }
@@ -40,7 +46,7 @@ export function getErrorMessage(error: any, defaultMessage: string = 'Erro ao pr
         const rawField = Array.isArray(err.loc) ? err.loc.slice(-1)[0] : '';
         const msg = err.msg || '';
         if (rawField && msg) {
-          return `${rawField}: ${msg}`;
+          return `${campos[rawField] || rawField}: ${msg}`;
         }
         return msg || rawField || JSON.stringify(err);
       })

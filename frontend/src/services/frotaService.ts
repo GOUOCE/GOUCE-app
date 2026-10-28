@@ -125,15 +125,7 @@ export const frotaService = {
   },
 
   async inativarOnibus(placaOuId: number | string): Promise<void> {
-    try {
-      await api.patch(`/onibus/${placaOuId}/inativar`);
-    } catch (error: any) {
-      if (error.response?.status === 409 || error.response?.data?.detail || error.response?.data?.message) {
-        const msg = error.response?.data?.detail || error.response?.data?.message || error.message;
-        throw new Error(msg || 'Este veículo possui alocações pendentes e não pode ser inativado no momento.');
-      }
-      throw error;
-    }
+    await api.patch(`/onibus/${placaOuId}/inativar`);
   },
 
   async reativarOnibus(placaOuId: number | string): Promise<void> {

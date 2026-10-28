@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Button } from 'react-native-paper';
+import { Text, TextInput, Button, ActivityIndicator } from 'react-native-paper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,9 +12,14 @@ import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function EditarOnibusScreen() {
-  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  return <EditarOnibusForm key={id} id={id} />;
+}
 
+function EditarOnibusForm({ id }: { id: string }) {
+  const router = useRouter();
+
+  const [carregando, setCarregando] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadError, setIsLoadError] = useState(false);
 
@@ -34,9 +39,9 @@ export default function EditarOnibusScreen() {
     message: '',
   });
 
-  const showPopup = (config: Omit<typeof popup, 'visible'>) => {
+  const showPopup = React.useCallback((config: Omit<typeof popup, 'visible'>) => {
     setPopup({ ...config, visible: true });
-  };
+  }, []);
 
   const closePopup = () => {
     setPopup((prev) => ({ ...prev, visible: false }));
@@ -55,6 +60,7 @@ export default function EditarOnibusScreen() {
   useFocusEffect(
     React.useCallback(() => {
       let isMounted = true;
+      setCarregando(true);
       setIsLoadError(false);
       reset({
         placa: '',
@@ -66,7 +72,9 @@ export default function EditarOnibusScreen() {
         if (!id) return;
         try {
           const o = await frotaService.obterOnibusPorId(id);
-          if (o && isMounted) {
+          if (!isMounted) return;
+          if (!o) throw new Error('Ônibus não encontrado.');
+          if (o) {
             setIsLoadError(false);
             reset({
               placa: o.placa,
@@ -75,7 +83,8 @@ export default function EditarOnibusScreen() {
             });
           }
         } catch (err) {
-          if (isMounted) setIsLoadError(true);
+          if (!isMounted) return;
+          setIsLoadError(true);
           const msg = getErrorMessage(err, 'Erro ao carregar dados do ônibus.');
           showPopup({
             type: 'error',
@@ -83,6 +92,8 @@ export default function EditarOnibusScreen() {
             message: msg,
             confirmText: 'Entendido',
           });
+        } finally {
+          if (isMounted) setCarregando(false);
         }
       }
 
@@ -90,13 +101,14 @@ export default function EditarOnibusScreen() {
 
       return () => {
         isMounted = false;
+        setCarregando(true);
         reset({
           placa: '',
           assentos: undefined,
           capacidadeEmPe: undefined,
         });
       };
-    }, [id, reset])
+    }, [id, reset, showPopup])
   );
 
   const voltarParaListagem = () => {
@@ -121,7 +133,7 @@ export default function EditarOnibusScreen() {
   };
 
   const onSubmit = async (dados: FrotaFormData) => {
-    if (!id || isLoadError) return;
+    if (!id || isLoadError || carregando) return;
     setIsLoading(true);
     try {
       await frotaService.atualizarOnibus(id, dados.placa, Number(dados.assentos), Number(dados.capacidadeEmPe));
@@ -173,7 +185,7 @@ export default function EditarOnibusScreen() {
         onDismiss={closePopup}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      {carregando ? <ActivityIndicator accessibilityLabel="Carregando ônibus" /> : <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Placa */}
         <View style={styles.inputBox}>
           <Controller
@@ -186,7 +198,7 @@ export default function EditarOnibusScreen() {
                 placeholder="ex: OCR-1234"
                 value={value}
                 maxLength={8}
-                onChangeText={(t) => onChange(t.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 8))}
+                onChangeText={(t) => onChange(t.toUpperCase())}
                 autoCapitalize="characters"
                 error={!!errors.placa}
                 style={styles.input}
@@ -250,7 +262,7 @@ export default function EditarOnibusScreen() {
         >
           Salvar alterações
         </Button>
-      </ScrollView>
+      </ScrollView>}
     </View>
   );
 }

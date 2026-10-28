@@ -19,6 +19,7 @@ def validation_message(error: dict, field: str | None) -> str:
     context = error.get("ctx") or {}
 
     tipo_msg = {
+        "int_from_float": "Informe um número inteiro válido.",
         "int_parsing": "Informe um número válido.",
         "int_type": "Informe um número válido.",
         "bool_parsing": "Informe um valor booleano válido.",
@@ -26,6 +27,14 @@ def validation_message(error: dict, field: str | None) -> str:
     }.get(error_type)
     if tipo_msg:
         return tipo_msg
+
+    if error_type == "less_than_equal":
+        if context.get("le") == 100:
+            if field in {"assentos", "qtd_assentos", "quantidade_assentos"}:
+                return "A quantidade de assentos deve ser no máximo 100."
+            if field in {"capacidade_em_pe", "capacidade_maxima", "capacidade_alunos_em_pe", "capacidade_maxima_alunos_em_pe"}:
+                return "A capacidade em pé deve ser no máximo 100."
+        return f"O valor informado excede o limite máximo permitido (máximo {context.get('le')})."
 
     msg_customizada = error.get("msg")
     if msg_customizada and not msg_customizada.startswith("Value error,"):
