@@ -614,6 +614,7 @@ async def aprovar_aluno(
         resultado = use_case.execute(
             aluno_id=aluno_id,
             novo_status=StatusCadastroEnum.ATIVADO,
+            usuario_responsavel_id=current_user.get("current_user_id"),
         )
 
         usuario, aluno = repository.buscar_com_detalhes_por_id(aluno_id)
@@ -695,6 +696,7 @@ async def atualizar_status_aluno(
             novo_status=data.status_cadastro,
             motivo_reprovacao=data.motivo_reprovacao,
             documentos_reenvio=getattr(data, "documentos_reenvio", None),
+            usuario_responsavel_id=current_user.get("current_user_id"),
         )
 
         if data.status_cadastro == StatusCadastroEnum.REJEITADO:

@@ -144,6 +144,77 @@ class AvaliacaoCadastroUseCaseTest(unittest.TestCase):
                 self.assertEqual(repositorio.aluno.status_cadastro, "rejeitado")
 
 
+class FakeSessao:
+    def __init__(self):
+        self.registros = []
+        self.commits = 0
+
+    def add(self, registro):
+        self.registros.append(registro)
+
+    def commit(self):
+        self.commits += 1
+
+    def refresh(self, entidade):
+        pass
+
+
+class AuditoriaDaAvaliacaoTest(unittest.TestCase):
+    def avaliar(self, status_atual, novo_status, usuario_responsavel_id=1, **extras):
+        aluno = SimpleNamespace(
+            aluno_id=4,
+            status_cadastro=status_atual,
+            motivo_reprovacao=None,
+            documentos_reenvio=None,
+            validade_acesso=None,
+            data_hora_envio_analise=None,
+            data_hora_ultima_renovacao_matricula=None,
+        )
+        sessao = FakeSessao()
+        repositorio = SQLAlchemyUsuarioRepository(sessao)
+        repositorio.buscar_aluno_por_id = lambda aluno_id: aluno
+
+        repositorio.atualizar_status_aluno(
+            aluno_id=4,
+            novo_status=novo_status,
+            usuario_responsavel_id=usuario_responsavel_id,
+            **extras,
+        )
+
+        self.assertEqual(len(sessao.registros), 1)
+        self.assertEqual(sessao.commits, 1)
+        return sessao.registros[0]
+
+    def test_aprovacao_registra_o_administrador_e_o_status_antes_e_depois(self):
+        # RNF-013: o log gravava o id do aluno como autor e o status novo também como anterior.
+        registro = self.avaliar("pendente", "ativado", usuario_responsavel_id=1)
+
+        self.assertEqual(registro.usuario_id, 1)
+        self.assertEqual(registro.acao, "UPDATE_STATUS")
+        self.assertEqual(registro.entidade, "aluno")
+        self.assertEqual(registro.entidade_id, 4)
+        self.assertEqual(registro.valor_anterior, "pendente")
+        self.assertEqual(registro.valor_novo, "ativado")
+
+    def test_reprovacao_registra_o_status_de_onde_o_aluno_saiu(self):
+        registro = self.avaliar(
+            "analise_renovacao",
+            "rejeitado",
+            usuario_responsavel_id=7,
+            motivo_reprovacao="Dados inconsistentes.",
+            documentos_reenvio=[DOCUMENTO_VALIDO],
+        )
+
+        self.assertEqual(registro.usuario_id, 7)
+        self.assertEqual(registro.valor_anterior, "analise_renovacao")
+        self.assertEqual(registro.valor_novo, "rejeitado")
+
+    def test_sem_responsavel_o_autor_fica_vazio_em_vez_de_virar_o_aluno(self):
+        registro = self.avaliar("pendente", "ativado", usuario_responsavel_id=None)
+
+        self.assertIsNone(registro.usuario_id)
+
+
 class AvaliacaoCadastroDTOTest(unittest.TestCase):
     def test_motivo_do_documento_vazio_ou_so_com_espacos_e_recusado(self):
         for motivo in ("", "   ", "\t\n"):
@@ -238,6 +309,22 @@ class AvaliacaoCadastroRotasTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(corpo["status_cadastro"], "rejeitado")
         self.assertEqual(corpo["documentos_reenvio"], [DOCUMENTO_VALIDO])
         email.return_value.enviar_documentos_rejeitados.assert_called_once()
+
+    async def test_aprovar_e_reprovar_passam_o_administrador_logado_para_a_auditoria(self):
+        with patch(f"{ROTAS_USUARIO}.get_email_service", return_value=MagicMock()):
+            await self.patch("/usuarios/alunos/4/aprovar")
+            self.assertEqual(self.repositorio.chamadas[0]["usuario_responsavel_id"], 1)
+
+            self.repositorio = FakeRepositorio()
+            await self.patch(
+                "/usuarios/alunos/4/status",
+                {
+                    "status_cadastro": "rejeitado",
+                    "motivo_reprovacao": "Cadastro com dados inconsistentes.",
+                    "documentos_reenvio": [DOCUMENTO_VALIDO],
+                },
+            )
+            self.assertEqual(self.repositorio.chamadas[0]["usuario_responsavel_id"], 1)
 
     async def test_aprovar_aluno_fora_da_fila_devolve_409_sem_alterar_nem_enviar_e_mail(self):
         for status_atual in ("ativado", "rejeitado"):

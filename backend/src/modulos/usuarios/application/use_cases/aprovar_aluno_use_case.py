@@ -56,6 +56,7 @@ class AprovarAlunoUseCase:
         novo_status: StatusCadastroEnum | str = StatusCadastroEnum.ATIVADO,
         motivo_reprovacao: str | None = None,
         documentos_reenvio: dict | list | None = None,
+        usuario_responsavel_id: int | None = None,
     ) -> AprovacaoAlunoResponseDTO:
         if not aluno_id or not isinstance(aluno_id, int) or aluno_id <= 0:
             raise ValueError("ID do aluno é obrigatório e deve ser um número inteiro positivo")
@@ -109,6 +110,7 @@ class AprovarAlunoUseCase:
             motivo_reprovacao=motivo_reprovacao,
             documentos_reenvio=documentos,
             validade_acesso=validade_acesso,
+            usuario_responsavel_id=usuario_responsavel_id,
         )
 
         mensagens = {
