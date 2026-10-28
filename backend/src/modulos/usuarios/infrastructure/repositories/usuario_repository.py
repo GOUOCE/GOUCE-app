@@ -138,8 +138,10 @@ class SQLAlchemyUsuarioRepository:
 
         if aluno:
             status_cadastro = self._normalizar_valor(aluno.status_cadastro)
-            # O aluno rejeitado ainda pode logar para reenviar documentos.
-            ativo = status_cadastro in {"ativado", "analise_renovacao", "rejeitado"}
+            # O aluno rejeitado ainda pode logar para reenviar documentos, e o
+            # pendente para acompanhar a avaliação (HU-031). O acesso deles aos
+            # demais recursos é limitado pelas dependências de autorização (RN-011).
+            ativo = status_cadastro in {"ativado", "analise_renovacao", "rejeitado", "pendente"}
             motivo = None
 
             if status_cadastro == "pendente":
