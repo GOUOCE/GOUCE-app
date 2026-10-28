@@ -21,9 +21,11 @@ class FaculdadeNaoEncontradaError(ValueError):
     """Lançada quando a faculdade não é encontrada."""
     pass
 
+
 class FaculdadeJaAtivadaError(ValueError):
     """Lançada ao ativar uma faculdade que já está ativa."""
     pass
+
 
 class FaculdadeJaDesativadaError(ValueError):
     """Lançada ao inativar uma faculdade que já está inativa."""
@@ -163,6 +165,9 @@ class FaculdadeRepository:
             ):
                 raise FaculdadeJaCadastradaError("Esta faculdade já está cadastrada.")
 
+            if ativo is False and faculdade.ativo:
+                self._validar_sem_rota_ativa(faculdade_id)
+
             antes = self._snapshot(faculdade)
 
             if nome is not None:
@@ -221,6 +226,8 @@ class FaculdadeRepository:
                     if ativo
                     else FaculdadeJaDesativadaError("Faculdade já desativada.")
                 )
+            if not ativo:
+                self._validar_sem_rota_ativa(faculdade_id)
             self._aplicar_status(faculdade, ativo, usuario_executor_id)
             self.session.commit()
             self.session.refresh(faculdade)
@@ -235,9 +242,7 @@ class FaculdadeRepository:
         ativo: bool,
         usuario_executor_id: Optional[int],
     ) -> None:
-
-        if not ativo:
-            self._validar_sem_rota_ativa(faculdade.id_faculdade)
+ 
         anterior = "ativo" if faculdade.ativo else "inativo"
         faculdade.ativo = ativo
         self._registrar(

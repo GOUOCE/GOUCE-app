@@ -112,6 +112,9 @@ class FaculdadesCrudUnitTest(unittest.TestCase):
             def add(self, item):
                 pass
 
+            def flush(self):
+                pass
+
             def commit(self):
                 raise IntegrityError("duplicate key", params=None, orig=Exception("uq_faculdade_nome_campus"))
 
@@ -157,6 +160,7 @@ class FaculdadesCrudUnitTest(unittest.TestCase):
         log = self.session.query(LogAuditoriaORM).filter(
             LogAuditoriaORM.entidade == "faculdade",
             LogAuditoriaORM.entidade_id == faculdade_id,
+            LogAuditoriaORM.acao == "INATIVAR",
         ).first()
 
         self.assertIsNotNone(log)
@@ -428,6 +432,7 @@ class FaculdadesApiHttpTest(unittest.IsolatedAsyncioTestCase):
         log = self.session.query(LogAuditoriaORM).filter(
             LogAuditoriaORM.entidade == "faculdade",
             LogAuditoriaORM.entidade_id == faculdade_id,
+            LogAuditoriaORM.acao == "INATIVAR",
         ).first()
         self.assertIsNotNone(log)
         self.assertEqual(log.usuario_id, 1)
@@ -470,13 +475,13 @@ class FaculdadesApiHttpTest(unittest.IsolatedAsyncioTestCase):
         faculdade_id = resposta["data"]["id_faculdade"]
 
         for acao, esperado, total_logs, ativo in (
-            ("ativar", 409, 0, True),
-            ("inativar", 200, 1, False),
-            ("inativar", 409, 1, False),
-            ("ativar", 200, 2, True),
-            ("ativar", 409, 2, True),
-            ("inativar", 200, 3, False),
-            ("inativar", 409, 3, False),
+            ("ativar", 409, 1, True),
+            ("inativar", 200, 2, False),
+            ("inativar", 409, 2, False),
+            ("ativar", 200, 3, True),
+            ("ativar", 409, 3, True),
+            ("inativar", 200, 4, False),
+            ("inativar", 409, 4, False),
         ):
             with self.subTest(acao=acao, esperado=esperado, total_logs=total_logs):
                 status, body = await self.asgi_request(
@@ -499,7 +504,7 @@ class FaculdadesApiHttpTest(unittest.IsolatedAsyncioTestCase):
                 ).order_by(LogAuditoriaORM.id).all()
                 self.assertEqual(len(logs), total_logs)
 
-        self.assertEqual([log.acao for log in logs], ["INATIVAR", "ATIVAR", "INATIVAR"])
+        self.assertEqual([log.acao for log in logs], ["CRIAR", "INATIVAR", "ATIVAR", "INATIVAR"])
         self.assertTrue(all(log.usuario_id == 1 for log in logs))
 
     async def test_listar_faculdades_com_e_sem_filtro(self):
