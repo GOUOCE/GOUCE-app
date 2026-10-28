@@ -1,24 +1,3 @@
-const DICIONARIO_CAMPOS: Record<string, string> = {
-  assentos: 'Qtd. de Assentos',
-  qtd_assentos: 'Qtd. de Assentos',
-  capacidade_em_pe: 'Capac. Máxima em Pé',
-  capacidade_maxima: 'Capac. Máxima em Pé',
-  placa: 'Placa',
-  placa_onibus: 'Placa',
-  nome: 'Nome',
-  nome_faculdade: 'Nome da Instituição',
-  sigla: 'Sigla',
-  sigla_faculdade: 'Sigla',
-  campus: 'Campus',
-  campus_faculdade: 'Campus',
-  email: 'E-mail',
-  telefone: 'Telefone',
-  bairro_id: 'Bairro',
-  faculdade_id: 'Instituição de Ensino',
-  horario_saida: 'Horário de Saída',
-  horario_retorno: 'Horário de Retorno',
-};
-
 /**
  * Extrai uma mensagem de erro padronizada, clara e específica de uma resposta da API (FastAPI)
  */
@@ -49,18 +28,8 @@ export function getErrorMessage(error: any, defaultMessage: string = 'Erro ao pr
   // 2. Caso { error: { details: [...] } }
   if (data?.error?.details && Array.isArray(data.error.details)) {
     const mensagens = data.error.details
-      .map((d: any) => {
-        if (typeof d === 'string') return d;
-        const nomeCampoRaw = d.field || '';
-        const rotuloAmigavel = DICIONARIO_CAMPOS[nomeCampoRaw] || nomeCampoRaw;
-        const msg = d.message || '';
-        if (rotuloAmigavel && msg) {
-          return `${rotuloAmigavel}: ${msg}`;
-        }
-        return msg || rotuloAmigavel || JSON.stringify(d);
-      })
+      .map((d: any) => (typeof d === 'string' ? d : d.message || (d.field ? `${d.field}: ${d.message}` : JSON.stringify(d))))
       .filter(Boolean);
-
     return Array.from(new Set(mensagens)).join('\n');
   }
 
@@ -69,12 +38,11 @@ export function getErrorMessage(error: any, defaultMessage: string = 'Erro ao pr
     const mensagens = data.detail
       .map((err: any) => {
         const rawField = Array.isArray(err.loc) ? err.loc.slice(-1)[0] : '';
-        const rotuloAmigavel = DICIONARIO_CAMPOS[rawField] || rawField;
         const msg = err.msg || '';
-        if (rotuloAmigavel && msg) {
-          return `${rotuloAmigavel}: ${msg}`;
+        if (rawField && msg) {
+          return `${rawField}: ${msg}`;
         }
-        return msg || rotuloAmigavel || JSON.stringify(err);
+        return msg || rawField || JSON.stringify(err);
       })
       .filter(Boolean);
 
