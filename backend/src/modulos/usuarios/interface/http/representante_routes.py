@@ -18,6 +18,7 @@ from src.modulos.usuarios.application.use_cases.gerenciar_representantes_use_cas
 from src.modulos.usuarios.infrastructure.repositories.representante_repository import (
     AlunoNaoAprovadoOuInativoError,
     AlunoNaoEncontradoError,
+    AlunoValidadeAcessoExpiradoError,
     FaculdadeInativaError,
     FaculdadeNaoEncontradaError,
     RepresentanteJaAtivoError,
@@ -127,7 +128,7 @@ async def promover_aluno(
         raise HTTPException(status_code=404, detail=str(error))
     except FaculdadeInativaError as error:
         raise HTTPException(status_code=422, detail=str(error))
-    except AlunoNaoAprovadoOuInativoError as error:
+    except (AlunoNaoAprovadoOuInativoError, AlunoValidadeAcessoExpiradoError) as error:
         raise HTTPException(status_code=422, detail=str(error))
     except RepresentanteJaAtivoError as error:
         raise HTTPException(status_code=409, detail=str(error))

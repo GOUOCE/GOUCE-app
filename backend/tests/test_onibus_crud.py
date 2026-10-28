@@ -171,6 +171,24 @@ class OnibusCrudUnitTest(unittest.TestCase):
         self.assertEqual(log_ativar.usuario_id, 99)
         self.assertEqual(log_ativar.valor_novo, "ativo")
 
+    def test_criar_editar_e_mudar_status_por_atualizar_gravam_o_administrador(self):
+        onibus = self.service.criar(
+            placa="LOG-1234", qtd_assentos=40, capacidade_maxima=15, usuario_executor_id=7
+        )
+        self.service.atualizar(onibus.placa, qtd_assentos=44, usuario_executor_id=7)
+        self.service.atualizar(onibus.placa, ativo=False, usuario_executor_id=7)
+
+        logs = (
+            self.session.query(LogAuditoriaORM)
+            .filter_by(entidade="onibus")
+            .order_by(LogAuditoriaORM.id)
+            .all()
+        )
+        self.assertEqual(
+            [(log.acao, log.usuario_id) for log in logs],
+            [("CRIAR", 7), ("EDITAR", 7), ("INATIVAR", 7)],
+        )
+
 
 class OnibusApiHttpTest(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
@@ -411,6 +429,34 @@ class OnibusApiHttpTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(status_reativar, 200)
         self.assertEqual(body_reativar["message"], "Operação realizada com sucesso")
         self.assertTrue(body_reativar["data"]["ativo"])
+
+    async def test_escritas_gravam_o_administrador_logado_na_auditoria(self):
+        placa = "AUD-1A11"
+        status, _ = await self.asgi_request("/onibus", payload={"placa": placa, "assentos": 30, "capacidade_em_pe": 10}, method="POST")
+        self.assertEqual(status, 201)
+        status, _ = await self.asgi_request(f"/onibus/{placa}", payload={"assentos": 40}, method="PATCH")
+        self.assertEqual(status, 200)
+        files = {"foto": ("foto.png", b"fake-png-content", "image/png")}
+        status, _ = await self.asgi_multipart_request(f"/onibus/{placa}/foto", fields={}, files=files, method="POST")
+        self.assertEqual(status, 200)
+        status, _ = await self.asgi_request(f"/onibus/{placa}", payload={"ativo": False}, method="PATCH")
+        self.assertEqual(status, 200)
+        status, _ = await self.asgi_request(f"/onibus/{placa}", payload={"ativo": True}, method="PATCH")
+        self.assertEqual(status, 200)
+        status, _ = await self.asgi_request(f"/onibus/{placa}/foto", method="DELETE")
+        self.assertEqual(status, 200)
+
+        logs = (
+            self.session.query(LogAuditoriaORM)
+            .filter_by(entidade="onibus")
+            .order_by(LogAuditoriaORM.id)
+            .all()
+        )
+        self.assertEqual(
+            [log.acao for log in logs],
+            ["CRIAR", "EDITAR", "EDITAR", "INATIVAR", "ATIVAR", "EDITAR"],
+        )
+        self.assertEqual({log.usuario_id for log in logs}, {self.fake_admin["current_user_id"]})
 
     async def test_bloqueio_403_para_nao_admin(self):
         user_aluno = {
