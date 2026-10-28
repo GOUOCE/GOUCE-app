@@ -5,6 +5,7 @@ from pydantic import BaseModel, EmailStr, Field, ConfigDict, model_validator
 from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
 from src.shared.enums.tipo_documento_reenvio_enum import TipoDocumentoReenvioEnum
 from src.shared.enums.turno_curso_enum import TurnoCursoEnum
+from src.shared.validators.id_localidade_validator import IdLocalidade
 from src.shared.enums.demograficos_enum import (
     RacaEnum,
     IdentidadeSexualEnum,
@@ -35,9 +36,9 @@ class ValidarEtapa2CadastroUsuarioDTO(BaseModel):
 class ValidarEtapa3CadastroUsuarioDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    bairro_id: int | str = Field(min_length=1, max_length=20)
+    bairro_id: IdLocalidade
     telefone: str = Field(min_length=1, max_length=20)
-    faculdade_id: int
+    faculdade_id: IdLocalidade
     curso: str = Field(min_length=1, max_length=150)
     periodo_ingresso: str = Field(min_length=1, max_length=20)
     turno_curso: TurnoCursoEnum | str | None = None
@@ -56,8 +57,8 @@ class CadastroUsuarioDTO(BaseModel):
     email: EmailStr
     senha: str = Field(min_length=8, max_length=128)
     telefone: str = Field(min_length=1, max_length=20)
-    faculdade_id: int
-    bairro_id: int 
+    faculdade_id: IdLocalidade
+    bairro_id: IdLocalidade
     id_comprovante_matricula: str = Field(default="", max_length=255)
     id_comprovante_residencia: str = Field(default="", max_length=255)
     data_nascimento: str | int | float | date | datetime | None = None

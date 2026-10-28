@@ -45,9 +45,14 @@ def validation_message(error: dict, field: str | None) -> str:
     required_messages = {
         "comprovante_matricula": "Comprovante de matrícula é obrigatório.",
         "nome": "Informe o nome completo.",
+        "bairro_id": "Selecione o bairro.",
+        "faculdade_id": "Selecione a instituição.",
     }
     if error_type in {"missing", "field_required"} and field in required_messages:
         return required_messages[field]
+
+    if field in {"bairro_id", "faculdade_id"}:
+        return str(context.get("error") or "Informe o ID inteiro positivo da localidade cadastrada.")
 
     if error_type in {"value_error", "value_error.email"} and field == "email":
         return "Formato de e-mail inválido."

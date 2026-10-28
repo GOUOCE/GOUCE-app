@@ -146,8 +146,13 @@ class BairrosCrudUnitTest(unittest.TestCase):
             b1.bairro_id, pontos_de_parada=["Ponto 3"]
         )
         self.assertEqual(
-            [p.nome for p in atualizado.pontos_de_parada],
+            [p.nome for p in atualizado.pontos_de_parada if p.ativo],
             ["Ponto 3"],
+        )
+
+        self.assertEqual(
+            {p.nome for p in atualizado.pontos_de_parada if not p.ativo},
+            {"Ponto 1", "Ponto 2", "Ponto Renovado"},
         )
 
         b2_db = self.repository.buscar_por_id(b2.bairro_id)
@@ -164,6 +169,19 @@ class BairrosCrudUnitTest(unittest.TestCase):
             str(ctx.exception),
             "O ponto de parada 'ponto 3' está repetido neste bairro.",
         )
+
+    def test_inativar_e_reativar_ponto_preserva_registro_e_id(self):
+        bairro = self.service.criar("Centro", ["Praça", "Mercado"])
+        ids = {p.nome: p.ponto_id for p in bairro.pontos_de_parada}
+
+        atualizado = self.service.atualizar(bairro.bairro_id, pontos_de_parada=["Praça"])
+        mercado = next(p for p in atualizado.pontos_de_parada if p.nome == "Mercado")
+        self.assertEqual(mercado.ponto_id, ids["Mercado"])
+        self.assertFalse(mercado.ativo)
+
+        atualizado = self.service.atualizar(bairro.bairro_id, pontos_de_parada=["Praça", "Mercado"])
+        self.assertEqual({p.nome: p.ponto_id for p in atualizado.pontos_de_parada}, ids)
+        self.assertTrue(all(p.ativo for p in atualizado.pontos_de_parada))
 
     def test_criterio_5_inativacao_e_reativacao_gera_log_auditoria(self):
         b = self.service.criar("Distrito", ["Ponto X"])

@@ -1,35 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
-import { TextInput, Text, useTheme, Portal } from 'react-native-paper';
+import { TextInput, Text, Button, useTheme, Portal } from 'react-native-paper';
 import { useFormContext, Controller } from 'react-hook-form';
 import { ChevronDown, Phone, School, GraduationCap, Search, X } from 'lucide-react-native';
 import { formatarCelular } from '../../utils/formatarTelefone';
 import { abreviarParaLargura } from '../../utils/abreviarTexto';
+import { carregarVinculosAtivos } from '../../services/vinculoAlunoService';
+import { getErrorMessage } from '../../utils/errorUtils';
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
 
 interface SelectInputProps {
   label: string;
   value: string;
-  options: string[];
+  options: (string | SelectOption)[];
   onSelect: (val: string) => void;
   error?: boolean;
   leftIcon?: React.ReactNode;
   searchable?: boolean;
+  disabled?: boolean;
 }
 
-function CustomSelect({ label, value, options, onSelect, error, leftIcon, searchable }: SelectInputProps) {
+function CustomSelect({ label, value, options, onSelect, error, leftIcon, searchable, disabled }: SelectInputProps) {
   const [visible, setVisible] = useState(false);
   const [largura, setLargura] = useState(0);
-  const texto = value || 'Selecionar';
+  const opcoes = options.map((opt) => typeof opt === 'string' ? { value: opt, label: opt } : opt);
+  const texto = opcoes.find((opt) => opt.value === value)?.label || 'Selecionar';
   const [searchQuery, setSearchQuery] = useState('');
   const theme = useTheme();
 
   const filteredOptions = searchable && searchQuery.trim()
-    ? options.filter((opt) => opt.toLowerCase().includes(searchQuery.toLowerCase().trim()))
-    : options;
+    ? opcoes.filter((opt) => opt.label.toLowerCase().includes(searchQuery.toLowerCase().trim()))
+    : opcoes;
 
   return (
     <View style={styles.selectContainer}>
-      <TouchableOpacity activeOpacity={0.7} onPress={() => setVisible(true)}>
+      <TouchableOpacity activeOpacity={0.7} disabled={disabled} onPress={() => setVisible(true)}>
         <View pointerEvents="none" onLayout={(e) => setLargura(e.nativeEvent.layout.width)}>
           <TextInput
             label={label}
@@ -40,7 +49,8 @@ function CustomSelect({ label, value, options, onSelect, error, leftIcon, search
             editable={false}
             error={error}
             left={leftIcon ? <TextInput.Icon icon={() => leftIcon} /> : undefined}
-            right={<TextInput.Icon icon={() => <ChevronDown size={20} color="#333" />} onPress={() => setVisible(true)} />}
+            disabled={disabled}
+            right={<TextInput.Icon icon={() => <ChevronDown size={20} color="#333" />} disabled={disabled} onPress={() => setVisible(true)} />}
             style={{ backgroundColor: '#fff' }}
           />
         </View>
@@ -90,15 +100,15 @@ function CustomSelect({ label, value, options, onSelect, error, leftIcon, search
                 {filteredOptions.length > 0 ? (
                   filteredOptions.map((opt) => (
                     <TouchableOpacity
-                      key={opt}
+                      key={opt.value}
                       style={styles.optionItem}
-                      onPress={() => { onSelect(opt); setVisible(false); setSearchQuery(''); }}
+                      onPress={() => { onSelect(opt.value); setVisible(false); setSearchQuery(''); }}
                     >
                       <Text variant="bodyLarge" style={[
                         styles.optionText,
-                        value === opt && { color: theme.colors.primary, fontWeight: 'bold' }
+                        value === opt.value && { color: theme.colors.primary, fontWeight: 'bold' }
                       ]}>
-                        {opt}
+                        {opt.label}
                       </Text>
                     </TouchableOpacity>
                   ))
@@ -149,15 +159,41 @@ const LISTA_DE_CURSOS = [
 ];
 
 export function Passo3ContatoVinculo() {
-  const { control, formState: { errors }, watch, setValue } = useFormContext();
-  // Enquanto o campo está em foco, mostra só os dígitos (dá para apagar e editar
-  // em qualquer posição); a máscara é aplicada ao sair do campo. Reformatar a cada
-  // tecla impedia apagar no meio do número e fazia o cursor pular para o final.
+  const { control, formState: { errors }, watch, setValue, getValues } = useFormContext();
   const [editandoTelefone, setEditandoTelefone] = useState(false);
 
+  const [bairrosAtivos, setBairrosAtivos] = useState<SelectOption[]>([]);
+  const [faculdadesAtivas, setFaculdadesAtivas] = useState<SelectOption[]>([]);
+  const [carregandoVinculos, setCarregandoVinculos] = useState(true);
+  const [erroVinculos, setErroVinculos] = useState('');
+  const [tentativa, setTentativa] = useState(0);
+
   const cursoSelecionado = watch('curso');
-  const instituicaoSelecionada = watch('instituicao');
-  const bairroSelecionado = watch('bairro');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    carregarVinculosAtivos().then(({ bairros, faculdades }) => {
+      if (!isMounted) return;
+      setBairrosAtivos(bairros.map((b) => ({ value: String(b.id), label: b.nome })));
+      setFaculdadesAtivas(faculdades.map((f) => ({
+        value: String(f.id),
+        label: `${f.sigla} - ${f.nome}${f.campus ? ` (${f.campus})` : ''}`,
+      })));
+      // O perfil também pode devolver o nome do bairro; converte somente se ele
+      // corresponder a um cadastro ativo, antes de preencher o seletor.
+      const bairroAtual = String(getValues('bairro') || '');
+      const bairroSalvo = bairros.find((b) => String(b.id) === bairroAtual || b.nome === bairroAtual);
+      setValue('bairro', bairroSalvo ? String(bairroSalvo.id) : '');
+      if (!faculdades.some((f) => String(f.id) === String(getValues('instituicao')))) setValue('instituicao', '');
+    }).catch((error) => {
+      if (isMounted) setErroVinculos(getErrorMessage(error, 'Não foi possível carregar os bairros e instituições.'));
+    }).finally(() => {
+      if (isMounted) setCarregandoVinculos(false);
+    });
+
+    return () => { isMounted = false; };
+  }, [tentativa, getValues, setValue]);
 
   const gerarPeriodosIngresso = () => {
     const anoAtual = new Date().getFullYear();
@@ -171,6 +207,22 @@ export function Passo3ContatoVinculo() {
 
   return (
     <View style={styles.container}>
+      {carregandoVinculos && <Text>Carregando bairros e instituições...</Text>}
+      {erroVinculos !== '' && (
+        <View>
+          <Text style={styles.errorText}>{erroVinculos}</Text>
+          <Button onPress={() => {
+            setCarregandoVinculos(true);
+            setErroVinculos('');
+            setBairrosAtivos([]);
+            setFaculdadesAtivas([]);
+            setTentativa((atual) => atual + 1);
+          }}>Tentar novamente</Button>
+        </View>
+      )}
+      {!carregandoVinculos && !erroVinculos && bairrosAtivos.length === 0 && (
+        <Text style={styles.errorText}>Não há bairros ativos disponíveis. Entre em contato com a administração.</Text>
+      )}
       <Controller
         control={control}
         name="bairro"
@@ -178,37 +230,14 @@ export function Passo3ContatoVinculo() {
           <CustomSelect
             label="Bairro / Localidade *"
             value={value}
-            options={['Centro', 'Croatá', 'Bairro Novo', 'Planalto', 'Serra', 'Outro']}
-            onSelect={(val) => {
-              onChange(val);
-              if (val !== 'Outro') setValue('bairroEspecifico', '');
-            }}
+            options={bairrosAtivos}
+            onSelect={onChange}
+            disabled={carregandoVinculos || !!erroVinculos}
             error={!!errors.bairro}
           />
         )}
       />
       {errors.bairro && <Text style={styles.errorText}>{errors.bairro.message as string}</Text>}
-
-      {bairroSelecionado === 'Outro' && (
-        <Controller
-          control={control}
-          name="bairroEspecifico"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              label="Especifique seu Bairro / Localidade *"
-              mode="outlined"
-              placeholder="Informe o nome do seu bairro"
-              value={value}
-              onChangeText={onChange}
-              error={!!errors.bairroEspecifico}
-              style={styles.input}
-            />
-          )}
-        />
-      )}
-      {bairroSelecionado === 'Outro' && errors.bairroEspecifico && (
-        <Text style={styles.errorText}>{errors.bairroEspecifico.message as string}</Text>
-      )}
 
       <Controller
         control={control}
@@ -232,6 +261,9 @@ export function Passo3ContatoVinculo() {
       />
       {errors.whatsapp && <Text style={styles.errorText}>{errors.whatsapp.message as string}</Text>}
 
+      {!carregandoVinculos && !erroVinculos && faculdadesAtivas.length === 0 && (
+        <Text style={styles.errorText}>Não há instituições de ensino ativas disponíveis. Entre em contato com a administração.</Text>
+      )}
       <Controller
         control={control}
         name="instituicao"
@@ -239,11 +271,9 @@ export function Passo3ContatoVinculo() {
           <CustomSelect
             label="Instituição de Ensino *"
             value={value}
-            options={['UFC - Universidade Federal do Ceará', 'IFCE', 'UNILAB', 'Estácio', 'Outra']}
-            onSelect={(val) => {
-              onChange(val);
-              if (val !== 'Outra') setValue('instituicaoEspecifica', '');
-            }}
+            options={faculdadesAtivas}
+            onSelect={onChange}
+            disabled={carregandoVinculos || !!erroVinculos}
             error={!!errors.instituicao}
             leftIcon={<School size={20} color="#666" />}
           />
@@ -251,27 +281,12 @@ export function Passo3ContatoVinculo() {
       />
       {errors.instituicao && <Text style={styles.errorText}>{errors.instituicao.message as string}</Text>}
 
-      {instituicaoSelecionada === 'Outra' && (
-        <Controller
-          control={control}
-          name="instituicaoEspecifica"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              label="Especifique a sua Instituição de Ensino *"
-              mode="outlined"
-              placeholder="Informe o nome da instituição"
-              value={value}
-              onChangeText={onChange}
-              error={!!errors.instituicaoEspecifica}
-              style={styles.input}
-            />
-          )}
-        />
+      {!carregandoVinculos && !erroVinculos && (bairrosAtivos.length === 0 || faculdadesAtivas.length === 0) && (
+        <Button onPress={() => {
+          setCarregandoVinculos(true);
+          setTentativa((atual) => atual + 1);
+        }}>Atualizar opções</Button>
       )}
-      {instituicaoSelecionada === 'Outra' && errors.instituicaoEspecifica && (
-        <Text style={styles.errorText}>{errors.instituicaoEspecifica.message as string}</Text>
-      )}
-
       <Controller
         control={control}
         name="curso"

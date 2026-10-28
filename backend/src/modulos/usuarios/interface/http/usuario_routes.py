@@ -11,6 +11,12 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from src.shared.infrastructure.db import get_session
+from src.shared.http.validation import validation_message
+from src.shared.validators.id_localidade_validator import IdLocalidade
+from src.modulos.usuarios.application.use_cases.validar_vinculos_aluno_use_case import (
+    ValidarVinculosAlunoUseCase,
+    VinculoAlunoValidationError,
+)
 from src.shared.auth.dependencies import (
     require_roles,
     verify_student_renewal_access,
@@ -82,7 +88,9 @@ def _validation_details(errors: list[dict]) -> list[dict]:
         ]
         details.append({
             "field": ".".join(location) or None,
-            "message": error.get("msg", "Valor inválido"),
+            "message": validation_message(error, location[-1])
+            if location and location[-1] in {"bairro_id", "faculdade_id"}
+            else error.get("msg", "Valor inválido"),
         })
     return details
 
@@ -317,14 +325,14 @@ async def cadastrar_usuario_com_arquivos(
     nome: str = Form(...),
     email: str = Form(...),
     senha: str = Form(...),
-    faculdade_id: int = Form(...),
+    faculdade_id: Annotated[IdLocalidade, Form()] = ...,
     curso: str = Form(...),
     data_nascimento: str = Form(...),
     termos_de_uso: bool = Form(...),
     comprovante_matricula: UploadFile = File(..., description="Arquivo PDF ou Imagem do comprovante de matrícula"),
     comprovante_residencia: UploadFile = File(..., description="Arquivo PDF ou Imagem do comprovante de residência"),
     telefone: str = Form(...),
-    bairro_id: str = Form(None),
+    bairro_id: Annotated[IdLocalidade, Form()] = ...,
     identificacao_genero: str = Form(...),
     tem_filhos: bool = Form(...),
     transgenero: str = Form(...),
@@ -354,11 +362,11 @@ async def cadastrar_usuario_com_arquivos(
                 details=[{"field": "senha", "message": mensagem_senha}],
             )
 
+        ValidarVinculosAlunoUseCase(repository).execute(bairro_id, faculdade_id)
         salvar_arquivo_uc = SalvarArquivoUseCase(arquivo_repository, storage_service)
 
         # Normaliza campos opcionais para evitar strings vazias vindas do Swagger/FormData.
         telefone = telefone.strip() if isinstance(telefone, str) and telefone.strip() else None
-        bairro_id = bairro_id.strip() if isinstance(bairro_id, str) and bairro_id.strip() else None
         identificacao_genero = identificacao_genero.strip() if isinstance(identificacao_genero, str) and identificacao_genero.strip() else None
         raca = raca.strip() if isinstance(raca, str) and raca.strip() else None
         identificacao_sexual = identificacao_sexual.strip() if isinstance(identificacao_sexual, str) and identificacao_sexual.strip() else None
@@ -429,6 +437,13 @@ async def cadastrar_usuario_com_arquivos(
         resposta = use_case.execute(dto)
         cadastro_concluido = True
         return resposta
+    except VinculoAlunoValidationError as error:
+        return _error_response(
+            status_code=422,
+            code="REQUEST_VALIDATION_ERROR",
+            message="Requisição inválida",
+            details=[{"field": error.field, "message": str(error)}],
+        )
     except EmailAlreadyRegisteredError:
         return _error_response(
             status_code=409,
@@ -498,6 +513,13 @@ async def cadastrar_usuario_json(
     try:
         use_case = CriarUsuarioUseCase(repository, hasher, token_service, repository_faculdade=repository_faculdade, repository_bairro=repository_bairro, arquivo_repository=arquivo_repository)
         return use_case.execute(data)
+    except VinculoAlunoValidationError as error:
+        return _error_response(
+            status_code=422,
+            code="REQUEST_VALIDATION_ERROR",
+            message="Requisição inválida",
+            details=[{"field": error.field, "message": str(error)}],
+        )
     except EmailAlreadyRegisteredError:
         return _error_response(
             status_code=409,
