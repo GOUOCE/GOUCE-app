@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Button, Snackbar } from 'react-native-paper';
+import { Text, TextInput, Button } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, Building2, X } from 'lucide-react-native';
+import { ChevronLeft, Building2 } from 'lucide-react-native';
 
 import { faculdadeSchema, FaculdadeFormData } from '@/schemas/faculdadeSchema';
 import { faculdadeService } from '@/services/faculdadeService';
@@ -15,8 +15,6 @@ export default function CadastrarFaculdadeScreen() {
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -41,7 +39,7 @@ export default function CadastrarFaculdadeScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const { control, handleSubmit, formState: { errors }, reset } = useForm<FaculdadeFormData>({
+  const { control, handleSubmit, formState: { errors }, reset, setValue, clearErrors } = useForm<FaculdadeFormData>({
     resolver: zodResolver(faculdadeSchema),
     defaultValues: {
       nome: '',
@@ -50,7 +48,6 @@ export default function CadastrarFaculdadeScreen() {
     },
   });
 
-  // Reseta o formulário limpo sempre que ganha ou perde o foco
   useFocusEffect(
     React.useCallback(() => {
       reset({
@@ -68,6 +65,13 @@ export default function CadastrarFaculdadeScreen() {
       };
     }, [reset])
   );
+
+  // Campo apagado não mostra erro; a mensagem de obrigatório só aparece ao cadastrar
+  const alterarCampo = (campo: keyof FaculdadeFormData, texto: string) => {
+    const preenchido = texto.trim() !== '';
+    setValue(campo, texto, { shouldDirty: true, shouldValidate: preenchido });
+    if (!preenchido) clearErrors(campo);
+  };
 
   const voltarParaListagem = () => {
     closePopup();
@@ -87,11 +91,13 @@ export default function CadastrarFaculdadeScreen() {
         try {
           await faculdadeService.criarFaculdade(dados.nome, dados.sigla, dados.campus);
           setIsLoading(false);
-          setSnackbarMessage('Faculdade cadastrada com sucesso');
-          setSnackbarVisivel(true);
-          setTimeout(() => {
-            voltarParaListagem();
-          }, 1200);
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: 'A faculdade foi cadastrada com sucesso.',
+            confirmText: 'OK',
+            onConfirm: voltarParaListagem,
+          });
         } catch (error: any) {
           setIsLoading(false);
           const msg = getErrorMessage(error, 'Erro ao cadastrar faculdade.');
@@ -134,13 +140,13 @@ export default function CadastrarFaculdadeScreen() {
           <Controller
             control={control}
             name="nome"
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { value } }) => (
               <TextInput
                 label="Nome da Instituição *"
                 mode="outlined"
                 placeholder="Nome da instituição"
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(texto) => alterarCampo('nome', texto)}
                 error={!!errors.nome}
                 left={<TextInput.Icon icon={() => <Building2 size={20} color="#666" />} />}
                 style={styles.input}
@@ -155,13 +161,13 @@ export default function CadastrarFaculdadeScreen() {
           <Controller
             control={control}
             name="sigla"
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { value } }) => (
               <TextInput
                 label="Sigla do Nome *"
                 mode="outlined"
                 placeholder="Sigla do nome (ex.: UFC)"
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(texto) => alterarCampo('sigla', texto)}
                 error={!!errors.sigla}
                 style={styles.input}
               />
@@ -175,13 +181,13 @@ export default function CadastrarFaculdadeScreen() {
           <Controller
             control={control}
             name="campus"
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { value } }) => (
               <TextInput
                 label="Campus *"
                 mode="outlined"
                 placeholder="Campus"
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(texto) => alterarCampo('campus', texto)}
                 error={!!errors.campus}
                 style={styles.input}
               />
@@ -193,7 +199,7 @@ export default function CadastrarFaculdadeScreen() {
         {/* Botão Finalizar Cadastro */}
         <Button
           mode="contained"
-          onPress={handleSubmit(onSubmit)}
+          onPress={handleSubmit(onSubmit) as any}
           loading={isLoading}
           disabled={isLoading}
           style={styles.saveButton}
@@ -202,20 +208,6 @@ export default function CadastrarFaculdadeScreen() {
           Finalizar cadastro
         </Button>
       </ScrollView>
-
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
     </View>
   );
 }
@@ -258,11 +250,5 @@ const styles = StyleSheet.create({
   },
   buttonContent: {
     height: 55,
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });

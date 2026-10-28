@@ -62,7 +62,7 @@ describe('Seletores de vínculos do aluno', () => {
     mockCarregar.mockResolvedValue(opcoes);
     await abrir();
     await selecionar('Bairro / Localidade *', 'Serra do Estêvão');
-    await selecionar('Instituição de Ensino *', 'UNI - Universidade (Quixadá)');
+    await selecionar('Instituição de Ensino *', 'Universidade - Quixadá');
     expect(form.getValues('bairro')).toBe('7');
     expect(form.getValues('instituicao')).toBe('9');
     expect(mockCarregar).toHaveBeenCalledTimes(1);
@@ -89,7 +89,7 @@ describe('Seletores de vínculos do aluno', () => {
     await renderer.act(async () => { root.root.findByType('Button').props.onPress(); });
     expect(textos()).not.toContain('Não há instituições');
     expect(form.getValues('bairro')).toBe('7');
-    await selecionar('Instituição de Ensino *', 'UNI - Universidade (Quixadá)');
+    await selecionar('Instituição de Ensino *', 'Universidade - Quixadá');
     expect(form.getValues('instituicao')).toBe('9');
     await renderer.act(async () => root.unmount());
   });

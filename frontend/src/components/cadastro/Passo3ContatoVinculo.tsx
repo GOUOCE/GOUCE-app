@@ -176,9 +176,10 @@ export function Passo3ContatoVinculo() {
     carregarVinculosAtivos().then(({ bairros, faculdades }) => {
       if (!isMounted) return;
       setBairrosAtivos(bairros.map((b) => ({ value: String(b.id), label: b.nome })));
+      // Nome e campus, como no cadastro de representante; a sigla pode não existir (#259, #262)
       setFaculdadesAtivas(faculdades.map((f) => ({
         value: String(f.id),
-        label: `${f.sigla} - ${f.nome}${f.campus ? ` (${f.campus})` : ''}`,
+        label: f.campus ? `${f.nome} - ${f.campus}` : f.nome,
       })));
       // O perfil também pode devolver o nome do bairro; converte somente se ele
       // corresponder a um cadastro ativo, antes de preencher o seletor.

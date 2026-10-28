@@ -50,6 +50,48 @@ def _error_response(status_code: int, code: str, message: str, details=None):
     )
 
 
+# Mensagens do Critério 12 - HU-008, as mesmas do faculdadeSchema do app
+_MENSAGENS_CAMPOS = {
+    "nome": {
+        "obrigatorio": "Informe o nome da instituição com pelo menos 3 caracteres",
+        "maximo": "O nome da instituição deve ter no máximo 150 caracteres",
+    },
+    "sigla": {
+        "obrigatorio": "Informe a sigla do nome (ex.: UFC)",
+        "maximo": "A sigla deve ter no máximo 20 caracteres",
+    },
+    "campus": {
+        "obrigatorio": "Informe o campus da instituição",
+        "maximo": "O campus deve ter no máximo 100 caracteres",
+    },
+}
+_ALIASES_CAMPOS = {
+    "nome_faculdade": "nome",
+    "sigla_faculdade": "sigla",
+    "campus_faculdade": "campus",
+}
+
+
+def _detalhes_validacao_faculdade(errors: list[dict]) -> list[dict]:
+    """Troca a mensagem genérica pela do campo e mantém a dos validators."""
+    details = validation_details(errors)
+    for error, detail in zip(errors, details):
+        campo = _ALIASES_CAMPOS.get(detail["field"], detail["field"])
+        mensagens = _MENSAGENS_CAMPOS.get(campo)
+        if mensagens is None:
+            continue
+        detail["field"] = campo
+        error_type = error.get("type")
+        if error_type in {"missing", "string_too_short"}:
+            detail["message"] = mensagens["obrigatorio"]
+        elif error_type == "string_too_long":
+            detail["message"] = mensagens["maximo"]
+        elif error_type == "value_error":
+            # Mensagem do field_validator, sem o prefixo do Pydantic
+            detail["message"] = str(error.get("ctx", {}).get("error") or error.get("msg"))
+    return details
+
+
 class FaculdadeValidationRoute(APIRoute):
     def get_route_handler(self):
         original_route_handler = super().get_route_handler()
@@ -63,7 +105,7 @@ class FaculdadeValidationRoute(APIRoute):
                     422,
                     "REQUEST_VALIDATION_ERROR",
                     "Requisição inválida",
-                    validation_details(error.errors()),
+                    _detalhes_validacao_faculdade(error.errors()),
                 )
             except HTTPException as error:
                 code_by_status = {
