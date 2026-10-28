@@ -11,9 +11,15 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from src.shared.infrastructure.db import get_session
+from src.shared.http.validation import validation_message
+from src.shared.validators.id_localidade_validator import IdLocalidade
+from src.modulos.usuarios.application.use_cases.validar_vinculos_aluno_use_case import (
+    ValidarVinculosAlunoUseCase,
+    VinculoAlunoValidationError,
+)
 from src.shared.auth.dependencies import (
     require_roles,
-    verify_student_renewal_access,
+    verify_student_profile_access,
     verify_student_standard_access,
 )
 from src.shared.auth.jwt_service import JWTService
@@ -45,7 +51,11 @@ from src.modulos.usuarios.application.use_cases.criar_usuario_use_case import (
 from src.modulos.crud_basicos.infrastructure.repositories.bairro_repository import BairroRepository
 from src.modulos.crud_basicos.infrastructure.repositories.faculdade_repository import FaculdadeRepository
 from src.modulos.usuarios.application.use_cases.listar_usuarios_use_case import ListarUsuariosUseCase
-from src.modulos.usuarios.application.use_cases.aprovar_aluno_use_case import AprovarAlunoUseCase
+from src.modulos.usuarios.application.use_cases.aprovar_aluno_use_case import (
+    AprovarAlunoUseCase,
+    AvaliacaoCadastroError,
+    CadastroForaDaFilaError,
+)
 from src.modulos.usuarios.application.use_cases.obter_perfil_aluno_use_case import ObterPerfilAlunoUseCase
 from src.modulos.usuarios.application.use_cases.redefinir_email_use_case import (
     RedefinirEmailUseCase,
@@ -82,7 +92,9 @@ def _validation_details(errors: list[dict]) -> list[dict]:
         ]
         details.append({
             "field": ".".join(location) or None,
-            "message": error.get("msg", "Valor inválido"),
+            "message": validation_message(error, location[-1])
+            if location and location[-1] in {"bairro_id", "faculdade_id"}
+            else error.get("msg", "Valor inválido"),
         })
     return details
 
@@ -195,6 +207,93 @@ class EdicaoPerfilValidationRoute(APIRoute):
         return custom_route_handler
 
 
+_ROTULOS_AVALIACAO = {
+    "status_cadastro": "O status do cadastro",
+    "motivo_reprovacao": "O motivo da reprovação",
+    "documentos_reenvio": "Os documentos para reenvio",
+    "tipo": "O tipo do documento",
+    "motivo": "O motivo do documento",
+    "aluno_id": "O ID do aluno",
+}
+
+
+def _opcoes(enum_cls) -> str:
+    valores = [item.value for item in enum_cls]
+    return f"{', '.join(valores[:-1])} ou {valores[-1]}"
+
+
+def _mensagem_validacao_avaliacao(error: dict, campo: str | None) -> str:
+    """Traduz as recusas estruturais da avaliação de cadastro para mensagens em português."""
+    tipo = error.get("type")
+    contexto = error.get("ctx") or {}
+    rotulo = _ROTULOS_AVALIACAO.get(campo, "O valor informado")
+
+    if tipo == "value_error":
+        return str(error.get("msg", "")).removeprefix("Value error, ") or "Valor inválido."
+    if tipo == "missing":
+        return f"{rotulo} é obrigatório."
+    if tipo == "string_too_short":
+        return {
+            "motivo": "Informe o motivo do documento.",
+            "motivo_reprovacao": "Informe o motivo da reprovação.",
+        }.get(campo, f"{rotulo} é curto demais.")
+    if tipo == "string_too_long":
+        return f"{rotulo} deve ter no máximo {contexto.get('max_length')} caracteres."
+    if tipo == "enum" and campo == "tipo":
+        return f"Tipo de documento inválido. Use {_opcoes(TipoDocumentoReenvioEnum)}."
+    if tipo == "enum" and campo == "status_cadastro":
+        return f"Status do cadastro inválido. Use {_opcoes(StatusCadastroEnum)}."
+    if tipo in {"int_parsing", "int_type", "int_from_float"}:
+        return f"{rotulo} deve ser um número inteiro."
+    if tipo == "string_type":
+        return f"{rotulo} deve ser um texto."
+    if tipo == "list_type":
+        return f"{rotulo} devem ser enviados em uma lista."
+    if tipo in {"json_invalid", "model_attributes_type", "dict_type"}:
+        return "Corpo da requisição inválido. Envie um JSON válido."
+    return f"{rotulo} é inválido."
+
+
+def _avaliacao_validation_details(errors: list[dict]) -> list[dict]:
+    details = []
+    for error in errors:
+        partes = [
+            str(parte)
+            for parte in error.get("loc", ())
+            if parte not in {"body", "path", "query", "form"}
+        ]
+        # JSON malformado aponta a posição do caractere, não um campo.
+        if error.get("type") == "json_invalid":
+            partes = []
+        campo = next((parte for parte in reversed(partes) if not parte.isdigit()), None)
+        details.append({
+            "field": ".".join(partes) or None,
+            "message": _mensagem_validacao_avaliacao(error, campo),
+        })
+    return details
+
+
+class AvaliacaoCadastroValidationRoute(APIRoute):
+    """Traduz e padroniza as recusas estruturais das rotas de avaliação de cadastro (HU-027)."""
+
+    def get_route_handler(self):
+        original_route_handler = super().get_route_handler()
+
+        @wraps(original_route_handler)
+        async def custom_route_handler(request: Request):
+            try:
+                return await original_route_handler(request)
+            except RequestValidationError as error:
+                return _error_response(
+                    status_code=422,
+                    code="REQUEST_VALIDATION_ERROR",
+                    message="Requisição inválida",
+                    details=_avaliacao_validation_details(error.errors()),
+                )
+
+        return custom_route_handler
+
+
 CADASTRO_ERROR_RESPONSES = {
     400: {"model": CadastroErrorResponseDTO},
     409: {"model": CadastroErrorResponseDTO},
@@ -206,6 +305,7 @@ CADASTRO_ERROR_RESPONSES = {
 router = APIRouter(prefix="/usuarios", tags=["Usuários e Alunos"])
 cadastro_router = APIRouter(route_class=CadastroValidationRoute)
 edicao_router = APIRouter(route_class=EdicaoPerfilValidationRoute)
+avaliacao_router = APIRouter(route_class=AvaliacaoCadastroValidationRoute)
 
 EDICAO_ERROR_RESPONSES = {
     400: {"model": CadastroErrorResponseDTO},
@@ -317,14 +417,14 @@ async def cadastrar_usuario_com_arquivos(
     nome: str = Form(...),
     email: str = Form(...),
     senha: str = Form(...),
-    faculdade_id: int = Form(...),
+    faculdade_id: Annotated[IdLocalidade, Form()] = ...,
     curso: str = Form(...),
     data_nascimento: str = Form(...),
     termos_de_uso: bool = Form(...),
     comprovante_matricula: UploadFile = File(..., description="Arquivo PDF ou Imagem do comprovante de matrícula"),
     comprovante_residencia: UploadFile = File(..., description="Arquivo PDF ou Imagem do comprovante de residência"),
     telefone: str = Form(...),
-    bairro_id: str = Form(None),
+    bairro_id: Annotated[IdLocalidade, Form()] = ...,
     identificacao_genero: str = Form(...),
     tem_filhos: bool = Form(...),
     transgenero: str = Form(...),
@@ -354,11 +454,11 @@ async def cadastrar_usuario_com_arquivos(
                 details=[{"field": "senha", "message": mensagem_senha}],
             )
 
+        ValidarVinculosAlunoUseCase(repository).execute(bairro_id, faculdade_id)
         salvar_arquivo_uc = SalvarArquivoUseCase(arquivo_repository, storage_service)
 
         # Normaliza campos opcionais para evitar strings vazias vindas do Swagger/FormData.
         telefone = telefone.strip() if isinstance(telefone, str) and telefone.strip() else None
-        bairro_id = bairro_id.strip() if isinstance(bairro_id, str) and bairro_id.strip() else None
         identificacao_genero = identificacao_genero.strip() if isinstance(identificacao_genero, str) and identificacao_genero.strip() else None
         raca = raca.strip() if isinstance(raca, str) and raca.strip() else None
         identificacao_sexual = identificacao_sexual.strip() if isinstance(identificacao_sexual, str) and identificacao_sexual.strip() else None
@@ -429,6 +529,13 @@ async def cadastrar_usuario_com_arquivos(
         resposta = use_case.execute(dto)
         cadastro_concluido = True
         return resposta
+    except VinculoAlunoValidationError as error:
+        return _error_response(
+            status_code=422,
+            code="REQUEST_VALIDATION_ERROR",
+            message="Requisição inválida",
+            details=[{"field": error.field, "message": str(error)}],
+        )
     except EmailAlreadyRegisteredError:
         return _error_response(
             status_code=409,
@@ -498,6 +605,13 @@ async def cadastrar_usuario_json(
     try:
         use_case = CriarUsuarioUseCase(repository, hasher, token_service, repository_faculdade=repository_faculdade, repository_bairro=repository_bairro, arquivo_repository=arquivo_repository)
         return use_case.execute(data)
+    except VinculoAlunoValidationError as error:
+        return _error_response(
+            status_code=422,
+            code="REQUEST_VALIDATION_ERROR",
+            message="Requisição inválida",
+            details=[{"field": error.field, "message": str(error)}],
+        )
     except EmailAlreadyRegisteredError:
         return _error_response(
             status_code=409,
@@ -570,29 +684,78 @@ async def cadastrar_usuario_alias(
     return await cadastrar_usuario_json(data, repository, arquivo_repository, hasher, token_service)
 
 
-@router.patch(
+@avaliacao_router.patch(
     "/alunos/{aluno_id}/aprovar",
     response_model=AprovarAlunoResponseDTO,
 )
 async def aprovar_aluno(
     aluno_id: int,
     repository=Depends(get_repository),
-    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ADMINISTRADOR.value))] = None,
+    current_user: Annotated[
+        dict,
+        Depends(require_roles(CargoEnum.ADMINISTRADOR.value)),
+    ] = None,
 ):
     try:
         use_case = AprovarAlunoUseCase(repository)
-        return use_case.execute(aluno_id=aluno_id, novo_status=StatusCadastroEnum.ATIVADO)
+
+        resultado = use_case.execute(
+            aluno_id=aluno_id,
+            novo_status=StatusCadastroEnum.ATIVADO,
+            usuario_responsavel_id=current_user.get("current_user_id"),
+        )
+
+        usuario, aluno = repository.buscar_com_detalhes_por_id(aluno_id)
+
+        if usuario and getattr(usuario, "email", None):
+            email_service = get_email_service()
+
+            enviado = email_service.enviar_aprovacao_aluno(
+                email_destino=usuario.email,
+                nome_usuario=usuario.nome_completo,
+            )
+
+            if not enviado:
+                logger.warning(
+                    "E-mail de aprovação não enviado para o aluno %s",
+                    aluno_id,
+                )
+
+        return resultado
+
     except HTTPException:
         raise
+
+    except CadastroForaDaFilaError as error:
+        raise HTTPException(status_code=409, detail=str(error))
+
+    except AvaliacaoCadastroError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+
     except ValueError as error:
         if "não encontrado" in str(error).lower():
-            raise HTTPException(status_code=404, detail="Aluno não encontrado")
-        raise HTTPException(status_code=400, detail="Dados inválidos")
+            raise HTTPException(
+                status_code=404,
+                detail="Aluno não encontrado",
+            )
+        raise HTTPException(
+            status_code=400,
+            detail="Dados inválidos",
+        )
+
     except Exception:
-        raise HTTPException(status_code=500, detail="Erro interno ao aprovar o cadastro do aluno")
+        logger.exception(
+            "Erro interno ao aprovar o cadastro do aluno %s",
+            aluno_id,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Erro interno ao aprovar o cadastro do aluno",
+        )
 
 
-@router.patch(
+
+@avaliacao_router.patch(
     "/alunos/{aluno_id}/status",
     response_model=AprovacaoAlunoResponseDTO,
     summary="Atualizar status e solicitar reenvio de documentos",
@@ -608,41 +771,90 @@ async def atualizar_status_aluno(
     aluno_id: int,
     data: AtualizarStatusAlunoDTO,
     repository=Depends(get_repository),
-    current_user: Annotated[dict, Depends(require_roles(CargoEnum.ADMINISTRADOR.value))] = None,
+    current_user: Annotated[
+        dict,
+        Depends(require_roles(CargoEnum.ADMINISTRADOR.value)),
+    ] = None,
 ):
     try:
         use_case = AprovarAlunoUseCase(repository)
+
         resultado = use_case.execute(
             aluno_id=aluno_id,
             novo_status=data.status_cadastro,
             motivo_reprovacao=data.motivo_reprovacao,
             documentos_reenvio=getattr(data, "documentos_reenvio", None),
+            usuario_responsavel_id=current_user.get("current_user_id"),
         )
 
         if data.status_cadastro == StatusCadastroEnum.REJEITADO:
             usuario, aluno = repository.buscar_com_detalhes_por_id(aluno_id)
+
             if usuario and aluno and getattr(usuario, "email", None):
                 email_service = get_email_service()
+
                 enviado = email_service.enviar_documentos_rejeitados(
                     email_destino=usuario.email,
                     nome_usuario=usuario.nome_completo,
-                    documentos=repository.normalizar_documentos_reenvio(getattr(aluno, "documentos_reenvio", None)) or [],
+                    documentos=repository.normalizar_documentos_reenvio(
+                        getattr(aluno, "documentos_reenvio", None)
+                    ) or [],
                 )
+
                 if not enviado:
                     logger.warning(
                         "E-mail de rejeição não enviado para o aluno %s",
                         aluno_id,
                     )
 
+        elif data.status_cadastro == StatusCadastroEnum.ATIVADO:
+            usuario, aluno = repository.buscar_com_detalhes_por_id(aluno_id)
+
+            if usuario and getattr(usuario, "email", None):
+                email_service = get_email_service()
+
+                enviado = email_service.enviar_aprovacao_aluno(
+                    email_destino=usuario.email,
+                    nome_usuario=usuario.nome_completo,
+                )
+
+                if not enviado:
+                    logger.warning(
+                        "E-mail de aprovação não enviado para o aluno %s",
+                        aluno_id,
+                    )
+
         return resultado
+
     except HTTPException:
         raise
+
+    except CadastroForaDaFilaError as error:
+        raise HTTPException(status_code=409, detail=str(error))
+
+    except AvaliacaoCadastroError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+
     except ValueError as error:
         if "não encontrado" in str(error).lower():
-            raise HTTPException(status_code=404, detail="Aluno não encontrado")
-        raise HTTPException(status_code=400, detail="Dados inválidos")
+            raise HTTPException(
+                status_code=404,
+                detail="Aluno não encontrado",
+            )
+        raise HTTPException(
+            status_code=400,
+            detail="Dados inválidos",
+        )
+
     except Exception:
-        raise HTTPException(status_code=500, detail="Erro interno ao atualizar o status do aluno")
+        logger.exception(
+            "Erro interno ao atualizar o status do aluno %s",
+            aluno_id,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Erro interno ao atualizar o status do aluno",
+        )
 
 
 @router.get(
@@ -667,8 +879,9 @@ async def verificar_email(
     responses=EDICAO_ERROR_RESPONSES,
 )
 async def obter_meu_perfil(
-    # O aluno com vínculo vencido precisa ver o perfil para renovar (HU-028).
-    current_user: Annotated[dict, Depends(verify_student_renewal_access)],
+    # O aluno com vínculo vencido (HU-028) ou com cadastro pendente (HU-031)
+    # precisa ver o perfil e o status.
+    current_user: Annotated[dict, Depends(verify_student_profile_access)],
     repository=Depends(get_repository),
     arquivo_repository=Depends(get_arquivo_repository),
 ):
@@ -705,6 +918,11 @@ async def consultar_reenvio_documento(
     _, aluno = repository.buscar_com_detalhes_por_id(user_id)
     if not aluno:
         raise HTTPException(status_code=404, detail="Aluno não encontrado")
+
+    # Só o cadastro rejeitado tem pendência; depois do reenvio (pendente) os
+    # motivos antigos não voltam como pendência (HU-031, AC-08).
+    if current_user.get("current_status") != StatusCadastroEnum.REJEITADO.value:
+        return {"documentos": []}
 
     documentos = repository.normalizar_documentos_reenvio(getattr(aluno, "documentos_reenvio", None)) or []
     return {"documentos": documentos}
@@ -925,3 +1143,4 @@ async def atualizar_meu_perfil(
 
 router.include_router(cadastro_router)
 router.include_router(edicao_router)
+router.include_router(avaliacao_router)

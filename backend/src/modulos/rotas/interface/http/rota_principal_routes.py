@@ -23,6 +23,7 @@ from src.modulos.rotas.application.use_cases.gerenciar_rotas_principais_use_case
     RotaPrincipalStatusInalteradoError,
     RotaPrincipalValidationError,
 )
+from src.modulos.rotas.infrastructure.nome_rota import MENSAGEM_NOME_ROTA_EM_USO
 from src.modulos.rotas.infrastructure.repositories.rota_principal_repository import (
     RotaPrincipalNomeEmUsoError,
     RotaPrincipalRepository,
@@ -181,7 +182,7 @@ def _nao_encontrada() -> HTTPException:
 
 
 def _nome_em_uso() -> HTTPException:
-    return HTTPException(status_code=409, detail="Já existe uma rota com este nome.")
+    return HTTPException(status_code=409, detail=MENSAGEM_NOME_ROTA_EM_USO)
 
 
 @router.get("", response_model=list[RotaPrincipalResponseDTO])

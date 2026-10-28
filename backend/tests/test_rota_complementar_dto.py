@@ -17,6 +17,7 @@ def valido(**alteracoes):
     dados = {
         "nome": "Van 2 - Bairro Novo",
         "horario_saida": "06:00",
+        "horario_retorno": "17:40",
         "ponto_conexao": "Trevo do Bairro Novo",
         "rota_principal_id": 1,
     }
@@ -35,19 +36,24 @@ class CriarRotaComplementarDTOTest(unittest.TestCase):
         self.assertEqual(dto.nome, "Van 2")
         self.assertEqual(dto.ponto_conexao, "Posto")
         self.assertEqual(dto.horario_saida, time(6, 0))
+        self.assertEqual(dto.horario_retorno, time(17, 40))
         self.assertEqual(dto.rota_principal_id, 1)
 
     def test_horarios_validos_nos_limites(self):
-        for texto, esperado in (("00:00", time(0, 0)), ("23:59", time(23, 59)), (" 06:30 ", time(6, 30))):
-            with self.subTest(horario=texto):
-                self.assertEqual(
-                    CriarRotaComplementarDTO(**valido(horario_saida=texto)).horario_saida, esperado
-                )
+        # A ordem saída < retorno é regra do use case; o DTO só valida o formato.
+        for campo in ("horario_saida", "horario_retorno"):
+            for texto, esperado in (("00:00", time(0, 0)), ("23:59", time(23, 59)), (" 06:30 ", time(6, 30))):
+                with self.subTest(campo=campo, horario=texto):
+                    dto = CriarRotaComplementarDTO(**valido(**{campo: texto}))
+                    self.assertEqual(getattr(dto, campo), esperado)
 
     def test_objeto_time_e_aceito_e_perde_segundos(self):
-        dto = CriarRotaComplementarDTO(**valido(horario_saida=time(6, 30, 45, 10)))
+        dto = CriarRotaComplementarDTO(
+            **valido(horario_saida=time(6, 30, 45, 10), horario_retorno=time(17, 40, 5))
+        )
 
         self.assertEqual(dto.horario_saida, time(6, 30))
+        self.assertEqual(dto.horario_retorno, time(17, 40))
 
     def test_horarios_invalidos_sao_recusados(self):
         invalidos = [
@@ -56,19 +62,30 @@ class CriarRotaComplementarDTOTest(unittest.TestCase):
             "٠٦:٣٠",  # dígitos arábico-índicos
             630, 6.5, True, [], {},
         ]
-        for valor in invalidos:
-            with self.subTest(horario=valor):
-                with self.assertRaises(ValidationError) as ctx:
-                    CriarRotaComplementarDTO(**valido(horario_saida=valor))
-                self.assertEqual(campos_com_erro(ctx.exception), {"horario_saida"})
+        for campo in ("horario_saida", "horario_retorno"):
+            for valor in invalidos:
+                with self.subTest(campo=campo, horario=valor):
+                    with self.assertRaises(ValidationError) as ctx:
+                        CriarRotaComplementarDTO(**valido(**{campo: valor}))
+                    self.assertEqual(campos_com_erro(ctx.exception), {campo})
 
     def test_horario_ausente_ou_nulo_e_recusado(self):
-        dados = valido()
-        del dados["horario_saida"]
-        for entrada in (dados, valido(horario_saida=None)):
-            with self.assertRaises(ValidationError) as ctx:
-                CriarRotaComplementarDTO(**entrada)
-            self.assertEqual(campos_com_erro(ctx.exception), {"horario_saida"})
+        for campo in ("horario_saida", "horario_retorno"):
+            dados = valido()
+            del dados[campo]
+            for entrada in (dados, valido(**{campo: None})):
+                with self.subTest(campo=campo, entrada=entrada):
+                    with self.assertRaises(ValidationError) as ctx:
+                        CriarRotaComplementarDTO(**entrada)
+                    self.assertEqual(campos_com_erro(ctx.exception), {campo})
+
+    def test_lista_de_horarios_e_recusada(self):
+        # Um único horário de saída e um de retorno por complementar (#208, item 4)
+        for campo in ("horario_saida", "horario_retorno"):
+            with self.subTest(campo=campo):
+                with self.assertRaises(ValidationError) as ctx:
+                    CriarRotaComplementarDTO(**valido(**{campo: ["06:00", "07:00"]}))
+                self.assertEqual(campos_com_erro(ctx.exception), {campo})
 
     def test_texto_vazio_so_espacos_ou_nulo_e_recusado_em_nome_e_ponto(self):
         for campo in ("nome", "ponto_conexao"):
@@ -109,11 +126,11 @@ class CriarRotaComplementarDTOTest(unittest.TestCase):
 
         self.assertEqual(
             campos_com_erro(ctx.exception),
-            {"nome", "horario_saida", "ponto_conexao", "rota_principal_id"},
+            {"nome", "horario_saida", "horario_retorno", "ponto_conexao", "rota_principal_id"},
         )
 
     def test_campos_extras_sao_rejeitados(self):
-        for extra in ("horario_retorno", "ativo", "id", "x"):
+        for extra in ("ativo", "id", "x"):
             with self.subTest(extra=extra):
                 with self.assertRaises(ValidationError) as ctx:
                     CriarRotaComplementarDTO(**valido(**{extra: "1"}))
@@ -128,6 +145,7 @@ class AtualizarRotaComplementarDTOTest(unittest.TestCase):
         casos = {
             "nome": "Van 3",
             "horario_saida": "05:45",
+            "horario_retorno": "18:10",
             "ponto_conexao": "Posto Central",
             "rota_principal_id": 2,
         }
@@ -141,9 +159,12 @@ class AtualizarRotaComplementarDTOTest(unittest.TestCase):
         self.assertEqual(
             AtualizarRotaComplementarDTO(horario_saida="23:59").horario_saida, time(23, 59)
         )
+        self.assertEqual(
+            AtualizarRotaComplementarDTO(horario_retorno="17:45").horario_retorno, time(17, 45)
+        )
 
     def test_nulo_explicito_e_marcado_como_enviado_para_o_use_case_rejeitar(self):
-        for campo in ("nome", "horario_saida", "ponto_conexao", "rota_principal_id"):
+        for campo in ("nome", "horario_saida", "horario_retorno", "ponto_conexao", "rota_principal_id"):
             with self.subTest(campo=campo):
                 dto = AtualizarRotaComplementarDTO(**{campo: None})
                 self.assertEqual(dto.model_fields_set, {campo})
@@ -155,6 +176,7 @@ class AtualizarRotaComplementarDTOTest(unittest.TestCase):
             ("ponto_conexao", ""), ("ponto_conexao", "  "), ("ponto_conexao", "a" * 151),
             ("horario_saida", "24:00"), ("horario_saida", "6:30"), ("horario_saida", ""),
             ("horario_saida", "０６:３０"), ("horario_saida", 630),
+            ("horario_retorno", "24:00"), ("horario_retorno", "17h40"), ("horario_retorno", ""),
             ("rota_principal_id", 0), ("rota_principal_id", -3), ("rota_principal_id", True),
             ("rota_principal_id", "1"),
         ]
@@ -179,7 +201,8 @@ class AtualizarRotaComplementarDTOTest(unittest.TestCase):
 class RespostaDTOTest(unittest.TestCase):
     def test_resposta_tem_o_contrato_esperado(self):
         dados = {
-            "id": 1, "nome": "Van", "horario_saida": "06:00", "ponto_conexao": "Trevo",
+            "id": 1, "nome": "Van", "horario_saida": "06:00", "horario_retorno": "17:40",
+            "ponto_conexao": "Trevo",
             "ativo": True, "rota_principal": {"id": 2, "nome": "Linha", "ativo": True},
         }
 

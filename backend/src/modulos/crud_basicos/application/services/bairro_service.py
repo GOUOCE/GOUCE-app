@@ -34,7 +34,15 @@ class BairroService:
             raise BairroNaoEncontradoError("Bairro não encontrado.")
         return bairro
 
-    def criar(self, nome: str, pontos_de_parada: list[str]) -> BairroORM:
+    def criar(
+        self,
+        nome: str,
+        pontos_de_parada: list[str],
+        usuario_executor_id: Optional[int] = None,
+    ) -> BairroORM:
+        if usuario_executor_id is not None:
+            self._validar_id(usuario_executor_id, "usuario_executor_id")
+
         nome_normalizado = self._validar_campo_obrigatorio(
             nome, "nome", "O nome do bairro é obrigatório."
         )
@@ -54,6 +62,7 @@ class BairroService:
         return self.repository.criar(
             nome=nome_normalizado,
             pontos_de_parada=pontos_limpos,
+            usuario_executor_id=usuario_executor_id,
         )
 
     def atualizar(
@@ -61,8 +70,11 @@ class BairroService:
         bairro_id: int,
         nome: Optional[str] = None,
         pontos_de_parada: Optional[list[str]] = None,
+        usuario_executor_id: Optional[int] = None,
     ) -> BairroORM:
         self._validar_id(bairro_id, "bairro_id")
+        if usuario_executor_id is not None:
+            self._validar_id(usuario_executor_id, "usuario_executor_id")
 
         nome_normalizado = None
         if nome is not None:
@@ -87,6 +99,7 @@ class BairroService:
             bairro_id=bairro_id,
             nome=nome_normalizado,
             pontos_de_parada=pontos_limpos,
+            usuario_executor_id=usuario_executor_id,
         )
 
     def ativar(
@@ -116,6 +129,45 @@ class BairroService:
             bairro_id=bairro_id,
             usuario_executor_id=usuario_executor_id,
         )
+
+    def ativar_ponto(
+        self,
+        bairro_id: int,
+        ponto_id: int,
+        usuario_executor_id: Optional[int] = None,
+    ) -> BairroORM:
+        self._validar_ids_do_ponto(bairro_id, ponto_id, usuario_executor_id)
+
+        return self.repository.ativar_ponto(
+            bairro_id=bairro_id,
+            ponto_id=ponto_id,
+            usuario_executor_id=usuario_executor_id,
+        )
+
+    def inativar_ponto(
+        self,
+        bairro_id: int,
+        ponto_id: int,
+        usuario_executor_id: Optional[int] = None,
+    ) -> BairroORM:
+        self._validar_ids_do_ponto(bairro_id, ponto_id, usuario_executor_id)
+
+        return self.repository.inativar_ponto(
+            bairro_id=bairro_id,
+            ponto_id=ponto_id,
+            usuario_executor_id=usuario_executor_id,
+        )
+
+    def _validar_ids_do_ponto(
+        self,
+        bairro_id: int,
+        ponto_id: int,
+        usuario_executor_id: Optional[int],
+    ) -> None:
+        self._validar_id(bairro_id, "bairro_id")
+        self._validar_id(ponto_id, "ponto_id")
+        if usuario_executor_id is not None:
+            self._validar_id(usuario_executor_id, "usuario_executor_id")
 
     @staticmethod
     def _validar_campo_obrigatorio(valor: Optional[str], campo: str, mensagem: str) -> str:

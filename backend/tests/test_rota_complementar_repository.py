@@ -53,7 +53,7 @@ class RepositoryTestBase(unittest.TestCase):
 
     def criar(self, **alteracoes):
         argumentos = dict(
-            nome="Van 2 - Bairro Novo", horario_saida=time(6, 0),
+            nome="Van 2 - Bairro Novo", horario_saida=time(6, 0), horario_retorno=time(17, 40),
             ponto_conexao="Trevo do Bairro Novo", rota_principal_id=PRINCIPAL_CENTRO,
             usuario_executor_id=ADMIN_ID,
         )
@@ -77,17 +77,18 @@ class CadastroTest(RepositoryTestBase):
             rota,
             {
                 "id": rota["id"], "nome": "Van 2 - Bairro Novo", "horario_saida": "06:00",
-                "ponto_conexao": "Trevo do Bairro Novo", "ativo": True,
+                "horario_retorno": "17:40", "ponto_conexao": "Trevo do Bairro Novo", "ativo": True,
                 "rota_principal": {"id": PRINCIPAL_CENTRO, "nome": "Rota Centro - UFC", "ativo": True},
             },
         )
         self.assertEqual(self.repository.buscar(rota["id"]), rota)
 
     def test_horario_persiste_como_time(self):
-        rota = self.criar(horario_saida=time(0, 0))
+        rota = self.criar(horario_saida=time(0, 0), horario_retorno=time(23, 59))
 
         orm = self.session.get(RotaComplementarORM, rota["id"])
         self.assertEqual(orm.horario_saida, time(0, 0))
+        self.assertEqual(orm.horario_retorno, time(23, 59))
 
     def test_grava_exatamente_um_log_criar_com_json(self):
         rota = self.criar()
@@ -99,7 +100,7 @@ class CadastroTest(RepositoryTestBase):
         self.assertIsNone(log.valor_anterior)
         self.assertEqual(
             json.loads(log.valor_novo),
-            {"nome": "Van 2 - Bairro Novo", "horario_saida": "06:00",
+            {"nome": "Van 2 - Bairro Novo", "horario_saida": "06:00", "horario_retorno": "17:40",
              "ponto_conexao": "Trevo do Bairro Novo", "rota_principal_id": PRINCIPAL_CENTRO, "ativo": True},
         )
         self.assertIsNotNone(log.criado_em)
@@ -122,10 +123,16 @@ class CadastroTest(RepositoryTestBase):
         with self.assertRaises(RotaComplementarNomeEmUsoError):
             self.criar()
 
-    def test_nome_pode_coincidir_com_o_de_uma_rota_principal(self):
-        rota = self.criar(nome="Rota Centro - UFC")
+    def test_nome_de_rota_principal_ativa_ou_inativa_e_recusado(self):
+        # O nome é único entre principais e complementares (#208, item 1; #309)
+        for nome in ("Rota Centro - UFC", "  rota centro - ufc ", "ROTA ANTIGA"):
+            with self.subTest(nome=nome):
+                with self.assertRaises(RotaComplementarNomeEmUsoError) as ctx:
+                    self.criar(nome=nome)
+                self.assertEqual(str(ctx.exception), "Já existe uma rota com este nome.")
 
-        self.assertEqual(rota["nome"], "Rota Centro - UFC")
+        self.assertEqual(self.repository.listar(ativo=None), [])
+        self.assertEqual(self.logs(), [])
 
     def test_principal_inativa_ou_inexistente_e_recusada_sem_gravar(self):
         for principal_id in (PRINCIPAL_INATIVA, 999):
@@ -143,7 +150,7 @@ class CadastroTest(RepositoryTestBase):
         self.session.add(
             RotaComplementarORM(
                 rota_principal_id=PRINCIPAL_CENTRO, nome="  van a ", horario_saida=time(7, 0),
-                ponto_conexao="X",
+                horario_retorno=time(18, 0), ponto_conexao="X",
             )
         )
 
@@ -236,13 +243,14 @@ class EdicaoTest(RepositoryTestBase):
 
     def test_edita_todos_os_campos_e_grava_um_log_editar_com_antes_e_depois(self):
         resultado = self.atualizar(
-            {"nome": " Van 3 - Bairro Novo ", "horario_saida": time(5, 45),
+            {"nome": " Van 3 - Bairro Novo ", "horario_saida": time(5, 45), "horario_retorno": time(18, 10),
              "ponto_conexao": " Posto Central ", "rota_principal_id": PRINCIPAL_INTEGRADA}
         )
 
         self.assertEqual(
-            (resultado["nome"], resultado["horario_saida"], resultado["ponto_conexao"], resultado["rota_principal"]["id"]),
-            ("Van 3 - Bairro Novo", "05:45", "Posto Central", PRINCIPAL_INTEGRADA),
+            (resultado["nome"], resultado["horario_saida"], resultado["horario_retorno"],
+             resultado["ponto_conexao"], resultado["rota_principal"]["id"]),
+            ("Van 3 - Bairro Novo", "05:45", "18:10", "Posto Central", PRINCIPAL_INTEGRADA),
         )
         criar, editar = self.logs()
         self.assertEqual(editar.acao, "EDITAR")
@@ -256,6 +264,7 @@ class EdicaoTest(RepositoryTestBase):
 
         self.assertEqual(resultado["nome"], "Van 2 - Bairro Novo")
         self.assertEqual(resultado["horario_saida"], "06:00")
+        self.assertEqual(resultado["horario_retorno"], "17:40")
         self.assertEqual(resultado["rota_principal"]["id"], PRINCIPAL_CENTRO)
 
     def test_edicao_sem_mudanca_nao_grava_log(self):
@@ -278,6 +287,16 @@ class EdicaoTest(RepositoryTestBase):
 
         self.assertEqual(self.repository.buscar(self.rota["id"])["ponto_conexao"], "Trevo do Bairro Novo")
         self.assertEqual(len(self.logs()), 2)
+
+    def test_nome_de_rota_principal_e_recusado_na_edicao_sem_alterar_nem_logar(self):
+        # #309: a edição também confere o nome nas rotas principais (ativas e inativas)
+        for nome in ("Rota Integrada", " rota antiga "):
+            with self.subTest(nome=nome):
+                with self.assertRaises(RotaComplementarNomeEmUsoError):
+                    self.atualizar({"nome": nome})
+
+        self.assertEqual(self.repository.buscar(self.rota["id"])["nome"], "Van 2 - Bairro Novo")
+        self.assertEqual(len(self.logs()), 1)
 
     def test_trocar_para_principal_inativa_ou_inexistente_e_recusado_sem_alterar_nem_logar(self):
         for principal_id in (PRINCIPAL_INATIVA, 999):

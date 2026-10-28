@@ -26,6 +26,13 @@ from src.modulos.crud_basicos.infrastructure.repositories.bairro_repository impo
     BairroNaoEncontradoError,
     BairroRepository,
     PontoDeParadaJaCadastradoError,
+    UltimoPontoAtivoError,
+)
+from src.modulos.crud_basicos.infrastructure.repositories.ponto_parada_repository import (
+    PontoDeParadaComRotaAtivaError,
+    PontoDeParadaJaAtivadoError,
+    PontoDeParadaJaDesativadoError,
+    PontoDeParadaNaoEncontradoError,
 )
 from src.modulos.rotas.infrastructure.rota_ativa_checkers import (
     bairro_em_rota_ativa,
@@ -122,6 +129,19 @@ def is_admin_user(user: Optional[dict]) -> bool:
     return CargoEnum.ADMINISTRADOR.value in roles
 
 
+def _usuario_executor_id(current_user: dict) -> Optional[int]:
+    user_id = current_user.get("current_user_id") or current_user.get("sub")
+    return int(user_id) if user_id is not None else None
+
+
+def _bairro_visivel(bairro, admin: bool) -> BairroResponseDTO:
+    """Quem não é administrador só enxerga os pontos de parada ativos (AC-09 e AC-11)."""
+    dto = BairroResponseDTO.model_validate(bairro)
+    if not admin:
+        dto.pontos_de_parada = [p for p in dto.pontos_de_parada if p.ativo]
+    return dto
+
+
 def _montar_resposta_operacao(
     bairro, message: str = "Operação realizada com sucesso"
 ) -> OperacaoBairroResponseDTO:
@@ -140,9 +160,11 @@ async def listar_bairros(
     service: BairroService = Depends(get_service),
     current_user: Optional[dict] = Depends(get_optional_current_user),
 ):
-    if not is_admin_user(current_user):
+    admin = is_admin_user(current_user)
+    if not admin:
         ativo = True
-    return service.listar(ativo=ativo, limite=limite, offset=offset)
+    bairros = service.listar(ativo=ativo, limite=limite, offset=offset)
+    return [_bairro_visivel(bairro, admin) for bairro in bairros]
 
 
 @router.get("/{bairro_id}", response_model=BairroResponseDTO)
@@ -158,7 +180,7 @@ async def buscar_bairro(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Bairro não encontrado.",
             )
-        return bairro
+        return _bairro_visivel(bairro, is_admin_user(current_user))
     except BairroNaoEncontradoError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -179,12 +201,13 @@ async def buscar_bairro(
 async def criar_bairro(
     dados: CriarBairroDTO,
     service: BairroService = Depends(get_service),
-    _: dict = Depends(admin_required),
+    current_user: dict = Depends(admin_required),
 ):
     try:
         bairro = service.criar(
             nome=dados.nome,
             pontos_de_parada=dados.pontos_de_parada,
+            usuario_executor_id=_usuario_executor_id(current_user),
         )
         return _montar_resposta_operacao(bairro, "Operação realizada com sucesso")
     except (BairroJaCadastradoError, PontoDeParadaJaCadastradoError) as error:
@@ -206,13 +229,14 @@ async def atualizar_bairro(
     bairro_id: int,
     dados: AtualizarBairroDTO,
     service: BairroService = Depends(get_service),
-    _: dict = Depends(admin_required),
+    current_user: dict = Depends(admin_required),
 ):
     try:
         bairro = service.atualizar(
             bairro_id=bairro_id,
             nome=dados.nome,
             pontos_de_parada=dados.pontos_de_parada,
+            usuario_executor_id=_usuario_executor_id(current_user),
         )
         return _montar_resposta_operacao(bairro, "Operação realizada com sucesso")
     except BairroNaoEncontradoError:
@@ -249,11 +273,9 @@ async def ativar_bairro(
     service: BairroService = Depends(get_service),
 ):
     try:
-        user_id = current_user.get("current_user_id") or current_user.get("sub")
-        usuario_executor_id = int(user_id) if user_id is not None else None
         bairro = service.ativar(
             bairro_id=bairro_id,
-            usuario_executor_id=usuario_executor_id,
+            usuario_executor_id=_usuario_executor_id(current_user),
         )
         return _montar_resposta_operacao(bairro, "Operação realizada com sucesso")
     except BairroNaoEncontradoError:
@@ -283,11 +305,9 @@ async def inativar_bairro(
     service: BairroService = Depends(get_service),
 ):
     try:
-        user_id = current_user.get("current_user_id") or current_user.get("sub")
-        usuario_executor_id = int(user_id) if user_id is not None else None
         bairro = service.inativar(
             bairro_id=bairro_id,
-            usuario_executor_id=usuario_executor_id,
+            usuario_executor_id=_usuario_executor_id(current_user),
         )
         return _montar_resposta_operacao(bairro, "Operação realizada com sucesso")
     except BairroNaoEncontradoError:
@@ -301,6 +321,83 @@ async def inativar_bairro(
             detail=str(error),
         )
     except BairroComRotaAtivaError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(error),
+        )
+    except BairroValidationError as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(error),
+        )
+
+
+@router.patch(
+    "/{bairro_id}/pontos/{ponto_id}/ativar",
+    response_model=OperacaoBairroResponseDTO,
+)
+@router.patch(
+    "/{bairro_id}/pontos/{ponto_id}/reativar",
+    response_model=OperacaoBairroResponseDTO,
+    include_in_schema=False,
+)
+async def ativar_ponto_de_parada(
+    bairro_id: int,
+    ponto_id: int,
+    current_user: dict = Depends(admin_required),
+    service: BairroService = Depends(get_service),
+):
+    try:
+        bairro = service.ativar_ponto(
+            bairro_id=bairro_id,
+            ponto_id=ponto_id,
+            usuario_executor_id=_usuario_executor_id(current_user),
+        )
+        return _montar_resposta_operacao(bairro, "Operação realizada com sucesso")
+    except (BairroNaoEncontradoError, PontoDeParadaNaoEncontradoError) as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        )
+    except PontoDeParadaJaAtivadoError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(error),
+        )
+    except BairroValidationError as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(error),
+        )
+
+
+@router.patch(
+    "/{bairro_id}/pontos/{ponto_id}/inativar",
+    response_model=OperacaoBairroResponseDTO,
+)
+async def inativar_ponto_de_parada(
+    bairro_id: int,
+    ponto_id: int,
+    current_user: dict = Depends(admin_required),
+    service: BairroService = Depends(get_service),
+):
+    try:
+        bairro = service.inativar_ponto(
+            bairro_id=bairro_id,
+            ponto_id=ponto_id,
+            usuario_executor_id=_usuario_executor_id(current_user),
+        )
+        return _montar_resposta_operacao(bairro, "Operação realizada com sucesso")
+    except (BairroNaoEncontradoError, PontoDeParadaNaoEncontradoError) as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        )
+    except (
+        PontoDeParadaJaDesativadoError,
+        PontoDeParadaComRotaAtivaError,
+        UltimoPontoAtivoError,
+    ) as error:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=str(error),

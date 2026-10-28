@@ -24,7 +24,7 @@ ESCRITAS = {"criar", "atualizar", "inativar", "reativar"}
 
 def rota(rota_id, nome, ativo):
     return {
-        "id": rota_id, "nome": nome, "horario_saida": "06:00",
+        "id": rota_id, "nome": nome, "horario_saida": "06:00", "horario_retorno": "17:40",
         "ponto_conexao": "Trevo", "ativo": ativo,
         "rota_principal": {"id": 1, "nome": "Rota Centro - UFC", "ativo": True},
     }
@@ -101,7 +101,7 @@ class CasoDeUsoTestBase(unittest.TestCase):
 
 def criar_args(**alteracoes):
     dados = dict(
-        nome="  Van 2 - Bairro Novo ", horario_saida=time(6, 0),
+        nome="  Van 2 - Bairro Novo ", horario_saida=time(6, 0), horario_retorno=time(17, 40),
         ponto_conexao=" Trevo do Bairro Novo ", rota_principal_id=1,
         usuario_executor_id=ADMIN_ID,
     )
@@ -116,13 +116,14 @@ class CriarTest(CasoDeUsoTestBase):
         self.assertEqual(resultado, {"id": 3})
         self.assertEqual(
             self.repository.chamadas,
-            [("criar", "Van 2 - Bairro Novo", time(6, 0), "Trevo do Bairro Novo", 1, ADMIN_ID)],
+            [("criar", "Van 2 - Bairro Novo", time(6, 0), time(17, 40), "Trevo do Bairro Novo", 1, ADMIN_ID)],
         )
 
     def test_horario_em_texto_e_convertido(self):
-        self.use_case.criar(**criar_args(horario_saida="05:45"))
+        self.use_case.criar(**criar_args(horario_saida="05:45", horario_retorno="18:10"))
 
         self.assertEqual(self.repository.chamadas[0][2], time(5, 45))
+        self.assertEqual(self.repository.chamadas[0][3], time(18, 10))
 
     def test_nome_obrigatorio_texto_e_tamanho(self):
         self.assert_validacao(
@@ -153,16 +154,28 @@ class CriarTest(CasoDeUsoTestBase):
         self.assertEqual(self.repository.chamadas, [])
 
     def test_horario_obrigatorio_e_formato(self):
-        self.assert_validacao(
-            "horario_saida", "Horário de saída é obrigatório.",
-            self.use_case.criar, **criar_args(horario_saida=None),
-        )
-        for invalido in ("24:00", "6:30", "06:60", "", 630, "０６:３０"):
-            with self.subTest(horario=invalido):
+        for campo, rotulo in (("horario_saida", "Horário de saída"), ("horario_retorno", "Horário de retorno")):
+            self.assert_validacao(
+                campo, f"{rotulo} é obrigatório.",
+                self.use_case.criar, **criar_args(**{campo: None}),
+            )
+            for invalido in ("24:00", "6:30", "06:60", "", 630, "０６:３０"):
+                with self.subTest(campo=campo, horario=invalido):
+                    self.assert_validacao(
+                        campo, "Horário deve estar no formato HH:MM.",
+                        self.use_case.criar, **criar_args(**{campo: invalido}),
+                    )
+
+    def test_retorno_igual_ou_anterior_a_saida_e_recusado(self):
+        # #208, item 2: o retorno precisa ser estritamente posterior à saída
+        for saida, retorno in (("06:00", "06:00"), ("06:00", "05:59"), ("23:59", "00:00")):
+            with self.subTest(saida=saida, retorno=retorno):
                 self.assert_validacao(
-                    "horario_saida", "Horário deve estar no formato HH:MM.",
-                    self.use_case.criar, **criar_args(horario_saida=invalido),
+                    "horario_retorno", "Horário de retorno deve ser maior que o horário de saída.",
+                    self.use_case.criar, **criar_args(horario_saida=saida, horario_retorno=retorno),
                 )
+        self.use_case.criar(**criar_args(horario_saida="06:00", horario_retorno="06:01"))
+        self.assertEqual(self.escritas(), ["criar"])
 
     def test_ponto_de_conexao_obrigatorio_texto_e_tamanho(self):
         self.assert_validacao(
@@ -211,6 +224,9 @@ class CriarTest(CasoDeUsoTestBase):
             self.use_case.criar(**criar_args(horario_saida=None, ponto_conexao=None, rota_principal_id=None))
         self.assertEqual(ctx.exception.field, "horario_saida")
         with self.assertRaises(RotaComplementarValidationError) as ctx:
+            self.use_case.criar(**criar_args(horario_retorno=None, ponto_conexao=None, rota_principal_id=None))
+        self.assertEqual(ctx.exception.field, "horario_retorno")
+        with self.assertRaises(RotaComplementarValidationError) as ctx:
             self.use_case.criar(**criar_args(ponto_conexao=None, rota_principal_id=None))
         self.assertEqual(ctx.exception.field, "ponto_conexao")
 
@@ -257,19 +273,22 @@ class AtualizarTest(CasoDeUsoTestBase):
     def test_repassa_somente_os_campos_enviados_ja_normalizados(self):
         self.use_case.atualizar(
             1,
-            {"nome": " Van 3 ", "horario_saida": "05:45", "ponto_conexao": " Posto ", "rota_principal_id": 2},
+            {"nome": " Van 3 ", "horario_saida": "05:45", "horario_retorno": "18:10",
+             "ponto_conexao": " Posto ", "rota_principal_id": 2},
             ADMIN_ID,
         )
 
         self.assertEqual(
             self.repository.chamadas[-1],
             ("atualizar", 1,
-             {"nome": "Van 3", "horario_saida": time(5, 45), "ponto_conexao": "Posto", "rota_principal_id": 2},
+             {"nome": "Van 3", "horario_saida": time(5, 45), "horario_retorno": time(18, 10),
+              "ponto_conexao": "Posto", "rota_principal_id": 2},
              ADMIN_ID),
         )
 
     def test_cada_campo_isolado_e_aceito(self):
         for campo, valor in (("nome", "Van 3"), ("horario_saida", time(7, 0)),
+                             ("horario_retorno", time(18, 0)),
                              ("ponto_conexao", "Posto"), ("rota_principal_id", 2)):
             with self.subTest(campo=campo):
                 self.use_case.atualizar(1, {campo: valor}, ADMIN_ID)
@@ -281,6 +300,8 @@ class AtualizarTest(CasoDeUsoTestBase):
             ("nome", "  ", "Nome da rota complementar é obrigatório."),
             ("horario_saida", None, "Horário de saída é obrigatório."),
             ("horario_saida", "25:00", "Horário deve estar no formato HH:MM."),
+            ("horario_retorno", None, "Horário de retorno é obrigatório."),
+            ("horario_retorno", "17h45", "Horário deve estar no formato HH:MM."),
             ("ponto_conexao", None, "Ponto de conexão é obrigatório."),
             ("ponto_conexao", "", "Ponto de conexão é obrigatório."),
             ("rota_principal_id", None, "Rota principal vinculada é obrigatória."),
@@ -291,6 +312,30 @@ class AtualizarTest(CasoDeUsoTestBase):
                 self.assert_validacao(
                     campo, mensagem, self.use_case.atualizar, 1, {campo: valor}, ADMIN_ID
                 )
+
+    def test_edicao_parcial_compara_com_o_horario_salvo(self):
+        # Rota salva: saída 06:00 e retorno 17:40
+        casos = [
+            ({"horario_retorno": "06:00"}, False),
+            ({"horario_retorno": "05:30"}, False),
+            ({"horario_saida": "17:40"}, False),
+            ({"horario_saida": "18:00"}, False),
+            ({"horario_saida": "18:00", "horario_retorno": "19:00"}, True),
+            ({"horario_retorno": "17:45"}, True),
+            ({"horario_saida": "17:39"}, True),
+        ]
+        for campos, aceito in casos:
+            with self.subTest(campos=campos):
+                self.repository.chamadas.clear()
+                if aceito:
+                    self.use_case.atualizar(1, campos, ADMIN_ID)
+                    self.assertEqual(self.escritas(), ["atualizar"])
+                else:
+                    self.assert_validacao(
+                        "horario_retorno",
+                        "Horário de retorno deve ser maior que o horário de saída.",
+                        self.use_case.atualizar, 1, campos, ADMIN_ID,
+                    )
 
     def test_nul_em_nome_e_ponto_e_recusado_na_edicao_sem_escrever(self):
         for campo, rotulo in (("nome", "Nome da rota complementar"), ("ponto_conexao", "Ponto de conexão")):
@@ -385,7 +430,7 @@ class InativarReativarTest(CasoDeUsoTestBase):
 
         self.assertEqual(
             str(ctx.exception),
-            "A rota principal vinculada está inativa. Reative-a ou altere o vínculo antes.",
+            "Não é possível reativar esta rota complementar pois a rota principal vinculada está inativa.",
         )
         self.assertEqual(self.escritas(), [])
 

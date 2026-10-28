@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
-import { Text, TextInput, Button, Snackbar, Portal } from 'react-native-paper';
-import { useRouter } from 'expo-router';
+import { Text, TextInput, Button, Portal } from 'react-native-paper';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, Trash2, X } from 'lucide-react-native';
+import { ChevronLeft, Trash2 } from 'lucide-react-native';
 
-import { bairroSchema, BairroFormData } from '@/schemas/bairroSchema';
+import { bairroSchema, BairroFormData, pontoParadaSchema } from '@/schemas/bairroSchema';
 import { bairroService } from '@/services/bairroService';
 import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
@@ -14,15 +14,12 @@ import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 export default function CadastrarBairroScreen() {
   const router = useRouter();
 
-  const [pontos, setPontos] = useState<string[]>(['Praça da Matriz']);
+  const [pontos, setPontos] = useState<string[]>([]);
   const [modalPontoVisible, setModalPontoVisible] = useState(false);
   const [novoPontoNome, setNovoPontoNome] = useState('');
-  const [erroPonto, setErroPonto] = useState(false);
+  const [erroPonto, setErroPonto] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Snackbar Toast
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -47,22 +44,66 @@ export default function CadastrarBairroScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const { control, handleSubmit, formState: { errors }, setValue, trigger } = useForm<BairroFormData>({
+  const { control, handleSubmit, formState: { errors }, setValue, trigger, reset } = useForm<BairroFormData>({
     resolver: zodResolver(bairroSchema),
     defaultValues: {
       nome: '',
-      pontos: ['Praça da Matriz'],
+      pontos: [],
     },
   });
 
+  // Reseta o formulário e o modal sempre que a tela ganha/perde foco
+  useFocusEffect(
+    React.useCallback(() => {
+      setPontos([]);
+      setNovoPontoNome('');
+      setErroPonto('');
+      setModalPontoVisible(false);
+      reset({
+        nome: '',
+        pontos: [],
+      });
+
+      return () => {
+        setPontos([]);
+        setNovoPontoNome('');
+        setErroPonto('');
+        setModalPontoVisible(false);
+        reset({
+          nome: '',
+          pontos: [],
+        });
+      };
+    }, [reset])
+  );
+
+  const voltarParaListagem = () => {
+    closePopup();
+    router.replace('/(administrador)/bairros');
+  };
+
+  const abrirModalPonto = () => {
+    setNovoPontoNome('');
+    setErroPonto('');
+    setModalPontoVisible(true);
+  };
+
+  const cancelarModalPonto = () => {
+    setModalPontoVisible(false);
+    setNovoPontoNome('');
+    setErroPonto('');
+  };
+
   const handleAdicionarPonto = () => {
-    if (!novoPontoNome || novoPontoNome.trim().length < 2) {
-      setErroPonto(true);
+    const resultado = pontoParadaSchema.safeParse(novoPontoNome);
+    if (!resultado.success) {
+      setErroPonto(resultado.error.issues[0].message);
       return;
     }
 
-    const pontoFormatado = novoPontoNome.trim();
+    const pontoFormatado = resultado.data;
     if (pontos.some((p) => p.toLowerCase() === pontoFormatado.toLowerCase())) {
+      setModalPontoVisible(false);
       showPopup({
         type: 'error',
         title: 'Aviso',
@@ -77,7 +118,7 @@ export default function CadastrarBairroScreen() {
     setValue('pontos', novosPontos);
     trigger('pontos');
     setNovoPontoNome('');
-    setErroPonto(false);
+    setErroPonto('');
     setModalPontoVisible(false);
   };
 
@@ -101,11 +142,13 @@ export default function CadastrarBairroScreen() {
         try {
           await bairroService.criarBairro(dados.nome, pontos);
           setIsLoading(false);
-          setSnackbarMessage('Bairro cadastrado com sucesso');
-          setSnackbarVisivel(true);
-          setTimeout(() => {
-            router.replace('/(administrador)/bairros');
-          }, 1200);
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: 'Bairro cadastrado com sucesso.',
+            confirmText: 'OK',
+            onConfirm: voltarParaListagem,
+          });
         } catch (error: any) {
           setIsLoading(false);
           const msg = getErrorMessage(error, 'Erro ao cadastrar bairro.');
@@ -120,11 +163,14 @@ export default function CadastrarBairroScreen() {
     });
   };
 
+  const mensagemErroPontos = errors.pontos?.message || (Array.isArray(errors.pontos)
+    ? errors.pontos.find((erro) => erro?.message)?.message : undefined);
+
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={voltarParaListagem}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Novo Bairro</Text>
@@ -139,7 +185,7 @@ export default function CadastrarBairroScreen() {
         confirmText={popup.confirmText}
         cancelText={popup.cancelText}
         onConfirm={popup.onConfirm}
-        onDismiss={closePopup}
+        onDismiss={popup.type === 'success' ? voltarParaListagem : closePopup}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -176,13 +222,13 @@ export default function CadastrarBairroScreen() {
             </View>
           ))}
 
-          {errors.pontos && <Text style={styles.errorText}>{errors.pontos.message}</Text>}
+          {mensagemErroPontos && <Text accessibilityRole="alert" style={styles.errorText}>{mensagemErroPontos}</Text>}
         </View>
 
         {/* Botão Adicionar Ponto de Parada */}
         <Button
           mode="outlined"
-          onPress={() => setModalPontoVisible(true)}
+          onPress={abrirModalPonto}
           style={styles.addPontoButton}
           labelStyle={styles.addPontoLabel}
         >
@@ -204,7 +250,7 @@ export default function CadastrarBairroScreen() {
 
       {/* Modal Novo Ponto de Parada */}
       <Portal>
-        <RNModal visible={modalPontoVisible} transparent={true} animationType="fade">
+        <RNModal visible={modalPontoVisible} transparent={true} animationType="fade" onRequestClose={cancelarModalPonto}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <Text variant="headlineSmall" style={styles.modalTitle}>Novo ponto de parada</Text>
@@ -213,16 +259,21 @@ export default function CadastrarBairroScreen() {
               <TextInput
                 label="Nome do Ponto *"
                 mode="outlined"
-                placeholder="Nome do ponto de parada"
                 value={novoPontoNome}
-                onChangeText={setNovoPontoNome}
-                error={erroPonto}
+                onChangeText={(texto) => {
+                  setNovoPontoNome(texto);
+                  if (erroPonto) {
+                    const resultado = pontoParadaSchema.safeParse(texto);
+                    setErroPonto(resultado.success ? '' : resultado.error.issues[0].message);
+                  }
+                }}
+                error={!!erroPonto}
                 style={{ backgroundColor: '#fff', marginBottom: 16 }}
               />
-              {erroPonto && <Text style={styles.errorTextModal}>Informe um nome válido com pelo menos 2 caracteres.</Text>}
+              {!!erroPonto && <Text accessibilityRole="alert" style={styles.errorTextModal}>{erroPonto}</Text>}
 
               <View style={styles.modalButtons}>
-                <Button mode="text" onPress={() => setModalPontoVisible(false)}>
+                <Button mode="text" onPress={cancelarModalPonto}>
                   Cancelar
                 </Button>
                 <Button mode="text" onPress={handleAdicionarPonto} labelStyle={{ color: '#004D40', fontWeight: 'bold' }}>
@@ -234,19 +285,6 @@ export default function CadastrarBairroScreen() {
         </RNModal>
       </Portal>
 
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
     </View>
   );
 }
@@ -349,11 +387,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     gap: 12,
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });

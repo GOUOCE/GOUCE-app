@@ -6,8 +6,8 @@ class CriarOnibusDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     placa: str = Field(..., alias="placa_onibus", min_length=1, max_length=20)
-    assentos: int = Field(..., alias="qtd_assentos", ge=0)
-    capacidade_em_pe: int = Field(..., alias="capacidade_maxima", ge=0)
+    assentos: int = Field(..., alias="qtd_assentos", ge=0, le=100)
+    capacidade_em_pe: int = Field(..., alias="capacidade_maxima", ge=0, le=100)
     apelido: Optional[str] = Field(default=None, alias="apelido_onibus", max_length=100)
     id_foto_onibus: Optional[str] = Field(default=None, alias="foto_onibus", max_length=36)
 
@@ -60,8 +60,8 @@ class AtualizarOnibusDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     placa: Optional[str] = Field(default=None, alias="placa_onibus", max_length=20)
-    assentos: Optional[int] = Field(default=None, alias="qtd_assentos", ge=0)
-    capacidade_em_pe: Optional[int] = Field(default=None, alias="capacidade_maxima", ge=0)
+    assentos: Optional[int] = Field(default=None, alias="qtd_assentos", ge=0, le=100)
+    capacidade_em_pe: Optional[int] = Field(default=None, alias="capacidade_maxima", ge=0, le=100)
     apelido: Optional[str] = Field(default=None, alias="apelido_onibus", max_length=100)
     ativo: Optional[bool] = None
     id_foto_onibus: Optional[str] = Field(default=None, alias="foto_onibus", max_length=36)

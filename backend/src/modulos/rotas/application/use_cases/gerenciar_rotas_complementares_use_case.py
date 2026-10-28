@@ -21,8 +21,12 @@ TAMANHO_MAXIMO = 150
 _ROTULOS = {
     "nome": "Nome da rota complementar",
     "ponto_conexao": "Ponto de conexão",
+    "horario_saida": "Horário de saída",
+    "horario_retorno": "Horário de retorno",
 }
 MENSAGEM_ID_PRINCIPAL_INVALIDO = "Informe um ID de rota principal válido."
+# Mesma regra e mensagem da rota principal (#208, item 2)
+MENSAGEM_ORDEM_HORARIOS = "Horário de retorno deve ser maior que o horário de saída."
 
 
 class RotaComplementarValidationError(ValueError):
@@ -84,18 +88,22 @@ class GerenciarRotasComplementaresUseCase:
         self,
         nome: str,
         horario_saida: time,
+        horario_retorno: time,
         ponto_conexao: str,
         rota_principal_id: int,
         usuario_executor_id: int,
     ) -> dict:
         self._validar_id(usuario_executor_id, "usuario_executor_id")
         nome = self._validar_texto(nome, "nome")
-        horario_saida = self._validar_horario(horario_saida)
+        horario_saida = self._validar_horario(horario_saida, "horario_saida")
+        horario_retorno = self._validar_horario(horario_retorno, "horario_retorno")
+        self._validar_ordem_horarios(horario_saida, horario_retorno)
         ponto_conexao = self._validar_texto(ponto_conexao, "ponto_conexao")
         rota_principal_id = self._validar_principal(rota_principal_id)
         return self.repository.criar(
             nome,
             horario_saida,
+            horario_retorno,
             ponto_conexao,
             rota_principal_id,
             usuario_executor_id,
@@ -115,13 +123,22 @@ class GerenciarRotasComplementaresUseCase:
                 "rota", "Informe ao menos um campo para atualização."
             )
 
-        self.buscar(rota_id)
+        atual = self.buscar(rota_id)
         validados: dict = {}
         for campo in ("nome", "ponto_conexao"):
             if campo in campos:
                 validados[campo] = self._validar_texto(campos[campo], campo)
-        if "horario_saida" in campos:
-            validados["horario_saida"] = self._validar_horario(campos["horario_saida"])
+        for campo in ("horario_saida", "horario_retorno"):
+            if campo in campos:
+                validados[campo] = self._validar_horario(campos[campo], campo)
+        # Na edição parcial, o horário não enviado é o que já está salvo
+        if "horario_saida" in validados or "horario_retorno" in validados:
+            self._validar_ordem_horarios(
+                validados.get("horario_saida", interpretar_horario(atual["horario_saida"])),
+                validados.get(
+                    "horario_retorno", interpretar_horario(atual["horario_retorno"])
+                ),
+            )
         if "rota_principal_id" in campos:
             validados["rota_principal_id"] = self._validar_principal(
                 campos["rota_principal_id"]
@@ -183,15 +200,20 @@ class GerenciarRotasComplementaresUseCase:
         return valor
 
     @staticmethod
-    def _validar_horario(valor: object) -> time:
+    def _validar_horario(valor: object, campo: str) -> time:
         if valor is None:
-            raise RotaComplementarValidationError(
-                "horario_saida", "Horário de saída é obrigatório."
-            )
+            raise RotaComplementarValidationError(campo, f"{_ROTULOS[campo]} é obrigatório.")
         try:
             return interpretar_horario(valor)
         except ValueError as error:
-            raise RotaComplementarValidationError("horario_saida", str(error)) from error
+            raise RotaComplementarValidationError(campo, str(error)) from error
+
+    @staticmethod
+    def _validar_ordem_horarios(saida: time, retorno: time) -> None:
+        if retorno <= saida:
+            raise RotaComplementarValidationError(
+                "horario_retorno", MENSAGEM_ORDEM_HORARIOS
+            )
 
     @staticmethod
     def _validar_principal(valor: object) -> int:

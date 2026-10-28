@@ -1,24 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
-import { Text, TextInput, Button, Surface, Avatar, Snackbar, Portal } from 'react-native-paper';
-import { useRouter } from 'expo-router';
+import { Text, TextInput, Button, Surface, Avatar, Portal } from 'react-native-paper';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, Search, Building2, ChevronDown, X } from 'lucide-react-native';
 
 import { representanteService, AlunoElegivelItem } from '@/services/representanteService';
+import { faculdadeService, FaculdadeItem } from '@/services/faculdadeService';
+import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
+
+// Rótulo da faculdade no seletor: nome e campus vindos da API (#262)
+const rotuloFaculdade = (fac: FaculdadeItem) => `${fac.nome} - ${fac.campus}`;
 
 export default function CadastrarRepresentanteScreen() {
   const router = useRouter();
 
-  const [instituicao, setInstituicao] = useState('UFC - Campus Quixadá');
+  const [faculdades, setFaculdades] = useState<FaculdadeItem[]>([]);
+  const [instituicaoSelecionadaId, setInstituicaoSelecionadaId] = useState<number | null>(null);
+  const [instituicaoTexto, setInstituicaoTexto] = useState('Selecione uma instituição');
   const [modalInstVisible, setModalInstVisible] = useState(false);
   const [busca, setBusca] = useState('');
   const [alunoSelecionado, setAlunoSelecionado] = useState<AlunoElegivelItem | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Snackbar Toast
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
   // Pop-up Estilizado (Confirmação)
   const [popup, setPopup] = useState<{
@@ -28,6 +31,7 @@ export default function CadastrarRepresentanteScreen() {
     message: string;
     confirmText?: string;
     cancelText?: string;
+    confirmColor?: string;
     onConfirm?: () => void;
   }>({
     visible: false,
@@ -43,9 +47,50 @@ export default function CadastrarRepresentanteScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
+  // Reseta estado ao focar/desfocar a tela para evitar dados residuais
+  useFocusEffect(
+    React.useCallback(() => {
+      setFaculdades([]);
+      setInstituicaoSelecionadaId(null);
+      setInstituicaoTexto('Selecione uma instituição');
+      setBusca('');
+      setAlunoSelecionado(null);
+
+      faculdadeService.listarFaculdades().then((lista) => {
+        const ativas = lista.filter((f) => f.ativo !== false);
+        setFaculdades(ativas);
+        if (ativas.length === 0) {
+          setInstituicaoTexto('Nenhuma instituição ativa cadastrada');
+        } else {
+          setInstituicaoSelecionadaId(ativas[0].id);
+          setInstituicaoTexto(rotuloFaculdade(ativas[0]));
+        }
+      }).catch((err) => {
+        const msg = getErrorMessage(err, 'Erro ao carregar faculdades.');
+        showPopup({
+          type: 'error',
+          title: 'Erro de Conexão',
+          message: msg,
+          confirmText: 'Entendido',
+        });
+      });
+
+      return () => {
+        setFaculdades([]);
+        setInstituicaoSelecionadaId(null);
+        setInstituicaoTexto('Selecione uma instituição');
+        setBusca('');
+        setAlunoSelecionado(null);
+      };
+    }, [])
+  );
+
   useEffect(() => {
+    if (!instituicaoSelecionadaId) return;
     let isMounted = true;
-    representanteService.listarAlunosElegiveis(instituicao, busca).then((lista) => {
+    // A instituição do representante pode ser diferente da matrícula (PO na #207, item 6b):
+    // os discentes não são filtrados pela instituição escolhida
+    representanteService.listarAlunosElegiveis('', busca).then((lista) => {
       if (isMounted) {
         if (lista.length > 0) {
           setAlunoSelecionado(lista[0]);
@@ -53,13 +98,21 @@ export default function CadastrarRepresentanteScreen() {
           setAlunoSelecionado(null);
         }
       }
-    }).catch((err) => console.warn('Erro ao carregar alunos elegíveis:', err));
+    }).catch((err) => {
+      const msg = getErrorMessage(err, 'Erro ao carregar discentes elegíveis.');
+      console.warn(msg);
+    });
 
     return () => { isMounted = false; };
-  }, [instituicao, busca]);
+  }, [instituicaoSelecionadaId, busca]);
+
+  const voltarParaListagem = () => {
+    closePopup();
+    router.replace('/(administrador)/representantes');
+  };
 
   const handleTornarRepresentante = () => {
-    if (!alunoSelecionado) return;
+    if (!alunoSelecionado || !instituicaoSelecionadaId) return;
 
     showPopup({
       type: 'info',
@@ -71,19 +124,25 @@ export default function CadastrarRepresentanteScreen() {
         closePopup();
         setIsLoading(true);
         try {
-          await representanteService.atribuirRepresentante(alunoSelecionado.aluno_id || alunoSelecionado.id);
+          await representanteService.atribuirRepresentante(
+            alunoSelecionado.aluno_id || alunoSelecionado.id,
+            instituicaoSelecionadaId
+          );
           setIsLoading(false);
-          setSnackbarMessage('Representante atribuído com sucesso');
-          setSnackbarVisivel(true);
-          setTimeout(() => {
-            router.replace('/(administrador)/representantes');
-          }, 1200);
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: 'O representante foi atribuído com sucesso.',
+            confirmText: 'OK',
+            onConfirm: voltarParaListagem,
+          });
         } catch (error: any) {
           setIsLoading(false);
+          const msg = getErrorMessage(error, 'Erro ao atribuir representante.');
           showPopup({
             type: 'error',
             title: 'Aviso',
-            message: error.message || 'Erro ao atribuir representante.',
+            message: msg,
             confirmText: 'Entendido',
           });
         }
@@ -102,7 +161,7 @@ export default function CadastrarRepresentanteScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={voltarParaListagem}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Cadastrar Representante</Text>
@@ -116,6 +175,7 @@ export default function CadastrarRepresentanteScreen() {
         message={popup.message}
         confirmText={popup.confirmText}
         cancelText={popup.cancelText}
+        confirmColor={popup.confirmColor}
         onConfirm={popup.onConfirm}
         onDismiss={closePopup}
       />
@@ -128,7 +188,7 @@ export default function CadastrarRepresentanteScreen() {
               <TextInput
                 label="Instituição de Ensino *"
                 mode="outlined"
-                value={instituicao}
+                value={instituicaoTexto}
                 editable={false}
                 left={<TextInput.Icon icon={() => <Building2 size={20} color="#666" />} />}
                 right={<TextInput.Icon icon={() => <ChevronDown size={20} color="#333" />} onPress={() => setModalInstVisible(true)} />}
@@ -144,17 +204,24 @@ export default function CadastrarRepresentanteScreen() {
             <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalInstVisible(false)}>
               <View style={styles.modalSelectContent}>
                 <Text variant="titleMedium" style={styles.modalSelectTitle}>Instituição de Ensino</Text>
-                {['UFC - Campus Quixadá', 'IFCE - Campus Quixadá', 'UECE - Campus Quixadá'].map((inst) => (
-                  <TouchableOpacity
-                    key={inst}
-                    style={styles.optionItem}
-                    onPress={() => { setInstituicao(inst); setModalInstVisible(false); }}
-                  >
-                    <Text style={[styles.optionText, instituicao === inst && { color: '#3E5F90', fontWeight: 'bold' }]}>
-                      {inst}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                {faculdades.map((fac) => {
+                  const labelFac = rotuloFaculdade(fac);
+                  return (
+                    <TouchableOpacity
+                      key={fac.id}
+                      style={styles.optionItem}
+                      onPress={() => {
+                        setInstituicaoSelecionadaId(fac.id);
+                        setInstituicaoTexto(labelFac);
+                        setModalInstVisible(false);
+                      }}
+                    >
+                      <Text style={[styles.optionText, instituicaoSelecionadaId === fac.id && { color: '#3E5F90', fontWeight: 'bold' }]}>
+                        {labelFac}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </TouchableOpacity>
           </RNModal>
@@ -211,7 +278,7 @@ export default function CadastrarRepresentanteScreen() {
         <Button
           mode="contained"
           onPress={handleTornarRepresentante}
-          disabled={!alunoSelecionado || isLoading}
+          disabled={!alunoSelecionado || !instituicaoSelecionadaId || isLoading}
           loading={isLoading}
           style={styles.saveButton}
           contentStyle={styles.buttonContent}
@@ -219,20 +286,6 @@ export default function CadastrarRepresentanteScreen() {
           Tornar representante
         </Button>
       </ScrollView>
-
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
     </View>
   );
 }
@@ -346,11 +399,5 @@ const styles = StyleSheet.create({
   optionText: {
     color: '#333',
     fontSize: 16,
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });
