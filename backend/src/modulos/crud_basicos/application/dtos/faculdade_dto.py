@@ -14,7 +14,7 @@ class CriarFaculdadeDTO(BaseModel):
         ...,
         validation_alias=AliasChoices("nome", "nome_faculdade"),
         serialization_alias="nome_faculdade",
-        min_length=3,
+        min_length=1,
         max_length=150,
     )
     sigla: Optional[str] = Field(
@@ -27,7 +27,7 @@ class CriarFaculdadeDTO(BaseModel):
         ...,
         validation_alias=AliasChoices("campus", "campus_faculdade"),
         serialization_alias="campus_faculdade",
-        min_length=2,
+        min_length=1,
         max_length=100,
     )
 
@@ -35,10 +35,10 @@ class CriarFaculdadeDTO(BaseModel):
     @classmethod
     def validar_nome(cls, valor: object) -> str:
         if valor is None:
-            raise ValueError("Informe o nome da instituição com pelo menos 3 caracteres")
+            raise ValueError("Informe o nome da instituição")
         valor_str = str(valor).strip()
-        if len(valor_str) < 3:
-            raise ValueError("Informe o nome da instituição com pelo menos 3 caracteres")
+        if not valor_str:
+            raise ValueError("Informe o nome da instituição")
         if len(valor_str) > 150:
             raise ValueError("O nome da instituição deve ter no máximo 150 caracteres")
         if not REGEX_TEXTO_LIVRE.match(valor_str):
@@ -65,7 +65,7 @@ class CriarFaculdadeDTO(BaseModel):
         if valor is None:
             raise ValueError("Informe o campus da instituição")
         valor_str = str(valor).strip()
-        if len(valor_str) < 2:
+        if not valor_str:
             raise ValueError("Informe o campus da instituição")
         if len(valor_str) > 100:
             raise ValueError("O campus deve ter no máximo 100 caracteres")
@@ -103,8 +103,8 @@ class AtualizarFaculdadeDTO(BaseModel):
         if valor is None:
             return None
         valor_str = str(valor).strip()
-        if len(valor_str) < 3:
-            raise ValueError("Informe o nome da instituição com pelo menos 3 caracteres")
+        if not valor_str:
+            raise ValueError("Informe o nome da instituição")
         if len(valor_str) > 150:
             raise ValueError("O nome da instituição deve ter no máximo 150 caracteres")
         if not REGEX_TEXTO_LIVRE.match(valor_str):
@@ -131,7 +131,7 @@ class AtualizarFaculdadeDTO(BaseModel):
         if valor is None:
             return None
         valor_str = str(valor).strip()
-        if len(valor_str) < 2:
+        if not valor_str:
             raise ValueError("Informe o campus da instituição")
         if len(valor_str) > 100:
             raise ValueError("O campus deve ter no máximo 100 caracteres")
