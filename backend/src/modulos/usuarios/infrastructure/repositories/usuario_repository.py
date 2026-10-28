@@ -196,8 +196,14 @@ class SQLAlchemyUsuarioRepository:
             user_id=user_id,
         )
         if representante and representante[0]:
-            # "supervisor" é o valor legado presente no CargoEnum e no JWT
-            # atual para o perfil operacional equivalente a Representante.
+            # Suporta ambos "representante" e "supervisor" para compatibilidade entre JWT, CargoEnum e App
+            candidatos.append({
+                "role": "representante",
+                "ativo": representante[1],
+                "status": "ativado" if representante[1] else "inativado",
+                "motivo": None if representante[1] else "Usuário representante inativo.",
+                "aluno": None,
+            })
             candidatos.append({
                 "role": CargoEnum.SUPERVISOR.value,
                 "ativo": representante[1],
