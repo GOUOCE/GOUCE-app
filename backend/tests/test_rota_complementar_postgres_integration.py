@@ -176,6 +176,7 @@ class RotaComplementarPostgreSQLIntegrationTest(unittest.TestCase):
         argumentos = dict(
             nome=f"{self.prefix} Van {sufixo}",
             horario_saida=time(6, 0),
+            horario_retorno=time(17, 40),
             ponto_conexao="Trevo do Bairro Novo",
             rota_principal_id=principal_id,
             usuario_executor_id=self.executor,
@@ -297,6 +298,7 @@ class RotaComplementarPostgreSQLIntegrationTest(unittest.TestCase):
         return lambda sessao: RotaComplementarRepository(sessao).criar(
             nome=f"{self.prefix} Van {sufixo}",
             horario_saida=time(6, 0),
+            horario_retorno=time(17, 40),
             ponto_conexao="Trevo do Bairro Novo",
             rota_principal_id=principal_id,
             usuario_executor_id=self.executor,
@@ -308,12 +310,13 @@ class RotaComplementarPostgreSQLIntegrationTest(unittest.TestCase):
         ).reativar(rota_id, self.executor)
 
     # ------------------------------------------------------------ testes
-    def test_schema_da_migration_77_e_cadeia_com_um_unico_head(self):
+    def test_schema_das_migrations_77_e_78_e_cadeia_com_um_unico_head(self):
         inspector = inspect(engine)
 
         self.assertIn("rota_complementar", inspector.get_table_names())
         self.assertEqual(
-            {"id", "rota_principal_id", "nome", "horario_saida", "ponto_conexao", "ativo", "data_criacao"},
+            {"id", "rota_principal_id", "nome", "horario_saida", "horario_retorno", "ponto_conexao",
+             "ativo", "data_criacao"},
             {c["name"] for c in inspector.get_columns("rota_complementar")},
         )
         indices = {i["name"]: i for i in inspector.get_indexes("rota_complementar")}
@@ -327,7 +330,13 @@ class RotaComplementarPostgreSQLIntegrationTest(unittest.TestCase):
         script = ScriptDirectory(MIGRATIONS_DIR)
         aplicadas = {r.revision for r in script.walk_revisions(base="base", head=revision)}
         self.assertIn("77_create_rota_complementar", aplicadas)
-        self.assertEqual(script.get_heads(), ["77_create_rota_complementar"])
+        self.assertIn("76_ponto_unico_por_bairro", aplicadas)
+        # A 78 une as duas heads da develop (#318)
+        self.assertEqual(script.get_heads(), ["78_horario_retorno_rota_complementar"])
+        coluna = next(
+            c for c in inspector.get_columns("rota_complementar") if c["name"] == "horario_retorno"
+        )
+        self.assertFalse(coluna["nullable"])
 
     def test_fluxo_completo_criar_inativar_principal_reativar_e_trocar_vinculo(self):
         p1 = self._criar_principal("P1")
@@ -533,11 +542,74 @@ class RotaComplementarPostgreSQLIntegrationTest(unittest.TestCase):
     "defina HU012_INTEGRATION_DATABASE_URL para executar a integração PostgreSQL",
 )
 class Migration77PostgreSQLTest(unittest.TestCase):
-    """Roda downgrade e upgrade da 77 no banco isolado e restaura o estado original."""
+    """Roda downgrade e upgrade da 77 e da 78 no banco isolado e restaura o estado original."""
+
+    HEAD = "78_horario_retorno_rota_complementar"
+
+    def setUp(self):
+        self.config = Config()
+        self.config.set_main_option("script_location", os.path.abspath(MIGRATIONS_DIR))
+
+    def versoes(self) -> set[str]:
+        with engine.connect() as conn:
+            return set(conn.execute(text("SELECT version_num FROM alembic_version")).scalars())
+
+    def test_78_preenche_o_retorno_dos_registros_existentes(self):
+        prefixo = f"HU012 M78 {uuid4().hex[:8]}"
+        engine.dispose()
+        try:
+            command.downgrade(self.config, "77_create_rota_complementar")
+            self.assertEqual(
+                self.versoes(), {"77_create_rota_complementar", "76_ponto_unico_por_bairro"}
+            )
+            with engine.begin() as conn:
+                principal_id = conn.execute(
+                    text(
+                        "INSERT INTO rota_principal (nome, horario_saida, horario_retorno, ativo) "
+                        "VALUES (:nome, '06:30', '17:30', TRUE) RETURNING id"
+                    ),
+                    {"nome": f"{prefixo} Principal"},
+                ).scalar_one()
+                for nome, saida in ((f"{prefixo} Antes", "06:00"), (f"{prefixo} Depois", "18:00")):
+                    conn.execute(
+                        text(
+                            "INSERT INTO rota_complementar (rota_principal_id, nome, horario_saida, ponto_conexao) "
+                            "VALUES (:principal, :nome, :saida, 'Trevo')"
+                        ),
+                        {"principal": principal_id, "nome": nome, "saida": saida},
+                    )
+        finally:
+            command.upgrade(self.config, "head")
+
+        try:
+            self.assertEqual(self.versoes(), {self.HEAD})
+            with engine.connect() as conn:
+                retornos = dict(
+                    conn.execute(
+                        text(
+                            "SELECT nome, horario_retorno FROM rota_complementar "
+                            "WHERE nome LIKE :prefixo"
+                        ),
+                        {"prefixo": f"{prefixo}%"},
+                    ).all()
+                )
+            # Retorno da principal quando posterior à saída; senão, 23:59
+            self.assertEqual(
+                retornos, {f"{prefixo} Antes": time(17, 30), f"{prefixo} Depois": time(23, 59)}
+            )
+        finally:
+            with engine.begin() as conn:
+                conn.execute(
+                    text("DELETE FROM rota_complementar WHERE nome LIKE :prefixo"),
+                    {"prefixo": f"{prefixo}%"},
+                )
+                conn.execute(
+                    text("DELETE FROM rota_principal WHERE nome LIKE :prefixo"),
+                    {"prefixo": f"{prefixo}%"},
+                )
 
     def test_downgrade_remove_a_tabela_e_upgrade_recria_com_os_indices(self):
-        config = Config()
-        config.set_main_option("script_location", os.path.abspath(MIGRATIONS_DIR))
+        config = self.config
         if "rota_complementar" not in inspect(engine).get_table_names():
             self.fail("aplique a migration 77 no banco isolado antes de executar este teste")
         engine.dispose()
@@ -545,11 +617,9 @@ class Migration77PostgreSQLTest(unittest.TestCase):
         try:
             command.downgrade(config, "76_create_rota_principal")
             self.assertNotIn("rota_complementar", inspect(engine).get_table_names())
-            with engine.connect() as conn:
-                self.assertEqual(
-                    conn.execute(text("SELECT version_num FROM alembic_version")).scalar_one(),
-                    "76_create_rota_principal",
-                )
+            self.assertEqual(
+                self.versoes(), {"76_create_rota_principal", "76_ponto_unico_por_bairro"}
+            )
         finally:
             command.upgrade(config, "head")
 
@@ -559,8 +629,4 @@ class Migration77PostgreSQLTest(unittest.TestCase):
             {"ix_rota_complementar_ativo", "ix_rota_complementar_rota_principal_id", "uq_rota_complementar_nome_lower"},
             {i["name"] for i in inspector.get_indexes("rota_complementar")},
         )
-        with engine.connect() as conn:
-            self.assertEqual(
-                conn.execute(text("SELECT version_num FROM alembic_version")).scalar_one(),
-                "77_create_rota_complementar",
-            )
+        self.assertEqual(self.versoes(), {self.HEAD})

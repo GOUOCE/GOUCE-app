@@ -452,7 +452,7 @@ class ComplementaresAtivasTest(RotaPrincipalRepositoryTestBase):
         self.session.add(
             RotaComplementarORM(
                 rota_principal_id=rota_id, nome=nome, horario_saida=time(6, 0),
-                ponto_conexao="Trevo", ativo=ativo,
+                horario_retorno=time(17, 40), ponto_conexao="Trevo", ativo=ativo,
             )
         )
         self.session.commit()

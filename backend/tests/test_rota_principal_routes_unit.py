@@ -195,8 +195,8 @@ class MapeamentoDeErrosTest(RotasHttpUnitBase):
             "PATCH", "/rotas-principais/1/inativar", None,
             RotaComComplementaresAtivasError(MENSAGEM_ROTA_COM_COMPLEMENTARES_ATIVAS),
             409, "CONFLICT",
-            "Esta rota possui rotas complementares ativas e não pode ser inativada. "
-            "Inative ou reassocie as complementares antes.",
+            "Esta rota possui rotas complementares ativas vinculadas. "
+            "Inative ou desvincule as rotas complementares antes de continuar.",
         )
 
     async def test_vinculo_inativo_vira_409_com_a_mensagem_exata_na_reativacao(self):

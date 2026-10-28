@@ -320,6 +320,29 @@ class CadastroTest(RotaPrincipalHttpTestBase):
         self.assertEqual(corpo["error"]["code"], "CONFLICT")
         self.assertEqual(corpo["error"]["message"], "Já existe uma rota com este nome.")
 
+    async def test_ct_hu011_api_004_nome_de_rota_complementar_retorna_409(self):
+        # #309: complementar "Van Trevo" inativa bloqueia o nome para a principal
+        rota = await self.criar_rota()
+        self.session.add(
+            RotaComplementarORM(
+                rota_principal_id=rota["id"], nome="Van Trevo", horario_saida=time(6, 0),
+                horario_retorno=time(17, 40), ponto_conexao="Trevo do Bairro Novo", ativo=False,
+            )
+        )
+        self.session.commit()
+        logs_antes = len(self.logs())
+
+        status, corpo = await self.requisitar("POST", "/rotas-principais", dados_rota(nome=" van trevo "))
+        self.assertEqual(status, 409)
+        self.assertEqual(
+            (corpo["error"]["code"], corpo["error"]["message"]),
+            ("CONFLICT", "Já existe uma rota com este nome."),
+        )
+
+        status, corpo = await self.requisitar("PATCH", f"/rotas-principais/{rota['id']}", {"nome": "Van Trevo"})
+        self.assertEqual((status, corpo["error"]["message"]), (409, "Já existe uma rota com este nome."))
+        self.assertEqual(len(self.logs()), logs_antes)
+
     async def test_nao_aceita_campo_extra_como_ativo(self):
         status, corpo = await self.requisitar(
             "POST", "/rotas-principais", dados_rota(ativo=False)
@@ -595,7 +618,8 @@ class BloqueioPorComplementaresAtivasTest(RotaPrincipalHttpTestBase):
         self.session.add(
             RotaComplementarORM(
                 rota_principal_id=rota_id, nome="Van 2 - Bairro Novo",
-                horario_saida=time(6, 0), ponto_conexao="Trevo do Bairro Novo", ativo=ativo,
+                horario_saida=time(6, 0), horario_retorno=time(17, 40),
+                ponto_conexao="Trevo do Bairro Novo", ativo=ativo,
             )
         )
         self.session.commit()
@@ -611,8 +635,8 @@ class BloqueioPorComplementaresAtivasTest(RotaPrincipalHttpTestBase):
         self.assertEqual(corpo["error"]["code"], "CONFLICT")
         self.assertEqual(
             corpo["error"]["message"],
-            "Esta rota possui rotas complementares ativas e não pode ser inativada. "
-            "Inative ou reassocie as complementares antes.",
+            "Esta rota possui rotas complementares ativas vinculadas. "
+            "Inative ou desvincule as rotas complementares antes de continuar.",
         )
         _, depois = await self.requisitar("GET", f"/rotas-principais/{rota['id']}")
         self.assertTrue(depois["ativo"])
