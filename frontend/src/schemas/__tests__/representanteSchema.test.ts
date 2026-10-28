@@ -43,8 +43,11 @@ jest.mock('../../api/api', () => ({
     post: jest.fn((...args: any[]) => {
       const url = args[0];
       if (url === '/representantes/promover') {
-        const error: any = new Error('Este aluno já possui a função de representante.');
-        error.response = { status: 409 };
+        const error: any = new Error('Request failed with status code 409');
+        error.response = {
+          status: 409,
+          data: { success: false, error: { code: 'CONFLICT', message: 'Este aluno já é um representante ativo.' } },
+        };
         return Promise.reject(error);
       }
       return Promise.resolve({ data: { success: true } });
@@ -107,9 +110,12 @@ describe('Suíte de Testes Unitários - HU-030 (Gerenciamento de Representantes)
       const representantes = await representanteService.listarRepresentantes();
       const primeiroRep = representantes[0];
 
+      // A mensagem de regra vem da API e segue até a tela
       await expect(
-        representanteService.atribuirRepresentante(primeiroRep.aluno_id)
-      ).rejects.toThrow('já possui a função de representante');
+        representanteService.atribuirRepresentante(primeiroRep.aluno_id, 1)
+      ).rejects.toMatchObject({
+        response: { status: 409, data: { error: { message: 'Este aluno já é um representante ativo.' } } },
+      });
     });
 
     it('deve permitir revogar a função de representante mantendo o cadastro do aluno ativo', async () => {

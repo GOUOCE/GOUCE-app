@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Switch } from 'react-native-paper';
+import { Text, TextInput } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, Plus, Search, UserX, X, ChevronRight as ChevronRightIcon } from 'lucide-react-native';
 
@@ -12,8 +12,10 @@ export default function RepresentantesListScreen() {
   const router = useRouter();
 
   const [busca, setBusca] = useState('');
-  const [mostrarInativos, setMostrarInativos] = useState(true); // Mostra ativos e revogados conforme AC-01
+  // A lista traz os ativos e os revogados, identificados com a etiqueta "Revogado" (AC-01)
   const [representantes, setRepresentantes] = useState<RepresentanteItem[]>([]);
+  // Com a carga falhando, a tela não pode dizer que não há representantes (#300)
+  const [erroCarga, setErroCarga] = useState(false);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -43,12 +45,13 @@ export default function RepresentantesListScreen() {
     try {
       const lista = await representanteService.listarRepresentantes(busca);
       setRepresentantes(lista);
-    } catch (err) {
-      const msg = getErrorMessage(err, 'Erro ao carregar listagem de representantes.');
+      setErroCarga(false);
+    } catch (err: any) {
+      setErroCarga(true);
       showPopup({
         type: 'error',
-        title: 'Erro de Conexão',
-        message: msg,
+        title: err?.response ? 'Aviso' : 'Erro de Conexão',
+        message: getErrorMessage(err, 'Erro ao carregar listagem de representantes.'),
         confirmText: 'Entendido',
       });
     }
@@ -72,30 +75,27 @@ export default function RepresentantesListScreen() {
         closePopup();
         try {
           await representanteService.revogarRepresentante(rep.id);
+          // Atualiza já após o PATCH: o pop-up pode ser fechado pelo X ou por fora
+          carregarRepresentantes();
           showPopup({
             type: 'success',
             title: 'Operação realizada com sucesso',
             message: 'A representação foi revogada com sucesso.',
             confirmText: 'OK',
-            onConfirm: () => {
-              closePopup();
-              carregarRepresentantes();
-            },
+            onConfirm: closePopup,
           });
         } catch (error: any) {
-          const msg = getErrorMessage(error, 'Erro ao revogar representação.');
+          // Sem resposta da API é falha de conexão, não regra de negócio (#300)
           showPopup({
             type: 'error',
-            title: 'Erro ao revogar',
-            message: msg,
+            title: error?.response ? 'Aviso' : 'Erro de Conexão',
+            message: getErrorMessage(error, 'Erro ao revogar representação.'),
             confirmText: 'Entendido',
           });
         }
       },
     });
   };
-
-  const filtrados = representantes.filter((r) => mostrarInativos || r.ativo);
 
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
@@ -143,24 +143,14 @@ export default function RepresentantesListScreen() {
           />
         </View>
 
-        {/* Toggle Mostrar inativos */}
-        <View style={styles.toggleRow}>
-          <Text variant="bodyLarge" style={styles.toggleLabel}>Mostrar inativos / revogados</Text>
-          <Switch
-            value={mostrarInativos}
-            onValueChange={setMostrarInativos}
-            color="#3e5f90"
-          />
-        </View>
-
         {/* Quantidade de Resultados */}
         <Text variant="bodySmall" style={styles.countText}>
-          {filtrados.length} {filtrados.length === 1 ? 'resultado obtido' : 'resultados obtidos'}
+          {representantes.length} {representantes.length === 1 ? 'resultado obtido' : 'resultados obtidos'}
         </Text>
 
         {/* Lista de Representantes */}
         <View style={styles.listSection}>
-          {filtrados.map((rep) => (
+          {representantes.map((rep) => (
             <View key={rep.id} style={styles.repRow}>
               <View style={styles.repInfo}>
                 <View style={styles.nameRow}>
@@ -171,7 +161,9 @@ export default function RepresentantesListScreen() {
                     </View>
                   )}
                 </View>
-                <Text variant="bodySmall" style={styles.repSub}>{rep.instituicao} - {rep.campus}</Text>
+                <Text variant="bodySmall" style={styles.repSub}>
+                  {[rep.instituicao, rep.campus].filter(Boolean).join(' - ')}
+                </Text>
               </View>
 
               {rep.ativo && (
@@ -182,13 +174,13 @@ export default function RepresentantesListScreen() {
             </View>
           ))}
 
-          {filtrados.length === 0 && (
+          {representantes.length === 0 && !erroCarga && (
             <Text style={styles.emptyText}>Nenhum representante encontrado.</Text>
           )}
         </View>
 
         {/* Paginação Estilizada do Protótipo */}
-        {filtrados.length > 0 && (
+        {representantes.length > 0 && (
           <View style={styles.paginationRow}>
             <TouchableOpacity style={styles.pageArrow}>
               <ChevronLeft size={18} color="#333" />
@@ -247,16 +239,6 @@ const styles = StyleSheet.create({
   searchOutline: {
     borderRadius: 28,
     borderWidth: 0,
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  toggleLabel: {
-    color: '#333',
-    fontWeight: '500',
   },
   countText: {
     color: '#666',
