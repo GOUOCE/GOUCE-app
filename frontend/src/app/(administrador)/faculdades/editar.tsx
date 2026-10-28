@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Text, TextInput, Button } from 'react-native-paper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
@@ -16,6 +16,9 @@ export default function EditarFaculdadeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const [isLoading, setIsLoading] = useState(false);
+  // id da faculdade cujos dados estão no formulário; enquanto não carregar, o formulário não aparece (#256)
+  const [idCarregado, setIdCarregado] = useState<string | null>(null);
+  const [carregando, setCarregando] = useState(true);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -41,7 +44,7 @@ export default function EditarFaculdadeScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const { control, handleSubmit, formState: { errors, isDirty }, reset } = useForm<FaculdadeFormData>({
+  const { control, handleSubmit, formState: { errors, isDirty }, reset, setValue, clearErrors } = useForm<FaculdadeFormData>({
     resolver: zodResolver(faculdadeSchema),
     defaultValues: {
       nome: '',
@@ -50,30 +53,47 @@ export default function EditarFaculdadeScreen() {
     },
   });
 
-  // Recarrega os dados oficiais do banco de dados ao ganhar foco e descarta alterações não salvas ao sair
+  const voltarParaListagem = () => {
+    closePopup();
+    router.replace('/(administrador)/faculdades');
+  };
+
+  const limparFormulario = React.useCallback(() => {
+    setIdCarregado(null);
+    reset({ nome: '', sigla: '', campus: '' });
+  }, [reset]);
+
+  // Ao ganhar foco, descarta o que havia no formulário e carrega os dados salvos do id atual;
+  // ao sair, limpa de novo, para que um rascunho não seja enviado para outra faculdade (#256)
   useFocusEffect(
     React.useCallback(() => {
       let isMounted = true;
+      limparFormulario();
+      setCarregando(true);
 
       async function carregarDadosOficiais() {
         if (!id) return;
         try {
           const f = await faculdadeService.obterFaculdadePorId(Number(id));
-          if (f && isMounted) {
-            reset({
-              nome: f.nome,
-              sigla: f.sigla,
-              campus: f.campus,
-            });
-          }
-        } catch (err) {
+          if (!isMounted) return;
+          if (!f) throw new Error('Faculdade não encontrada.');
+          reset({
+            nome: f.nome,
+            sigla: f.sigla,
+            campus: f.campus,
+          });
+          setIdCarregado(id);
+        } catch (err: any) {
+          if (!isMounted) return;
           const msg = getErrorMessage(err, 'Erro ao carregar dados da faculdade.');
           showPopup({
             type: 'error',
-            title: 'Erro de Conexão',
+            title: err?.response ? 'Aviso' : 'Erro de Conexão',
             message: msg,
             confirmText: 'Entendido',
           });
+        } finally {
+          if (isMounted) setCarregando(false);
         }
       }
 
@@ -81,13 +101,18 @@ export default function EditarFaculdadeScreen() {
 
       return () => {
         isMounted = false;
+        limparFormulario();
       };
-    }, [id, reset])
+    }, [id, reset, limparFormulario])
   );
 
-  const voltarParaListagem = () => {
-    closePopup();
-    router.replace('/(administrador)/faculdades');
+  const dadosCarregados = !!id && idCarregado === id;
+
+  // Campo apagado não mostra erro; a mensagem de obrigatório só aparece ao salvar
+  const alterarCampo = (campo: keyof FaculdadeFormData, texto: string) => {
+    const preenchido = texto.trim() !== '';
+    setValue(campo, texto, { shouldDirty: true, shouldValidate: preenchido });
+    if (!preenchido) clearErrors(campo);
   };
 
   const handleBack = () => {
@@ -107,7 +132,7 @@ export default function EditarFaculdadeScreen() {
   };
 
   const onSubmit = async (dados: FaculdadeFormData) => {
-    if (!id) return;
+    if (!id || idCarregado !== id) return;
     setIsLoading(true);
     try {
       await faculdadeService.atualizarFaculdade(Number(id), dados.nome, dados.sigla, dados.campus);
@@ -154,19 +179,24 @@ export default function EditarFaculdadeScreen() {
         onDismiss={closePopup}
       />
 
+      {!dadosCarregados ? (
+        <View style={styles.loading}>
+          {carregando && <ActivityIndicator size="large" color="#3E5F90" />}
+        </View>
+      ) : (
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Nome da Instituição */}
         <View style={styles.inputBox}>
           <Controller
             control={control}
             name="nome"
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { value } }) => (
               <TextInput
                 label="Nome da Instituição *"
                 mode="outlined"
                 placeholder="Nome da instituição"
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(texto) => alterarCampo('nome', texto)}
                 error={!!errors.nome}
                 left={<TextInput.Icon icon={() => <Building2 size={20} color="#666" />} />}
                 style={styles.input}
@@ -181,13 +211,13 @@ export default function EditarFaculdadeScreen() {
           <Controller
             control={control}
             name="sigla"
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { value } }) => (
               <TextInput
                 label="Sigla do Nome *"
                 mode="outlined"
                 placeholder="Sigla do nome (ex.: UFC)"
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(texto) => alterarCampo('sigla', texto)}
                 error={!!errors.sigla}
                 style={styles.input}
               />
@@ -201,13 +231,13 @@ export default function EditarFaculdadeScreen() {
           <Controller
             control={control}
             name="campus"
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { value } }) => (
               <TextInput
                 label="Campus *"
                 mode="outlined"
                 placeholder="Campus"
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(texto) => alterarCampo('campus', texto)}
                 error={!!errors.campus}
                 style={styles.input}
               />
@@ -228,6 +258,7 @@ export default function EditarFaculdadeScreen() {
           Salvar Alterações
         </Button>
       </ScrollView>
+      )}
     </View>
   );
 }
@@ -251,6 +282,11 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 24,
     paddingBottom: 40,
+  },
+  loading: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   inputBox: {
     marginBottom: 20,

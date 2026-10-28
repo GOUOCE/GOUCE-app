@@ -133,6 +133,24 @@ describe('Suíte de Testes Unitários - HU-008 (Gerenciamento de Faculdades)', (
         expect(res.error.issues[0].message).toContain('Informe o campus da instituição');
       }
     });
+
+    it('deve aceitar os tamanhos máximos e recusar 1 caractere a mais (#261)', () => {
+      const valido = { nome: 'A'.repeat(150), sigla: 'S'.repeat(20), campus: 'C'.repeat(100) };
+      expect(faculdadeSchema.safeParse(valido).success).toBe(true);
+
+      const casos: [keyof typeof valido, string, string][] = [
+        ['nome', 'A'.repeat(151), 'O nome da instituição deve ter no máximo 150 caracteres'],
+        ['sigla', 'S'.repeat(21), 'A sigla deve ter no máximo 20 caracteres'],
+        ['campus', 'C'.repeat(101), 'O campus deve ter no máximo 100 caracteres'],
+      ];
+      for (const [campo, texto, mensagem] of casos) {
+        const res = faculdadeSchema.safeParse({ ...valido, [campo]: texto });
+        expect(res.success).toBe(false);
+        if (!res.success) {
+          expect(res.error.issues[0].message).toBe(mensagem);
+        }
+      }
+    });
   });
 
   describe('Regras de Negócio de Faculdades', () => {

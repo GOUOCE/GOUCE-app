@@ -39,7 +39,7 @@ export default function CadastrarFaculdadeScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const { control, handleSubmit, formState: { errors }, reset } = useForm<FaculdadeFormData>({
+  const { control, handleSubmit, formState: { errors }, reset, setValue, clearErrors } = useForm<FaculdadeFormData>({
     resolver: zodResolver(faculdadeSchema),
     defaultValues: {
       nome: '',
@@ -65,6 +65,13 @@ export default function CadastrarFaculdadeScreen() {
       };
     }, [reset])
   );
+
+  // Campo apagado não mostra erro; a mensagem de obrigatório só aparece ao cadastrar
+  const alterarCampo = (campo: keyof FaculdadeFormData, texto: string) => {
+    const preenchido = texto.trim() !== '';
+    setValue(campo, texto, { shouldDirty: true, shouldValidate: preenchido });
+    if (!preenchido) clearErrors(campo);
+  };
 
   const voltarParaListagem = () => {
     closePopup();
@@ -133,13 +140,13 @@ export default function CadastrarFaculdadeScreen() {
           <Controller
             control={control}
             name="nome"
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { value } }) => (
               <TextInput
                 label="Nome da Instituição *"
                 mode="outlined"
                 placeholder="Nome da instituição"
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(texto) => alterarCampo('nome', texto)}
                 error={!!errors.nome}
                 left={<TextInput.Icon icon={() => <Building2 size={20} color="#666" />} />}
                 style={styles.input}
@@ -154,13 +161,13 @@ export default function CadastrarFaculdadeScreen() {
           <Controller
             control={control}
             name="sigla"
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { value } }) => (
               <TextInput
                 label="Sigla do Nome *"
                 mode="outlined"
                 placeholder="Sigla do nome (ex.: UFC)"
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(texto) => alterarCampo('sigla', texto)}
                 error={!!errors.sigla}
                 style={styles.input}
               />
@@ -174,13 +181,13 @@ export default function CadastrarFaculdadeScreen() {
           <Controller
             control={control}
             name="campus"
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { value } }) => (
               <TextInput
                 label="Campus *"
                 mode="outlined"
                 placeholder="Campus"
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(texto) => alterarCampo('campus', texto)}
                 error={!!errors.campus}
                 style={styles.input}
               />

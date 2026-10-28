@@ -72,23 +72,21 @@ export default function FaculdadesListScreen() {
         closePopup();
         try {
           await faculdadeService.inativarFaculdade(fac.id);
+          // Atualiza já após o PATCH: o pop-up pode ser fechado pelo X ou por fora
+          carregarFaculdades();
           showPopup({
             type: 'success',
             title: 'Operação realizada com sucesso',
             message: 'A faculdade foi inativada com sucesso.',
             confirmText: 'OK',
-            onConfirm: () => {
-              closePopup();
-              carregarFaculdades();
-            },
+            onConfirm: closePopup,
           });
         } catch (error: any) {
+          // Sem resposta da API é falha de conexão, não bloqueio de negócio (#263)
           showPopup({
             type: 'error',
-            title: 'Inativação Bloqueada',
-            message:
-              error.message ||
-              'Esta instituição possui viagens programadas pendentes. Não é possível inativar no momento.',
+            title: error?.response ? 'Inativação Bloqueada' : 'Erro de Conexão',
+            message: getErrorMessage(error, 'Erro ao inativar faculdade.'),
             confirmText: 'Entendido',
           });
         }
@@ -107,21 +105,19 @@ export default function FaculdadesListScreen() {
         closePopup();
         try {
           await faculdadeService.reativarFaculdade(fac.id);
+          carregarFaculdades();
           showPopup({
             type: 'success',
             title: 'Operação realizada com sucesso',
             message: 'A faculdade foi reativada com sucesso.',
             confirmText: 'OK',
-            onConfirm: () => {
-              closePopup();
-              carregarFaculdades();
-            },
+            onConfirm: closePopup,
           });
-        } catch (err) {
+        } catch (err: any) {
           const msg = getErrorMessage(err, 'Erro ao reativar faculdade.');
           showPopup({
             type: 'error',
-            title: 'Erro ao reativar',
+            title: err?.response ? 'Erro ao reativar' : 'Erro de Conexão',
             message: msg,
             confirmText: 'Entendido',
           });
@@ -195,7 +191,7 @@ export default function FaculdadesListScreen() {
             <View key={fac.id} style={styles.itemRow}>
               <View style={styles.itemInfo}>
                 <Text variant="bodyLarge" style={styles.itemName}>
-                  {fac.sigla} - {fac.campus}
+                  {fac.sigla ? `${fac.sigla} - ${fac.campus}` : fac.campus}
                 </Text>
                 <Text variant="bodySmall" style={styles.itemSub}>{fac.nome}</Text>
               </View>
@@ -233,7 +229,7 @@ export default function FaculdadesListScreen() {
               <View key={fac.id} style={styles.itemRow}>
                 <View style={styles.itemInfo}>
                   <Text variant="bodyLarge" style={styles.itemName}>
-                    {fac.sigla} - {fac.campus}
+                    {fac.sigla ? `${fac.sigla} - ${fac.campus}` : fac.campus}
                   </Text>
                   <Text variant="bodySmall" style={styles.itemSub}>{fac.nome}</Text>
                 </View>

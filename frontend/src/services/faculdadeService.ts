@@ -9,25 +9,24 @@ export interface FaculdadeItem {
   viagens_programadas_pendentes?: boolean;
 }
 
+// Converte o registro da API; a sigla vem do banco e fica vazia quando não existe (#259)
+function mapearFaculdade(f: any): FaculdadeItem {
+  return {
+    id: f.id_faculdade || f.id,
+    nome: f.nome_faculdade || f.nome || '',
+    sigla: f.sigla || f.sigla_faculdade || '',
+    campus: f.campus_faculdade || f.campus || '',
+    ativo: f.ativo ?? true,
+    viagens_programadas_pendentes: Boolean(f.viagens_programadas_pendentes),
+  };
+}
+
 export const faculdadeService = {
   async listarFaculdades(busca = ''): Promise<FaculdadeItem[]> {
     const response = await api.get<any[]>('/faculdades');
     const lista = response.data || [];
 
-    const mapeados: FaculdadeItem[] = lista.map((f) => {
-      const nomeCompleto = f.nome_faculdade || f.nome || '';
-      const siglaDb = f.sigla || f.sigla_faculdade || '';
-      const siglaExtraida = siglaDb || (nomeCompleto.length <= 10 ? nomeCompleto : nomeCompleto.split(' ')[0]);
-
-      return {
-        id: f.id_faculdade || f.id,
-        nome: nomeCompleto,
-        sigla: siglaExtraida,
-        campus: f.campus_faculdade || f.campus,
-        ativo: f.ativo ?? true,
-        viagens_programadas_pendentes: Boolean(f.viagens_programadas_pendentes),
-      };
-    });
+    const mapeados: FaculdadeItem[] = lista.map(mapearFaculdade);
 
     const q = busca.toLowerCase().trim();
     if (!q) return mapeados;
@@ -42,22 +41,7 @@ export const faculdadeService = {
 
   async obterFaculdadePorId(id: number): Promise<FaculdadeItem | undefined> {
     const response = await api.get<any>(`/faculdades/${id}`);
-    const f = response.data;
-    if (f) {
-      const nomeCompleto = f.nome_faculdade || f.nome || '';
-      const siglaDb = f.sigla || f.sigla_faculdade || '';
-      const siglaExtraida = siglaDb || (nomeCompleto.length <= 10 ? nomeCompleto : nomeCompleto.split(' ')[0]);
-
-      return {
-        id: f.id_faculdade || f.id,
-        nome: nomeCompleto,
-        sigla: siglaExtraida,
-        campus: f.campus_faculdade || f.campus,
-        ativo: f.ativo ?? true,
-        viagens_programadas_pendentes: Boolean(f.viagens_programadas_pendentes),
-      };
-    }
-    return undefined;
+    return response.data ? mapearFaculdade(response.data) : undefined;
   },
 
   async criarFaculdade(nome: string, sigla: string, campus: string): Promise<FaculdadeItem> {
@@ -71,14 +55,7 @@ export const faculdadeService = {
         sigla_faculdade: siglaLimpa,
         campus_faculdade: campusLimpo,
       });
-      const f = response.data?.data || response.data;
-      return {
-        id: f.id_faculdade || f.id || Date.now(),
-        nome: f.nome_faculdade || nomeLimpo,
-        sigla: f.sigla || f.sigla_faculdade || siglaLimpa || 'UNI',
-        campus: f.campus_faculdade || campusLimpo,
-        ativo: true,
-      };
+      return mapearFaculdade(response.data?.data || response.data);
     } catch (error: any) {
       if (error.response?.status === 409 || error.message?.includes('cadastrada')) {
         throw new Error('Esta faculdade já está cadastrada.');
@@ -94,14 +71,7 @@ export const faculdadeService = {
         sigla_faculdade: sigla.trim(),
         campus_faculdade: campus.trim(),
       });
-      const f = response.data?.data || response.data;
-      return {
-        id: f.id_faculdade || id,
-        nome: f.nome_faculdade || nome,
-        sigla: f.sigla || f.sigla_faculdade || sigla || 'UNI',
-        campus: f.campus_faculdade || campus,
-        ativo: true,
-      };
+      return mapearFaculdade(response.data?.data || response.data);
     } catch (error: any) {
       if (error.response?.status === 409 || error.message?.includes('cadastrada')) {
         throw new Error('Esta faculdade já está cadastrada.');
@@ -110,16 +80,10 @@ export const faculdadeService = {
     }
   },
 
+  // Os erros seguem para a tela com a resposta da API (ou sem resposta, em falha de conexão);
+  // a tela usa getErrorMessage para montar a mensagem em português (#263)
   async inativarFaculdade(id: number): Promise<void> {
-    try {
-      await api.patch(`/faculdades/${id}/inativar`);
-    } catch (error: any) {
-      const msg = error.response?.data?.detail || error.response?.data?.message || error.message;
-      if (error.response?.status === 409 || msg) {
-        throw new Error(msg || 'Esta instituição possui viagens programadas pendentes. Não é possível inativar no momento.');
-      }
-      throw error;
-    }
+    await api.patch(`/faculdades/${id}/inativar`);
   },
 
   async reativarFaculdade(id: number): Promise<void> {
