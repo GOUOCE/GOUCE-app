@@ -1,19 +1,11 @@
 import re
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from src.shared.security.lgpd_encryption import normalizar_telefone
+from src.modulos.motoristas.application.validators.telefone_validator import (
+    validar_telefone_br,
+)
 
 REGEX_NOME_PESSOA = re.compile(r"^[A-Za-zÀ-ÖØ-öø-ÿ'’\- ]+$")
-
-
-def _validar_telefone_com_digitos(valor: str) -> str:
-    if not valor:
-        raise ValueError("Informe um telefone válido com DDD")
-    valor_str = str(valor).strip()
-    digitos = re.sub(r"\D", "", valor_str)
-    if len(digitos) < 10 or len(digitos) > 11:
-        raise ValueError("Informe um telefone válido com DDD")
-    return valor_str
 
 
 def _validar_nome_pessoa(valor: str) -> str:
@@ -37,7 +29,7 @@ class _MotoristaCamposDTO(BaseModel):
     )
 
     nome: str = Field(min_length=3, max_length=150)
-    telefone: str = Field(min_length=1, max_length=20)
+    telefone: str = Field(min_length=1)
 
     @field_validator("nome")
     @classmethod
@@ -63,7 +55,7 @@ class AtualizarMotoristaDTO(BaseModel):
     )
 
     nome: str | None = Field(default=None, min_length=3, max_length=150)
-    telefone: str | None = Field(default=None, min_length=1, max_length=20)
+    telefone: str | None = Field(default=None, min_length=1)
 
     @field_validator("nome")
     @classmethod
