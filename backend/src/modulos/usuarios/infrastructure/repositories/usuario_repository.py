@@ -138,8 +138,10 @@ class SQLAlchemyUsuarioRepository:
 
         if aluno:
             status_cadastro = self._normalizar_valor(aluno.status_cadastro)
-            # O aluno rejeitado ainda pode logar para reenviar documentos.
-            ativo = status_cadastro in {"ativado", "analise_renovacao", "rejeitado"}
+            # O aluno rejeitado ainda pode logar para reenviar documentos, e o
+            # pendente para acompanhar a avaliação (HU-031). O acesso deles aos
+            # demais recursos é limitado pelas dependências de autorização (RN-011).
+            ativo = status_cadastro in {"ativado", "analise_renovacao", "rejeitado", "pendente"}
             motivo = None
 
             if status_cadastro == "pendente":
@@ -550,11 +552,14 @@ class SQLAlchemyUsuarioRepository:
         motivo_reprovacao: str | None = None,
         documentos_reenvio: list[dict] | None = None,
         validade_acesso: datetime | None = None,
+        usuario_responsavel_id: int | None = None,
     ) -> AlunoORM | None:
         aluno = self.buscar_aluno_por_id(aluno_id)
         if not aluno:
             return None
 
+        # Guardado antes da troca: depois dela o log registrava o status novo nos dois campos (RNF-013).
+        status_anterior = self._normalizar_valor(aluno.status_cadastro)
         aluno.status_cadastro = novo_status
         if validade_acesso is not None:
             aluno.validade_acesso = validade_acesso
@@ -576,11 +581,11 @@ class SQLAlchemyUsuarioRepository:
             aluno.data_hora_ultima_renovacao_matricula = datetime.now(timezone.utc)
 
         self.session.add(LogAuditoriaORM(
-            usuario_id=aluno.aluno_id,
+            usuario_id=usuario_responsavel_id,
             acao="UPDATE_STATUS",
             entidade="aluno",
             entidade_id=aluno.aluno_id,
-            valor_anterior=str(aluno.status_cadastro),
+            valor_anterior=status_anterior,
             valor_novo=str(novo_status),
         ))
 

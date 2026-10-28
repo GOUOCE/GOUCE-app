@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Button, Snackbar } from 'react-native-paper';
-import { useRouter } from 'expo-router';
+import { Text, TextInput, Button } from 'react-native-paper';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, User, Phone, X } from 'lucide-react-native';
+import { ChevronLeft, User, Phone } from 'lucide-react-native';
 
 import { motoristaSchema, MotoristaFormData } from '@/schemas/motoristaSchema';
 import { motoristaService } from '@/services/motoristaService';
@@ -16,8 +16,6 @@ export default function CadastrarMotoristaScreen() {
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -27,6 +25,7 @@ export default function CadastrarMotoristaScreen() {
     message: string;
     confirmText?: string;
     cancelText?: string;
+    confirmColor?: string;
     onConfirm?: () => void;
   }>({
     visible: false,
@@ -42,13 +41,41 @@ export default function CadastrarMotoristaScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const { control, handleSubmit, formState: { errors } } = useForm<MotoristaFormData>({
+  const { control, handleSubmit, formState: { errors, isSubmitted }, reset, setValue, clearErrors } = useForm<MotoristaFormData>({
     resolver: zodResolver(motoristaSchema),
     defaultValues: {
       nome: '',
       telefone: '',
     },
   });
+
+  // Reseta o formulário limpo sempre que ganha ou perde o foco
+  useFocusEffect(
+    React.useCallback(() => {
+      reset({
+        nome: '',
+        telefone: '',
+      });
+
+      return () => {
+        reset({
+          nome: '',
+          telefone: '',
+        });
+      };
+    }, [reset])
+  );
+
+  const atualizarCampo = (campo: 'nome' | 'telefone', valor: string) => {
+    const preenchido = valor.trim() !== '';
+    setValue(campo, valor, { shouldDirty: true, shouldValidate: preenchido && isSubmitted });
+    if (!preenchido) clearErrors(campo);
+  };
+
+  const voltarParaListagem = () => {
+    closePopup();
+    router.replace('/(administrador)/motoristas');
+  };
 
   const onSubmit = (dados: MotoristaFormData) => {
     showPopup({
@@ -63,11 +90,13 @@ export default function CadastrarMotoristaScreen() {
         try {
           await motoristaService.criarMotorista(dados.nome, dados.telefone);
           setIsLoading(false);
-          setSnackbarMessage('Motorista cadastrado com sucesso');
-          setSnackbarVisivel(true);
-          setTimeout(() => {
-            router.replace('/(administrador)/motoristas');
-          }, 1200);
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: 'O motorista foi cadastrado com sucesso.',
+            confirmText: 'OK',
+            onConfirm: voltarParaListagem,
+          });
         } catch (error: any) {
           setIsLoading(false);
           const status = error.response?.status;
@@ -91,7 +120,7 @@ export default function CadastrarMotoristaScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={voltarParaListagem}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Cadastrar Motorista</Text>
@@ -105,8 +134,9 @@ export default function CadastrarMotoristaScreen() {
         message={popup.message}
         confirmText={popup.confirmText}
         cancelText={popup.cancelText}
+        confirmColor={popup.confirmColor}
         onConfirm={popup.onConfirm}
-        onDismiss={closePopup}
+        onDismiss={popup.type === 'success' ? voltarParaListagem : closePopup}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -115,13 +145,13 @@ export default function CadastrarMotoristaScreen() {
           <Controller
             control={control}
             name="nome"
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { value } }) => (
               <TextInput
                 label="Nome Completo *"
                 mode="outlined"
                 placeholder="Nome do motorista"
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(texto) => atualizarCampo('nome', texto)}
                 error={!!errors.nome}
                 left={<TextInput.Icon icon={() => <User size={20} color="#666" />} />}
                 style={styles.input}
@@ -136,18 +166,18 @@ export default function CadastrarMotoristaScreen() {
           <Controller
             control={control}
             name="telefone"
-            render={({ field: { onChange, onBlur, value } }) => (
+            render={({ field: { onBlur, value } }) => (
               <TextInput
                 label="Telefone *"
                 mode="outlined"
                 placeholder="(88) 9 9999-9999"
                 value={value}
-                onChangeText={(text) => onChange(formatarTelefone(text))}
+                onChangeText={(text) => atualizarCampo('telefone', formatarTelefone(text))}
                 onBlur={() => {
                   onBlur();
-                  if (value) onChange(formatarTelefone(value));
+                  if (value) atualizarCampo('telefone', formatarTelefone(value));
                 }}
-                maxLength={15}
+                maxLength={16}
                 keyboardType="phone-pad"
                 error={!!errors.telefone}
                 left={<TextInput.Icon icon={() => <Phone size={20} color="#666" />} />}
@@ -161,7 +191,7 @@ export default function CadastrarMotoristaScreen() {
         {/* Botão Finalizar Cadastro */}
         <Button
           mode="contained"
-          onPress={handleSubmit(onSubmit)}
+          onPress={handleSubmit(onSubmit) as any}
           loading={isLoading}
           disabled={isLoading}
           style={styles.saveButton}
@@ -170,20 +200,6 @@ export default function CadastrarMotoristaScreen() {
           Finalizar cadastro
         </Button>
       </ScrollView>
-
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
     </View>
   );
 }
@@ -226,11 +242,5 @@ const styles = StyleSheet.create({
   },
   buttonContent: {
     height: 55,
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });

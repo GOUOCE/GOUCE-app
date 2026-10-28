@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Button, Snackbar } from 'react-native-paper';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Text, TextInput, Button, ActivityIndicator } from 'react-native-paper';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, User, Phone, X } from 'lucide-react-native';
+import { ChevronLeft, User, Phone } from 'lucide-react-native';
 
 import { motoristaSchema, MotoristaFormData } from '@/schemas/motoristaSchema';
 import { motoristaService } from '@/services/motoristaService';
@@ -13,12 +13,17 @@ import { formatarTelefone } from '@/utils/formatarTelefone';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function EditarMotoristaScreen() {
-  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const [tentativa, setTentativa] = useState(0);
+  const recarregar = React.useCallback(() => setTentativa((atual) => atual + 1), []);
+  return <EditarMotoristaForm key={`${id}-${tentativa}`} id={id} onRetry={recarregar} />;
+}
 
+function EditarMotoristaForm({ id, onRetry }: { id: string; onRetry: () => void }) {
+  const router = useRouter();
+
+  const [dadosCarregados, setDadosCarregados] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -27,6 +32,8 @@ export default function EditarMotoristaScreen() {
     title: string;
     message: string;
     confirmText?: string;
+    cancelText?: string;
+    confirmColor?: string;
     onConfirm?: () => void;
   }>({
     visible: false,
@@ -34,15 +41,15 @@ export default function EditarMotoristaScreen() {
     message: '',
   });
 
-  const showPopup = (config: Omit<typeof popup, 'visible'>) => {
+  const showPopup = React.useCallback((config: Omit<typeof popup, 'visible'>) => {
     setPopup({ ...config, visible: true });
-  };
+  }, []);
 
   const closePopup = () => {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const { control, handleSubmit, formState: { errors }, reset } = useForm<MotoristaFormData>({
+  const { control, handleSubmit, formState: { errors, isDirty, isSubmitted }, reset, setValue, clearErrors } = useForm<MotoristaFormData>({
     resolver: zodResolver(motoristaSchema),
     defaultValues: {
       nome: '',
@@ -50,35 +57,89 @@ export default function EditarMotoristaScreen() {
     },
   });
 
-  useEffect(() => {
-    async function carregarDados() {
-      if (!id) return;
-      try {
-        const m = await motoristaService.obterMotoristaPorId(Number(id));
-        if (m) {
-          reset({
-            nome: m.nome,
-            telefone: formatarTelefone(m.telefone) || m.telefone,
+  // Recarrega os dados oficiais do banco de dados ao ganhar foco e descarta alterações não salvas ao sair
+  useFocusEffect(
+    React.useCallback(() => {
+      let isMounted = true;
+      setDadosCarregados(false);
+      reset({ nome: '', telefone: '' });
+
+      async function carregarDadosOficiais() {
+        if (!id) return;
+        try {
+          const m = await motoristaService.obterMotoristaPorId(Number(id));
+          if (!isMounted) return;
+          if (!m) throw new Error('Motorista não encontrado.');
+          if (m) {
+            reset({
+              nome: m.nome,
+              telefone: formatarTelefone(m.telefone) || m.telefone,
+            });
+            setDadosCarregados(true);
+          }
+        } catch (err) {
+          if (!isMounted) return;
+          const msg = getErrorMessage(err, 'Erro ao carregar dados do motorista.');
+          showPopup({
+            type: 'error',
+            title: 'Erro de Conexão',
+            message: msg,
+            confirmText: 'Tentar novamente',
+            onConfirm: () => { closePopup(); onRetry(); },
           });
         }
-      } catch (err) {
-        console.warn('Erro ao carregar dados do motorista:', err);
       }
+
+      carregarDadosOficiais();
+
+      return () => {
+        isMounted = false;
+        setDadosCarregados(false);
+        reset({ nome: '', telefone: '' });
+      };
+    }, [id, reset, showPopup, onRetry])
+  );
+
+  const atualizarCampo = (campo: 'nome' | 'telefone', valor: string) => {
+    const preenchido = valor.trim() !== '';
+    setValue(campo, valor, { shouldDirty: true, shouldValidate: preenchido && isSubmitted });
+    if (!preenchido) clearErrors(campo);
+  };
+
+  const voltarParaListagem = () => {
+    closePopup();
+    router.replace('/(administrador)/motoristas');
+  };
+
+  const handleBack = () => {
+    if (isDirty) {
+      showPopup({
+        type: 'warning',
+        title: 'Sair desta tela?',
+        message: 'As alterações não salvas serão perdidas.',
+        confirmText: 'Sim, sair',
+        cancelText: 'Continuar aqui',
+        confirmColor: '#B00020',
+        onConfirm: voltarParaListagem,
+      });
+    } else {
+      voltarParaListagem();
     }
-    carregarDados();
-  }, [id, reset]);
+  };
 
   const onSubmit = async (dados: MotoristaFormData) => {
-    if (!id) return;
+    if (!id || !dadosCarregados) return;
     setIsLoading(true);
     try {
       await motoristaService.atualizarMotorista(Number(id), dados.nome, dados.telefone);
       setIsLoading(false);
-      setSnackbarMessage('Motorista alterado com sucesso');
-      setSnackbarVisivel(true);
-      setTimeout(() => {
-        router.replace('/(administrador)/motoristas');
-      }, 1200);
+      showPopup({
+        type: 'success',
+        title: 'Operação realizada com sucesso',
+        message: 'As alterações do profissional foram salvas.',
+        confirmText: 'OK',
+        onConfirm: voltarParaListagem,
+      });
     } catch (error: any) {
       setIsLoading(false);
       const status = error.response?.status;
@@ -100,7 +161,7 @@ export default function EditarMotoristaScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={handleBack}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Editar Motorista</Text>
@@ -113,23 +174,25 @@ export default function EditarMotoristaScreen() {
         title={popup.title}
         message={popup.message}
         confirmText={popup.confirmText}
+        cancelText={popup.cancelText}
+        confirmColor={popup.confirmColor}
         onConfirm={popup.onConfirm}
-        onDismiss={closePopup}
+        onDismiss={popup.type === 'success' ? voltarParaListagem : closePopup}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      {!dadosCarregados ? <ActivityIndicator accessibilityLabel="Carregando motorista" /> : <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Nome Completo */}
         <View style={styles.inputBox}>
           <Controller
             control={control}
             name="nome"
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { value } }) => (
               <TextInput
                 label="Nome Completo *"
                 mode="outlined"
                 placeholder="Nome do motorista"
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(texto) => atualizarCampo('nome', texto)}
                 error={!!errors.nome}
                 left={<TextInput.Icon icon={() => <User size={20} color="#666" />} />}
                 style={styles.input}
@@ -144,18 +207,18 @@ export default function EditarMotoristaScreen() {
           <Controller
             control={control}
             name="telefone"
-            render={({ field: { onChange, onBlur, value } }) => (
+            render={({ field: { onBlur, value } }) => (
               <TextInput
                 label="Telefone *"
                 mode="outlined"
                 placeholder="(88) 9 9999-9999"
                 value={value}
-                onChangeText={(text) => onChange(formatarTelefone(text))}
+                onChangeText={(text) => atualizarCampo('telefone', formatarTelefone(text))}
                 onBlur={() => {
                   onBlur();
-                  if (value) onChange(formatarTelefone(value));
+                  if (value) atualizarCampo('telefone', formatarTelefone(value));
                 }}
-                maxLength={15}
+                maxLength={16}
                 keyboardType="phone-pad"
                 error={!!errors.telefone}
                 left={<TextInput.Icon icon={() => <Phone size={20} color="#666" />} />}
@@ -169,7 +232,7 @@ export default function EditarMotoristaScreen() {
         {/* Botão Salvar Alterações */}
         <Button
           mode="contained"
-          onPress={handleSubmit(onSubmit)}
+          onPress={handleSubmit(onSubmit) as any}
           loading={isLoading}
           disabled={isLoading}
           style={styles.saveButton}
@@ -177,21 +240,7 @@ export default function EditarMotoristaScreen() {
         >
           Salvar alterações
         </Button>
-      </ScrollView>
-
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
+      </ScrollView>}
     </View>
   );
 }
@@ -234,11 +283,5 @@ const styles = StyleSheet.create({
   },
   buttonContent: {
     height: 55,
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });

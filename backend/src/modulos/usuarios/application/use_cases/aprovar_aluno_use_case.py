@@ -18,6 +18,25 @@ def somar_meses(data: datetime, meses: int) -> datetime:
     return data.replace(year=ano, month=mes, day=dia)
 
 
+class AvaliacaoCadastroError(ValueError):
+    """Recusa de regra de negócio na avaliação do cadastro; a mensagem já é própria para o administrador."""
+
+
+class CadastroForaDaFilaError(AvaliacaoCadastroError):
+    """Aprovar ou reprovar um cadastro que não está aguardando avaliação."""
+
+
+# HU-027: só entra na avaliação quem está na fila de solicitações; a renovação (HU-028) chega como analise_renovacao.
+STATUS_NA_FILA = {StatusCadastroEnum.PENDENTE.value, StatusCadastroEnum.ANALISE_RENOVACAO.value}
+STATUS_AVALIACAO = {StatusCadastroEnum.ATIVADO.value, StatusCadastroEnum.REJEITADO.value}
+
+SITUACAO_FORA_DA_FILA = {
+    StatusCadastroEnum.ATIVADO.value: "Este aluno já está com o cadastro aprovado.",
+    StatusCadastroEnum.REJEITADO.value: "Este aluno está com o cadastro rejeitado, aguardando o reenvio dos documentos.",
+    StatusCadastroEnum.INATIVADO.value: "Este aluno está com o acesso inativado.",
+}
+
+
 class AprovarAlunoUseCase:
     """
     Caso de uso para aprovação ou alteração do status de cadastro de um aluno.
@@ -37,6 +56,7 @@ class AprovarAlunoUseCase:
         novo_status: StatusCadastroEnum | str = StatusCadastroEnum.ATIVADO,
         motivo_reprovacao: str | None = None,
         documentos_reenvio: dict | list | None = None,
+        usuario_responsavel_id: int | None = None,
     ) -> AprovacaoAlunoResponseDTO:
         if not aluno_id or not isinstance(aluno_id, int) or aluno_id <= 0:
             raise ValueError("ID do aluno é obrigatório e deve ser um número inteiro positivo")
@@ -61,10 +81,20 @@ class AprovarAlunoUseCase:
         if not aluno_existente:
             raise ValueError(f"Aluno com ID {aluno_id} não encontrado")
 
+        if status_str in STATUS_AVALIACAO:
+            status_atual = getattr(aluno_existente.status_cadastro, "value", aluno_existente.status_cadastro)
+            status_atual = str(status_atual).lower().strip()
+            if status_atual not in STATUS_NA_FILA:
+                situacao = SITUACAO_FORA_DA_FILA.get(status_atual, "Este cadastro não está aguardando avaliação.")
+                raise CadastroForaDaFilaError(
+                    f"{situacao} Só é possível aprovar ou reprovar cadastros na fila de solicitações."
+                )
+
         if status_str == StatusCadastroEnum.REJEITADO.value:
+            # RN-012: o aluno rejeitado precisa ter ao menos um documento para corrigir e reenviar.
             documentos = self.repository.normalizar_documentos_reenvio(documentos_reenvio)
-            if not documentos and not motivo_reprovacao:
-                raise ValueError("É necessário informar ao menos um documento para reenvio ou o motivo da rejeição.")
+            if not documentos:
+                raise AvaliacaoCadastroError("Informe ao menos um documento para o aluno reenviar, com o motivo.")
         else:
             documentos = None
 
@@ -80,6 +110,7 @@ class AprovarAlunoUseCase:
             motivo_reprovacao=motivo_reprovacao,
             documentos_reenvio=documentos,
             validade_acesso=validade_acesso,
+            usuario_responsavel_id=usuario_responsavel_id,
         )
 
         mensagens = {
