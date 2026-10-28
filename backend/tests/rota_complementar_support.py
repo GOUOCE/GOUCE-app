@@ -49,6 +49,7 @@ def dados_complementar(**alteracoes):
     dados = {
         "nome": "Van 2 - Bairro Novo",
         "horario_saida": "06:00",
+        "horario_retorno": "17:40",
         "ponto_conexao": "Trevo do Bairro Novo",
         "rota_principal_id": PRINCIPAL_CENTRO,
     }

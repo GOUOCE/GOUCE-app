@@ -31,7 +31,8 @@ from src.shared.enums.cargo_enum import CargoEnum
 
 MENSAGEM_SUCESSO = "Operação realizada com sucesso"
 ROTA = {
-    "id": 1, "nome": "Van 2", "horario_saida": "06:00", "ponto_conexao": "Trevo", "ativo": True,
+    "id": 1, "nome": "Van 2", "horario_saida": "06:00", "horario_retorno": "17:40",
+    "ponto_conexao": "Trevo", "ativo": True,
     "rota_principal": {"id": 1, "nome": "Rota Centro - UFC", "ativo": True},
 }
 
@@ -104,21 +105,24 @@ class SucessoTest(RotasHttpUnitBase):
     async def test_criar_repassa_dados_convertidos_e_o_usuario_autenticado(self):
         await self.chamar(
             "POST", "/rotas-complementares",
-            dados_complementar(nome="  Van X ", ponto_conexao=" Posto ", horario_saida="05:45", rota_principal_id=2),
+            dados_complementar(nome="  Van X ", ponto_conexao=" Posto ", horario_saida="05:45",
+                               horario_retorno="18:10", rota_principal_id=2),
         )
 
         self.assertEqual(
-            self.use_case.chamadas, [("criar", "Van X", time(5, 45), "Posto", 2, ADMIN_ID)]
+            self.use_case.chamadas, [("criar", "Van X", time(5, 45), time(18, 10), "Posto", 2, ADMIN_ID)]
         )
 
     async def test_patch_repassa_somente_os_campos_enviados(self):
         await self.chamar("PATCH", "/rotas-complementares/5", {"horario_saida": "06:00", "rota_principal_id": 3})
         await self.chamar("PATCH", "/rotas-complementares/5", {"nome": None})
+        await self.chamar("PATCH", "/rotas-complementares/5", {"horario_retorno": "17:45"})
 
         self.assertEqual(
             self.use_case.chamadas,
             [("atualizar", 5, {"horario_saida": time(6, 0), "rota_principal_id": 3}, ADMIN_ID),
-             ("atualizar", 5, {"nome": None}, ADMIN_ID)],
+             ("atualizar", 5, {"nome": None}, ADMIN_ID),
+             ("atualizar", 5, {"horario_retorno": time(17, 45)}, ADMIN_ID)],
         )
 
     async def test_inativar_e_reativar_repassam_o_id_e_o_usuario(self):
@@ -181,7 +185,7 @@ class MapeamentoDeErrosTest(RotasHttpUnitBase):
             with self.subTest(operacao=f"{metodo} {caminho}"):
                 await self.assert_erro(
                     metodo, caminho, corpo, RotaComplementarNomeEmUsoError("qualquer"),
-                    409, "CONFLICT", "Já existe uma rota complementar com este nome.",
+                    409, "CONFLICT", "Já existe uma rota com este nome.",
                 )
 
     async def test_agendamentos_pendentes_vira_409_com_a_mensagem_exata(self):
@@ -197,7 +201,7 @@ class MapeamentoDeErrosTest(RotasHttpUnitBase):
             "PATCH", "/rotas-complementares/1/reativar", None,
             RotaComplementarComPrincipalInativaError(MENSAGEM_PRINCIPAL_INATIVA_REATIVACAO),
             409, "CONFLICT",
-            "A rota principal vinculada está inativa. Reative-a ou altere o vínculo antes.",
+            "Não é possível reativar esta rota complementar pois a rota principal vinculada está inativa.",
         )
 
     async def test_estado_inalterado_vira_409(self):
@@ -268,15 +272,18 @@ class MensagensDeValidacaoDoCorpoTest(RotasHttpUnitBase):
             {
                 "nome": "Nome da rota complementar é obrigatório.",
                 "horario_saida": "Horário de saída é obrigatório.",
+                "horario_retorno": "Horário de retorno é obrigatório.",
                 "ponto_conexao": "Ponto de conexão é obrigatório.",
                 "rota_principal_id": "Rota principal vinculada é obrigatória.",
             },
         )
         self.assertEqual(
-            await self.mensagens(dados_complementar(nome="   ", ponto_conexao="", horario_saida=None, rota_principal_id=None)),
+            await self.mensagens(dados_complementar(nome="   ", ponto_conexao="", horario_saida=None,
+                                                    horario_retorno=None, rota_principal_id=None)),
             {
                 "nome": "Nome da rota complementar é obrigatório.",
                 "horario_saida": "Horário de saída é obrigatório.",
+                "horario_retorno": "Horário de retorno é obrigatório.",
                 "ponto_conexao": "Ponto de conexão é obrigatório.",
                 "rota_principal_id": "Rota principal vinculada é obrigatória.",
             },
@@ -324,12 +331,13 @@ class MensagensDeValidacaoDoCorpoTest(RotasHttpUnitBase):
                 )
 
     async def test_horario_em_formato_invalido(self):
-        for invalido in ("24:00", "6:30", "06:60", "", "０６:３０", 630):
-            with self.subTest(horario=invalido):
-                self.assertEqual(
-                    await self.mensagens(dados_complementar(horario_saida=invalido)),
-                    {"horario_saida": "Horário deve estar no formato HH:MM."},
-                )
+        for campo in ("horario_saida", "horario_retorno"):
+            for invalido in ("24:00", "6:30", "06:60", "", "０６:３０", 630):
+                with self.subTest(campo=campo, horario=invalido):
+                    self.assertEqual(
+                        await self.mensagens(dados_complementar(**{campo: invalido})),
+                        {campo: "Horário deve estar no formato HH:MM."},
+                    )
 
     async def test_rota_principal_id_invalido(self):
         for invalido in (0, -1, True, "1", "abc", 1.5):
@@ -341,8 +349,8 @@ class MensagensDeValidacaoDoCorpoTest(RotasHttpUnitBase):
 
     async def test_campo_extra_e_mensagem_unica(self):
         self.assertEqual(
-            await self.mensagens(dados_complementar(horario_retorno="07:00", ativo=False)),
-            {"horario_retorno": "Campo não permitido.", "ativo": "Campo não permitido."},
+            await self.mensagens(dados_complementar(id=9, ativo=False)),
+            {"id": "Campo não permitido.", "ativo": "Campo não permitido."},
         )
 
     async def test_patch_valida_o_corpo_e_o_id_da_url(self):

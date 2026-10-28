@@ -12,7 +12,7 @@ from src.modulos.rotas.application.dtos.rota_principal_dto import (
 class _RotaComplementarBaseDTO(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
-    @field_validator("horario_saida", mode="before", check_fields=False)
+    @field_validator("horario_saida", "horario_retorno", mode="before", check_fields=False)
     @classmethod
     def validar_horario(cls, valor: object) -> object:
         if valor is None:
@@ -28,6 +28,7 @@ class _RotaComplementarBaseDTO(BaseModel):
 class CriarRotaComplementarDTO(_RotaComplementarBaseDTO):
     nome: str = Field(min_length=1, max_length=150)
     horario_saida: time
+    horario_retorno: time
     ponto_conexao: str = Field(min_length=1, max_length=150)
     rota_principal_id: IdPositivo
 
@@ -37,6 +38,7 @@ class AtualizarRotaComplementarDTO(_RotaComplementarBaseDTO):
 
     nome: str | None = Field(default=None, min_length=1, max_length=150)
     horario_saida: time | None = None
+    horario_retorno: time | None = None
     ponto_conexao: str | None = Field(default=None, min_length=1, max_length=150)
     rota_principal_id: IdPositivo | None = None
 
@@ -53,6 +55,7 @@ class RotaComplementarResponseDTO(BaseModel):
     id: int
     nome: str
     horario_saida: str
+    horario_retorno: str
     ponto_conexao: str
     ativo: bool
     rota_principal: RotaPrincipalVinculadaDTO

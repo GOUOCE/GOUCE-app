@@ -22,6 +22,7 @@ from src.modulos.rotas.application.use_cases.gerenciar_rotas_complementares_use_
     RotaComplementarStatusInalteradoError,
     RotaComplementarValidationError,
 )
+from src.modulos.rotas.infrastructure.nome_rota import MENSAGEM_NOME_ROTA_EM_USO
 from src.modulos.rotas.infrastructure.repositories.rota_complementar_repository import (
     RotaComplementarComPrincipalInativaError,
     RotaComplementarNomeEmUsoError,
@@ -52,6 +53,12 @@ def _error_response(status_code: int, code: str, message: str, details=None):
     )
 
 
+_ROTULOS_HORARIO = {
+    "horario_saida": "Horário de saída",
+    "horario_retorno": "Horário de retorno",
+}
+
+
 def _mensagem_campo_complementar(error: dict, field: str | None) -> str | None:
     """Mensagens específicas dos campos da rota complementar; ``None`` usa a padrão."""
     error_type = error.get("type")
@@ -69,9 +76,9 @@ def _mensagem_campo_complementar(error: dict, field: str | None) -> str | None:
         if error_type == "string_type":
             return f"{rotulo} deve ser um texto válido."
         return None
-    if field == "horario_saida":
+    if field in _ROTULOS_HORARIO:
         if sem_valor:
-            return "Horário de saída é obrigatório."
+            return f"{_ROTULOS_HORARIO[field]} é obrigatório."
         return "Horário deve estar no formato HH:MM."
     if field == "rota_principal_id":
         if sem_valor:
@@ -166,9 +173,7 @@ def _nao_encontrada() -> HTTPException:
 
 
 def _nome_em_uso() -> HTTPException:
-    return HTTPException(
-        status_code=409, detail="Já existe uma rota complementar com este nome."
-    )
+    return HTTPException(status_code=409, detail=MENSAGEM_NOME_ROTA_EM_USO)
 
 
 @router.get("", response_model=list[RotaComplementarResponseDTO])
@@ -209,6 +214,7 @@ async def criar_rota_complementar(
         resultado = use_case.criar(
             dados.nome,
             dados.horario_saida,
+            dados.horario_retorno,
             dados.ponto_conexao,
             dados.rota_principal_id,
             _executor_id(current_user),

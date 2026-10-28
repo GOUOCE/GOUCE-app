@@ -19,7 +19,7 @@ from src.shared.infrastructure.db import Base
 
 
 class RotaComplementarORM(Base):
-    """Rota complementar: um único horário de saída e o ponto de conexão com uma principal."""
+    """Rota complementar: um horário de saída, um de retorno e o ponto de conexão com uma principal."""
 
     __tablename__ = "rota_complementar"
 
@@ -32,6 +32,7 @@ class RotaComplementarORM(Base):
     )
     nome = Column(String(150), nullable=False)
     horario_saida = Column(Time, nullable=False)
+    horario_retorno = Column(Time, nullable=False)
     ponto_conexao = Column(String(150), nullable=False)
     ativo = Column(
         Boolean,
@@ -51,6 +52,7 @@ class RotaComplementarORM(Base):
 
 
 # Nome único sem diferenciar maiúsculas e espaços nas pontas (ativas e inativas).
+# Entre principais e complementares, a unicidade é conferida em nome_rota.py.
 Index(
     "uq_rota_complementar_nome_lower",
     func.lower(func.trim(RotaComplementarORM.nome)),
