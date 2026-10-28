@@ -104,10 +104,8 @@ export default function CadastrarRepresentanteScreen() {
   // O discente só é escolhido pelo administrador, tocando em um dos resultados da busca
   useEffect(() => {
     const termo = busca.trim();
-    if (!termo) {
-      setResultado(null);
-      return;
-    }
+    // Sem texto não há busca; o resultado antigo não vale mais (resultadoAtual confere o termo)
+    if (!termo) return;
     let isMounted = true;
     // A instituição do representante pode ser diferente da matrícula (PO na #207, item 6b):
     // os discentes não são filtrados pela instituição escolhida
