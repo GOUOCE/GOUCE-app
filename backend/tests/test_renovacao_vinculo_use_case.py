@@ -9,6 +9,7 @@ from src.modulos.usuarios.application.use_cases.renovar_vinculo_use_case import 
     RenovarVinculoUseCase,
 )
 from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
+from src.modulos.usuarios.application.use_cases.validar_vinculos_aluno_use_case import VinculoAlunoValidationError
 
 
 class FakeRenewalRepository:
@@ -20,9 +21,17 @@ class FakeRenewalRepository:
             status_cadastro=status_cadastro,
         )
         self.update_call = None
+        self.bairro_ativo = True
+        self.faculdade_ativa = True
 
     def buscar_com_detalhes_por_id(self, aluno_id):
         return self.usuario, self.aluno
+
+    def bairro_ativo_existe(self, bairro_id):
+        return bairro_id == 1 and self.bairro_ativo
+
+    def faculdade_ativa_existe(self, faculdade_id):
+        return faculdade_id == 1 and self.faculdade_ativa
 
     def atualizar_dados_renovacao(self, **kwargs):
         self.update_call = kwargs
@@ -47,7 +56,7 @@ def criar_dto():
         transgenero="Não",
         tem_filhos=False,
         telefone="85999990000",
-        bairro_id="Centro",
+        bairro_id="1",
         faculdade_id=1,
         curso="Engenharia de Software",
         periodo_ingresso="2024.1",
@@ -57,6 +66,19 @@ def criar_dto():
 
 
 class RenovacaoVinculoUseCaseTest(unittest.TestCase):
+    def test_nao_salva_documentos_nem_renova_com_vinculo_inativo(self):
+        for atributo in ("bairro_ativo", "faculdade_ativa"):
+            with self.subTest(atributo=atributo):
+                repository = FakeRenewalRepository()
+                setattr(repository, atributo, False)
+                salvar = FakeSaveFileUseCase()
+                with self.assertRaises(VinculoAlunoValidationError):
+                    RenovarVinculoUseCase(repository, salvar).execute(
+                        7, criar_dto(), ("matricula.pdf", "application/pdf", b"matricula"), None,
+                    )
+                self.assertEqual(salvar.salvos, [])
+                self.assertIsNone(repository.update_call)
+
     def test_atualiza_aluno_autenticado_com_campus_e_status_de_renovacao(self):
         repository = FakeRenewalRepository()
         use_case = RenovarVinculoUseCase(repository, FakeSaveFileUseCase())
@@ -68,7 +90,7 @@ class RenovacaoVinculoUseCaseTest(unittest.TestCase):
             transgenero="Não",
             tem_filhos=False,
             telefone="85999990000",
-            bairro_id="Centro",
+            bairro_id="1",
             faculdade_id=1,
             curso="Engenharia de Software",
 

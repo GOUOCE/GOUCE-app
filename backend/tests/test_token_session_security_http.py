@@ -26,6 +26,12 @@ class RecordingUserRepository:
     def buscar_por_email(self, email):
         return None
 
+    def bairro_ativo_existe(self, bairro_id):
+        return bairro_id == 1
+
+    def faculdade_ativa_existe(self, faculdade_id):
+        return faculdade_id == 1
+
     def criar_aluno(self, comando, senha_hash):
         self.created_command = comando
         return SimpleNamespace(

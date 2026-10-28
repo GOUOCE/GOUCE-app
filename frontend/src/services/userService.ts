@@ -1,6 +1,7 @@
 import { api } from '../api/api';
 import { AlunoFormData } from '@/schemas/alunoSchema';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { validarVinculosAluno } from './vinculoAlunoService';
 
 export interface CadastroResponse {
   success: true;
@@ -143,12 +144,11 @@ export const userService = {
     formData.append('transgenero', String(data.transgenero || ''));
     formData.append('tem_filhos', String(Boolean(data.temFilhos)));
 
-    const bairroFinal = data.bairro === 'Outro' && data.bairroEspecifico ? data.bairroEspecifico : data.bairro;
-    const instFinal = data.instituicao === 'Outra' && data.instituicaoEspecifica ? data.instituicaoEspecifica : data.instituicao;
+    const { bairroId, faculdadeId } = await validarVinculosAluno(data.bairro, data.instituicao);
     const cursoFinal = data.curso === 'Outro' && data.cursoEspecifico ? data.cursoEspecifico : data.curso;
 
-    formData.append('bairro_id', String(bairroFinal || ''));
-    formData.append('faculdade_id', String(instFinal || ''));
+    formData.append('bairro_id', bairroId);
+    formData.append('faculdade_id', faculdadeId);
     formData.append('curso', String(cursoFinal || ''));
     formData.append('campus', String(data.campus || 'Quixadá'));
 
@@ -195,13 +195,12 @@ export const userService = {
     formData.append('transgenero', String(data.transgenero || ''));
     formData.append('tem_filhos', String(Boolean(data.temFilhos)));
 
-    const bairroFinal = data.bairro === 'Outro' && data.bairroEspecifico ? data.bairroEspecifico : data.bairro;
-    const instFinal = data.instituicao === 'Outra' && data.instituicaoEspecifica ? data.instituicaoEspecifica : data.instituicao;
+    const { bairroId, faculdadeId } = await validarVinculosAluno(data.bairro, data.instituicao);
     const cursoFinal = data.curso === 'Outro' && data.cursoEspecifico ? data.cursoEspecifico : data.curso;
 
     formData.append('telefone', String(data.whatsapp || ''));
-    formData.append('bairro_id', String(bairroFinal || ''));
-    formData.append('faculdade_id', String(instFinal || ''));
+    formData.append('bairro_id', bairroId);
+    formData.append('faculdade_id', faculdadeId);
     formData.append('curso', String(cursoFinal || ''));
     formData.append('campus', String(data.campus || 'Quixadá'));
 

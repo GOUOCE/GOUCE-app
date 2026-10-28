@@ -224,17 +224,18 @@ class BairroRepository:
             }
             novos_nomes_normalizados = {p.casefold() for p in pontos_limpos}
 
-            # Remover pontos que não foram mantidos
+            # Inativar pontos que não foram mantidos (soft delete) em vez de remover
             for nome_antigo, ponto_obj in list(pontos_existentes_map.items()):
                 if nome_antigo not in novos_nomes_normalizados:
-                    bairro.pontos_de_parada.remove(ponto_obj)
+                    ponto_obj.ativo = False
 
-            # Adicionar ou atualizar novos
+            # Adicionar ou reativar pontos
             for nome_ponto in pontos_limpos:
                 nome_norm = nome_ponto.casefold()
                 if nome_norm in pontos_existentes_map:
                     ponto_existente = pontos_existentes_map[nome_norm]
                     ponto_existente.nome = nome_ponto
+                    ponto_existente.ativo = True
                 else:
                     bairro.pontos_de_parada.append(
                         PontoDeParadaORM(

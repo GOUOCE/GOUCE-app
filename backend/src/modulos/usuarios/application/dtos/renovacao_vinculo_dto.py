@@ -8,6 +8,7 @@ from src.shared.enums.demograficos_enum import (
 )
 from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
 from src.shared.enums.turno_curso_enum import TurnoCursoEnum
+from src.shared.validators.id_localidade_validator import IdLocalidade
 
 
 class RenovacaoVinculoDTO(BaseModel):
@@ -20,8 +21,8 @@ class RenovacaoVinculoDTO(BaseModel):
     transgenero: SimNaoPrefiroEnum
     tem_filhos: bool
     telefone: str = Field(min_length=1, max_length=20)
-    bairro_id: int | str = Field(min_length=1, max_length=20)
-    faculdade_id: int
+    bairro_id: IdLocalidade
+    faculdade_id: IdLocalidade
     curso: str = Field(min_length=1, max_length=150)
     periodo_ingresso: str = Field(min_length=1, max_length=20)
     turno_curso: TurnoCursoEnum | str
