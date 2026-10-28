@@ -15,6 +15,12 @@ def validation_details(errors: list[dict]) -> list[dict]:
 
 
 def validation_message(error: dict, field: str | None) -> str:
+    msg_customizada = error.get("msg")
+    if msg_customizada and not msg_customizada.startswith("Value error,"):
+        return msg_customizada
+    if msg_customizada and msg_customizada.startswith("Value error, "):
+        return msg_customizada.replace("Value error, ", "")
+
     error_type = error.get("type")
     context = error.get("ctx") or {}
 
@@ -34,8 +40,12 @@ def validation_message(error: dict, field: str | None) -> str:
             return "O primeiro nome deve ter pelo menos 3 letras."
         return f"O campo deve ter pelo menos {minimum} caracteres."
 
+    if error_type == "less_than_equal":
+        maximum = context.get("le")
+        return f"O valor informado excede o limite máximo permitido (máximo {maximum})."
+
     return {
         "int_parsing": "Informe um número válido.",
         "bool_parsing": "Informe um valor booleano válido.",
         "string_type": "Informe um texto válido.",
-    }.get(error_type, "Valor inválido.")
+    }.get(error_type, msg_customizada or "Valor inválido.")

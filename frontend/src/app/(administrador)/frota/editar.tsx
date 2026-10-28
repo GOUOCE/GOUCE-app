@@ -16,6 +16,7 @@ export default function EditarOnibusScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadError, setIsLoadError] = useState(false);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -54,12 +55,19 @@ export default function EditarOnibusScreen() {
   useFocusEffect(
     React.useCallback(() => {
       let isMounted = true;
+      setIsLoadError(false);
+      reset({
+        placa: '',
+        assentos: undefined,
+        capacidadeEmPe: undefined,
+      });
 
       async function carregarDadosOficiais() {
         if (!id) return;
         try {
           const o = await frotaService.obterOnibusPorId(id);
           if (o && isMounted) {
+            setIsLoadError(false);
             reset({
               placa: o.placa,
               assentos: o.assentos,
@@ -67,6 +75,7 @@ export default function EditarOnibusScreen() {
             });
           }
         } catch (err) {
+          if (isMounted) setIsLoadError(true);
           const msg = getErrorMessage(err, 'Erro ao carregar dados do ônibus.');
           showPopup({
             type: 'error',
@@ -81,6 +90,11 @@ export default function EditarOnibusScreen() {
 
       return () => {
         isMounted = false;
+        reset({
+          placa: '',
+          assentos: undefined,
+          capacidadeEmPe: undefined,
+        });
       };
     }, [id, reset])
   );
@@ -107,7 +121,7 @@ export default function EditarOnibusScreen() {
   };
 
   const onSubmit = async (dados: FrotaFormData) => {
-    if (!id) return;
+    if (!id || isLoadError) return;
     setIsLoading(true);
     try {
       await frotaService.atualizarOnibus(id, dados.placa, Number(dados.assentos), Number(dados.capacidadeEmPe));
@@ -172,7 +186,7 @@ export default function EditarOnibusScreen() {
                 placeholder="ex: OCR-1234"
                 value={value}
                 maxLength={8}
-                onChangeText={(t) => onChange(t.toUpperCase())}
+                onChangeText={(t) => onChange(t.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 8))}
                 autoCapitalize="characters"
                 error={!!errors.placa}
                 style={styles.input}
@@ -230,7 +244,7 @@ export default function EditarOnibusScreen() {
           mode="contained"
           onPress={handleSubmit(onSubmit) as any}
           loading={isLoading}
-          disabled={isLoading}
+          disabled={isLoading || isLoadError}
           style={styles.saveButton}
           contentStyle={styles.buttonContent}
         >

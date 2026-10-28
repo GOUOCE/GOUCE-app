@@ -72,6 +72,7 @@ export default function FrotaListScreen() {
         closePopup();
         try {
           await frotaService.inativarOnibus(item.placa);
+          await carregarFrota(); // Atualiza a lista imediatamente
           showPopup({
             type: 'success',
             title: 'Operação realizada com sucesso',
@@ -109,6 +110,7 @@ export default function FrotaListScreen() {
         closePopup();
         try {
           await frotaService.reativarOnibus(item.placa);
+          await carregarFrota(); // Atualiza a lista imediatamente
           showPopup({
             type: 'success',
             title: 'Operação realizada com sucesso',
