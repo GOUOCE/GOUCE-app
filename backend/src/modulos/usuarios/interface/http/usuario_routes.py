@@ -19,7 +19,7 @@ from src.modulos.usuarios.application.use_cases.validar_vinculos_aluno_use_case 
 )
 from src.shared.auth.dependencies import (
     require_roles,
-    verify_student_renewal_access,
+    verify_student_profile_access,
     verify_student_standard_access,
 )
 from src.shared.auth.jwt_service import JWTService
@@ -879,8 +879,9 @@ async def verificar_email(
     responses=EDICAO_ERROR_RESPONSES,
 )
 async def obter_meu_perfil(
-    # O aluno com vínculo vencido precisa ver o perfil para renovar (HU-028).
-    current_user: Annotated[dict, Depends(verify_student_renewal_access)],
+    # O aluno com vínculo vencido (HU-028) ou com cadastro pendente (HU-031)
+    # precisa ver o perfil e o status.
+    current_user: Annotated[dict, Depends(verify_student_profile_access)],
     repository=Depends(get_repository),
     arquivo_repository=Depends(get_arquivo_repository),
 ):
@@ -917,6 +918,11 @@ async def consultar_reenvio_documento(
     _, aluno = repository.buscar_com_detalhes_por_id(user_id)
     if not aluno:
         raise HTTPException(status_code=404, detail="Aluno não encontrado")
+
+    # Só o cadastro rejeitado tem pendência; depois do reenvio (pendente) os
+    # motivos antigos não voltam como pendência (HU-031, AC-08).
+    if current_user.get("current_status") != StatusCadastroEnum.REJEITADO.value:
+        return {"documentos": []}
 
     documentos = repository.normalizar_documentos_reenvio(getattr(aluno, "documentos_reenvio", None)) or []
     return {"documentos": documentos}

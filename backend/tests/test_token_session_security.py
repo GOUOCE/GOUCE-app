@@ -227,7 +227,9 @@ class TokenSessionSecurityTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertTrue(current_user["access_expired"])
 
-    async def test_pending_student_is_rejected(self):
+    async def test_pending_student_keeps_a_session_limited_by_status(self):
+        # HU-031: o aluno pendente entra para acompanhar a avaliação; o acesso aos
+        # demais recursos é barrado pelas dependências de aluno (RN-011).
         usuario = SimpleNamespace(id=1, senha="hash", limite_de_bloqueio=None)
         aluno = SimpleNamespace(
             status_cadastro="pendente",
@@ -236,14 +238,14 @@ class TokenSessionSecurityTests(unittest.IsolatedAsyncioTestCase):
         )
         repository = StudentRepository(usuario, aluno)
 
-        await self.assert_http_status(
-            get_current_user(
-                "access",
-                FakeTokenService(payload=access_payload()),
-                repository,
-            ),
-            401,
+        current_user = await get_current_user(
+            "access",
+            FakeTokenService(payload=access_payload()),
+            repository,
         )
+
+        self.assertEqual(current_user["current_status"], "pendente")
+        self.assertEqual(current_user["current_role"], CargoEnum.ALUNO.value)
 
     async def test_role_divergence_returns_401(self):
         service = FakeTokenService(
