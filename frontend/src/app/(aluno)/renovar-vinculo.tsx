@@ -114,7 +114,7 @@ export default function RenovarVinculoScreen() {
           temFilhos: Boolean(perfilApi.tem_filhos),
           bairro: perfilApi.bairro_id || 'Centro',
           whatsapp: perfilApi.telefone || '',
-          instituicao: perfilApi.faculdade_id || 'UFC - Universidade Federal do Ceará',
+          instituicao: perfilApi.faculdade_id ? String(perfilApi.faculdade_id) : '',
           curso: perfilApi.curso || 'Engenharia de Software',
           campus: campus || 'Quixadá',
           periodoIngresso: perfilApi.periodo_ingresso || '2024.1',

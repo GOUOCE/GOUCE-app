@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { TextInput, Text, useTheme, Portal } from 'react-native-paper';
 import { useFormContext, Controller } from 'react-hook-form';
 import { ChevronDown, Phone, School, GraduationCap, Search, X } from 'lucide-react-native';
 import { formatarCelular } from '../../utils/formatarTelefone';
 import { abreviarParaLargura } from '../../utils/abreviarTexto';
+import { getErrorMessage } from '../../utils/errorUtils';
+import { faculdadeService, FaculdadeItem } from '../../services/faculdadeService';
 
 interface SelectInputProps {
   label: string;
@@ -14,17 +16,21 @@ interface SelectInputProps {
   error?: boolean;
   leftIcon?: React.ReactNode;
   searchable?: boolean;
+  // Texto exibido para cada opção, quando o valor guardado não é o próprio texto (ex.: id)
+  optionLabel?: (opt: string) => string;
+  emptyText?: string;
 }
 
-function CustomSelect({ label, value, options, onSelect, error, leftIcon, searchable }: SelectInputProps) {
+function CustomSelect({ label, value, options, onSelect, error, leftIcon, searchable, optionLabel, emptyText }: SelectInputProps) {
   const [visible, setVisible] = useState(false);
   const [largura, setLargura] = useState(0);
-  const texto = value || 'Selecionar';
+  const rotulo = (opt: string) => (optionLabel ? optionLabel(opt) : opt);
+  const texto = (value && rotulo(value)) || 'Selecionar';
   const [searchQuery, setSearchQuery] = useState('');
   const theme = useTheme();
 
   const filteredOptions = searchable && searchQuery.trim()
-    ? options.filter((opt) => opt.toLowerCase().includes(searchQuery.toLowerCase().trim()))
+    ? options.filter((opt) => rotulo(opt).toLowerCase().includes(searchQuery.toLowerCase().trim()))
     : options;
 
   return (
@@ -98,13 +104,13 @@ function CustomSelect({ label, value, options, onSelect, error, leftIcon, search
                         styles.optionText,
                         value === opt && { color: theme.colors.primary, fontWeight: 'bold' }
                       ]}>
-                        {opt}
+                        {rotulo(opt)}
                       </Text>
                     </TouchableOpacity>
                   ))
                 ) : (
                   <View style={styles.noResultsBox}>
-                    <Text variant="bodyMedium" style={{ color: '#888' }}>Nenhuma opção encontrada</Text>
+                    <Text variant="bodyMedium" style={{ color: '#888' }}>{emptyText || 'Nenhuma opção encontrada'}</Text>
                   </View>
                 )}
               </ScrollView>
@@ -156,8 +162,30 @@ export function Passo3ContatoVinculo() {
   const [editandoTelefone, setEditandoTelefone] = useState(false);
 
   const cursoSelecionado = watch('curso');
-  const instituicaoSelecionada = watch('instituicao');
   const bairroSelecionado = watch('bairro');
+
+  // Instituições: faculdades ativas cadastradas pelo administrador; o valor guardado é o id (#262, #192)
+  const [faculdades, setFaculdades] = useState<FaculdadeItem[]>([]);
+  const [erroFaculdades, setErroFaculdades] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+    faculdadeService.listarFaculdades().then((lista) => {
+      if (!isMounted) return;
+      setFaculdades(lista.filter((f) => f.ativo !== false));
+      setErroFaculdades('');
+    }).catch((err) => {
+      if (!isMounted) return;
+      setFaculdades([]);
+      setErroFaculdades(getErrorMessage(err, 'Não foi possível carregar as instituições de ensino.'));
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  const rotuloFaculdade = (id: string) => {
+    const fac = faculdades.find((f) => String(f.id) === id);
+    return fac ? `${fac.nome} - ${fac.campus}` : '';
+  };
 
   const gerarPeriodosIngresso = () => {
     const anoAtual = new Date().getFullYear();
@@ -238,39 +266,18 @@ export function Passo3ContatoVinculo() {
         render={({ field: { onChange, value } }) => (
           <CustomSelect
             label="Instituição de Ensino *"
-            value={value}
-            options={['UFC - Universidade Federal do Ceará', 'IFCE', 'UNILAB', 'Estácio', 'Outra']}
-            onSelect={(val) => {
-              onChange(val);
-              if (val !== 'Outra') setValue('instituicaoEspecifica', '');
-            }}
+            value={value ? String(value) : ''}
+            options={faculdades.map((f) => String(f.id))}
+            optionLabel={rotuloFaculdade}
+            emptyText="Nenhuma instituição de ensino disponível"
+            onSelect={onChange}
             error={!!errors.instituicao}
             leftIcon={<School size={20} color="#666" />}
           />
         )}
       />
       {errors.instituicao && <Text style={styles.errorText}>{errors.instituicao.message as string}</Text>}
-
-      {instituicaoSelecionada === 'Outra' && (
-        <Controller
-          control={control}
-          name="instituicaoEspecifica"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              label="Especifique a sua Instituição de Ensino *"
-              mode="outlined"
-              placeholder="Informe o nome da instituição"
-              value={value}
-              onChangeText={onChange}
-              error={!!errors.instituicaoEspecifica}
-              style={styles.input}
-            />
-          )}
-        />
-      )}
-      {instituicaoSelecionada === 'Outra' && errors.instituicaoEspecifica && (
-        <Text style={styles.errorText}>{errors.instituicaoEspecifica.message as string}</Text>
-      )}
+      {!!erroFaculdades && <Text style={styles.errorText}>{erroFaculdades}</Text>}
 
       <Controller
         control={control}
