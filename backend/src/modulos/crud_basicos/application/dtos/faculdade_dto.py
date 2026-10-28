@@ -6,6 +6,11 @@ from pydantic import BaseModel, ConfigDict, Field, AliasChoices, field_validator
 REGEX_TEXTO_LIVRE = re.compile(r"^[A-Za-z0-9À-ÖØ-öø-ÿ'’\-. ]+$")
 REGEX_SIGLA = re.compile(r"^[A-Za-z0-9]+$")
 
+# Limites do Critério 12 - HU-008, iguais aos do faculdadeSchema do app
+NOME_MIN, NOME_MAX = 3, 150
+SIGLA_MIN, SIGLA_MAX = 2, 20
+CAMPUS_MIN, CAMPUS_MAX = 2, 100
+
 
 class CriarFaculdadeDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -14,31 +19,32 @@ class CriarFaculdadeDTO(BaseModel):
         ...,
         validation_alias=AliasChoices("nome", "nome_faculdade"),
         serialization_alias="nome_faculdade",
-        min_length=1,
-        max_length=255,
+        min_length=NOME_MIN,
+        max_length=NOME_MAX,
     )
     sigla: Optional[str] = Field(
         default=None,
         validation_alias=AliasChoices("sigla", "sigla_faculdade"),
         serialization_alias="sigla",
-        max_length=50,
+        min_length=SIGLA_MIN,
+        max_length=SIGLA_MAX,
     )
     campus: str = Field(
         ...,
         validation_alias=AliasChoices("campus", "campus_faculdade"),
         serialization_alias="campus_faculdade",
-        min_length=1,
-        max_length=255,
+        min_length=CAMPUS_MIN,
+        max_length=CAMPUS_MAX,
     )
 
     @field_validator("nome", mode="before")
     @classmethod
     def validar_nome(cls, valor: object) -> str:
         if valor is None:
-            raise ValueError("Informe o nome da instituição")
+            raise ValueError("Informe o nome da instituição com pelo menos 3 caracteres")
         valor_str = str(valor).strip()
         if not valor_str:
-            raise ValueError("Informe o nome da instituição")
+            raise ValueError("Informe o nome da instituição com pelo menos 3 caracteres")
         if not REGEX_TEXTO_LIVRE.match(valor_str):
             raise ValueError("Use apenas letras, números, espaços, hífen, apóstrofo ou ponto")
         return valor_str
@@ -73,19 +79,22 @@ class AtualizarFaculdadeDTO(BaseModel):
         default=None,
         validation_alias=AliasChoices("nome", "nome_faculdade"),
         serialization_alias="nome_faculdade",
-        max_length=255,
+        min_length=NOME_MIN,
+        max_length=NOME_MAX,
     )
     sigla: Optional[str] = Field(
         default=None,
         validation_alias=AliasChoices("sigla", "sigla_faculdade"),
         serialization_alias="sigla",
-        max_length=50,
+        min_length=SIGLA_MIN,
+        max_length=SIGLA_MAX,
     )
     campus: Optional[str] = Field(
         default=None,
         validation_alias=AliasChoices("campus", "campus_faculdade"),
         serialization_alias="campus_faculdade",
-        max_length=255,
+        min_length=CAMPUS_MIN,
+        max_length=CAMPUS_MAX,
     )
     ativo: Optional[bool] = None
 
@@ -96,7 +105,7 @@ class AtualizarFaculdadeDTO(BaseModel):
             return None
         valor_str = str(valor).strip()
         if not valor_str:
-            raise ValueError("Informe o nome da instituição")
+            raise ValueError("Informe o nome da instituição com pelo menos 3 caracteres")
         if not REGEX_TEXTO_LIVRE.match(valor_str):
             raise ValueError("Use apenas letras, números, espaços, hífen, apóstrofo ou ponto")
         return valor_str

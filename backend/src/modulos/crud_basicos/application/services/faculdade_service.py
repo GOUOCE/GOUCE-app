@@ -36,7 +36,8 @@ class FaculdadeService:
     def criar(self, nome: str, campus: str, sigla: Optional[str] = None) -> FaculdadeORM:
         nome_normalizado = self._validar_campo_obrigatorio(nome, "nome", "O nome da faculdade é obrigatório.")
         campus_normalizado = self._validar_campo_obrigatorio(campus, "campus", "O campus da faculdade é obrigatório.")
-        sigla_normalizada = sigla.strip() if sigla is not None and str(sigla).strip() else nome_normalizado[:3].upper()
+        # Sem sigla informada, grava vazio: a sigla não é derivada do nome (#259)
+        sigla_normalizada = sigla.strip() if sigla is not None and str(sigla).strip() else None
 
         return self.repository.criar(nome=nome_normalizado, campus=campus_normalizado, sigla=sigla_normalizada)
 
@@ -59,7 +60,7 @@ class FaculdadeService:
         if campus is not None:
             campus_normalizado = self._validar_campo_obrigatorio(campus, "campus", "O campus da faculdade não pode ser vazio.")
 
-        sigla_normalizada = sigla.strip() if sigla is not None and str(sigla).strip() else (None if sigla is not None else None)
+        sigla_normalizada = sigla.strip() if sigla is not None and str(sigla).strip() else None
 
         return self.repository.atualizar(
             faculdade_id=faculdade_id,
