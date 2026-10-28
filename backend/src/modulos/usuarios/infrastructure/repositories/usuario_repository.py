@@ -544,11 +544,14 @@ class SQLAlchemyUsuarioRepository:
         motivo_reprovacao: str | None = None,
         documentos_reenvio: list[dict] | None = None,
         validade_acesso: datetime | None = None,
+        usuario_responsavel_id: int | None = None,
     ) -> AlunoORM | None:
         aluno = self.buscar_aluno_por_id(aluno_id)
         if not aluno:
             return None
 
+        # Guardado antes da troca: depois dela o log registrava o status novo nos dois campos (RNF-013).
+        status_anterior = self._normalizar_valor(aluno.status_cadastro)
         aluno.status_cadastro = novo_status
         if validade_acesso is not None:
             aluno.validade_acesso = validade_acesso
@@ -570,11 +573,11 @@ class SQLAlchemyUsuarioRepository:
             aluno.data_hora_ultima_renovacao_matricula = datetime.now(timezone.utc)
 
         self.session.add(LogAuditoriaORM(
-            usuario_id=aluno.aluno_id,
+            usuario_id=usuario_responsavel_id,
             acao="UPDATE_STATUS",
             entidade="aluno",
             entidade_id=aluno.aluno_id,
-            valor_anterior=str(aluno.status_cadastro),
+            valor_anterior=status_anterior,
             valor_novo=str(novo_status),
         ))
 
