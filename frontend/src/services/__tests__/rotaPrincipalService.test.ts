@@ -124,3 +124,26 @@ describe('rotaPrincipalService - bloqueios de inativação e reativação (HU-01
     expect(getErrorMessage(erroReativar)).toBe(mensagem);
   });
 });
+
+describe('rotaPrincipalService - sigla e campus das faculdades (HU-011, #344)', () => {
+  beforeEach(() => {
+    mockGet.mockReset();
+  });
+
+  it('guarda sigla e campus para montar "SIGLA - Campus" sem trocar a sigla pelo nome', async () => {
+    mockGet.mockResolvedValue({
+      data: {
+        faculdades: [
+          { id: 1, nome: 'Universidade Federal do Ceará', sigla: 'UFC', campus: 'Quixadá' },
+          { id: 9, nome: 'Faculdade Sem Sigla', sigla: null, campus: 'Quixadá' },
+        ],
+        bairros: [],
+      },
+    });
+
+    const { faculdades } = await rotaPrincipalService.listarOpcoes();
+
+    expect(faculdades[0]).toMatchObject({ sigla: 'UFC', campus: 'Quixadá', nome: 'Universidade Federal do Ceará' });
+    expect(faculdades[1].sigla).toBe('');
+  });
+});

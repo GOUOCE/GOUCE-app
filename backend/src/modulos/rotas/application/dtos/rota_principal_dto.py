@@ -83,6 +83,7 @@ class BairroRotaDTO(BaseModel):
 class FaculdadeRotaDTO(BaseModel):
     id: int
     nome: str
+    sigla: str | None = None
     campus: str
 
 

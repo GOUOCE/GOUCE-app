@@ -4,6 +4,7 @@ export interface FaculdadeOpcao {
   id: number;
   nome: string;
   sigla: string;
+  campus: string;
   ativo: boolean;
 }
 
@@ -44,7 +45,8 @@ function mapearFaculdade(f: any): FaculdadeOpcao {
   return {
     id: f.id_faculdade || f.id,
     nome: f.nome_faculdade || f.nome || '',
-    sigla: f.sigla || f.nome_faculdade || f.nome || '',
+    sigla: f.sigla || '',
+    campus: f.campus || f.campus_faculdade || '',
     ativo: f.ativo ?? true,
   };
 }

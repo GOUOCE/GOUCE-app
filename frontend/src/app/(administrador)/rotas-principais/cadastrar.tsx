@@ -14,7 +14,12 @@ import {
 } from '@/services/rotaPrincipalService';
 import { getErrorMessage } from '@/utils/errorUtils';
 import { formatarHorario } from '@/utils/formatarHorario';
+import { formatarInstituicao } from '@/utils/formatarInstituicao';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
+
+// Campo fechado: "SIGLA - Campus", como em Faculdades; sem sigla, o nome no lugar (#344)
+const rotuloFaculdade = (f: FaculdadeOpcao) =>
+  formatarInstituicao({ sigla: f.sigla, nome_faculdade: f.nome, campus: f.campus });
 
 // Valores do formulário vazio; a tela volta a eles ao ganhar e ao perder o foco (#341).
 // Nenhum campo obrigatório vem preenchido: o administrador escolhe tudo (#337)
@@ -196,13 +201,15 @@ export default function CadastrarRotaPrincipalScreen() {
     });
   };
 
-  const resumoFacsIda = facsIdaSelecionadas.length > 0
-    ? `${facsIdaSelecionadas.length} - ${faculdadesAtivas.filter((f) => facsIdaSelecionadas.includes(f.id)).map((f) => f.sigla).join(', ')}`
-    : 'Selecionar';
+  const resumoFacsIda = faculdadesAtivas
+    .filter((f) => facsIdaSelecionadas.includes(f.id))
+    .map(rotuloFaculdade)
+    .join(', ');
 
-  const resumoFacsVolta = facsVoltaSelecionadas.length > 0
-    ? `${facsVoltaSelecionadas.length} - ${faculdadesAtivas.filter((f) => facsVoltaSelecionadas.includes(f.id)).map((f) => f.sigla).join(', ')}`
-    : 'Selecionar';
+  const resumoFacsVolta = faculdadesAtivas
+    .filter((f) => facsVoltaSelecionadas.includes(f.id))
+    .map(rotuloFaculdade)
+    .join(', ');
 
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
@@ -303,8 +310,10 @@ export default function CadastrarRotaPrincipalScreen() {
               <TextInput
                 label="Faculdades de Ida (Destino) *"
                 mode="outlined"
+                placeholder="Selecionar"
                 value={resumoFacsIda}
                 editable={false}
+                textColor="#191C20"
                 error={!!errors.faculdadesIdaIds}
                 left={<TextInput.Icon icon={() => <Building2 size={20} color="#666" />} />}
                 right={<TextInput.Icon icon={() => <ChevronDown size={20} color="#333" />} onPress={() => setModalFacsIdaVisible(true)} />}
@@ -322,8 +331,10 @@ export default function CadastrarRotaPrincipalScreen() {
               <TextInput
                 label="Faculdades de Volta (Origem) *"
                 mode="outlined"
+                placeholder="Selecionar"
                 value={resumoFacsVolta}
                 editable={false}
+                textColor="#191C20"
                 error={!!errors.faculdadesVoltaIds}
                 left={<TextInput.Icon icon={() => <Building2 size={20} color="#666" />} />}
                 right={<TextInput.Icon icon={() => <ChevronDown size={20} color="#333" />} onPress={() => setModalFacsVoltaVisible(true)} />}
@@ -388,7 +399,7 @@ export default function CadastrarRotaPrincipalScreen() {
                 style={styles.checkboxRow}
                 onPress={() => toggleFaculdadeIda(fac.id)}
               >
-                <Text style={styles.checkboxLabel}>{fac.sigla}</Text>
+                <Text style={styles.checkboxLabel}>{[fac.nome, fac.campus].filter(Boolean).join(' - ')}</Text>
                 <View pointerEvents="none">
                   <Checkbox.Android
                     status={facsIdaSelecionadas.includes(fac.id) ? 'checked' : 'unchecked'}
@@ -419,7 +430,7 @@ export default function CadastrarRotaPrincipalScreen() {
                 style={styles.checkboxRow}
                 onPress={() => toggleFaculdadeVolta(fac.id)}
               >
-                <Text style={styles.checkboxLabel}>{fac.sigla}</Text>
+                <Text style={styles.checkboxLabel}>{[fac.nome, fac.campus].filter(Boolean).join(' - ')}</Text>
                 <View pointerEvents="none">
                   <Checkbox.Android
                     status={facsVoltaSelecionadas.includes(fac.id) ? 'checked' : 'unchecked'}
