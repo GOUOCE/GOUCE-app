@@ -55,7 +55,7 @@ function corpoDaRotaComplementar(dados: DadosRotaComplementar) {
 
 export const rotaComplementarService = {
   // A tela busca por nome, rota principal e ponto; a API filtra só por nome, então a lista vem inteira
-  // e o filtro é feito na tela (#363)
+  // e o filtro é feito na tela, sem chamar a API a cada letra (#363)
   async listarRotasComplementares(incluirInativos = true): Promise<RotaComplementarItem[]> {
     const response = await api.get<any[]>('/rotas-complementares', { params: { incluir_inativos: incluirInativos } });
     return (response.data || []).map(mapearRotaComplementar);

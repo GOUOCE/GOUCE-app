@@ -142,7 +142,8 @@ export default function RotasComplementaresListScreen() {
       params: { id: String(item.id) },
     });
 
-  // Nome, rota principal ou ponto de conexão, como a busca promete
+  // Acha pelo nome, pela rota principal ou pelo ponto de conexão; o campo mostra só "Buscar por nome"
+  // para o texto não ficar cortado
   const termo = normalizar(busca);
   const filtradas = termo
     ? rotas.filter((r) =>
@@ -199,7 +200,7 @@ export default function RotasComplementaresListScreen() {
         {/* Barra de Busca */}
         <View style={styles.searchContainer}>
           <TextInput
-            placeholder="Buscar por nome, rota principal ou ponto"
+            placeholder="Buscar por nome"
             value={busca}
             onChangeText={setBusca}
             mode="outlined"
