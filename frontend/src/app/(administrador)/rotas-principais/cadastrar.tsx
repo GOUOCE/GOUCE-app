@@ -394,7 +394,7 @@ export default function CadastrarRotaPrincipalScreen() {
       </ScrollView>
 
       {/* Modal Faculdades de Ida */}
-      <RNModal visible={modalFacsIdaVisible} transparent={true} animationType="fade">
+      <RNModal visible={modalFacsIdaVisible} transparent={true} animationType="none">
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalFacsIdaVisible(false)}>
           <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
             <Text variant="titleLarge" style={styles.modalTitle}>Faculdades de Ida (Destino)</Text>
@@ -425,7 +425,7 @@ export default function CadastrarRotaPrincipalScreen() {
       </RNModal>
 
       {/* Modal Faculdades de Volta */}
-      <RNModal visible={modalFacsVoltaVisible} transparent={true} animationType="fade">
+      <RNModal visible={modalFacsVoltaVisible} transparent={true} animationType="none">
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalFacsVoltaVisible(false)}>
           <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
             <Text variant="titleLarge" style={styles.modalTitle}>Faculdades de Volta (Origem)</Text>
@@ -456,7 +456,7 @@ export default function CadastrarRotaPrincipalScreen() {
       </RNModal>
 
       {/* Modal Vincular Bairro */}
-      <RNModal visible={modalVincularBairroVisible} transparent={true} animationType="fade">
+      <RNModal visible={modalVincularBairroVisible} transparent={true} animationType="none">
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalVincularBairroVisible(false)}>
           <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
             <Text variant="titleLarge" style={styles.modalTitle}>Vincular bairro</Text>
