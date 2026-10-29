@@ -47,6 +47,12 @@ export default function EditarRotaComplementarScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
+  // A seta e o sucesso voltam sempre para a listagem, não para o Painel (#360)
+  const voltarParaListagem = () => {
+    closePopup();
+    router.replace('/(administrador)/rotas-complementares');
+  };
+
   const { control, handleSubmit, formState: { errors }, reset, setValue } = useForm<RotaComplementarFormData>({
     resolver: zodResolver(rotaComplementarSchema),
     defaultValues: {
@@ -120,7 +126,7 @@ export default function EditarRotaComplementarScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={voltarParaListagem}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Editar Rota Complementar</Text>
