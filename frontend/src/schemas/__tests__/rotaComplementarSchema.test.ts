@@ -68,13 +68,6 @@ describe('Suíte de Testes Unitários - HU-012 (Gerenciamento de Rotas Complemen
       expect(rotasAtivas.every((r) => r.ativo)).toBe(true);
     });
 
-    it('deve bloquear a inativação de uma rota complementar com agendamentos pendentes de alunos', async () => {
-      // Van 2 - Bairro Novo (ID 1) possui agendamentos pendentes no MOCK
-      await expect(
-        rotaComplementarService.inativarRotaComplementar(1)
-      ).rejects.toThrow('Esta rota possui agendamentos pendentes de alunos. Não é possível inativar no momento.');
-    });
-
     it('deve permitir inativar uma rota complementar sem agendamentos pendentes', async () => {
       // Van 5 - Trevo da BR (ID 2) não possui agendamentos pendentes
       await rotaComplementarService.inativarRotaComplementar(2);

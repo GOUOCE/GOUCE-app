@@ -299,11 +299,9 @@ export const rotaComplementarService = {
     }
   },
 
+  // O bloqueio (agendamentos pendentes) é decidido só pela API (#352)
   async inativarRotaComplementar(id: number): Promise<void> {
     const rcLocal = ROTAS_COMPLEMENTARES_MOCK.find((item) => item.id === id);
-    if (rcLocal && rcLocal.agendamentos_pendentes) {
-      throw new Error('Esta rota possui agendamentos pendentes de alunos. Não é possível inativar no momento.');
-    }
 
     try {
       await api.patch(`/rotas-complementares/${id}/inativar`);
