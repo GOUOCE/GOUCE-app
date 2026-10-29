@@ -12,6 +12,7 @@ export interface RotaComplementarItem {
   rota_principal_id: number;
   rota_principal_nome: string;
   horario_saida: string;
+  horario_retorno: string;
   ponto_conexao: string;
   ativo: boolean;
 }
@@ -20,6 +21,7 @@ export interface DadosRotaComplementar {
   nome: string;
   rotaPrincipalId: number;
   horarioSaida: string;
+  horarioRetorno: string;
   pontoConexao: string;
 }
 
@@ -32,6 +34,7 @@ function mapearRotaComplementar(rc: any): RotaComplementarItem {
     rota_principal_id: rc.rota_principal?.id ?? rc.rota_principal_id,
     rota_principal_nome: rc.rota_principal?.nome ?? rc.rota_principal_nome ?? '',
     horario_saida: rc.horario_saida,
+    horario_retorno: rc.horario_retorno,
     ponto_conexao: rc.ponto_conexao,
     ativo: rc.ativo ?? true,
   };
@@ -41,6 +44,8 @@ function corpoDaRotaComplementar(dados: DadosRotaComplementar) {
   return {
     nome: dados.nome.trim(),
     horario_saida: dados.horarioSaida.trim(),
+    // A API exige o retorno desde a #310; sem ele, todo cadastro voltava 422 (#350)
+    horario_retorno: dados.horarioRetorno.trim(),
     ponto_conexao: dados.pontoConexao.trim(),
     rota_principal_id: dados.rotaPrincipalId,
   };

@@ -20,6 +20,7 @@ const dados = {
   nome: 'Van Sem Conexão',
   rotaPrincipalId: 1,
   horarioSaida: '06:30',
+  horarioRetorno: '17:30',
   pontoConexao: 'Trevo do Bairro Novo',
 };
 
@@ -102,5 +103,38 @@ describe('rotaComplementarService - só dados da API (HU-012, #351 e #352)', () 
 
     expect(getErrorMessage(erroCadastro)).toBe('Já existe uma rota com este nome.');
     expect(getErrorMessage(erroEdicao)).toBe('Já existe uma rota com este nome.');
+  });
+
+  it('envia o horário de retorno que a API exige no cadastro e na edição (#350)', async () => {
+    const resposta = {
+      data: {
+        success: true,
+        data: {
+          id: 3,
+          nome: 'Van Sem Conexão',
+          horario_saida: '06:30',
+          horario_retorno: '17:30',
+          ponto_conexao: 'Trevo do Bairro Novo',
+          ativo: true,
+          rota_principal: { id: 1, nome: 'Rota Centro - UFC', ativo: true },
+        },
+      },
+    };
+    mockPost.mockResolvedValue(resposta);
+    mockPatch.mockResolvedValue(resposta);
+
+    const criada = await rotaComplementarService.criarRotaComplementar(dados);
+    await rotaComplementarService.atualizarRotaComplementar(3, dados);
+
+    const corpo = {
+      nome: 'Van Sem Conexão',
+      horario_saida: '06:30',
+      horario_retorno: '17:30',
+      ponto_conexao: 'Trevo do Bairro Novo',
+      rota_principal_id: 1,
+    };
+    expect(mockPost).toHaveBeenCalledWith('/rotas-complementares', corpo);
+    expect(mockPatch).toHaveBeenCalledWith('/rotas-complementares/3', corpo);
+    expect(criada.horario_retorno).toBe('17:30');
   });
 });

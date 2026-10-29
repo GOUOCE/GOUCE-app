@@ -50,12 +50,13 @@ export default function CadastrarRotaComplementarScreen() {
     router.replace('/(administrador)/rotas-complementares');
   };
 
-  const { control, handleSubmit, formState: { errors, isSubmitted }, setValue, getValues } = useForm<RotaComplementarFormData>({
+  const { control, handleSubmit, formState: { errors, isSubmitted }, setValue, getValues, trigger } = useForm<RotaComplementarFormData>({
     resolver: zodResolver(rotaComplementarSchema),
     defaultValues: {
       rotaPrincipalId: undefined,
       nome: '',
       horarioSaida: '',
+      horarioRetorno: '',
       pontoConexao: '',
     },
   });
@@ -77,6 +78,12 @@ export default function CadastrarRotaComplementarScreen() {
     }
     carregarRotasPrincipais();
   }, [showPopup]);
+
+  // Trocar um horário depois de tentar salvar reconfere os dois: o retorno depende da saída (#350)
+  const atualizarHorario = (campo: 'horarioSaida' | 'horarioRetorno', horario: string) => {
+    setValue(campo, horario, { shouldDirty: true });
+    if (isSubmitted) trigger(['horarioSaida', 'horarioRetorno']);
+  };
 
   const abrirSeletorRota = () => {
     setRotaParaVincularId(getValues('rotaPrincipalId') || undefined);
@@ -106,6 +113,7 @@ export default function CadastrarRotaComplementarScreen() {
             nome: dados.nome,
             rotaPrincipalId: Number(dados.rotaPrincipalId),
             horarioSaida: dados.horarioSaida,
+        horarioRetorno: dados.horarioRetorno,
             pontoConexao: dados.pontoConexao,
           });
           setIsLoading(false);
@@ -232,21 +240,39 @@ export default function CadastrarRotaComplementarScreen() {
           {errors.nome && <Text style={styles.errorText}>{errors.nome.message}</Text>}
         </View>
 
-        {/* Horário de Saída: relógio de 24 h, qualquer HH:mm (#208, item 2b; #357) */}
-        <View style={styles.inputBox}>
-          <Controller
-            control={control}
-            name="horarioSaida"
-            render={({ field: { value } }) => (
-              <CampoHorario
-                label="Horário de Saída *"
-                value={value}
-                onChange={(horario) => setValue('horarioSaida', horario, { shouldDirty: true, shouldValidate: isSubmitted })}
-                error={!!errors.horarioSaida}
-              />
-            )}
-          />
-          {errors.horarioSaida && <Text style={styles.errorText}>{errors.horarioSaida.message}</Text>}
+        {/* Horários de Saída e Retorno lado a lado, como nas rotas principais: relógio de 24 h (#208, itens 2 e 4; #350, #357) */}
+        <View style={styles.rowInputs}>
+          <View style={styles.halfInputBox}>
+            <Controller
+              control={control}
+              name="horarioSaida"
+              render={({ field: { value } }) => (
+                <CampoHorario
+                  label="Horário de Saída *"
+                  value={value}
+                  onChange={(horario) => atualizarHorario('horarioSaida', horario)}
+                  error={!!errors.horarioSaida}
+                />
+              )}
+            />
+            {errors.horarioSaida && <Text style={styles.errorText}>{errors.horarioSaida.message}</Text>}
+          </View>
+
+          <View style={styles.halfInputBox}>
+            <Controller
+              control={control}
+              name="horarioRetorno"
+              render={({ field: { value } }) => (
+                <CampoHorario
+                  label="Horário de Retorno *"
+                  value={value}
+                  onChange={(horario) => atualizarHorario('horarioRetorno', horario)}
+                  error={!!errors.horarioRetorno}
+                />
+              )}
+            />
+            {errors.horarioRetorno && <Text style={styles.errorText}>{errors.horarioRetorno.message}</Text>}
+          </View>
         </View>
 
         {/* Ponto de Conexão */}
@@ -304,6 +330,14 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 24,
     paddingBottom: 40,
+  },
+  rowInputs: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  halfInputBox: {
+    flex: 1,
+    marginBottom: 20,
   },
   inputBox: {
     marginBottom: 20,
