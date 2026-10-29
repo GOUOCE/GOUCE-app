@@ -301,6 +301,21 @@ class MensagensDeValidacaoTest(CasoDeUsoTestBase):
         )
         self.assertEqual([c for c in self.repository.chamadas if c[0] in ("criar", "atualizar")], [])
 
+    def test_nome_com_simbolos_e_recusado_na_criacao_e_na_edicao(self):
+        mensagem = "Nome da rota deve conter apenas letras, números, espaços, hífen, apóstrofo ou barra."
+        for nome in ("wwww@@@2", "Rota #1", "Rota (Manhã)", "Rota_Centro"):
+            with self.subTest(nome=nome):
+                self.assert_validacao("nome", mensagem, self.use_case.criar, **argumentos(nome=nome))
+                self.assert_validacao("nome", mensagem, self.use_case.atualizar, 1, {"nome": nome}, ADMIN_ID)
+        self.assertEqual(self.escritas(), [])
+
+    def test_nome_com_letras_acentos_numeros_hifen_apostrofo_e_barra_e_aceito(self):
+        for nome in ("Rota Centro - UFC", "Linha 01/02", "Rota D'Ávila", "Rota São João"):
+            with self.subTest(nome=nome):
+                self.use_case.criar(**argumentos(nome=nome))
+
+        self.assertEqual(self.escritas(), ["criar"] * 4)
+
     def test_nome_no_limite_de_150_e_aceito(self):
         self.use_case.criar(**argumentos(nome="x" * 150))
 

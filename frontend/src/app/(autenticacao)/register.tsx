@@ -237,7 +237,7 @@ export default function RegisterScreen() {
           ) : (
             <Button
               mode="contained"
-              onPress={handleSubmit(onSubmit)}
+              onPress={() => { void handleSubmit(onSubmit)(); }}
               loading={isLoading}
               style={styles.actionButton}
               contentStyle={styles.buttonContent}

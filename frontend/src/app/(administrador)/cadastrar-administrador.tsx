@@ -298,7 +298,7 @@ export default function CadastrarAdministradorScreen() {
         ) : (
           <Button
             mode="contained"
-            onPress={handleSubmit(handleNovoSubmit)}
+            onPress={handleSubmit(handleNovoSubmit) as any}
             disabled={isLoading}
             loading={isLoading}
             style={styles.actionButton}

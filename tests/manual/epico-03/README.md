@@ -1,6 +1,16 @@
 # Testes manuais — Épico 03 — Gestão de Rotas e Horários
 
-Planejamento essencial de API e UI das HU-011 e HU-012. **54 casos: 27 de API e 27 de UI**, todos pendentes. Esta versão substitui o planejamento feito antes da implementação (base `5554bc90`, 24/10/2026): agora os casos usam as **decisões do PO** na [issue #208](https://github.com/GOUOCE/GOUCE-app/issues/208), os requisitos atualizados, o **backend real** da `develop` e as telas dos PRs de front. Riscos encontrados por leitura de código não são defeitos reproduzidos.
+Planejamento essencial de API e UI das HU-011 e HU-012. **54 casos: 27 de API e 27 de UI**. A execução de API de 27/10/2026 está registrada abaixo; os 27 casos de UI permanecem pendentes. Esta versão substitui o planejamento feito antes da implementação (base `5554bc90`, 24/10/2026): agora os casos usam as **decisões do PO** na [issue #208](https://github.com/GOUOCE/GOUCE-app/issues/208), os requisitos atualizados, o **backend real** da `develop` e as telas dos PRs de front. Riscos encontrados por leitura de código não são defeitos reproduzidos.
+
+## Execução de API — 27/10/2026
+
+| HU | Casos | Aprovados | Falharam | Parciais | Bloqueados | Chamadas HTTP (com preparação) | Branch / PR |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| HU-011 | 14 | 11 | 1 | 1 | 1 | 143 | [feat/front-hu011 — PR #194](https://github.com/GOUOCE/GOUCE-app/pull/194) |
+| HU-012 | 13 | 8 | 2 | 2 | 1 | 123 | [feat/front-hu012 — PR #182](https://github.com/GOUOCE/GOUCE-app/pull/182) |
+| Total API | 27 | 19 | 3 | 3 | 2 | 266 | Evidências separadas por HU |
+
+Issues reproduzidas: [#309](https://github.com/GOUOCE/GOUCE-app/issues/309), [#310](https://github.com/GOUOCE/GOUCE-app/issues/310), [#311](https://github.com/GOUOCE/GOUCE-app/issues/311) e [#312](https://github.com/GOUOCE/GOUCE-app/issues/312). Os casos bloqueados dependem da HU-013; não foram aprovados por simulação. Cada branch contém os resultados e os commits da respectiva HU; os JSONs de evidência ficam diretamente nos Markdown das issues e nas issues do GitHub; o outro resultado está no PR indicado. Os resultados de UI não foram preenchidos nesta execução.
 
 ## Índice das suítes
 
@@ -8,13 +18,13 @@ Planejamento essencial de API e UI das HU-011 e HU-012. **54 casos: 27 de API e 
 | --- | --- | --- | --- | --- | --- |
 | HU-011 | Rotas principais e horários | [14 casos](HU-011/api/API-HU-011.md) | [14 casos](HU-011/ui/UI-HU-011.md) | Bairros e faculdades ativos (HU-007/008); [PR #194](https://github.com/GOUOCE/GOUCE-app/pull/194) para as telas; HU-013 para agendamentos | Nome único só entre principais; mensagem de complementar ativa diferente do PO; exemplos e sucesso offline no app; horários em lista fixa |
 | HU-012 | Rotas complementares | [13 casos](HU-012/api/API-HU-012.md) | [13 casos](HU-012/ui/UI-HU-012.md) | Rotas principais ativas (HU-011); [PR #182](https://github.com/GOUOCE/GOUCE-app/pull/182) para as telas; HU-013 para agendamentos | Sem horário de retorno (back e front); nome único só entre complementares; mensagem da reativação diferente do PO; exemplos no app |
-| **Total** | **2 HUs** | **27** | **27** | **Dependências registradas por caso** | **54 casos pendentes** |
+| **Total** | **2 HUs** | **27** | **27** | **Dependências registradas por caso** | **27 casos de UI pendentes; API executada acima** |
 
 Guias de execução de API: [HU-011](HU-011/api/README.md) e [HU-012](HU-012/api/README.md).
 
 ## Escopo e organização
 
-- **API:** execução pela IA (Claude Code), com validação de Cauan Ricardo; stack isolada com banco limpo e Postman/Insomnia/Swagger em `/docs`. Os endpoints `/rotas-principais` e `/rotas-complementares` estão na `develop` (`7c3d72d8`).
+- **API:** execução assistida pelo Codex, com validação de Cauan Ricardo; HTTP real e PostgreSQL isolado com banco limpo, conforme as evidências desta rodada. Os endpoints `/rotas-principais` e `/rotas-complementares` estão na `develop` (`7c3d72d8`).
 - **UI:** execução por Cauan no celular (Expo Go) ou web em `http://localhost:3000`, na branch do PR de front de cada HU (ou na `develop` depois do merge). Cada suíte está dividida nas seções A/B/C.
 - **Apoio da IA:** persistência, vínculos, status e auditoria são conferidos pela IA na API/banco quando os passos pedirem. Se a UI não permitir montar a massa (por exemplo, inativar um bairro usado em rota), a IA monta pela API, registrando a origem.
 - IDs seguem `CT-HU011-API-001`, `CT-HU011-UI-001`, `CT-HU012-API-001` e `CT-HU012-UI-001`. O resumo e o detalhamento de cada suíte usam os mesmos IDs.
@@ -78,6 +88,6 @@ Um caso pode ter partes independentes: registrar o que foi verificado, a falha e
 
 ## Registro dos resultados
 
-Preencher ambiente/commit, última execução, resultado obtido, status, resumo e defeitos quando a execução ocorrer. **Não alterar o esperado para fazer o teste passar.** Os totais atuais são somente de planejamento: 54 pendentes, sem aprovações, reprovações ou bloqueios contabilizados.
+Preencher ambiente/commit, última execução, resultado obtido, status, resumo e defeitos quando a execução ocorrer. **Não alterar o esperado para fazer o teste passar.** São 54 casos planejados; os resultados de API desta execução estão na tabela acima. A UI permanece pendente.
 
 Mensagens definidas pelo PO valem como esperado; quando a regra funciona com outro texto, registrar ⚠️ na API. Ocultar credenciais, tokens e dados pessoais em evidências. Abrir issues somente depois de reproduzir, ao final de cada HU.

@@ -165,7 +165,7 @@ export default function EsqueciSenhaScreen() {
 
         <Button
           mode="contained"
-          onPress={handleSubmit(onSubmit)}
+          onPress={() => { void handleSubmit(onSubmit)(); }}
           loading={isLoading}
           disabled={isLoading}
           style={styles.button}
