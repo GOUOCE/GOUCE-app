@@ -16,6 +16,7 @@ import { getErrorMessage } from '@/utils/errorUtils';
 import { formatarInstituicao } from '@/utils/formatarInstituicao';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 import { CampoHorario } from '@/components/ui/CampoHorario';
+import { CampoTextoRotulado } from '@/components/ui/CampoTextoRotulado';
 
 // Campo fechado: "SIGLA - Campus", como em Faculdades; sem sigla, o nome no lugar (#344)
 const rotuloFaculdade = (f: FaculdadeOpcao) =>
@@ -300,9 +301,8 @@ export default function EditarRotaPrincipalScreen() {
             control={control}
             name="nome"
             render={({ field: { value } }) => (
-              <TextInput
-                label="Nome da Rota *"
-                mode="outlined"
+              <CampoTextoRotulado
+                rotulo="Nome da Rota *"
                 placeholder="ex.: Linha 01 - Centro"
                 value={value}
                 onChangeText={(texto) => atualizarCampo('nome', texto)}
@@ -445,7 +445,11 @@ export default function EditarRotaPrincipalScreen() {
                 style={styles.checkboxRow}
                 onPress={() => toggleFaculdadeIda(fac.id)}
               >
-                <Text style={styles.checkboxLabel}>{[fac.nome, fac.campus].filter(Boolean).join(' - ')}</Text>
+                {/* Texto com largura fixa ao lado do checkbox: não quebra diferente na primeira abertura */}
+                <View style={styles.checkboxTexto}>
+                  <Text style={styles.checkboxLabel}>{fac.nome}</Text>
+                  <Text style={styles.checkboxSub}>{rotuloFaculdade(fac)}</Text>
+                </View>
                 <View pointerEvents="none">
                   <Checkbox.Android
                     status={facsIdaSelecionadas.includes(fac.id) ? 'checked' : 'unchecked'}
@@ -476,7 +480,11 @@ export default function EditarRotaPrincipalScreen() {
                 style={styles.checkboxRow}
                 onPress={() => toggleFaculdadeVolta(fac.id)}
               >
-                <Text style={styles.checkboxLabel}>{[fac.nome, fac.campus].filter(Boolean).join(' - ')}</Text>
+                {/* Texto com largura fixa ao lado do checkbox: não quebra diferente na primeira abertura */}
+                <View style={styles.checkboxTexto}>
+                  <Text style={styles.checkboxLabel}>{fac.nome}</Text>
+                  <Text style={styles.checkboxSub}>{rotuloFaculdade(fac)}</Text>
+                </View>
                 <View pointerEvents="none">
                   <Checkbox.Android
                     status={facsVoltaSelecionadas.includes(fac.id) ? 'checked' : 'unchecked'}
@@ -643,9 +651,18 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
   },
+  checkboxTexto: {
+    flex: 1,
+    marginRight: 8,
+  },
   checkboxLabel: {
     fontSize: 16,
     color: '#333',
+  },
+  checkboxSub: {
+    fontSize: 13,
+    color: '#666',
+    marginTop: 2,
   },
   radioItem: {
     paddingHorizontal: 0,

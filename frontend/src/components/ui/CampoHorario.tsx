@@ -31,7 +31,7 @@ export function CampoHorario({ label, value, onChange, error }: CampoHorarioProp
             editable={false}
             textColor={value ? '#191C20' : '#74777F'}
             error={error}
-            left={<TextInput.Icon icon={() => <Clock size={20} color="#666" />} />}
+            right={<TextInput.Icon icon={() => <Clock size={20} color="#666" />} />}
             style={styles.input}
           />
         </View>
