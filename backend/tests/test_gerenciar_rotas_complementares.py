@@ -195,6 +195,33 @@ class CriarTest(CasoDeUsoTestBase):
             self.use_case.criar, **criar_args(ponto_conexao="a" * 151),
         )
 
+    def test_nome_e_ponto_com_simbolos_sao_recusados_na_criacao_e_na_edicao(self):
+        # #356: mesma regra do nome da rota principal (#339); o ponto aceita também . , º e ª
+        casos = (
+            ("nome", "Nome da rota deve conter apenas letras, números, espaços, hífen, apóstrofo ou barra.",
+             ("wwww@@@2", "Van #1", "Van (Manhã)", "Van_Sitio", "Van 2.0")),
+            ("ponto_conexao", "Ponto de conexão deve conter apenas letras, números, espaços, hífen, "
+             "apóstrofo, barra, ponto, vírgula, º ou ª.",
+             ("Trevo @@", "Posto #2", "Praça (Centro)", "Rua_1")),
+        )
+        for campo, mensagem, valores in casos:
+            for valor in valores:
+                with self.subTest(campo=campo, valor=valor):
+                    self.assert_validacao(campo, mensagem, self.use_case.criar, **criar_args(**{campo: valor}))
+                    self.assert_validacao(campo, mensagem, self.use_case.atualizar, 1, {campo: valor}, ADMIN_ID)
+        self.assertEqual(self.escritas(), [])
+
+    def test_nome_e_ponto_com_acentos_numeros_e_pontuacao_permitida_sao_aceitos(self):
+        for nome, ponto in (
+            ("Van 2 - Bairro Novo", "Trevo do Bairro Novo"),
+            ("Van Sítio D'Água 2/3", "Av. Plácido Castelo, Nº 120"),
+            ("Van São João", "Rua 1º de Maio, 45-A"),
+        ):
+            with self.subTest(nome=nome, ponto=ponto):
+                self.use_case.criar(**criar_args(nome=nome, ponto_conexao=ponto))
+
+        self.assertEqual(self.escritas(), ["criar"] * 3)
+
     def test_rota_principal_obrigatoria_e_id_valido(self):
         self.assert_validacao(
             "rota_principal_id", "Rota principal vinculada é obrigatória.",
