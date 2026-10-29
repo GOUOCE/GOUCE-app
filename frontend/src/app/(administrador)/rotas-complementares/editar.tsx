@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
-import { Text, TextInput, Button, RadioButton } from 'react-native-paper';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useForm, Controller } from 'react-hook-form';
+import { Text, TextInput, Button, RadioButton, ActivityIndicator } from 'react-native-paper';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { useForm, Controller, DefaultValues } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft, Building2, ChevronDown, GitFork, MapPin } from 'lucide-react-native';
 
@@ -13,6 +13,16 @@ import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 import { CampoHorario } from '@/components/ui/CampoHorario';
 import { CampoTextoRotulado } from '@/components/ui/CampoTextoRotulado';
 
+// Valores do formulário vazio; a tela volta a eles ao ganhar e ao perder o foco (#358).
+// Nenhum campo obrigatório vem preenchido: o administrador escolhe tudo (#355)
+const VALORES_INICIAIS: DefaultValues<RotaComplementarFormData> = {
+  rotaPrincipalId: undefined,
+  nome: '',
+  horarioSaida: '',
+  horarioRetorno: '',
+  pontoConexao: '',
+};
+
 export default function EditarRotaComplementarScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -22,6 +32,7 @@ export default function EditarRotaComplementarScreen() {
   const [rotaSelecionadaNome, setRotaSelecionadaNome] = useState('');
   const [rotaParaVincularId, setRotaParaVincularId] = useState<number | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
+  const [dadosCarregados, setDadosCarregados] = useState(false);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -53,46 +64,64 @@ export default function EditarRotaComplementarScreen() {
 
   const { control, handleSubmit, formState: { errors, isSubmitted }, reset, setValue, getValues, trigger, clearErrors } = useForm<RotaComplementarFormData>({
     resolver: zodResolver(rotaComplementarSchema),
-    defaultValues: {
-      rotaPrincipalId: undefined,
-      nome: '',
-      horarioSaida: '',
-      horarioRetorno: '',
-      pontoConexao: '',
-    },
+    defaultValues: VALORES_INICIAIS,
   });
 
-  useEffect(() => {
-    async function carregarDados() {
-      if (!id) return;
-      try {
-        const ativas = await rotaComplementarService.listarRotasPrincipaisAtivas();
-        setRotasPrincipaisAtivas(ativas);
+  const limparFormulario = React.useCallback(() => {
+    reset(VALORES_INICIAIS);
+    setRotaSelecionadaNome('');
+    setRotaParaVincularId(undefined);
+    setModalRotaVisible(false);
+    setDadosCarregados(false);
+  }, [reset]);
 
-        const rc = await rotaComplementarService.obterRotaComplementarPorId(Number(id));
-        reset({
-          rotaPrincipalId: rc.rota_principal_id,
-          nome: rc.nome,
-          horarioSaida: rc.horario_saida,
-          horarioRetorno: rc.horario_retorno,
-          pontoConexao: rc.ponto_conexao,
-        });
-        setRotaSelecionadaNome(rc.rota_principal_nome);
-      } catch (err) {
-        showPopup({
-          type: 'error',
-          title: 'Erro de Conexão',
-          message: getErrorMessage(err, 'Erro ao carregar dados da rota complementar.'),
-          confirmText: 'Entendido',
-          onConfirm: () => {
-            closePopup();
-            router.replace('/(administrador)/rotas-complementares');
-          },
-        });
+
+  // Recarrega a complementar escolhida e as rotas principais ativas ao ganhar foco e descarta o que não foi salvo ao sair (#358)
+  useFocusEffect(
+    React.useCallback(() => {
+      let ativa = true;
+      limparFormulario();
+
+      async function carregarDados() {
+        if (!id) return;
+        try {
+          const [ativas, rc] = await Promise.all([
+            rotaComplementarService.listarRotasPrincipaisAtivas(),
+            rotaComplementarService.obterRotaComplementarPorId(Number(id)),
+          ]);
+          if (!ativa) return;
+          setRotasPrincipaisAtivas(ativas);
+          reset({
+            rotaPrincipalId: rc.rota_principal_id,
+            nome: rc.nome,
+            horarioSaida: rc.horario_saida,
+            horarioRetorno: rc.horario_retorno,
+            pontoConexao: rc.ponto_conexao,
+          });
+          setRotaSelecionadaNome(rc.rota_principal_nome);
+          setDadosCarregados(true);
+        } catch (err) {
+          if (!ativa) return;
+          showPopup({
+            type: 'error',
+            title: 'Erro de Conexão',
+            message: getErrorMessage(err, 'Erro ao carregar dados da rota complementar.'),
+            confirmText: 'Entendido',
+            onConfirm: () => {
+              closePopup();
+              router.replace('/(administrador)/rotas-complementares');
+            },
+          });
+        }
       }
-    }
-    carregarDados();
-  }, [id, reset, showPopup, router]);
+      carregarDados();
+
+      return () => {
+        ativa = false;
+        limparFormulario();
+      };
+    }, [id, limparFormulario, reset, showPopup, router])
+  );
 
   // Erro só aparece depois de tentar salvar; apagar o campo tira o erro (padrão da HU-010) (#356)
   const atualizarCampo = (campo: 'nome' | 'pontoConexao', valor: string) => {
@@ -121,7 +150,7 @@ export default function EditarRotaComplementarScreen() {
   };
 
   const onSubmit = async (dados: RotaComplementarFormData) => {
-    if (!id) return;
+    if (!id || !dadosCarregados) return;
     setIsLoading(true);
     try {
       await rotaComplementarService.atualizarRotaComplementar(Number(id), {
@@ -173,7 +202,7 @@ export default function EditarRotaComplementarScreen() {
         onDismiss={popup.type === 'success' ? voltarParaListagem : closePopup}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      {!dadosCarregados ? <ActivityIndicator style={styles.carregando} accessibilityLabel="Carregando rota complementar" /> : <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Seletor Rota Principal Vinculada */}
         <View style={styles.inputBox}>
           <TouchableOpacity activeOpacity={0.7} onPress={abrirSeletorRota}>
@@ -319,7 +348,7 @@ export default function EditarRotaComplementarScreen() {
         >
           Salvar alterações
         </Button>
-      </ScrollView>
+      </ScrollView>}
     </View>
   );
 }
@@ -339,6 +368,9 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontWeight: 'bold',
     color: '#333',
+  },
+  carregando: {
+    marginTop: 48,
   },
   scrollContent: {
     paddingHorizontal: 24,

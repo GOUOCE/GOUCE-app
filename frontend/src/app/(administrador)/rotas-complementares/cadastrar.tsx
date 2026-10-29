@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
 import { Text, TextInput, Button, RadioButton } from 'react-native-paper';
-import { useRouter } from 'expo-router';
-import { useForm, Controller } from 'react-hook-form';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { useForm, Controller, DefaultValues } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft, Building2, ChevronDown, GitFork, MapPin } from 'lucide-react-native';
 
@@ -12,6 +12,16 @@ import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 import { CampoHorario } from '@/components/ui/CampoHorario';
 import { CampoTextoRotulado } from '@/components/ui/CampoTextoRotulado';
+
+// Valores do formulário vazio; a tela volta a eles ao ganhar e ao perder o foco (#358).
+// Nenhum campo obrigatório vem preenchido: o administrador escolhe tudo (#355)
+const VALORES_INICIAIS: DefaultValues<RotaComplementarFormData> = {
+  rotaPrincipalId: undefined,
+  nome: '',
+  horarioSaida: '',
+  horarioRetorno: '',
+  pontoConexao: '',
+};
 
 export default function CadastrarRotaComplementarScreen() {
   const router = useRouter();
@@ -51,34 +61,49 @@ export default function CadastrarRotaComplementarScreen() {
     router.replace('/(administrador)/rotas-complementares');
   };
 
-  const { control, handleSubmit, formState: { errors, isSubmitted }, setValue, getValues, trigger, clearErrors } = useForm<RotaComplementarFormData>({
+  const { control, handleSubmit, formState: { errors, isSubmitted }, reset, setValue, getValues, trigger, clearErrors } = useForm<RotaComplementarFormData>({
     resolver: zodResolver(rotaComplementarSchema),
-    defaultValues: {
-      rotaPrincipalId: undefined,
-      nome: '',
-      horarioSaida: '',
-      horarioRetorno: '',
-      pontoConexao: '',
-    },
+    defaultValues: VALORES_INICIAIS,
   });
 
-  useEffect(() => {
-    async function carregarRotasPrincipais() {
-      try {
-        const ativas = await rotaComplementarService.listarRotasPrincipaisAtivas();
-        // Nenhuma rota principal vem marcada: o administrador escolhe (#355)
-        setRotasPrincipaisAtivas(ativas);
-      } catch (err) {
-        showPopup({
-          type: 'error',
-          title: 'Erro de Conexão',
-          message: getErrorMessage(err, 'Erro ao carregar rotas principais.'),
-          confirmText: 'Entendido',
-        });
+  const limparFormulario = React.useCallback(() => {
+    reset(VALORES_INICIAIS);
+    setRotaSelecionadaNome('');
+    setRotaParaVincularId(undefined);
+    setModalRotaVisible(false);
+  }, [reset]);
+
+
+  // Limpa o formulário e recarrega as rotas principais ativas sempre que a tela ganha ou perde o foco (#358)
+  useFocusEffect(
+    React.useCallback(() => {
+      let ativa = true;
+      limparFormulario();
+
+      async function carregarRotasPrincipais() {
+        try {
+          // Nenhuma rota principal vem marcada: o administrador escolhe (#355)
+          const ativas = await rotaComplementarService.listarRotasPrincipaisAtivas();
+          if (!ativa) return;
+          setRotasPrincipaisAtivas(ativas);
+        } catch (err) {
+          if (!ativa) return;
+          showPopup({
+            type: 'error',
+            title: 'Erro de Conexão',
+            message: getErrorMessage(err, 'Erro ao carregar rotas principais.'),
+            confirmText: 'Entendido',
+          });
+        }
       }
-    }
-    carregarRotasPrincipais();
-  }, [showPopup]);
+      carregarRotasPrincipais();
+
+      return () => {
+        ativa = false;
+        limparFormulario();
+      };
+    }, [limparFormulario, showPopup])
+  );
 
   // Erro só aparece depois de tentar salvar; apagar o campo tira o erro (padrão da HU-010) (#356)
   const atualizarCampo = (campo: 'nome' | 'pontoConexao', valor: string) => {
