@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
-import { Text, TextInput, Button, Portal, Snackbar } from 'react-native-paper';
+import { Text, TextInput, Button, Portal } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, Building2, ChevronDown, GitFork, Clock, X } from 'lucide-react-native';
+import { ChevronLeft, Building2, ChevronDown, GitFork, Clock } from 'lucide-react-native';
 
 import { rotaComplementarSchema, RotaComplementarFormData } from '@/schemas/rotaComplementarSchema';
 import { rotaComplementarService, RotaPrincipalSimples } from '@/services/rotaComplementarService';
@@ -20,10 +20,6 @@ export default function EditarRotaComplementarScreen() {
   const [modalHorarioVisible, setModalHorarioVisible] = useState(false);
   const [rotaSelecionadaNome, setRotaSelecionadaNome] = useState('Selecionar');
   const [isLoading, setIsLoading] = useState(false);
-
-  // Snackbar Toast
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -105,11 +101,14 @@ export default function EditarRotaComplementarScreen() {
         pontoConexao: dados.pontoConexao,
       });
       setIsLoading(false);
-      setSnackbarMessage('Rota complementar alterada com sucesso');
-      setSnackbarVisivel(true);
-      setTimeout(() => {
-        router.replace('/(administrador)/rotas-complementares');
-      }, 1200);
+      // Sucesso no pop-up padrão; a tela só sai ao tocar em OK, sem segundo envio no meio (#353)
+      showPopup({
+        type: 'success',
+        title: 'Operação realizada com sucesso',
+        message: 'As alterações da rota complementar foram salvas.',
+        confirmText: 'OK',
+        onConfirm: voltarParaListagem,
+      });
     } catch (error: any) {
       setIsLoading(false);
       const msg = getErrorMessage(error, 'Erro ao atualizar rota complementar.');
@@ -140,7 +139,7 @@ export default function EditarRotaComplementarScreen() {
         message={popup.message}
         confirmText={popup.confirmText}
         onConfirm={popup.onConfirm}
-        onDismiss={closePopup}
+        onDismiss={popup.type === 'success' ? voltarParaListagem : closePopup}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -289,20 +288,6 @@ export default function EditarRotaComplementarScreen() {
           Salvar alterações
         </Button>
       </ScrollView>
-
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
     </View>
   );
 }
@@ -374,11 +359,5 @@ const styles = StyleSheet.create({
   optionText: {
     color: '#333',
     fontSize: 16,
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });
