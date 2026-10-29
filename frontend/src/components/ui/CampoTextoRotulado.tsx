@@ -30,9 +30,13 @@ export function CampoTextoRotulado({ rotulo, error, onFocus, onBlur, style, ...p
         }}
         style={[styles.input, style]}
       />
-      <Text pointerEvents="none" numberOfLines={1} style={[styles.rotulo, { color: cor }]}>
-        {rotulo}
-      </Text>
+      {/* Só uma faixa fina da cor do campo apaga a borda atrás do texto; o resto fica transparente */}
+      <View pointerEvents="none" style={styles.rotuloCaixa}>
+        <View style={styles.cobreBorda} />
+        <Text numberOfLines={1} style={[styles.rotulo, { color: cor }]}>
+          {rotulo}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -45,12 +49,21 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: '#fff',
   },
-  rotulo: {
+  rotuloCaixa: {
     position: 'absolute',
     top: 0, // sem label, a borda do Paper fica no topo do campo (8 px abaixo da caixa); o rótulo fica centrado nela
     left: 12,
     paddingHorizontal: 4,
+  },
+  cobreBorda: {
+    position: 'absolute',
+    top: 7,
+    height: 3,
+    left: 0,
+    right: 0,
     backgroundColor: '#fff',
+  },
+  rotulo: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12,
     lineHeight: 16,
