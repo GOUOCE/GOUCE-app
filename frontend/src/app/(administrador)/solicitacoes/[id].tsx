@@ -271,7 +271,7 @@ export default function AnalisarSolicitacaoScreen() {
             </View>
             <View style={styles.infoItem}>
               <Text variant="labelSmall" style={styles.infoLabel}>Bairro</Text>
-              <Text variant="bodyMedium" style={styles.infoValue}>{aluno?.bairro_id || '-'}</Text>
+              <Text variant="bodyMedium" style={styles.infoValue}>{aluno?.bairro || '-'}</Text>
             </View>
           </View>
         </View>

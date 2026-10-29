@@ -54,3 +54,11 @@ describe('solicitacaoService.obterDetalhes - instituição do aluno (#192)', () 
     expect((await solicitacaoService.obterDetalhes(7)).instituicao).toBe('');
   });
 });
+
+describe('solicitacaoService.obterDetalhes - bairro do aluno (HU-027, #366)', () => {
+  it('usa o nome do bairro que a API devolve', async () => {
+    mockGet.mockResolvedValue({ data: { id: 2, nome: 'Zuleide Andrade', status_cadastro: 'pendente', bairro: 'Centro' } });
+
+    expect((await solicitacaoService.obterDetalhes(2)).bairro).toBe('Centro');
+  });
+});
