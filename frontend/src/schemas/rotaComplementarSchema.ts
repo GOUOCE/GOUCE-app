@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+// Mesmo formato aceito pela API: 00:00 a 23:59, sem faixa mínima ou máxima (#208, item 2b; #357)
+const REGEX_HORARIO = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
+
 export const rotaComplementarSchema = z.object({
   rotaPrincipalId: z
     .coerce
@@ -21,6 +24,7 @@ export const rotaComplementarSchema = z.object({
       z
         .string()
         .min(1, 'Selecione o horário de saída')
+        .refine((v) => REGEX_HORARIO.test(v), 'Horário deve estar no formato HH:MM.')
     ),
   pontoConexao: z
     .string()

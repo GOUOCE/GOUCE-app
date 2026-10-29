@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
-import { Text, TextInput, Button, Portal, RadioButton } from 'react-native-paper';
+import { Text, TextInput, Button, RadioButton } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, Building2, ChevronDown, GitFork, Clock } from 'lucide-react-native';
+import { ChevronLeft, Building2, ChevronDown, GitFork } from 'lucide-react-native';
 
 import { rotaComplementarSchema, RotaComplementarFormData } from '@/schemas/rotaComplementarSchema';
 import { rotaComplementarService, RotaPrincipalSimples } from '@/services/rotaComplementarService';
 import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
+import { CampoHorario } from '@/components/ui/CampoHorario';
 
 export default function EditarRotaComplementarScreen() {
   const router = useRouter();
@@ -17,7 +18,6 @@ export default function EditarRotaComplementarScreen() {
 
   const [rotasPrincipaisAtivas, setRotasPrincipaisAtivas] = useState<RotaPrincipalSimples[]>([]);
   const [modalRotaVisible, setModalRotaVisible] = useState(false);
-  const [modalHorarioVisible, setModalHorarioVisible] = useState(false);
   const [rotaSelecionadaNome, setRotaSelecionadaNome] = useState('');
   const [rotaParaVincularId, setRotaParaVincularId] = useState<number | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
@@ -235,54 +235,22 @@ export default function EditarRotaComplementarScreen() {
           {errors.nome && <Text style={styles.errorText}>{errors.nome.message}</Text>}
         </View>
 
-        {/* Horário de Saída */}
+        {/* Horário de Saída: relógio de 24 h, qualquer HH:mm (#208, item 2b; #357) */}
         <View style={styles.inputBox}>
           <Controller
             control={control}
             name="horarioSaida"
-            render={({ field: { onChange, value } }) => (
-              <TouchableOpacity activeOpacity={0.7} onPress={() => setModalHorarioVisible(true)}>
-                <View pointerEvents="none">
-                  <TextInput
-                    label="Horário de Saída *"
-                    mode="outlined"
-                    placeholder="Selecionar"
-                    value={value || 'Selecionar'}
-                    editable={false}
-                    textColor={value ? '#191C20' : '#74777F'}
-                    error={!!errors.horarioSaida}
-                    left={<TextInput.Icon icon={() => <Clock size={20} color="#666" />} />}
-                    style={styles.input}
-                  />
-                </View>
-              </TouchableOpacity>
+            render={({ field: { value } }) => (
+              <CampoHorario
+                label="Horário de Saída *"
+                value={value}
+                onChange={(horario) => setValue('horarioSaida', horario, { shouldDirty: true, shouldValidate: isSubmitted })}
+                error={!!errors.horarioSaida}
+              />
             )}
           />
           {errors.horarioSaida && <Text style={styles.errorText}>{errors.horarioSaida.message}</Text>}
         </View>
-
-        {/* Modal de Seleção de Horário */}
-        <Portal>
-          <RNModal visible={modalHorarioVisible} transparent={true} animationType="fade">
-            <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalHorarioVisible(false)}>
-              <View style={styles.modalSelectContent}>
-                <Text variant="titleMedium" style={styles.modalSelectTitle}>Horário de Saída</Text>
-                {['05:40', '06:00', '06:10', '06:20', '06:30', '07:00'].map((horario) => (
-                  <TouchableOpacity
-                    key={horario}
-                    style={styles.optionItem}
-                    onPress={() => {
-                      setValue('horarioSaida', horario);
-                      setModalHorarioVisible(false);
-                    }}
-                  >
-                    <Text style={styles.optionText}>{horario}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </TouchableOpacity>
-          </RNModal>
-        </Portal>
 
         {/* Ponto de Conexão */}
         <View style={styles.inputBox}>
@@ -394,24 +362,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     gap: 12,
     marginTop: 20,
-  },
-  modalSelectContent: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    width: '100%',
-    paddingVertical: 16,
-  },
-  modalSelectTitle: {
-    paddingHorizontal: 24,
-    paddingBottom: 12,
-    fontWeight: 'bold',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    marginBottom: 8,
-  },
-  optionItem: {
-    paddingVertical: 14,
-    paddingHorizontal: 24,
   },
   optionText: {
     color: '#333',

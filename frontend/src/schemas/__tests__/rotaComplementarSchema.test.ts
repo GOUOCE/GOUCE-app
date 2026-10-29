@@ -52,5 +52,28 @@ describe('Suíte de Testes Unitários - HU-012 (Gerenciamento de Rotas Complemen
         expect(res.error.issues[0].message).toContain('pelo menos 3 caracteres');
       }
     });
+
+    it('aceita qualquer horário HH:mm, fora da antiga lista fixa (#357)', () => {
+      const res = rotaComplementarSchema.safeParse({
+        rotaPrincipalId: 1,
+        nome: 'Van 2 - Bairro Novo',
+        horarioSaida: '13:15',
+        pontoConexao: 'Trevo do Bairro Novo',
+      });
+      expect(res.success).toBe(true);
+    });
+
+    it('recusa horário fora do formato HH:mm (#357)', () => {
+      const res = rotaComplementarSchema.safeParse({
+        rotaPrincipalId: 1,
+        nome: 'Van 2 - Bairro Novo',
+        horarioSaida: '25:00',
+        pontoConexao: 'Trevo do Bairro Novo',
+      });
+      expect(res.success).toBe(false);
+      if (!res.success) {
+        expect(res.error.issues[0].message).toBe('Horário deve estar no formato HH:MM.');
+      }
+    });
   });
 });
