@@ -70,6 +70,18 @@ class SMTPEmailService(IEmailService):
 
         return self._enviar_mensagem(email_destino, assunto, conteudo_texto, conteudo_html)
 
+    # Nomes dos documentos como o aluno vê no app, com acento (#371)
+    NOMES_DOCUMENTOS = {
+        "comprovante_matricula": "Comprovante de matrícula",
+        "comprovante_residencia": "Comprovante de residência",
+        "foto_perfil": "Foto de perfil",
+    }
+
+    @classmethod
+    def _nome_documento(cls, tipo: object) -> str:
+        chave = str(getattr(tipo, "value", tipo) or "")
+        return cls.NOMES_DOCUMENTOS.get(chave) or chave.replace("_", " ").capitalize() or "Documento"
+
     def enviar_documentos_rejeitados(
         self,
         email_destino: str,
@@ -79,7 +91,7 @@ class SMTPEmailService(IEmailService):
         assunto = "Documentos pendentes para reenvio - GOUCE"
         linhas = []
         for item in documentos:
-            tipo = str(item.get("tipo", "Documento")).replace("_", " ").title()
+            tipo = self._nome_documento(item.get("tipo"))
             motivo = str(item.get("motivo", "Motivo não informado")).strip()
             linhas.append(f"- {tipo}: {motivo}")
 
@@ -98,7 +110,7 @@ class SMTPEmailService(IEmailService):
               <p>Olá <strong>{nome_usuario}</strong>,</p>
               <p>Foram identificados documentos do seu cadastro que precisam ser reenviados.</p>
               <ul>
-                {''.join(f'<li><strong>{str(item.get("tipo", "Documento")).replace("_", " ").title()}</strong>: {str(item.get("motivo", "Motivo não informado"))}</li>' for item in documentos)}
+                {''.join(f'<li><strong>{self._nome_documento(item.get("tipo"))}</strong>: {str(item.get("motivo", "Motivo não informado"))}</li>' for item in documentos)}
               </ul>
               <p>Faça login na plataforma para reenviar os documentos solicitados.</p>
             </div>
