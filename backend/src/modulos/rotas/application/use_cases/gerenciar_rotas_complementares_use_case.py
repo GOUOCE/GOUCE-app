@@ -1,5 +1,6 @@
 """Casos de uso para o gerenciamento administrativo de rotas complementares."""
 
+import re
 from datetime import time
 
 from src.modulos.rotas.application.dtos.rota_principal_dto import (
@@ -11,12 +12,29 @@ from src.modulos.rotas.infrastructure.repositories.rota_complementar_repository 
     RotaComplementarComPrincipalInativaError,
     RotaComplementarRepository,
 )
+from src.modulos.rotas.application.use_cases.gerenciar_rotas_principais_use_case import (
+    MENSAGEM_NOME_ROTA_INVALIDO,
+)
 
 MENSAGEM_ROTA_COM_AGENDAMENTOS = (
     "Esta rota possui agendamentos pendentes e não pode ser inativada no momento."
 )
 
 TAMANHO_MAXIMO = 150
+
+# O nome é único entre principal e complementar (#208, item 1): mesma regra de caracteres da principal.
+# O ponto de conexão é um endereço: a mesma base mais ponto, vírgula, º e ª, como a máscara do app (#356)
+_PADROES_TEXTO = {
+    "nome": (
+        re.compile(r"[0-9A-Za-zÀ-ÖØ-öø-ÿ'’/\- ]+"),
+        MENSAGEM_NOME_ROTA_INVALIDO,
+    ),
+    "ponto_conexao": (
+        re.compile(r"[0-9A-Za-zÀ-ÖØ-öø-ÿ'’/\-.,ºª ]+"),
+        "Ponto de conexão deve conter apenas letras, números, espaços, hífen, apóstrofo, "
+        "barra, ponto, vírgula, º ou ª.",
+    ),
+}
 
 _ROTULOS = {
     "nome": "Nome da rota complementar",
@@ -197,6 +215,9 @@ class GerenciarRotasComplementaresUseCase:
             raise RotaComplementarValidationError(
                 campo, f"{rotulo} deve ter no máximo {TAMANHO_MAXIMO} caracteres."
             )
+        padrao, mensagem = _PADROES_TEXTO[campo]
+        if not padrao.fullmatch(valor):
+            raise RotaComplementarValidationError(campo, mensagem)
         return valor
 
     @staticmethod
