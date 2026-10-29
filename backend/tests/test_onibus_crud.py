@@ -171,6 +171,24 @@ class OnibusCrudUnitTest(unittest.TestCase):
         self.assertEqual(log_ativar.usuario_id, 99)
         self.assertEqual(log_ativar.valor_novo, "ativo")
 
+    def test_criar_editar_e_mudar_status_por_atualizar_gravam_o_administrador(self):
+        onibus = self.service.criar(
+            placa="LOG-1234", qtd_assentos=40, capacidade_maxima=15, usuario_executor_id=7
+        )
+        self.service.atualizar(onibus.placa, qtd_assentos=44, usuario_executor_id=7)
+        self.service.atualizar(onibus.placa, ativo=False, usuario_executor_id=7)
+
+        logs = (
+            self.session.query(LogAuditoriaORM)
+            .filter_by(entidade="onibus")
+            .order_by(LogAuditoriaORM.id)
+            .all()
+        )
+        self.assertEqual(
+            [(log.acao, log.usuario_id) for log in logs],
+            [("CRIAR", 7), ("EDITAR", 7), ("INATIVAR", 7)],
+        )
+
 
 class OnibusApiHttpTest(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
@@ -314,6 +332,32 @@ class OnibusApiHttpTest(unittest.IsolatedAsyncioTestCase):
 
         return start["status"], decoded_body
 
+    async def test_regressao_limites_post_patch_sem_alterar_registro(self):
+        base = {"placa": "QAQ3J45", "assentos": 40, "capacidade_em_pe": 10}
+        status, _ = await self.asgi_request("/onibus", payload=base, method="POST")
+        self.assertEqual(status, 201)
+        for campo in ("assentos", "capacidade_em_pe"):
+            for valor in (2.5, 101, 883833333333):
+                for method, path in (("POST", "/onibus"), ("PATCH", "/onibus/QAQ3J45")):
+                    with self.subTest(campo=campo, valor=valor, method=method):
+                        status, body = await self.asgi_request(path, payload={**base, campo: valor}, method=method)
+                        self.assertEqual(status, 422)
+                        self.assertTrue(body["error"]["details"])
+                        if valor >= 101:
+                            self.assertIn("no máximo 100", body["error"]["details"][0]["message"])
+        status, body = await self.asgi_request("/onibus/QAQ3J45")
+        self.assertEqual(status, 200)
+        self.assertEqual(body["assentos"], 40)
+        self.assertEqual(body["capacidade_em_pe"], 10)
+
+    async def test_limite_100_em_cada_campo_post_patch(self):
+        status, body = await self.asgi_request("/onibus", payload={"placa": "CEM1234", "assentos": 100, "capacidade_em_pe": 100}, method="POST")
+        self.assertEqual(status, 201)
+        status, body = await self.asgi_request("/onibus/CEM1234", payload={"assentos": 100, "capacidade_em_pe": 100}, method="PATCH")
+        self.assertEqual(status, 200)
+        self.assertEqual(body["data"]["assentos"], 100)
+        self.assertEqual(body["data"]["capacidade_em_pe"], 100)
+
     async def test_criar_onibus_api_201(self):
         payload = {
             "placa": "RIO-2A18",
@@ -385,6 +429,49 @@ class OnibusApiHttpTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(status_reativar, 200)
         self.assertEqual(body_reativar["message"], "Operação realizada com sucesso")
         self.assertTrue(body_reativar["data"]["ativo"])
+
+    async def test_escritas_gravam_o_administrador_logado_na_auditoria(self):
+        placa = "AUD-1A11"
+        status, _ = await self.asgi_request("/onibus", payload={"placa": placa, "assentos": 30, "capacidade_em_pe": 10}, method="POST")
+        self.assertEqual(status, 201)
+        status, _ = await self.asgi_request(f"/onibus/{placa}", payload={"assentos": 40}, method="PATCH")
+        self.assertEqual(status, 200)
+        files = {"foto": ("foto.png", b"fake-png-content", "image/png")}
+        status, _ = await self.asgi_multipart_request(f"/onibus/{placa}/foto", fields={}, files=files, method="POST")
+        self.assertEqual(status, 200)
+        status, _ = await self.asgi_request(f"/onibus/{placa}", payload={"ativo": False}, method="PATCH")
+        self.assertEqual(status, 200)
+        status, _ = await self.asgi_request(f"/onibus/{placa}", payload={"ativo": True}, method="PATCH")
+        self.assertEqual(status, 200)
+        status, _ = await self.asgi_request(f"/onibus/{placa}/foto", method="DELETE")
+        self.assertEqual(status, 200)
+
+        logs = (
+            self.session.query(LogAuditoriaORM)
+            .filter_by(entidade="onibus")
+            .order_by(LogAuditoriaORM.id)
+            .all()
+        )
+        self.assertEqual(
+            [log.acao for log in logs],
+            ["CRIAR", "EDITAR", "EDITAR", "INATIVAR", "ATIVAR", "EDITAR"],
+        )
+        self.assertEqual({log.usuario_id for log in logs}, {self.fake_admin["current_user_id"]})
+
+    async def test_validacao_de_frota_devolve_motivo_em_portugues(self):
+        base = {"placa": "VAL-1A11", "assentos": 30, "capacidade_em_pe": 10}
+        casos = [
+            ({**base, "assentos": -1}, "assentos", "A quantidade de assentos deve ser maior que zero."),
+            ({**base, "capacidade_em_pe": -1}, "capacidade_em_pe", "A capacidade em pé não pode ser negativa."),
+            ({k: v for k, v in base.items() if k != "placa"}, "placa", "A placa do veículo é obrigatória."),
+            ({k: v for k, v in base.items() if k != "assentos"}, "assentos", "A quantidade de assentos é obrigatória."),
+        ]
+        for payload, campo, mensagem in casos:
+            with self.subTest(campo=campo, mensagem=mensagem):
+                status, body = await self.asgi_request("/onibus", payload=payload, method="POST")
+                self.assertEqual(status, 422)
+                self.assertEqual(body["error"]["details"], [{"field": campo, "message": mensagem}])
+        self.assertEqual(self.session.query(OnibusORM).count(), 0)
 
     async def test_bloqueio_403_para_nao_admin(self):
         user_aluno = {

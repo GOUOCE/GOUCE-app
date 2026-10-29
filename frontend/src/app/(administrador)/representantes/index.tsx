@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Snackbar } from 'react-native-paper';
+import { Text, TextInput } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, Plus, Search, UserX, X, ChevronRight as ChevronRightIcon } from 'lucide-react-native';
 
 import { representanteService, RepresentanteItem } from '@/services/representanteService';
+import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function RepresentantesListScreen() {
   const router = useRouter();
 
   const [busca, setBusca] = useState('');
+  // A lista traz os ativos e os revogados, identificados com a etiqueta "Revogado" (AC-01)
   const [representantes, setRepresentantes] = useState<RepresentanteItem[]>([]);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
+  // Com a carga falhando, a tela não pode dizer que não há representantes (#300)
+  const [erroCarga, setErroCarga] = useState(false);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -42,9 +44,16 @@ export default function RepresentantesListScreen() {
   const carregarRepresentantes = React.useCallback(async () => {
     try {
       const lista = await representanteService.listarRepresentantes(busca);
-      setRepresentantes(lista.filter((r) => r.ativo));
-    } catch (err) {
-      console.warn('Erro ao carregar representantes:', err);
+      setRepresentantes(lista);
+      setErroCarga(false);
+    } catch (err: any) {
+      setErroCarga(true);
+      showPopup({
+        type: 'error',
+        title: err?.response ? 'Aviso' : 'Erro de Conexão',
+        message: getErrorMessage(err, 'Erro ao carregar listagem de representantes.'),
+        confirmText: 'Entendido',
+      });
     }
   }, [busca]);
 
@@ -59,18 +68,30 @@ export default function RepresentantesListScreen() {
       type: 'warning',
       title: 'Revogar representação?',
       message: 'O discente não terá mais acesso às funções de representante.',
-      confirmText: 'Inativar',
+      confirmText: 'Revogar',
       cancelText: 'Cancelar',
       confirmColor: '#B00020',
       onConfirm: async () => {
         closePopup();
         try {
           await representanteService.revogarRepresentante(rep.id);
-          setSnackbarMessage('Representante revogado');
-          setSnackbarVisivel(true);
+          // Atualiza já após o PATCH: o pop-up pode ser fechado pelo X ou por fora
           carregarRepresentantes();
-        } catch (err) {
-          console.error('Erro ao revogar representação:', err);
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: 'A representação foi revogada com sucesso.',
+            confirmText: 'OK',
+            onConfirm: closePopup,
+          });
+        } catch (error: any) {
+          // Sem resposta da API é falha de conexão, não regra de negócio (#300)
+          showPopup({
+            type: 'error',
+            title: error?.response ? 'Aviso' : 'Erro de Conexão',
+            message: getErrorMessage(error, 'Erro ao revogar representação.'),
+            confirmText: 'Entendido',
+          });
         }
       },
     });
@@ -80,7 +101,7 @@ export default function RepresentantesListScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.replace('/(administrador)/cadastros')}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Representantes</Text>
@@ -132,18 +153,29 @@ export default function RepresentantesListScreen() {
           {representantes.map((rep) => (
             <View key={rep.id} style={styles.repRow}>
               <View style={styles.repInfo}>
-                <Text variant="bodyLarge" style={styles.repName}>{rep.nome}</Text>
-                <Text variant="bodySmall" style={styles.repSub}>{rep.instituicao} - {rep.campus}</Text>
+                <View style={styles.nameRow}>
+                  <Text variant="bodyLarge" style={styles.repName}>{rep.nome}</Text>
+                  {!rep.ativo && (
+                    <View style={styles.badgeRevogado}>
+                      <Text style={styles.badgeText}>Revogado</Text>
+                    </View>
+                  )}
+                </View>
+                <Text variant="bodySmall" style={styles.repSub}>
+                  {[rep.instituicao, rep.campus].filter(Boolean).join(' - ')}
+                </Text>
               </View>
 
-              <TouchableOpacity onPress={() => handleRevogar(rep)} style={styles.iconBtn}>
-                <UserX size={22} color="#333" />
-              </TouchableOpacity>
+              {rep.ativo && (
+                <TouchableOpacity onPress={() => handleRevogar(rep)} style={styles.iconBtn}>
+                  <UserX size={22} color="#333" />
+                </TouchableOpacity>
+              )}
             </View>
           ))}
 
-          {representantes.length === 0 && (
-            <Text style={styles.emptyText}>Nenhum representante cadastrado.</Text>
+          {representantes.length === 0 && !erroCarga && (
+            <Text style={styles.emptyText}>Nenhum representante encontrado.</Text>
           )}
         </View>
 
@@ -162,20 +194,6 @@ export default function RepresentantesListScreen() {
           </View>
         )}
       </ScrollView>
-
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
     </View>
   );
 }
@@ -240,9 +258,25 @@ const styles = StyleSheet.create({
   repInfo: {
     flex: 1,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   repName: {
     fontWeight: '500',
     color: '#333',
+  },
+  badgeRevogado: {
+    backgroundColor: '#FFEBEE',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  badgeText: {
+    color: '#C62828',
+    fontSize: 11,
+    fontWeight: 'bold',
   },
   repSub: {
     color: '#666',
@@ -277,11 +311,5 @@ const styles = StyleSheet.create({
   pageNumberActive: {
     fontWeight: 'bold',
     color: '#004D40',
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });

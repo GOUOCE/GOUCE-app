@@ -44,8 +44,11 @@ class OnibusService:
         capacidade_maxima: int,
         apelido: Optional[str] = None,
         id_foto_onibus: Optional[str] = None,
+        usuario_executor_id: Optional[int] = None,
     ) -> OnibusORM:
         placa_normalizada = self._validar_placa(placa, "placa")
+        if usuario_executor_id is not None:
+            self._validar_id(usuario_executor_id, "usuario_executor_id")
         self._validar_capacidade(qtd_assentos, "qtd_assentos", "A quantidade de assentos deve ser maior que zero.")
         self._validar_capacidade_em_pe(capacidade_maxima, "capacidade_maxima", "A capacidade máxima de alunos em pé deve ser maior ou igual a zero.")
 
@@ -61,6 +64,7 @@ class OnibusService:
             capacidade_maxima=capacidade_maxima,
             apelido=apelido,
             id_foto_onibus=id_foto_onibus,
+            usuario_executor_id=usuario_executor_id,
         )
 
     def atualizar(
@@ -73,8 +77,11 @@ class OnibusService:
         ativo: Optional[bool] = None,
         id_foto_onibus: Optional[str] = None,
         remover_foto: bool = False,
+        usuario_executor_id: Optional[int] = None,
     ) -> OnibusORM:
         placa_atual_normalizada = self._validar_placa(placa_atual, "placa")
+        if usuario_executor_id is not None:
+            self._validar_id(usuario_executor_id, "usuario_executor_id")
 
         placa_nova_normalizada = None
         if nova_placa is not None:
@@ -105,6 +112,7 @@ class OnibusService:
             ativo=ativo,
             id_foto_onibus=id_foto_onibus,
             remover_foto=remover_foto,
+            usuario_executor_id=usuario_executor_id,
         )
 
     def ativar(

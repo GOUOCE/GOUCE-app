@@ -112,9 +112,9 @@ export default function RenovarVinculoScreen() {
           genero: perfilApi.identificacao_genero || 'Homem',
           transgenero: perfilApi.transgenero || 'Não',
           temFilhos: Boolean(perfilApi.tem_filhos),
-          bairro: perfilApi.bairro_id || 'Centro',
+          bairro: String(perfilApi.bairro_id ?? perfilApi.bairro ?? ''),
           whatsapp: perfilApi.telefone || '',
-          instituicao: perfilApi.faculdade_id || 'UFC - Universidade Federal do Ceará',
+          instituicao: String(perfilApi.faculdade_id || ''),
           curso: perfilApi.curso || 'Engenharia de Software',
           campus: campus || 'Quixadá',
           periodoIngresso: perfilApi.periodo_ingresso || '2024.1',
@@ -344,7 +344,7 @@ export default function RenovarVinculoScreen() {
             <View style={styles.footer}>
               <Button
                 mode="contained"
-                onPress={passo === 4 ? handleSubmit(onSubmit) : proximoPasso}
+                onPress={passo === 4 ? handleSubmit(onSubmit) as any : proximoPasso}
                 loading={isLoading}
                 disabled={isLoading}
                 style={styles.primaryButton}

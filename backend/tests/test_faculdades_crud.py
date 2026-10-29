@@ -112,6 +112,9 @@ class FaculdadesCrudUnitTest(unittest.TestCase):
             def add(self, item):
                 pass
 
+            def flush(self):
+                pass
+
             def commit(self):
                 raise IntegrityError("duplicate key", params=None, orig=Exception("uq_faculdade_nome_campus"))
 
@@ -157,6 +160,7 @@ class FaculdadesCrudUnitTest(unittest.TestCase):
         log = self.session.query(LogAuditoriaORM).filter(
             LogAuditoriaORM.entidade == "faculdade",
             LogAuditoriaORM.entidade_id == faculdade_id,
+            LogAuditoriaORM.acao == "INATIVAR",
         ).first()
 
         self.assertIsNotNone(log)
@@ -428,6 +432,7 @@ class FaculdadesApiHttpTest(unittest.IsolatedAsyncioTestCase):
         log = self.session.query(LogAuditoriaORM).filter(
             LogAuditoriaORM.entidade == "faculdade",
             LogAuditoriaORM.entidade_id == faculdade_id,
+            LogAuditoriaORM.acao == "INATIVAR",
         ).first()
         self.assertIsNotNone(log)
         self.assertEqual(log.usuario_id, 1)
@@ -470,13 +475,13 @@ class FaculdadesApiHttpTest(unittest.IsolatedAsyncioTestCase):
         faculdade_id = resposta["data"]["id_faculdade"]
 
         for acao, esperado, total_logs, ativo in (
-            ("ativar", 409, 0, True),
-            ("inativar", 200, 1, False),
-            ("inativar", 409, 1, False),
-            ("ativar", 200, 2, True),
-            ("ativar", 409, 2, True),
-            ("inativar", 200, 3, False),
-            ("inativar", 409, 3, False),
+            ("ativar", 409, 1, True),
+            ("inativar", 200, 2, False),
+            ("inativar", 409, 2, False),
+            ("ativar", 200, 3, True),
+            ("ativar", 409, 3, True),
+            ("inativar", 200, 4, False),
+            ("inativar", 409, 4, False),
         ):
             with self.subTest(acao=acao, esperado=esperado, total_logs=total_logs):
                 status, body = await self.asgi_request(
@@ -499,12 +504,12 @@ class FaculdadesApiHttpTest(unittest.IsolatedAsyncioTestCase):
                 ).order_by(LogAuditoriaORM.id).all()
                 self.assertEqual(len(logs), total_logs)
 
-        self.assertEqual([log.acao for log in logs], ["INATIVAR", "ATIVAR", "INATIVAR"])
+        self.assertEqual([log.acao for log in logs], ["CRIAR", "INATIVAR", "ATIVAR", "INATIVAR"])
         self.assertTrue(all(log.usuario_id == 1 for log in logs))
 
     async def test_listar_faculdades_com_e_sem_filtro(self):
-        await self.asgi_request("/faculdades", payload={"nome": "F1", "campus": "C1"}, method="POST")
-        _, res2 = await self.asgi_request("/faculdades", payload={"nome": "F2", "campus": "C2"}, method="POST")
+        await self.asgi_request("/faculdades", payload={"nome": "Fac1", "campus": "C1"}, method="POST")
+        _, res2 = await self.asgi_request("/faculdades", payload={"nome": "Fac2", "campus": "C2"}, method="POST")
         f2_id = res2["data"]["id_faculdade"]
         await self.asgi_request(f"/faculdades/{f2_id}/inativar", method="PATCH")
 
@@ -612,6 +617,105 @@ class FaculdadesApiHttpTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(status_admin_f2, 200)
         self.assertEqual(body_admin_f2["id_faculdade"], f2_id)
         self.assertFalse(body_admin_f2["ativo"])
+
+
+    async def _criar_http(self, payload):
+        return await self.asgi_request("/faculdades", payload=payload, method="POST")
+
+    @staticmethod
+    def _mensagem_campo(body, campo):
+        return next(d["message"] for d in body["error"]["details"] if d["field"] == campo)
+
+    async def test_limites_de_tamanho_no_cadastro(self):
+        """#261: a API aplica os mesmos limites da tela (nome 3-150, sigla 2-20, campus 2-100)."""
+        base = {"nome_faculdade": "Faculdade Limite", "sigla_faculdade": "FL", "campus_faculdade": "Centro"}
+        casos = [
+            ("nome_faculdade", "nome", "Ab", "Informe o nome da instituição com pelo menos 3 caracteres"),
+            ("nome_faculdade", "nome", "A" * 151, "O nome da instituição deve ter no máximo 150 caracteres"),
+            ("sigla_faculdade", "sigla", "U", "Informe a sigla do nome (ex.: UFC)"),
+            ("sigla_faculdade", "sigla", "U" * 21, "A sigla deve ter no máximo 20 caracteres"),
+            ("campus_faculdade", "campus", "C", "Informe o campus da instituição"),
+            ("campus_faculdade", "campus", "C" * 101, "O campus deve ter no máximo 100 caracteres"),
+        ]
+        for chave, campo, valor, mensagem in casos:
+            with self.subTest(campo=campo, tamanho=len(valor)):
+                status, body = await self._criar_http({**base, chave: valor})
+                self.assertEqual(status, 422)
+                self.assertEqual(self._mensagem_campo(body, campo), mensagem)
+
+        aceitos = [
+            {**base, "nome_faculdade": "Abc", "sigla_faculdade": "AB", "campus_faculdade": "Cs"},
+            {
+                "nome_faculdade": "N" * 150,
+                "sigla_faculdade": "S" * 20,
+                "campus_faculdade": "C" * 100,
+            },
+        ]
+        for payload in aceitos:
+            with self.subTest(payload=payload["nome_faculdade"][:10]):
+                status, _ = await self._criar_http(payload)
+                self.assertEqual(status, 201)
+
+    async def test_limites_de_tamanho_na_edicao(self):
+        """#261: o PATCH valida os campos enviados com os mesmos limites."""
+        _, body = await self._criar_http({"nome": "Faculdade Edicao", "sigla": "FE", "campus": "Centro"})
+        fid = body["data"]["id_faculdade"]
+        casos = [
+            ({"nome_faculdade": "Ab"}, "nome", "Informe o nome da instituição com pelo menos 3 caracteres"),
+            ({"nome_faculdade": "A" * 151}, "nome", "O nome da instituição deve ter no máximo 150 caracteres"),
+            ({"sigla_faculdade": "U"}, "sigla", "Informe a sigla do nome (ex.: UFC)"),
+            ({"sigla_faculdade": "U" * 21}, "sigla", "A sigla deve ter no máximo 20 caracteres"),
+            ({"campus_faculdade": "C"}, "campus", "Informe o campus da instituição"),
+            ({"campus_faculdade": "C" * 101}, "campus", "O campus deve ter no máximo 100 caracteres"),
+        ]
+        for payload, campo, mensagem in casos:
+            with self.subTest(payload=payload):
+                status, body = await self.asgi_request(f"/faculdades/{fid}", payload=payload, method="PATCH")
+                self.assertEqual(status, 422)
+                self.assertEqual(self._mensagem_campo(body, campo), mensagem)
+
+        _, body = await self.asgi_request(f"/faculdades/{fid}", method="GET")
+        self.assertEqual(body["nome_faculdade"], "Faculdade Edicao")
+        self.assertEqual(body["sigla"], "FE")
+        self.assertEqual(body["campus_faculdade"], "Centro")
+
+    async def test_caracteres_invalidos_retornam_mensagem_especifica(self):
+        """#261: a mensagem do validator chega ao cliente, sem virar "Valor inválido."."""
+        base = {"nome_faculdade": "Faculdade Teste", "sigla_faculdade": "FT", "campus_faculdade": "Centro"}
+        casos = [
+            ("nome_faculdade", "nome", "Teste 😀 @#$%", "Use apenas letras, números, espaços, hífen, apóstrofo ou ponto"),
+            ("sigla_faculdade", "sigla", "U F C", "Use apenas letras e números na sigla, sem espaços"),
+            ("campus_faculdade", "campus", "Campus 😀", "Use apenas letras, números, espaços, hífen, apóstrofo ou ponto"),
+        ]
+        for chave, campo, valor, mensagem in casos:
+            with self.subTest(campo=campo):
+                status, body = await self._criar_http({**base, chave: valor})
+                self.assertEqual(status, 422)
+                self.assertEqual(self._mensagem_campo(body, campo), mensagem)
+
+    async def test_sigla_ausente_nao_e_inventada(self):
+        """#259: sem sigla informada, a API grava e devolve vazio, sem derivar do nome."""
+        status, body = await self._criar_http({"nome": "Universidade Legada", "campus": "Centro"})
+        self.assertEqual(status, 201)
+        self.assertIsNone(body["data"]["sigla"])
+
+        fid = body["data"]["id_faculdade"]
+        status, body = await self.asgi_request(f"/faculdades/{fid}", payload={"campus": "Sede"}, method="PATCH")
+        self.assertEqual(status, 200)
+        self.assertIsNone(body["data"]["sigla"])
+
+    async def test_sigla_informada_e_gravada_e_editada(self):
+        """#259: a sigla enviada pelo app (sigla_faculdade) é gravada e atualizada."""
+        status, body = await self._criar_http(
+            {"nome_faculdade": "Universidade Teste", "sigla_faculdade": "UTST", "campus_faculdade": "Centro"}
+        )
+        self.assertEqual(status, 201)
+        fid = body["data"]["id_faculdade"]
+
+        status, _ = await self.asgi_request(f"/faculdades/{fid}", payload={"sigla_faculdade": "NOVA"}, method="PATCH")
+        self.assertEqual(status, 200)
+        _, body = await self.asgi_request(f"/faculdades/{fid}", method="GET")
+        self.assertEqual(body["sigla"], "NOVA")
 
 
 if __name__ == "__main__":

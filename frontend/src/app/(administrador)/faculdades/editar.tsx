@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Button, Snackbar } from 'react-native-paper';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import React, { useState } from 'react';
+import { StyleSheet, View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Text, TextInput, Button } from 'react-native-paper';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, Building2, X } from 'lucide-react-native';
+import { ChevronLeft, Building2 } from 'lucide-react-native';
 
 import { faculdadeSchema, FaculdadeFormData } from '@/schemas/faculdadeSchema';
 import { faculdadeService } from '@/services/faculdadeService';
@@ -16,8 +16,9 @@ export default function EditarFaculdadeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
+  // id da faculdade cujos dados estão no formulário; enquanto não carregar, o formulário não aparece (#256)
+  const [idCarregado, setIdCarregado] = useState<string | null>(null);
+  const [carregando, setCarregando] = useState(true);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -26,6 +27,8 @@ export default function EditarFaculdadeScreen() {
     title: string;
     message: string;
     confirmText?: string;
+    cancelText?: string;
+    confirmColor?: string;
     onConfirm?: () => void;
   }>({
     visible: false,
@@ -41,7 +44,7 @@ export default function EditarFaculdadeScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const { control, handleSubmit, formState: { errors }, reset } = useForm<FaculdadeFormData>({
+  const { control, handleSubmit, formState: { errors, isDirty }, reset, setValue, clearErrors } = useForm<FaculdadeFormData>({
     resolver: zodResolver(faculdadeSchema),
     defaultValues: {
       nome: '',
@@ -50,36 +53,97 @@ export default function EditarFaculdadeScreen() {
     },
   });
 
-  useEffect(() => {
-    async function carregarDados() {
-      if (!id) return;
-      try {
-        const f = await faculdadeService.obterFaculdadePorId(Number(id));
-        if (f) {
+  const voltarParaListagem = () => {
+    closePopup();
+    router.replace('/(administrador)/faculdades');
+  };
+
+  const limparFormulario = React.useCallback(() => {
+    setIdCarregado(null);
+    reset({ nome: '', sigla: '', campus: '' });
+  }, [reset]);
+
+  // Ao ganhar foco, descarta o que havia no formulário e carrega os dados salvos do id atual;
+  // ao sair, limpa de novo, para que um rascunho não seja enviado para outra faculdade (#256)
+  useFocusEffect(
+    React.useCallback(() => {
+      let isMounted = true;
+      limparFormulario();
+      setCarregando(true);
+
+      async function carregarDadosOficiais() {
+        if (!id) return;
+        try {
+          const f = await faculdadeService.obterFaculdadePorId(Number(id));
+          if (!isMounted) return;
+          if (!f) throw new Error('Faculdade não encontrada.');
           reset({
             nome: f.nome,
             sigla: f.sigla,
             campus: f.campus,
           });
+          setIdCarregado(id);
+        } catch (err: any) {
+          if (!isMounted) return;
+          const msg = getErrorMessage(err, 'Erro ao carregar dados da faculdade.');
+          showPopup({
+            type: 'error',
+            title: err?.response ? 'Aviso' : 'Erro de Conexão',
+            message: msg,
+            confirmText: 'Entendido',
+          });
+        } finally {
+          if (isMounted) setCarregando(false);
         }
-      } catch (err) {
-        console.warn('Erro ao carregar dados da faculdade:', err);
       }
+
+      carregarDadosOficiais();
+
+      return () => {
+        isMounted = false;
+        limparFormulario();
+      };
+    }, [id, reset, limparFormulario])
+  );
+
+  const dadosCarregados = !!id && idCarregado === id;
+
+  // Campo apagado não mostra erro; a mensagem de obrigatório só aparece ao salvar
+  const alterarCampo = (campo: keyof FaculdadeFormData, texto: string) => {
+    const preenchido = texto.trim() !== '';
+    setValue(campo, texto, { shouldDirty: true, shouldValidate: preenchido });
+    if (!preenchido) clearErrors(campo);
+  };
+
+  const handleBack = () => {
+    if (isDirty) {
+      showPopup({
+        type: 'warning',
+        title: 'Sair desta tela?',
+        message: 'As alterações não salvas serão perdidas.',
+        confirmText: 'Sim, sair',
+        cancelText: 'Continuar aqui',
+        confirmColor: '#B00020',
+        onConfirm: voltarParaListagem,
+      });
+    } else {
+      voltarParaListagem();
     }
-    carregarDados();
-  }, [id, reset]);
+  };
 
   const onSubmit = async (dados: FaculdadeFormData) => {
-    if (!id) return;
+    if (!id || idCarregado !== id) return;
     setIsLoading(true);
     try {
       await faculdadeService.atualizarFaculdade(Number(id), dados.nome, dados.sigla, dados.campus);
       setIsLoading(false);
-      setSnackbarMessage('Faculdade alterada com sucesso');
-      setSnackbarVisivel(true);
-      setTimeout(() => {
-        router.replace('/(administrador)/faculdades');
-      }, 1200);
+      showPopup({
+        type: 'success',
+        title: 'Operação realizada com sucesso',
+        message: 'As alterações da faculdade foram salvas.',
+        confirmText: 'OK',
+        onConfirm: voltarParaListagem,
+      });
     } catch (error: any) {
       setIsLoading(false);
       const msg = getErrorMessage(error, 'Erro ao atualizar faculdade.');
@@ -96,7 +160,7 @@ export default function EditarFaculdadeScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={handleBack}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Editar Faculdade</Text>
@@ -109,23 +173,30 @@ export default function EditarFaculdadeScreen() {
         title={popup.title}
         message={popup.message}
         confirmText={popup.confirmText}
+        cancelText={popup.cancelText}
+        confirmColor={popup.confirmColor}
         onConfirm={popup.onConfirm}
         onDismiss={closePopup}
       />
 
+      {!dadosCarregados ? (
+        <View style={styles.loading}>
+          {carregando && <ActivityIndicator size="large" color="#3E5F90" />}
+        </View>
+      ) : (
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Nome da Instituição */}
         <View style={styles.inputBox}>
           <Controller
             control={control}
             name="nome"
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { value } }) => (
               <TextInput
                 label="Nome da Instituição *"
                 mode="outlined"
                 placeholder="Nome da instituição"
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(texto) => alterarCampo('nome', texto)}
                 error={!!errors.nome}
                 left={<TextInput.Icon icon={() => <Building2 size={20} color="#666" />} />}
                 style={styles.input}
@@ -140,13 +211,13 @@ export default function EditarFaculdadeScreen() {
           <Controller
             control={control}
             name="sigla"
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { value } }) => (
               <TextInput
                 label="Sigla do Nome *"
                 mode="outlined"
                 placeholder="Sigla do nome (ex.: UFC)"
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(texto) => alterarCampo('sigla', texto)}
                 error={!!errors.sigla}
                 style={styles.input}
               />
@@ -160,13 +231,13 @@ export default function EditarFaculdadeScreen() {
           <Controller
             control={control}
             name="campus"
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { value } }) => (
               <TextInput
                 label="Campus *"
                 mode="outlined"
                 placeholder="Campus"
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(texto) => alterarCampo('campus', texto)}
                 error={!!errors.campus}
                 style={styles.input}
               />
@@ -178,7 +249,7 @@ export default function EditarFaculdadeScreen() {
         {/* Botão Salvar Alterações */}
         <Button
           mode="contained"
-          onPress={handleSubmit(onSubmit)}
+          onPress={handleSubmit(onSubmit) as any}
           loading={isLoading}
           disabled={isLoading}
           style={styles.saveButton}
@@ -187,20 +258,7 @@ export default function EditarFaculdadeScreen() {
           Salvar Alterações
         </Button>
       </ScrollView>
-
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
+      )}
     </View>
   );
 }
@@ -225,6 +283,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 40,
   },
+  loading: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   inputBox: {
     marginBottom: 20,
   },
@@ -243,11 +306,5 @@ const styles = StyleSheet.create({
   },
   buttonContent: {
     height: 55,
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });

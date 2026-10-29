@@ -33,9 +33,9 @@ def bairro(bairro_id=1, nome="Centro", ativo=True):
     return BairroORM(bairro_id=bairro_id, nome=nome, ativo=ativo)
 
 
-def faculdade(faculdade_id=1, nome="UFC", ativo=True):
+def faculdade(faculdade_id=1, nome="UFC", ativo=True, sigla=None):
     return FaculdadeORM(
-        id_faculdade=faculdade_id, nome_faculdade=nome, campus_faculdade="Quixadá", ativo=ativo
+        id_faculdade=faculdade_id, nome_faculdade=nome, sigla=sigla, campus_faculdade="Quixadá", ativo=ativo
     )
 
 
@@ -554,14 +554,14 @@ class SerializacaoTest(RepositoryUnitBase):
         rota = rota_em_memoria()
         rota.horario_saida, rota.horario_retorno = time(5, 5), time(23, 59, 30)
         rota.bairros = [bairro(2, "campo velho"), bairro(1, "Centro"), bairro(3, "Alto")]
-        rota.faculdades_ida = [faculdade(2, "UECE"), faculdade(1, "ifce")]
+        rota.faculdades_ida = [faculdade(2, "UECE"), faculdade(1, "ifce", sigla="IFCE")]
 
         dados = self.repository._serializar(rota)
 
         self.assertEqual((dados["horario_saida"], dados["horario_retorno"]), ("05:05", "23:59"))
         self.assertEqual([b["nome"] for b in dados["bairros"]], ["Alto", "campo velho", "Centro"])
         self.assertEqual([f["nome"] for f in dados["faculdades_ida"]], ["ifce", "UECE"])
-        self.assertEqual(dados["faculdades_ida"][0], {"id": 1, "nome": "ifce", "campus": "Quixadá"})
+        self.assertEqual(dados["faculdades_ida"][0], {"id": 1, "nome": "ifce", "sigla": "IFCE", "campus": "Quixadá"})
         self.assertIs(dados["ativo"], True)
 
     def test_snapshot_e_json_estavel_com_ids_ordenados(self):

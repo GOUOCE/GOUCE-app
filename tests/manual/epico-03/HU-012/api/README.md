@@ -1,15 +1,5 @@
 # Como executar os testes manuais de API
 
-## Execução de 27/10/2026
-
-13 casos: 8 aprovados, 2 falharam, 2 parciais e 1 bloqueado. Resultados completos em [API-HU-012.md](API-HU-012.md). As evidências JSON de requisição/resposta estão diretamente nas [issues dos defeitos](issues/), também publicadas no GitHub. Os demais casos mantêm seus resultados na suíte.
-
-Execução HTTP real com login e PostgreSQL/MinIO isolados; sem mocks. Foram registradas 123 chamadas HTTP, incluindo a preparação da massa. O caso de agendamentos ficou bloqueado pela ausência da HU-013. A conta ativa de representante foi autenticada com os perfis legados `aluno/supervisor`, conforme registrado no resultado do caso de acesso.
-
-O commit da aplicação testada foi `23d1063f09f13cc195da7e45422581f73e2ae6da`; o roteiro veio do planejamento `939921e3`.
-
----
-
 Passo a passo para executar a suíte, registrar os resultados e reportar falhas. Os exemplos usam
 a HU-012; troque pelo número da HU que você está testando.
 

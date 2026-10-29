@@ -2,426 +2,508 @@
 
 ## Identificação da suíte
 
-| Campo | Valor |
-| --- | --- |
-| Módulo | Gestão de Rotas e Horários (EP-003) |
-| Funcionalidade | HU-011 — Gerenciamento de Rotas Principais e Horários |
-| Camada | UI |
-| Tipo de teste | Funcional manual — suíte essencial (baseada em risco), planejada antes da implementação |
-| Tela | Administrador → Cadastros → Rotas principais (alvo atual de navegação, ainda sem tela identificada). Rótulos internos baseados no BDD, sujeitos à confirmação na entrega. |
-| Ambiente | A preencher — URL, branch e commit da implementação em execução, celular (Expo Go) ou web http://localhost:3000 |
-| Total de casos | 13 |
-| Última execução | Não realizada |
-| Testador | Cauan Ricardo |
+| Campo           | Valor |
+| --------------- | ----- |
+| Módulo          | Gestão de Rotas e Horários (EP-003) |
+| Funcionalidade  | HU-011 — Gerenciamento de Rotas Principais e Horários |
+| Camada          | UI |
+| Tipo de teste   | Funcional manual — suíte essencial (baseada em risco) |
+| Tela            | Painel do administrador → aba **Cadastros** → **Rotas principais** (listagem **Rotas Principais**, **Cadastrar Rota** e **Editar Rota**) |
+| Ambiente        | Desenvolvimento — app web (`http://localhost:3000`) e API local (`http://127.0.0.1:18011`), branch `test/execucao-ui-hu-011` a partir da `develop` (`e5d620d8`), com o front do [PR #194](https://github.com/GOUOCE/GOUCE-app/pull/194) (`feat/front-hu011`, `e7343e40`) aplicado só no working tree (sem as mudanças de `package.json` e `app.json` do PR, que sobem o Expo para o SDK 58) |
+| Total de casos  | 14 |
+| Última execução | 2026-10-29 |
+| Testador        | Cauan Ricardo |
 
 ## Resultado geral
 
-| Situação | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 13 | 0 | 0 | 0 | 13 |
+| Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
+| --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
+| ❌ Reprovada | 14 | 2 | 12 | 0 | 0 |
 
 ## Pré-condições
 
-| ID | Descrição |
-| --- | --- |
-| PC-01 | A implementação da camada deve existir na branch escolhida para execução; na base `5554bc90` ela ainda não foi identificada. Este é só planejamento, sem stack/testes. Na execução futura, usar ambiente isolado com banco de teste; sem a funcionalidade, marcar a parte dependente como 🚫, não como falha reproduzida nesta rodada. |
-| PC-02 | Administrador A do seed; autenticação por `POST /auth/login`, guardando id e horário do executor para auditoria. App no celular (Expo Go) ou web, sem compartilhar armazenamento de sessão entre administrador e outros perfis. |
-| PC-03 | Credenciais de aluno aprovado/ativo e representante ativo para autorização. Se não conseguir autenticar representante, registrar motivo e bloquear só essa parte; sessão vencida exige novo login antes de repetir. |
-| PC-04 | Massa local de teste, com ids registrados: B1 Centro ativo/P1 Praça José de Barros; B2 Campo Velho ativo/P2 Escola Coronel Virgílio Távora; B0 Alto São Francisco inativo; F1 UFC/Quixadá, F2 IFCE/Quixadá e F3 UECE/Quixadá ativas; F0 Unicatólica/Quixadá inativa. RP0 Rota Antiga inativa sem complementar vinculada; RP1 criada no CT-002, RP2 no CT-003 e RP3 no CT-004. Em falha anterior, a IA pode preparar estado independente por API/banco local, registrando origem e sem aprovar a ação que falhou. |
-| PC-05 | **Apoio da IA (Claude Code)** para conferir na API/banco os dados realmente gravados, vínculos e auditoria, e preparar massa quando a UI/API não permitir. Comparar entidades pelos ids reais, não apenas pelo nome exibido. |
-| PC-06 | Confirmar a rota final e os controles da tela entregue. Alvo atual do card: web http://localhost:3000/cadastros/rotas-principais; Expo exp://<IP do computador>:8081/--/cadastros/rotas-principais. Esses links são intenção de navegação, não existência confirmada de tela. Confirmar como bairros/pontos são selecionados. |
-| PC-07 | HU-013 para agenda futura e novos agendamentos; dados/módulos históricos para RN-004. Registrar datas/fuso. Regra de seleção de inativa e demais decisões abertas devem ser confirmadas antes de julgar a parte correspondente; ausência de decisão é impedimento documentado. |
+| ID    | Descrição |
+| ----- | --------- |
+| PC-01 | Aplicativo aberto com a API e o banco disponíveis. **Banco de teste sem rotas cadastradas**, para o CT-001 e o CT-010 poderem expor o uso de dados de exemplo no app (a primeira rota criada recebe o `id` 1). |
+| PC-02 | **Administrador A** logado: aba **Cadastros** → **Rotas principais**. |
+| PC-03 | Credenciais de um **aluno aprovado e ativo** e de um **representante**, para o CT-013. |
+| PC-04 | Massa de base preparada pela IA antes da execução: bairros **Centro** e **Campo Velho** ativos e **Alto São Francisco** inativo; faculdades **UFC**, **IFCE** e **UECE** (Campus Quixadá) ativas e **Unicatólica** inativa. |
+| PC-05 | Massa de rotas criada pela própria suíte: **Rota Centro - UFC** (CT-002) e **Rota Integrada** (CT-003). Depois do CT-003, a IA cria pela API da HU-012 a complementar ativa **Van Trevo** ligada à **Rota Integrada** (usada nos CT-007 e CT-011). |
+| PC-06 | Apoio da IA (Claude Code) para conferir na API ou no banco, quando o caso pedir, se o que a tela mostra foi mesmo gravado. |
+| PC-07 | Se uma ação falhar com “não autorizado” por sessão vencida, sair, entrar de novo e repetir o caso. |
 
 ## Resumo da execução
 
-São **13 casos essenciais**, nas seções A/B/C. Registrar cada variação. CT-001 começa pelo vazio e repete consultas após a massa. Massa criada diretamente pela IA não aprova a operação que se pretende testar. Os passos referem-se a ações do BDD; adequar rótulos à entrega sem mudar os resultados esperados.
+Executar na ordem abaixo. São **14 casos essenciais**, em três seções. Os IDs completos usam o prefixo `CT-HU011-UI-`, numerados de 001 a 014. As regras marcadas com **#208** vêm das decisões do PO na [issue #208](https://github.com/GOUOCE/GOUCE-app/issues/208).
 
 ### Seção A — Listagem e cadastro
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU011-UI-001 | Acessar rotas, conferir horários e lista vazia | Cadastros → Rotas principais; sem rotas; depois RP1 ativa e RP0 inativa | Lista real; horários corretos; acesso aos dois estados | ⏳ PENDENTE | Não executado. |
-| CT-HU011-UI-002 | Cadastrar rota mínima e conferir persistência | Rota Centro - UFC; saída 06:30; retorno 17:30; Centro; UFC ida/volta | Sucesso e mesmos dados após reabrir e consultar API | ⏳ PENDENTE | Não executado. |
-| CT-HU011-UI-003 | Cadastrar com vários bairros e faculdades | Rota Integrada; B1+B2; F1+F2 ida/volta; 06:30/17:30 | Todas as seleções gravadas e exibidas sem perda | ⏳ PENDENTE | Não executado. |
-| CT-HU011-UI-004 | Configurar volta diferente da ida | RP3: ida UFC+IFCE, volta só UFC; depois ida UFC e volta UECE | Independência persistida, sem copiar seleções entre sentidos | ⏳ PENDENTE | Não executado. |
-| CT-HU011-UI-005 | Validar obrigatórios e retirada do último vínculo | Nome/saída/retorno vazios; zero bairros; zero faculdades da ida; controle com um | Destaque do campo; salvamento bloqueado; dados anteriores preservados | ⏳ PENDENTE | Não executado. |
-| CT-HU011-UI-006 | Selecionar somente base ativa e tratar mudança após seleção | B0 inativo; F0 inativa; B1/F1 ativos; base inativada depois de selecionada | Inativos fora das opções; vínculo inválido bloqueado | ⏳ PENDENTE | Não executado. |
-| CT-HU011-UI-007 | Preencher horários sem troca de turno ou conversão silenciosa | 06:30/17:30; minuto 60/texto se possível; 00:00/23:59 e 23:00→01:00 para caracterizar | Horas preservadas; erros compreensíveis; cronologia sem regra presumida | ⏳ PENDENTE | Não executado. |
+| CT-HU011-UI-001 | Acessar a gestão de rotas principais | Cadastros → Rotas principais, banco sem rotas | Listagem só de ativas com horários; busca; “Mostrar inativos” desligada; sem dados de exemplo | ❌ FALHOU | Chave **Mostrar inativos** começa ligada (#335); lista de exemplo `Linha 01–03` no código (#333); seta volta ao Painel (#343). |
+| CT-HU011-UI-002 | Cadastrar rota principal | `Rota Centro - UFC`; saída e retorno; UFC na ida e na volta; Centro | “Operação realizada com sucesso”; na listagem; continua após reabrir o app e existe na API | ❌ FALHOU | Gravou certo (rota `id` 1); sucesso em barra preta, texto fora do padrão (#336); tela guarda dados antigos (#341). |
+| CT-HU011-UI-003 | Vários vínculos e volta independente | `Rota Integrada`: 3 faculdades na ida, 1 na volta; 2 bairros | Seleções mantidas; ida e volta gravadas separadas | ❌ FALHOU | Volta gravada como IFCE por pré-seleção (#337); nome completo no lugar de `SIGLA - Campus` (#344); checkbox lento (#345); modal de bairro e lixeira (#346). |
+| CT-HU011-UI-004 | Seleções só com bairros e faculdades ativos | Listas de faculdades (ida e volta) e de bairros | Ativos da base aparecem; inativos e nomes inexistentes no banco não aparecem | ❌ FALHOU | Só ativos aparecem ✅ (conferido na API); as listas só carregam ao abrir a tela e há lista de exemplo (#333). |
+| CT-HU011-UI-005 | Campos obrigatórios | Formulário vazio; sem faculdade na volta; sem bairro; nome em branco | Campos destacados com mensagem; nada salvo | ❌ FALHOU | Tudo vem pré-marcado e só o nome basta para salvar (#337); nome sem máscara (#338, #339); erro reaparece ao apagar (#338). |
+| CT-HU011-UI-006 | Horários livres e retorno depois da saída (#208) | Saída 13:15 e retorno 22:40; retorno antes da saída | Qualquer horário `HH:mm` pode ser escolhido; retorno ≤ saída sinalizado no campo | ❌ FALHOU | Horários só em lista de 6 opções (#340). Retorno antes da saída: 🚫 bloqueado, a lista não permite montar o cenário. |
+| CT-HU011-UI-007 | Nome de rota duplicado (#208) | Nome igual com variação de maiúsculas e espaços; nome de complementar | Mensagem de nome em uso; nada criado | ❌ FALHOU | A API bloqueia as 4 variações ✅; o app mostra outro texto e esconde a mensagem da API (#347). |
 
 ### Seção B — Edição, inativação e reativação
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU011-UI-008 | Editar rota, horários e vínculos e sair sem salvar | RP1 → Rota Campo Velho - IFCE; 06:00/18:00; B2; ida F2/volta F3 | Mesmo id; dados e listas corretos; alterações não salvas descartadas | ⏳ PENDENTE | Não executado. |
-| CT-HU011-UI-009 | Cancelar e confirmar inativação sem agenda futura | RP1 sem futuro nem complementar ativa; registro/log anteriores | Cancelar não altera; confirmar faz soft delete só da rota escolhida | ⏳ PENDENTE | Não executado. |
-| CT-HU011-UI-010 | Mostrar inativas e reativar | RP0 inativa, independente de eventual falha do CT-009 | Registro identificado e mesmo id reativado com persistência | ⏳ PENDENTE | Não executado. |
+| CT-HU011-UI-008 | Editar rota | Trocar nome, horários, faculdades e bairros; nome em uso | Sucesso e listagem atualizada; dados carregados certos; nome em uso bloqueado | ❌ FALHOU | Gravou certo; sucesso em barra preta (#336); checkbox lento (#345); texto do nome em uso (#347). |
+| CT-HU011-UI-009 | Sair sem salvar | Alterar o nome em Editar e tocar na seta | Pedir confirmação; nada salvo | ❌ FALHOU | Edição sai e salva sem nenhuma confirmação (#342). |
+| CT-HU011-UI-010 | Inativar, mostrar inativos e reativar | Cancelar e confirmar a inativação da rota `id` 1; ligar a chave; reativar | Sucesso nas duas; inativa identificada; nenhum bloqueio por dado de exemplo | ❌ FALHOU | Rota `id` 1 barrada por dado de exemplo (#334); sucesso em barra preta (#336). |
+| CT-HU011-UI-011 | Bloqueios de inativação e reativação (#208) | Rota com complementar ativa; rota com bairro inativo | Mensagem clara de cada bloqueio; rota mantém o estado | ❌ FALHOU | A API devolve a mensagem certa; o app mostra texto técnico e, na reativação, nenhum aviso (#348). |
+| CT-HU011-UI-012 | Bairro e faculdade usados em rota ativa (#208) | Inativar Centro e UFC nas telas de Bairros e Faculdades | Bloqueio com as mensagens definidas; base continua ativa | ✅ PASSOU | Os dois bloqueios aparecem como “Inativação Bloqueada” e a base continua ativa. |
 
-### Seção C — Integração, acesso e robustez
+### Seção C — Acesso e robustez
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU011-UI-011 | Impedir acesso administrativo de aluno e representante | Menus e link direto pretendido /cadastros/rotas-principais | Sem menu de gestão; acesso direto sem ações administrativas | ⏳ PENDENTE | Não executado. |
-| CT-HU011-UI-012 | Falha de conexão e rejeição da API sem sucesso falso | Lista; cadastro de Rota Offline QA; edição/status em registro real | Erro visível; campos preservados; lista reconciliada com a API | ⏳ PENDENTE | Não executado. |
-| CT-HU011-UI-013 | Agenda futura, histórico e indisponibilidade de inativa | Rota com agenda amanhã; outra só com passado; rota inativa; HU-013 | Bloqueio real na futura; histórico preservado; seleção ainda a confirmar | ⏳ PENDENTE | HU-013, histórico real e decisão de seleção; não executado. |
+| CT-HU011-UI-013 | Aluno e representante sem acesso | Menus do aluno e do representante; link `rotas-principais` | Menu não exibido; link mostra Acesso Negado | ✅ PASSOU | Aluno e representante não veem o menu e os três links mostram acesso negado (403). |
+| CT-HU011-UI-014 | Falha de conexão e dados de exemplo | Servidor/Wi-Fi desligado ao listar, cadastrar, editar e inativar | Mensagem de conexão; app não finge sucesso nem mostra rotas que não existem | ❌ FALHOU | Sem servidor, o app finge sucesso e mostra rotas de exemplo (#333). |
 
 ## Detalhamento dos casos
 
 ### Seção A — Listagem e cadastro
 
-#### CT-HU011-UI-001 — Acessar rotas, conferir horários e lista vazia
+#### CT-HU011-UI-001 — Acessar a gestão de rotas principais
 
-**Dados de entrada:** Cadastros → Rotas principais; sem rotas; depois RP1 ativa e RP0 inativa.
+**Dados de entrada:** Administrador A logado no Painel, com o banco sem rotas (PC-01). Repetir os passos 3 e 4 depois do CT-003.
 
 **Passos**
 
-1. Conferir PC-01; como administrador, tocar em Cadastros → Rotas principais. Se a tela ainda não existir, registrar 🚫 e não continuar como se o formulário tivesse sido aberto.
-2. Antes da massa, conferir lista vazia com apoio da IA (PC-05); depois preparar RP0 e executar CT-002 para obter RP1.
-3. Reabrir a lista, conferir nome/saída/retorno, mecanismo de mostrar inativas e ação de novo cadastro; anotar o estado inicial do filtro.
-4. Voltar pela navegação da tela e conferir retorno ao painel de cadastros.
+1. Tocar na aba **Cadastros** e no card **Rotas principais**.
+2. Conferir os elementos da tela e a posição inicial da chave **Mostrar inativos**.
+3. Digitar parte de um nome em **Buscar por nome**; depois o mesmo texto em maiúsculas; depois um texto inexistente.
+4. Conferir o que cada rota mostra.
+5. Tocar na seta de voltar.
 
 **Resultado esperado**
 
-- Nenhum exemplo apresentado como rota real; as horas exibidas correspondem à API.
-- Ativas e inativas acessíveis ao administrador (AC-01, AC-09). O BDD oculta inativas inicialmente com uma chave, mas o requisito cita ambas na listagem; o padrão inicial fica pendente de alinhamento.
-- Rótulos de cadastro/edição e posição de controles são referências do BDD, não desenho final implementado. Ausência de tela não é defeito já reproduzido desta rodada.
+- O card abre a listagem **Rotas Principais** (não uma tela de erro ou “não encontrada”).
+- Com o banco **sem rotas**, a listagem fica vazia com “Nenhuma rota principal ativa encontrada.”. Se aparecerem `Linha 01 - Centro`, `Linha 02 - Bairro Novo` ou `Linha 03 - Vila Antiga`, que não existem no banco, são dados de exemplo do app: registrar como falha.
+- A chave **Mostrar inativos** começa **desligada**; só ativas aparecem (AC-01, AC-09).
+- Cada rota mostra nome e horários de saída e retorno (AC-01).
+- A busca filtra sem diferenciar maiúsculas; sem resultado, aparece a mensagem de lista vazia.
+- O botão **Nova** leva ao cadastro e a seta volta para **Cadastros**.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Card abre a listagem; busca filtra sem diferenciar maiúsculas e sem resultado mostra lista vazia ✅.
+- A chave **Mostrar inativos** abriu **ligada** (esperado: desligada) → #335.
+- A seta de voltar leva ao **Painel**, não a **Cadastros** → #343.
+- Com o banco sem rotas, o código mostra `Linha 01 - Centro`, `Linha 02 - Bairro Novo` e `Linha 03 - Vila Antiga` (`listaApi.length > 0 ? listaApi : ROTAS_PRINCIPAIS_MOCK`) → #333. Resultado por leitura do código e conferência na API; o testador dispensou a execução na tela por a falha já estar clara no código.
+- Status: ❌ FALHOU.
 
 ---
 
-#### CT-HU011-UI-002 — Cadastrar rota mínima e conferir persistência
+#### CT-HU011-UI-002 — Cadastrar rota principal
 
-**Dados de entrada:** Rota Centro - UFC; saída 06:30; retorno 17:30; Centro; UFC ida/volta.
+**Dados de entrada:** Nome `Rota Centro - UFC`; saída `06:30`; retorno `17:30`; **Faculdades de Ida** UFC; **Faculdades de Volta** UFC; bairro vinculado Centro.
 
 **Passos**
 
-1. Abrir Nova Rota (ou ação equivalente confirmada na implementação); preencher nome, saída e retorno.
-2. Vincular Centro e UFC/Quixadá na ida e na volta; se a tela expuser pontos, selecionar P1 do Centro conforme PC-06.
-3. Salvar; anotar a confirmação e conferir a listagem. Se houver diálogo, confirmar a operação.
-4. Fechar/reabrir o app, ou recarregar a web; pedir à IA para conferir id, dados e associações na API/banco (PC-05).
+1. Tocar em **Nova**, preencher os campos e vincular o bairro em **Vincular bairro**.
+2. Tocar em **Finalizar cadastro**, conferir a confirmação e confirmar; anotar a mensagem exibida.
+3. Conferir a listagem.
+4. **Fechar o app por completo e abrir de novo** (na web, recarregar a página); voltar à listagem.
+5. Pedir à IA para conferir na API (`GET /rotas-principais`) se a rota foi gravada com horários, faculdades e bairro.
 
 **Resultado esperado**
 
-- Rota criada ativa, com nome, horários e vínculos corretos (AC-02); não exigir veículo ou motorista nesta HU.
-- Mensagem de sucesso e lista atualizada conforme fluxo/BDD; registrar o texto exato. O BDD usa “Operação realizada com sucesso”.
-- Registro continua depois de reabrir e existe na API: resultado só em memória não aprova o caso.
+- Pedir confirmação antes de salvar.
+- Exibir “Operação realizada com sucesso” e voltar à listagem com a rota entre as ativas (AC-02, AC-07). Registrar o texto exato.
+- Depois de reabrir o app, a rota continua na listagem.
+- A rota existe na API com os dados da tela: o cadastro foi gravado no banco, e não só no app.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Rota cadastrada e conferida na API: `Rota Centro - UFC`, 06:30 / 17:30, UFC na ida e na volta, bairro Centro ✅.
+- A confirmação aparece como barra preta (Snackbar) com “Rota cadastrada com sucesso”, em vez do pop-up “Operação realizada com sucesso” → #336.
+- Ao abrir **Nova** de novo, o formulário guarda o que foi digitado antes → #341.
+- Status: ❌ FALHOU.
 
 ---
 
-#### CT-HU011-UI-003 — Cadastrar com vários bairros e faculdades
+#### CT-HU011-UI-003 — Vários vínculos e volta independente
 
-**Dados de entrada:** Rota Integrada; B1+B2; F1+F2 ida/volta; 06:30/17:30.
+**Dados de entrada:** Nome `Rota Integrada`; saída e retorno quaisquer válidos; **Faculdades de Ida** UFC, IFCE e UECE; **Faculdades de Volta** só UFC; bairros Centro e Campo Velho.
 
 **Passos**
 
-1. Abrir nova rota e preencher os dados de RP2; selecionar Centro e Campo Velho, UFC e IFCE na ida e na volta.
-2. Sair e voltar aos seletores antes de salvar para conferir que selecionar o segundo item não apaga o primeiro.
-3. Salvar, reabrir e pedir à IA para conferir todos os vínculos e os dados de RP1 (PC-05).
+1. Tocar em **Nova** e marcar as três faculdades na ida e só a UFC na volta.
+2. Vincular os dois bairros, um de cada vez; tentar vincular o Centro de novo.
+3. Desvincular e vincular de novo o Campo Velho.
+4. Finalizar o cadastro e abrir a rota em **Editar**.
+5. Pedir à IA para conferir na API as listas de ida, volta e bairros.
 
 **Resultado esperado**
 
-- Mais de um bairro e faculdade aceitos (AC-02 e BDD).
-- RP2 mantém o conjunto completo nos dois sentidos; não guardar só o último item nem transferir uma seleção entre ida/volta.
-- Os dados das outras rotas e das entidades-base não mudam. Não exigir ordem de passagem não definida.
+- O resumo de cada campo de faculdades mostra a quantidade e as instituições marcadas, identificáveis pelo nome ou sigla.
+- Marcar a ida **não** marca nem limita a volta (AC-10; #208, item 3).
+- O mesmo bairro não entra duas vezes; desvincular retira só o bairro escolhido.
+- Na edição e na API: três faculdades na ida, uma na volta e dois bairros (AC-02).
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Rota `Rota Integrada` cadastrada com 3 faculdades na ida e 2 bairros ✅, mas a API mostra a **volta = IFCE** (esperado: só UFC). A volta já vinha marcada com a primeira faculdade e não foi desmarcada → #337.
+- Os campos de faculdade mostram o nome completo, sem o formato `SIGLA - Campus` da HU-010/HU-030 → #344.
+- Os checkboxes das faculdades de ida e volta demoram muito para marcar → #345.
+- O modal **Vincular bairro** lista os nomes como texto azul/negrito, sem marcação de escolhido (parece uma chave); a lixeira remove o bairro sem pedir confirmação → #346.
+- Status: ❌ FALHOU.
 
 ---
 
-#### CT-HU011-UI-004 — Configurar volta diferente da ida
+#### CT-HU011-UI-004 — Seleções só com bairros e faculdades ativos
 
-**Dados de entrada:** RP3: ida UFC+IFCE, volta só UFC; depois ida UFC e volta UECE.
+**Dados de entrada:** Massa da PC-04 (Alto São Francisco e Unicatólica inativos).
 
 **Passos**
 
-1. Cadastrar RP3 com B1, 06:30/17:30, ida F1+F2 e volta F1.
-2. Reabrir e conferir os dois seletores; editar para ida F1 e volta F3.
-3. Salvar/reabrir e pedir à IA para confirmar as associações por sentido no banco/API (PC-05).
+1. Em **Nova**, abrir **Faculdades de Ida**, **Faculdades de Volta** e **Vincular bairro**; anotar as opções.
+2. Pedir à IA para cadastrar uma faculdade nova ativa pela API; voltar e abrir **Nova** de novo.
+3. Comparar as opções com `GET /rotas-principais/opcoes`.
 
 **Resultado esperado**
 
-- Volta pode diferir da ida (AC-10), inclusive faculdade exclusiva na volta pela independência expressa no requisito.
-- Modificar a ida não preenche a volta automaticamente nem obriga os dois conjuntos a coincidirem.
-- Este caso mantém a volta preenchida: esvaziá-la exige decisão sobre obrigatoriedade ainda ausente no requisito.
+- Aparecem só bairros e faculdades **ativos** do banco; Alto São Francisco e Unicatólica não aparecem (AC-03, FA-002; #207, item 7).
+- A faculdade nova aparece sem reiniciar o app.
+- Não aparecem instituições ou bairros que não existem no banco (por exemplo `Universidade Estadual do Ceará` sem cadastro, `Uniateneu Inativa`, `Vila Antiga Inativa`): seriam dados de exemplo do app.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `GET /rotas-principais/opcoes` devolve só UFC, IFCE, UECE e Centro, Campo Velho (ativos), e a tela mostra as mesmas opções ✅.
+- As opções são carregadas uma única vez ao abrir a tela (`useEffect` sem recarga): uma faculdade criada depois não aparece sem recarregar → #333.
+- Se `/opcoes` falhar, o serviço troca por `FACULDADES_MOCK` e `BAIRROS_MOCK` (inclui `Uniateneu Inativa`) → #333. Resultado por leitura do código e conferência na API; o testador dispensou a execução na tela por a falha já estar clara no código.
+- Status: ❌ FALHOU.
 
 ---
 
-#### CT-HU011-UI-005 — Validar obrigatórios e retirada do último vínculo
+#### CT-HU011-UI-005 — Campos obrigatórios
 
-**Dados de entrada:** Nome/saída/retorno vazios; zero bairros; zero faculdades da ida; controle com um.
+**Dados de entrada:**
+
+1. Formulário vazio.
+2. Tudo preenchido, menos a faculdade da volta.
+3. Tudo preenchido, sem bairro vinculado.
+4. Nome só com espaços.
 
 **Passos**
 
-1. Na criação, deixar um obrigatório vazio por vez e preencher corretamente os demais; testar nome só com espaços.
-2. Na edição de RP1, esvaziar nome/horários por vez, retirar o último bairro e depois a última faculdade da ida, mantendo a volta preenchida.
-3. Tentar salvar cada variação; reabrir o registro entre tentativas e pedir à IA para conferir ausência de alterações/criações (PC-05).
+1. Tocar em **Finalizar cadastro** em cada situação.
+2. Conferir se a listagem e a API continuam sem rota nova.
 
 **Resultado esperado**
 
-- Campo obrigatório destacado e orientação em português; não salvar cadastro/edição incompleto (AC-08, FA-003).
-- Um bairro e uma faculdade da ida são o controle mínimo do BDD; não perder o último vínculo sem avisar.
-- Não acrescentar obrigatoriedade da volta, mínimo de caracteres do nome nem limites máximos não definidos; anotar a pendência da volta.
+- O cadastro não é enviado; cada campo vazio fica **destacado** com mensagem própria (AC-08, FA-003): nome, horário de saída, horário de retorno, faculdade da ida, faculdade da **volta** (#208, item 3) e bairro.
+- Nome só com espaços conta como vazio.
+- Ao preencher o campo, o destaque some.
+- Nenhuma rota é criada.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Ao abrir **Nova**, já vêm marcadas todas as faculdades na ida, a primeira na volta, o primeiro bairro e os horários 06:40 / 17:30. Por isso não foi possível testar os obrigatórios → #337.
+- Foi salva a rota `wwww@@@2` (`id` 3) digitando só o nome: horários 06:40 / 17:30, bairro Campo Velho, 3 faculdades na ida e volta IFCE. O nome aceita símbolos e não tem máscara; a API também aceitou → #338, #339.
+- A mensagem de erro de um campo reaparece ao apagar o texto, em vez de sumir e voltar só ao tocar em finalizar → #338.
+- Status: ❌ FALHOU.
 
 ---
 
-#### CT-HU011-UI-006 — Selecionar somente base ativa e tratar mudança após seleção
+#### CT-HU011-UI-006 — Horários livres e retorno depois da saída (#208)
 
-**Dados de entrada:** B0 inativo; F0 inativa; B1/F1 ativos; base inativada depois de selecionada.
+**Dados de entrada:** cadastro `Rota Noturna Teste`: saída `13:15` e retorno `22:40`; depois saída `18:00` e retorno `17:00`; depois saída e retorno iguais.
 
 **Passos**
 
-1. Abrir seletores de bairros e faculdades da ida/volta e procurar a massa ativa/inativa conferida pela IA (PC-05).
-2. Confirmar que B1/F1 podem ser selecionados e B0/F0 não aparecem como opções novas.
-3. Para uma variação independente, selecionar base ativa livre; pedir à IA para inativá-la antes de salvar, somente se o ambiente permitir sem violar outra regra. Registrar o preparo.
-4. Tentar salvar e pedir à IA para conferir ausência de vínculo inválido e preservação dos demais dados (PC-05).
+1. Em **Nova**, tocar em **Horário de Saída** e tentar escolher `13:15`; fazer o mesmo no retorno com `22:40`.
+2. Tentar escolher um retorno anterior à saída e um retorno igual à saída e salvar.
+3. Repetir o passo 2 em **Editar** de `Rota Centro - UFC`.
 
 **Resultado esperado**
 
-- Somente bairros e faculdades ativos oferecidos nos três seletores (AC-03, FA-002).
-- Validação final impede gravar novo vínculo com base já inativa, inclusive se a seleção ficou desatualizada.
-- Se a regra de HU-007 impedir preparar a inativação, registrar a barreira e usar o caso de API para referências inativas; não contornar proteção de produção nem declarar aprovado sem evidência.
-- Tratamento de uma base inativada depois de vínculo já salvo é outra decisão, ainda pendente.
+- O administrador consegue informar **qualquer horário válido `HH:mm`**: não há horário mínimo nem máximo (#208, item 2b; RF-013). Se o app só oferece uma lista fixa de horários, registrar como falha.
+- Retorno igual ou anterior à saída é sinalizado no campo de retorno e o salvamento é bloqueado (#208, item 2a).
+- Se a lista fixa impedir montar o retorno antes da saída, registrar essa parte como 🚫 e citar o CT-HU011-API-006.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Saída aceita só 06:00, 06:10, 06:20, 06:30, 06:40 e 07:00; retorno só 11:30, 12:00, 17:00, 17:30, 18:00 e 22:00. Não dá para escolher `13:15` nem `22:40`, que a API aceita (qualquer `HH:mm`) e o PO definiu na #208, item 2 → #340.
+- O campo mostra o placeholder “Selecionar” muito escuro e o horário escolhido em cinza (campo `editable={false}`), fora do padrão dos campos do app → #340.
+- 🚫 Retorno antes ou igual à saída: não é possível informar o horário; coberto na API em `CT-HU011-API-006`.
+- Status: ❌ FALHOU.
 
 ---
 
-#### CT-HU011-UI-007 — Preencher horários sem troca de turno ou conversão silenciosa
+#### CT-HU011-UI-007 — Nome de rota duplicado (#208)
 
-**Dados de entrada:** 06:30/17:30; minuto 60/texto se possível; 00:00/23:59 e 23:00→01:00 para caracterizar.
+**Dados de entrada:** nome `Rota Centro - UFC` (igual ao do CT-002), `ROTA CENTRO - UFC` e `  rota centro - ufc  `; depois, `Van Trevo` (nome da complementar da PC-05).
 
 **Passos**
 
-1. Preencher saída/retorno pelos controles reais da tela e salvar uma configuração válida, sem alterar o bairro/faculdades.
-2. Se o controle permitir digitar/colar hora impossível, tentar minuto 60 e texto; se só permitir opções válidas, registrar essa proteção.
-3. Caracterizar fronteiras do relógio e retorno no dia seguinte apenas como observação até decisão; pedir à IA para conferir valores salvos (PC-05).
-4. Reabrir em celular/web disponível e comparar os horários locais, sem exigir teste em uma plataforma que não esteja preparada.
+1. Cadastrar uma rota com cada nome e os demais dados válidos.
+2. Conferir a listagem e pedir à IA para conferir na API.
 
 **Resultado esperado**
 
-- 06:30/17:30 preservados na listagem, edição e API, sem trocar saída/retorno ou deslocar por fuso.
-- Entrada incompatível com o formato confirmado deve mostrar o campo e não gravar; teclado seletivo não prova validação do backend.
-- Faixa operacional, retorno posterior à saída e pernoite não estão definidos: essa parte permanece pendente de decisão, sem reprovar a implementação por uma suposição.
+- O cadastro é bloqueado com mensagem clara de que o nome já está em uso. Registrar o texto exato.
+- Vale para maiúsculas, espaços nas pontas, rota inativa e nome de rota complementar (#208, item 1).
+- A tela continua com os dados preenchidos para correção; nenhuma rota nova é criada.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Na API, `Rota Centro - UFC`, `ROTAS CENTRO - UFC`, `  rota centro - ufc  ` e `Van Trevo` (nome da complementar) devolvem `409` “Já existe uma rota com este nome.”; nada foi criado ✅.
+- No app, qualquer `409` do cadastro vira “Esta rota já está cadastrada.” em pop-up (visto ao salvar `Rota Integrada` no CT-008). O requisito (HU-011, item 11) manda exibir “Já existe uma rota com este nome.” → #347. O testador considerou o pop-up adequado; o desvio é só de texto.
+- Status: ❌ FALHOU.
 
 ---
 
 ### Seção B — Edição, inativação e reativação
 
-#### CT-HU011-UI-008 — Editar rota, horários e vínculos e sair sem salvar
+#### CT-HU011-UI-008 — Editar rota
 
-**Dados de entrada:** RP1 → Rota Campo Velho - IFCE; 06:00/18:00; B2; ida F2/volta F3.
+**Dados de entrada:** `Rota Centro - UFC`: nome `Rota Centro - UFC Manhã`; outros horários; ida IFCE; volta UECE; trocar o bairro Centro por Campo Velho. Depois, nome `Rota Integrada` (em uso).
 
 **Passos**
 
-1. Abrir Editar de RP1 e conferir dados atuais e seleções; alterar nome, horas, bairro e faculdades conforme entrada.
-2. Salvar, conferir listagem e reabrir; pedir à IA para confirmar id e vínculos de RP1 e que RP2 não mudou (PC-05).
-3. Alterar um nome sem salvar, voltar e reabrir; pedir à IA para confirmar que essa mudança não foi persistida (PC-05).
+1. Tocar no ícone de editar da rota e conferir se os dados carregados batem com a API.
+2. Fazer as alterações e tocar em **Salvar alterações**; anotar a mensagem.
+3. Conferir a listagem e abrir **Editar** de novo.
+4. Tentar salvar com o nome `Rota Integrada`.
+5. Pedir à IA para conferir na API.
 
 **Resultado esperado**
 
-- Edição válida mantém o id e persiste os campos e associações corretos (AC-04).
-- Remover um vínculo da configuração atual não apaga a entidade-base nem altera outra rota.
-- Sair sem acionar salvar mantém o último dado gravado; não exigir diálogo de descarte que ainda não foi especificado.
+- A tela abre com nome, horários, faculdades e bairros da rota.
+- Exibir “Operação realizada com sucesso” e voltar à listagem com os dados novos (AC-04, AC-07).
+- Ao reabrir, as faculdades e bairros antigos não ficam marcados.
+- O nome em uso é bloqueado com mensagem clara; nada é alterado.
+- Na API, a mesma rota (mesmo `id`) com os dados novos.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Rota `id` 1 alterada e conferida na API: `Rota Centro - UFC Manhã`, 06:10 / 11:30, ida só IFCE, volta só UECE ✅. O bairro continuou Centro (a troca por Campo Velho não foi confirmada).
+- Sucesso exibido em barra preta → #336. Checkboxes das faculdades demoram muito → #345.
+- Salvar com o nome `Rota Integrada` foi bloqueado em pop-up com “Esta rota já está cadastrada.” (texto difere do requisito) → #347.
+- Status: ❌ FALHOU.
 
 ---
 
-#### CT-HU011-UI-009 — Cancelar e confirmar inativação sem agenda futura
+#### CT-HU011-UI-009 — Sair sem salvar
 
-**Dados de entrada:** RP1 sem futuro nem complementar ativa; registro/log anteriores.
+**Dados de entrada:** `Rota Integrada` aberta em **Editar**, com o nome trocado para `Rota Integrada Teste`, sem salvar.
 
 **Passos**
 
-1. Pedir à IA para conferir o cenário sem futuro e registrar estado/log antes (PC-05).
-2. Acionar Inativar, se houver diálogo cancelar e conferir que o registro continua ativo; pedir à IA para confirmar ausência de escrita (PC-05).
-3. Repetir e confirmar; anotar texto e lista; reabrir e pedir à IA para conferir estado, registro e auditoria (PC-05).
+1. Alterar o nome e tocar na seta de voltar (no Android, também no botão voltar do aparelho).
+2. Responder à confirmação, se houver, escolhendo sair.
+3. Abrir a rota em **Editar** de novo.
 
 **Resultado esperado**
 
-- Cancelamento, quando oferecido, não grava mudança nem log de inativação concluída.
-- Inativação válida mostra “Operação realizada com sucesso” e atualiza a lista conforme o mecanismo de status escolhido (AC-05, AC-07).
-- Rota permanece no banco como inativa com mesmo id/vínculos e auditoria correta; outra rota não é afetada.
-- Cascata para complementares não é avaliada aqui: a rota da massa não tem complementares ativas.
+- O app pede confirmação antes de descartar as alterações (padrão das telas de edição do épico 02).
+- Ao sair, nada é salvo: a rota continua `Rota Integrada`.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `editar.tsx` salva direto e a seta chama `router.back()` sem aviso de alterações não salvas → #342. Resultado por leitura do código e conferência na API; o testador dispensou a execução na tela por a falha já estar clara no código.
+- Status: ❌ FALHOU.
 
 ---
 
-#### CT-HU011-UI-010 — Mostrar inativas e reativar
+#### CT-HU011-UI-010 — Inativar, mostrar inativos e reativar
 
-**Dados de entrada:** RP0 inativa, independente de eventual falha do CT-009.
+**Dados de entrada:** `Rota Centro - UFC` (a primeira cadastrada no banco limpo, `id` 1), sem complementar e sem agendamentos.
 
 **Passos**
 
-1. Usar Mostrar inativos ou o mecanismo aprovado para localizar RP0; conferir identificação de inativa.
-2. Acionar Reativar; se houver confirmação, cancelar primeiro e depois repetir confirmando.
-3. Reabrir e pedir à IA para conferir status, dados e log na API/banco (PC-05).
+1. Tocar no ícone de inativar e **cancelar**; conferir que nada mudou.
+2. Tocar de novo e **confirmar**; anotar a mensagem.
+3. Ligar **Mostrar inativos** e conferir como a rota aparece.
+4. Reativar a rota, confirmar e anotar a mensagem.
+5. Pedir à IA para conferir na API que a rota continua no banco nos dois estados.
 
 **Resultado esperado**
 
-- Inativa acessível e identificada (AC-09), sem confundir com rota ativa.
-- Reativação, prevista no fluxo/BDD, mantém id e configuração e exibe sucesso; se recusada, deve haver feedback visível.
-- Preparo direto de RP0 não aprova o fluxo de inativação. O padrão inicial da lista continua sujeito à divergência documentada.
+- Pedir confirmação; cancelar não muda nada.
+- Confirmar exibe “Operação realizada com sucesso”, tira a rota dos ativos e atualiza a listagem (AC-05, AC-07).
+- Com a chave ligada, a rota aparece identificada como **inativa** (AC-09).
+- A reativação exibe “Operação realizada com sucesso” e devolve a rota aos ativos.
+- A rota nunca some do banco (soft delete).
+- Se a inativação for barrada com “agendamentos pendentes” sem existir agenda (HU-013 ainda não existe), é regra de exemplo do app: registrar como falha.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Inativar `Rota Centro - UFC` (`id` 1) foi barrado com “Inativação bloqueada” de agendamentos pendentes, sem existir agenda: o app confere a lista de exemplo (`Linha 01`, `id` 1) antes da API → #334.
+- A rota 3 (`wwww@@@2`) foi inativada: aparece com a chave **Mostrar inativos** ligada ✅ e continua no banco como `ativo: false` (soft delete ✅). A reativação não foi executada na tela.
+- A confirmação de sucesso usa barra preta (“Rota inativada”) → #336.
+- Status: ❌ FALHOU.
 
 ---
 
-### Seção C — Integração, acesso e robustez
+#### CT-HU011-UI-011 — Bloqueios de inativação e reativação (#208)
 
-#### CT-HU011-UI-011 — Impedir acesso administrativo de aluno e representante
+**Dados de entrada:**
 
-**Dados de entrada:** Menus e link direto pretendido /cadastros/rotas-principais.
+1. `Rota Integrada` com a complementar ativa `Van Trevo` ligada a ela (PC-05).
+2. `Rota Integrada` inativa (depois de inativar `Van Trevo`), com o bairro Centro inativado pela IA via API (depois do CT-008, o Centro só está nesta rota).
 
 **Passos**
 
-1. Entrar como aluno e conferir menus; abrir o link direto confirmado para a tela de gestão (PC-06).
-2. Repetir como representante ativo; se o login estiver indisponível, registrar só essa variação como bloqueada.
-3. Confirmar que é a tela administrativa e não uma lista de rotas destinada ao agendamento.
+1. Tentar inativar `Rota Integrada` com a complementar ativa; anotar a mensagem.
+2. Pedir à IA para inativar `Van Trevo`; inativar a rota; pedir à IA para inativar o bairro Centro.
+3. Ligar **Mostrar inativos** e tentar reativar `Rota Integrada`; anotar a mensagem.
+4. Pedir à IA para reativar o Centro e reativar a rota.
 
 **Resultado esperado**
 
-- Aluno/representante não veem o menu de gestão nem conseguem abrir formulário ou ações administrativas (RN-006, BDD).
-- Rejeição/redirecionamento ocorre sem exibir dados administrativos brevemente; Acesso Negado é o padrão atual do app, a confirmar na tela entregue.
-- Rota inexistente não prova proteção: só executar a verificação com a implementação presente. A API de escrita é coberta no CT-HU011-API-012.
+- Passo 1: a inativação é bloqueada com “Esta rota possui rotas complementares ativas vinculadas. Inative ou desvincule as rotas complementares antes de continuar.” (#208, item 5); a rota continua ativa.
+- Passo 3: a reativação é bloqueada com mensagem clara sobre o bairro ou faculdade inativo; a rota continua inativa.
+- Nenhuma mensagem técnica (como `Request failed with status code 409`) nem ausência de aviso.
+- Passo 4: a rota volta a ficar ativa.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Na API, inativar a `Rota Integrada` com a complementar ativa devolve `409` com a mensagem do PO (#208, item 5), e nada mudou ✅.
+- No app, a inativação lê `error.response.data.detail`, mas a API manda `error.message`: o aviso exibido é “Request failed with status code 409”. A reativação recusada só grava `console.error`, sem aviso na tela → #348. Resultado por leitura do código e conferência na API; o testador dispensou a execução na tela por a falha já estar clara no código.
+- Status: ❌ FALHOU.
 
 ---
 
-#### CT-HU011-UI-012 — Falha de conexão e rejeição da API sem sucesso falso
+#### CT-HU011-UI-012 — Bairro e faculdade usados em rota ativa (#208)
 
-**Dados de entrada:** Lista; cadastro de Rota Offline QA; edição/status em registro real.
+**Dados de entrada:** `Rota Integrada` ativa, com o bairro Centro e a faculdade UFC (na ida e na volta).
 
 **Passos**
 
-1. Na execução futura, tornar somente a API inacessível, mantendo o bundle Expo disponível; tentar abrir a listagem.
-2. Carregar formulário/registro com conexão antes, se necessário, e retirar a conexão antes de salvar ou mudar status.
-3. Restaurar acesso, reabrir e pedir à IA para conferir registros, vínculos e logs (PC-05).
-4. Se houver resposta de negócio recusando operação, conferir que a tela também a apresenta, sem transformar erro em sucesso.
+1. Em **Cadastros → Bairros**, tentar inativar o Centro; anotar a mensagem.
+2. Em **Cadastros → Faculdades**, tentar inativar a UFC; anotar a mensagem.
+3. Conferir que os dois continuam ativos.
 
 **Resultado esperado**
 
-- Falha de conexão ou negócio aparece em português, sem travamento e sem exemplos inventados para preencher a lista.
-- Não informar sucesso de escrita sem confirmação da API; manter dados úteis do formulário para nova tentativa.
-- Reconciliar o resultado ao reconectar; distinguir resposta perdida após gravação de alteração puramente local com apoio da IA, sem criar duplicação.
-- Este é risco preventivo de integração, não afirmação de que existe service com mocks para rotas nesta versão.
+- Bairro: “Este bairro não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar.” (HU-007, CA 6).
+- Faculdade: “Esta faculdade não pode ser inativada pois pertence a uma rota ativa. Remova-a da rota antes de continuar.” (#208, item 7).
+- Os dois continuam ativos e a rota não muda.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Em **Cadastros → Bairros**, inativar o Centro foi bloqueado (“Inativação Bloqueada”) com a mensagem da API: “Este bairro não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar.” ✅.
+- Em **Cadastros → Faculdades**, inativar a UFC foi bloqueado do mesmo modo (“Esta faculdade não pode ser inativada pois pertence a uma rota ativa. Remova-a da rota antes de continuar.”) ✅.
+- Conferido na API: Centro e UFC seguem ativos e a rota não mudou ✅.
+- Status: ✅ PASSOU.
 
 ---
 
-#### CT-HU011-UI-013 — Agenda futura, histórico e indisponibilidade de inativa
+### Seção C — Acesso e robustez
 
-**Dados de entrada:** Rota com agenda amanhã; outra só com passado; rota inativa; HU-013.
+#### CT-HU011-UI-013 — Aluno e representante sem acesso
+
+**Dados de entrada:** conta de aluno aprovado e de representante (PC-03); na web, os endereços `/rotas-principais`, `/rotas-principais/cadastrar` e `/rotas-principais/editar?id=1`.
 
 **Passos**
 
-1. Conferir PC-07; pedir à IA para preparar vínculos reais e registrar datas/fuso e histórico (PC-05). Sem dependência, marcar a parte como 🚫.
-2. Tentar inativar a rota com agenda futura; depois a que só tem passado; conferir os resultados com a IA.
-3. Após confirmação da regra de seleção, abrir o agendamento do aluno e procurar a inativa; sem decisão manter essa parte bloqueada.
-4. Reabrir registros e pedir à IA para comparar histórico/logs, sem usar exemplos locais como agendamento real.
+1. Entrar como aluno e procurar a gestão de rotas nos menus.
+2. Na web, abrir os endereços diretos.
+3. Repetir como representante.
 
 **Resultado esperado**
 
-- Futuro bloqueia com mensagem de agendamentos pendentes; estado ativo preservado (AC-06, FA-001).
-- Histórico passado não equivale a futuro e não é apagado pela inativação (RN-004).
-- Ausência de inativa no agendamento é proposta inferida do BDD, não regra já aprovada. HU-013, histórico real e decisão são dependências separadas.
+- O menu de gestão de rotas não aparece para aluno nem representante (RN-006).
+- O link direto mostra **Acesso Negado** (ou volta ao Início), sem exibir dados de rotas nem permitir salvar.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O menu de gestão de rotas não aparece para a aluna nem para a representante ✅.
+- `/rotas-principais`, `/rotas-principais/cadastrar` e `/rotas-principais/editar?id=1` mostraram acesso negado (403) para os dois perfis, sem dados de rotas ✅.
+- Status: ✅ PASSOU.
+
+---
+
+#### CT-HU011-UI-014 — Falha de conexão e dados de exemplo
+
+**Dados de entrada:** servidor parado (ou Wi-Fi do celular desligado) com o app aberto na listagem.
+
+**Passos**
+
+1. Atualizar a listagem (sair e voltar à tela).
+2. Tentar cadastrar `Rota Sem Conexão`, editar uma rota e inativar outra.
+3. Religar o servidor, voltar à listagem e pedir à IA para conferir na API.
+
+**Resultado esperado**
+
+- O app avisa que não conseguiu falar com o servidor.
+- Não mostra rotas, faculdades ou bairros que não existem no banco.
+- Cadastrar, editar e inativar **não** exibem sucesso; depois de religar, nada disso aparece na API.
+
+**Resultado obtido**
+
+- O serviço captura qualquer falha e cai nas listas de exemplo: listar mostra `Linha 01–03`; cadastrar, editar, inativar e reativar alteram só a lista local e devolvem sucesso (ids `Date.now()`); o erro de conexão não usa o pop-up “Erro de Conexão” → #333. Resultado por leitura do código e conferência na API; o testador dispensou a execução na tela por a falha já estar clara no código.
+- Status: ❌ FALHOU.
 
 ## Rastreabilidade
 
 | Critério | Cenário BDD | Casos |
 | --- | --- | --- |
-| AC-01 / AC-09 — listagem e inativas | Visualiza ativas com horários; visualiza inativas | CT-001, CT-010; padrão inicial pendente |
-| AC-02 — cadastro/múltiplos vínculos | Cadastra rota; vários bairros/faculdades | CT-002, CT-003; pontos a confirmar |
-| AC-03 / FA-002 — seleção ativa | Não oferece base inativa | CT-006 |
-| AC-04 — edição | Edita dados existentes | CT-008, CT-004 |
-| AC-05 / RF-014 — soft delete | Inativa sem futuro; mantém registro | CT-009, com apoio da IA |
-| Fluxo principal — reativação | Reativa rota inativa | CT-010 |
-| AC-06 / FA-001 — agenda futura | Bloqueia inativação com agendamentos futuros | CT-013 — HU-013 |
-| AC-07 — confirmação da inativação | Inativa e atualiza lista | CT-009; demais sucessos pelo fluxo/BDD |
-| AC-08 / FA-003 — obrigatórios | Cadastro/edição com obrigatório vazio | CT-005 |
-| AC-10 — volta independente | Configura volta diferente da ida | CT-004 |
-| RF-013 — horários | Preenchimento no cadastro/edição; formato e fronteiras como complemento técnico | CT-007 — cronologia operacional pendente |
-| RNF-013 / fluxo — auditoria | Log de escritas | CT-009, CT-010 e CT-HU011-API-010, com apoio da IA |
-| RN-004 — histórico | Preserva registros antigos | CT-013 — histórico real |
-| Regra inferida de seleção | Inativa fora do agendamento | CT-013 — HU-013 e decisão |
-| RN-006 — exclusividade administrativa | Menu não exibido a aluno/representante | CT-011; escrita em CT-HU011-API-012 |
-| Robustez da integração | Cobertura complementar de falha de conexão; sem cenário BDD específico | CT-012 |
+| AC-01 — listagem de ativas com horários | Visualiza as rotas ativas com horários | CT-001 |
+| AC-02 — cadastro com vários vínculos | Cadastra rota; vários bairros e faculdades | CT-002, CT-003 |
+| AC-03 / FA-002 — só base ativa | Não oferece bairro/faculdade inativos | CT-004 |
+| AC-04 — edição | Edita nome, horários, faculdades e bairros | CT-008 |
+| AC-05 — inativar e reativar | Inativa; reativa | CT-010 |
+| AC-06 / FA-001 — agendamentos futuros | Bloqueia inativação | Não coberto na UI nesta rodada (depende da HU-013); ver CT-HU011-API-014 e CT-010 |
+| AC-07 — mensagem de sucesso | Cenários de sucesso | CT-002, CT-008, CT-010 |
+| AC-08 / FA-003 — obrigatórios | Cadastro sem obrigatório | CT-005 |
+| AC-09 — Mostrar inativos | Visualiza inativas | CT-001, CT-010 |
+| AC-10 — volta independente | Faculdades da volta diferentes da ida | CT-003 |
+| AC-05 / RNF-013 — auditoria | Log de auditoria | Conferido na API (CT-HU011-API-012) |
+| #208 item 1 — nome único | — (decisão do PO) | CT-007, CT-008 |
+| #208 item 2 — horários | — (decisão do PO) | CT-006 |
+| #208 item 3 — volta obrigatória | — (decisão do PO) | CT-005 |
+| #208 item 5 — complementar ativa | — (decisão do PO) | CT-011 |
+| #208 item 7 — base em rota ativa | — (decisão do PO) | CT-012 |
+| RN-006 — exclusividade administrativa | Menu não exibido para outros perfis | CT-013 |
 
 ## Defeitos encontrados
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-001, 004, 014 | Dados de exemplo (`Linha 01–03`, faculdades e bairros inventados) aparecem com o banco vazio e quando o servidor falha; cadastrar, editar, inativar e reativar dão sucesso falso sem conexão; as opções só carregam ao abrir a tela | #333 |
+| CT-010 | Inativar a rota de `id` 1 é barrado por “agendamentos pendentes” vindo da lista de exemplo | #334 |
+| CT-001 | A chave **Mostrar inativos** abre ligada | #335 |
+| CT-002, 008, 010 | Sucesso em barra preta (Snackbar) e com textos fora do padrão “Operação realizada com sucesso” | #336 |
+| CT-003, 005 | Campos obrigatórios vêm pré-marcados; só o nome basta para salvar e a volta foi gravada errada | #337 |
+| CT-005 | Nome da rota sem máscara; erro de validação reaparece ao apagar | #338 |
+| CT-005 | A API aceita nome de rota com símbolos (`wwww@@@2`) | #339 |
+| CT-006 | Horários só em lista fixa de 6 opções; campo com placeholder escuro e texto cinza; retorno antes da saída não conferido | #340 |
+| CT-002, 008 | Telas de cadastro e edição guardam os dados digitados antes | #341 |
+| CT-009 | Edição sai e salva sem confirmação de alterações não salvas | #342 |
+| CT-001 a 008 | A seta de voltar leva ao Painel em vez da listagem de origem | #343 |
+| CT-003 | Faculdades aparecem com o nome completo, sem `SIGLA - Campus` | #344 |
+| CT-003, 008 | Checkbox das faculdades demora muito para marcar | #345 |
+| CT-003 | Modal **Vincular bairro** sem marcação de escolhido; lixeira remove sem confirmar | #346 |
+| CT-007, 008 | Qualquer `409` do cadastro vira “Esta rota já está cadastrada.” (requisito: “Já existe uma rota com este nome.”) | #347 |
+| CT-011 | Inativação bloqueada mostra “Request failed with status code 409”; reativação recusada sem aviso | #348 |
 
 ## Observações gerais
 
-- Fontes: [requisitos, seção 7.4.1](../../../../../docs/requisitos.md), [HU-011.feature](../../../../../bdd/features/epico-03/HU-011.feature) e [README do BDD](../../../../../bdd/features/epico-03/README.md), nesta ordem de autoridade. Nenhum requisito ou BDD foi alterado.
-- **Riscos mapeados no código** — base `5554bc90`, conferida em 24/10/2026:
-  - [backend/main.py](../../../../../backend/main.py) ainda não registra router de gestão de rotas principais/complementares. Não foram identificados contrato HTTP, DTO, service ou schema de gestão dessas HUs em `backend/src`. URLs, métodos, chaves e tabelas da rota são **a confirmar**; não presumir `/rotas`, JSON ou PATCH por semelhança com outro módulo.
-  - [cadastros.tsx](../../../../../frontend/src/app/%28administrador%29/cadastros.tsx) tem o card Rotas principais apontando para `/(administrador)/cadastros/rotas-principais`, mas a tela de gestão correspondente não foi identificada. O alvo de navegação não comprova implementação.
-  - As entidades-base já possuem status e consultas administrativas que podem incluir inativos. Conferir seleção e validação final de referência; filtro de UI sozinho não protege escrita direta.
-  - Como a implementação não foi entregue, riscos de perda de vínculos, mistura de ida/volta, gravação parcial, horários convertidos, auditoria omitida e sucesso apenas local são **preventivos**, não bugs constatados.
-- Técnicas: **partição de equivalência** (base ativa/inativa/inexistente; perfis; campos válidos/vazios), **valor-limite** (zero/um bairro e faculdade; hora válida/inválida), **transição de estado** (ativa → inativa → ativa) e **tabela de decisão** (sem agenda / só passado / futuro). Prioridade em integridade de vínculos, independência da volta e proteção de estado.
-- **Dúvidas/divergências para alinhamento**:
-  - AC-01/fluxo pedem listagem com ativas e inativas; BDD propõe ativas inicialmente e chave Mostrar inativos. Garantir acesso a ambos os estados; mecanismo e padrão inicial aguardam decisão.
-  - AC-05 cita auditoria da inativação; fluxo principal/BDD registram as quatro escritas. Esta suíte cobre todas com base nesses trechos, sem impor nomes de ação ainda inexistentes.
-  - AC-02 permite várias faculdades e volta independente; fluxo/FA-003 usam singular. Os casos seguem o AC-02/AC-10 e o BDD; **mínimo obrigatório na volta** continua sem definição.
-  - O AC-02/fluxo mencionam bairros/pontos; o BDD detalha bairros. Confirmar granularidade, seleção de pontos e pertencimento antes de mapear o contrato; não fingir cobertura de campos ainda não definidos.
-  - Nome único, ordem dos vínculos, faixa de horários, retorno posterior à saída e pernoite não estão definidos. Não criar bloqueio de duplicidade, mínimo/máximo de texto ou regra temporal por conta própria.
-  - Efeito de inativar principal com complementares ativas, reativar complementar com principal inativa e base inativada depois do vínculo salvo: não definidos; registrar decisão antes de exigir cascata/bloqueio.
-  - Inativa fora de novo agendamento é cenário **inferido e a confirmar** no BDD; sem decisão, a parte não pode receber aprovação/reprovação.
-- Nenhuma suíte foi executada, nenhuma stack foi iniciada e nenhum defeito foi reproduzido. Os 13 casos desta camada permanecem pendentes. Na execução futura, marcar 🚫 por ausência de implementação, contrato, massa ou decisão; registrar partes independentes e não alterar o esperado para adaptar ao código.
-- Não vincular veículo/motorista como obrigatório nesta HU: alocações operacionais pertencem a outras histórias. Preservar dados antigos e ocultar credenciais/tokens nas evidências.
-- Suíte complementar: [API-HU-011.md](../api/API-HU-011.md). Sempre usar PC-05 nas conferências de persistência/auditoria; Cauan não precisa consultar o banco manualmente.
+- Referências: [HU-011, seção 7.4.1](../../../../../docs/requisitos.md), [cenários BDD](../../../../../bdd/features/epico-03/HU-011.feature), [decisões do PO (#208)](https://github.com/GOUOCE/GOUCE-app/issues/208), [PR #194](https://github.com/GOUOCE/GOUCE-app/pull/194) e [suíte de API](../api/API-HU-011.md).
+- **Riscos mapeados no código** do PR #194 (`frontend/src/services/rotaPrincipalService.ts` e telas em `frontend/src/app/(administrador)/rotas-principais/`), que orientaram a escolha dos casos:
+  - o serviço mantém uma **lista de exemplo** (`Linha 01 - Centro`, `Linha 02 - Bairro Novo`, `Linha 03 - Vila Antiga`, ids 1 a 3) e a mostra quando a API devolve lista **vazia** ou falha (CT-001, CT-014);
+  - a inativação confere a lista de exemplo **antes** da API: a rota de `id` 1 é barrada com “Esta rota possui agendamentos pendentes de alunos. Não é possível inativar no momento.” mesmo sem agenda, e esse texto difere do requisito (CT-010);
+  - sem resposta do servidor, cadastrar, editar, inativar e reativar alteram só a lista de exemplo e **parecem ter dado certo** (CT-014);
+  - faculdades e bairros de exemplo (`Universidade Estadual do Ceará`, `Uniateneu Inativa`, `Vila Antiga Inativa`) entram nas seleções quando `/rotas-principais/opcoes` falha (CT-004);
+  - a chave **Mostrar inativos** começa **ligada** (CT-001);
+  - os horários são escolhidos em listas fixas (saída: 06:00 a 07:00; retorno: 11:30 a 22:00, seis opções cada); não dá para informar outro horário e o app não confere retorno depois da saída (CT-006);
+  - as mensagens de sucesso são “Rota cadastrada com sucesso”, “Rota alterada com sucesso”, “Rota inativada” e “Rota reativada”, e não “Operação realizada com sucesso” (CT-002, 008, 010);
+  - o bloqueio da inativação lê `detail` da resposta, mas a API devolve a mensagem em `error.message`: o aviso pode mostrar `Request failed with status code 409` (CT-011);
+  - a reativação recusada só registra o erro no console, sem aviso na tela (CT-011);
+  - a edição salva sem pedir confirmação e não há aviso ao sair sem salvar (CT-009);
+  - o resumo das faculdades usa a `sigla`, que a API de rotas não devolve: o app mostra o nome no lugar (CT-003);
+  - no PR #194, o card **Rotas complementares** aponta para `/(administrador)/cadastros/rotas-complementares`, e no PR #182 é o card **Rotas principais** que aponta para `/cadastros/...`: conferir os dois cards depois do merge dos dois PRs (CT-001).
+- O bloqueio por agendamentos futuros (AC-06) e a rota inativa fora do agendamento (#208, item 8) dependem da HU-013 e ficam para quando a agenda estiver na `develop`.
+- Ocultar senhas e dados pessoais nas evidências.
+- **Execução (28 e 29/10/2026):** o testador executou na tela os CT-001 a 003, 004 (parte das opções), 005, 006 (parte dos campos), 008, 010 (inativação), 012 e 013. Os CT-007, 009, 011 e 014 e o que sobrou dos CT-001, 004 e 006 foram fechados por leitura do código e conferência na API, a pedido do testador, porque a falha já estava clara no código (o PR #194 repete os padrões já reprovados nas HUs 007 a 010 e 030).
+- **Massa criada pela IA:** a complementar `Van Trevo` (`id` 1, ligada à `Rota Integrada`) pela API da HU-012. A rota 3 (`wwww@@@2`) foi mantida como evidência do CT-005 e está inativa.
+- O PR #194 está com conflito com a `develop` (`DIRTY`) e traz, além do front da HU-011, a subida do Expo para o SDK 58 e versões antigas dos documentos de `tests/manual/epico-03`, que apagariam este planejamento. Não deve ser mesclado como está.

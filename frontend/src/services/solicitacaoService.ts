@@ -1,4 +1,5 @@
 import { api } from '../api/api';
+import { formatarInstituicao } from '../utils/formatarInstituicao';
 
 export interface SolicitacaoItem {
   id: number;
@@ -13,6 +14,8 @@ export interface SolicitacaoItem {
 }
 
 export interface DetalhesSolicitacaoItem extends SolicitacaoItem {
+  // "SIGLA - Campus" montado com o nome da faculdade que a API devolve
+  instituicao?: string;
   telefone?: string;
   data_nascimento?: string;
   bairro_id?: string;
@@ -63,6 +66,7 @@ export const solicitacaoService = {
       curso: response.data.curso,
       campus: response.data.campus,
       faculdade_id: response.data.faculdade_id,
+      instituicao: formatarInstituicao(response.data),
       data_nascimento: response.data.data_nascimento,
       bairro_id: response.data.bairro_id,
       turno_curso: response.data.turno_curso,

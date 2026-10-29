@@ -203,7 +203,7 @@ class CadastroTest(RotaComplementarHttpTestBase):
             corpo["data"],
             {
                 "id": corpo["data"]["id"], "nome": "Van 2 - Bairro Novo", "horario_saida": "06:00",
-                "ponto_conexao": "Trevo do Bairro Novo", "ativo": True,
+                "horario_retorno": "17:40", "ponto_conexao": "Trevo do Bairro Novo", "ativo": True,
                 "rota_principal": {"id": PRINCIPAL_CENTRO, "nome": "Rota Centro - UFC", "ativo": True},
             },
         )
@@ -259,14 +259,52 @@ class CadastroTest(RotaComplementarHttpTestBase):
                 status, corpo = await self.requisitar("POST", BASE, dados_complementar(nome=nome))
                 self.assertEqual(status, 409)
                 self.assertEqual(corpo["error"]["code"], "CONFLICT")
-                self.assertEqual(corpo["error"]["message"], "Já existe uma rota complementar com este nome.")
+                self.assertEqual(corpo["error"]["message"], "Já existe uma rota com este nome.")
         self.assertEqual(len(self.logs()), 1)
 
     async def test_campos_extras_sao_rejeitados(self):
-        status, corpo = await self.requisitar("POST", BASE, dados_complementar(horario_retorno="07:00"))
+        status, corpo = await self.requisitar("POST", BASE, dados_complementar(ativo=False))
 
         self.assertEqual(status, 422)
-        self.assertEqual(self.erro_por_campo(corpo), {"horario_retorno": "Campo não permitido."})
+        self.assertEqual(self.erro_por_campo(corpo), {"ativo": "Campo não permitido."})
+
+    async def test_ct_hu012_api_003_retorno_valido_e_gravado_e_devolvido(self):
+        # #310 / #208, item 2: horário de retorno no cadastro, na edição e na consulta
+        rota = await self.criar(nome="Van Retorno 17:40", horario_saida="06:00", horario_retorno="17:40")
+        self.assertEqual(rota["horario_retorno"], "17:40")
+
+        status, corpo = await self.requisitar("PATCH", f"{BASE}/{rota['id']}", {"horario_retorno": "17:45"})
+        self.assertEqual(status, 200, corpo)
+
+        status, consulta = await self.requisitar("GET", f"{BASE}/{rota['id']}")
+        self.assertEqual((status, consulta["horario_saida"], consulta["horario_retorno"]), (200, "06:00", "17:45"))
+        self.assertEqual(json.loads(self.logs()[-1].valor_novo)["horario_retorno"], "17:45")
+
+    async def test_ct_hu012_api_003_retorno_igual_ou_anterior_a_saida_e_recusado(self):
+        for retorno in ("06:00", "05:30"):
+            with self.subTest(retorno=retorno):
+                status, corpo = await self.requisitar(
+                    "POST", BASE,
+                    dados_complementar(nome=f"Van Retorno {retorno}", horario_saida="06:00", horario_retorno=retorno),
+                )
+                self.assertEqual(status, 422)
+                self.assertEqual(
+                    self.erro_por_campo(corpo),
+                    {"horario_retorno": "Horário de retorno deve ser maior que o horário de saída."},
+                )
+        self.assertEqual(self.logs(), [])
+
+    async def test_ct_hu012_api_004_nome_de_rota_principal_retorna_409(self):
+        # #309: o nome é único entre principais e complementares, ativas ou inativas
+        for nome in ("Rota Centro - UFC", " rota antiga "):
+            with self.subTest(nome=nome):
+                status, corpo = await self.requisitar("POST", BASE, dados_complementar(nome=nome))
+                self.assertEqual(status, 409)
+                self.assertEqual(
+                    (corpo["error"]["code"], corpo["error"]["message"]),
+                    ("CONFLICT", "Já existe uma rota com este nome."),
+                )
+        self.assertEqual(self.logs(), [])
 
 
 class OpcoesDeRotaPrincipalTest(RotaComplementarHttpTestBase):
@@ -319,7 +357,7 @@ class ListagemTest(RotaComplementarHttpTestBase):
             lista[0],
             {
                 "id": lista[0]["id"], "nome": "Van 2 - Bairro Novo", "horario_saida": "06:00",
-                "ponto_conexao": "Trevo do Bairro Novo", "ativo": True,
+                "horario_retorno": "17:40", "ponto_conexao": "Trevo do Bairro Novo", "ativo": True,
                 "rota_principal": {"id": PRINCIPAL_CENTRO, "nome": "Rota Centro - UFC", "ativo": True},
             },
         )
@@ -366,8 +404,8 @@ class EdicaoTest(RotaComplementarHttpTestBase):
 
         status, corpo = await self.requisitar(
             "PATCH", f"{BASE}/{rota['id']}",
-            {"nome": "Van 3 - Bairro Novo", "horario_saida": "05:45", "ponto_conexao": "Posto Central",
-             "rota_principal_id": PRINCIPAL_INTEGRADA},
+            {"nome": "Van 3 - Bairro Novo", "horario_saida": "05:45", "horario_retorno": "18:10",
+             "ponto_conexao": "Posto Central", "rota_principal_id": PRINCIPAL_INTEGRADA},
         )
 
         self.assertEqual(status, 200)
@@ -376,7 +414,7 @@ class EdicaoTest(RotaComplementarHttpTestBase):
             corpo["data"],
             {
                 "id": rota["id"], "nome": "Van 3 - Bairro Novo", "horario_saida": "05:45",
-                "ponto_conexao": "Posto Central", "ativo": True,
+                "horario_retorno": "18:10", "ponto_conexao": "Posto Central", "ativo": True,
                 "rota_principal": {"id": PRINCIPAL_INTEGRADA, "nome": "Rota Integrada", "ativo": True},
             },
         )
@@ -440,7 +478,29 @@ class EdicaoTest(RotaComplementarHttpTestBase):
         status, corpo = await self.requisitar("PATCH", f"{BASE}/{rota['id']}", {"nome": " VAN 1 "})
 
         self.assertEqual(status, 409)
-        self.assertEqual(corpo["error"]["message"], "Já existe uma rota complementar com este nome.")
+        self.assertEqual(corpo["error"]["message"], "Já existe uma rota com este nome.")
+
+    async def test_nome_de_rota_principal_na_edicao_retorna_409(self):
+        rota = await self.criar()
+
+        status, corpo = await self.requisitar("PATCH", f"{BASE}/{rota['id']}", {"nome": "Rota Integrada"})
+
+        self.assertEqual((status, corpo["error"]["message"]), (409, "Já existe uma rota com este nome."))
+        _, consulta = await self.requisitar("GET", f"{BASE}/{rota['id']}")
+        self.assertEqual(consulta["nome"], "Van 2 - Bairro Novo")
+
+    async def test_edicao_parcial_do_horario_compara_com_o_salvo(self):
+        rota = await self.criar()  # saída 06:00, retorno 17:40
+
+        for campos in ({"horario_retorno": "06:00"}, {"horario_saida": "18:00"}):
+            with self.subTest(campos=campos):
+                status, corpo = await self.requisitar("PATCH", f"{BASE}/{rota['id']}", campos)
+                self.assertEqual(status, 422)
+                self.assertEqual(
+                    self.erro_por_campo(corpo),
+                    {"horario_retorno": "Horário de retorno deve ser maior que o horário de saída."},
+                )
+        self.assertEqual(len(self.logs()), 1)
 
     async def test_edicao_de_inexistente_retorna_404(self):
         status, corpo = await self.requisitar("PATCH", f"{BASE}/999", {"nome": "X"})
@@ -568,7 +628,7 @@ class InativacaoEReativacaoTest(RotaComplementarHttpTestBase):
         self.assertEqual(status, 409)
         self.assertEqual(
             corpo["error"]["message"],
-            "A rota principal vinculada está inativa. Reative-a ou altere o vínculo antes.",
+            "Não é possível reativar esta rota complementar pois a rota principal vinculada está inativa.",
         )
         _, depois = await self.requisitar("GET", f"{BASE}/{rota['id']}")
         self.assertFalse(depois["ativo"])
@@ -593,8 +653,8 @@ class InteracaoComRotaPrincipalTest(RotaComplementarHttpTestBase):
         self.assertEqual(status, 409)
         self.assertEqual(
             corpo["error"]["message"],
-            "Esta rota possui rotas complementares ativas e não pode ser inativada. "
-            "Inative ou reassocie as complementares antes.",
+            "Esta rota possui rotas complementares ativas vinculadas. "
+            "Inative ou desvincule as rotas complementares antes de continuar.",
         )
         self.assertEqual(len(self.logs()), logs_antes)
 

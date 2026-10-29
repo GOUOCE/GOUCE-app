@@ -22,6 +22,13 @@ from src.modulos.crud_basicos.infrastructure.repositories.bairro_repository impo
     BairroNaoEncontradoError,
     BairroRepository,
     PontoDeParadaJaCadastradoError,
+    UltimoPontoAtivoError,
+)
+from src.modulos.crud_basicos.infrastructure.repositories.ponto_parada_repository import (
+    PontoDeParadaComRotaAtivaError,
+    PontoDeParadaJaAtivadoError,
+    PontoDeParadaJaDesativadoError,
+    PontoDeParadaNaoEncontradoError,
 )
 from src.modulos.crud_basicos.interface.http.bairro_routes import (
     admin_required,
@@ -67,7 +74,6 @@ class BairrosCrudUnitTest(unittest.TestCase):
         )
 
     def test_criterio_2_e_1_criar_e_listar_com_pontos(self):
-        # Campos obrigatórios: nome do bairro e ao menos um ponto de parada
         bairro = self.service.criar("Centro", ["Praça Matriz", "Hospital"])
         self.assertIsNotNone(bairro.bairro_id)
         self.assertEqual(bairro.nome, "Centro")
@@ -77,7 +83,6 @@ class BairrosCrudUnitTest(unittest.TestCase):
         self.assertIn("Praça Matriz", nomes_pontos)
         self.assertIn("Hospital", nomes_pontos)
 
-        # Listar retorna ativos por padrão
         itens = self.service.listar(ativo=True)
         self.assertEqual(len(itens), 1)
         self.assertEqual(len(itens[0].pontos_de_parada), 2)
@@ -91,12 +96,23 @@ class BairrosCrudUnitTest(unittest.TestCase):
         self.assertEqual(str(ctx.exception), "Esta localidade já está cadastrada.")
 
     def test_criterio_3_unicidade_ponto_de_parada_mensagem_exata(self):
-        self.service.criar("Bairro 1", ["Ponto A"])
-
         with self.assertRaises(PontoDeParadaJaCadastradoError) as ctx:
-            self.service.criar("Bairro 2", ["Ponto A"])
+            self.service.criar("Bairro 1", ["Ponto A", "ponto a"])
 
-        self.assertEqual(str(ctx.exception), "Esta localidade já está cadastrada.")
+        self.assertEqual(
+            str(ctx.exception),
+            "O ponto de parada 'ponto a' está repetido neste bairro.",
+        )
+
+    def test_criterio_3_mesmo_ponto_em_bairros_diferentes_e_permitido(self):
+        self.service.criar("Centro", ["Posto de Saúde"])
+        novo = self.service.criar("Planalto Universitário", ["Posto de Saúde"])
+
+        self.assertEqual(
+            [p.nome for p in novo.pontos_de_parada],
+            ["Posto de Saúde"],
+        )
+        self.assertEqual(len(self.service.listar()), 2)
 
     def test_criterio_3_unicidade_bloqueia_mesmo_se_inativo(self):
         b1 = self.service.criar("Bairro Antigo", ["Ponto Antigo"])
@@ -105,21 +121,20 @@ class BairrosCrudUnitTest(unittest.TestCase):
         b1_db = self.repository.buscar_por_id(b1.bairro_id)
         self.assertFalse(b1_db.ativo)
 
-        # Bairro inativo bloqueia nome duplicado
         with self.assertRaises(BairroJaCadastradoError) as ctx:
             self.service.criar("Bairro Antigo", ["Novo Ponto"])
         self.assertEqual(str(ctx.exception), "Esta localidade já está cadastrada.")
 
-        # Ponto em bairro inativo bloqueia nome duplicado
-        with self.assertRaises(PontoDeParadaJaCadastradoError) as ctx:
-            self.service.criar("Outro Bairro", ["Ponto Antigo"])
-        self.assertEqual(str(ctx.exception), "Esta localidade já está cadastrada.")
+        outro = self.service.criar("Outro Bairro", ["Ponto Antigo"])
+        self.assertEqual(
+            [p.nome for p in outro.pontos_de_parada],
+            ["Ponto Antigo"],
+        )
 
     def test_criterio_4_edicao_mantem_validacoes(self):
         b1 = self.service.criar("Planalto", ["Ponto 1", "Ponto 2"])
         b2 = self.service.criar("Alto Alegre", ["Ponto 3"])
 
-        # Editar nome e pontos com sucesso
         atualizado = self.service.atualizar(
             b1.bairro_id,
             nome="Planalto Nobre",
@@ -130,21 +145,55 @@ class BairrosCrudUnitTest(unittest.TestCase):
         self.assertIn("Ponto 1", nomes)
         self.assertIn("Ponto Renovado", nomes)
 
-        # Não permite duplicar com nome de outro bairro existente
         with self.assertRaises(BairroJaCadastradoError) as ctx:
             self.service.atualizar(b1.bairro_id, nome="Alto Alegre")
         self.assertEqual(str(ctx.exception), "Esta localidade já está cadastrada.")
 
-        # Não permite duplicar com ponto de outro bairro existente
+        atualizado = self.service.atualizar(
+            b1.bairro_id, pontos_de_parada=["Ponto 3"]
+        )
+        self.assertEqual(
+            [p.nome for p in atualizado.pontos_de_parada if p.ativo],
+            ["Ponto 3"],
+        )
+
+        self.assertEqual(
+            {p.nome for p in atualizado.pontos_de_parada if not p.ativo},
+            {"Ponto 1", "Ponto 2", "Ponto Renovado"},
+        )
+
+        b2_db = self.repository.buscar_por_id(b2.bairro_id)
+        self.assertEqual(
+            [p.nome for p in b2_db.pontos_de_parada],
+            ["Ponto 3"],
+        )
+
         with self.assertRaises(PontoDeParadaJaCadastradoError) as ctx:
-            self.service.atualizar(b1.bairro_id, pontos_de_parada=["Ponto 3"])
-        self.assertEqual(str(ctx.exception), "Esta localidade já está cadastrada.")
+            self.service.atualizar(
+                b1.bairro_id, pontos_de_parada=["Ponto 3", "ponto 3"]
+            )
+        self.assertEqual(
+            str(ctx.exception),
+            "O ponto de parada 'ponto 3' está repetido neste bairro.",
+        )
+
+    def test_inativar_e_reativar_ponto_preserva_registro_e_id(self):
+        bairro = self.service.criar("Centro", ["Praça", "Mercado"])
+        ids = {p.nome: p.ponto_id for p in bairro.pontos_de_parada}
+
+        atualizado = self.service.atualizar(bairro.bairro_id, pontos_de_parada=["Praça"])
+        mercado = next(p for p in atualizado.pontos_de_parada if p.nome == "Mercado")
+        self.assertEqual(mercado.ponto_id, ids["Mercado"])
+        self.assertFalse(mercado.ativo)
+
+        atualizado = self.service.atualizar(bairro.bairro_id, pontos_de_parada=["Praça", "Mercado"])
+        self.assertEqual({p.nome: p.ponto_id for p in atualizado.pontos_de_parada}, ids)
+        self.assertTrue(all(p.ativo for p in atualizado.pontos_de_parada))
 
     def test_criterio_5_inativacao_e_reativacao_gera_log_auditoria(self):
         b = self.service.criar("Distrito", ["Ponto X"])
         bid = b.bairro_id
 
-        # Inativar
         self.service.inativar(bid, usuario_executor_id=42)
         b_inativo = self.repository.buscar_por_id(bid)
         self.assertFalse(b_inativo.ativo)
@@ -164,7 +213,6 @@ class BairrosCrudUnitTest(unittest.TestCase):
         self.assertEqual(log_inativar.valor_novo, "inativo")
         self.assertIsNotNone(log_inativar.criado_em)
 
-        # Reativar
         self.service.ativar(bid, usuario_executor_id=42)
         b_reativado = self.repository.buscar_por_id(bid)
         self.assertTrue(b_reativado.ativo)
@@ -185,7 +233,6 @@ class BairrosCrudUnitTest(unittest.TestCase):
         self.assertIsNotNone(log_reativar.criado_em)
 
     def test_criterio_6_bloqueio_por_rota_ativa(self):
-        # Configurar repo com checker simulando rota ativa
         rotas_ativas_por_bairro = {99: True}
         repo_com_rota = BairroRepository(
             self.session,
@@ -204,14 +251,105 @@ class BairrosCrudUnitTest(unittest.TestCase):
             "Este bairro não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar.",
         )
 
+    def test_cadastro_e_edicao_gravam_auditoria_com_o_administrador(self):
+        bairro = self.service.criar("Centro", ["Praça", "Mercado"], usuario_executor_id=7)
+        self.service.atualizar(bairro.bairro_id, nome="Centro Velho", usuario_executor_id=7)
+        self.service.atualizar(bairro.bairro_id, pontos_de_parada=["Praça"], usuario_executor_id=7)
+        # Edição sem nenhuma mudança não gera registro.
+        self.service.atualizar(bairro.bairro_id, nome="Centro Velho", usuario_executor_id=7)
+
+        logs = (
+            self.session.query(LogAuditoriaORM)
+            .filter_by(entidade="bairro")
+            .order_by(LogAuditoriaORM.id)
+            .all()
+        )
+        self.assertEqual(
+            [(log.acao, log.usuario_id, log.entidade_id) for log in logs],
+            [("CRIAR", 7, bairro.bairro_id), ("EDITAR", 7, bairro.bairro_id), ("EDITAR", 7, bairro.bairro_id)],
+        )
+        self.assertIsNone(logs[0].valor_anterior)
+        self.assertEqual(json.loads(logs[1].valor_anterior)["nome"], "Centro")
+        self.assertEqual(json.loads(logs[1].valor_novo)["nome"], "Centro Velho")
+        mercado_depois = next(
+            p for p in json.loads(logs[2].valor_novo)["pontos_de_parada"] if p["nome"] == "Mercado"
+        )
+        self.assertFalse(mercado_depois["ativo"])
+
+    def test_inativar_e_reativar_ponto_individual_com_auditoria(self):
+        bairro = self.service.criar("Centro", ["Praça", "Mercado"])
+        ids = {p.nome: p.ponto_id for p in bairro.pontos_de_parada}
+
+        atualizado = self.service.inativar_ponto(bairro.bairro_id, ids["Mercado"], usuario_executor_id=42)
+        mercado = next(p for p in atualizado.pontos_de_parada if p.nome == "Mercado")
+        self.assertEqual(mercado.ponto_id, ids["Mercado"])
+        self.assertFalse(mercado.ativo)
+
+        with self.assertRaises(PontoDeParadaJaDesativadoError):
+            self.service.inativar_ponto(bairro.bairro_id, ids["Mercado"], usuario_executor_id=42)
+
+        atualizado = self.service.ativar_ponto(bairro.bairro_id, ids["Mercado"], usuario_executor_id=42)
+        self.assertTrue(all(p.ativo for p in atualizado.pontos_de_parada))
+
+        with self.assertRaises(PontoDeParadaJaAtivadoError):
+            self.service.ativar_ponto(bairro.bairro_id, ids["Mercado"], usuario_executor_id=42)
+
+        logs = (
+            self.session.query(LogAuditoriaORM)
+            .filter_by(entidade="ponto_de_parada")
+            .order_by(LogAuditoriaORM.id)
+            .all()
+        )
+        self.assertEqual(
+            [(log.acao, log.usuario_id, log.entidade_id, log.valor_anterior, log.valor_novo) for log in logs],
+            [
+                ("INATIVAR", 42, ids["Mercado"], "ativo", "inativo"),
+                ("ATIVAR", 42, ids["Mercado"], "inativo", "ativo"),
+            ],
+        )
+
+    def test_inativar_ponto_nao_deixa_o_bairro_sem_ponto_ativo(self):
+        bairro = self.service.criar("Centro", ["Praça", "Mercado"])
+        ids = {p.nome: p.ponto_id for p in bairro.pontos_de_parada}
+        self.service.inativar_ponto(bairro.bairro_id, ids["Mercado"])
+
+        with self.assertRaises(UltimoPontoAtivoError) as ctx:
+            self.service.inativar_ponto(bairro.bairro_id, ids["Praça"])
+
+        self.assertEqual(str(ctx.exception), "O bairro precisa ter ao menos um ponto de parada ativo.")
+        praca = next(p for p in self.repository.buscar_por_id(bairro.bairro_id).pontos_de_parada if p.nome == "Praça")
+        self.assertTrue(praca.ativo)
+
+    def test_inativar_ponto_de_bairro_em_rota_ativa_bloqueia(self):
+        repo_com_rota = BairroRepository(self.session, rota_ativa_checker=lambda bairro_id: True)
+        svc = BairroService(repo_com_rota)
+        bairro = svc.criar("Bairro Com Rota", ["Ponto 1", "Ponto 2"])
+
+        with self.assertRaises(PontoDeParadaComRotaAtivaError) as ctx:
+            svc.inativar_ponto(bairro.bairro_id, bairro.pontos_de_parada[0].ponto_id)
+
+        self.assertEqual(
+            str(ctx.exception),
+            "Este ponto de parada não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar.",
+        )
+        self.assertTrue(all(p.ativo for p in self.repository.buscar_por_id(bairro.bairro_id).pontos_de_parada))
+        self.assertEqual(self.session.query(LogAuditoriaORM).filter_by(entidade="ponto_de_parada").count(), 0)
+
+    def test_ponto_de_outro_bairro_ou_bairro_inexistente_nao_e_encontrado(self):
+        b1 = self.service.criar("Bairro Um", ["Ponto 1", "Ponto 2"])
+        b2 = self.service.criar("Bairro Dois", ["Ponto 3", "Ponto 4"])
+
+        with self.assertRaises(PontoDeParadaNaoEncontradoError):
+            self.service.inativar_ponto(b1.bairro_id, b2.pontos_de_parada[0].ponto_id)
+        with self.assertRaises(BairroNaoEncontradoError):
+            self.service.inativar_ponto(999, b1.pontos_de_parada[0].ponto_id)
+
     def test_criterio_8_validacao_campos_obrigatorios(self):
-        # Nome vazio
         with self.assertRaises(BairroValidationError) as ctx:
             self.service.criar("   ", ["Ponto 1"])
         self.assertEqual(ctx.exception.field, "nome")
         self.assertEqual(str(ctx.exception), "O nome do bairro é obrigatório.")
 
-        # Pontos vazios
         with self.assertRaises(BairroValidationError) as ctx:
             self.service.criar("Centro", [])
         self.assertEqual(ctx.exception.field, "pontos_de_parada")
@@ -219,7 +357,6 @@ class BairrosCrudUnitTest(unittest.TestCase):
             str(ctx.exception), "Ao menos um ponto de parada é obrigatório."
         )
 
-        # Ponto com string em branco
         with self.assertRaises(BairroValidationError) as ctx:
             self.service.criar("Centro", ["   "])
         self.assertEqual(ctx.exception.field, "pontos_de_parada")
@@ -325,7 +462,6 @@ class BairrosApiHttpTest(unittest.IsolatedAsyncioTestCase):
         return start["status"], decoded_body
 
     async def test_api_fluxo_completo_e_criterios_de_aceite(self):
-        # 1. Criação com sucesso (Critério 2 e 7)
         status, body = await self.asgi_request(
             "/bairros",
             payload={
@@ -340,8 +476,6 @@ class BairrosApiHttpTest(unittest.IsolatedAsyncioTestCase):
         bairro_id = body["data"]["bairro_id"]
         self.assertEqual(len(body["data"]["pontos_de_parada"]), 2)
 
-        # 2. Listagem com default ativo e incluirInativos (Critério 1)
-        # Cria um segundo e inativa
         status2, body2 = await self.asgi_request(
             "/bairros",
             payload={
@@ -353,12 +487,10 @@ class BairrosApiHttpTest(unittest.IsolatedAsyncioTestCase):
         bid2 = body2["data"]["bairro_id"]
         await self.asgi_request(f"/bairros/{bid2}/inativar", method="PATCH")
 
-        # Listagem padrão (ativo=None como admin traz todos; se não admin traz ativos)
         status_admin_all, body_admin_all = await self.asgi_request("/bairros", method="GET")
         self.assertEqual(status_admin_all, 200)
         self.assertEqual(len(body_admin_all), 2)
 
-        # Listagem filtrando ativos
         status_ativos, body_ativos = await self.asgi_request(
             "/bairros", method="GET", query_string=b"ativo=true"
         )
@@ -366,7 +498,6 @@ class BairrosApiHttpTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(body_ativos), 1)
         self.assertEqual(body_ativos[0]["bairro_id"], bairro_id)
 
-        # Listagem filtrando inativos
         status_inativos, body_inativos = await self.asgi_request(
             "/bairros", method="GET", query_string=b"ativo=false"
         )
@@ -374,7 +505,6 @@ class BairrosApiHttpTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(body_inativos), 1)
         self.assertEqual(body_inativos[0]["bairro_id"], bid2)
 
-        # 3. Unicidade (Critério 3)
         status_dup, body_dup = await self.asgi_request(
             "/bairros",
             payload={
@@ -386,7 +516,29 @@ class BairrosApiHttpTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(status_dup, 409)
         self.assertIn("Esta localidade já está cadastrada.", str(body_dup))
 
-        # 4. Inativação e Reativação com mensagem esperada (Critério 5 e 7)
+        status_mesmo_ponto, body_mesmo_ponto = await self.asgi_request(
+            "/bairros",
+            payload={
+                "nome": "Planalto Universitário",
+                "pontos_de_parada": ["Rua das Rosas"],
+            },
+            method="POST",
+        )
+        self.assertEqual(status_mesmo_ponto, 201)
+        self.assertTrue(body_mesmo_ponto["success"])
+        self.assertEqual(body_mesmo_ponto["message"], "Operação realizada com sucesso")
+
+        status_ponto_dup, body_ponto_dup = await self.asgi_request(
+            "/bairros",
+            payload={
+                "nome": "Bairro Com Ponto Repetido",
+                "pontos_de_parada": ["Praça Central", "praça central"],
+            },
+            method="POST",
+        )
+        self.assertEqual(status_ponto_dup, 409)
+        self.assertIn("está repetido neste bairro", str(body_ponto_dup))
+
         status_inativar, body_inativar = await self.asgi_request(
             f"/bairros/{bairro_id}/inativar", method="PATCH"
         )
@@ -401,10 +553,63 @@ class BairrosApiHttpTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(body_reativar["message"], "Operação realizada com sucesso")
         self.assertTrue(body_reativar["data"]["ativo"])
 
-        # 5. Validação de campos obrigatórios (Critério 8)
         status_val, body_val = await self.asgi_request(
             "/bairros",
             payload={"nome": "", "pontos_de_parada": []},
             method="POST",
         )
         self.assertEqual(status_val, 422)
+
+    async def test_cadastro_e_edicao_gravam_o_administrador_logado_no_log(self):
+        status, body = await self.asgi_request(
+            "/bairros", payload={"nome": "Bairro Log", "pontos_de_parada": ["Ponto Log"]}, method="POST"
+        )
+        self.assertEqual(status, 201)
+        bairro_id = body["data"]["bairro_id"]
+        status, _ = await self.asgi_request(f"/bairros/{bairro_id}", payload={"nome": "Bairro Log Editado"}, method="PATCH")
+        self.assertEqual(status, 200)
+
+        logs = self.session.query(LogAuditoriaORM).filter_by(entidade="bairro").order_by(LogAuditoriaORM.id).all()
+        self.assertEqual([(log.acao, log.usuario_id) for log in logs], [("CRIAR", 1), ("EDITAR", 1)])
+
+    async def test_api_ponto_individual_e_visibilidade_do_ponto_inativo(self):
+        status, body = await self.asgi_request(
+            "/bairros", payload={"nome": "Centro", "pontos_de_parada": ["Praça", "Mercado"]}, method="POST"
+        )
+        bairro_id = body["data"]["bairro_id"]
+        ids = {p["nome"]: p["ponto_id"] for p in body["data"]["pontos_de_parada"]}
+        base = f"/bairros/{bairro_id}/pontos"
+
+        status, body = await self.asgi_request(f"{base}/{ids['Mercado']}/inativar", method="PATCH")
+        self.assertEqual(status, 200)
+        self.assertEqual(body["message"], "Operação realizada com sucesso")
+        mercado = next(p for p in body["data"]["pontos_de_parada"] if p["nome"] == "Mercado")
+        self.assertEqual((mercado["ponto_id"], mercado["ativo"]), (ids["Mercado"], False))
+
+        status, body = await self.asgi_request(f"{base}/{ids['Mercado']}/inativar", method="PATCH")
+        self.assertEqual(status, 409)
+        status, body = await self.asgi_request(f"{base}/{ids['Praça']}/inativar", method="PATCH")
+        self.assertEqual(status, 409)
+        self.assertIn("ao menos um ponto de parada ativo", str(body))
+        status, _ = await self.asgi_request(f"{base}/9999/inativar", method="PATCH")
+        self.assertEqual(status, 404)
+
+        # O administrador vê o ponto inativo, identificado como inativo.
+        status, body = await self.asgi_request(f"/bairros/{bairro_id}")
+        self.assertEqual({p["nome"]: p["ativo"] for p in body["pontos_de_parada"]}, {"Praça": True, "Mercado": False})
+
+        # Quem não é administrador só enxerga os pontos ativos (detalhe e listagem).
+        self.app.dependency_overrides[get_optional_current_user] = lambda: None
+        status, body = await self.asgi_request(f"/bairros/{bairro_id}")
+        self.assertEqual([p["nome"] for p in body["pontos_de_parada"]], ["Praça"])
+        status, lista = await self.asgi_request("/bairros")
+        self.assertEqual([p["nome"] for p in lista[0]["pontos_de_parada"]], ["Praça"])
+
+        status, body = await self.asgi_request(f"{base}/{ids['Mercado']}/ativar", method="PATCH")
+        self.assertEqual(status, 200)
+        self.assertTrue(all(p["ativo"] for p in body["data"]["pontos_de_parada"]))
+        status, _ = await self.asgi_request(f"{base}/{ids['Mercado']}/ativar", method="PATCH")
+        self.assertEqual(status, 409)
+
+        logs = self.session.query(LogAuditoriaORM).filter_by(entidade="ponto_de_parada").order_by(LogAuditoriaORM.id).all()
+        self.assertEqual([(log.acao, log.usuario_id) for log in logs], [("INATIVAR", 1), ("ATIVAR", 1)])

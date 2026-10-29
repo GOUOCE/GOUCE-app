@@ -29,7 +29,7 @@ class ValidarEtapa3UseCaseTest(unittest.TestCase):
 
     def payload(self, **updates):
         data = {
-            "bairro_id": "Centro",
+            "bairro_id": "1",
             "telefone": "85999990000",
             "faculdade_id": 1,
             "curso": "Direito",
