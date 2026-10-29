@@ -18,7 +18,8 @@ export interface DetalhesSolicitacaoItem extends SolicitacaoItem {
   instituicao?: string;
   telefone?: string;
   data_nascimento?: string;
-  bairro_id?: string;
+  // Nome do bairro: a API manda o nome em `bairro`, não o id (#366)
+  bairro?: string;
   turno_curso?: string;
   periodo_ingresso?: string;
   id_comprovante_matricula?: string;
@@ -68,13 +69,20 @@ export const solicitacaoService = {
       faculdade_id: response.data.faculdade_id,
       instituicao: formatarInstituicao(response.data),
       data_nascimento: response.data.data_nascimento,
-      bairro_id: response.data.bairro_id,
+      bairro: response.data.bairro || response.data.nome_bairro,
       turno_curso: response.data.turno_curso,
       periodo_ingresso: response.data.periodo_ingresso,
       id_comprovante_matricula: response.data.id_comprovante_matricula,
       id_comprovante_residencia: response.data.id_comprovante_residencia,
       id_foto_aluno: response.data.id_foto_aluno || response.data.foto_perfil,
     };
+  },
+
+  // Na web baixa o arquivo com o token no cabeçalho e devolve um endereço local (blob) para abrir numa aba,
+  // sem pôr o token na URL (#368)
+  async obterUrlDocumentoWeb(arquivoId: string): Promise<string> {
+    const response = await api.get(`/arquivos/${arquivoId}/view`, { responseType: 'blob' });
+    return URL.createObjectURL(response.data as Blob);
   },
 
   async aprovarSolicitacao(alunoId: number): Promise<any> {
