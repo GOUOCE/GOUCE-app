@@ -404,10 +404,8 @@ export const rotaPrincipalService = {
   },
 
   async inativarRotaPrincipal(id: number): Promise<void> {
+    // O bloqueio por agendamentos vem só da API; a lista local não decide a inativação
     const rotaLocal = ROTAS_PRINCIPAIS_MOCK.find((r) => r.id === id);
-    if (rotaLocal && rotaLocal.agendamentos_pendentes) {
-      throw new Error('Esta rota possui agendamentos pendentes de alunos. Não é possível inativar no momento.');
-    }
 
     try {
       await api.patch(`/rotas-principais/${id}/inativar`);

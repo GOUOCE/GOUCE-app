@@ -81,9 +81,7 @@ export default function RotasPrincipaisListScreen() {
           showPopup({
             type: 'error',
             title: 'Inativação Bloqueada',
-            message:
-              error.message ||
-              'Esta rota possui agendamentos pendentes de alunos. Não é possível inativar no momento.',
+            message: error.message || 'Erro ao inativar rota principal.',
             confirmText: 'Entendido',
           });
         }
