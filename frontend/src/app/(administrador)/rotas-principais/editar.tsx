@@ -74,7 +74,7 @@ export default function EditarRotaPrincipalScreen() {
     router.replace('/(administrador)/rotas-principais');
   };
 
-  const { control, handleSubmit, formState: { errors }, reset, setValue, trigger } = useForm<RotaPrincipalFormData>({
+  const { control, handleSubmit, formState: { errors, isSubmitted }, reset, setValue, trigger, clearErrors } = useForm<RotaPrincipalFormData>({
     resolver: zodResolver(rotaPrincipalSchema),
     defaultValues: VALORES_INICIAIS,
   });
@@ -144,6 +144,13 @@ export default function EditarRotaPrincipalScreen() {
       };
     }, [id, limparFormulario, reset, showPopup, router])
   );
+
+  // Erro só aparece depois de tentar salvar; apagar o campo tira o erro (padrão da HU-010)
+  const atualizarCampo = (campo: 'nome', valor: string) => {
+    const preenchido = valor.trim() !== '';
+    setValue(campo, valor, { shouldDirty: true, shouldValidate: preenchido && isSubmitted });
+    if (!preenchido) clearErrors(campo);
+  };
 
   const toggleFaculdadeIda = (idFac: number) => {
     const novos = facsIdaSelecionadas.includes(idFac)
@@ -248,13 +255,14 @@ export default function EditarRotaPrincipalScreen() {
           <Controller
             control={control}
             name="nome"
-            render={({ field: { onChange, value } }) => (
+            render={({ field: { value } }) => (
               <TextInput
                 label="Nome da Rota *"
                 mode="outlined"
                 placeholder="ex.: Linha 01 - Centro"
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(texto) => atualizarCampo('nome', texto)}
+                maxLength={150}
                 error={!!errors.nome}
                 left={<TextInput.Icon icon={() => <GitCommit size={20} color="#666" />} />}
                 style={styles.input}

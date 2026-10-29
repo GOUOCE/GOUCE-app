@@ -66,3 +66,30 @@ describe('Suíte de Testes Unitários - HU-011 (Gerenciamento de Rotas Principai
     });
   });
 });
+
+describe('Máscara do nome da rota (HU-011, #338)', () => {
+  const base = {
+    horarioSaida: '06:40',
+    horarioRetorno: '17:30',
+    faculdadesIdaIds: [1],
+    faculdadesVoltaIds: [1],
+    bairrosIds: [1],
+  };
+
+  it.each(['Rota Centro - UFC', 'Linha 01/02', "Rota D'Ávila", 'Rota São João'])('aceita "%s"', (nome) => {
+    expect(rotaPrincipalSchema.safeParse({ ...base, nome }).success).toBe(true);
+  });
+
+  it.each(['wwww@@@2', 'Rota #1', 'Rota (Manhã)', 'Rota_Centro'])('recusa "%s" com a mensagem do campo', (nome) => {
+    const res = rotaPrincipalSchema.safeParse({ ...base, nome });
+    expect(res.success).toBe(false);
+    if (!res.success) {
+      expect(res.error.issues[0].message).toBe('Use apenas letras, números, espaços, hífen, apóstrofo ou barra');
+    }
+  });
+
+  it('tira espaços das pontas e espaços repetidos', () => {
+    const res = rotaPrincipalSchema.safeParse({ ...base, nome: '  Rota   Centro  ' });
+    expect(res.success && res.data.nome).toBe('Rota Centro');
+  });
+});
