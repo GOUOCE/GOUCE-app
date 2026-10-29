@@ -15,11 +15,12 @@ import {
 import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
-// Valores do formulário vazio; a tela volta a eles ao ganhar e ao perder o foco (#341)
+// Valores do formulário vazio; a tela volta a eles ao ganhar e ao perder o foco (#341).
+// Nenhum campo obrigatório vem preenchido: o administrador escolhe tudo (#337)
 const VALORES_INICIAIS: RotaPrincipalFormData = {
   nome: '',
-  horarioSaida: '06:40',
-  horarioRetorno: '17:30',
+  horarioSaida: '',
+  horarioRetorno: '',
   faculdadesIdaIds: [],
   faculdadesVoltaIds: [],
   bairrosIds: [],

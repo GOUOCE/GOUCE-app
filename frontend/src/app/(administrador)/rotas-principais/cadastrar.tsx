@@ -15,11 +15,12 @@ import {
 import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
-// Valores do formulário vazio; a tela volta a eles ao ganhar e ao perder o foco (#341)
+// Valores do formulário vazio; a tela volta a eles ao ganhar e ao perder o foco (#341).
+// Nenhum campo obrigatório vem preenchido: o administrador escolhe tudo (#337)
 const VALORES_INICIAIS: RotaPrincipalFormData = {
   nome: '',
-  horarioSaida: '06:40',
-  horarioRetorno: '17:30',
+  horarioSaida: '',
+  horarioRetorno: '',
   faculdadesIdaIds: [],
   faculdadesVoltaIds: [],
   bairrosIds: [],
@@ -97,21 +98,6 @@ export default function CadastrarRotaPrincipalScreen() {
           if (!ativa) return;
           setFaculdadesAtivas(facs);
           setBairrosAtivos(bairros);
-
-          if (facs.length > 0) {
-            const idsIniciais = facs.map((f) => f.id);
-            setFacsIdaSelecionadas(idsIniciais);
-            setFacsVoltaSelecionadas([facs[0].id]);
-            setValue('faculdadesIdaIds', idsIniciais);
-            setValue('faculdadesVoltaIds', [facs[0].id]);
-          }
-
-          if (bairros.length > 0) {
-            const idsBairros = [bairros[0].id];
-            setBairrosVinculadosIds(idsBairros);
-            setValue('bairrosIds', idsBairros);
-            setBairroParaVincularId(bairros[0].id);
-          }
         } catch (err) {
           if (!ativa) return;
           showPopup({
@@ -128,7 +114,7 @@ export default function CadastrarRotaPrincipalScreen() {
         ativa = false;
         limparFormulario();
       };
-    }, [limparFormulario, setValue, showPopup])
+    }, [limparFormulario, showPopup])
   );
 
   const toggleFaculdadeIda = (id: number) => {
