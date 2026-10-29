@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
-import { Text, TextInput, Button, Checkbox, Portal } from 'react-native-paper';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Text, TextInput, Button, Checkbox, Portal, ActivityIndicator } from 'react-native-paper';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft, GitCommit, Clock, Building2, ChevronDown, Trash2 } from 'lucide-react-native';
@@ -14,6 +14,16 @@ import {
 } from '@/services/rotaPrincipalService';
 import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
+
+// Valores do formulário vazio; a tela volta a eles ao ganhar e ao perder o foco (#341)
+const VALORES_INICIAIS: RotaPrincipalFormData = {
+  nome: '',
+  horarioSaida: '06:40',
+  horarioRetorno: '17:30',
+  faculdadesIdaIds: [],
+  faculdadesVoltaIds: [],
+  bairrosIds: [],
+};
 
 export default function EditarRotaPrincipalScreen() {
   const router = useRouter();
@@ -34,6 +44,7 @@ export default function EditarRotaPrincipalScreen() {
 
   const [bairroParaVincularId, setBairroParaVincularId] = useState<number | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
+  const [dadosCarregados, setDadosCarregados] = useState(false);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -64,53 +75,74 @@ export default function EditarRotaPrincipalScreen() {
 
   const { control, handleSubmit, formState: { errors }, reset, setValue, trigger } = useForm<RotaPrincipalFormData>({
     resolver: zodResolver(rotaPrincipalSchema),
-    defaultValues: {
-      nome: '',
-      horarioSaida: '06:40',
-      horarioRetorno: '17:30',
-      faculdadesIdaIds: [],
-      faculdadesVoltaIds: [],
-      bairrosIds: [],
-    },
+    defaultValues: VALORES_INICIAIS,
   });
 
-  useEffect(() => {
-    async function carregarDados() {
-      if (!id) return;
-      try {
-        const { faculdades: facs, bairros } = await rotaPrincipalService.listarOpcoes();
-        setFaculdadesAtivas(facs);
-        setBairrosAtivos(bairros);
+  const limparFormulario = React.useCallback(() => {
+    reset(VALORES_INICIAIS);
+    setFacsIdaSelecionadas([]);
+    setFacsVoltaSelecionadas([]);
+    setBairrosVinculadosIds([]);
+    setBairroParaVincularId(undefined);
+    setDadosCarregados(false);
+  }, [reset]);
 
-        const r = await rotaPrincipalService.obterRotaPrincipalPorId(Number(id));
-        const idaIds = r.faculdades_ida.map((f) => f.id);
-        const voltaIds = r.faculdades_volta.map((f) => f.id);
-        const bairrosIds = r.bairros.map((b) => b.id);
+  // Recarrega a rota escolhida e as opções ativas ao ganhar foco e descarta o que não foi salvo ao sair (#341)
+  useFocusEffect(
+    React.useCallback(() => {
+      let ativa = true;
+      limparFormulario();
 
-        setFacsIdaSelecionadas(idaIds);
-        setFacsVoltaSelecionadas(voltaIds);
-        setBairrosVinculadosIds(bairrosIds);
+      async function carregarDados() {
+        if (!id) return;
+        try {
+          const [{ faculdades: facs, bairros }, r] = await Promise.all([
+            rotaPrincipalService.listarOpcoes(),
+            rotaPrincipalService.obterRotaPrincipalPorId(Number(id)),
+          ]);
+          if (!ativa) return;
+          setFaculdadesAtivas(facs);
+          setBairrosAtivos(bairros);
 
-        reset({
-          nome: r.nome,
-          horarioSaida: r.horario_saida,
-          horarioRetorno: r.horario_retorno,
-          faculdadesIdaIds: idaIds,
-          faculdadesVoltaIds: voltaIds,
-          bairrosIds: bairrosIds,
-        });
-      } catch (err) {
-        showPopup({
-          type: 'error',
-          title: 'Erro de Conexão',
-          message: getErrorMessage(err, 'Erro ao carregar dados da rota principal.'),
-          confirmText: 'Entendido',
-          onConfirm: voltarParaListagem,
-        });
+          const idaIds = r.faculdades_ida.map((f) => f.id);
+          const voltaIds = r.faculdades_volta.map((f) => f.id);
+          const bairrosIds = r.bairros.map((b) => b.id);
+
+          setFacsIdaSelecionadas(idaIds);
+          setFacsVoltaSelecionadas(voltaIds);
+          setBairrosVinculadosIds(bairrosIds);
+
+          reset({
+            nome: r.nome,
+            horarioSaida: r.horario_saida,
+            horarioRetorno: r.horario_retorno,
+            faculdadesIdaIds: idaIds,
+            faculdadesVoltaIds: voltaIds,
+            bairrosIds: bairrosIds,
+          });
+          setDadosCarregados(true);
+        } catch (err) {
+          if (!ativa) return;
+          showPopup({
+            type: 'error',
+            title: 'Erro de Conexão',
+            message: getErrorMessage(err, 'Erro ao carregar dados da rota principal.'),
+            confirmText: 'Entendido',
+            onConfirm: () => {
+              closePopup();
+              router.replace('/(administrador)/rotas-principais');
+            },
+          });
+        }
       }
-    }
-    carregarDados();
-  }, [id, reset, showPopup]);
+      carregarDados();
+
+      return () => {
+        ativa = false;
+        limparFormulario();
+      };
+    }, [id, limparFormulario, reset, showPopup, router])
+  );
 
   const toggleFaculdadeIda = (idFac: number) => {
     const novos = facsIdaSelecionadas.includes(idFac)
@@ -149,7 +181,7 @@ export default function EditarRotaPrincipalScreen() {
   };
 
   const onSubmit = async (dados: RotaPrincipalFormData) => {
-    if (!id) return;
+    if (!id || !dadosCarregados) return;
     setIsLoading(true);
     try {
       await rotaPrincipalService.atualizarRotaPrincipal(Number(id), {
@@ -209,7 +241,7 @@ export default function EditarRotaPrincipalScreen() {
         onDismiss={popup.type === 'success' ? voltarParaListagem : closePopup}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      {!dadosCarregados ? <ActivityIndicator style={styles.carregando} accessibilityLabel="Carregando rota" /> : <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Nome da Rota */}
         <View style={styles.inputBox}>
           <Controller
@@ -357,7 +389,7 @@ export default function EditarRotaPrincipalScreen() {
         >
           Salvar alterações
         </Button>
-      </ScrollView>
+      </ScrollView>}
 
       {/* Modal Faculdades de Ida */}
       <Portal>
@@ -503,6 +535,9 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontWeight: 'bold',
     color: '#333',
+  },
+  carregando: {
+    marginTop: 32,
   },
   scrollContent: {
     paddingHorizontal: 24,

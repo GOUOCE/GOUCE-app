@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
 import { Text, TextInput, Button, Checkbox, Portal } from 'react-native-paper';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft, GitCommit, Clock, Building2, ChevronDown, Trash2 } from 'lucide-react-native';
@@ -14,6 +14,16 @@ import {
 } from '@/services/rotaPrincipalService';
 import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
+
+// Valores do formulário vazio; a tela volta a eles ao ganhar e ao perder o foco (#341)
+const VALORES_INICIAIS: RotaPrincipalFormData = {
+  nome: '',
+  horarioSaida: '06:40',
+  horarioRetorno: '17:30',
+  faculdadesIdaIds: [],
+  faculdadesVoltaIds: [],
+  bairrosIds: [],
+};
 
 export default function CadastrarRotaPrincipalScreen() {
   const router = useRouter();
@@ -62,50 +72,64 @@ export default function CadastrarRotaPrincipalScreen() {
     router.replace('/(administrador)/rotas-principais');
   };
 
-  const { control, handleSubmit, formState: { errors }, setValue, trigger } = useForm<RotaPrincipalFormData>({
+  const { control, handleSubmit, formState: { errors }, reset, setValue, trigger } = useForm<RotaPrincipalFormData>({
     resolver: zodResolver(rotaPrincipalSchema),
-    defaultValues: {
-      nome: '',
-      horarioSaida: '06:40',
-      horarioRetorno: '17:30',
-      faculdadesIdaIds: [],
-      faculdadesVoltaIds: [],
-      bairrosIds: [],
-    },
+    defaultValues: VALORES_INICIAIS,
   });
 
-  useEffect(() => {
-    async function carregarOpcoes() {
-      try {
-        const { faculdades: facs, bairros } = await rotaPrincipalService.listarOpcoes();
-        setFaculdadesAtivas(facs);
-        setBairrosAtivos(bairros);
+  const limparFormulario = React.useCallback(() => {
+    reset(VALORES_INICIAIS);
+    setFacsIdaSelecionadas([]);
+    setFacsVoltaSelecionadas([]);
+    setBairrosVinculadosIds([]);
+    setBairroParaVincularId(undefined);
+  }, [reset]);
 
-        if (facs.length > 0) {
-          const idsIniciais = facs.map((f) => f.id);
-          setFacsIdaSelecionadas(idsIniciais);
-          setFacsVoltaSelecionadas([facs[0].id]);
-          setValue('faculdadesIdaIds', idsIniciais);
-          setValue('faculdadesVoltaIds', [facs[0].id]);
-        }
+  // Limpa o formulário e recarrega faculdades e bairros ativos sempre que a tela ganha ou perde o foco
+  useFocusEffect(
+    React.useCallback(() => {
+      let ativa = true;
+      limparFormulario();
 
-        if (bairros.length > 0) {
-          const idsBairros = [bairros[0].id];
-          setBairrosVinculadosIds(idsBairros);
-          setValue('bairrosIds', idsBairros);
-          setBairroParaVincularId(bairros[0].id);
+      async function carregarOpcoes() {
+        try {
+          const { faculdades: facs, bairros } = await rotaPrincipalService.listarOpcoes();
+          if (!ativa) return;
+          setFaculdadesAtivas(facs);
+          setBairrosAtivos(bairros);
+
+          if (facs.length > 0) {
+            const idsIniciais = facs.map((f) => f.id);
+            setFacsIdaSelecionadas(idsIniciais);
+            setFacsVoltaSelecionadas([facs[0].id]);
+            setValue('faculdadesIdaIds', idsIniciais);
+            setValue('faculdadesVoltaIds', [facs[0].id]);
+          }
+
+          if (bairros.length > 0) {
+            const idsBairros = [bairros[0].id];
+            setBairrosVinculadosIds(idsBairros);
+            setValue('bairrosIds', idsBairros);
+            setBairroParaVincularId(bairros[0].id);
+          }
+        } catch (err) {
+          if (!ativa) return;
+          showPopup({
+            type: 'error',
+            title: 'Erro de Conexão',
+            message: getErrorMessage(err, 'Erro ao carregar faculdades e bairros.'),
+            confirmText: 'Entendido',
+          });
         }
-      } catch (err) {
-        showPopup({
-          type: 'error',
-          title: 'Erro de Conexão',
-          message: getErrorMessage(err, 'Erro ao carregar faculdades e bairros.'),
-          confirmText: 'Entendido',
-        });
       }
-    }
-    carregarOpcoes();
-  }, [setValue, showPopup]);
+      carregarOpcoes();
+
+      return () => {
+        ativa = false;
+        limparFormulario();
+      };
+    }, [limparFormulario, setValue, showPopup])
+  );
 
   const toggleFaculdadeIda = (id: number) => {
     const novos = facsIdaSelecionadas.includes(id)
