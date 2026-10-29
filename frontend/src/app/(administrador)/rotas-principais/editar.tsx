@@ -13,6 +13,7 @@ import {
   BairroOpcao,
 } from '@/services/rotaPrincipalService';
 import { getErrorMessage } from '@/utils/errorUtils';
+import { formatarHorario } from '@/utils/formatarHorario';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 // Valores do formulário vazio; a tela volta a eles ao ganhar e ao perder o foco (#341).
@@ -40,8 +41,6 @@ export default function EditarRotaPrincipalScreen() {
   const [modalFacsIdaVisible, setModalFacsIdaVisible] = useState(false);
   const [modalFacsVoltaVisible, setModalFacsVoltaVisible] = useState(false);
   const [modalVincularBairroVisible, setModalVincularBairroVisible] = useState(false);
-  const [modalSaidaVisible, setModalSaidaVisible] = useState(false);
-  const [modalRetornoVisible, setModalRetornoVisible] = useState(false);
 
   const [bairroParaVincularId, setBairroParaVincularId] = useState<number | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
@@ -146,7 +145,7 @@ export default function EditarRotaPrincipalScreen() {
   );
 
   // Erro só aparece depois de tentar salvar; apagar o campo tira o erro (padrão da HU-010)
-  const atualizarCampo = (campo: 'nome', valor: string) => {
+  const atualizarCampo = (campo: 'nome' | 'horarioSaida' | 'horarioRetorno', valor: string) => {
     const preenchido = valor.trim() !== '';
     setValue(campo, valor, { shouldDirty: true, shouldValidate: preenchido && isSubmitted });
     if (!preenchido) clearErrors(campo);
@@ -279,19 +278,18 @@ export default function EditarRotaPrincipalScreen() {
               control={control}
               name="horarioSaida"
               render={({ field: { value } }) => (
-                <TouchableOpacity activeOpacity={0.7} onPress={() => setModalSaidaVisible(true)}>
-                  <View pointerEvents="none">
-                    <TextInput
-                      label="Horário de Saída *"
-                      mode="outlined"
-                      value={value || 'Selecionar'}
-                      editable={false}
-                      error={!!errors.horarioSaida}
-                      left={<TextInput.Icon icon={() => <Clock size={20} color="#666" />} />}
-                      style={styles.input}
-                    />
-                  </View>
-                </TouchableOpacity>
+                <TextInput
+                  label="Horário de Saída *"
+                  mode="outlined"
+                  placeholder="HH:mm"
+                  value={value}
+                  onChangeText={(texto) => atualizarCampo('horarioSaida', formatarHorario(texto))}
+                  keyboardType="number-pad"
+                  maxLength={5}
+                  error={!!errors.horarioSaida}
+                  left={<TextInput.Icon icon={() => <Clock size={20} color="#666" />} />}
+                  style={styles.input}
+                />
               )}
             />
             {errors.horarioSaida && <Text style={styles.errorText}>{errors.horarioSaida.message}</Text>}
@@ -302,19 +300,18 @@ export default function EditarRotaPrincipalScreen() {
               control={control}
               name="horarioRetorno"
               render={({ field: { value } }) => (
-                <TouchableOpacity activeOpacity={0.7} onPress={() => setModalRetornoVisible(true)}>
-                  <View pointerEvents="none">
-                    <TextInput
-                      label="Horário de Retorno *"
-                      mode="outlined"
-                      value={value || 'Selecionar'}
-                      editable={false}
-                      error={!!errors.horarioRetorno}
-                      left={<TextInput.Icon icon={() => <Clock size={20} color="#666" />} />}
-                      style={styles.input}
-                    />
-                  </View>
-                </TouchableOpacity>
+                <TextInput
+                  label="Horário de Retorno *"
+                  mode="outlined"
+                  placeholder="HH:mm"
+                  value={value}
+                  onChangeText={(texto) => atualizarCampo('horarioRetorno', formatarHorario(texto))}
+                  keyboardType="number-pad"
+                  maxLength={5}
+                  error={!!errors.horarioRetorno}
+                  left={<TextInput.Icon icon={() => <Clock size={20} color="#666" />} />}
+                  style={styles.input}
+                />
               )}
             />
             {errors.horarioRetorno && <Text style={styles.errorText}>{errors.horarioRetorno.message}</Text>}
@@ -490,37 +487,6 @@ export default function EditarRotaPrincipalScreen() {
                 <Button mode="text" onPress={() => setModalVincularBairroVisible(false)}>Cancelar</Button>
                 <Button mode="text" onPress={handleVincularBairro} labelStyle={{ color: '#004D40', fontWeight: 'bold' }}>Vincular</Button>
               </View>
-            </View>
-          </TouchableOpacity>
-        </RNModal>
-      </Portal>
-
-      {/* Modais de Horário de Saída e Retorno */}
-      <Portal>
-        <RNModal visible={modalSaidaVisible} transparent={true} animationType="fade">
-          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalSaidaVisible(false)}>
-            <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-              <Text variant="titleLarge" style={styles.modalTitle}>Horário de Saída</Text>
-              {['06:00', '06:10', '06:20', '06:30', '06:40', '07:00'].map((h) => (
-                <TouchableOpacity key={h} style={styles.optionItem} onPress={() => { setValue('horarioSaida', h); setModalSaidaVisible(false); }}>
-                  <Text style={styles.optionText}>{h}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </TouchableOpacity>
-        </RNModal>
-      </Portal>
-
-      <Portal>
-        <RNModal visible={modalRetornoVisible} transparent={true} animationType="fade">
-          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalRetornoVisible(false)}>
-            <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-              <Text variant="titleLarge" style={styles.modalTitle}>Horário de Retorno</Text>
-              {['11:30', '12:00', '17:00', '17:30', '18:00', '22:00'].map((h) => (
-                <TouchableOpacity key={h} style={styles.optionItem} onPress={() => { setValue('horarioRetorno', h); setModalRetornoVisible(false); }}>
-                  <Text style={styles.optionText}>{h}</Text>
-                </TouchableOpacity>
-              ))}
             </View>
           </TouchableOpacity>
         </RNModal>

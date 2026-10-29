@@ -93,3 +93,40 @@ describe('Máscara do nome da rota (HU-011, #338)', () => {
     expect(res.success && res.data.nome).toBe('Rota Centro');
   });
 });
+
+describe('Horários livres no formato HH:mm (HU-011, #340)', () => {
+  const base = {
+    nome: 'Rota Centro - UFC',
+    faculdadesIdaIds: [1],
+    faculdadesVoltaIds: [1],
+    bairrosIds: [1],
+  };
+  const erroDe = (res: any, campo: string) =>
+    res.error.issues.find((i: any) => i.path[0] === campo)?.message;
+
+  it('aceita qualquer horário válido, como 13:15 e 22:40, e 00:00 a 23:59', () => {
+    expect(rotaPrincipalSchema.safeParse({ ...base, horarioSaida: '13:15', horarioRetorno: '22:40' }).success).toBe(true);
+    expect(rotaPrincipalSchema.safeParse({ ...base, horarioSaida: '00:00', horarioRetorno: '23:59' }).success).toBe(true);
+  });
+
+  it.each(['24:00', '06:60', '6:30', '0630'])('recusa "%s" com a mensagem da API', (horario) => {
+    const res = rotaPrincipalSchema.safeParse({ ...base, horarioSaida: horario, horarioRetorno: '23:00' });
+    expect(res.success).toBe(false);
+    expect(erroDe(res, 'horarioSaida')).toBe('Horário deve estar no formato HH:MM.');
+  });
+
+  it('exige os dois horários', () => {
+    const res = rotaPrincipalSchema.safeParse({ ...base, horarioSaida: '', horarioRetorno: '' });
+    expect(erroDe(res, 'horarioSaida')).toBe('Horário de saída é obrigatório.');
+    expect(erroDe(res, 'horarioRetorno')).toBe('Horário de retorno é obrigatório.');
+  });
+
+  it.each([['13:15', '13:15'], ['13:15', '13:14'], ['22:00', '06:00']])(
+    'recusa retorno %s → %s (igual ou antes da saída) no campo de retorno',
+    (saida, retorno) => {
+      const res = rotaPrincipalSchema.safeParse({ ...base, horarioSaida: saida, horarioRetorno: retorno });
+      expect(res.success).toBe(false);
+      expect(erroDe(res, 'horarioRetorno')).toBe('Horário de retorno deve ser maior que o horário de saída.');
+    }
+  );
+});
