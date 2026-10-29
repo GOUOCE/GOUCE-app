@@ -78,7 +78,7 @@ export default function CadastrarRotaPrincipalScreen() {
     router.replace('/(administrador)/rotas-principais');
   };
 
-  const { control, handleSubmit, formState: { errors, isSubmitted }, reset, setValue, clearErrors } = useForm<RotaPrincipalFormData>({
+  const { control, handleSubmit, formState: { errors, isSubmitted }, reset, setValue, trigger, clearErrors } = useForm<RotaPrincipalFormData>({
     resolver: zodResolver(rotaPrincipalSchema),
     defaultValues: VALORES_INICIAIS,
   });
@@ -127,6 +127,8 @@ export default function CadastrarRotaPrincipalScreen() {
     const preenchido = valor.trim() !== '';
     setValue(campo, valor, { shouldDirty: true, shouldValidate: preenchido && isSubmitted });
     if (!preenchido) clearErrors(campo);
+    // Trocar um horário depois de tentar salvar reconfere os dois: a regra de retorno depois da saída depende de ambos
+    if (campo !== 'nome' && isSubmitted) trigger(['horarioSaida', 'horarioRetorno']);
   };
 
   const toggleFaculdadeIda = (id: number) => {
@@ -277,37 +279,39 @@ export default function CadastrarRotaPrincipalScreen() {
           {errors.nome && <Text style={styles.errorText}>{errors.nome.message}</Text>}
         </View>
 
-        {/* Horários de Saída e Retorno: relógio de 24 h (#340) */}
-        <View style={styles.inputBox}>
-          <Controller
-            control={control}
-            name="horarioSaida"
-            render={({ field: { value } }) => (
-              <CampoHorario
-                label="Horário de saída *"
-                value={value}
-                onChange={(horario) => atualizarCampo('horarioSaida', horario)}
-                error={!!errors.horarioSaida}
-              />
-            )}
-          />
-          {errors.horarioSaida && <Text style={styles.errorText}>{errors.horarioSaida.message}</Text>}
-        </View>
+        {/* Horários de Saída e Retorno lado a lado, como no protótipo: relógio de 24 h (#340) */}
+        <View style={styles.rowInputs}>
+          <View style={styles.halfInputBox}>
+            <Controller
+              control={control}
+              name="horarioSaida"
+              render={({ field: { value } }) => (
+                <CampoHorario
+                  label="Horário de Saída *"
+                  value={value}
+                  onChange={(horario) => atualizarCampo('horarioSaida', horario)}
+                  error={!!errors.horarioSaida}
+                />
+              )}
+            />
+            {errors.horarioSaida && <Text style={styles.errorText}>{errors.horarioSaida.message}</Text>}
+          </View>
 
-        <View style={styles.inputBox}>
-          <Controller
-            control={control}
-            name="horarioRetorno"
-            render={({ field: { value } }) => (
-              <CampoHorario
-                label="Horário de retorno *"
-                value={value}
-                onChange={(horario) => atualizarCampo('horarioRetorno', horario)}
-                error={!!errors.horarioRetorno}
-              />
-            )}
-          />
-          {errors.horarioRetorno && <Text style={styles.errorText}>{errors.horarioRetorno.message}</Text>}
+          <View style={styles.halfInputBox}>
+            <Controller
+              control={control}
+              name="horarioRetorno"
+              render={({ field: { value } }) => (
+                <CampoHorario
+                  label="Horário de Retorno *"
+                  value={value}
+                  onChange={(horario) => atualizarCampo('horarioRetorno', horario)}
+                  error={!!errors.horarioRetorno}
+                />
+              )}
+            />
+            {errors.horarioRetorno && <Text style={styles.errorText}>{errors.horarioRetorno.message}</Text>}
+          </View>
         </View>
 
         {/* Faculdades de Ida (Destino) */}
@@ -315,12 +319,11 @@ export default function CadastrarRotaPrincipalScreen() {
           <TouchableOpacity activeOpacity={0.7} onPress={() => setModalFacsIdaVisible(true)}>
             <View pointerEvents="none">
               <TextInput
-                label="Faculdades da ida *"
+                label="Faculdades de Ida (Destino) *"
                 mode="outlined"
-                placeholder="Selecionar"
-                value={resumoFacsIda}
+                value={resumoFacsIda || 'Selecionar'}
                 editable={false}
-                textColor="#191C20"
+                textColor={resumoFacsIda ? '#191C20' : '#74777F'}
                 error={!!errors.faculdadesIdaIds}
                 left={<TextInput.Icon icon={() => <Building2 size={20} color="#666" />} />}
                 right={<TextInput.Icon icon={() => <ChevronDown size={20} color="#333" />} onPress={() => setModalFacsIdaVisible(true)} />}
@@ -336,12 +339,11 @@ export default function CadastrarRotaPrincipalScreen() {
           <TouchableOpacity activeOpacity={0.7} onPress={() => setModalFacsVoltaVisible(true)}>
             <View pointerEvents="none">
               <TextInput
-                label="Faculdades da volta *"
+                label="Faculdades de Volta (Origem) *"
                 mode="outlined"
-                placeholder="Selecionar"
-                value={resumoFacsVolta}
+                value={resumoFacsVolta || 'Selecionar'}
                 editable={false}
-                textColor="#191C20"
+                textColor={resumoFacsVolta ? '#191C20' : '#74777F'}
                 error={!!errors.faculdadesVoltaIds}
                 left={<TextInput.Icon icon={() => <Building2 size={20} color="#666" />} />}
                 right={<TextInput.Icon icon={() => <ChevronDown size={20} color="#333" />} onPress={() => setModalFacsVoltaVisible(true)} />}
@@ -511,6 +513,14 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontWeight: 'bold',
     color: '#333',
+  },
+  rowInputs: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  halfInputBox: {
+    flex: 1,
+    marginBottom: 20,
   },
   scrollContent: {
     paddingHorizontal: 24,

@@ -27,10 +27,9 @@ export function CampoHorario({ label, value, onChange, error }: CampoHorarioProp
           <TextInput
             label={label}
             mode="outlined"
-            placeholder="Selecionar"
-            value={value}
+            value={value || 'Selecionar'}
             editable={false}
-            textColor="#191C20"
+            textColor={value ? '#191C20' : '#74777F'}
             error={error}
             left={<TextInput.Icon icon={() => <Clock size={20} color="#666" />} />}
             style={styles.input}
