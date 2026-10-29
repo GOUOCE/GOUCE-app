@@ -1,5 +1,6 @@
 """Casos de uso para o gerenciamento administrativo de rotas principais."""
 
+import re
 from datetime import time
 
 from src.modulos.rotas.application.dtos.rota_principal_dto import (
@@ -10,6 +11,12 @@ from src.modulos.rotas.infrastructure.repositories.rota_principal_repository imp
     MENSAGEM_ROTA_COM_COMPLEMENTARES_ATIVAS,
     RotaComComplementaresAtivasError,
     RotaPrincipalRepository,
+)
+
+# Letras (com acento), números, espaço, hífen, apóstrofo e barra, como a máscara do app (#339)
+_PADRAO_NOME_ROTA = re.compile(r"[0-9A-Za-zÀ-ÖØ-öø-ÿ'’/\- ]+")
+MENSAGEM_NOME_ROTA_INVALIDO = (
+    "Nome da rota deve conter apenas letras, números, espaços, hífen, apóstrofo ou barra."
 )
 
 MENSAGEM_ROTA_COM_AGENDAMENTOS = (
@@ -207,6 +214,8 @@ class GerenciarRotasPrincipaisUseCase:
             raise RotaPrincipalValidationError(
                 "nome", "Nome da rota deve ter no máximo 150 caracteres."
             )
+        if not _PADRAO_NOME_ROTA.fullmatch(valor):
+            raise RotaPrincipalValidationError("nome", MENSAGEM_NOME_ROTA_INVALIDO)
         return valor
 
     @staticmethod
