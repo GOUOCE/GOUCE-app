@@ -1,0 +1,192 @@
+[
+  {
+    "passo": "PREP-00",
+    "descricao": "Mesma stack da HU-027 (banco limpo em 27/10/2026). Reaproveitados: faculdade UFC id 1, bairro Centro id 1 e AP (aluno_id 6, ativado). Ver ../../HU-027/api/evidencias/00-preparacao-massa.json"
+  },
+  {
+    "passo": "PREP-01",
+    "descricao": "Cadastrar aluno Rafael Reprovado Um pelo fluxo real (multipart)",
+    "data_hora_utc": "2026-10-27T17:51:59Z",
+    "requisicao": {
+      "metodo": "POST",
+      "rota": "/usuarios/cadastrar",
+      "credencial": "-",
+      "corpo": {
+        "nome": "Rafael Reprovado Um",
+        "email": "r1.rafael@qa.gouce.app",
+        "senha": "***",
+        "faculdade_id": 1,
+        "bairro_id": 1,
+        "curso": "Ciência da Computação",
+        "arquivos": [
+          "comprovante_matricula=doc.pdf",
+          "comprovante_residencia=doc.pdf",
+          "foto_perfil=foto.png"
+        ]
+      }
+    },
+    "resposta": {
+      "status": 201,
+      "corpo": {
+        "success": true,
+        "message": "Cadastro enviado para análise da coordenação",
+        "data": {
+          "id": 8,
+          "nome": "Rafael Reprovado Um",
+          "email": "r1.rafael@qa.gouce.app",
+          "status_cadastro": "pendente"
+        }
+      }
+    }
+  },
+  {
+    "passo": "PREP-02",
+    "descricao": "Cadastrar aluno Renata Reprovada Dois pelo fluxo real (multipart)",
+    "data_hora_utc": "2026-10-27T17:51:59Z",
+    "requisicao": {
+      "metodo": "POST",
+      "rota": "/usuarios/cadastrar",
+      "credencial": "-",
+      "corpo": {
+        "nome": "Renata Reprovada Dois",
+        "email": "r2.renata@qa.gouce.app",
+        "senha": "***",
+        "faculdade_id": 1,
+        "bairro_id": 1,
+        "curso": "Ciência da Computação",
+        "arquivos": [
+          "comprovante_matricula=doc.pdf",
+          "comprovante_residencia=doc.pdf",
+          "foto_perfil=foto.png"
+        ]
+      }
+    },
+    "resposta": {
+      "status": 201,
+      "corpo": {
+        "success": true,
+        "message": "Cadastro enviado para análise da coordenação",
+        "data": {
+          "id": 9,
+          "nome": "Renata Reprovada Dois",
+          "email": "r2.renata@qa.gouce.app",
+          "status_cadastro": "pendente"
+        }
+      }
+    }
+  },
+  {
+    "passo": "PREP-03",
+    "descricao": "Cadastrar aluno Paulo Pendente Um pelo fluxo real (multipart)",
+    "data_hora_utc": "2026-10-27T17:51:59Z",
+    "requisicao": {
+      "metodo": "POST",
+      "rota": "/usuarios/cadastrar",
+      "credencial": "-",
+      "corpo": {
+        "nome": "Paulo Pendente Um",
+        "email": "p1.paulo@qa.gouce.app",
+        "senha": "***",
+        "faculdade_id": 1,
+        "bairro_id": 1,
+        "curso": "Ciência da Computação",
+        "arquivos": [
+          "comprovante_matricula=doc.pdf",
+          "comprovante_residencia=doc.pdf",
+          "foto_perfil=foto.png"
+        ]
+      }
+    },
+    "resposta": {
+      "status": 201,
+      "corpo": {
+        "success": true,
+        "message": "Cadastro enviado para análise da coordenação",
+        "data": {
+          "id": 10,
+          "nome": "Paulo Pendente Um",
+          "email": "p1.paulo@qa.gouce.app",
+          "status_cadastro": "pendente"
+        }
+      }
+    }
+  },
+  {
+    "passo": "PREP-04",
+    "descricao": "Reprovar R1 (matrícula e residência)",
+    "data_hora_utc": "2026-10-27T17:51:59Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/8/status",
+      "credencial": "admin",
+      "corpo": {
+        "status_cadastro": "rejeitado",
+        "motivo_reprovacao": "Documentos precisam ser reenviados.",
+        "documentos_reenvio": [
+          {
+            "tipo": "comprovante_matricula",
+            "motivo": "Comprovante de matrícula desatualizado."
+          },
+          {
+            "tipo": "comprovante_residencia",
+            "motivo": "Comprovante com mais de 3 meses."
+          }
+        ]
+      }
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "aluno_id": 8,
+        "status_cadastro": "rejeitado",
+        "motivo_reprovacao": "Documentos precisam ser reenviados.",
+        "documentos_reenvio": [
+          {
+            "tipo": "comprovante_matricula",
+            "motivo": "Comprovante de matrícula desatualizado."
+          },
+          {
+            "tipo": "comprovante_residencia",
+            "motivo": "Comprovante com mais de 3 meses."
+          }
+        ],
+        "mensagem": "Documentos rejeitados e marcados para reenvio."
+      }
+    }
+  },
+  {
+    "passo": "PREP-05",
+    "descricao": "Reprovar R2 (só a foto)",
+    "data_hora_utc": "2026-10-27T17:52:00Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/9/status",
+      "credencial": "admin",
+      "corpo": {
+        "status_cadastro": "rejeitado",
+        "motivo_reprovacao": "Foto precisa ser reenviada.",
+        "documentos_reenvio": [
+          {
+            "tipo": "foto_perfil",
+            "motivo": "Foto com baixa resolução."
+          }
+        ]
+      }
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "aluno_id": 9,
+        "status_cadastro": "rejeitado",
+        "motivo_reprovacao": "Foto precisa ser reenviada.",
+        "documentos_reenvio": [
+          {
+            "tipo": "foto_perfil",
+            "motivo": "Foto com baixa resolução."
+          }
+        ],
+        "mensagem": "Documentos rejeitados e marcados para reenvio."
+      }
+    }
+  }
+]

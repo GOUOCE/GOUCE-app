@@ -1,0 +1,108 @@
+[
+  {
+    "passo": "1",
+    "descricao": "Reprovar A2 com motivo por documento",
+    "data_hora_utc": "2026-10-27T17:49:38Z",
+    "requisicao": {
+      "metodo": "PATCH",
+      "rota": "/usuarios/alunos/3/status",
+      "credencial": "admin",
+      "corpo": {
+        "status_cadastro": "rejeitado",
+        "motivo_reprovacao": "Documentos precisam ser reenviados.",
+        "documentos_reenvio": [
+          {
+            "tipo": "comprovante_matricula",
+            "motivo": "Comprovante de matrícula desatualizado."
+          },
+          {
+            "tipo": "comprovante_residencia",
+            "motivo": "Comprovante com mais de 3 meses."
+          }
+        ]
+      }
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": {
+        "aluno_id": 3,
+        "status_cadastro": "rejeitado",
+        "motivo_reprovacao": "Documentos precisam ser reenviados.",
+        "documentos_reenvio": [
+          {
+            "tipo": "comprovante_matricula",
+            "motivo": "Comprovante de matrícula desatualizado."
+          },
+          {
+            "tipo": "comprovante_residencia",
+            "motivo": "Comprovante com mais de 3 meses."
+          }
+        ],
+        "mensagem": "Documentos rejeitados e marcados para reenvio."
+      }
+    }
+  },
+  {
+    "passo": "2",
+    "descricao": "Fila depois da reprovação",
+    "data_hora_utc": "2026-10-27T17:49:38Z",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "/usuarios/alunos?status=pendente&ordem=asc",
+      "credencial": "admin",
+      "corpo": null
+    },
+    "resposta": {
+      "status": 200,
+      "corpo": [
+        {
+          "id": 4,
+          "nome": "Marta Sousa Neri",
+          "email": "a3.marta@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:47:58.528458Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        },
+        {
+          "id": 5,
+          "nome": "Ana Paula Freitas",
+          "email": "a4.ana@qa.gouce.app",
+          "faculdade": "Universidade Federal do Ceará",
+          "sigla": "UFC",
+          "campus": "Campus Quixadá",
+          "status_cadastro": "pendente",
+          "data_hora_envio_analise": "2026-10-27T17:48:01.672455Z",
+          "data_hora_ultima_renovacao_matricula": null,
+          "motivo_reprovacao": null,
+          "documentos_reenvio": null
+        }
+      ]
+    }
+  },
+  {
+    "passo": "3",
+    "descricao": "Mailpit: e-mail recebido pelo A2",
+    "requisicao": {
+      "metodo": "GET",
+      "rota": "http://127.0.0.1:58025/api/v1/message/<id>"
+    },
+    "resposta": {
+      "Subject": "Documentos pendentes para reenvio - GOUCE",
+      "To": [
+        "a2.bruno@qa.gouce.app"
+      ],
+      "Text": "Olá Bruno Alves Lima,\n\nForam identificados documentos do seu cadastro que precisam ser reenviados.\n\n- Comprovante Matricula: Comprovante de matrícula desatualizado.\n- Comprovante Residencia: Comprovante com mais de 3 meses.\n\nFaça login na plataforma para reenviar os documentos solicitados.\n"
+    }
+  },
+  {
+    "passo": "4",
+    "descricao": "Banco: status | motivo | documentos_reenvio | ids dos comprovantes (antes: 1a1d5c98-d86d-476d-a6ff-8b51bed3735b | c1b2f512-74a5-4ee6-a1f7-64cd099e8eaa)",
+    "consulta_sql": "select status_cadastro, motivo_reprovacao, documentos_reenvio, id_comprovante_matricula, id_comprovante_residencia from aluno where aluno_id=3",
+    "resultado": "rejeitado | Documentos precisam ser reenviados. | [{\"tipo\": \"comprovante_matricula\", \"motivo\": \"Comprovante de matr\\u00edcula desatualizado.\"}, {\"tipo\": \"comprovante_residencia\", \"motivo\": \"Comprovante com mais de 3 meses.\"}] | 1a1d5c98-d86d-476d-a6ff-8b51bed3735b | c1b2f512-74a5-4ee6-a1f7-64cd099e8eaa"
+  }
+]

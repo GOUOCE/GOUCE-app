@@ -1,0 +1,641 @@
+import React, { useState } from 'react';
+import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal, Linking, Platform } from 'react-native';
+import { Text, Surface, Avatar, Button, TextInput, Snackbar, Portal, ActivityIndicator } from 'react-native-paper';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
+import { ChevronLeft, ExternalLink, X, CheckSquare, Square } from 'lucide-react-native';
+
+import { solicitacaoService, DetalhesSolicitacaoItem } from '@/services/solicitacaoService';
+import { useAuth } from '@contexts/AuthContext';
+import { getErrorMessage } from '@/utils/errorUtils';
+import { AppPopup, PopupType } from '@/components/ui/AppPopup';
+import { api } from '@/api/api';
+import { formatarCelular } from '@/utils/formatarTelefone';
+import { formatarDataNascimento } from '@/utils/formatarData';
+
+type TipoDocumento = 'comprovante_matricula' | 'comprovante_residencia' | 'foto_perfil';
+
+// Documentos que o administrador pode pedir para reenviar, cada um com o seu motivo (#370)
+const DOCUMENTOS: { tipo: TipoDocumento; rotulo: string }[] = [
+  { tipo: 'comprovante_matricula', rotulo: 'Comprovante de Matrícula' },
+  { tipo: 'comprovante_residencia', rotulo: 'Comprovante de Residência' },
+  { tipo: 'foto_perfil', rotulo: 'Foto de Perfil' },
+];
+const SEM_MARCACAO: Record<TipoDocumento, boolean> = { comprovante_matricula: false, comprovante_residencia: false, foto_perfil: false };
+const SEM_MOTIVO: Record<TipoDocumento, string> = { comprovante_matricula: '', comprovante_residencia: '', foto_perfil: '' };
+const MOTIVO_MINIMO = 5;
+
+export default function AnalisarSolicitacaoScreen() {
+  const router = useRouter();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { token } = useAuth();
+
+  const [aluno, setAluno] = useState<DetalhesSolicitacaoItem | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Modais de Aprovação e Reprovação
+  const [modalAprovarVisible, setModalAprovarVisible] = useState(false);
+  const [modalReprovarVisible, setModalReprovarVisible] = useState(false);
+
+  // Campos de recusa
+  const [marcados, setMarcados] = useState<Record<TipoDocumento, boolean>>(SEM_MARCACAO);
+  const [motivos, setMotivos] = useState<Record<TipoDocumento, string>>(SEM_MOTIVO);
+  const [tentouReprovar, setTentouReprovar] = useState(false);
+
+  // Toast / Snackbar
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastVisible, setToastVisible] = useState(false);
+
+  const [popup, setPopup] = useState<{
+    visible: boolean;
+    type?: PopupType;
+    title: string;
+    message: string;
+    confirmText?: string;
+    onConfirm?: () => void;
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+  });
+
+  const showPopup = (config: Omit<typeof popup, 'visible'>) => {
+    setPopup({ ...config, visible: true });
+  };
+
+  const closePopup = () => {
+    setPopup((prev) => ({ ...prev, visible: false }));
+  };
+
+  // Depois de avaliar, volta para a fila, que recarrega ao ganhar foco (AC-08)
+  const voltarParaFila = () => {
+    closePopup();
+    router.replace('/(administrador)/solicitacoes');
+  };
+
+  const getIniciais = (nome?: string) => {
+    if (!nome) return 'AL';
+    const partes = nome.trim().split(/\s+/);
+    if (partes.length === 1) return partes[0].substring(0, 2).toUpperCase();
+    return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
+  };
+
+  // A tela fica montada na aba: ao trocar de pessoa ela zera os dados da anterior antes de carregar os da atual
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!id) return;
+      let ativo = true;
+
+      const limparTela = () => {
+        setAluno(null);
+        setModalAprovarVisible(false);
+        setModalReprovarVisible(false);
+        setMarcados(SEM_MARCACAO);
+        setMotivos(SEM_MOTIVO);
+        setTentouReprovar(false);
+        setToastVisible(false);
+      };
+
+      limparTela();
+      setIsLoading(true);
+      solicitacaoService.obterDetalhes(Number(id)).then((dados) => {
+        if (ativo) setAluno(dados);
+      }).catch((error: any) => {
+        if (!ativo) return;
+        const msg = getErrorMessage(error, 'Erro ao carregar detalhes do aluno.');
+        showPopup({
+          type: 'error',
+          title: 'Erro',
+          message: msg,
+          confirmText: 'Voltar',
+          onConfirm: () => { closePopup(); router.replace('/(administrador)/solicitacoes'); },
+        });
+      }).finally(() => {
+        if (ativo) setIsLoading(false);
+      });
+
+      return () => {
+        ativo = false;
+        limparTela();
+      };
+    }, [id, router])
+  );
+
+  const handleAprovar = async () => {
+    setModalAprovarVisible(false);
+    setIsLoading(true);
+    try {
+      await solicitacaoService.aprovarSolicitacao(Number(id));
+      setIsLoading(false);
+      showPopup({
+        type: 'success',
+        title: 'Solicitação avaliada com sucesso',
+        message: 'O cadastro foi aprovado e o aluno foi avisado por e-mail.',
+        confirmText: 'Voltar à Fila',
+        onConfirm: voltarParaFila,
+      });
+    } catch (error: any) {
+      setIsLoading(false);
+      const msg = getErrorMessage(error, 'Erro ao aprovar cadastro.');
+      showPopup({
+        type: 'error',
+        title: 'Falha na Aprovação',
+        message: msg,
+        confirmText: 'Entendido',
+      });
+    }
+  };
+
+  const tiposMarcados = DOCUMENTOS.filter((d) => marcados[d.tipo]).map((d) => d.tipo);
+  const motivoInvalido = (tipo: TipoDocumento) => motivos[tipo].trim().length < MOTIVO_MINIMO;
+  // Os erros só aparecem depois da primeira tentativa de confirmar
+  const erroSemDocumento = tentouReprovar && tiposMarcados.length === 0;
+
+  const alternarDocumento = (tipo: TipoDocumento) => {
+    setMarcados((atuais) => ({ ...atuais, [tipo]: !atuais[tipo] }));
+  };
+
+  const handleReprovar = async () => {
+    setTentouReprovar(true);
+    // Sem documento marcado não reprova: o app não escolhe um documento pelo administrador (#370)
+    if (tiposMarcados.length === 0 || tiposMarcados.some(motivoInvalido)) return;
+
+    setModalReprovarVisible(false);
+    setIsLoading(true);
+
+    const documentosReenvio = tiposMarcados.map((tipo) => ({ tipo, motivo: motivos[tipo].trim() }));
+    // O motivo geral (até 255 caracteres na API) junta os motivos de cada documento, sem repetir
+    const motivoGeral = Array.from(new Set(documentosReenvio.map((d) => d.motivo))).join(' | ').slice(0, 255);
+
+    try {
+      await solicitacaoService.reprovarSolicitacao(Number(id), motivoGeral, documentosReenvio);
+      setIsLoading(false);
+      showPopup({
+        type: 'success',
+        title: 'Solicitação avaliada com sucesso',
+        message: 'O cadastro foi reprovado e o aluno foi avisado por e-mail dos documentos a reenviar.',
+        confirmText: 'Voltar à Fila',
+        onConfirm: voltarParaFila,
+      });
+    } catch (error: any) {
+      setIsLoading(false);
+      const msg = getErrorMessage(error, 'Erro ao reprovar cadastro.');
+      showPopup({
+        type: 'error',
+        title: 'Falha na Reprovação',
+        message: msg,
+        confirmText: 'Entendido',
+      });
+    }
+  };
+
+  // Mesmo texto da fila: cadastro novo (pendente) ou renovação semestral (analise_renovacao) (#367)
+  const etiquetaStatus = aluno?.status_cadastro === 'analise_renovacao'
+    ? 'Pendente: renovação semestral'
+    : 'Pendente: cadastro novo';
+
+  const baseUrl = api.defaults.baseURL || 'http://192.168.0.4:8000';
+  const idFoto = aluno?.id_foto_aluno;
+  const fotoUri = idFoto
+    ? (idFoto.startsWith('http')
+        ? idFoto
+        : `${baseUrl}/arquivos/${idFoto}/view?token=${token || ''}`)
+    : null;
+
+  // Abre o comprovante enviado pelo aluno para o administrador conferir (AC-03, #368)
+  const abrirDocumento = async (arquivoId?: string) => {
+    if (!arquivoId) {
+      showPopup({
+        type: 'warning',
+        title: 'Aviso',
+        message: 'O aluno não enviou este documento.',
+        confirmText: 'Entendido',
+      });
+      return;
+    }
+    // Na web a aba abre já no toque (senão o navegador bloqueia a janela aberta depois do download)
+    const aba = Platform.OS === 'web' ? window.open('', '_blank') : null;
+    try {
+      if (Platform.OS === 'web') {
+        const url = await solicitacaoService.obterUrlDocumentoWeb(arquivoId);
+        if (aba) aba.location.href = url;
+        else window.open(url, '_blank');
+      } else {
+        await Linking.openURL(`${baseUrl}/arquivos/${arquivoId}/view?token=${token || ''}`);
+      }
+    } catch (error: any) {
+      aba?.close();
+      const msg = getErrorMessage(error, 'Não foi possível abrir o documento.');
+      showPopup({
+        type: 'error',
+        title: msg.startsWith('Erro de conexão') ? 'Erro de Conexão' : 'Aviso',
+        message: msg,
+        confirmText: 'Entendido',
+      });
+    }
+  };
+
+  const imageSource = fotoUri
+    ? {
+        uri: fotoUri,
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          'ngrok-skip-browser-warning': 'true',
+        },
+      }
+    : null;
+
+  return (
+    <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.replace('/(administrador)/solicitacoes')}>
+          <ChevronLeft size={32} color="#333" />
+        </TouchableOpacity>
+        <Text variant="headlineSmall" style={styles.headerTitle}>Analisar Solicitação</Text>
+      </View>
+
+      {/* Pop-up Estilizado */}
+      <AppPopup
+        visible={popup.visible}
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        confirmText={popup.confirmText}
+        onConfirm={popup.onConfirm}
+        onDismiss={popup.type === 'success' ? voltarParaFila : closePopup}
+      />
+
+      {!aluno ? <ActivityIndicator style={styles.carregando} accessibilityLabel="Carregando solicitação" /> : <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Foto e Status */}
+        <View style={styles.profileSection}>
+          {imageSource ? (
+            <Avatar.Image size={110} source={imageSource} style={styles.avatar} />
+          ) : (
+            <Avatar.Text
+              size={110}
+              label={getIniciais(aluno?.nome)}
+              style={[styles.avatar, { backgroundColor: '#3E5F90' }]}
+              labelStyle={{ color: '#FFF', fontSize: 32, fontWeight: 'bold' }}
+            />
+          )}
+          <Text variant="titleLarge" style={styles.userName}>{aluno.nome}</Text>
+          <Surface style={styles.statusBadge} elevation={0}>
+            <Text style={styles.statusText}>{etiquetaStatus}</Text>
+          </Surface>
+        </View>
+
+        {/* Dados Informados */}
+        <View style={styles.section}>
+          <Text variant="titleMedium" style={styles.sectionTitle}>Dados Informados</Text>
+          <View style={styles.infoGrid}>
+            <View style={styles.infoItem}>
+              <Text variant="labelSmall" style={styles.infoLabel}>E-mail</Text>
+              <Text variant="bodyMedium" style={styles.infoValue}>{aluno?.email || '-'}</Text>
+            </View>
+            <View style={styles.infoItem}>
+              <Text variant="labelSmall" style={styles.infoLabel}>Telefone (WhatsApp)</Text>
+              <Text variant="bodyMedium" style={styles.infoValue}>{formatarCelular(aluno?.telefone) || '-'}</Text>
+            </View>
+            <View style={styles.infoItem}>
+              <Text variant="labelSmall" style={styles.infoLabel}>Instituição - Campus</Text>
+              <Text variant="bodyMedium" style={styles.infoValue}>
+                {aluno?.instituicao || '-'}
+              </Text>
+            </View>
+            <View style={styles.infoItem}>
+              <Text variant="labelSmall" style={styles.infoLabel}>Curso</Text>
+              <Text variant="bodyMedium" style={styles.infoValue}>{aluno?.curso || '-'}</Text>
+            </View>
+            <View style={styles.infoItem}>
+              <Text variant="labelSmall" style={styles.infoLabel}>Período de Ingresso</Text>
+              <Text variant="bodyMedium" style={styles.infoValue}>{aluno?.periodo_ingresso || '-'}</Text>
+            </View>
+            <View style={styles.infoItem}>
+              <Text variant="labelSmall" style={styles.infoLabel}>Turno</Text>
+              <Text variant="bodyMedium" style={styles.infoValue}>{aluno?.turno_curso || '-'}</Text>
+            </View>
+            <View style={styles.infoItem}>
+              <Text variant="labelSmall" style={styles.infoLabel}>Data de Nascimento</Text>
+              <Text variant="bodyMedium" style={styles.infoValue}>{formatarDataNascimento(aluno?.data_nascimento) || '-'}</Text>
+            </View>
+            <View style={styles.infoItem}>
+              <Text variant="labelSmall" style={styles.infoLabel}>Bairro</Text>
+              <Text variant="bodyMedium" style={styles.infoValue}>{aluno?.bairro || '-'}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Documentos Anexados */}
+        <View style={styles.section}>
+          <Text variant="titleMedium" style={styles.sectionTitle}>Documentos Anexados</Text>
+          <View style={styles.docsGrid}>
+            <TouchableOpacity
+              style={styles.docToque}
+              onPress={() => abrirDocumento(aluno.id_comprovante_matricula)}
+              accessibilityLabel="Abrir comprovante de matrícula"
+            >
+              <Surface style={styles.docCard} elevation={1}>
+                <ExternalLink size={20} color="#3E5F90" style={styles.docIcon} />
+                <Text variant="bodyMedium" style={styles.docTitle}>Comprovante de Matrícula</Text>
+              </Surface>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.docToque}
+              onPress={() => abrirDocumento(aluno.id_comprovante_residencia)}
+              accessibilityLabel="Abrir comprovante de residência"
+            >
+              <Surface style={styles.docCard} elevation={1}>
+                <ExternalLink size={20} color="#3E5F90" style={styles.docIcon} />
+                <Text variant="bodyMedium" style={styles.docTitle}>Comprovante de Residência</Text>
+              </Surface>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Botões de Ação */}
+        <View style={styles.actionButtonsBox}>
+          <TouchableOpacity onPress={() => { setTentouReprovar(false); setModalReprovarVisible(true); }}>
+            <Text style={styles.reprovarText}>Reprovar cadastro</Text>
+          </TouchableOpacity>
+
+          <Button
+            mode="contained"
+            onPress={() => setModalAprovarVisible(true)}
+            loading={isLoading}
+            disabled={isLoading}
+            style={styles.aprovarButton}
+            contentStyle={styles.btnContent}
+          >
+            Aprovar cadastro
+          </Button>
+        </View>
+      </ScrollView>}
+
+      {/* Modal de Confirmação de Aprovação */}
+      <Portal>
+        <RNModal visible={modalAprovarVisible} transparent={true} animationType="fade">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text variant="headlineSmall" style={styles.modalTitle}>Aprovar cadastro?</Text>
+              <Text variant="bodyLarge" style={styles.modalText}>Essa ação não poderá ser desfeita.</Text>
+              <View style={styles.modalButtons}>
+                <Button mode="text" onPress={() => setModalAprovarVisible(false)} style={styles.modalBtn}>
+                  Cancelar
+                </Button>
+                <Button mode="contained" onPress={handleAprovar} style={[styles.modalBtn, { backgroundColor: '#3E5F90' }]}>
+                  Confirmar
+                </Button>
+              </View>
+            </View>
+          </View>
+        </RNModal>
+      </Portal>
+
+      {/* Modal de Detalhar Recusa / Reprovação */}
+      <Portal>
+        <RNModal visible={modalReprovarVisible} transparent={true} animationType="fade">
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, { maxHeight: '90%' }]}>
+              <Text variant="headlineSmall" style={styles.modalTitle}>Detalhar Recusa</Text>
+              <Text variant="bodySmall" style={{ color: '#666', marginBottom: 16 }}>
+                Selecione quais partes apresentaram inconsistências e informe o motivo de cada uma.
+              </Text>
+
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {DOCUMENTOS.map(({ tipo, rotulo }) => (
+                  <View key={tipo}>
+                    <TouchableOpacity style={styles.checkboxRow} onPress={() => alternarDocumento(tipo)}>
+                      {marcados[tipo] ? <CheckSquare size={22} color="#3E5F90" /> : <Square size={22} color="#666" />}
+                      <Text style={styles.checkboxLabel}>{rotulo}</Text>
+                    </TouchableOpacity>
+                    {marcados[tipo] && (
+                      <View style={styles.motivoBox}>
+                        <TextInput
+                          label="Motivo *"
+                          mode="outlined"
+                          placeholder="ex.: Documento ilegível ou desatualizado."
+                          value={motivos[tipo]}
+                          onChangeText={(texto) => setMotivos((atuais) => ({ ...atuais, [tipo]: texto }))}
+                          multiline
+                          maxLength={255}
+                          error={tentouReprovar && motivoInvalido(tipo)}
+                          style={{ backgroundColor: '#fff' }}
+                        />
+                        {tentouReprovar && motivoInvalido(tipo) && (
+                          <Text style={styles.errorText}>Informe um motivo com pelo menos 5 caracteres.</Text>
+                        )}
+                      </View>
+                    )}
+                  </View>
+                ))}
+                {erroSemDocumento && (
+                  <Text style={styles.errorText}>Selecione ao menos um documento para reenvio.</Text>
+                )}
+              </ScrollView>
+
+              <View style={[styles.modalButtons, { marginTop: 24 }]}>
+                <Button mode="text" onPress={() => setModalReprovarVisible(false)} style={styles.modalBtn}>
+                  Cancelar
+                </Button>
+                <Button mode="contained" onPress={handleReprovar} style={[styles.modalBtn, { backgroundColor: '#B00020' }]}>
+                  Reprovar cadastro
+                </Button>
+              </View>
+            </View>
+          </View>
+        </RNModal>
+      </Portal>
+
+      {/* Toast Snackbar */}
+      <Snackbar
+        visible={toastVisible}
+        onDismiss={() => setToastVisible(false)}
+        action={{
+          label: '',
+          icon: () => <X size={20} color="#fff" />,
+          onPress: () => setToastVisible(false),
+        }}
+        style={styles.snackbar}
+      >
+        {toastMessage}
+      </Snackbar>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingTop: 60,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 20,
+    gap: 12,
+  },
+  headerTitle: {
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  carregando: {
+    marginTop: 32,
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+  },
+  profileSection: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  avatar: {
+    backgroundColor: '#E3EFFF',
+  },
+  userName: {
+    marginTop: 12,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  statusBadge: {
+    marginTop: 8,
+    backgroundColor: '#FFF3E0',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  statusText: {
+    color: '#E65100',
+    fontWeight: '600',
+    fontSize: 13,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    marginBottom: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  infoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  infoItem: {
+    width: '48%',
+    marginBottom: 16,
+  },
+  infoLabel: {
+    color: '#666',
+    marginBottom: 2,
+  },
+  infoValue: {
+    color: '#333',
+    fontWeight: '500',
+  },
+  docsGrid: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  docToque: {
+    flex: 1,
+  },
+  docCard: {
+    flex: 1,
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E2EC',
+  },
+  docIcon: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
+  docTitle: {
+    textAlign: 'center',
+    color: '#333',
+    fontSize: 12,
+    marginTop: 12,
+  },
+  actionButtonsBox: {
+    alignItems: 'center',
+    gap: 16,
+    marginTop: 16,
+  },
+  reprovarText: {
+    color: '#B00020',
+    fontWeight: 'bold',
+    fontSize: 16,
+    paddingVertical: 8,
+  },
+  aprovarButton: {
+    width: '100%',
+    borderRadius: 8,
+    backgroundColor: '#3E5F90',
+  },
+  btnContent: {
+    height: 55,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+  },
+  modalTitle: {
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  modalText: {
+    color: '#666',
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+  },
+  modalBtn: {
+    borderRadius: 8,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    gap: 12,
+  },
+  motivoBox: {
+    marginLeft: 34,
+    marginBottom: 8,
+  },
+  checkboxLabel: {
+    color: '#333',
+    fontSize: 16,
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  snackbar: {
+    backgroundColor: '#333',
+    borderRadius: 8,
+    marginBottom: 20,
+    marginHorizontal: 16,
+  },
+});

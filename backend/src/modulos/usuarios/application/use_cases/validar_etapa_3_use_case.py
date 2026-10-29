@@ -1,0 +1,117 @@
+# -*- coding: utf-8 -*-
+from src.modulos.usuarios.application.dtos.usuario_dto import (
+    ValidacaoSucessoDTO,
+    CadastroSucessoDTO,
+    ValidarEtapa3CadastroUsuarioDTO,
+    CadastroValidationDetailDTO
+)
+from src.shared.validators.periodo_ingresso_validator import PeriodoIngressoValidator
+from src.shared.validators.telefone_validator import TelefoneValidator
+from src.shared.validators.turno_curso_validator import TurnoCursoValidator
+from src.modulos.usuarios.application.use_cases.criar_usuario_use_case import ValidacaoMultiplaError
+
+class ValidarEtapa3UsuarioUseCase:
+    def __init__(
+        self,
+        repository_faculdade=None,
+        repository_bairro=None,
+        telefone_validator=None,
+        periodo_ingresso_validator=None,
+        turno_curso_validator=None,
+    ):
+        self.telefone_validator = telefone_validator or TelefoneValidator()
+        self.periodo_ingresso_validator = periodo_ingresso_validator or PeriodoIngressoValidator()
+        self.turno_curso_validator = turno_curso_validator or TurnoCursoValidator()
+        self.repository_faculdade = repository_faculdade
+        self.repository_bairro = repository_bairro
+
+    def execute(self, dto: ValidarEtapa3CadastroUsuarioDTO) -> CadastroSucessoDTO:
+        erros = []
+        periodo_formatado = None
+
+        # Validação de Bairro
+        bairro_id = str(dto.bairro_id).strip() if dto.bairro_id else ""
+        if not bairro_id:
+            erros.append({"field": "bairro_id", "message": "Bairro é obrigatório"})
+        elif self.repository_bairro is not None:
+            bairro_id_int = None
+            try:
+                bairro_id_int = int(bairro_id)
+            except (ValueError, TypeError):
+                bairro_id_int = None
+            bairro = self.repository_bairro.buscar_por_id(bairro_id_int) if bairro_id_int is not None else None
+            if bairro is None or not getattr(bairro, "ativo", True):
+                erros.append({"field": "bairro_id", "message": "Bairro não existente"})
+
+        # Validação de Telefone / Celular com DDD
+        telefone = str(dto.telefone).strip() if dto.telefone else ""
+        if not telefone:
+            erros.append({"field": "telefone", "message": "Telefone é obrigatório"})
+        elif not self.telefone_validator.validar_telefone(telefone):
+            erros.append({"field": "telefone", "message": "Telefone celular inválido. Informe um número celular válido com DDD (ex: 11987654321)"})
+
+        # Validação de Instituição / Faculdade
+        if not dto.faculdade_id or not isinstance(dto.faculdade_id, int) or dto.faculdade_id <= 0:
+            erros.append({"field": "faculdade_id", "message": "Instituição/Faculdade é obrigatória (informe o ID da faculdade)"})
+        elif self.repository_faculdade is not None:
+            faculdade = self.repository_faculdade.buscar_por_id(dto.faculdade_id)
+            if faculdade is None or not getattr(faculdade, "ativo", True):
+                erros.append({"field": "faculdade_id", "message": "Instituição/Faculdade não existente"})
+
+        # Validação de Curso
+        curso = str(dto.curso).strip() if dto.curso else ""
+        if not curso or len(curso) < 2:
+            erros.append({"field": "curso", "message": "O nome do curso é obrigatório"})
+
+        # Validação do Período de Ingresso
+        if not dto.periodo_ingresso or not str(dto.periodo_ingresso).strip():
+            erros.append({"field": "periodo_ingresso", "message": "Período de ingresso é obrigatório"})
+        else:
+            try:
+                periodo_formatado = self.periodo_ingresso_validator.validar_e_formatar(
+                    str(dto.periodo_ingresso).strip()
+                )
+            except ValueError as e:
+                erros.append({"field": "periodo_ingresso", "message": str(e)})
+
+        # Validação de Turno do Curso
+        turno_curso_str = str(dto.turno_curso).strip() if dto.turno_curso else ""
+        if not turno_curso_str:
+            erros.append({"field": "turno_curso", "message": "O turno do curso é obrigatório"})
+        else:
+            is_valid, _ = self.turno_curso_validator.validar_e_formatar(turno_curso_str)
+            if not is_valid:
+                erros.append({"field": "turno_curso", "message": "Turno do curso inválido. Opções permitidas: Matutino, Vespertino, Noturno ou Integral"})
+
+        # Validação de Semestre Atual
+        if dto.semestre_atual is None:
+            erros.append({"field": "semestre_atual", "message": "Semestre atual é obrigatório"})
+        elif not isinstance(dto.semestre_atual, int) or dto.semestre_atual < 1:
+            erros.append({"field": "semestre_atual", "message": "O semestre atual deve ser um número inteiro entre 1 e 16"})
+        elif periodo_formatado is not None:
+            maximo_semestre = min(
+                16,
+                self.periodo_ingresso_validator.quantidade_semestres_decorridos(
+                    periodo_formatado
+                ),
+            )
+            if dto.semestre_atual > maximo_semestre:
+                erros.append({
+                    "field": "semestre_atual",
+                    "message": (
+                        f"O semestre atual não pode ser maior que {maximo_semestre}, "
+                        "considerando o período de ingresso informado"
+                    ),
+                })
+
+        if erros:
+            raise ValidacaoMultiplaError(erros)
+
+        return ValidacaoSucessoDTO(
+            success=True,
+            message="Etapa 3 validada com sucesso",
+            data=CadastroValidationDetailDTO(
+                field=None,
+                message="Sem erros"
+            )
+        )

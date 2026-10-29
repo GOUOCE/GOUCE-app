@@ -1,0 +1,402 @@
+"""Testes de integração da HU-010 contra um PostgreSQL explicitamente isolado.
+
+O módulo só é executado quando ``HU010_INTEGRATION_DATABASE_URL`` é definido.
+Isso evita que a suíte aponte acidentalmente para o banco de desenvolvimento.
+As migrations devem ser aplicadas separadamente no banco efêmero antes da
+execução deste arquivo.
+"""
+
+from __future__ import annotations
+
+import os
+import unittest
+from concurrent.futures import ThreadPoolExecutor
+from urllib.parse import urlparse
+from uuid import uuid4
+
+from alembic.script import ScriptDirectory
+from sqlalchemy import inspect, text
+from sqlalchemy.orm import Session, sessionmaker
+
+
+INTEGRATION_DATABASE_URL = os.getenv("HU010_INTEGRATION_DATABASE_URL")
+
+
+def _is_isolated_database_url(url: str) -> bool:
+    parsed = urlparse(url)
+    database_name = parsed.path.lstrip("/")
+    return parsed.scheme.startswith("postgresql") and database_name == "hu010_integration"
+
+
+if INTEGRATION_DATABASE_URL and not _is_isolated_database_url(INTEGRATION_DATABASE_URL):
+    raise RuntimeError(
+        "HU010_INTEGRATION_DATABASE_URL deve apontar somente para o banco "
+        "PostgreSQL isolado chamado hu010_integration."
+    )
+
+if INTEGRATION_DATABASE_URL:
+    # db.py valida DATABASE_URL no import e cria o engine global a partir dela.
+    os.environ["DATABASE_URL"] = INTEGRATION_DATABASE_URL
+    os.environ.setdefault("SECRET_KEY_JWT", "hu010-integration-only-secret")
+
+    from src.modulos.motoristas.application.use_cases.gerenciar_motoristas_use_case import (
+        GerenciarMotoristasUseCase,
+        MotoristaValidationError,
+    )
+    from src.modulos.motoristas.infrastructure.repositories.motorista_repository import (
+        MotoristaTelefoneEmUsoError,
+        MotoristaRepository,
+    )
+    from src.modulos.motoristas.model.entities.motorista import MotoristaORM
+    from src.shared.infrastructure.audit_model import LogAuditoriaORM
+    from src.shared.infrastructure.db import engine
+    from src.shared.security.lgpd_encryption import hash_telefone
+
+
+class FailingCommitSession(Session):
+    """Sessão de teste que permite simular uma falha no commit."""
+
+    fail_next_commit = False
+
+    def commit(self):
+        if self.fail_next_commit:
+            self.fail_next_commit = False
+            raise RuntimeError("falha de persistência controlada")
+        return super().commit()
+
+
+@unittest.skipUnless(
+    INTEGRATION_DATABASE_URL,
+    "defina HU010_INTEGRATION_DATABASE_URL para executar a integração PostgreSQL",
+)
+class MotoristaPostgreSQLIntegrationTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.session_factory = sessionmaker(bind=engine)
+        cls.created_ids: set[int] = set()
+
+    def setUp(self):
+        self.session = self.session_factory()
+        self.repository = MotoristaRepository(self.session)
+        self.prefix = f"HU010 {uuid4().hex[:10]}"
+
+    def tearDown(self):
+        self.session.rollback()
+        self.session.close()
+
+        if not self.created_ids:
+            return
+
+        cleanup_session = self.session_factory()
+        try:
+            cleanup_session.query(LogAuditoriaORM).filter(
+                LogAuditoriaORM.entidade == "motorista",
+                # A migration 72 tornou log_auditoria.entidade_id VARCHAR.
+                LogAuditoriaORM.entidade_id.in_(
+                    [str(motorista_id) for motorista_id in self.created_ids]
+                ),
+            ).delete(synchronize_session=False)
+            cleanup_session.query(MotoristaORM).filter(
+                MotoristaORM.id.in_(self.created_ids),
+            ).delete(synchronize_session=False)
+            cleanup_session.commit()
+        finally:
+            cleanup_session.close()
+
+        self.created_ids.clear()
+
+    def _criar(self, sufixo: str, telefone: str = "85999990000") -> dict:
+        resultado = self.repository.criar(
+            f"{self.prefix} {sufixo}",
+            telefone,
+            self._executor_id(),
+        )
+        self.created_ids.add(resultado["id"])
+        return resultado
+
+    def _executor_id(self) -> int:
+        executor_id = self.session.execute(
+            text("SELECT id FROM usuario ORDER BY id LIMIT 1")
+        ).scalar_one_or_none()
+        self.assertIsNotNone(executor_id)
+        return int(executor_id)
+
+    def test_migration_criou_schema_e_revision_68(self):
+        inspector = inspect(engine)
+
+        self.assertIn("motorista", inspector.get_table_names())
+        self.assertEqual(
+            {
+                "id",
+                "nome_completo",
+                "telefone",
+                "telefone_hash",
+                "ativo",
+                "data_criacao",
+            },
+            {column["name"] for column in inspector.get_columns("motorista")},
+        )
+        self.assertIn(
+            "ix_motorista_ativo",
+            {index["name"] for index in inspector.get_indexes("motorista")},
+        )
+        telefone_hash_index = next(
+            index
+            for index in inspector.get_indexes("motorista")
+            if index["name"] == "ix_motorista_telefone_hash"
+        )
+        self.assertTrue(telefone_hash_index["unique"])
+        revision = self.session.execute(
+            text("SELECT version_num FROM alembic_version")
+        ).scalar_one()
+        # A revision 68 deve fazer parte do histórico aplicado, mesmo que
+        # migrations posteriores já tenham sido adicionadas.
+        script = ScriptDirectory(
+            os.path.join(os.path.dirname(__file__), "..", "migrations")
+        )
+        aplicadas = {
+            item.revision
+            for item in script.walk_revisions(base="base", head=revision)
+        }
+        self.assertIn("68_create_motorista", aplicadas)
+
+    def test_crud_criptografia_busca_edicao_e_telefone_unico_normalizado(self):
+        primeiro = self._criar("Primeiro", "(85) 99999-0000")
+
+        with self.assertRaises(MotoristaTelefoneEmUsoError):
+            self.repository.criar("Segundo", "85999990000", self._executor_id())
+
+        dados_crus = self.session.execute(
+            text(
+                "SELECT nome_completo, telefone, telefone_hash "
+                "FROM motorista WHERE id = :motorista_id"
+            ),
+            {"motorista_id": primeiro["id"]},
+        ).one()
+        self.assertNotEqual(dados_crus.nome_completo, primeiro["nome"])
+        self.assertNotEqual(dados_crus.telefone, primeiro["telefone"])
+        self.assertEqual(dados_crus.telefone_hash, hash_telefone("85999990000"))
+
+        encontrados = self.repository.listar(nome=self.prefix.casefold())
+        self.assertEqual({item["id"] for item in encontrados}, {primeiro["id"]})
+
+        atualizado = self.repository.atualizar(
+            primeiro["id"],
+            nome=f"{self.prefix} Atualizado",
+            usuario_executor_id=self._executor_id(),
+        )
+        self.assertEqual(atualizado["nome"], f"{self.prefix} Atualizado")
+        self.assertEqual(atualizado["telefone"], primeiro["telefone"])
+
+        recuperado = self.repository.buscar(primeiro["id"])
+        self.assertEqual(recuperado["nome"], f"{self.prefix} Atualizado")
+
+        executor_id = self._executor_id()
+        self.repository.inativar(primeiro["id"], executor_id)
+        with self.assertRaises(MotoristaTelefoneEmUsoError):
+            self.repository.criar("Terceiro", "(85) 99999-0000", self._executor_id())
+
+    def test_telefone_invalido_nao_grava_e_telefone_antigo_nao_bloqueia_nome(self):
+        use_case = GerenciarMotoristasUseCase(self.repository)
+        antigo = self._criar("Antigo", "123")
+
+        for telefone in ("123", "998112233", "889981122334", "(88) abcdef"):
+            with self.subTest(telefone=telefone):
+                with self.assertRaises(MotoristaValidationError):
+                    use_case.criar(
+                        f"{self.prefix} Recusado", telefone, self._executor_id()
+                    )
+                with self.assertRaises(MotoristaValidationError):
+                    use_case.atualizar(
+                        antigo["id"],
+                        telefone=telefone,
+                        usuario_executor_id=self._executor_id(),
+                    )
+
+        recusados = self.repository.listar(nome=f"{self.prefix} Recusado")
+        self.assertEqual(recusados, [])
+
+        editado = use_case.atualizar(
+            antigo["id"],
+            nome=f"{self.prefix} Novo Nome",
+            usuario_executor_id=self._executor_id(),
+        )
+        self.assertEqual(editado["nome"], f"{self.prefix} Novo Nome")
+        self.assertEqual(editado["telefone"], "123")
+
+        valido = use_case.criar(
+            f"{self.prefix} Valido", "(88) 99811-2233", self._executor_id()
+        )
+        self.created_ids.add(valido["id"])
+        with self.assertRaises(MotoristaTelefoneEmUsoError):
+            use_case.criar(
+                f"{self.prefix} Duplicado", "88998112233", self._executor_id()
+            )
+
+    def test_edicao_permite_proprio_telefone_e_rejeita_outro(self):
+        primeiro = self._criar("Primeiro", "85911112222")
+        segundo = self._criar("Segundo", "85922223333")
+
+        proprio = self.repository.atualizar(
+            primeiro["id"],
+            telefone="(85) 91111-2222",
+            usuario_executor_id=self._executor_id(),
+        )
+        self.assertEqual(proprio["telefone"], "(85) 91111-2222")
+
+        with self.assertRaises(MotoristaTelefoneEmUsoError):
+            self.repository.atualizar(
+                primeiro["id"],
+                telefone="85 92222-3333",
+                usuario_executor_id=self._executor_id(),
+            )
+        self.assertEqual(
+            self.repository.buscar(segundo["id"])["telefone"],
+            "85922223333",
+        )
+
+    def test_concorrencia_preserva_unicidade_do_telefone(self):
+        telefone = f"859{uuid4().int % 100_000_000:08d}"
+        executor_id = self._executor_id()
+
+        def criar_em_sessao(sufixo: str):
+            session = self.session_factory()
+            try:
+                resultado = MotoristaRepository(session).criar(
+                    f"{self.prefix} {sufixo}",
+                    telefone,
+                    executor_id,
+                )
+                return "sucesso", resultado["id"]
+            except Exception as error:
+                return "falha", type(error).__name__
+            finally:
+                session.close()
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            resultados = list(
+                executor.map(criar_em_sessao, ("Concorrente A", "Concorrente B"))
+            )
+
+        sucessos = [resultado for resultado in resultados if resultado[0] == "sucesso"]
+        falhas = [resultado for resultado in resultados if resultado[0] == "falha"]
+        self.assertEqual(len(sucessos), 1)
+        self.assertEqual(len(falhas), 1)
+        self.created_ids.add(sucessos[0][1])
+
+        quantidade = self.session.query(MotoristaORM).filter(
+            MotoristaORM.telefone_hash == hash_telefone(telefone)
+        ).count()
+        self.assertEqual(quantidade, 1)
+
+    def test_inativacao_e_reativacao_com_status_auditado(self):
+        motorista = self._criar("Status")
+        executor_id = self._executor_id()
+
+        inativado = self.repository.inativar(motorista["id"], executor_id)
+        self.assertFalse(inativado["ativo"])
+
+        log_inativacao = self.session.query(LogAuditoriaORM).filter_by(
+            entidade="motorista",
+            entidade_id=str(motorista["id"]),
+            acao="INATIVAR",
+        ).one()
+        self.assertEqual(log_inativacao.usuario_id, executor_id)
+        self.assertEqual(log_inativacao.valor_anterior, "ativo")
+        self.assertEqual(log_inativacao.valor_novo, "inativo")
+        self.assertIsNotNone(log_inativacao.criado_em)
+        # Soft delete: o registro continua no banco após a inativação.
+        self.assertIsNotNone(self.repository.buscar(motorista["id"]))
+
+        inativos = self.repository.listar(ativo=False, nome=self.prefix)
+        self.assertEqual([item["id"] for item in inativos], [motorista["id"]])
+
+        reativado = self.repository.reativar(motorista["id"], executor_id)
+        self.assertTrue(reativado["ativo"])
+        log_reativacao = self.session.query(LogAuditoriaORM).filter_by(
+            entidade="motorista",
+            entidade_id=str(motorista["id"]),
+            acao="REATIVAR",
+        ).one()
+        self.assertEqual(log_reativacao.usuario_id, executor_id)
+        self.assertIsNotNone(log_reativacao.criado_em)
+
+    def test_ciclo_auditado_cria_edita_inativa_e_reativa_sem_dados_pessoais(self):
+        executor_id = self._executor_id()
+        telefone = "(85) 97777-1234"
+        motorista = self._criar("Ciclo", telefone)
+        novo_nome = f"{self.prefix} Ciclo Editado"
+
+        self.repository.atualizar(
+            motorista["id"], nome=novo_nome, usuario_executor_id=executor_id
+        )
+        self.repository.inativar(motorista["id"], executor_id)
+        self.repository.reativar(motorista["id"], executor_id)
+
+        logs = (
+            self.session.query(LogAuditoriaORM)
+            .filter_by(entidade="motorista", entidade_id=str(motorista["id"]))
+            .order_by(LogAuditoriaORM.id)
+            .all()
+        )
+        self.assertEqual(
+            [(log.acao, log.valor_anterior, log.valor_novo) for log in logs],
+            [
+                ("CRIAR", None, "ativo"),
+                ("EDITAR", None, "nome"),
+                ("INATIVAR", "ativo", "inativo"),
+                ("REATIVAR", "inativo", "ativo"),
+            ],
+        )
+        for log in logs:
+            self.assertEqual(log.usuario_id, executor_id)
+            self.assertIsNotNone(log.criado_em)
+            # entidade_id é varchar no banco: compara como texto.
+            self.assertEqual(str(log.entidade_id), str(motorista["id"]))
+            texto = f"{log.valor_anterior}|{log.valor_novo}"
+            self.assertNotIn(self.prefix, texto)
+            self.assertNotIn(novo_nome, texto)
+            self.assertNotIn("97777", texto)
+
+        # Edição sem mudança efetiva e recusa por telefone duplicado não logam.
+        self.repository.atualizar(
+            motorista["id"], nome=novo_nome, usuario_executor_id=executor_id
+        )
+        with self.assertRaises(MotoristaTelefoneEmUsoError):
+            self.repository.criar("Duplicado", "85977771234", executor_id)
+        total = (
+            self.session.query(LogAuditoriaORM)
+            .filter_by(entidade="motorista", entidade_id=str(motorista["id"]))
+            .count()
+        )
+        self.assertEqual(total, 4)
+
+    def test_rollback_de_falha_de_persistencia_preserva_dado(self):
+        motorista = self._criar("Rollback")
+        failing_factory = sessionmaker(bind=engine, class_=FailingCommitSession)
+        failing_session = failing_factory()
+        try:
+            failing_repository = MotoristaRepository(failing_session)
+            failing_session.fail_next_commit = True
+            with self.assertRaisesRegex(RuntimeError, "falha de persistência"):
+                failing_repository.atualizar(
+                    motorista["id"],
+                    nome=f"{self.prefix} Não Persistido",
+                    usuario_executor_id=self._executor_id(),
+                )
+        finally:
+            failing_session.close()
+
+        recuperacao_session = self.session_factory()
+        try:
+            recuperado = MotoristaRepository(recuperacao_session).buscar(
+                motorista["id"]
+            )
+        finally:
+            recuperacao_session.close()
+
+        self.assertEqual(recuperado["nome"], motorista["nome"])
+
+
+if __name__ == "__main__":
+    unittest.main()

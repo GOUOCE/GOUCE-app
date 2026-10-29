@@ -1,0 +1,56 @@
+# Environment variables (keep the sanitized example)
+.env
+.env.*
+!.env.example
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Credentials and signing keys
+secrets/
+credentials.json
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.mobileprovision
+
+# Local databases and backups
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite-*
+*.sqlite3-*
+*.dump
+*.bak
+
+# Dependencies and Expo output
+node_modules/
+.expo/
+dist/
+web-build/
+coverage/
+*.tsbuildinfo
+
+# Logs and local tooling
+*.log
+.idea/
+.DS_Store
+Thumbs.db
+
+# Cache do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Cache do Pytest
+.pytest_cache/
+
+# Cache de ferramentas
+.mypy_cache/
+.ruff_cache/

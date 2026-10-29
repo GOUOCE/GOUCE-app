@@ -1,0 +1,83 @@
+from src.modulos.usuarios.application.dtos.usuario_dto import PerfilAlunoResponseDTO
+
+
+class ObterPerfilAlunoUseCase:
+    """
+    Caso de uso responsável por consultar os dados do perfil do aluno autenticado.
+    Retorna apenas as informações permitidas, omitindo hashes, senhas e dados internos.
+    """
+
+    def __init__(self, repository, arquivo_repository=None):
+        self.repository = repository
+        self.arquivo_repository = arquivo_repository
+
+    def execute(self, user_id: int) -> PerfilAlunoResponseDTO:
+        if not user_id or not isinstance(user_id, int) or user_id <= 0:
+            raise ValueError("ID de usuário inválido")
+
+        usuario, aluno = self.repository.buscar_com_detalhes_por_id(user_id)
+
+        if not usuario:
+            raise ValueError(f"Usuário com ID {user_id} não encontrado")
+
+        status_cadastro = aluno.status_cadastro if aluno else "desconhecido"
+
+        nome_mat = None
+        nome_res = None
+        if self.arquivo_repository and aluno:
+            if aluno.id_comprovante_matricula:
+                arq_mat = self.arquivo_repository.buscar_por_id(aluno.id_comprovante_matricula)
+                if arq_mat:
+                    nome_mat = arq_mat.nome
+            if aluno.id_comprovante_residencia:
+                arq_res = self.arquivo_repository.buscar_por_id(aluno.id_comprovante_residencia)
+                if arq_res:
+                    nome_res = arq_res.nome
+
+        nome_bairro = None
+        if aluno:
+            if getattr(aluno, "bairro_rel", None) and getattr(aluno.bairro_rel, "nome", None):
+                nome_bairro = aluno.bairro_rel.nome
+            elif aluno.bairro_id is not None:
+                nome_bairro = str(aluno.bairro_id)
+
+        nome_faculdade = None
+        sigla_faculdade = None
+        campus_faculdade = None
+        if aluno and getattr(aluno, "faculdade_rel", None):
+            nome_faculdade = getattr(aluno.faculdade_rel, "nome_faculdade", None)
+            sigla_faculdade = getattr(aluno.faculdade_rel, "sigla", None)
+            campus_faculdade = getattr(aluno.faculdade_rel, "campus_faculdade", None)
+
+        return PerfilAlunoResponseDTO(
+            id=usuario.id,
+            nome=usuario.nome_completo,
+            email=usuario.email,
+            telefone=usuario.telefone,
+            data_criacao=usuario.data_criacao,
+            status_cadastro=status_cadastro,
+            faculdade_id=aluno.faculdade_id if aluno else None,
+            faculdade=nome_faculdade,
+            nome_faculdade=nome_faculdade,
+            sigla=sigla_faculdade,
+            sigla_faculdade=sigla_faculdade,
+            campus=campus_faculdade,
+            bairro=nome_bairro,
+            curso=aluno.curso if aluno else None,
+            semestre_atual=aluno.semestre_atual if aluno else None,
+            periodo_ingresso=aluno.periodo_ingresso if aluno else None,
+            turno_curso=aluno.turno_curso if aluno else None,
+            data_nascimento=aluno.data_nascimento if aluno else None,
+            identificacao_genero=aluno.identificacao_genero if aluno else None,
+            transgenero=getattr(aluno, "transgenero", None) if aluno else None,
+            raca=aluno.raca if aluno else None,
+            identificacao_sexual=aluno.identificacao_sexual if aluno else None,
+            tem_filhos=aluno.tem_filhos if aluno else None,
+            id_foto_aluno=aluno.id_foto_aluno if aluno else None,
+            validade_acesso=aluno.validade_acesso if aluno else None,
+            motivo_reprovacao=aluno.motivo_reprovacao if aluno else None,
+            id_comprovante_matricula=aluno.id_comprovante_matricula if aluno else None,
+            id_comprovante_residencia=aluno.id_comprovante_residencia if aluno else None,
+            nome_comprovante_matricula=nome_mat,
+            nome_comprovante_residencia=nome_res,
+        )

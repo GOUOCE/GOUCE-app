@@ -1,0 +1,15 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "ignoreDeprecations": "5.0",
+    "types": ["jest"],
+    "paths": {
+      "@/*": ["./frontend/src/*"],
+      "@api/*": ["./frontend/src/api/*"],
+      "@contexts/*": ["./frontend/src/contexts/*"],
+      "@services/*": ["./frontend/src/services/*"],
+      "@theme/*": ["./frontend/src/theme/*"]
+    }
+  }
+}

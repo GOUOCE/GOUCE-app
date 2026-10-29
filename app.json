@@ -1,0 +1,60 @@
+{
+  "expo": {
+    "name": "GOUCE Mobile",
+    "slug": "atu-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.gouce.app"
+    },
+    "android": {
+      "package": "com.gouce.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "https",
+              "host": "octopus-ragweed-shorter.ngrok-free.dev",
+              "pathPrefix": "/auth/redefinir-senha"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "root": "./frontend/src/app"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ],
+    "scheme": "gouoce-app",
+    "extra": {
+      "expoClient": {
+        "scheme": "gouoce-app"
+      }
+    }
+  }
+}

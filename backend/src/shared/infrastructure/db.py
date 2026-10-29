@@ -1,0 +1,113 @@
+import os
+from dotenv import load_dotenv
+from sqlalchemy import create_engine, text, inspect
+from sqlalchemy.orm import sessionmaker, declarative_base
+
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL or not DATABASE_URL.startswith("postgresql"):
+    raise ValueError("DATABASE_URL deve apontar para um banco PostgreSQL")
+
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = declarative_base()
+
+def get_session():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+def create_tables():
+    """Criar todas tabelas"""
+    from src.modulos.arquivos.model.entities.arquivo import ArquivoORM
+    from src.modulos.usuarios.model.entities.usuario import UsuarioORM
+    from src.modulos.usuarios.model.entities.tipo import TipoORM
+    from src.modulos.usuarios.model.entities.usuario_tipo import UsuarioTipoORM
+    from src.modulos.usuarios.model.entities.aluno import AlunoORM
+    from src.modulos.usuarios.model.entities.administrador import AdministradorORM
+    from src.modulos.usuarios.model.entities.representante import RepresentanteORM
+    from src.modulos.motoristas.model.entities.motorista import MotoristaORM
+    from src.modulos.auth.domain.entities.password_reset_token import PasswordResetTokenORM
+    from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
+    from src.modulos.crud_basicos.domain.entities.onibus import OnibusORM
+    from src.shared.infrastructure.audit_model import LogAuditoriaORM
+
+    Base.metadata.create_all(bind=engine)
+
+def sync_schema():
+    """
+    Sincroniza o schema do banco de dados com os modelos definidos.
+    Detecta automaticamente mudanças nas entidades e altera tipos ou cria colunas no banco.
+    """
+    inspector = inspect(engine)
+
+    with engine.begin() as connection:
+        preparer = connection.dialect.identifier_preparer
+
+        for table in Base.metadata.tables.values():
+            table_name = table.name
+
+            if table_name not in inspector.get_table_names():
+                continue
+
+            existing_columns = {col['name']: col for col in inspector.get_columns(table_name)}
+
+            # Correções e expansão de tipos para criptografia LGPD (EncryptedString & Blind Index)
+            if table_name == "usuario":
+                for col_lgpd in ["telefone", "email", "nome_completo"]:
+                    if col_lgpd in existing_columns:
+                        try:
+                            connection.execute(text(f"ALTER TABLE usuario ALTER COLUMN {col_lgpd} TYPE VARCHAR(500);"))
+                        except Exception as e:
+                            print(f"Aviso ao alterar usuario.{col_lgpd}: {e}")
+
+            if table_name == "arquivos" and "nome" in existing_columns:
+                try:
+                    connection.execute(text("ALTER TABLE arquivos ALTER COLUMN nome TYPE VARCHAR(500);"))
+                except Exception as e:
+                    print(f"Aviso ao alterar arquivos.nome: {e}")
+
+            if table_name == "aluno":
+                for col_lgpd in ["identificacao_genero", "identificacao_sexual", "raca"]:
+                    if col_lgpd in existing_columns:
+                        try:
+                            connection.execute(text(f"ALTER TABLE aluno ALTER COLUMN {col_lgpd} TYPE VARCHAR(500);"))
+                        except Exception as e:
+                            print(f"Aviso ao alterar aluno.{col_lgpd}: {e}")
+
+            # Verificar se há colunas novas
+            for column in table.columns:
+                col_name = column.name
+
+                if col_name not in existing_columns:
+                    savepoint_name = f"sp_{table_name}_{col_name}".replace("-", "_")
+                    try:
+                        col_type = str(column.type.compile(dialect=connection.dialect))
+                        default_clause = column.server_default
+                        default = (
+                            f"DEFAULT {default_clause.arg.text}"
+                            if default_clause is not None
+                            and hasattr(default_clause.arg, "text")
+                            else ""
+                        )
+
+                        quoted_table_name = preparer.quote(table_name)
+                        quoted_column_name = preparer.quote(col_name)
+
+                        connection.execute(text(f"SAVEPOINT {savepoint_name};"))
+                        sql = f"ALTER TABLE {quoted_table_name} ADD COLUMN {quoted_column_name} {col_type} NULL {default}".strip()
+                        connection.execute(text(sql))
+                        connection.execute(text(f"RELEASE SAVEPOINT {savepoint_name};"))
+                        print(f"✓ Coluna {table_name}.{col_name} criada")
+                    except Exception as e:
+                        try:
+                            connection.execute(text(f"ROLLBACK TO SAVEPOINT {savepoint_name};"))
+                        except Exception:
+                            pass
+                        print(f"Aviso ao criar {table_name}.{col_name}: {e}")
