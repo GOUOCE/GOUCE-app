@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, TextInput, Button, Snackbar } from 'react-native-paper';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft, X } from 'lucide-react-native';
@@ -41,7 +41,7 @@ export default function CadastrarOnibusScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
-  const { control, handleSubmit, formState: { errors } } = useForm<FrotaFormData>({
+  const { control, handleSubmit, formState: { errors }, reset } = useForm<FrotaFormData>({
     resolver: zodResolver(frotaSchema),
     defaultValues: {
       placa: '',
@@ -49,6 +49,30 @@ export default function CadastrarOnibusScreen() {
       capacidadeEmPe: undefined,
     },
   });
+
+  // Reseta o formulário limpo sempre que a tela ganha/perde foco
+  useFocusEffect(
+    React.useCallback(() => {
+      reset({
+        placa: '',
+        assentos: undefined,
+        capacidadeEmPe: undefined,
+      });
+
+      return () => {
+        reset({
+          placa: '',
+          assentos: undefined,
+          capacidadeEmPe: undefined,
+        });
+      };
+    }, [reset])
+  );
+
+  const voltarParaListagem = () => {
+    closePopup();
+    router.replace('/(administrador)/frota');
+  };
 
   const onSubmit = (dados: FrotaFormData) => {
     showPopup({
@@ -63,11 +87,13 @@ export default function CadastrarOnibusScreen() {
         try {
           await frotaService.criarOnibus(dados.placa, Number(dados.assentos), Number(dados.capacidadeEmPe));
           setIsLoading(false);
-          setSnackbarMessage('Ônibus cadastrado com sucesso');
-          setSnackbarVisivel(true);
-          setTimeout(() => {
-            router.replace('/(administrador)/frota');
-          }, 1200);
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: 'O veículo foi cadastrado com sucesso.',
+            confirmText: 'OK',
+            onConfirm: voltarParaListagem,
+          });
         } catch (error: any) {
           setIsLoading(false);
           const status = error.response?.status;
@@ -91,7 +117,7 @@ export default function CadastrarOnibusScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={voltarParaListagem}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Cadastrar Ônibus</Text>
@@ -121,6 +147,7 @@ export default function CadastrarOnibusScreen() {
                 mode="outlined"
                 placeholder="ex: OCR-1234"
                 value={value}
+                maxLength={8}
                 onChangeText={(t) => onChange(t.toUpperCase())}
                 autoCapitalize="characters"
                 error={!!errors.placa}
@@ -177,7 +204,7 @@ export default function CadastrarOnibusScreen() {
         {/* Botão Finalizar Cadastro */}
         <Button
           mode="contained"
-          onPress={() => { void handleSubmit(onSubmit)(); }}
+          onPress={handleSubmit(onSubmit) as any}
           loading={isLoading}
           disabled={isLoading}
           style={styles.saveButton}

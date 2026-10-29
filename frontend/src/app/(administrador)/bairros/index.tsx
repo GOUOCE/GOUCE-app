@@ -1,20 +1,19 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Switch, Snackbar } from 'react-native-paper';
+import { Text, TextInput, Switch } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, Plus, Search, Pencil, Trash2, RotateCcw, X } from 'lucide-react-native';
 
 import { bairroService, BairroItem } from '@/services/bairroService';
+import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function BairrosListScreen() {
   const router = useRouter();
 
   const [busca, setBusca] = useState('');
-  const [mostrarInativos, setMostrarInativos] = useState(true);
+  const [mostrarInativos, setMostrarInativos] = useState(false); // Inicia desligada por padrão (AC-01 / AC-09)
   const [bairros, setBairros] = useState<BairroItem[]>([]);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -32,9 +31,9 @@ export default function BairrosListScreen() {
     message: '',
   });
 
-  const showPopup = (config: Omit<typeof popup, 'visible'>) => {
+  const showPopup = React.useCallback((config: Omit<typeof popup, 'visible'>) => {
     setPopup({ ...config, visible: true });
-  };
+  }, []);
 
   const closePopup = () => {
     setPopup((prev) => ({ ...prev, visible: false }));
@@ -45,9 +44,15 @@ export default function BairrosListScreen() {
       const lista = await bairroService.listarBairros(busca);
       setBairros(lista);
     } catch (err) {
-      console.warn('Erro ao carregar bairros:', err);
+      const msg = getErrorMessage(err, 'Erro ao carregar listagem de bairros.');
+      showPopup({
+        type: 'error',
+        title: 'Erro de Conexão',
+        message: msg,
+        confirmText: 'Entendido',
+      });
     }
-  }, [busca]);
+  }, [busca, showPopup]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -67,16 +72,18 @@ export default function BairrosListScreen() {
         closePopup();
         try {
           await bairroService.inativarBairro(bairro.id);
-          setSnackbarMessage(`Bairro ${bairro.nome} inativado`);
-          setSnackbarVisivel(true);
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: `Bairro ${bairro.nome} inativado com sucesso.`,
+            confirmText: 'OK',
+          });
           carregarBairros();
         } catch (error: any) {
           showPopup({
             type: 'error',
             title: 'Inativação Bloqueada',
-            message:
-              error.message ||
-              'Este bairro não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar.',
+            message: getErrorMessage(error, 'Erro ao inativar bairro.'),
             confirmText: 'Entendido',
           });
         }
@@ -95,11 +102,21 @@ export default function BairrosListScreen() {
         closePopup();
         try {
           await bairroService.reativarBairro(bairro.id);
-          setSnackbarMessage(`Bairro ${bairro.nome} reativado`);
-          setSnackbarVisivel(true);
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: `Bairro ${bairro.nome} reativado com sucesso.`,
+            confirmText: 'OK',
+          });
           carregarBairros();
         } catch (err) {
-          console.error('Erro ao reativar bairro:', err);
+          const msg = getErrorMessage(err, 'Erro ao reativar bairro.');
+          showPopup({
+            type: 'error',
+            title: 'Erro ao reativar',
+            message: msg,
+            confirmText: 'Entendido',
+          });
         }
       },
     });
@@ -112,7 +129,7 @@ export default function BairrosListScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.replace('/(administrador)/cadastros')}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Bairros e Pontos</Text>
@@ -167,14 +184,28 @@ export default function BairrosListScreen() {
         {/* Lista de Ativos */}
         <View style={styles.listSection}>
           {ativos.map((bairro) => {
-            const qtdPontos = bairro.pontos.length;
-            const textoPontos = `${qtdPontos} ${qtdPontos === 1 ? 'ponto de parada' : 'pontos de parada'}`;
+            const pontosAtivosNomes = bairro.pontos
+              .filter((p) => p.ativo !== false)
+              .map((p) => p.nome)
+              .join(', ');
+            const textoPontos = pontosAtivosNomes || 'Nenhum ponto registrado';
+            const pontosInativosNomes = bairro.pontos
+              .filter((p) => p.ativo === false)
+              .map((p) => p.nome)
+              .join(', ');
 
             return (
               <View key={bairro.id} style={styles.itemRow}>
                 <View style={styles.itemInfo}>
                   <Text variant="bodyLarge" style={styles.itemName}>{bairro.nome}</Text>
-                  <Text variant="bodySmall" style={styles.itemSub}>{textoPontos}</Text>
+                  <Text variant="bodySmall" style={styles.itemSub} numberOfLines={1}>
+                    {textoPontos}
+                  </Text>
+                  {mostrarInativos && pontosInativosNomes !== '' && (
+                    <Text variant="bodySmall" style={styles.itemSub}>
+                      Pontos inativos: {pontosInativosNomes}
+                    </Text>
+                  )}
                 </View>
 
                 <View style={styles.actionButtons}>
@@ -208,14 +239,16 @@ export default function BairrosListScreen() {
           <View style={styles.inativosSection}>
             <Text variant="titleMedium" style={styles.inativosTitle}>Inativos</Text>
             {inativos.map((bairro) => {
-              const qtdPontos = bairro.pontos.length;
-              const textoPontos = `${qtdPontos} ${qtdPontos === 1 ? 'ponto de parada' : 'pontos de parada'}`;
+              const pontosNomes = bairro.pontos.map((p) => p.nome).join(', ');
+              const textoPontos = pontosNomes || 'Nenhum ponto registrado';
 
               return (
                 <View key={bairro.id} style={styles.itemRow}>
                   <View style={styles.itemInfo}>
                     <Text variant="bodyLarge" style={styles.itemName}>{bairro.nome}</Text>
-                    <Text variant="bodySmall" style={styles.itemSub}>{textoPontos}</Text>
+                    <Text variant="bodySmall" style={styles.itemSub} numberOfLines={1}>
+                      {textoPontos}
+                    </Text>
                   </View>
 
                   <TouchableOpacity onPress={() => handleReativar(bairro)} style={styles.iconBtn}>
@@ -228,19 +261,6 @@ export default function BairrosListScreen() {
         )}
       </ScrollView>
 
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
     </View>
   );
 }
@@ -338,11 +358,5 @@ const styles = StyleSheet.create({
     color: '#888',
     textAlign: 'center',
     marginVertical: 24,
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });

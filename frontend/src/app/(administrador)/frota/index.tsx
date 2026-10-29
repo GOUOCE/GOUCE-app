@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Switch, Snackbar } from 'react-native-paper';
+import { Text, TextInput, Switch } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, Plus, Search, Pencil, Trash2, RotateCcw, X } from 'lucide-react-native';
 
 import { frotaService, OnibusItem } from '@/services/frotaService';
+import { formatarTituloOnibus } from '@/utils/formatarOnibus';
+import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function FrotaListScreen() {
   const router = useRouter();
 
   const [busca, setBusca] = useState('');
-  const [mostrarInativos, setMostrarInativos] = useState(true);
+  const [mostrarInativos, setMostrarInativos] = useState(false); // Inicia desligada por padrão
   const [onibusLista, setOnibusLista] = useState<OnibusItem[]>([]);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -45,7 +45,13 @@ export default function FrotaListScreen() {
       const lista = await frotaService.listarOnibus(busca);
       setOnibusLista(lista);
     } catch (err) {
-      console.warn('Erro ao carregar frota:', err);
+      const msg = getErrorMessage(err, 'Erro ao carregar frota de veículos.');
+      showPopup({
+        type: 'error',
+        title: 'Erro de Conexão',
+        message: msg,
+        confirmText: 'Entendido',
+      });
     }
   }, [busca]);
 
@@ -66,17 +72,27 @@ export default function FrotaListScreen() {
       onConfirm: async () => {
         closePopup();
         try {
-          await frotaService.inativarOnibus(item.id);
-          setSnackbarMessage('Ônibus inativado');
-          setSnackbarVisivel(true);
-          carregarFrota();
+          await frotaService.inativarOnibus(item.placa);
+          await carregarFrota(); // Atualiza a lista imediatamente
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: 'O veículo foi inativado com sucesso.',
+            confirmText: 'OK',
+            onConfirm: () => {
+              closePopup();
+              carregarFrota();
+            },
+          });
         } catch (error: any) {
+          const msg = getErrorMessage(
+            error,
+            'Este veículo possui alocações pendentes e não pode ser inativado no momento.'
+          );
           showPopup({
             type: 'error',
             title: 'Inativação Bloqueada',
-            message:
-              error.message ||
-              'Este veículo possui alocações pendentes e não pode ser inativado no momento.',
+            message: msg,
             confirmText: 'Entendido',
           });
         }
@@ -94,12 +110,26 @@ export default function FrotaListScreen() {
       onConfirm: async () => {
         closePopup();
         try {
-          await frotaService.reativarOnibus(item.id);
-          setSnackbarMessage('Ônibus reativado');
-          setSnackbarVisivel(true);
-          carregarFrota();
+          await frotaService.reativarOnibus(item.placa);
+          await carregarFrota(); // Atualiza a lista imediatamente
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: 'O veículo foi reativado com sucesso.',
+            confirmText: 'OK',
+            onConfirm: () => {
+              closePopup();
+              carregarFrota();
+            },
+          });
         } catch (err) {
-          console.error('Erro ao reativar ônibus:', err);
+          const msg = getErrorMessage(err, 'Erro ao reativar veículo.');
+          showPopup({
+            type: 'error',
+            title: 'Erro ao reativar',
+            message: msg,
+            confirmText: 'Entendido',
+          });
         }
       },
     });
@@ -112,7 +142,7 @@ export default function FrotaListScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.replace('/(administrador)/cadastros')}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Frota</Text>
@@ -142,7 +172,7 @@ export default function FrotaListScreen() {
         {/* Barra de Busca */}
         <View style={styles.searchContainer}>
           <TextInput
-            placeholder="Buscar por nome"
+            placeholder="Buscar por nome ou placa"
             value={busca}
             onChangeText={setBusca}
             mode="outlined"
@@ -167,10 +197,10 @@ export default function FrotaListScreen() {
         {/* Lista de Ativos */}
         <View style={styles.listSection}>
           {ativos.map((item) => (
-            <View key={item.id} style={styles.itemRow}>
+            <View key={item.placa || item.id} style={styles.itemRow}>
               <View style={styles.itemInfo}>
                 <Text variant="bodyLarge" style={styles.itemName}>
-                  {item.identificacao} - {item.placa}
+                  {formatarTituloOnibus(item.identificacao, item.placa)}
                 </Text>
                 <Text variant="bodySmall" style={styles.itemSub}>
                   {item.assentos} assentos | No máximo {item.capacidade_em_pe} em pé
@@ -182,7 +212,7 @@ export default function FrotaListScreen() {
                   onPress={() =>
                     router.push({
                       pathname: '/(administrador)/frota/editar',
-                      params: { id: String(item.id) },
+                      params: { id: item.placa || String(item.id) },
                     })
                   }
                   style={styles.iconBtn}
@@ -207,10 +237,10 @@ export default function FrotaListScreen() {
           <View style={styles.inativosSection}>
             <Text variant="titleMedium" style={styles.inativosTitle}>Inativos</Text>
             {inativos.map((item) => (
-              <View key={item.id} style={styles.itemRow}>
+              <View key={item.placa || item.id} style={styles.itemRow}>
                 <View style={styles.itemInfo}>
                   <Text variant="bodyLarge" style={styles.itemName}>
-                    {item.identificacao} - {item.placa}
+                    {formatarTituloOnibus(item.identificacao, item.placa)}
                   </Text>
                   <Text variant="bodySmall" style={styles.itemSub}>
                     {item.assentos} assentos | No máximo {item.capacidade_em_pe} em pé
@@ -225,20 +255,6 @@ export default function FrotaListScreen() {
           </View>
         )}
       </ScrollView>
-
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
     </View>
   );
 }
@@ -336,11 +352,5 @@ const styles = StyleSheet.create({
     color: '#888',
     textAlign: 'center',
     marginVertical: 24,
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });

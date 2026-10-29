@@ -14,6 +14,11 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
+from src.modulos.rotas.infrastructure.nome_rota import (
+    MENSAGEM_NOME_ROTA_EM_USO,
+    nome_rota_em_uso,
+    travar_nome_rota,
+)
 from src.modulos.rotas.model.entities.rota_complementar import RotaComplementarORM
 from src.modulos.rotas.model.entities.rota_principal import RotaPrincipalORM
 from src.modulos.usuarios.model.entities.usuario import UsuarioORM  # noqa: F401
@@ -23,12 +28,13 @@ ENTIDADE_AUDITORIA = "rota_complementar"
 
 MENSAGEM_PRINCIPAL_INATIVA_OU_INEXISTENTE = "Rota principal inativa ou inexistente."
 MENSAGEM_PRINCIPAL_INATIVA_REATIVACAO = (
-    "A rota principal vinculada está inativa. Reative-a ou altere o vínculo antes."
+    "Não é possível reativar esta rota complementar pois a rota principal "
+    "vinculada está inativa."
 )
 
 
 class RotaComplementarNomeEmUsoError(ValueError):
-    """Indica que já existe outra rota complementar (ativa ou inativa) com o mesmo nome."""
+    """Indica que já existe outra rota principal ou complementar (ativa ou inativa) com o mesmo nome."""
 
 
 class RotaComplementarReferenciaInvalidaError(ValueError):
@@ -104,13 +110,10 @@ class RotaComplementarRepository:
         }
 
     def nome_em_uso(self, nome: str, ignorar_rota_id: int | None = None) -> bool:
-        query = self.session.query(RotaComplementarORM.id).filter(
-            func.lower(func.trim(RotaComplementarORM.nome))
-            == func.lower(func.trim(nome))
+        """Confere o nome nas rotas complementares e nas principais (#309)."""
+        return nome_rota_em_uso(
+            self.session, nome, ignorar_complementar_id=ignorar_rota_id
         )
-        if ignorar_rota_id is not None:
-            query = query.filter(RotaComplementarORM.id != ignorar_rota_id)
-        return query.first() is not None
 
     def principal_inativa(self, rota_id: int) -> bool:
         """Indica se a rota principal vinculada à complementar está inativa."""
@@ -136,20 +139,21 @@ class RotaComplementarRepository:
         self,
         nome: str,
         horario_saida: time,
+        horario_retorno: time,
         ponto_conexao: str,
         rota_principal_id: int,
         usuario_executor_id: int,
     ) -> dict:
         try:
+            travar_nome_rota(self.session, nome)
             if self.nome_em_uso(nome):
-                raise RotaComplementarNomeEmUsoError(
-                    "Já existe uma rota complementar com este nome."
-                )
+                raise RotaComplementarNomeEmUsoError(MENSAGEM_NOME_ROTA_EM_USO)
 
             principal = self._carregar_principal_ativa(rota_principal_id)
             rota = RotaComplementarORM(
                 nome=nome.strip(),
                 horario_saida=horario_saida,
+                horario_retorno=horario_retorno,
                 ponto_conexao=ponto_conexao.strip(),
                 rota_principal=principal,
                 ativo=True,
@@ -169,9 +173,7 @@ class RotaComplementarRepository:
         except IntegrityError as error:
             self.session.rollback()
             if self.nome_em_uso(nome):
-                raise RotaComplementarNomeEmUsoError(
-                    "Já existe uma rota complementar com este nome."
-                ) from error
+                raise RotaComplementarNomeEmUsoError(MENSAGEM_NOME_ROTA_EM_USO) from error
             raise
         except Exception:
             self.session.rollback()
@@ -195,10 +197,10 @@ class RotaComplementarRepository:
                 return None
             antes = self._snapshot(rota)
 
-            if "nome" in campos and self.nome_em_uso(nome, ignorar_rota_id=rota_id):
-                raise RotaComplementarNomeEmUsoError(
-                    "Já existe uma rota complementar com este nome."
-                )
+            if "nome" in campos:
+                travar_nome_rota(self.session, nome)
+                if self.nome_em_uso(nome, ignorar_rota_id=rota_id):
+                    raise RotaComplementarNomeEmUsoError(MENSAGEM_NOME_ROTA_EM_USO)
 
             nova_principal = None
             if (
@@ -213,6 +215,8 @@ class RotaComplementarRepository:
                 rota.nome = nome.strip()
             if "horario_saida" in campos:
                 rota.horario_saida = campos["horario_saida"]
+            if "horario_retorno" in campos:
+                rota.horario_retorno = campos["horario_retorno"]
             if "ponto_conexao" in campos:
                 rota.ponto_conexao = campos["ponto_conexao"].strip()
             if nova_principal is not None:
@@ -227,9 +231,7 @@ class RotaComplementarRepository:
         except IntegrityError as error:
             self.session.rollback()
             if nome is not None and self.nome_em_uso(nome, ignorar_rota_id=rota_id):
-                raise RotaComplementarNomeEmUsoError(
-                    "Já existe uma rota complementar com este nome."
-                ) from error
+                raise RotaComplementarNomeEmUsoError(MENSAGEM_NOME_ROTA_EM_USO) from error
             raise
         except Exception:
             self.session.rollback()
@@ -334,6 +336,7 @@ class RotaComplementarRepository:
             {
                 "nome": rota.nome,
                 "horario_saida": rota.horario_saida.strftime("%H:%M"),
+                "horario_retorno": rota.horario_retorno.strftime("%H:%M"),
                 "ponto_conexao": rota.ponto_conexao,
                 "rota_principal_id": rota.rota_principal.id,
                 "ativo": bool(rota.ativo),
@@ -348,6 +351,7 @@ class RotaComplementarRepository:
             "id": rota.id,
             "nome": rota.nome,
             "horario_saida": rota.horario_saida.strftime("%H:%M"),
+            "horario_retorno": rota.horario_retorno.strftime("%H:%M"),
             "ponto_conexao": rota.ponto_conexao,
             "ativo": bool(rota.ativo),
             "rota_principal": {

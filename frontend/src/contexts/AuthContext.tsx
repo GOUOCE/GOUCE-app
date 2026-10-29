@@ -109,19 +109,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const response = await authService.login({ email, senha });
     console.log('[AUTH] Resposta do login recebida com sucesso');
 
-    const actualRole = authService.mapRole(response.usuario.role);
+    const rolesDisponiveis: string[] = response.usuario.roles && response.usuario.roles.length > 0
+      ? response.usuario.roles
+      : [response.usuario.role];
 
-    // Validação do perfil selecionado x perfil real da conta (AC-08 / CT-HU002-UI-009)
-    if (selectedRole && selectedRole !== actualRole) {
+    const rolesMapeadas: UserRole[] = rolesDisponiveis.map((r) => authService.mapRole(r));
+
+    // Determina a role final da sessão com base no perfil selecionado pelo usuário ou perfil principal
+    const roleFinal: UserRole = selectedRole && rolesMapeadas.includes(selectedRole)
+      ? selectedRole
+      : authService.mapRole(response.usuario.role);
+
+    // Validação do perfil selecionado x perfis disponíveis da conta (AC-08 / HU-002 / HU-030)
+    if (selectedRole && !rolesMapeadas.includes(selectedRole)) {
       const nomePerfilReal =
-        actualRole === 'ALUNO' ? 'Aluno' :
-        actualRole === 'MOTORISTA' ? 'Representante' : 'Administrador';
+        roleFinal === 'ALUNO' ? 'Aluno' :
+        roleFinal === 'MOTORISTA' ? 'Representante' : 'Administrador';
 
       const error: any = new Error(
         `Perfil incompatível. Sua conta é do perfil ${nomePerfilReal}. Por favor, escolha "Sou ${nomePerfilReal.toLowerCase()}" para continuar.`
       );
       error.code = 'ROLE_MISMATCH';
-      error.actualRole = actualRole;
+      error.actualRole = roleFinal;
       error.selectedRole = selectedRole;
       throw error;
     }
@@ -130,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       id: String(response.usuario.id),
       name: response.usuario.nome || response.usuario.nome_completo || 'Usuário',
       email: response.usuario.email,
-      role: actualRole,
+      role: roleFinal,
       status: calcularStatusAluno(response.usuario.status_cadastro, response.usuario.acesso_expirado),
       telefone: response.usuario.telefone,
       curso: response.usuario.curso,

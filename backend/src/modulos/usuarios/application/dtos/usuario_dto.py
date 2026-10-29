@@ -1,10 +1,11 @@
 from datetime import date, datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, EmailStr, Field, ConfigDict, model_validator
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, ValidationInfo, field_validator
 from src.shared.enums.status_cadastro_enum import StatusCadastroEnum
 from src.shared.enums.tipo_documento_reenvio_enum import TipoDocumentoReenvioEnum
 from src.shared.enums.turno_curso_enum import TurnoCursoEnum
+from src.shared.validators.id_localidade_validator import IdLocalidade
 from src.shared.enums.demograficos_enum import (
     RacaEnum,
     IdentidadeSexualEnum,
@@ -35,9 +36,9 @@ class ValidarEtapa2CadastroUsuarioDTO(BaseModel):
 class ValidarEtapa3CadastroUsuarioDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    bairro_id: int | str = Field(min_length=1, max_length=20)
+    bairro_id: IdLocalidade
     telefone: str = Field(min_length=1, max_length=20)
-    faculdade_id: int
+    faculdade_id: IdLocalidade
     curso: str = Field(min_length=1, max_length=150)
     periodo_ingresso: str = Field(min_length=1, max_length=20)
     turno_curso: TurnoCursoEnum | str | None = None
@@ -56,8 +57,8 @@ class CadastroUsuarioDTO(BaseModel):
     email: EmailStr
     senha: str = Field(min_length=8, max_length=128)
     telefone: str = Field(min_length=1, max_length=20)
-    faculdade_id: int
-    bairro_id: int 
+    faculdade_id: IdLocalidade
+    bairro_id: IdLocalidade
     id_comprovante_matricula: str = Field(default="", max_length=255)
     id_comprovante_residencia: str = Field(default="", max_length=255)
     data_nascimento: str | int | float | date | datetime | None = None
@@ -105,7 +106,8 @@ class DocumentoReenvioRespostaDTO(BaseModel):
 
 
 class DocumentoReenvioSolicitadoDTO(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    # Sem o strip, um motivo só com espaços passava pelo min_length e era descartado em silêncio depois.
+    model_config = ConfigDict(populate_by_name=True, str_strip_whitespace=True)
 
     tipo: TipoDocumentoReenvioEnum = Field(
         description="Tipo do documento que deve ser reenviado pelo aluno.",
@@ -169,33 +171,49 @@ class AtualizarStatusAlunoDTO(BaseModel):
     motivo_reprovacao: str | None = Field(
         default=None,
         max_length=255,
+        validate_default=True,
         description="Motivo geral da rejeição. Use junto com status_cadastro=rejeitado.",
     )
     documentos_reenvio: list[DocumentoReenvioSolicitadoDTO] | None = Field(
         default=None,
+        validate_default=True,
         description=(
             "Documentos específicos que o aluno deverá reenviar. "
             "Obrigatório quando status_cadastro=rejeitado."
         ),
     )
 
-    @model_validator(mode="after")
-    def validar_dados_de_rejeicao(self):
-        if self.status_cadastro == StatusCadastroEnum.REJEITADO:
-            if not self.motivo_reprovacao or not self.motivo_reprovacao.strip():
-                raise ValueError(
-                    "motivo_reprovacao é obrigatório quando status_cadastro é rejeitado."
-                )
-            if not self.documentos_reenvio:
-                raise ValueError(
-                    "documentos_reenvio é obrigatório quando status_cadastro é rejeitado."
-                )
-        elif self.motivo_reprovacao or self.documentos_reenvio:
-            raise ValueError(
-                "motivo_reprovacao e documentos_reenvio só devem ser informados "
-                "quando status_cadastro é rejeitado."
-            )
-        return self
+    # Validação por campo (e não no modelo) para o erro 422 apontar qual campo foi recusado.
+    @field_validator("motivo_reprovacao")
+    @classmethod
+    def validar_motivo_reprovacao(cls, valor: str | None, info: ValidationInfo) -> str | None:
+        valor = valor.strip() if valor else None
+        status = info.data.get("status_cadastro")
+        if status is None:
+            return valor
+        if status == StatusCadastroEnum.REJEITADO:
+            if not valor:
+                raise ValueError("Informe o motivo da reprovação.")
+        elif valor:
+            raise ValueError("O motivo da reprovação só pode ser informado ao reprovar o cadastro.")
+        return valor
+
+    @field_validator("documentos_reenvio")
+    @classmethod
+    def validar_documentos_reenvio(
+        cls,
+        valor: list[DocumentoReenvioSolicitadoDTO] | None,
+        info: ValidationInfo,
+    ) -> list[DocumentoReenvioSolicitadoDTO] | None:
+        status = info.data.get("status_cadastro")
+        if status is None:
+            return valor
+        if status == StatusCadastroEnum.REJEITADO:
+            if not valor:
+                raise ValueError("Informe ao menos um documento para o aluno reenviar, com o motivo.")
+        elif valor:
+            raise ValueError("Os documentos para reenvio só podem ser informados ao reprovar o cadastro.")
+        return valor
 
 
 class AprovacaoAlunoResponseDTO(BaseModel):

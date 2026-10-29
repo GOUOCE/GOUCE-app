@@ -1,0 +1,106 @@
+== PREPARAÇÃO ==
+admin logado; id no banco: 1
+faculdade: 201
+ids: {'A1': 2, 'A2': 3, 'A3': 4, 'A4': 5, 'AP': 6}
+
+== CT-HU027-API-004 — notificar o aluno da aprovação (#313) ==
+  [OK ] aprovar A1 por /aprovar
+         esperado: 200 ativado
+         obtido  : 200 {"aluno_id": 2, "status_cadastro": "ativado", "mensagem": "Cadastro do aluno aprovado com sucesso!"}
+  [OK ] e-mail de aprovação do A1 no Mailpit
+         esperado: 1 e-mail 'Cadastro aprovado - GOUCE'
+         obtido  : [('Cadastro aprovado - GOUCE', 'Cadastro aprovado! Olá Zuleide Ramos Costa, Seu cadastro no GOUCE foi aprovado! Você já pode acessar a platafo')]
+  [OK ] aprovar AP por /status (ativado) também avisa
+         esperado: 200 + 1 e-mail
+         obtido  : 200; [('Cadastro aprovado - GOUCE', 'Cadastro aprovado! Olá Pedro Aprovado Silva, Seu cadastro no GOUCE foi aprovado! Você já pode acessar a plataf')]
+
+== CT-HU027-API-005 — reprovar com motivo por documento (controle) ==
+  [OK ] reprovar A2
+         esperado: 200 rejeitado com os 2 documentos
+         obtido  : 200 {"aluno_id": 3, "status_cadastro": "rejeitado", "motivo_reprovacao": "Cadastro com dados inconsistentes.", "documentos_reenvio": [{"tipo": "comprovante_matricula", "motivo": "Documento ilegível."}, {"tipo": "comprovante_residencia
+  [OK ] e-mail de reprovação do A2
+         esperado: 1 e-mail de documentos pendentes
+         obtido  : [('Documentos pendentes para reenvio - GOUCE', 'Documentos pendentes de reenvio Olá Bruno Alves Lima, Foram identificados documentos do seu cadastro que preci')]
+
+== CT-HU027-API-006 — validações da reprovação (#314, #317) ==
+  [OK ] 1 sem motivo e sem documentos
+         esperado: 422 success/error, texto em português, aluno segue pendente
+         obtido  : 422 ['Informe o motivo da reprovação.', 'Informe ao menos um documento para o aluno reenviar, com o motivo.'] | pendente |
+  [OK ] 2 motivo geral '   ' e sem documentos
+         esperado: 422 success/error, texto em português, aluno segue pendente
+         obtido  : 422 ['Informe o motivo da reprovação.', 'Informe ao menos um documento para o aluno reenviar, com o motivo.'] | pendente |
+  [OK ] 3a documento com motivo ''
+         esperado: 422 success/error, texto em português, aluno segue pendente
+         obtido  : 422 ['Informe o motivo do documento.'] | pendente |
+  [OK ] 3b documento com motivo '   ' sem motivo geral
+         esperado: 422 success/error, texto em português, aluno segue pendente
+         obtido  : 422 ['Informe o motivo da reprovação.', 'Informe o motivo do documento.'] | pendente |
+  [OK ] 3c motivo geral válido + documento com motivo '   '
+         esperado: 422 success/error, texto em português, aluno segue pendente
+         obtido  : 422 ['Informe o motivo do documento.'] | pendente |
+  [OK ] 4 tipo 'rg'
+         esperado: 422 success/error, texto em português, aluno segue pendente
+         obtido  : 422 ['Tipo de documento inválido. Use comprovante_matricula, comprovante_residencia ou foto_perfil.'] | pendente |
+  [OK ] 5 motivo geral com 256 caracteres
+         esperado: 422 success/error, texto em português, aluno segue pendente
+         obtido  : 422 ['O motivo da reprovação deve ter no máximo 255 caracteres.'] | pendente |
+
+== CT-HU027-API-007 — avaliar quem não está na fila (#315) ==
+  [OK ] 1a aprovar AP (já ativo)
+         esperado: HTTP 409 com mensagem clara, sem e-mail
+         obtido  : 409 {"detail": "Este aluno já está com o cadastro aprovado. Só é possível aprovar ou reprovar cadastros na fila de solicitações."} | e-mails: 0
+  [OK ] 1b reprovar AP (já ativo)
+         esperado: HTTP 409 com mensagem clara, sem e-mail
+         obtido  : 409 {"detail": "Este aluno já está com o cadastro aprovado. Só é possível aprovar ou reprovar cadastros na fila de solicitações."} | e-mails: 0
+  [OK ] 2 aprovar A2 (rejeitado, sem reenvio)
+         esperado: HTTP 409 com mensagem clara, sem e-mail
+         obtido  : 409 {"detail": "Este aluno está com o cadastro rejeitado, aguardando o reenvio dos documentos. Só é possível aprovar ou reprovar cadastros na fila de solicitações."} | e-mails: 0
+  [OK ] 3 aprovar A1 de novo
+         esperado: HTTP 409 com mensagem clara, sem e-mail
+         obtido  : 409 {"detail": "Este aluno já está com o cadastro aprovado. Só é possível aprovar ou reprovar cadastros na fila de solicitações."} | e-mails: 0
+  [OK ] 3b aprovar A1 de novo por /status
+         esperado: HTTP 409 com mensagem clara, sem e-mail
+         obtido  : 409 {"detail": "Este aluno já está com o cadastro aprovado. Só é possível aprovar ou reprovar cadastros na fila de solicitações."} | e-mails: 0
+  [OK ] 4 aluno 999999
+         esperado: HTTP 404 com mensagem clara, sem e-mail
+         obtido  : 404 {"detail": "Aluno não encontrado"} | e-mails: 0
+  [OK ] status e validade de AP, A1 e A2 intactos
+         esperado: {'AP': '6 | ativado | 2027-04-28 16:26:17.712438+00', 'A1': '2 | ativado | 2027-04-28 16:26:15.619319+00', 'A2': '3 | rejeitado |'}
+         obtido  : {'AP': '6 | ativado | 2027-04-28 16:26:17.712438+00', 'A1': '2 | ativado | 2027-04-28 16:26:15.619319+00', 'A2': '3 | rejeitado |'}
+  [OK ] nenhum registro de auditoria para as recusas
+         esperado: 3
+         obtido  : 3
+
+== CT-HU027-API-008 — aluno consegue corrigir depois da reprovação (#314) ==
+  [OK ] reprovar A3 só com motivo geral
+         esperado: 422, A3 continua pendente
+         obtido  : 422 {"success": false, "error": {"code": "REQUEST_VALIDATION_ERROR", "message": "Requisição inválida", "details": [{"field": "documentos_reenvio", "message": "Informe ao menos um documento para o aluno reenviar, com o motivo."}]}} | 4 | pendente |
+  [OK ] atalho do 3c: documento com motivo em branco
+         esperado: 422, A4 continua pendente
+         obtido  : 422 | 5 | pendente |
+  [OK ] reprovar A3 com 1 documento válido
+         esperado: 200 rejeitado
+         obtido  : 200 {"aluno_id": 4, "status_cadastro": "rejeitado", "motivo_reprovacao": "Cadastro com dados inconsistentes.", "documentos_reenvio": [{"tipo": "comprovante_matricula", "motivo": "Ilegível."}], "mensagem": "Documentos rejeitados e marc
+  [OK ] A3 vê o documento a reenviar
+         esperado: 200 com 1 documento (motivo sem espaços nas pontas)
+         obtido  : 200 {"documentos": [{"tipo": "comprovante_matricula", "motivo": "Ilegível."}]}
+
+== CT-HU027-API-009 — auditoria (#316) ==
+2 | 1 | UPDATE_STATUS | 2 | pendente | ativado
+3 | 1 | UPDATE_STATUS | 6 | pendente | ativado
+4 | 1 | UPDATE_STATUS | 3 | pendente | rejeitado
+5 | 1 | UPDATE_STATUS | 4 | pendente | rejeitado
+  [OK ] um registro por avaliação efetiva, autor = admin (id 1), anterior e novo corretos
+         esperado: [(2, 'admin=1', 'pendente', 'ativado'), (6, 'admin=1', 'pendente', 'ativado'), (3, 'admin=1', 'pendente', 'rejeitado'), (4, 'admin=1', 'pendente', 'rejeitado')]
+         obtido  : 4 registros
+
+== RESUMO ==
+25/25 verificações OK
+
+== CT-HU027-API-010 — acesso sem privilégio (conferência manual com curl, só nas rotas alteradas) ==
+GET   /usuarios/alunos?status=pendente (administrador)   -> 200
+PATCH /usuarios/alunos/5/aprovar  (sem token)             -> 401
+PATCH /usuarios/alunos/5/status   (sem token)             -> 401
+PATCH /usuarios/alunos/5/aprovar  (token do A1, aluno)    -> 403 {"detail":"Acesso negado"}
+PATCH /usuarios/alunos/5/status   (token do A1, aluno)    -> 403 {"detail":"Acesso negado"}
+GET   /alunos/5 (administrador) -> status_cadastro: pendente (A4 intacto)

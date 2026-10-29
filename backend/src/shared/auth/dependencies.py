@@ -264,7 +264,7 @@ async def verify_student_standard_access(
     current_user: Annotated[dict, Depends(require_roles("aluno"))],
 ) -> dict:
     """Restringe recursos normais a alunos sem pendências de acesso."""
-    if current_user.get("current_status") == "rejeitado" or current_user.get("access_expired"):
+    if current_user.get("current_status") in {"rejeitado", "pendente"} or current_user.get("access_expired"):
         raise _forbidden()
     return current_user
 
@@ -273,6 +273,16 @@ async def verify_student_renewal_access(
     current_user: Annotated[dict, Depends(require_roles("aluno"))],
 ) -> dict:
     """Permite a renovação para alunos com vínculo expirado."""
+    if current_user.get("current_status") in {"rejeitado", "pendente"}:
+        raise _forbidden()
+    return current_user
+
+
+async def verify_student_profile_access(
+    current_user: Annotated[dict, Depends(require_roles("aluno"))],
+) -> dict:
+    """Permite ao aluno consultar o próprio perfil e status, inclusive com o
+    cadastro pendente (HU-031) ou o vínculo vencido (HU-028)."""
     if current_user.get("current_status") == "rejeitado":
         raise _forbidden()
     return current_user

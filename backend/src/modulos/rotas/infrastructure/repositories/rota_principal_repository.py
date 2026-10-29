@@ -18,6 +18,11 @@ from sqlalchemy.orm import Session, selectinload
 
 from src.modulos.crud_basicos.domain.entities.bairro import BairroORM
 from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
+from src.modulos.rotas.infrastructure.nome_rota import (
+    MENSAGEM_NOME_ROTA_EM_USO,
+    nome_rota_em_uso,
+    travar_nome_rota,
+)
 from src.modulos.rotas.model.entities.rota_complementar import RotaComplementarORM
 from src.modulos.rotas.model.entities.rota_principal import RotaPrincipalORM
 from src.modulos.usuarios.model.entities.usuario import UsuarioORM  # noqa: F401
@@ -26,8 +31,8 @@ from src.shared.infrastructure.audit_model import LogAuditoriaORM
 ENTIDADE_AUDITORIA = "rota_principal"
 
 MENSAGEM_ROTA_COM_COMPLEMENTARES_ATIVAS = (
-    "Esta rota possui rotas complementares ativas e não pode ser inativada. "
-    "Inative ou reassocie as complementares antes."
+    "Esta rota possui rotas complementares ativas vinculadas. "
+    "Inative ou desvincule as rotas complementares antes de continuar."
 )
 
 
@@ -36,7 +41,7 @@ class RotaComComplementaresAtivasError(ValueError):
 
 
 class RotaPrincipalNomeEmUsoError(ValueError):
-    """Indica que já existe outra rota (ativa ou inativa) com o mesmo nome."""
+    """Indica que já existe outra rota principal ou complementar (ativa ou inativa) com o mesmo nome."""
 
 
 class RotaReferenciaInvalidaError(ValueError):
@@ -106,13 +111,10 @@ class RotaPrincipalRepository:
         }
 
     def nome_em_uso(self, nome: str, ignorar_rota_id: int | None = None) -> bool:
-        query = self.session.query(RotaPrincipalORM.id).filter(
-            func.lower(func.trim(RotaPrincipalORM.nome))
-            == func.lower(func.trim(nome))
+        """Confere o nome nas rotas principais e nas complementares (#309)."""
+        return nome_rota_em_uso(
+            self.session, nome, ignorar_principal_id=ignorar_rota_id
         )
-        if ignorar_rota_id is not None:
-            query = query.filter(RotaPrincipalORM.id != ignorar_rota_id)
-        return query.first() is not None
 
     # ------------------------------------------------------------ escrita
     def criar(
@@ -126,10 +128,9 @@ class RotaPrincipalRepository:
         usuario_executor_id: int,
     ) -> dict:
         try:
+            travar_nome_rota(self.session, nome)
             if self.nome_em_uso(nome):
-                raise RotaPrincipalNomeEmUsoError(
-                    "Já existe uma rota com este nome."
-                )
+                raise RotaPrincipalNomeEmUsoError(MENSAGEM_NOME_ROTA_EM_USO)
 
             rota = RotaPrincipalORM(
                 nome=nome.strip(),
@@ -159,9 +160,7 @@ class RotaPrincipalRepository:
         except IntegrityError as error:
             self.session.rollback()
             if self.nome_em_uso(nome):
-                raise RotaPrincipalNomeEmUsoError(
-                    "Já existe uma rota com este nome."
-                ) from error
+                raise RotaPrincipalNomeEmUsoError(MENSAGEM_NOME_ROTA_EM_USO) from error
             raise
         except Exception:
             self.session.rollback()
@@ -186,12 +185,10 @@ class RotaPrincipalRepository:
                 return None
             antes = self._snapshot(rota)
 
-            if "nome" in campos and self.nome_em_uso(
-                nome, ignorar_rota_id=rota_id
-            ):
-                raise RotaPrincipalNomeEmUsoError(
-                    "Já existe uma rota com este nome."
-                )
+            if "nome" in campos:
+                travar_nome_rota(self.session, nome)
+                if self.nome_em_uso(nome, ignorar_rota_id=rota_id):
+                    raise RotaPrincipalNomeEmUsoError(MENSAGEM_NOME_ROTA_EM_USO)
 
             novos_bairros = novas_ida = novas_volta = None
             if "bairros_ids" in campos:
@@ -235,9 +232,7 @@ class RotaPrincipalRepository:
             if nome is not None and self.nome_em_uso(
                 nome, ignorar_rota_id=rota_id
             ):
-                raise RotaPrincipalNomeEmUsoError(
-                    "Já existe uma rota com este nome."
-                ) from error
+                raise RotaPrincipalNomeEmUsoError(MENSAGEM_NOME_ROTA_EM_USO) from error
             raise
         except Exception:
             self.session.rollback()

@@ -23,7 +23,7 @@ from src.modulos.rotas.model.entities.rota_complementar import RotaComplementarO
 from src.modulos.rotas.model.entities.rota_principal import RotaPrincipalORM
 from src.shared.infrastructure.audit_model import LogAuditoriaORM
 
-MENSAGEM_NOME_EM_USO = "Já existe uma rota complementar com este nome."
+MENSAGEM_NOME_EM_USO = "Já existe uma rota com este nome."
 
 
 def principal(principal_id=1, nome="Rota Centro - UFC", ativo=True):
@@ -36,7 +36,7 @@ def principal(principal_id=1, nome="Rota Centro - UFC", ativo=True):
 def complementar_em_memoria(ativo=True, nome="Van 2", principal_ativa=True):
     rota = RotaComplementarORM(
         id=1, rota_principal_id=1, nome=nome, horario_saida=time(6, 0),
-        ponto_conexao="Trevo", ativo=ativo,
+        horario_retorno=time(17, 40), ponto_conexao="Trevo", ativo=ativo,
     )
     rota.rota_principal = principal(ativo=principal_ativa)
     return rota
@@ -100,21 +100,18 @@ class PrincipalInativaTest(RepositoryUnitBase):
 
 
 class NomeEmUsoTest(RepositoryUnitBase):
-    def test_resultado_reflete_a_existencia_de_linha(self):
-        consulta = self.session.query.return_value.filter.return_value
-        consulta.filter.return_value.first.return_value = None
-        consulta.first.return_value = (1,)
+    """A consulta nos dois tipos de rota é testada com SQLite em test_nome_rota.py."""
 
-        self.assertTrue(self.repository.nome_em_uso("Van"))
-        consulta.first.return_value = None
-        self.assertFalse(self.repository.nome_em_uso("Van"))
-
-    def test_ignora_a_propria_rota_na_edicao(self):
-        consulta = self.session.query.return_value.filter.return_value
-        consulta.filter.return_value.first.return_value = None
-
-        self.assertFalse(self.repository.nome_em_uso("Van", ignorar_rota_id=1))
-        consulta.filter.assert_called_once()
+    def test_delega_aos_dois_tipos_ignorando_so_a_propria_complementar(self):
+        modulo = "src.modulos.rotas.infrastructure.repositories.rota_complementar_repository"
+        for ignorar, resultado in ((None, True), (1, False)):
+            with self.subTest(ignorar=ignorar), patch(
+                f"{modulo}.nome_rota_em_uso", return_value=resultado
+            ) as consulta:
+                self.assertIs(self.repository.nome_em_uso("Van", ignorar_rota_id=ignorar), resultado)
+                consulta.assert_called_once_with(
+                    self.session, "Van", ignorar_complementar_id=ignorar
+                )
 
 
 class CriarTest(RepositoryUnitBase):
@@ -126,7 +123,8 @@ class CriarTest(RepositoryUnitBase):
 
     def criar(self, **alteracoes):
         argumentos = dict(
-            nome="  Van 2 ", horario_saida=time(6, 0), ponto_conexao=" Trevo ",
+            nome="  Van 2 ", horario_saida=time(6, 0), horario_retorno=time(17, 40),
+            ponto_conexao=" Trevo ",
             rota_principal_id=1, usuario_executor_id=ADMIN_ID,
         )
         argumentos.update(alteracoes)
@@ -224,7 +222,8 @@ class AtualizarTest(RepositoryUnitBase):
 
     def test_mudanca_grava_um_unico_log_editar_com_antes_e_depois(self):
         self.repository.atualizar(
-            1, {"nome": " Van 3 ", "horario_saida": time(5, 45), "ponto_conexao": " Posto "}, ADMIN_ID
+            1, {"nome": " Van 3 ", "horario_saida": time(5, 45), "horario_retorno": time(18, 10),
+                "ponto_conexao": " Posto "}, ADMIN_ID
         )
 
         logs = logs_adicionados(self.session)
@@ -232,8 +231,8 @@ class AtualizarTest(RepositoryUnitBase):
         antes, depois = json.loads(logs[0].valor_anterior), json.loads(logs[0].valor_novo)
         self.assertEqual(antes["nome"], "Van 2")
         self.assertEqual(
-            (depois["nome"], depois["horario_saida"], depois["ponto_conexao"]),
-            ("Van 3", "05:45", "Posto"),
+            (depois["nome"], depois["horario_saida"], depois["horario_retorno"], depois["ponto_conexao"]),
+            ("Van 3", "05:45", "18:10", "Posto"),
         )
         self.session.commit.assert_called_once()
 
@@ -264,8 +263,9 @@ class AtualizarTest(RepositoryUnitBase):
         self.repository.atualizar(1, {"nome": "Van 9"}, ADMIN_ID)
 
         self.assertEqual(
-            (self.rota.horario_saida, self.rota.ponto_conexao, self.rota.rota_principal.id),
-            (time(6, 0), "Trevo", 1),
+            (self.rota.horario_saida, self.rota.horario_retorno, self.rota.ponto_conexao,
+             self.rota.rota_principal.id),
+            (time(6, 0), time(17, 40), "Trevo", 1),
         )
 
     def test_nome_de_outra_rota_nao_grava_e_desfaz(self):
@@ -353,7 +353,7 @@ class AlterarStatusTest(RepositoryUnitBase):
 
         self.assertEqual(
             str(ctx.exception),
-            "A rota principal vinculada está inativa. Reative-a ou altere o vínculo antes.",
+            "Não é possível reativar esta rota complementar pois a rota principal vinculada está inativa.",
         )
         self.assertFalse(rota.ativo)
         self.assertEqual(logs_adicionados(self.session), [])
@@ -393,8 +393,8 @@ class SerializacaoTest(unittest.TestCase):
         self.assertEqual(
             RotaComplementarRepository._serializar(rota),
             {
-                "id": 1, "nome": "Van 2", "horario_saida": "06:00", "ponto_conexao": "Trevo",
-                "ativo": True,
+                "id": 1, "nome": "Van 2", "horario_saida": "06:00", "horario_retorno": "17:40",
+                "ponto_conexao": "Trevo", "ativo": True,
                 "rota_principal": {"id": 1, "nome": "Rota Centro - UFC", "ativo": False},
             },
         )
@@ -407,6 +407,6 @@ class SerializacaoTest(unittest.TestCase):
         self.assertEqual(primeiro, RotaComplementarRepository._snapshot(rota))
         self.assertEqual(
             json.loads(primeiro),
-            {"nome": "Van 2", "horario_saida": "06:00", "ponto_conexao": "Trevo",
-             "rota_principal_id": 1, "ativo": True},
+            {"nome": "Van 2", "horario_saida": "06:00", "horario_retorno": "17:40",
+             "ponto_conexao": "Trevo", "rota_principal_id": 1, "ativo": True},
         )
