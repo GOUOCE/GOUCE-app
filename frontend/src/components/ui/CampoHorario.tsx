@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import { TextInput } from 'react-native-paper';
+import { CampoTextoRotulado } from './CampoTextoRotulado';
 import { TimePickerModal, registerTranslation, pt } from 'react-native-paper-dates';
 import { Clock } from 'lucide-react-native';
 
@@ -24,15 +25,13 @@ export function CampoHorario({ label, value, onChange, error }: CampoHorarioProp
     <>
       <TouchableOpacity activeOpacity={0.7} onPress={() => setAberto(true)} accessibilityLabel={label}>
         <View pointerEvents="none">
-          <TextInput
-            label={label}
-            mode="outlined"
+          <CampoTextoRotulado
+            rotulo={label}
             value={value || 'Selecionar'}
             editable={false}
             textColor={value ? '#191C20' : '#74777F'}
             error={error}
             right={<TextInput.Icon icon={() => <Clock size={20} color="#666" />} />}
-            style={styles.input}
           />
         </View>
       </TouchableOpacity>
@@ -55,8 +54,3 @@ export function CampoHorario({ label, value, onChange, error }: CampoHorarioProp
   );
 }
 
-const styles = StyleSheet.create({
-  input: {
-    backgroundColor: '#fff',
-  },
-});
