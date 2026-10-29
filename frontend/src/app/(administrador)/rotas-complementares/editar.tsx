@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
-import { Text, TextInput, Button, Portal } from 'react-native-paper';
+import { Text, TextInput, Button, Portal, RadioButton } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,7 +18,8 @@ export default function EditarRotaComplementarScreen() {
   const [rotasPrincipaisAtivas, setRotasPrincipaisAtivas] = useState<RotaPrincipalSimples[]>([]);
   const [modalRotaVisible, setModalRotaVisible] = useState(false);
   const [modalHorarioVisible, setModalHorarioVisible] = useState(false);
-  const [rotaSelecionadaNome, setRotaSelecionadaNome] = useState('Selecionar');
+  const [rotaSelecionadaNome, setRotaSelecionadaNome] = useState('');
+  const [rotaParaVincularId, setRotaParaVincularId] = useState<number | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
 
   // Pop-up Estilizado
@@ -49,12 +50,12 @@ export default function EditarRotaComplementarScreen() {
     router.replace('/(administrador)/rotas-complementares');
   };
 
-  const { control, handleSubmit, formState: { errors }, reset, setValue } = useForm<RotaComplementarFormData>({
+  const { control, handleSubmit, formState: { errors, isSubmitted }, reset, setValue, getValues } = useForm<RotaComplementarFormData>({
     resolver: zodResolver(rotaComplementarSchema),
     defaultValues: {
       rotaPrincipalId: undefined,
       nome: '',
-      horarioSaida: '06:10',
+      horarioSaida: '',
       pontoConexao: '',
     },
   });
@@ -89,6 +90,19 @@ export default function EditarRotaComplementarScreen() {
     }
     carregarDados();
   }, [id, reset, showPopup, router]);
+
+  const abrirSeletorRota = () => {
+    setRotaParaVincularId(getValues('rotaPrincipalId') || undefined);
+    setModalRotaVisible(true);
+  };
+
+  const confirmarRotaPrincipal = () => {
+    const escolhida = rotasPrincipaisAtivas.find((rp) => rp.id === rotaParaVincularId);
+    if (!escolhida) return;
+    setValue('rotaPrincipalId', escolhida.id, { shouldDirty: true, shouldValidate: isSubmitted });
+    setRotaSelecionadaNome(escolhida.nome);
+    setModalRotaVisible(false);
+  };
 
   const onSubmit = async (dados: RotaComplementarFormData) => {
     if (!id) return;
@@ -145,15 +159,17 @@ export default function EditarRotaComplementarScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Seletor Rota Principal Vinculada */}
         <View style={styles.inputBox}>
-          <TouchableOpacity activeOpacity={0.7} onPress={() => setModalRotaVisible(true)}>
+          <TouchableOpacity activeOpacity={0.7} onPress={abrirSeletorRota}>
             <View pointerEvents="none">
               <TextInput
                 label="Rota Principal Vinculada *"
                 mode="outlined"
-                value={rotaSelecionadaNome}
+                value={rotaSelecionadaNome || 'Selecionar'}
                 editable={false}
+                textColor={rotaSelecionadaNome ? '#191C20' : '#74777F'}
+                error={!!errors.rotaPrincipalId}
                 left={<TextInput.Icon icon={() => <Building2 size={20} color="#666" />} />}
-                right={<TextInput.Icon icon={() => <ChevronDown size={20} color="#333" />} onPress={() => setModalRotaVisible(true)} />}
+                right={<TextInput.Icon icon={() => <ChevronDown size={20} color="#333" />} onPress={abrirSeletorRota} />}
                 style={styles.input}
               />
             </View>
@@ -161,31 +177,42 @@ export default function EditarRotaComplementarScreen() {
           {errors.rotaPrincipalId && <Text style={styles.errorText}>{errors.rotaPrincipalId.message}</Text>}
         </View>
 
-        {/* Modal de Seleção de Rota Principal */}
-        <Portal>
-          <RNModal visible={modalRotaVisible} transparent={true} animationType="fade">
-            <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalRotaVisible(false)}>
-              <View style={styles.modalSelectContent}>
-                <Text variant="titleMedium" style={styles.modalSelectTitle}>Rota Principal Vinculada</Text>
-                {rotasPrincipaisAtivas.map((rp) => (
-                  <TouchableOpacity
-                    key={rp.id}
-                    style={styles.optionItem}
-                    onPress={() => {
-                      setValue('rotaPrincipalId', rp.id);
-                      setRotaSelecionadaNome(rp.nome);
-                      setModalRotaVisible(false);
-                    }}
-                  >
-                    <Text style={[styles.optionText, rotaSelecionadaNome === rp.nome && { color: '#3E5F90', fontWeight: 'bold' }]}>
-                      {rp.nome}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+        {/* Modal de Seleção de Rota Principal: só ativas, a escolhida fica marcada (#355) */}
+        <RNModal visible={modalRotaVisible} transparent={true} animationType="none">
+          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalRotaVisible(false)}>
+            <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+              <Text variant="titleLarge" style={styles.modalTitle}>Rota Principal Vinculada</Text>
+              <Text variant="bodySmall" style={styles.modalSubtitle}>Selecione a rota principal ativa à qual esta rota complementar se conecta.</Text>
+
+              {rotasPrincipaisAtivas.length === 0 ? (
+                <Text style={styles.optionText}>Nenhuma rota principal ativa cadastrada.</Text>
+              ) : (
+                <RadioButton.Group
+                  value={rotaParaVincularId ? String(rotaParaVincularId) : ''}
+                  onValueChange={(valor) => setRotaParaVincularId(Number(valor))}
+                >
+                  {rotasPrincipaisAtivas.map((rp) => (
+                    <RadioButton.Item
+                      key={rp.id}
+                      label={rp.nome}
+                      value={String(rp.id)}
+                      mode="android"
+                      color="#3E5F90"
+                      position="leading"
+                      labelStyle={styles.radioLabel}
+                      style={styles.radioItem}
+                    />
+                  ))}
+                </RadioButton.Group>
+              )}
+
+              <View style={styles.modalActionButtons}>
+                <Button mode="text" onPress={() => setModalRotaVisible(false)}>Cancelar</Button>
+                <Button mode="text" onPress={confirmarRotaPrincipal} disabled={!rotaParaVincularId} labelStyle={rotaParaVincularId ? { color: '#004D40', fontWeight: 'bold' } : undefined}>Confirmar</Button>
               </View>
-            </TouchableOpacity>
-          </RNModal>
-        </Portal>
+            </View>
+          </TouchableOpacity>
+        </RNModal>
 
         {/* Nome */}
         <View style={styles.inputBox}>
@@ -222,6 +249,7 @@ export default function EditarRotaComplementarScreen() {
                     placeholder="Selecionar"
                     value={value || 'Selecionar'}
                     editable={false}
+                    textColor={value ? '#191C20' : '#74777F'}
                     error={!!errors.horarioSaida}
                     left={<TextInput.Icon icon={() => <Clock size={20} color="#666" />} />}
                     style={styles.input}
@@ -337,6 +365,35 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+  },
+  modalTitle: {
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  modalSubtitle: {
+    color: '#666',
+    marginBottom: 20,
+  },
+  radioItem: {
+    paddingHorizontal: 0,
+  },
+  radioLabel: {
+    fontSize: 16,
+    color: '#333',
+    textAlign: 'left',
+  },
+  modalActionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+    marginTop: 20,
   },
   modalSelectContent: {
     backgroundColor: '#fff',
