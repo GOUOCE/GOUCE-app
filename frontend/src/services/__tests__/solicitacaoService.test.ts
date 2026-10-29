@@ -62,3 +62,18 @@ describe('solicitacaoService.obterDetalhes - bairro do aluno (HU-027, #366)', ()
     expect((await solicitacaoService.obterDetalhes(2)).bairro).toBe('Centro');
   });
 });
+
+describe('solicitacaoService.obterUrlDocumentoWeb - comprovantes na análise (HU-027, #368)', () => {
+  it('baixa o arquivo pela API autenticada e devolve um endereço local para abrir', async () => {
+    const arquivo = new Blob(['%PDF-1.4'], { type: 'application/pdf' });
+    mockGet.mockResolvedValue({ data: arquivo });
+    const criar = jest.fn(() => 'blob:local/1');
+    (global as any).URL.createObjectURL = criar;
+
+    const url = await solicitacaoService.obterUrlDocumentoWeb('abc-123');
+
+    expect(mockGet).toHaveBeenCalledWith('/arquivos/abc-123/view', { responseType: 'blob' });
+    expect(criar).toHaveBeenCalledWith(arquivo);
+    expect(url).toBe('blob:local/1');
+  });
+});

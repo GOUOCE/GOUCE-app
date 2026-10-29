@@ -78,6 +78,13 @@ export const solicitacaoService = {
     };
   },
 
+  // Na web baixa o arquivo com o token no cabeçalho e devolve um endereço local (blob) para abrir numa aba,
+  // sem pôr o token na URL (#368)
+  async obterUrlDocumentoWeb(arquivoId: string): Promise<string> {
+    const response = await api.get(`/arquivos/${arquivoId}/view`, { responseType: 'blob' });
+    return URL.createObjectURL(response.data as Blob);
+  },
+
   async aprovarSolicitacao(alunoId: number): Promise<any> {
     const response = await api.patch(`/usuarios/alunos/${alunoId}/aprovar`);
     return response.data;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
+import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal, Linking, Platform } from 'react-native';
 import { Text, Surface, Avatar, Button, TextInput, Snackbar, Portal, ActivityIndicator } from 'react-native-paper';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, ExternalLink, X, CheckSquare, Square } from 'lucide-react-native';
@@ -190,6 +190,39 @@ export default function AnalisarSolicitacaoScreen() {
         : `${baseUrl}/arquivos/${idFoto}/view?token=${token || ''}`)
     : null;
 
+  // Abre o comprovante enviado pelo aluno para o administrador conferir (AC-03, #368)
+  const abrirDocumento = async (arquivoId?: string) => {
+    if (!arquivoId) {
+      showPopup({
+        type: 'warning',
+        title: 'Aviso',
+        message: 'O aluno não enviou este documento.',
+        confirmText: 'Entendido',
+      });
+      return;
+    }
+    // Na web a aba abre já no toque (senão o navegador bloqueia a janela aberta depois do download)
+    const aba = Platform.OS === 'web' ? window.open('', '_blank') : null;
+    try {
+      if (Platform.OS === 'web') {
+        const url = await solicitacaoService.obterUrlDocumentoWeb(arquivoId);
+        if (aba) aba.location.href = url;
+        else window.open(url, '_blank');
+      } else {
+        await Linking.openURL(`${baseUrl}/arquivos/${arquivoId}/view?token=${token || ''}`);
+      }
+    } catch (error: any) {
+      aba?.close();
+      const msg = getErrorMessage(error, 'Não foi possível abrir o documento.');
+      showPopup({
+        type: 'error',
+        title: msg.startsWith('Erro de conexão') ? 'Erro de Conexão' : 'Aviso',
+        message: msg,
+        confirmText: 'Entendido',
+      });
+    }
+  };
+
   const imageSource = fotoUri
     ? {
         uri: fotoUri,
@@ -285,14 +318,26 @@ export default function AnalisarSolicitacaoScreen() {
         <View style={styles.section}>
           <Text variant="titleMedium" style={styles.sectionTitle}>Documentos Anexados</Text>
           <View style={styles.docsGrid}>
-            <Surface style={styles.docCard} elevation={1}>
-              <ExternalLink size={20} color="#3E5F90" style={styles.docIcon} />
-              <Text variant="bodyMedium" style={styles.docTitle}>Comprovante de Matrícula</Text>
-            </Surface>
-            <Surface style={styles.docCard} elevation={1}>
-              <ExternalLink size={20} color="#3E5F90" style={styles.docIcon} />
-              <Text variant="bodyMedium" style={styles.docTitle}>Comprovante de Residência</Text>
-            </Surface>
+            <TouchableOpacity
+              style={styles.docToque}
+              onPress={() => abrirDocumento(aluno.id_comprovante_matricula)}
+              accessibilityLabel="Abrir comprovante de matrícula"
+            >
+              <Surface style={styles.docCard} elevation={1}>
+                <ExternalLink size={20} color="#3E5F90" style={styles.docIcon} />
+                <Text variant="bodyMedium" style={styles.docTitle}>Comprovante de Matrícula</Text>
+              </Surface>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.docToque}
+              onPress={() => abrirDocumento(aluno.id_comprovante_residencia)}
+              accessibilityLabel="Abrir comprovante de residência"
+            >
+              <Surface style={styles.docCard} elevation={1}>
+                <ExternalLink size={20} color="#3E5F90" style={styles.docIcon} />
+                <Text variant="bodyMedium" style={styles.docTitle}>Comprovante de Residência</Text>
+              </Surface>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -482,6 +527,9 @@ const styles = StyleSheet.create({
   docsGrid: {
     flexDirection: 'row',
     gap: 16,
+  },
+  docToque: {
+    flex: 1,
   },
   docCard: {
     flex: 1,
