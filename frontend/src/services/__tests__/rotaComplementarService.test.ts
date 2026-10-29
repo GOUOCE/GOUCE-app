@@ -137,4 +137,39 @@ describe('rotaComplementarService - só dados da API (HU-012, #351 e #352)', () 
     expect(mockPatch).toHaveBeenCalledWith('/rotas-complementares/3', corpo);
     expect(criada.horario_retorno).toBe('17:30');
   });
+
+  it('bloqueios de inativação e reativação chegam à tela com a mensagem da API (#362)', async () => {
+    const bloqueio = (mensagem: string) =>
+      Object.assign(new Error('Request failed with status code 409'), {
+        response: { status: 409, data: { success: false, error: { code: 'CONFLICT', message: mensagem } } },
+      });
+    const reativar = 'Não é possível reativar esta rota complementar pois a rota principal vinculada está inativa.';
+    const inativar = 'Esta rota possui agendamentos pendentes e não pode ser inativada no momento.';
+    mockPatch.mockRejectedValueOnce(bloqueio(inativar)).mockRejectedValueOnce(bloqueio(reativar));
+
+    const erroInativar = await rotaComplementarService.inativarRotaComplementar(1).catch((e) => e);
+    const erroReativar = await rotaComplementarService.reativarRotaComplementar(2).catch((e) => e);
+
+    expect(getErrorMessage(erroInativar)).toBe(inativar);
+    expect(getErrorMessage(erroReativar)).toBe(reativar);
+  });
+
+  it('marca quando a rota principal vinculada está inativa (#362)', async () => {
+    mockGet.mockResolvedValue({
+      data: {
+        id: 2,
+        nome: 'Van Sítio',
+        horario_saida: '06:15',
+        horario_retorno: '18:10',
+        ponto_conexao: 'Entrada do Sítio',
+        ativo: false,
+        rota_principal: { id: 2, nome: 'Rota Campo Velho - IFCE', ativo: false },
+      },
+    });
+
+    const rc = await rotaComplementarService.obterRotaComplementarPorId(2);
+
+    expect(rc.ativo).toBe(false);
+    expect(rc.rota_principal_ativa).toBe(false);
+  });
 });

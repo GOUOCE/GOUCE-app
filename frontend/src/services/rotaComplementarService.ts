@@ -11,6 +11,7 @@ export interface RotaComplementarItem {
   nome: string;
   rota_principal_id: number;
   rota_principal_nome: string;
+  rota_principal_ativa: boolean;
   horario_saida: string;
   horario_retorno: string;
   ponto_conexao: string;
@@ -33,6 +34,7 @@ function mapearRotaComplementar(rc: any): RotaComplementarItem {
     nome: rc.nome,
     rota_principal_id: rc.rota_principal?.id ?? rc.rota_principal_id,
     rota_principal_nome: rc.rota_principal?.nome ?? rc.rota_principal_nome ?? '',
+    rota_principal_ativa: rc.rota_principal?.ativo ?? true,
     horario_saida: rc.horario_saida,
     horario_retorno: rc.horario_retorno,
     ponto_conexao: rc.ponto_conexao,
@@ -96,17 +98,10 @@ export const rotaComplementarService = {
     return mapearRotaComplementar(response.data?.data || response.data);
   },
 
-  // O bloqueio (agendamentos pendentes) é decidido só pela API (#352)
+  // Os bloqueios (agendamentos pendentes, rota principal inativa) vêm só da API, em error.message,
+  // e a tela lê com getErrorMessage (#352, #362)
   async inativarRotaComplementar(id: number): Promise<void> {
-    try {
-      await api.patch(`/rotas-complementares/${id}/inativar`);
-    } catch (error: any) {
-      if (error.response?.status === 409 || error.response?.data?.detail) {
-        const msg = error.response.data.detail || error.response.data.message;
-        if (msg) throw new Error(msg);
-      }
-      throw error;
-    }
+    await api.patch(`/rotas-complementares/${id}/inativar`);
   },
 
   async reativarRotaComplementar(id: number): Promise<void> {

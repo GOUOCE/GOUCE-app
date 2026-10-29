@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
 import { Text, TextInput, Button, RadioButton, ActivityIndicator } from 'react-native-paper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { useForm, Controller, DefaultValues } from 'react-hook-form';
+import { useForm, useWatch, Controller, DefaultValues } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft, Building2, ChevronDown, GitFork, MapPin } from 'lucide-react-native';
 
@@ -23,6 +23,8 @@ const VALORES_INICIAIS: DefaultValues<RotaComplementarFormData> = {
   pontoConexao: '',
 };
 
+const MENSAGEM_PRINCIPAL_INATIVA = 'A rota principal vinculada está inativa. Selecione uma rota principal ativa.';
+
 export default function EditarRotaComplementarScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -33,6 +35,8 @@ export default function EditarRotaComplementarScreen() {
   const [rotaParaVincularId, setRotaParaVincularId] = useState<number | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [dadosCarregados, setDadosCarregados] = useState(false);
+  // Complementar inativa ligada a uma rota principal inativa: só salva depois de trocar por uma ativa (#362)
+  const [principalInativaId, setPrincipalInativaId] = useState<number | undefined>(undefined);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -81,7 +85,7 @@ export default function EditarRotaComplementarScreen() {
     }
   };
 
-  const { control, handleSubmit, formState: { errors, isDirty, isSubmitted }, reset, setValue, getValues, trigger, clearErrors } = useForm<RotaComplementarFormData>({
+  const { control, handleSubmit, formState: { errors, isDirty, isSubmitted }, reset, setValue, getValues, trigger, clearErrors, setError } = useForm<RotaComplementarFormData>({
     resolver: zodResolver(rotaComplementarSchema),
     defaultValues: VALORES_INICIAIS,
   });
@@ -92,6 +96,7 @@ export default function EditarRotaComplementarScreen() {
     setRotaParaVincularId(undefined);
     setModalRotaVisible(false);
     setDadosCarregados(false);
+    setPrincipalInativaId(undefined);
   }, [reset]);
 
 
@@ -117,7 +122,8 @@ export default function EditarRotaComplementarScreen() {
             horarioRetorno: rc.horario_retorno,
             pontoConexao: rc.ponto_conexao,
           });
-          setRotaSelecionadaNome(rc.rota_principal_nome);
+          setRotaSelecionadaNome(rc.rota_principal_ativa ? rc.rota_principal_nome : `${rc.rota_principal_nome} (inativa)`);
+          setPrincipalInativaId(rc.rota_principal_ativa ? undefined : rc.rota_principal_id);
           setDadosCarregados(true);
         } catch (err) {
           if (!ativa) return;
@@ -164,12 +170,21 @@ export default function EditarRotaComplementarScreen() {
     const escolhida = rotasPrincipaisAtivas.find((rp) => rp.id === rotaParaVincularId);
     if (!escolhida) return;
     setValue('rotaPrincipalId', escolhida.id, { shouldDirty: true, shouldValidate: isSubmitted });
+    clearErrors('rotaPrincipalId');
     setRotaSelecionadaNome(escolhida.nome);
     setModalRotaVisible(false);
   };
 
+  const rotaPrincipalIdAtual = useWatch({ control, name: 'rotaPrincipalId' });
+  const principalInativaSelecionada =
+    principalInativaId !== undefined && Number(rotaPrincipalIdAtual) === principalInativaId;
+
   const onSubmit = async (dados: RotaComplementarFormData) => {
     if (!id || !dadosCarregados) return;
+    if (principalInativaId !== undefined && Number(dados.rotaPrincipalId) === principalInativaId) {
+      setError('rotaPrincipalId', { message: MENSAGEM_PRINCIPAL_INATIVA });
+      return;
+    }
     setIsLoading(true);
     try {
       await rotaComplementarService.atualizarRotaComplementar(Number(id), {
@@ -234,14 +249,18 @@ export default function EditarRotaComplementarScreen() {
                 value={rotaSelecionadaNome || 'Selecionar'}
                 editable={false}
                 textColor={rotaSelecionadaNome ? '#191C20' : '#74777F'}
-                error={!!errors.rotaPrincipalId}
+                error={!!errors.rotaPrincipalId || principalInativaSelecionada}
                 left={<TextInput.Icon icon={() => <Building2 size={20} color="#666" />} />}
                 right={<TextInput.Icon icon={() => <ChevronDown size={20} color="#333" />} onPress={abrirSeletorRota} />}
                 style={styles.input}
               />
             </View>
           </TouchableOpacity>
-          {errors.rotaPrincipalId && <Text style={styles.errorText}>{errors.rotaPrincipalId.message}</Text>}
+          {errors.rotaPrincipalId ? (
+            <Text style={styles.errorText}>{errors.rotaPrincipalId.message}</Text>
+          ) : (
+            principalInativaSelecionada && <Text style={styles.errorText}>{MENSAGEM_PRINCIPAL_INATIVA}</Text>
+          )}
         </View>
 
         {/* Modal de Seleção de Rota Principal: só ativas, a escolhida fica marcada (#355) */}

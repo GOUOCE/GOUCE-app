@@ -84,12 +84,11 @@ export default function RotasComplementaresListScreen() {
             onConfirm: fecharSucesso,
           });
         } catch (error: any) {
+          const msg = getErrorMessage(error, 'Erro ao inativar rota complementar.');
           showPopup({
             type: 'error',
-            title: 'Inativação Bloqueada',
-            message:
-              error.message ||
-              'Esta rota possui agendamentos pendentes de alunos. Não é possível inativar no momento.',
+            title: msg.startsWith('Erro de conexão') ? 'Erro de Conexão' : 'Inativação Bloqueada',
+            message: msg,
             confirmText: 'Entendido',
           });
         }
@@ -116,11 +115,24 @@ export default function RotasComplementaresListScreen() {
             onConfirm: fecharSucesso,
           });
         } catch (err) {
-          console.error('Erro ao reativar rota complementar:', err);
+          // Ex.: rota principal inativa (#208, item 6): a mensagem da API aparece na tela (#362)
+          const msg = getErrorMessage(err, 'Erro ao reativar rota complementar.');
+          showPopup({
+            type: 'error',
+            title: msg.startsWith('Erro de conexão') ? 'Erro de Conexão' : 'Reativação Bloqueada',
+            message: msg,
+            confirmText: 'Entendido',
+          });
         }
       },
     });
   };
+
+  const abrirEdicao = (item: RotaComplementarItem) =>
+    router.push({
+      pathname: '/(administrador)/rotas-complementares/editar',
+      params: { id: String(item.id) },
+    });
 
   const ativas = rotas.filter((r) => r.ativo);
   const inativas = rotas.filter((r) => !r.ativo);
@@ -193,15 +205,7 @@ export default function RotasComplementaresListScreen() {
               </View>
 
               <View style={styles.actionButtons}>
-                <TouchableOpacity
-                  onPress={() =>
-                    router.push({
-                      pathname: '/(administrador)/rotas-complementares/editar',
-                      params: { id: String(item.id) },
-                    })
-                  }
-                  style={styles.iconBtn}
-                >
+                <TouchableOpacity onPress={() => abrirEdicao(item)} style={styles.iconBtn} accessibilityLabel={`Editar ${item.nome}`}>
                   <Pencil size={20} color="#333" />
                 </TouchableOpacity>
 
@@ -224,13 +228,22 @@ export default function RotasComplementaresListScreen() {
             {inativas.map((item) => (
               <View key={item.id} style={styles.itemRow}>
                 <View style={styles.itemInfo}>
-                  <Text variant="bodyLarge" style={styles.itemName}>{item.nome}</Text>
-                  <Text variant="bodySmall" style={styles.itemSub}>(inativa)</Text>
+                  <Text variant="bodyLarge" style={styles.itemName}>{item.nome} (inativa)</Text>
+                  <Text variant="bodySmall" style={styles.itemSub}>
+                    Rota: {item.rota_principal_nome}{item.rota_principal_ativa ? '' : ' (inativa)'} | {item.horario_saida}
+                  </Text>
                 </View>
 
-                <TouchableOpacity onPress={() => handleReativar(item)} style={styles.iconBtn}>
-                  <RotateCcw size={20} color="#333" />
-                </TouchableOpacity>
+                {/* A inativa pode ser editada: trocar a rota principal inativa antes de reativar (#362) */}
+                <View style={styles.actionButtons}>
+                  <TouchableOpacity onPress={() => abrirEdicao(item)} style={styles.iconBtn} accessibilityLabel={`Editar ${item.nome}`}>
+                    <Pencil size={20} color="#333" />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity onPress={() => handleReativar(item)} style={styles.iconBtn} accessibilityLabel={`Reativar ${item.nome}`}>
+                    <RotateCcw size={20} color="#333" />
+                  </TouchableOpacity>
+                </View>
               </View>
             ))}
           </View>
