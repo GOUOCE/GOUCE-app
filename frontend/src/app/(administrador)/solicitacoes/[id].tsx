@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
-import { Text, Surface, Avatar, Button, TextInput, Snackbar, Portal } from 'react-native-paper';
+import { Text, Surface, Avatar, Button, TextInput, Snackbar, Portal, ActivityIndicator } from 'react-native-paper';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, ExternalLink, X, CheckSquare, Square } from 'lucide-react-native';
 
@@ -177,6 +177,11 @@ export default function AnalisarSolicitacaoScreen() {
     }
   };
 
+  // Mesmo texto da fila: cadastro novo (pendente) ou renovação semestral (analise_renovacao) (#367)
+  const etiquetaStatus = aluno?.status_cadastro === 'analise_renovacao'
+    ? 'Pendente: renovação semestral'
+    : 'Pendente: cadastro novo';
+
   const baseUrl = api.defaults.baseURL || 'http://192.168.0.4:8000';
   const idFoto = aluno?.id_foto_aluno;
   const fotoUri = idFoto
@@ -216,7 +221,7 @@ export default function AnalisarSolicitacaoScreen() {
         onDismiss={closePopup}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      {!aluno ? <ActivityIndicator style={styles.carregando} accessibilityLabel="Carregando solicitação" /> : <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Foto e Status */}
         <View style={styles.profileSection}>
           {imageSource ? (
@@ -229,9 +234,9 @@ export default function AnalisarSolicitacaoScreen() {
               labelStyle={{ color: '#FFF', fontSize: 32, fontWeight: 'bold' }}
             />
           )}
-          <Text variant="titleLarge" style={styles.userName}>{aluno?.nome || 'Carregando...'}</Text>
+          <Text variant="titleLarge" style={styles.userName}>{aluno.nome}</Text>
           <Surface style={styles.statusBadge} elevation={0}>
-            <Text style={styles.statusText}>Pendente: vínculo em análise</Text>
+            <Text style={styles.statusText}>{etiquetaStatus}</Text>
           </Surface>
         </View>
 
@@ -308,7 +313,7 @@ export default function AnalisarSolicitacaoScreen() {
             Aprovar cadastro
           </Button>
         </View>
-      </ScrollView>
+      </ScrollView>}
 
       {/* Modal de Confirmação de Aprovação */}
       <Portal>
@@ -417,6 +422,9 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontWeight: 'bold',
     color: '#333',
+  },
+  carregando: {
+    marginTop: 32,
   },
   scrollContent: {
     paddingHorizontal: 24,
