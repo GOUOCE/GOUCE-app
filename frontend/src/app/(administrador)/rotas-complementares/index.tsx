@@ -5,6 +5,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, Plus, Search, Pencil, Trash2, RotateCcw, X } from 'lucide-react-native';
 
 import { rotaComplementarService, RotaComplementarItem } from '@/services/rotaComplementarService';
+import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function RotasComplementaresListScreen() {
@@ -32,9 +33,9 @@ export default function RotasComplementaresListScreen() {
     message: '',
   });
 
-  const showPopup = (config: Omit<typeof popup, 'visible'>) => {
+  const showPopup = React.useCallback((config: Omit<typeof popup, 'visible'>) => {
     setPopup({ ...config, visible: true });
-  };
+  }, []);
 
   const closePopup = () => {
     setPopup((prev) => ({ ...prev, visible: false }));
@@ -45,9 +46,14 @@ export default function RotasComplementaresListScreen() {
       const lista = await rotaComplementarService.listarRotasComplementares(busca);
       setRotas(lista);
     } catch (err) {
-      console.warn('Erro ao carregar rotas complementares:', err);
+      showPopup({
+        type: 'error',
+        title: 'Erro de Conexão',
+        message: getErrorMessage(err, 'Erro ao carregar listagem de rotas complementares.'),
+        confirmText: 'Entendido',
+      });
     }
-  }, [busca]);
+  }, [busca, showPopup]);
 
   useFocusEffect(
     React.useCallback(() => {

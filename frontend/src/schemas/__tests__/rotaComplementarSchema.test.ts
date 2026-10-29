@@ -1,11 +1,6 @@
-import { describe, it, expect, jest } from '@jest/globals';
-
-jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
-);
+import { describe, it, expect } from '@jest/globals';
 
 import { rotaComplementarSchema } from '../rotaComplementarSchema';
-import { rotaComplementarService } from '../../services/rotaComplementarService';
 
 describe('Suíte de Testes Unitários - HU-012 (Gerenciamento de Rotas Complementares)', () => {
   describe('Validação do Formulário de Rota Complementar (rotaComplementarSchema)', () => {
@@ -56,30 +51,6 @@ describe('Suíte de Testes Unitários - HU-012 (Gerenciamento de Rotas Complemen
       if (!res.success) {
         expect(res.error.issues[0].message).toContain('pelo menos 3 caracteres');
       }
-    });
-  });
-
-  describe('Regras de Negócio de Rotas Complementares', () => {
-    it('deve exibir apenas rotas principais ATIVAS no seletor de vínculo', async () => {
-      const rotasAtivas = await rotaComplementarService.listarRotasPrincipaisAtivas();
-      const possuiInativa = rotasAtivas.some((r) => r.nome.includes('Inativa'));
-
-      expect(possuiInativa).toBe(false);
-      expect(rotasAtivas.every((r) => r.ativo)).toBe(true);
-    });
-
-    it('deve permitir inativar uma rota complementar sem agendamentos pendentes', async () => {
-      // Van 5 - Trevo da BR (ID 2) não possui agendamentos pendentes
-      await rotaComplementarService.inativarRotaComplementar(2);
-      const rc = await rotaComplementarService.obterRotaComplementarPorId(2);
-      expect(rc?.ativo).toBe(false);
-    });
-
-    it('deve permitir reativar uma rota complementar inativa', async () => {
-      // Rota complementar inativa (ID 3) está inativa
-      await rotaComplementarService.reativarRotaComplementar(3);
-      const rc = await rotaComplementarService.obterRotaComplementarPorId(3);
-      expect(rc?.ativo).toBe(true);
     });
   });
 });

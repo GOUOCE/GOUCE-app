@@ -39,9 +39,9 @@ export default function EditarRotaComplementarScreen() {
     message: '',
   });
 
-  const showPopup = (config: Omit<typeof popup, 'visible'>) => {
+  const showPopup = React.useCallback((config: Omit<typeof popup, 'visible'>) => {
     setPopup({ ...config, visible: true });
-  };
+  }, []);
 
   const closePopup = () => {
     setPopup((prev) => ({ ...prev, visible: false }));
@@ -65,21 +65,28 @@ export default function EditarRotaComplementarScreen() {
         setRotasPrincipaisAtivas(ativas);
 
         const rc = await rotaComplementarService.obterRotaComplementarPorId(Number(id));
-        if (rc) {
-          reset({
-            rotaPrincipalId: rc.rota_principal_id,
-            nome: rc.nome,
-            horarioSaida: rc.horario_saida,
-            pontoConexao: rc.ponto_conexao,
-          });
-          setRotaSelecionadaNome(rc.rota_principal_nome);
-        }
+        reset({
+          rotaPrincipalId: rc.rota_principal_id,
+          nome: rc.nome,
+          horarioSaida: rc.horario_saida,
+          pontoConexao: rc.ponto_conexao,
+        });
+        setRotaSelecionadaNome(rc.rota_principal_nome);
       } catch (err) {
-        console.warn('Erro ao carregar dados da rota complementar:', err);
+        showPopup({
+          type: 'error',
+          title: 'Erro de Conexão',
+          message: getErrorMessage(err, 'Erro ao carregar dados da rota complementar.'),
+          confirmText: 'Entendido',
+          onConfirm: () => {
+            closePopup();
+            router.replace('/(administrador)/rotas-complementares');
+          },
+        });
       }
     }
     carregarDados();
-  }, [id, reset]);
+  }, [id, reset, showPopup, router]);
 
   const onSubmit = async (dados: RotaComplementarFormData) => {
     if (!id) return;
@@ -102,7 +109,7 @@ export default function EditarRotaComplementarScreen() {
       const msg = getErrorMessage(error, 'Erro ao atualizar rota complementar.');
       showPopup({
         type: 'error',
-        title: 'Aviso',
+        title: msg.startsWith('Erro de conexão') ? 'Erro de Conexão' : 'Aviso',
         message: msg,
         confirmText: 'Entendido',
       });

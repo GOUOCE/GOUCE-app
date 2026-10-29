@@ -39,9 +39,9 @@ export default function CadastrarRotaComplementarScreen() {
     message: '',
   });
 
-  const showPopup = (config: Omit<typeof popup, 'visible'>) => {
+  const showPopup = React.useCallback((config: Omit<typeof popup, 'visible'>) => {
     setPopup({ ...config, visible: true });
-  };
+  }, []);
 
   const closePopup = () => {
     setPopup((prev) => ({ ...prev, visible: false }));
@@ -67,11 +67,16 @@ export default function CadastrarRotaComplementarScreen() {
           setRotaSelecionadaNome(ativas[0].nome);
         }
       } catch (err) {
-        console.warn('Erro ao carregar rotas principais ativas:', err);
+        showPopup({
+          type: 'error',
+          title: 'Erro de Conexão',
+          message: getErrorMessage(err, 'Erro ao carregar rotas principais.'),
+          confirmText: 'Entendido',
+        });
       }
     }
     carregarRotasPrincipais();
-  }, [setValue]);
+  }, [setValue, showPopup]);
 
   const onSubmit = (dados: RotaComplementarFormData) => {
     showPopup({
@@ -101,7 +106,7 @@ export default function CadastrarRotaComplementarScreen() {
           const msg = getErrorMessage(error, 'Erro ao cadastrar rota complementar.');
           showPopup({
             type: 'error',
-            title: 'Aviso',
+            title: msg.startsWith('Erro de conexão') ? 'Erro de Conexão' : 'Aviso',
             message: msg,
             confirmText: 'Entendido',
           });
