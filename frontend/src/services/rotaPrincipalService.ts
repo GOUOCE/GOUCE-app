@@ -117,27 +117,15 @@ export const rotaPrincipalService = {
   },
 
   async criarRotaPrincipal(dados: DadosRotaPrincipal): Promise<RotaPrincipalItem> {
-    try {
-      const response = await api.post<any>('/rotas-principais', corpoDaRota(dados));
-      return mapearRota(response.data?.data || response.data);
-    } catch (error: any) {
-      if (error.response?.status === 409 || error.message?.includes('cadastrada')) {
-        throw new Error('Esta rota já está cadastrada.');
-      }
-      throw error;
-    }
+    // Nome em uso (409) chega à tela com a mensagem da API: "Já existe uma rota com este nome." (#347)
+    const response = await api.post<any>('/rotas-principais', corpoDaRota(dados));
+    return mapearRota(response.data?.data || response.data);
   },
 
   async atualizarRotaPrincipal(id: number, dados: DadosRotaPrincipal): Promise<RotaPrincipalItem> {
-    try {
-      const response = await api.patch<any>(`/rotas-principais/${id}`, corpoDaRota(dados));
-      return mapearRota(response.data?.data || response.data);
-    } catch (error: any) {
-      if (error.response?.status === 409 || error.message?.includes('cadastrada')) {
-        throw new Error('Esta rota já está cadastrada.');
-      }
-      throw error;
-    }
+    // Nome em uso (409) chega à tela com a mensagem da API: "Já existe uma rota com este nome." (#347)
+    const response = await api.patch<any>(`/rotas-principais/${id}`, corpoDaRota(dados));
+    return mapearRota(response.data?.data || response.data);
   },
 
   async inativarRotaPrincipal(id: number): Promise<void> {

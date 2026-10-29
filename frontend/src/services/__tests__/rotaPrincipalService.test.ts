@@ -12,6 +12,7 @@ jest.mock('../../api/api', () => ({
 }));
 
 import { rotaPrincipalService } from '../rotaPrincipalService';
+import { getErrorMessage } from '../../utils/errorUtils';
 
 const semConexao = Object.assign(new Error('Network Error'), { request: {} });
 
@@ -73,5 +74,32 @@ describe('rotaPrincipalService - só dados da API (HU-011, #333 e #334)', () => 
 
     expect(opcoes.faculdades.map((f) => f.id)).toEqual([2]);
     expect(opcoes.bairros.map((b) => b.nome)).toEqual(['Centro']);
+  });
+});
+
+describe('rotaPrincipalService - nome em uso (HU-011, #347)', () => {
+  beforeEach(() => {
+    mockPost.mockReset();
+    mockPatch.mockReset();
+  });
+
+  it('mantém a mensagem da API no 409 do cadastro e da edição', async () => {
+    const conflito = Object.assign(new Error('Request failed with status code 409'), {
+      response: { status: 409, data: { success: false, error: { code: 'CONFLICT', message: 'Já existe uma rota com este nome.' } } },
+    });
+    mockPost.mockRejectedValue(conflito);
+    mockPatch.mockRejectedValue(conflito);
+    const dados = {
+      nome: 'Rota Integrada',
+      horarioSaida: '06:30',
+      horarioRetorno: '17:30',
+      faculdadesIdaIds: [1],
+      faculdadesVoltaIds: [1],
+      bairrosIds: [1],
+    };
+
+    await expect(rotaPrincipalService.criarRotaPrincipal(dados)).rejects.toBe(conflito);
+    await expect(rotaPrincipalService.atualizarRotaPrincipal(1, dados)).rejects.toBe(conflito);
+    expect(getErrorMessage(conflito)).toBe('Já existe uma rota com este nome.');
   });
 });
