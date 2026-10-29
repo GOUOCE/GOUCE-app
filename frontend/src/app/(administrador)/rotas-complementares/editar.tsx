@@ -41,6 +41,8 @@ export default function EditarRotaComplementarScreen() {
     title: string;
     message: string;
     confirmText?: string;
+    cancelText?: string;
+    confirmColor?: string;
     onConfirm?: () => void;
   }>({
     visible: false,
@@ -62,7 +64,24 @@ export default function EditarRotaComplementarScreen() {
     router.replace('/(administrador)/rotas-complementares');
   };
 
-  const { control, handleSubmit, formState: { errors, isSubmitted }, reset, setValue, getValues, trigger, clearErrors } = useForm<RotaComplementarFormData>({
+  // Alteração não salva pede confirmação antes de sair, como nas edições do épico 02 (#359)
+  const handleBack = () => {
+    if (isDirty) {
+      showPopup({
+        type: 'warning',
+        title: 'Sair desta tela?',
+        message: 'As alterações não salvas serão perdidas.',
+        confirmText: 'Sim, sair',
+        cancelText: 'Continuar aqui',
+        confirmColor: '#B00020',
+        onConfirm: voltarParaListagem,
+      });
+    } else {
+      voltarParaListagem();
+    }
+  };
+
+  const { control, handleSubmit, formState: { errors, isDirty, isSubmitted }, reset, setValue, getValues, trigger, clearErrors } = useForm<RotaComplementarFormData>({
     resolver: zodResolver(rotaComplementarSchema),
     defaultValues: VALORES_INICIAIS,
   });
@@ -185,7 +204,7 @@ export default function EditarRotaComplementarScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={voltarParaListagem}>
+        <TouchableOpacity onPress={handleBack}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Editar Rota Complementar</Text>
@@ -198,6 +217,8 @@ export default function EditarRotaComplementarScreen() {
         title={popup.title}
         message={popup.message}
         confirmText={popup.confirmText}
+        cancelText={popup.cancelText}
+        confirmColor={popup.confirmColor}
         onConfirm={popup.onConfirm}
         onDismiss={popup.type === 'success' ? voltarParaListagem : closePopup}
       />
