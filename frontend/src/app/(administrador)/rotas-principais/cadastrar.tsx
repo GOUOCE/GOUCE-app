@@ -49,9 +49,9 @@ export default function CadastrarRotaPrincipalScreen() {
     message: '',
   });
 
-  const showPopup = (config: Omit<typeof popup, 'visible'>) => {
+  const showPopup = React.useCallback((config: Omit<typeof popup, 'visible'>) => {
     setPopup({ ...config, visible: true });
-  };
+  }, []);
 
   const closePopup = () => {
     setPopup((prev) => ({ ...prev, visible: false }));
@@ -77,10 +77,7 @@ export default function CadastrarRotaPrincipalScreen() {
   useEffect(() => {
     async function carregarOpcoes() {
       try {
-        const [facs, bairros] = await Promise.all([
-          rotaPrincipalService.listarFaculdadesAtivas(),
-          rotaPrincipalService.listarBairrosAtivos(),
-        ]);
+        const { faculdades: facs, bairros } = await rotaPrincipalService.listarOpcoes();
         setFaculdadesAtivas(facs);
         setBairrosAtivos(bairros);
 
@@ -99,11 +96,16 @@ export default function CadastrarRotaPrincipalScreen() {
           setBairroParaVincularId(bairros[0].id);
         }
       } catch (err) {
-        console.warn('Erro ao carregar opções ativas:', err);
+        showPopup({
+          type: 'error',
+          title: 'Erro de Conexão',
+          message: getErrorMessage(err, 'Erro ao carregar faculdades e bairros.'),
+          confirmText: 'Entendido',
+        });
       }
     }
     carregarOpcoes();
-  }, [setValue]);
+  }, [setValue, showPopup]);
 
   const toggleFaculdadeIda = (id: number) => {
     const novos = facsIdaSelecionadas.includes(id)
@@ -173,7 +175,7 @@ export default function CadastrarRotaPrincipalScreen() {
           const msg = getErrorMessage(error, 'Erro ao cadastrar rota principal.');
           showPopup({
             type: 'error',
-            title: 'Aviso',
+            title: msg.startsWith('Erro de conexão') ? 'Erro de Conexão' : 'Aviso',
             message: msg,
             confirmText: 'Entendido',
           });

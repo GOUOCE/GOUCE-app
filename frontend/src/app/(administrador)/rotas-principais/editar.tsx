@@ -49,9 +49,9 @@ export default function EditarRotaPrincipalScreen() {
     message: '',
   });
 
-  const showPopup = (config: Omit<typeof popup, 'visible'>) => {
+  const showPopup = React.useCallback((config: Omit<typeof popup, 'visible'>) => {
     setPopup({ ...config, visible: true });
-  };
+  }, []);
 
   const closePopup = () => {
     setPopup((prev) => ({ ...prev, visible: false }));
@@ -78,38 +78,39 @@ export default function EditarRotaPrincipalScreen() {
     async function carregarDados() {
       if (!id) return;
       try {
-        const [facs, bairros] = await Promise.all([
-          rotaPrincipalService.listarFaculdadesAtivas(),
-          rotaPrincipalService.listarBairrosAtivos(),
-        ]);
+        const { faculdades: facs, bairros } = await rotaPrincipalService.listarOpcoes();
         setFaculdadesAtivas(facs);
         setBairrosAtivos(bairros);
 
         const r = await rotaPrincipalService.obterRotaPrincipalPorId(Number(id));
-        if (r) {
-          const idaIds = r.faculdades_ida.map((f) => f.id);
-          const voltaIds = r.faculdades_volta.map((f) => f.id);
-          const bairrosIds = r.bairros.map((b) => b.id);
+        const idaIds = r.faculdades_ida.map((f) => f.id);
+        const voltaIds = r.faculdades_volta.map((f) => f.id);
+        const bairrosIds = r.bairros.map((b) => b.id);
 
-          setFacsIdaSelecionadas(idaIds);
-          setFacsVoltaSelecionadas(voltaIds);
-          setBairrosVinculadosIds(bairrosIds);
+        setFacsIdaSelecionadas(idaIds);
+        setFacsVoltaSelecionadas(voltaIds);
+        setBairrosVinculadosIds(bairrosIds);
 
-          reset({
-            nome: r.nome,
-            horarioSaida: r.horario_saida,
-            horarioRetorno: r.horario_retorno,
-            faculdadesIdaIds: idaIds,
-            faculdadesVoltaIds: voltaIds,
-            bairrosIds: bairrosIds,
-          });
-        }
+        reset({
+          nome: r.nome,
+          horarioSaida: r.horario_saida,
+          horarioRetorno: r.horario_retorno,
+          faculdadesIdaIds: idaIds,
+          faculdadesVoltaIds: voltaIds,
+          bairrosIds: bairrosIds,
+        });
       } catch (err) {
-        console.warn('Erro ao carregar dados da rota principal:', err);
+        showPopup({
+          type: 'error',
+          title: 'Erro de Conexão',
+          message: getErrorMessage(err, 'Erro ao carregar dados da rota principal.'),
+          confirmText: 'Entendido',
+          onConfirm: voltarParaListagem,
+        });
       }
     }
     carregarDados();
-  }, [id, reset]);
+  }, [id, reset, showPopup]);
 
   const toggleFaculdadeIda = (idFac: number) => {
     const novos = facsIdaSelecionadas.includes(idFac)
@@ -172,7 +173,7 @@ export default function EditarRotaPrincipalScreen() {
       const msg = getErrorMessage(error, 'Erro ao atualizar rota principal.');
       showPopup({
         type: 'error',
-        title: 'Aviso',
+        title: msg.startsWith('Erro de conexão') ? 'Erro de Conexão' : 'Aviso',
         message: msg,
         confirmText: 'Entendido',
       });
