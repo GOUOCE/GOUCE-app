@@ -12,7 +12,7 @@ export default function RotasComplementaresListScreen() {
   const router = useRouter();
 
   const [busca, setBusca] = useState('');
-  const [mostrarInativos, setMostrarInativos] = useState(true);
+  const [mostrarInativos, setMostrarInativos] = useState(false); // Inicia desligada por padrão (AC-01 / AC-09)
   const [rotas, setRotas] = useState<RotaComplementarItem[]>([]);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarVisivel, setSnackbarVisivel] = useState(false);
