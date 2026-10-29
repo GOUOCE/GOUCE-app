@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
-import { Text, TextInput, Button, Checkbox } from 'react-native-paper';
+import { Text, TextInput, Button, Checkbox, RadioButton } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -57,6 +57,7 @@ export default function CadastrarRotaPrincipalScreen() {
     message: string;
     confirmText?: string;
     cancelText?: string;
+    confirmColor?: string;
     onConfirm?: () => void;
   }>({
     visible: false,
@@ -154,10 +155,29 @@ export default function CadastrarRotaPrincipalScreen() {
     setModalVincularBairroVisible(false);
   };
 
-  const handleDesvincularBairro = (id: number) => {
-    const novos = bairrosVinculadosIds.filter((bId) => bId !== id);
-    setBairrosVinculadosIds(novos);
-    setValue('bairrosIds', novos, { shouldDirty: true, shouldValidate: isSubmitted });
+  const bairrosDisponiveis = bairrosAtivos.filter((b) => !bairrosVinculadosIds.includes(b.id));
+
+  const abrirVincularBairro = () => {
+    setBairroParaVincularId(undefined);
+    setModalVincularBairroVisible(true);
+  };
+
+  // A lixeira pede confirmação antes de tirar o bairro da rota (#346)
+  const handleDesvincularBairro = (bairro: BairroOpcao) => {
+    showPopup({
+      type: 'warning',
+      title: 'Remover bairro?',
+      message: `O bairro ${bairro.nome} será removido desta rota.`,
+      confirmText: 'Remover',
+      cancelText: 'Cancelar',
+      confirmColor: '#B00020',
+      onConfirm: () => {
+        closePopup();
+        const novos = bairrosVinculadosIds.filter((bId) => bId !== bairro.id);
+        setBairrosVinculadosIds(novos);
+        setValue('bairrosIds', novos, { shouldDirty: true, shouldValidate: isSubmitted });
+      },
+    });
   };
 
   const onSubmit = (dados: RotaPrincipalFormData) => {
@@ -229,6 +249,7 @@ export default function CadastrarRotaPrincipalScreen() {
         message={popup.message}
         confirmText={popup.confirmText}
         cancelText={popup.cancelText}
+        confirmColor={popup.confirmColor}
         onConfirm={popup.onConfirm}
         onDismiss={popup.type === 'success' ? voltarParaListagem : closePopup}
       />
@@ -354,7 +375,7 @@ export default function CadastrarRotaPrincipalScreen() {
             .map((bairro) => (
               <View key={bairro.id} style={styles.bairroRow}>
                 <Text variant="bodyLarge" style={styles.bairroName}>{bairro.nome}</Text>
-                <TouchableOpacity onPress={() => handleDesvincularBairro(bairro.id)}>
+                <TouchableOpacity onPress={() => handleDesvincularBairro(bairro)} accessibilityLabel={`Remover ${bairro.nome}`}>
                   <Trash2 size={20} color="#333" />
                 </TouchableOpacity>
               </View>
@@ -366,7 +387,7 @@ export default function CadastrarRotaPrincipalScreen() {
         {/* Botão Vincular bairro */}
         <Button
           mode="outlined"
-          onPress={() => setModalVincularBairroVisible(true)}
+          onPress={abrirVincularBairro}
           style={styles.vincularButton}
           labelStyle={styles.vincularLabel}
         >
@@ -455,23 +476,32 @@ export default function CadastrarRotaPrincipalScreen() {
             <Text variant="titleLarge" style={styles.modalTitle}>Vincular bairro</Text>
             <Text variant="bodySmall" style={styles.modalSubtitle}>Selecione o bairro a ser vinculado.</Text>
 
-            <View style={styles.inputBox}>
-              {bairrosAtivos.map((b) => (
-                <TouchableOpacity
-                  key={b.id}
-                  style={styles.optionItem}
-                  onPress={() => setBairroParaVincularId(b.id)}
-                >
-                  <Text style={[styles.optionText, bairroParaVincularId === b.id && { color: '#3E5F90', fontWeight: 'bold' }]}>
-                    {b.nome}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            {/* Só bairros ainda não vinculados; o escolhido fica marcado (#346) */}
+            {bairrosDisponiveis.length === 0 ? (
+              <Text style={styles.optionText}>Todos os bairros ativos já estão vinculados a esta rota.</Text>
+            ) : (
+              <RadioButton.Group
+                value={bairroParaVincularId ? String(bairroParaVincularId) : ''}
+                onValueChange={(valor) => setBairroParaVincularId(Number(valor))}
+              >
+                {bairrosDisponiveis.map((b) => (
+                  <RadioButton.Item
+                    key={b.id}
+                    label={b.nome}
+                    value={String(b.id)}
+                    mode="android"
+                    color="#3E5F90"
+                    position="leading"
+                    labelStyle={styles.radioLabel}
+                    style={styles.radioItem}
+                  />
+                ))}
+              </RadioButton.Group>
+            )}
 
             <View style={styles.modalActionButtons}>
               <Button mode="text" onPress={() => setModalVincularBairroVisible(false)}>Cancelar</Button>
-              <Button mode="text" onPress={handleVincularBairro} labelStyle={{ color: '#004D40', fontWeight: 'bold' }}>Vincular</Button>
+              <Button mode="text" onPress={handleVincularBairro} disabled={!bairroParaVincularId} labelStyle={bairroParaVincularId ? { color: '#004D40', fontWeight: 'bold' } : undefined}>Vincular</Button>
             </View>
           </View>
         </TouchableOpacity>
@@ -589,8 +619,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
-  optionItem: {
-    paddingVertical: 12,
+  radioItem: {
+    paddingHorizontal: 0,
+  },
+  radioLabel: {
+    fontSize: 16,
+    color: '#333',
+    textAlign: 'left',
   },
   optionText: {
     fontSize: 16,
