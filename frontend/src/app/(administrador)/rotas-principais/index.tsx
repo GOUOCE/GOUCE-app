@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Switch, Snackbar } from 'react-native-paper';
+import { Text, TextInput, Switch } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, Plus, Search, Pencil, Trash2, RotateCcw, X } from 'lucide-react-native';
 
@@ -13,8 +13,6 @@ export default function RotasPrincipaisListScreen() {
   const [busca, setBusca] = useState('');
   const [mostrarInativos, setMostrarInativos] = useState(false); // Inicia desligada por padrão (AC-01 / AC-09)
   const [rotas, setRotas] = useState<RotaPrincipalItem[]>([]);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -55,6 +53,11 @@ export default function RotasPrincipaisListScreen() {
     }, [carregarRotas])
   );
 
+  const fecharSucesso = () => {
+    closePopup();
+    carregarRotas();
+  };
+
   const handleInativar = (item: RotaPrincipalItem) => {
     showPopup({
       type: 'warning',
@@ -67,9 +70,13 @@ export default function RotasPrincipaisListScreen() {
         closePopup();
         try {
           await rotaPrincipalService.inativarRotaPrincipal(item.id);
-          setSnackbarMessage('Rota inativada');
-          setSnackbarVisivel(true);
-          carregarRotas();
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: 'A rota foi inativada com sucesso.',
+            confirmText: 'OK',
+            onConfirm: fecharSucesso,
+          });
         } catch (error: any) {
           showPopup({
             type: 'error',
@@ -95,9 +102,13 @@ export default function RotasPrincipaisListScreen() {
         closePopup();
         try {
           await rotaPrincipalService.reativarRotaPrincipal(item.id);
-          setSnackbarMessage('Rota reativada');
-          setSnackbarVisivel(true);
-          carregarRotas();
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: 'A rota foi reativada com sucesso.',
+            confirmText: 'OK',
+            onConfirm: fecharSucesso,
+          });
         } catch (err) {
           console.error('Erro ao reativar rota principal:', err);
         }
@@ -135,7 +146,7 @@ export default function RotasPrincipaisListScreen() {
         cancelText={popup.cancelText}
         confirmColor={popup.confirmColor}
         onConfirm={popup.onConfirm}
-        onDismiss={closePopup}
+        onDismiss={popup.type === 'success' ? fecharSucesso : closePopup}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -219,20 +230,6 @@ export default function RotasPrincipaisListScreen() {
           </View>
         )}
       </ScrollView>
-
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
     </View>
   );
 }
@@ -330,11 +327,5 @@ const styles = StyleSheet.create({
     color: '#888',
     textAlign: 'center',
     marginVertical: 24,
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });

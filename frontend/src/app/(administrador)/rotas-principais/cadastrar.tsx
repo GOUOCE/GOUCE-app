@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
-import { Text, TextInput, Button, Checkbox, Portal, Snackbar } from 'react-native-paper';
+import { Text, TextInput, Button, Checkbox, Portal } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, GitCommit, Clock, Building2, ChevronDown, Trash2, X } from 'lucide-react-native';
+import { ChevronLeft, GitCommit, Clock, Building2, ChevronDown, Trash2 } from 'lucide-react-native';
 
 import { rotaPrincipalSchema, RotaPrincipalFormData } from '@/schemas/rotaPrincipalSchema';
 import {
@@ -33,10 +33,6 @@ export default function CadastrarRotaPrincipalScreen() {
 
   const [bairroParaVincularId, setBairroParaVincularId] = useState<number | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Snackbar Toast
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -165,11 +161,13 @@ export default function CadastrarRotaPrincipalScreen() {
             bairrosIds: dados.bairrosIds,
           });
           setIsLoading(false);
-          setSnackbarMessage('Rota cadastrada com sucesso');
-          setSnackbarVisivel(true);
-          setTimeout(() => {
-            router.replace('/(administrador)/rotas-principais');
-          }, 1200);
+          showPopup({
+            type: 'success',
+            title: 'Operação realizada com sucesso',
+            message: 'A rota foi cadastrada com sucesso.',
+            confirmText: 'OK',
+            onConfirm: voltarParaListagem,
+          });
         } catch (error: any) {
           setIsLoading(false);
           const msg = getErrorMessage(error, 'Erro ao cadastrar rota principal.');
@@ -211,7 +209,7 @@ export default function CadastrarRotaPrincipalScreen() {
         confirmText={popup.confirmText}
         cancelText={popup.cancelText}
         onConfirm={popup.onConfirm}
-        onDismiss={closePopup}
+        onDismiss={popup.type === 'success' ? voltarParaListagem : closePopup}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -489,20 +487,6 @@ export default function CadastrarRotaPrincipalScreen() {
           </TouchableOpacity>
         </RNModal>
       </Portal>
-
-      {/* Toast Snackbar */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
     </View>
   );
 }
@@ -628,11 +612,5 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     gap: 12,
     marginTop: 20,
-  },
-  snackbar: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    marginBottom: 20,
-    marginHorizontal: 16,
   },
 });
