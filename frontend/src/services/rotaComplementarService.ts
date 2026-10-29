@@ -54,22 +54,11 @@ function corpoDaRotaComplementar(dados: DadosRotaComplementar) {
 }
 
 export const rotaComplementarService = {
-  async listarRotasComplementares(busca = '', incluirInativos = true): Promise<RotaComplementarItem[]> {
-    const params: any = { incluir_inativos: incluirInativos };
-    if (busca && busca.trim()) params.nome = busca.trim();
-
-    const response = await api.get<any[]>('/rotas-complementares', { params });
-    const mapeados = (response.data || []).map(mapearRotaComplementar);
-
-    const q = busca.toLowerCase().trim();
-    if (!q) return mapeados;
-
-    return mapeados.filter(
-      (rc) =>
-        rc.nome.toLowerCase().includes(q) ||
-        rc.rota_principal_nome.toLowerCase().includes(q) ||
-        rc.ponto_conexao.toLowerCase().includes(q)
-    );
+  // A tela busca por nome, rota principal e ponto; a API filtra só por nome, então a lista vem inteira
+  // e o filtro é feito na tela (#363)
+  async listarRotasComplementares(incluirInativos = true): Promise<RotaComplementarItem[]> {
+    const response = await api.get<any[]>('/rotas-complementares', { params: { incluir_inativos: incluirInativos } });
+    return (response.data || []).map(mapearRotaComplementar);
   },
 
   // A API devolve só as rotas principais ativas (AC-03)

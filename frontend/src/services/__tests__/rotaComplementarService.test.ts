@@ -172,4 +172,12 @@ describe('rotaComplementarService - só dados da API (HU-012, #351 e #352)', () 
     expect(rc.ativo).toBe(false);
     expect(rc.rota_principal_ativa).toBe(false);
   });
+
+  it('lista ativas e inativas de uma vez, sem filtrar por nome na API (#363)', async () => {
+    mockGet.mockResolvedValue({ data: [] });
+
+    await rotaComplementarService.listarRotasComplementares();
+
+    expect(mockGet).toHaveBeenCalledWith('/rotas-complementares', { params: { incluir_inativos: true } });
+  });
 });

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Switch } from 'react-native-paper';
+import { Text, TextInput, Switch, ActivityIndicator } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, Plus, Search, Pencil, Trash2, RotateCcw, X } from 'lucide-react-native';
 
@@ -8,12 +8,17 @@ import { rotaComplementarService, RotaComplementarItem } from '@/services/rotaCo
 import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
+// Busca sem diferenciar maiúsculas nem acentos: "sitio" encontra "Van Sítio" (#363)
+const normalizar = (texto: string) =>
+  texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
 export default function RotasComplementaresListScreen() {
   const router = useRouter();
 
   const [busca, setBusca] = useState('');
   const [mostrarInativos, setMostrarInativos] = useState(false); // Inicia desligada por padrão (AC-01 / AC-09)
   const [rotas, setRotas] = useState<RotaComplementarItem[]>([]);
+  const [carregando, setCarregando] = useState(true);
 
   // Pop-up Estilizado
   const [popup, setPopup] = useState<{
@@ -39,9 +44,10 @@ export default function RotasComplementaresListScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
+  // Carrega a lista inteira ao abrir a tela; a busca filtra aqui mesmo, sem chamar a API a cada letra (#363)
   const carregarRotas = React.useCallback(async () => {
     try {
-      const lista = await rotaComplementarService.listarRotasComplementares(busca);
+      const lista = await rotaComplementarService.listarRotasComplementares();
       setRotas(lista);
     } catch (err) {
       showPopup({
@@ -50,8 +56,10 @@ export default function RotasComplementaresListScreen() {
         message: getErrorMessage(err, 'Erro ao carregar listagem de rotas complementares.'),
         confirmText: 'Entendido',
       });
+    } finally {
+      setCarregando(false);
     }
-  }, [busca, showPopup]);
+  }, [showPopup]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -134,8 +142,28 @@ export default function RotasComplementaresListScreen() {
       params: { id: String(item.id) },
     });
 
-  const ativas = rotas.filter((r) => r.ativo);
-  const inativas = rotas.filter((r) => !r.ativo);
+  // Nome, rota principal ou ponto de conexão, como a busca promete
+  const termo = normalizar(busca);
+  const filtradas = termo
+    ? rotas.filter((r) =>
+        [r.nome, r.rota_principal_nome, r.ponto_conexao].some((campo) => normalizar(campo).includes(termo))
+      )
+    : rotas;
+  const ativas = filtradas.filter((r) => r.ativo);
+  const inativas = filtradas.filter((r) => !r.ativo);
+
+  // Cada item mostra rota principal, horários e ponto de conexão (AC-01)
+  const renderDetalhes = (item: RotaComplementarItem) => (
+    <>
+      <Text variant="bodySmall" style={styles.itemSub}>
+        Rota: {item.rota_principal_nome}{item.rota_principal_ativa ? '' : ' (inativa)'}
+      </Text>
+      <Text variant="bodySmall" style={styles.itemSub}>
+        Saída {item.horario_saida} | Retorno {item.horario_retorno}
+      </Text>
+      <Text variant="bodySmall" style={styles.itemSub}>Ponto: {item.ponto_conexao}</Text>
+    </>
+  );
 
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
@@ -171,7 +199,7 @@ export default function RotasComplementaresListScreen() {
         {/* Barra de Busca */}
         <View style={styles.searchContainer}>
           <TextInput
-            placeholder="Buscar por nome"
+            placeholder="Buscar por nome, rota principal ou ponto"
             value={busca}
             onChangeText={setBusca}
             mode="outlined"
@@ -199,9 +227,7 @@ export default function RotasComplementaresListScreen() {
             <View key={item.id} style={styles.itemRow}>
               <View style={styles.itemInfo}>
                 <Text variant="bodyLarge" style={styles.itemName}>{item.nome}</Text>
-                <Text variant="bodySmall" style={styles.itemSub}>
-                  Rota: {item.rota_principal_nome} | {item.horario_saida}
-                </Text>
+                {renderDetalhes(item)}
               </View>
 
               <View style={styles.actionButtons}>
@@ -209,15 +235,18 @@ export default function RotasComplementaresListScreen() {
                   <Pencil size={20} color="#333" />
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => handleInativar(item)} style={styles.iconBtn}>
+                <TouchableOpacity onPress={() => handleInativar(item)} style={styles.iconBtn} accessibilityLabel={`Inativar ${item.nome}`}>
                   <Trash2 size={20} color="#333" />
                 </TouchableOpacity>
               </View>
             </View>
           ))}
 
-          {ativas.length === 0 && (
-            <Text style={styles.emptyText}>Nenhuma rota complementar ativa encontrada.</Text>
+          {/* Enquanto carrega, indicador no lugar de "Nenhuma…": a lista não "pula" (#363) */}
+          {carregando ? (
+            <ActivityIndicator style={styles.carregando} accessibilityLabel="Carregando rotas complementares" />
+          ) : (
+            ativas.length === 0 && <Text style={styles.emptyText}>Nenhuma rota complementar ativa encontrada.</Text>
           )}
         </View>
 
@@ -229,9 +258,7 @@ export default function RotasComplementaresListScreen() {
               <View key={item.id} style={styles.itemRow}>
                 <View style={styles.itemInfo}>
                   <Text variant="bodyLarge" style={styles.itemName}>{item.nome} (inativa)</Text>
-                  <Text variant="bodySmall" style={styles.itemSub}>
-                    Rota: {item.rota_principal_nome}{item.rota_principal_ativa ? '' : ' (inativa)'} | {item.horario_saida}
-                  </Text>
+                  {renderDetalhes(item)}
                 </View>
 
                 {/* A inativa pode ser editada: trocar a rota principal inativa antes de reativar (#362) */}
@@ -341,6 +368,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 8,
+  },
+  carregando: {
+    marginVertical: 24,
   },
   emptyText: {
     color: '#888',
