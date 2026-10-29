@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal as RNModal } from 'react-native';
-import { Text, TextInput, Button, Checkbox, Portal } from 'react-native-paper';
+import { Text, TextInput, Button, Checkbox } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -72,7 +72,7 @@ export default function CadastrarRotaPrincipalScreen() {
     router.replace('/(administrador)/rotas-principais');
   };
 
-  const { control, handleSubmit, formState: { errors, isSubmitted }, reset, setValue, trigger, clearErrors } = useForm<RotaPrincipalFormData>({
+  const { control, handleSubmit, formState: { errors, isSubmitted }, reset, setValue, clearErrors } = useForm<RotaPrincipalFormData>({
     resolver: zodResolver(rotaPrincipalSchema),
     defaultValues: VALORES_INICIAIS,
   });
@@ -128,8 +128,7 @@ export default function CadastrarRotaPrincipalScreen() {
       ? facsIdaSelecionadas.filter((fId) => fId !== id)
       : [...facsIdaSelecionadas, id];
     setFacsIdaSelecionadas(novos);
-    setValue('faculdadesIdaIds', novos);
-    trigger('faculdadesIdaIds');
+    setValue('faculdadesIdaIds', novos, { shouldDirty: true, shouldValidate: isSubmitted });
   };
 
   const toggleFaculdadeVolta = (id: number) => {
@@ -137,8 +136,7 @@ export default function CadastrarRotaPrincipalScreen() {
       ? facsVoltaSelecionadas.filter((fId) => fId !== id)
       : [...facsVoltaSelecionadas, id];
     setFacsVoltaSelecionadas(novos);
-    setValue('faculdadesVoltaIds', novos);
-    trigger('faculdadesVoltaIds');
+    setValue('faculdadesVoltaIds', novos, { shouldDirty: true, shouldValidate: isSubmitted });
   };
 
   const handleVincularBairro = () => {
@@ -146,8 +144,7 @@ export default function CadastrarRotaPrincipalScreen() {
     if (!bairrosVinculadosIds.includes(bairroParaVincularId)) {
       const novos = [...bairrosVinculadosIds, bairroParaVincularId];
       setBairrosVinculadosIds(novos);
-      setValue('bairrosIds', novos);
-      trigger('bairrosIds');
+      setValue('bairrosIds', novos, { shouldDirty: true, shouldValidate: isSubmitted });
     }
     setModalVincularBairroVisible(false);
   };
@@ -155,8 +152,7 @@ export default function CadastrarRotaPrincipalScreen() {
   const handleDesvincularBairro = (id: number) => {
     const novos = bairrosVinculadosIds.filter((bId) => bId !== id);
     setBairrosVinculadosIds(novos);
-    setValue('bairrosIds', novos);
-    trigger('bairrosIds');
+    setValue('bairrosIds', novos, { shouldDirty: true, shouldValidate: isSubmitted });
   };
 
   const onSubmit = (dados: RotaPrincipalFormData) => {
@@ -380,99 +376,95 @@ export default function CadastrarRotaPrincipalScreen() {
       </ScrollView>
 
       {/* Modal Faculdades de Ida */}
-      <Portal>
-        <RNModal visible={modalFacsIdaVisible} transparent={true} animationType="fade">
-          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalFacsIdaVisible(false)}>
-            <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-              <Text variant="titleLarge" style={styles.modalTitle}>Faculdades de Ida (Destino)</Text>
-              <Text variant="bodySmall" style={styles.modalSubtitle}>Selecione todas as faculdades presentes na rota de ida.</Text>
+      <RNModal visible={modalFacsIdaVisible} transparent={true} animationType="fade">
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalFacsIdaVisible(false)}>
+          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+            <Text variant="titleLarge" style={styles.modalTitle}>Faculdades de Ida (Destino)</Text>
+            <Text variant="bodySmall" style={styles.modalSubtitle}>Selecione todas as faculdades presentes na rota de ida.</Text>
 
-              {faculdadesAtivas.map((fac) => (
-                <TouchableOpacity
-                  key={fac.id}
-                  style={styles.checkboxRow}
-                  onPress={() => toggleFaculdadeIda(fac.id)}
-                >
-                  <Text style={styles.checkboxLabel}>{fac.sigla}</Text>
+            {faculdadesAtivas.map((fac) => (
+              <TouchableOpacity
+                key={fac.id}
+                style={styles.checkboxRow}
+                onPress={() => toggleFaculdadeIda(fac.id)}
+              >
+                <Text style={styles.checkboxLabel}>{fac.sigla}</Text>
+                <View pointerEvents="none">
                   <Checkbox.Android
                     status={facsIdaSelecionadas.includes(fac.id) ? 'checked' : 'unchecked'}
                     color="#3E5F90"
-                    onPress={() => toggleFaculdadeIda(fac.id)}
                   />
-                </TouchableOpacity>
-              ))}
+                </View>
+              </TouchableOpacity>
+            ))}
 
-              <View style={styles.modalActionButtons}>
-                <Button mode="text" onPress={() => setModalFacsIdaVisible(false)}>Cancelar</Button>
-                <Button mode="text" onPress={() => setModalFacsIdaVisible(false)} labelStyle={{ color: '#004D40', fontWeight: 'bold' }}>Confirmar</Button>
-              </View>
+            <View style={styles.modalActionButtons}>
+              <Button mode="text" onPress={() => setModalFacsIdaVisible(false)}>Cancelar</Button>
+              <Button mode="text" onPress={() => setModalFacsIdaVisible(false)} labelStyle={{ color: '#004D40', fontWeight: 'bold' }}>Confirmar</Button>
             </View>
-          </TouchableOpacity>
-        </RNModal>
-      </Portal>
+          </View>
+        </TouchableOpacity>
+      </RNModal>
 
       {/* Modal Faculdades de Volta */}
-      <Portal>
-        <RNModal visible={modalFacsVoltaVisible} transparent={true} animationType="fade">
-          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalFacsVoltaVisible(false)}>
-            <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-              <Text variant="titleLarge" style={styles.modalTitle}>Faculdades de Volta (Origem)</Text>
-              <Text variant="bodySmall" style={styles.modalSubtitle}>Selecione todas as faculdades presentes na rota de volta.</Text>
+      <RNModal visible={modalFacsVoltaVisible} transparent={true} animationType="fade">
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalFacsVoltaVisible(false)}>
+          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+            <Text variant="titleLarge" style={styles.modalTitle}>Faculdades de Volta (Origem)</Text>
+            <Text variant="bodySmall" style={styles.modalSubtitle}>Selecione todas as faculdades presentes na rota de volta.</Text>
 
-              {faculdadesAtivas.map((fac) => (
-                <TouchableOpacity
-                  key={fac.id}
-                  style={styles.checkboxRow}
-                  onPress={() => toggleFaculdadeVolta(fac.id)}
-                >
-                  <Text style={styles.checkboxLabel}>{fac.sigla}</Text>
+            {faculdadesAtivas.map((fac) => (
+              <TouchableOpacity
+                key={fac.id}
+                style={styles.checkboxRow}
+                onPress={() => toggleFaculdadeVolta(fac.id)}
+              >
+                <Text style={styles.checkboxLabel}>{fac.sigla}</Text>
+                <View pointerEvents="none">
                   <Checkbox.Android
                     status={facsVoltaSelecionadas.includes(fac.id) ? 'checked' : 'unchecked'}
                     color="#3E5F90"
-                    onPress={() => toggleFaculdadeVolta(fac.id)}
                   />
-                </TouchableOpacity>
-              ))}
+                </View>
+              </TouchableOpacity>
+            ))}
 
-              <View style={styles.modalActionButtons}>
-                <Button mode="text" onPress={() => setModalFacsVoltaVisible(false)}>Cancelar</Button>
-                <Button mode="text" onPress={() => setModalFacsVoltaVisible(false)} labelStyle={{ color: '#004D40', fontWeight: 'bold' }}>Confirmar</Button>
-              </View>
+            <View style={styles.modalActionButtons}>
+              <Button mode="text" onPress={() => setModalFacsVoltaVisible(false)}>Cancelar</Button>
+              <Button mode="text" onPress={() => setModalFacsVoltaVisible(false)} labelStyle={{ color: '#004D40', fontWeight: 'bold' }}>Confirmar</Button>
             </View>
-          </TouchableOpacity>
-        </RNModal>
-      </Portal>
+          </View>
+        </TouchableOpacity>
+      </RNModal>
 
       {/* Modal Vincular Bairro */}
-      <Portal>
-        <RNModal visible={modalVincularBairroVisible} transparent={true} animationType="fade">
-          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalVincularBairroVisible(false)}>
-            <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-              <Text variant="titleLarge" style={styles.modalTitle}>Vincular bairro</Text>
-              <Text variant="bodySmall" style={styles.modalSubtitle}>Selecione o bairro a ser vinculado.</Text>
+      <RNModal visible={modalVincularBairroVisible} transparent={true} animationType="fade">
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalVincularBairroVisible(false)}>
+          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+            <Text variant="titleLarge" style={styles.modalTitle}>Vincular bairro</Text>
+            <Text variant="bodySmall" style={styles.modalSubtitle}>Selecione o bairro a ser vinculado.</Text>
 
-              <View style={styles.inputBox}>
-                {bairrosAtivos.map((b) => (
-                  <TouchableOpacity
-                    key={b.id}
-                    style={styles.optionItem}
-                    onPress={() => setBairroParaVincularId(b.id)}
-                  >
-                    <Text style={[styles.optionText, bairroParaVincularId === b.id && { color: '#3E5F90', fontWeight: 'bold' }]}>
-                      {b.nome}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <View style={styles.modalActionButtons}>
-                <Button mode="text" onPress={() => setModalVincularBairroVisible(false)}>Cancelar</Button>
-                <Button mode="text" onPress={handleVincularBairro} labelStyle={{ color: '#004D40', fontWeight: 'bold' }}>Vincular</Button>
-              </View>
+            <View style={styles.inputBox}>
+              {bairrosAtivos.map((b) => (
+                <TouchableOpacity
+                  key={b.id}
+                  style={styles.optionItem}
+                  onPress={() => setBairroParaVincularId(b.id)}
+                >
+                  <Text style={[styles.optionText, bairroParaVincularId === b.id && { color: '#3E5F90', fontWeight: 'bold' }]}>
+                    {b.nome}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
-          </TouchableOpacity>
-        </RNModal>
-      </Portal>
+
+            <View style={styles.modalActionButtons}>
+              <Button mode="text" onPress={() => setModalVincularBairroVisible(false)}>Cancelar</Button>
+              <Button mode="text" onPress={handleVincularBairro} labelStyle={{ color: '#004D40', fontWeight: 'bold' }}>Vincular</Button>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </RNModal>
     </View>
   );
 }
