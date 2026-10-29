@@ -99,7 +99,6 @@ export default function EditarRotaComplementarScreen() {
     setPrincipalInativaId(undefined);
   }, [reset]);
 
-
   // Recarrega a complementar escolhida e as rotas principais ativas ao ganhar foco e descarta o que não foi salvo ao sair (#358)
   useFocusEffect(
     React.useCallback(() => {

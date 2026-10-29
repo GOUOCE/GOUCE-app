@@ -73,7 +73,6 @@ export default function CadastrarRotaComplementarScreen() {
     setModalRotaVisible(false);
   }, [reset]);
 
-
   // Limpa o formulário e recarrega as rotas principais ativas sempre que a tela ganha ou perde o foco (#358)
   useFocusEffect(
     React.useCallback(() => {
