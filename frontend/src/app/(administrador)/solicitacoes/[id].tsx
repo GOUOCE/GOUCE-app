@@ -56,6 +56,12 @@ export default function AnalisarSolicitacaoScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
+  // Depois de avaliar, volta para a fila, que recarrega ao ganhar foco (AC-08)
+  const voltarParaFila = () => {
+    closePopup();
+    router.replace('/(administrador)/solicitacoes');
+  };
+
   const getIniciais = (nome?: string) => {
     if (!nome) return 'AL';
     const partes = nome.trim().split(/\s+/);
@@ -114,13 +120,10 @@ export default function AnalisarSolicitacaoScreen() {
       setIsLoading(false);
       showPopup({
         type: 'success',
-        title: 'Solicitação Aprovada',
-        message: 'O cadastro do aluno foi aprovado com sucesso!',
+        title: 'Solicitação avaliada com sucesso',
+        message: 'O cadastro foi aprovado e o aluno foi avisado por e-mail.',
         confirmText: 'Voltar à Fila',
-        onConfirm: () => {
-          closePopup();
-          router.replace('/(administrador)/solicitacoes');
-        },
+        onConfirm: voltarParaFila,
       });
     } catch (error: any) {
       setIsLoading(false);
@@ -157,13 +160,10 @@ export default function AnalisarSolicitacaoScreen() {
       setIsLoading(false);
       showPopup({
         type: 'success',
-        title: 'Solicitação Recusada',
-        message: 'A solicitação foi recusada com sucesso e o aluno foi notificado para ajuste.',
+        title: 'Solicitação avaliada com sucesso',
+        message: 'O cadastro foi reprovado e o aluno foi avisado por e-mail dos documentos a reenviar.',
         confirmText: 'Voltar à Fila',
-        onConfirm: () => {
-          closePopup();
-          router.replace('/(administrador)/solicitacoes');
-        },
+        onConfirm: voltarParaFila,
       });
     } catch (error: any) {
       setIsLoading(false);
@@ -251,7 +251,7 @@ export default function AnalisarSolicitacaoScreen() {
         message={popup.message}
         confirmText={popup.confirmText}
         onConfirm={popup.onConfirm}
-        onDismiss={closePopup}
+        onDismiss={popup.type === 'success' ? voltarParaFila : closePopup}
       />
 
       {!aluno ? <ActivityIndicator style={styles.carregando} accessibilityLabel="Carregando solicitação" /> : <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
