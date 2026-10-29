@@ -40,18 +40,18 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU027-UI-001 | Acessar a fila de solicitações | Painel → Fila de solicitações; busca; filtros | Só pendentes, do mais antigo para o mais recente; busca e filtros funcionam | ✅ PASSOU | Fila só com pendentes, do mais antigo ao mais recente; busca e filtros funcionam. |
-| CT-HU027-UI-002 | Ver os dados do aluno | Tocar em A1 | Todos os dados do cadastro, com nomes (não ids) e sem valores inventados | ❌ FALHOU | Bairro aparece `-` (@@A@@); etiqueta fixa e iniciais `AL` antes de carregar (@@B@@). |
-| CT-HU027-UI-003 | Abrir os documentos anexados | Tocar em cada documento de A1 | Cada documento abre para visualizar ou baixar | ❌ FALHOU | Os cards de comprovante não abrem (@@C@@). |
+| CT-HU027-UI-002 | Ver os dados do aluno | Tocar em A1 | Todos os dados do cadastro, com nomes (não ids) e sem valores inventados | ❌ FALHOU | Bairro aparece `-` (#366); etiqueta fixa e iniciais `AL` antes de carregar (#367). |
+| CT-HU027-UI-003 | Abrir os documentos anexados | Tocar em cada documento de A1 | Cada documento abre para visualizar ou baixar | ❌ FALHOU | Os cards de comprovante não abrem (#368). |
 
 ### Seção B — Aprovação e reprovação
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU027-UI-004 | Aprovar solicitação | A1: cancelar e depois confirmar | “Solicitação avaliada com sucesso”; fila recarregada sem A1 | ❌ FALHOU | Aprovação correta, mas a mensagem não é a do AC-08 (@@D@@). |
+| CT-HU027-UI-004 | Aprovar solicitação | A1: cancelar e depois confirmar | “Solicitação avaliada com sucesso”; fila recarregada sem A1 | ❌ FALHOU | Aprovação correta, mas a mensagem não é a do AC-08 (#369). |
 | CT-HU027-UI-005 | Aluno avisado da aprovação | E-mail do A1; login do A1 | Aviso de acesso liberado; A1 entra no app | ✅ PASSOU | E-mail “Cadastro aprovado - GOUCE” recebido e A1 entra no app. |
-| CT-HU027-UI-006 | Reprovar com motivo | A2: matrícula e residência; motivo preenchido | “Solicitação avaliada com sucesso”; fila sem A2; aluno avisado com o motivo | ❌ FALHOU | Reprovação correta, mas a mensagem não é a do AC-08 (@@D@@). |
+| CT-HU027-UI-006 | Reprovar com motivo | A2: matrícula e residência; motivo preenchido | “Solicitação avaliada com sucesso”; fila sem A2; aluno avisado com o motivo | ❌ FALHOU | Reprovação correta, mas a mensagem não é a do AC-08 (#369). |
 | CT-HU027-UI-007 | Motivo obrigatório | A3: motivo vazio, só espaços, curto | Confirmação bloqueada e campo destacado; nada enviado | ✅ PASSOU | Vazio, só espaços e `Ruim` bloqueados; A3 continua pendente. |
-| CT-HU027-UI-008 | Documentos indicados na reprovação | A3: nenhum documento marcado; motivos diferentes por documento | Exige indicar o documento; motivo de cada um gravado como digitado | ❌ FALHOU | Sem documento marcado, o app indica a matrícula sozinho; um só motivo para todos os documentos (@@E@@); e-mail sem acento (@@F@@). |
+| CT-HU027-UI-008 | Documentos indicados na reprovação | A3: nenhum documento marcado; motivos diferentes por documento | Exige indicar o documento; motivo de cada um gravado como digitado | ❌ FALHOU | Sem documento marcado, o app indica a matrícula sozinho; um só motivo para todos os documentos (#370); e-mail sem acento (#371). |
 
 ### Seção C — Acesso e robustez
 
@@ -110,8 +110,8 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 **Resultado obtido**
 
 - E-mail, telefone, `UFC - Quixadá`, curso, período, turno e nascimento batem com a API (`GET /alunos/2`) ✅.
-- **Bairro** aparece `-`, mas a API tem `bairro: "Centro"`: a tela lê `bairro_id`, que a API não manda → @@A@@.
-- A etiqueta é sempre “Pendente: vínculo em análise”, mesmo para cadastro novo; e o avatar mostra `AL` antes de carregar a foto → @@B@@.
+- **Bairro** aparece `-`, mas a API tem `bairro: "Centro"`: a tela lê `bairro_id`, que a API não manda → #366.
+- A etiqueta é sempre “Pendente: vínculo em análise”, mesmo para cadastro novo; e o avatar mostra `AL` antes de carregar a foto → #367.
 - A foto exibida é a do aluno (imagem de teste com o nome dele) ✅.
 - Status: ❌ FALHOU.
 
@@ -135,7 +135,7 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Os cards **Comprovante de Matrícula** e **Comprovante de Residência** não têm ação de toque (`[id].tsx`, sem `onPress`), embora a API tenha `id_comprovante_*` e as rotas `/arquivos/{id}/view` e `/download` → @@C@@. Fechado por leitura do código e conferência na API: a falha já estava clara no código.
+- Os cards **Comprovante de Matrícula** e **Comprovante de Residência** não têm ação de toque (`[id].tsx`, sem `onPress`), embora a API tenha `id_comprovante_*` e as rotas `/arquivos/{id}/view` e `/download` → #368. Fechado por leitura do código e conferência na API: a falha já estava clara no código.
 - Status: ❌ FALHOU.
 
 ---
@@ -163,7 +163,7 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 **Resultado obtido**
 
 - Cancelar fechou o aviso; confirmar aprovou, o pop-up de sucesso apareceu e a fila recarregou sem A1 ✅. Na API, A1 está `ativado` ✅.
-- Texto exibido: “O cadastro do aluno foi aprovado com sucesso!” (título “Solicitação Aprovada”); o AC-08 pede “Solicitação avaliada com sucesso” → @@D@@.
+- Texto exibido: “O cadastro do aluno foi aprovado com sucesso!” (título “Solicitação Aprovada”); o AC-08 pede “Solicitação avaliada com sucesso” → #369.
 - Status: ❌ FALHOU.
 
 ---
@@ -212,7 +212,7 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 - Abriu **Detalhar Recusa**; após confirmar, a fila recarregou sem A2 ✅. Na API, A2 está `rejeitado` com os dois documentos e o motivo ✅.
 - E-mail “Documentos pendentes de reenvio” recebido com o motivo ✅ (o texto do e-mail tem problemas registrados no CT-008).
-- Texto exibido: “A solicitação foi recusada com sucesso e o aluno foi notificado para ajuste.” (título “Solicitação Recusada”), em vez de “Solicitação avaliada com sucesso” → @@D@@.
+- Texto exibido: “A solicitação foi recusada com sucesso e o aluno foi notificado para ajuste.” (título “Solicitação Recusada”), em vez de “Solicitação avaliada com sucesso” → #369.
 - Status: ❌ FALHOU.
 
 ---
@@ -260,9 +260,9 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Sem documento marcado, o código envia `comprovante_matricula` por conta própria, em vez de pedir para marcar → @@E@@. Fechado por leitura do código e conferência na API: a falha já estava clara no código.
-- O motivo é um só e vai para todos os documentos marcados: no CT-006 a residência do A2 foi indicada com “Comprovante de matrícula desatualizado.” (API e e-mail) → @@E@@.
-- O e-mail escreve “Comprovante Matricula” e “Comprovante Residencia”, sem acento (`email_service.py`, `replace('_', ' ').title()`) → @@F@@.
+- Sem documento marcado, o código envia `comprovante_matricula` por conta própria, em vez de pedir para marcar → #370. Fechado por leitura do código e conferência na API: a falha já estava clara no código.
+- O motivo é um só e vai para todos os documentos marcados: no CT-006 a residência do A2 foi indicada com “Comprovante de matrícula desatualizado.” (API e e-mail) → #370.
+- O e-mail escreve “Comprovante Matricula” e “Comprovante Residencia”, sem acento (`email_service.py`, `replace('_', ' ').title()`) → #371.
 - Status: ❌ FALHOU.
 
 ---
@@ -333,12 +333,12 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| CT-002 | Bairro aparece `-` na análise (a tela lê `bairro_id`; a API manda `bairro`) | @@A@@ |
-| CT-002 | Etiqueta fixa “Pendente: vínculo em análise” e iniciais `AL` antes de carregar | @@B@@ |
-| CT-003 | Comprovantes de matrícula e residência não abrem | @@C@@ |
-| CT-004, 006 | Mensagens de sucesso diferentes de “Solicitação avaliada com sucesso” (AC-08) | @@D@@ |
-| CT-006, 008 | Sem documento marcado, o app indica a matrícula; um único motivo repetido para todos os documentos | @@E@@ |
-| CT-006, 008 | E-mail de reenvio com “Comprovante Matricula/Residencia” sem acento | @@F@@ |
+| CT-002 | Bairro aparece `-` na análise (a tela lê `bairro_id`; a API manda `bairro`) | #366 |
+| CT-002 | Etiqueta fixa “Pendente: vínculo em análise” e iniciais `AL` antes de carregar | #367 |
+| CT-003 | Comprovantes de matrícula e residência não abrem | #368 |
+| CT-004, 006 | Mensagens de sucesso diferentes de “Solicitação avaliada com sucesso” (AC-08) | #369 |
+| CT-006, 008 | Sem documento marcado, o app indica a matrícula; um único motivo repetido para todos os documentos | #370 |
+| CT-006, 008 | E-mail de reenvio com “Comprovante Matricula/Residencia” sem acento | #371 |
 
 ## Observações gerais
 
