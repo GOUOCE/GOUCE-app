@@ -40,29 +40,29 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU012-UI-001 | Acessar a gestão de rotas complementares | Cadastros → Rotas complementares, banco sem complementares | Listagem só de ativas com principal, horário e ponto; “Mostrar inativos” desligada; sem dados de exemplo | ❌ FALHOU | Dados de exemplo com o banco vazio; chave ligada; sem ponto de conexão; sem indicador de carregamento; seta volta ao Painel. |
-| CT-HU012-UI-002 | Cadastrar rota complementar | `Van 2 - Bairro Novo`; Rota Centro - UFC; saída, retorno e ponto | “Operação realizada com sucesso”; na listagem; continua após reabrir o app e existe na API | ❌ FALHOU | Formulário sem horário de retorno: a API recusa (422) e nenhum cadastro é possível. Nome e ponto sem máscara. |
-| CT-HU012-UI-003 | Horário de saída e de retorno (#208) | Saída 06:00 e retorno 17:40; retorno antes da saída; horário fora da lista | Formulário tem saída e retorno com qualquer `HH:mm`; retorno ≤ saída sinalizado | ❌ FALHOU | Só horário de saída, em lista fixa de 6 opções; sem retorno. Fechado por código e API. |
-| CT-HU012-UI-004 | Seleção só com rotas principais ativas | Lista de **Rota Principal Vinculada** | Ativas aparecem; Rota Antiga e nomes inexistentes no banco não aparecem | ❌ FALHOU | Só ativas ✅; 1ª rota já vem marcada; opções não recarregam; falha mostra `Linha 01/02`. Fechado por código e API. |
-| CT-HU012-UI-005 | Campos obrigatórios | Formulário vazio; sem rota principal; sem horário; nome e ponto em branco | Campos destacados com mensagem; nada salvo | ❌ FALHOU | Horário `06:10` e rota principal já marcados; sem campo de retorno. Fechado por código. |
-| CT-HU012-UI-006 | Nome duplicado (#208) | Nome igual com variações; nome de rota principal | Mensagem de nome em uso; nada criado | ❌ FALHOU | Cadastro cai no 422 do retorno; na edição todo 409 vira texto fixo. Fechado por código e API. |
+| CT-HU012-UI-001 | Acessar a gestão de rotas complementares | Cadastros → Rotas complementares, banco sem complementares | Listagem só de ativas com principal, horário e ponto; “Mostrar inativos” desligada; sem dados de exemplo | ❌ FALHOU | Dados de exemplo com o banco vazio; chave ligada; sem ponto de conexão; sem indicador de carregamento; seta volta ao Painel. (#351, #354, #360, #363) |
+| CT-HU012-UI-002 | Cadastrar rota complementar | `Van 2 - Bairro Novo`; Rota Centro - UFC; saída, retorno e ponto | “Operação realizada com sucesso”; na listagem; continua após reabrir o app e existe na API | ❌ FALHOU | Formulário sem horário de retorno: a API recusa (422) e nenhum cadastro é possível. Nome e ponto sem máscara. (#350, #353, #356) |
+| CT-HU012-UI-003 | Horário de saída e de retorno (#208) | Saída 06:00 e retorno 17:40; retorno antes da saída; horário fora da lista | Formulário tem saída e retorno com qualquer `HH:mm`; retorno ≤ saída sinalizado | ❌ FALHOU | Só horário de saída, em lista fixa de 6 opções; sem retorno. Fechado por código e API. (#350, #357) |
+| CT-HU012-UI-004 | Seleção só com rotas principais ativas | Lista de **Rota Principal Vinculada** | Ativas aparecem; Rota Antiga e nomes inexistentes no banco não aparecem | ❌ FALHOU | Só ativas ✅; 1ª rota já vem marcada; opções não recarregam; falha mostra `Linha 01/02`. Fechado por código e API. (#351, #355, #358) |
+| CT-HU012-UI-005 | Campos obrigatórios | Formulário vazio; sem rota principal; sem horário; nome e ponto em branco | Campos destacados com mensagem; nada salvo | ❌ FALHOU | Horário `06:10` e rota principal já marcados; sem campo de retorno. Fechado por código. (#350, #355, #356) |
+| CT-HU012-UI-006 | Nome duplicado (#208) | Nome igual com variações; nome de rota principal | Mensagem de nome em uso; nada criado | ❌ FALHOU | Cadastro cai no 422 do retorno; na edição todo 409 vira texto fixo. Fechado por código e API. (#361) |
 
 ### Seção B — Edição, inativação e reativação
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU012-UI-007 | Editar rota complementar | Trocar nome, horário, ponto e rota principal | Dados carregados certos; sucesso e listagem atualizada | ❌ FALHOU | Gravou certo na API (mesmo `id`); sucesso em barra preta com “Rota complementar alterada com sucesso”. |
-| CT-HU012-UI-008 | Sair sem salvar | Alterar o ponto em Editar e tocar na seta | Pedir confirmação; nada salvo | ❌ FALHOU | Seta volta sem pedir confirmação. Fechado por código. |
-| CT-HU012-UI-009 | Inativar, mostrar inativos e reativar | Cancelar e confirmar a inativação da complementar `id` 1; ligar a chave; reativar | Sucesso nas duas; inativa identificada; nenhum bloqueio por dado de exemplo | ❌ FALHOU | `id` 1 barrado por “agendamentos pendentes” sem chamar a API; sucesso em barra preta. |
-| CT-HU012-UI-010 | Reativar com rota principal inativa (#208) | `Van Sítio` inativa com a principal inativada; trocar a principal e reativar | Mensagem do PO; depois da troca, reativação com sucesso | ❌ FALHOU | Reativação recusada só no console; inativas sem botão de editar. Fechado por código e API. |
-| CT-HU012-UI-011 | Complementar ativa protege a rota principal (#208) | Inativar a principal pela tela de rotas principais | Bloqueio com a mensagem do PO; liberado depois de inativar a complementar | ❌ FALHOU | Tela de principais: `id` 1 barrado pelo exemplo; 409 vira “Request failed…”. Fechado por código e API. |
+| CT-HU012-UI-007 | Editar rota complementar | Trocar nome, horário, ponto e rota principal | Dados carregados certos; sucesso e listagem atualizada | ❌ FALHOU | Gravou certo na API (mesmo `id`); sucesso em barra preta com “Rota complementar alterada com sucesso”. (#350, #353) |
+| CT-HU012-UI-008 | Sair sem salvar | Alterar o ponto em Editar e tocar na seta | Pedir confirmação; nada salvo | ❌ FALHOU | Seta volta sem pedir confirmação. Fechado por código. (#359, #360) |
+| CT-HU012-UI-009 | Inativar, mostrar inativos e reativar | Cancelar e confirmar a inativação da complementar `id` 1; ligar a chave; reativar | Sucesso nas duas; inativa identificada; nenhum bloqueio por dado de exemplo | ❌ FALHOU | `id` 1 barrado por “agendamentos pendentes” sem chamar a API; sucesso em barra preta. (#352, #353, #362) |
+| CT-HU012-UI-010 | Reativar com rota principal inativa (#208) | `Van Sítio` inativa com a principal inativada; trocar a principal e reativar | Mensagem do PO; depois da troca, reativação com sucesso | ❌ FALHOU | Reativação recusada só no console; inativas sem botão de editar. Fechado por código e API. (#362) |
+| CT-HU012-UI-011 | Complementar ativa protege a rota principal (#208) | Inativar a principal pela tela de rotas principais | Bloqueio com a mensagem do PO; liberado depois de inativar a complementar | ❌ FALHOU | Tela de principais: `id` 1 barrado pelo exemplo; 409 vira “Request failed…”. Fechado por código e API. (#334, #348) |
 
 ### Seção C — Acesso e robustez
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU012-UI-012 | Aluno e representante sem acesso | Menus do aluno e do representante; link `rotas-complementares` | Menu não exibido; link mostra Acesso Negado | ✅ PASSOU | Aluno e representante: menu ausente e links com 403. |
-| CT-HU012-UI-013 | Falha de conexão e dados de exemplo | Servidor/Wi-Fi desligado ao listar, cadastrar, editar e inativar | Mensagem de conexão; app não finge sucesso nem mostra rotas que não existem | ❌ FALHOU | Sem servidor, mostra exemplos e finge sucesso. Fechado por código. |
+| CT-HU012-UI-013 | Falha de conexão e dados de exemplo | Servidor/Wi-Fi desligado ao listar, cadastrar, editar e inativar | Mensagem de conexão; app não finge sucesso nem mostra rotas que não existem | ❌ FALHOU | Sem servidor, mostra exemplos e finge sucesso. Fechado por código. (#351) |
 
 ## Detalhamento dos casos
 
@@ -98,6 +98,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 - Busca ✅ por nome, sem diferenciar maiúsculas. Por código: a API filtra só por `nome`; a busca por ponto ou por rota principal devolve `[]` e o app cai nos exemplos (ex.: “Trevo” mostraria a `Van 2` de exemplo). A busca chama a API a cada tecla.
 - O carregamento “pula”: não há indicador de carregamento, então “Nenhuma rota complementar ativa encontrada.” aparece antes dos dados.
 - Os cards **Rotas principais** e **Rotas complementares** abrem as telas certas ✅. A seta de voltar leva ao **Painel** (`router.back()`).
+- Issues: #351, #354, #360, #363.
 - Status: ❌ FALHOU.
 
 ---
@@ -127,6 +128,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 - Nome e ponto de conexão sem máscara: aceitam qualquer caractere (`rotaComplementarSchema.ts` só confere tamanho).
 - Rota principal e horário (`06:10`) já vêm preenchidos e parecem valores digitados (ver CT-005).
 - Para seguir a suíte, a IA criou `Van 2 - Bairro Novo` (`id` 1, Rota Centro - UFC, 06:00/17:40) e `Van Sítio` (`id` 2, Rota Campo Velho - IFCE) pela API.
+- Issues: #350, #353, #356.
 - Status: ❌ FALHOU.
 
 ---
@@ -154,6 +156,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 - Só existe **Horário de Saída**, escolhido numa lista fixa de seis opções (05:40, 06:00, 06:10, 06:20, 06:30, 07:00 — `cadastrar.tsx:232`, `editar.tsx:230`). O PO (#208, item 2b) pede qualquer `HH:mm`, e a API aceita (ex.: 06:15).
 - Não há campo de retorno; por isso a regra “retorno depois da saída” (#208, item 2a) fica 🚫 na tela. A API já recusa retorno ≤ saída.
 - O valor `06:10` e o texto “Selecionar” ficam no lugar do campo como se fossem digitados; não dá para distinguir placeholder de valor.
+- Issues: #350, #357.
 - Status: ❌ FALHOU.
 
 ---
@@ -182,6 +185,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 - O cadastro já abre com a **primeira rota principal marcada** (`cadastrar.tsx:65-67`).
 - As opções carregam só ao montar a tela (`useEffect`); uma rota principal criada depois não aparece sem reiniciar.
 - Se a chamada falhar, aparecem `Linha 01 - Centro` e `Linha 02 - Bairro Novo`, que não existem.
+- Issues: #351, #355, #358.
 - Status: ❌ FALHOU.
 
 ---
@@ -213,6 +217,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 - O horário de saída começa com `06:10` (`cadastrar.tsx:55`) e a rota principal já vem marcada: os cenários “sem rota principal” e “sem horário” não podem ser feitos.
 - O horário de retorno não existe no formulário nem no schema.
 - Nome e ponto só com espaços: o schema faz `trim` e exige 3 caracteres ✅.
+- Issues: #350, #355, #356.
 - Status: ❌ FALHOU.
 
 ---
@@ -238,6 +243,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 - Na API, `VAN 2 - BAIRRO NOVO`, `  van 2 - bairro novo  ` e `Rota Centro - UFC` são recusados com `409` “Já existe uma rota com este nome.” ✅ (#309).
 - No cadastro pela tela, o pedido é recusado antes pelo `422` do horário de retorno (CT-002), então o duplicado nunca é avisado como tal.
 - Na edição, todo `409` vira “Esta rota complementar já está cadastrada.” (`rotaComplementarService.ts`), escondendo a mensagem da API.
+- Issues: #361.
 - Status: ❌ FALHOU.
 
 ---
@@ -268,6 +274,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 - `Van 2 - Bairro Novo` (`id` 1) abriu com os dados da API e foi alterada para `Van 2 - Bairro Novo Manhã`, ponto `Praça do Bairro Novo` e rota principal `Rota Campo Velho - IFCE`. Conferido na API: mesmo `id`, dados novos, retorno 17:40 mantido ✅. A listagem mostrou a rota principal nova ✅.
 - O sucesso apareceu em barra preta (Snackbar) com “Rota complementar alterada com sucesso”, e não no pop-up padrão com “Operação realizada com sucesso” (AC-07).
 - O horário de retorno não aparece na edição.
+- Issues: #350, #353.
 - Status: ❌ FALHOU.
 
 ---
@@ -292,6 +299,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 - Fechado por código.
 - A seta chama `router.back()` direto (`editar.tsx:116`), sem pedir confirmação e sem aviso de descarte; volta ao Painel.
 - A edição também salva sem pedir confirmação.
+- Issues: #359, #360.
 - Status: ❌ FALHOU.
 
 ---
@@ -323,6 +331,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 - Na lixeira da `Van 2 - Bairro Novo Manhã` (`id` 1), confirmar foi bloqueado com “Esta rota possui agendamentos pendentes de alunos. Não é possível inativar no momento.”, **sem chamar a API** (o log da API não registrou o pedido). O app confere a lista de exemplo antes, e o `id` 1 de exemplo tem agendamentos.
 - Por código: inativar e reativar mostram “Rota complementar inativada” / “… reativada” em barra preta, não “Operação realizada com sucesso”; a inativa aparece só com “(inativa)”, sem rota principal.
 - A API inativa e reativa normalmente (soft delete) ✅.
+- Issues: #352, #353, #362.
 - Status: ❌ FALHOU.
 
 ---
@@ -350,6 +359,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 - A API recusa com `409` “Não é possível reativar esta rota complementar pois a rota principal vinculada está inativa.” ✅ (#312).
 - Na tela, a reativação recusada só vai para o console (`index.tsx:101-103`): nenhum aviso aparece.
 - As complementares inativas não têm botão de editar (`index.tsx:207-216`): não dá para trocar a rota principal antes de reativar (passo 2).
+- Issues: #362.
 - Status: ❌ FALHOU.
 
 ---
@@ -376,6 +386,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 - A API recusa a inativação da principal com complementar ativa: `409` “Esta rota possui rotas complementares ativas vinculadas. Inative ou desvincule as rotas complementares antes de continuar.” ✅ (#311); sem complementar ativa, inativa normalmente ✅.
 - Na tela de principais, a `Rota Centro - UFC` (`id` 1) é barrada antes pela lista de exemplo (“agendamentos pendentes”, #334); nas demais, o app lê `detail`/`message` e mostra “Request failed with status code 409” (#348).
 - A rota principal inativa sai da lista **Rota Principal Vinculada** ✅ (API `/opcoes`).
+- Issues: #334, #348.
 - Status: ❌ FALHOU.
 
 ---
@@ -425,6 +436,7 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 - Fechado por código.
 - Sem resposta do servidor, a listagem e a lista de rotas principais passam a mostrar os exemplos; cadastrar, editar, inativar e reativar alteram só a lista de exemplo e exibem sucesso (`rotaComplementarService.ts`, ramos `!error.response`).
+- Issues: #351.
 - Status: ❌ FALHOU.
 
 ## Rastreabilidade
@@ -451,7 +463,21 @@ Executar na ordem abaixo. São **13 casos essenciais**, em três seções. Os ID
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-002, 003, 005, 007 | Formulário sem horário de retorno: a API recusa (`422` “Horário de retorno é obrigatório.”) e nenhuma complementar pode ser cadastrada pela tela | #350 |
+| CT-001, 004, 013 | Dados de exemplo (`Van 2`, `Van 5`, `Linha 01/02`) com banco vazio, busca sem resultado e sem conexão; sucesso falso; inativar exemplo mostra “Request failed with status code 404” | #351 |
+| CT-009 | Inativar a complementar de `id` 1 é barrado por “agendamentos pendentes” da lista de exemplo, sem chamar a API | #352 |
+| CT-002, 007, 009 | Sucesso em barra preta com textos próprios, não no pop-up “Operação realizada com sucesso” | #353 |
+| CT-001 | A chave **Mostrar inativos** abre ligada | #354 |
+| CT-004, 005 | Rota principal e horário `06:10` já vêm marcados; placeholder parece valor digitado | #355 |
+| CT-002, 005 | Nome e ponto de conexão sem máscara | #356 |
+| CT-003 | Horários só em lista fixa de seis opções | #357 |
+| CT-004 | Telas guardam dados antigos e não recarregam as rotas principais | #358 |
+| CT-008 | Edição salva sem confirmar e sai sem avisar | #359 |
+| CT-001 a 008 | A seta de voltar leva ao Painel | #360 |
+| CT-006 | Todo `409` vira “Esta rota complementar já está cadastrada.” | #361 |
+| CT-009, 010 | Reativação recusada sem aviso; bloqueio vira “Request failed…”; inativas sem editar | #362 |
+| CT-001 | Listagem sem ponto de conexão e sem carregamento; busca a cada tecla e só por nome | #363 |
+| CT-011 | Tela de rotas principais (PR #194): `id` 1 barrado pelo exemplo; `409` vira “Request failed…” | #334, #348 (HU-011) |
 
 ## Observações gerais
 
