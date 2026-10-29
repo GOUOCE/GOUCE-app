@@ -112,7 +112,7 @@ export default function RotasPrincipaisListScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.replace('/(administrador)/cadastros')}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Rotas Principais</Text>

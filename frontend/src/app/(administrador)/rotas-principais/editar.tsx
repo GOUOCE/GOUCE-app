@@ -61,6 +61,11 @@ export default function EditarRotaPrincipalScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
+  const voltarParaListagem = () => {
+    closePopup();
+    router.replace('/(administrador)/rotas-principais');
+  };
+
   const { control, handleSubmit, formState: { errors }, reset, setValue, trigger } = useForm<RotaPrincipalFormData>({
     resolver: zodResolver(rotaPrincipalSchema),
     defaultValues: {
@@ -188,7 +193,7 @@ export default function EditarRotaPrincipalScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={voltarParaListagem}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Editar Rota</Text>
