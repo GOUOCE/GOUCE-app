@@ -4,13 +4,14 @@ import { Text, TextInput, Button, RadioButton } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, Building2, ChevronDown, GitFork } from 'lucide-react-native';
+import { ChevronLeft, Building2, ChevronDown, GitFork, MapPin } from 'lucide-react-native';
 
 import { rotaComplementarSchema, RotaComplementarFormData } from '@/schemas/rotaComplementarSchema';
 import { rotaComplementarService, RotaPrincipalSimples } from '@/services/rotaComplementarService';
 import { getErrorMessage } from '@/utils/errorUtils';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 import { CampoHorario } from '@/components/ui/CampoHorario';
+import { CampoTextoRotulado } from '@/components/ui/CampoTextoRotulado';
 
 export default function EditarRotaComplementarScreen() {
   const router = useRouter();
@@ -50,7 +51,7 @@ export default function EditarRotaComplementarScreen() {
     router.replace('/(administrador)/rotas-complementares');
   };
 
-  const { control, handleSubmit, formState: { errors, isSubmitted }, reset, setValue, getValues, trigger } = useForm<RotaComplementarFormData>({
+  const { control, handleSubmit, formState: { errors, isSubmitted }, reset, setValue, getValues, trigger, clearErrors } = useForm<RotaComplementarFormData>({
     resolver: zodResolver(rotaComplementarSchema),
     defaultValues: {
       rotaPrincipalId: undefined,
@@ -92,6 +93,13 @@ export default function EditarRotaComplementarScreen() {
     }
     carregarDados();
   }, [id, reset, showPopup, router]);
+
+  // Erro só aparece depois de tentar salvar; apagar o campo tira o erro (padrão da HU-010) (#356)
+  const atualizarCampo = (campo: 'nome' | 'pontoConexao', valor: string) => {
+    const preenchido = valor.trim() !== '';
+    setValue(campo, valor, { shouldDirty: true, shouldValidate: preenchido && isSubmitted });
+    if (!preenchido) clearErrors(campo);
+  };
 
   // Trocar um horário depois de tentar salvar reconfere os dois: o retorno depende da saída (#350)
   const atualizarHorario = (campo: 'horarioSaida' | 'horarioRetorno', horario: string) => {
@@ -223,18 +231,18 @@ export default function EditarRotaComplementarScreen() {
           </TouchableOpacity>
         </RNModal>
 
-        {/* Nome */}
+        {/* Nome da Rota */}
         <View style={styles.inputBox}>
           <Controller
             control={control}
             name="nome"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                label="Nome *"
-                mode="outlined"
+            render={({ field: { value } }) => (
+              <CampoTextoRotulado
+                rotulo="Nome da Rota *"
                 placeholder="ex.: Van 2 - Bairro Novo"
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(texto) => atualizarCampo('nome', texto)}
+                maxLength={150}
                 error={!!errors.nome}
                 left={<TextInput.Icon icon={() => <GitFork size={20} color="#666" />} />}
                 style={styles.input}
@@ -284,14 +292,15 @@ export default function EditarRotaComplementarScreen() {
           <Controller
             control={control}
             name="pontoConexao"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                label="Ponto de Conexão *"
-                mode="outlined"
+            render={({ field: { value } }) => (
+              <CampoTextoRotulado
+                rotulo="Ponto de Conexão *"
                 placeholder="ex.: Trevo do Bairro Novo"
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(texto) => atualizarCampo('pontoConexao', texto)}
+                maxLength={150}
                 error={!!errors.pontoConexao}
+                left={<TextInput.Icon icon={() => <MapPin size={20} color="#666" />} />}
                 style={styles.input}
               />
             )}

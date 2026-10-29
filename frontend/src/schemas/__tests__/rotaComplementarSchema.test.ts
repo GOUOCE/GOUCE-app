@@ -113,5 +113,45 @@ describe('Suíte de Testes Unitários - HU-012 (Gerenciamento de Rotas Complemen
         }
       }
     });
+
+    const base = {
+      rotaPrincipalId: 1,
+      nome: 'Van 2 - Bairro Novo',
+      horarioSaida: '06:00',
+      horarioRetorno: '17:40',
+      pontoConexao: 'Trevo do Bairro Novo',
+    };
+
+    it('recusa símbolos no nome e no ponto de conexão (#356)', () => {
+      const nome = rotaComplementarSchema.safeParse({ ...base, nome: 'wwww@@@2' });
+      const ponto = rotaComplementarSchema.safeParse({ ...base, pontoConexao: 'Trevo #1 @@' });
+
+      expect(nome.success).toBe(false);
+      expect(ponto.success).toBe(false);
+      if (!nome.success) expect(nome.error.issues[0].message).toBe('Use apenas letras, números, espaços, hífen, apóstrofo ou barra');
+      if (!ponto.success) expect(ponto.error.issues[0].path).toEqual(['pontoConexao']);
+    });
+
+    it('aceita endereço com ponto, vírgula e º no ponto de conexão e acentos no nome (#356)', () => {
+      const res = rotaComplementarSchema.safeParse({
+        ...base,
+        nome: "Van Sítio D'Água 2/3",
+        pontoConexao: 'Av. Plácido Castelo, Nº 120',
+      });
+      expect(res.success).toBe(true);
+    });
+
+    it('tira espaços das pontas e junta espaços repetidos no nome e no ponto (#356)', () => {
+      const res = rotaComplementarSchema.safeParse({
+        ...base,
+        nome: '  Van   2 - Bairro Novo  ',
+        pontoConexao: '  Trevo   do Bairro  ',
+      });
+      expect(res.success).toBe(true);
+      if (res.success) {
+        expect(res.data.nome).toBe('Van 2 - Bairro Novo');
+        expect(res.data.pontoConexao).toBe('Trevo do Bairro');
+      }
+    });
   });
 });
