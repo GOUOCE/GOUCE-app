@@ -11,7 +11,7 @@ export default function RotasPrincipaisListScreen() {
   const router = useRouter();
 
   const [busca, setBusca] = useState('');
-  const [mostrarInativos, setMostrarInativos] = useState(true);
+  const [mostrarInativos, setMostrarInativos] = useState(false); // Inicia desligada por padrão (AC-01 / AC-09)
   const [rotas, setRotas] = useState<RotaPrincipalItem[]>([]);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarVisivel, setSnackbarVisivel] = useState(false);
