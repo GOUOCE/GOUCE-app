@@ -40,22 +40,22 @@ Executar na ordem abaixo. São **14 casos essenciais**, em três seções. Os ID
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU011-UI-001 | Acessar a gestão de rotas principais | Cadastros → Rotas principais, banco sem rotas | Listagem só de ativas com horários; busca; “Mostrar inativos” desligada; sem dados de exemplo | ❌ FALHOU | Chave **Mostrar inativos** começa ligada (@@C@@); lista de exemplo `Linha 01–03` no código (@@A@@); seta volta ao Painel (@@K@@). |
-| CT-HU011-UI-002 | Cadastrar rota principal | `Rota Centro - UFC`; saída e retorno; UFC na ida e na volta; Centro | “Operação realizada com sucesso”; na listagem; continua após reabrir o app e existe na API | ❌ FALHOU | Gravou certo (rota `id` 1); sucesso em barra preta, texto fora do padrão (@@D@@); tela guarda dados antigos (@@I@@). |
-| CT-HU011-UI-003 | Vários vínculos e volta independente | `Rota Integrada`: 3 faculdades na ida, 1 na volta; 2 bairros | Seleções mantidas; ida e volta gravadas separadas | ❌ FALHOU | Volta gravada como IFCE por pré-seleção (@@E@@); nome completo no lugar de `SIGLA - Campus` (@@L@@); checkbox lento (@@M@@); modal de bairro e lixeira (@@N@@). |
-| CT-HU011-UI-004 | Seleções só com bairros e faculdades ativos | Listas de faculdades (ida e volta) e de bairros | Ativos da base aparecem; inativos e nomes inexistentes no banco não aparecem | ❌ FALHOU | Só ativos aparecem ✅ (conferido na API); as listas só carregam ao abrir a tela e há lista de exemplo (@@A@@). |
-| CT-HU011-UI-005 | Campos obrigatórios | Formulário vazio; sem faculdade na volta; sem bairro; nome em branco | Campos destacados com mensagem; nada salvo | ❌ FALHOU | Tudo vem pré-marcado e só o nome basta para salvar (@@E@@); nome sem máscara (@@F@@, @@G@@); erro reaparece ao apagar (@@F@@). |
-| CT-HU011-UI-006 | Horários livres e retorno depois da saída (#208) | Saída 13:15 e retorno 22:40; retorno antes da saída | Qualquer horário `HH:mm` pode ser escolhido; retorno ≤ saída sinalizado no campo | ❌ FALHOU | Horários só em lista de 6 opções (@@H@@). Retorno antes da saída: 🚫 bloqueado, a lista não permite montar o cenário. |
-| CT-HU011-UI-007 | Nome de rota duplicado (#208) | Nome igual com variação de maiúsculas e espaços; nome de complementar | Mensagem de nome em uso; nada criado | ❌ FALHOU | A API bloqueia as 4 variações ✅; o app mostra outro texto e esconde a mensagem da API (@@O@@). |
+| CT-HU011-UI-001 | Acessar a gestão de rotas principais | Cadastros → Rotas principais, banco sem rotas | Listagem só de ativas com horários; busca; “Mostrar inativos” desligada; sem dados de exemplo | ❌ FALHOU | Chave **Mostrar inativos** começa ligada (#335); lista de exemplo `Linha 01–03` no código (#333); seta volta ao Painel (#343). |
+| CT-HU011-UI-002 | Cadastrar rota principal | `Rota Centro - UFC`; saída e retorno; UFC na ida e na volta; Centro | “Operação realizada com sucesso”; na listagem; continua após reabrir o app e existe na API | ❌ FALHOU | Gravou certo (rota `id` 1); sucesso em barra preta, texto fora do padrão (#336); tela guarda dados antigos (#341). |
+| CT-HU011-UI-003 | Vários vínculos e volta independente | `Rota Integrada`: 3 faculdades na ida, 1 na volta; 2 bairros | Seleções mantidas; ida e volta gravadas separadas | ❌ FALHOU | Volta gravada como IFCE por pré-seleção (#337); nome completo no lugar de `SIGLA - Campus` (#344); checkbox lento (#345); modal de bairro e lixeira (#346). |
+| CT-HU011-UI-004 | Seleções só com bairros e faculdades ativos | Listas de faculdades (ida e volta) e de bairros | Ativos da base aparecem; inativos e nomes inexistentes no banco não aparecem | ❌ FALHOU | Só ativos aparecem ✅ (conferido na API); as listas só carregam ao abrir a tela e há lista de exemplo (#333). |
+| CT-HU011-UI-005 | Campos obrigatórios | Formulário vazio; sem faculdade na volta; sem bairro; nome em branco | Campos destacados com mensagem; nada salvo | ❌ FALHOU | Tudo vem pré-marcado e só o nome basta para salvar (#337); nome sem máscara (#338, #339); erro reaparece ao apagar (#338). |
+| CT-HU011-UI-006 | Horários livres e retorno depois da saída (#208) | Saída 13:15 e retorno 22:40; retorno antes da saída | Qualquer horário `HH:mm` pode ser escolhido; retorno ≤ saída sinalizado no campo | ❌ FALHOU | Horários só em lista de 6 opções (#340). Retorno antes da saída: 🚫 bloqueado, a lista não permite montar o cenário. |
+| CT-HU011-UI-007 | Nome de rota duplicado (#208) | Nome igual com variação de maiúsculas e espaços; nome de complementar | Mensagem de nome em uso; nada criado | ❌ FALHOU | A API bloqueia as 4 variações ✅; o app mostra outro texto e esconde a mensagem da API (#347). |
 
 ### Seção B — Edição, inativação e reativação
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU011-UI-008 | Editar rota | Trocar nome, horários, faculdades e bairros; nome em uso | Sucesso e listagem atualizada; dados carregados certos; nome em uso bloqueado | ❌ FALHOU | Gravou certo; sucesso em barra preta (@@D@@); checkbox lento (@@M@@); texto do nome em uso (@@O@@). |
-| CT-HU011-UI-009 | Sair sem salvar | Alterar o nome em Editar e tocar na seta | Pedir confirmação; nada salvo | ❌ FALHOU | Edição sai e salva sem nenhuma confirmação (@@J@@). |
-| CT-HU011-UI-010 | Inativar, mostrar inativos e reativar | Cancelar e confirmar a inativação da rota `id` 1; ligar a chave; reativar | Sucesso nas duas; inativa identificada; nenhum bloqueio por dado de exemplo | ❌ FALHOU | Rota `id` 1 barrada por dado de exemplo (@@B@@); sucesso em barra preta (@@D@@). |
-| CT-HU011-UI-011 | Bloqueios de inativação e reativação (#208) | Rota com complementar ativa; rota com bairro inativo | Mensagem clara de cada bloqueio; rota mantém o estado | ❌ FALHOU | A API devolve a mensagem certa; o app mostra texto técnico e, na reativação, nenhum aviso (@@P@@). |
+| CT-HU011-UI-008 | Editar rota | Trocar nome, horários, faculdades e bairros; nome em uso | Sucesso e listagem atualizada; dados carregados certos; nome em uso bloqueado | ❌ FALHOU | Gravou certo; sucesso em barra preta (#336); checkbox lento (#345); texto do nome em uso (#347). |
+| CT-HU011-UI-009 | Sair sem salvar | Alterar o nome em Editar e tocar na seta | Pedir confirmação; nada salvo | ❌ FALHOU | Edição sai e salva sem nenhuma confirmação (#342). |
+| CT-HU011-UI-010 | Inativar, mostrar inativos e reativar | Cancelar e confirmar a inativação da rota `id` 1; ligar a chave; reativar | Sucesso nas duas; inativa identificada; nenhum bloqueio por dado de exemplo | ❌ FALHOU | Rota `id` 1 barrada por dado de exemplo (#334); sucesso em barra preta (#336). |
+| CT-HU011-UI-011 | Bloqueios de inativação e reativação (#208) | Rota com complementar ativa; rota com bairro inativo | Mensagem clara de cada bloqueio; rota mantém o estado | ❌ FALHOU | A API devolve a mensagem certa; o app mostra texto técnico e, na reativação, nenhum aviso (#348). |
 | CT-HU011-UI-012 | Bairro e faculdade usados em rota ativa (#208) | Inativar Centro e UFC nas telas de Bairros e Faculdades | Bloqueio com as mensagens definidas; base continua ativa | ✅ PASSOU | Os dois bloqueios aparecem como “Inativação Bloqueada” e a base continua ativa. |
 
 ### Seção C — Acesso e robustez
@@ -63,7 +63,7 @@ Executar na ordem abaixo. São **14 casos essenciais**, em três seções. Os ID
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU011-UI-013 | Aluno e representante sem acesso | Menus do aluno e do representante; link `rotas-principais` | Menu não exibido; link mostra Acesso Negado | ✅ PASSOU | Aluno e representante não veem o menu e os três links mostram acesso negado (403). |
-| CT-HU011-UI-014 | Falha de conexão e dados de exemplo | Servidor/Wi-Fi desligado ao listar, cadastrar, editar e inativar | Mensagem de conexão; app não finge sucesso nem mostra rotas que não existem | ❌ FALHOU | Sem servidor, o app finge sucesso e mostra rotas de exemplo (@@A@@). |
+| CT-HU011-UI-014 | Falha de conexão e dados de exemplo | Servidor/Wi-Fi desligado ao listar, cadastrar, editar e inativar | Mensagem de conexão; app não finge sucesso nem mostra rotas que não existem | ❌ FALHOU | Sem servidor, o app finge sucesso e mostra rotas de exemplo (#333). |
 
 ## Detalhamento dos casos
 
@@ -93,9 +93,9 @@ Executar na ordem abaixo. São **14 casos essenciais**, em três seções. Os ID
 **Resultado obtido**
 
 - Card abre a listagem; busca filtra sem diferenciar maiúsculas e sem resultado mostra lista vazia ✅.
-- A chave **Mostrar inativos** abriu **ligada** (esperado: desligada) → @@C@@.
-- A seta de voltar leva ao **Painel**, não a **Cadastros** → @@K@@.
-- Com o banco sem rotas, o código mostra `Linha 01 - Centro`, `Linha 02 - Bairro Novo` e `Linha 03 - Vila Antiga` (`listaApi.length > 0 ? listaApi : ROTAS_PRINCIPAIS_MOCK`) → @@A@@. Resultado por leitura do código e conferência na API; o testador dispensou a execução na tela por a falha já estar clara no código.
+- A chave **Mostrar inativos** abriu **ligada** (esperado: desligada) → #335.
+- A seta de voltar leva ao **Painel**, não a **Cadastros** → #343.
+- Com o banco sem rotas, o código mostra `Linha 01 - Centro`, `Linha 02 - Bairro Novo` e `Linha 03 - Vila Antiga` (`listaApi.length > 0 ? listaApi : ROTAS_PRINCIPAIS_MOCK`) → #333. Resultado por leitura do código e conferência na API; o testador dispensou a execução na tela por a falha já estar clara no código.
 - Status: ❌ FALHOU.
 
 ---
@@ -122,8 +122,8 @@ Executar na ordem abaixo. São **14 casos essenciais**, em três seções. Os ID
 **Resultado obtido**
 
 - Rota cadastrada e conferida na API: `Rota Centro - UFC`, 06:30 / 17:30, UFC na ida e na volta, bairro Centro ✅.
-- A confirmação aparece como barra preta (Snackbar) com “Rota cadastrada com sucesso”, em vez do pop-up “Operação realizada com sucesso” → @@D@@.
-- Ao abrir **Nova** de novo, o formulário guarda o que foi digitado antes → @@I@@.
+- A confirmação aparece como barra preta (Snackbar) com “Rota cadastrada com sucesso”, em vez do pop-up “Operação realizada com sucesso” → #336.
+- Ao abrir **Nova** de novo, o formulário guarda o que foi digitado antes → #341.
 - Status: ❌ FALHOU.
 
 ---
@@ -149,10 +149,10 @@ Executar na ordem abaixo. São **14 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Rota `Rota Integrada` cadastrada com 3 faculdades na ida e 2 bairros ✅, mas a API mostra a **volta = IFCE** (esperado: só UFC). A volta já vinha marcada com a primeira faculdade e não foi desmarcada → @@E@@.
-- Os campos de faculdade mostram o nome completo, sem o formato `SIGLA - Campus` da HU-010/HU-030 → @@L@@.
-- Os checkboxes das faculdades de ida e volta demoram muito para marcar → @@M@@.
-- O modal **Vincular bairro** lista os nomes como texto azul/negrito, sem marcação de escolhido (parece uma chave); a lixeira remove o bairro sem pedir confirmação → @@N@@.
+- Rota `Rota Integrada` cadastrada com 3 faculdades na ida e 2 bairros ✅, mas a API mostra a **volta = IFCE** (esperado: só UFC). A volta já vinha marcada com a primeira faculdade e não foi desmarcada → #337.
+- Os campos de faculdade mostram o nome completo, sem o formato `SIGLA - Campus` da HU-010/HU-030 → #344.
+- Os checkboxes das faculdades de ida e volta demoram muito para marcar → #345.
+- O modal **Vincular bairro** lista os nomes como texto azul/negrito, sem marcação de escolhido (parece uma chave); a lixeira remove o bairro sem pedir confirmação → #346.
 - Status: ❌ FALHOU.
 
 ---
@@ -176,8 +176,8 @@ Executar na ordem abaixo. São **14 casos essenciais**, em três seções. Os ID
 **Resultado obtido**
 
 - `GET /rotas-principais/opcoes` devolve só UFC, IFCE, UECE e Centro, Campo Velho (ativos), e a tela mostra as mesmas opções ✅.
-- As opções são carregadas uma única vez ao abrir a tela (`useEffect` sem recarga): uma faculdade criada depois não aparece sem recarregar → @@A@@.
-- Se `/opcoes` falhar, o serviço troca por `FACULDADES_MOCK` e `BAIRROS_MOCK` (inclui `Uniateneu Inativa`) → @@A@@. Resultado por leitura do código e conferência na API; o testador dispensou a execução na tela por a falha já estar clara no código.
+- As opções são carregadas uma única vez ao abrir a tela (`useEffect` sem recarga): uma faculdade criada depois não aparece sem recarregar → #333.
+- Se `/opcoes` falhar, o serviço troca por `FACULDADES_MOCK` e `BAIRROS_MOCK` (inclui `Uniateneu Inativa`) → #333. Resultado por leitura do código e conferência na API; o testador dispensou a execução na tela por a falha já estar clara no código.
 - Status: ❌ FALHOU.
 
 ---
@@ -205,9 +205,9 @@ Executar na ordem abaixo. São **14 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Ao abrir **Nova**, já vêm marcadas todas as faculdades na ida, a primeira na volta, o primeiro bairro e os horários 06:40 / 17:30. Por isso não foi possível testar os obrigatórios → @@E@@.
-- Foi salva a rota `wwww@@@2` (`id` 3) digitando só o nome: horários 06:40 / 17:30, bairro Campo Velho, 3 faculdades na ida e volta IFCE. O nome aceita símbolos e não tem máscara; a API também aceitou → @@F@@, @@G@@.
-- A mensagem de erro de um campo reaparece ao apagar o texto, em vez de sumir e voltar só ao tocar em finalizar → @@F@@.
+- Ao abrir **Nova**, já vêm marcadas todas as faculdades na ida, a primeira na volta, o primeiro bairro e os horários 06:40 / 17:30. Por isso não foi possível testar os obrigatórios → #337.
+- Foi salva a rota `wwww@@@2` (`id` 3) digitando só o nome: horários 06:40 / 17:30, bairro Campo Velho, 3 faculdades na ida e volta IFCE. O nome aceita símbolos e não tem máscara; a API também aceitou → #338, #339.
+- A mensagem de erro de um campo reaparece ao apagar o texto, em vez de sumir e voltar só ao tocar em finalizar → #338.
 - Status: ❌ FALHOU.
 
 ---
@@ -230,8 +230,8 @@ Executar na ordem abaixo. São **14 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Saída aceita só 06:00, 06:10, 06:20, 06:30, 06:40 e 07:00; retorno só 11:30, 12:00, 17:00, 17:30, 18:00 e 22:00. Não dá para escolher `13:15` nem `22:40`, que a API aceita (qualquer `HH:mm`) e o PO definiu na #208, item 2 → @@H@@.
-- O campo mostra o placeholder “Selecionar” muito escuro e o horário escolhido em cinza (campo `editable={false}`), fora do padrão dos campos do app → @@H@@.
+- Saída aceita só 06:00, 06:10, 06:20, 06:30, 06:40 e 07:00; retorno só 11:30, 12:00, 17:00, 17:30, 18:00 e 22:00. Não dá para escolher `13:15` nem `22:40`, que a API aceita (qualquer `HH:mm`) e o PO definiu na #208, item 2 → #340.
+- O campo mostra o placeholder “Selecionar” muito escuro e o horário escolhido em cinza (campo `editable={false}`), fora do padrão dos campos do app → #340.
 - 🚫 Retorno antes ou igual à saída: não é possível informar o horário; coberto na API em `CT-HU011-API-006`.
 - Status: ❌ FALHOU.
 
@@ -255,7 +255,7 @@ Executar na ordem abaixo. São **14 casos essenciais**, em três seções. Os ID
 **Resultado obtido**
 
 - Na API, `Rota Centro - UFC`, `ROTAS CENTRO - UFC`, `  rota centro - ufc  ` e `Van Trevo` (nome da complementar) devolvem `409` “Já existe uma rota com este nome.”; nada foi criado ✅.
-- No app, qualquer `409` do cadastro vira “Esta rota já está cadastrada.” em pop-up (visto ao salvar `Rota Integrada` no CT-008). O requisito (HU-011, item 11) manda exibir “Já existe uma rota com este nome.” → @@O@@. O testador considerou o pop-up adequado; o desvio é só de texto.
+- No app, qualquer `409` do cadastro vira “Esta rota já está cadastrada.” em pop-up (visto ao salvar `Rota Integrada` no CT-008). O requisito (HU-011, item 11) manda exibir “Já existe uma rota com este nome.” → #347. O testador considerou o pop-up adequado; o desvio é só de texto.
 - Status: ❌ FALHOU.
 
 ---
@@ -285,8 +285,8 @@ Executar na ordem abaixo. São **14 casos essenciais**, em três seções. Os ID
 **Resultado obtido**
 
 - Rota `id` 1 alterada e conferida na API: `Rota Centro - UFC Manhã`, 06:10 / 11:30, ida só IFCE, volta só UECE ✅. O bairro continuou Centro (a troca por Campo Velho não foi confirmada).
-- Sucesso exibido em barra preta → @@D@@. Checkboxes das faculdades demoram muito → @@M@@.
-- Salvar com o nome `Rota Integrada` foi bloqueado em pop-up com “Esta rota já está cadastrada.” (texto difere do requisito) → @@O@@.
+- Sucesso exibido em barra preta → #336. Checkboxes das faculdades demoram muito → #345.
+- Salvar com o nome `Rota Integrada` foi bloqueado em pop-up com “Esta rota já está cadastrada.” (texto difere do requisito) → #347.
 - Status: ❌ FALHOU.
 
 ---
@@ -308,7 +308,7 @@ Executar na ordem abaixo. São **14 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- `editar.tsx` salva direto e a seta chama `router.back()` sem aviso de alterações não salvas → @@J@@. Resultado por leitura do código e conferência na API; o testador dispensou a execução na tela por a falha já estar clara no código.
+- `editar.tsx` salva direto e a seta chama `router.back()` sem aviso de alterações não salvas → #342. Resultado por leitura do código e conferência na API; o testador dispensou a execução na tela por a falha já estar clara no código.
 - Status: ❌ FALHOU.
 
 ---
@@ -336,9 +336,9 @@ Executar na ordem abaixo. São **14 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Inativar `Rota Centro - UFC` (`id` 1) foi barrado com “Inativação bloqueada” de agendamentos pendentes, sem existir agenda: o app confere a lista de exemplo (`Linha 01`, `id` 1) antes da API → @@B@@.
+- Inativar `Rota Centro - UFC` (`id` 1) foi barrado com “Inativação bloqueada” de agendamentos pendentes, sem existir agenda: o app confere a lista de exemplo (`Linha 01`, `id` 1) antes da API → #334.
 - A rota 3 (`wwww@@@2`) foi inativada: aparece com a chave **Mostrar inativos** ligada ✅ e continua no banco como `ativo: false` (soft delete ✅). A reativação não foi executada na tela.
-- A confirmação de sucesso usa barra preta (“Rota inativada”) → @@D@@.
+- A confirmação de sucesso usa barra preta (“Rota inativada”) → #336.
 - Status: ❌ FALHOU.
 
 ---
@@ -367,7 +367,7 @@ Executar na ordem abaixo. São **14 casos essenciais**, em três seções. Os ID
 **Resultado obtido**
 
 - Na API, inativar a `Rota Integrada` com a complementar ativa devolve `409` com a mensagem do PO (#208, item 5), e nada mudou ✅.
-- No app, a inativação lê `error.response.data.detail`, mas a API manda `error.message`: o aviso exibido é “Request failed with status code 409”. A reativação recusada só grava `console.error`, sem aviso na tela → @@P@@. Resultado por leitura do código e conferência na API; o testador dispensou a execução na tela por a falha já estar clara no código.
+- No app, a inativação lê `error.response.data.detail`, mas a API manda `error.message`: o aviso exibido é “Request failed with status code 409”. A reativação recusada só grava `console.error`, sem aviso na tela → #348. Resultado por leitura do código e conferência na API; o testador dispensou a execução na tela por a falha já estar clara no código.
 - Status: ❌ FALHOU.
 
 ---
@@ -440,7 +440,7 @@ Executar na ordem abaixo. São **14 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- O serviço captura qualquer falha e cai nas listas de exemplo: listar mostra `Linha 01–03`; cadastrar, editar, inativar e reativar alteram só a lista local e devolvem sucesso (ids `Date.now()`); o erro de conexão não usa o pop-up “Erro de Conexão” → @@A@@. Resultado por leitura do código e conferência na API; o testador dispensou a execução na tela por a falha já estar clara no código.
+- O serviço captura qualquer falha e cai nas listas de exemplo: listar mostra `Linha 01–03`; cadastrar, editar, inativar e reativar alteram só a lista local e devolvem sucesso (ids `Date.now()`); o erro de conexão não usa o pop-up “Erro de Conexão” → #333. Resultado por leitura do código e conferência na API; o testador dispensou a execução na tela por a falha já estar clara no código.
 - Status: ❌ FALHOU.
 
 ## Rastreabilidade
@@ -469,22 +469,22 @@ Executar na ordem abaixo. São **14 casos essenciais**, em três seções. Os ID
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| CT-001, 004, 014 | Dados de exemplo (`Linha 01–03`, faculdades e bairros inventados) aparecem com o banco vazio e quando o servidor falha; cadastrar, editar, inativar e reativar dão sucesso falso sem conexão; as opções só carregam ao abrir a tela | @@A@@ |
-| CT-010 | Inativar a rota de `id` 1 é barrado por “agendamentos pendentes” vindo da lista de exemplo | @@B@@ |
-| CT-001 | A chave **Mostrar inativos** abre ligada | @@C@@ |
-| CT-002, 008, 010 | Sucesso em barra preta (Snackbar) e com textos fora do padrão “Operação realizada com sucesso” | @@D@@ |
-| CT-003, 005 | Campos obrigatórios vêm pré-marcados; só o nome basta para salvar e a volta foi gravada errada | @@E@@ |
-| CT-005 | Nome da rota sem máscara; erro de validação reaparece ao apagar | @@F@@ |
-| CT-005 | A API aceita nome de rota com símbolos (`wwww@@@2`) | @@G@@ |
-| CT-006 | Horários só em lista fixa de 6 opções; campo com placeholder escuro e texto cinza; retorno antes da saída não conferido | @@H@@ |
-| CT-002, 008 | Telas de cadastro e edição guardam os dados digitados antes | @@I@@ |
-| CT-009 | Edição sai e salva sem confirmação de alterações não salvas | @@J@@ |
-| CT-001 a 008 | A seta de voltar leva ao Painel em vez da listagem de origem | @@K@@ |
-| CT-003 | Faculdades aparecem com o nome completo, sem `SIGLA - Campus` | @@L@@ |
-| CT-003, 008 | Checkbox das faculdades demora muito para marcar | @@M@@ |
-| CT-003 | Modal **Vincular bairro** sem marcação de escolhido; lixeira remove sem confirmar | @@N@@ |
-| CT-007, 008 | Qualquer `409` do cadastro vira “Esta rota já está cadastrada.” (requisito: “Já existe uma rota com este nome.”) | @@O@@ |
-| CT-011 | Inativação bloqueada mostra “Request failed with status code 409”; reativação recusada sem aviso | @@P@@ |
+| CT-001, 004, 014 | Dados de exemplo (`Linha 01–03`, faculdades e bairros inventados) aparecem com o banco vazio e quando o servidor falha; cadastrar, editar, inativar e reativar dão sucesso falso sem conexão; as opções só carregam ao abrir a tela | #333 |
+| CT-010 | Inativar a rota de `id` 1 é barrado por “agendamentos pendentes” vindo da lista de exemplo | #334 |
+| CT-001 | A chave **Mostrar inativos** abre ligada | #335 |
+| CT-002, 008, 010 | Sucesso em barra preta (Snackbar) e com textos fora do padrão “Operação realizada com sucesso” | #336 |
+| CT-003, 005 | Campos obrigatórios vêm pré-marcados; só o nome basta para salvar e a volta foi gravada errada | #337 |
+| CT-005 | Nome da rota sem máscara; erro de validação reaparece ao apagar | #338 |
+| CT-005 | A API aceita nome de rota com símbolos (`wwww@@@2`) | #339 |
+| CT-006 | Horários só em lista fixa de 6 opções; campo com placeholder escuro e texto cinza; retorno antes da saída não conferido | #340 |
+| CT-002, 008 | Telas de cadastro e edição guardam os dados digitados antes | #341 |
+| CT-009 | Edição sai e salva sem confirmação de alterações não salvas | #342 |
+| CT-001 a 008 | A seta de voltar leva ao Painel em vez da listagem de origem | #343 |
+| CT-003 | Faculdades aparecem com o nome completo, sem `SIGLA - Campus` | #344 |
+| CT-003, 008 | Checkbox das faculdades demora muito para marcar | #345 |
+| CT-003 | Modal **Vincular bairro** sem marcação de escolhido; lixeira remove sem confirmar | #346 |
+| CT-007, 008 | Qualquer `409` do cadastro vira “Esta rota já está cadastrada.” (requisito: “Já existe uma rota com este nome.”) | #347 |
+| CT-011 | Inativação bloqueada mostra “Request failed with status code 409”; reativação recusada sem aviso | #348 |
 
 ## Observações gerais
 
