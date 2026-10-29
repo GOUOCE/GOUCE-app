@@ -147,3 +147,31 @@ describe('rotaPrincipalService - sigla e campus das faculdades (HU-011, #344)', 
     expect(faculdades[1].sigla).toBe('');
   });
 });
+
+describe('rotaPrincipalService - ida e volta independentes (HU-011, #337)', () => {
+  beforeEach(() => {
+    mockPost.mockReset();
+  });
+
+  it('envia só as faculdades escolhidas em cada lista, sem copiar a ida na volta', async () => {
+    mockPost.mockResolvedValue({ data: { success: true, data: { id: 9, nome: 'Rota Integrada' } } });
+
+    await rotaPrincipalService.criarRotaPrincipal({
+      nome: '  Rota Integrada ',
+      horarioSaida: '06:30',
+      horarioRetorno: '17:30',
+      faculdadesIdaIds: [1, 2, 3],
+      faculdadesVoltaIds: [1],
+      bairrosIds: [1, 2],
+    });
+
+    expect(mockPost).toHaveBeenCalledWith('/rotas-principais', {
+      nome: 'Rota Integrada',
+      horario_saida: '06:30',
+      horario_retorno: '17:30',
+      bairros_ids: [1, 2],
+      faculdades_ida_ids: [1, 2, 3],
+      faculdades_volta_ids: [1],
+    });
+  });
+});
