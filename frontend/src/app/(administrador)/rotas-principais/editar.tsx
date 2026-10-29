@@ -352,7 +352,7 @@ export default function EditarRotaPrincipalScreen() {
           <TouchableOpacity activeOpacity={0.7} onPress={() => setModalFacsIdaVisible(true)}>
             <View pointerEvents="none">
               <TextInput
-                label="Faculdades de Ida (Destino) *"
+                label="Faculdades da ida *"
                 mode="outlined"
                 placeholder="Selecionar"
                 value={resumoFacsIda}
@@ -373,7 +373,7 @@ export default function EditarRotaPrincipalScreen() {
           <TouchableOpacity activeOpacity={0.7} onPress={() => setModalFacsVoltaVisible(true)}>
             <View pointerEvents="none">
               <TextInput
-                label="Faculdades de Volta (Origem) *"
+                label="Faculdades da volta *"
                 mode="outlined"
                 placeholder="Selecionar"
                 value={resumoFacsVolta}
