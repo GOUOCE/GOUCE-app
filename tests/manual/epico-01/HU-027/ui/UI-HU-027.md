@@ -9,16 +9,16 @@
 | Camada          | UI |
 | Tipo de teste   | Funcional manual — suíte essencial (baseada em risco) |
 | Tela            | Painel do administrador → **Acesso Rápido** → **Fila de solicitações** (telas **Fila de Solicitações** e **Analisar Solicitação**) |
-| Ambiente        | Desenvolvimento — app no celular (Expo Go) ou versão web (`http://localhost:3000`), na `develop` (`939921e3`) |
+| Ambiente        | Desenvolvimento — app no celular (Expo Go) ou versão web (`http://localhost:3000`), na `develop` (`84681c3a`), API local `http://127.0.0.1:18027` e Mailpit `http://localhost:8025` |
 | Total de casos  | 10 |
-| Última execução | Não realizada |
+| Última execução | 2026-10-29 |
 | Testador        | Cauan Ricardo |
 
 ## Resultado geral
 
 | Situação        | Total | ✅ Passaram | ❌ Falharam | 🚫 Bloqueados | ⏳ Pendentes |
 | --------------- | ----: | ----------: | ----------: | ------------: | -----------: |
-| ⏳ Não executada | 10 | 0 | 0 | 0 | 10 |
+| ❌ Reprovada | 10 | 5 | 5 | 0 | 0 |
 
 ## Pré-condições
 
@@ -39,26 +39,26 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU027-UI-001 | Acessar a fila de solicitações | Painel → Fila de solicitações; busca; filtros | Só pendentes, do mais antigo para o mais recente; busca e filtros funcionam | ⏳ PENDENTE | Não executado. |
-| CT-HU027-UI-002 | Ver os dados do aluno | Tocar em A1 | Todos os dados do cadastro, com nomes (não ids) e sem valores inventados | ⏳ PENDENTE | Não executado. |
-| CT-HU027-UI-003 | Abrir os documentos anexados | Tocar em cada documento de A1 | Cada documento abre para visualizar ou baixar | ⏳ PENDENTE | Não executado. |
+| CT-HU027-UI-001 | Acessar a fila de solicitações | Painel → Fila de solicitações; busca; filtros | Só pendentes, do mais antigo para o mais recente; busca e filtros funcionam | ✅ PASSOU | Fila só com pendentes, do mais antigo ao mais recente; busca e filtros funcionam. |
+| CT-HU027-UI-002 | Ver os dados do aluno | Tocar em A1 | Todos os dados do cadastro, com nomes (não ids) e sem valores inventados | ❌ FALHOU | Bairro aparece `-` (#366); etiqueta fixa e iniciais `AL` antes de carregar (#367). |
+| CT-HU027-UI-003 | Abrir os documentos anexados | Tocar em cada documento de A1 | Cada documento abre para visualizar ou baixar | ❌ FALHOU | Os cards de comprovante não abrem (#368). |
 
 ### Seção B — Aprovação e reprovação
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU027-UI-004 | Aprovar solicitação | A1: cancelar e depois confirmar | “Solicitação avaliada com sucesso”; fila recarregada sem A1 | ⏳ PENDENTE | Não executado. |
-| CT-HU027-UI-005 | Aluno avisado da aprovação | E-mail do A1; login do A1 | Aviso de acesso liberado; A1 entra no app | ⏳ PENDENTE | Não executado. |
-| CT-HU027-UI-006 | Reprovar com motivo | A2: matrícula e residência; motivo preenchido | “Solicitação avaliada com sucesso”; fila sem A2; aluno avisado com o motivo | ⏳ PENDENTE | Não executado. |
-| CT-HU027-UI-007 | Motivo obrigatório | A3: motivo vazio, só espaços, curto | Confirmação bloqueada e campo destacado; nada enviado | ⏳ PENDENTE | Não executado. |
-| CT-HU027-UI-008 | Documentos indicados na reprovação | A3: nenhum documento marcado; motivos diferentes por documento | Exige indicar o documento; motivo de cada um gravado como digitado | ⏳ PENDENTE | Não executado. |
+| CT-HU027-UI-004 | Aprovar solicitação | A1: cancelar e depois confirmar | “Solicitação avaliada com sucesso”; fila recarregada sem A1 | ❌ FALHOU | Aprovação correta, mas a mensagem não é a do AC-08 (#369). |
+| CT-HU027-UI-005 | Aluno avisado da aprovação | E-mail do A1; login do A1 | Aviso de acesso liberado; A1 entra no app | ✅ PASSOU | E-mail “Cadastro aprovado - GOUCE” recebido e A1 entra no app. |
+| CT-HU027-UI-006 | Reprovar com motivo | A2: matrícula e residência; motivo preenchido | “Solicitação avaliada com sucesso”; fila sem A2; aluno avisado com o motivo | ❌ FALHOU | Reprovação correta, mas a mensagem não é a do AC-08 (#369). |
+| CT-HU027-UI-007 | Motivo obrigatório | A3: motivo vazio, só espaços, curto | Confirmação bloqueada e campo destacado; nada enviado | ✅ PASSOU | Vazio, só espaços e `Ruim` bloqueados; A3 continua pendente. |
+| CT-HU027-UI-008 | Documentos indicados na reprovação | A3: nenhum documento marcado; motivos diferentes por documento | Exige indicar o documento; motivo de cada um gravado como digitado | ❌ FALHOU | Sem documento marcado, o app indica a matrícula sozinho; um só motivo para todos os documentos (#370); e-mail sem acento (#371). |
 
 ### Seção C — Acesso e robustez
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU027-UI-009 | Aluno e representante sem acesso | Menus do aluno e do representante; link `/solicitacoes` | Menu não exibido; link mostra Acesso Negado | ⏳ PENDENTE | Não executado. |
-| CT-HU027-UI-010 | Falha de conexão | Servidor/Wi-Fi desligado ao abrir a fila, aprovar e reprovar | Mensagem de conexão; app não finge sucesso | ⏳ PENDENTE | Não executado. |
+| CT-HU027-UI-009 | Aluno e representante sem acesso | Menus do aluno e do representante; link `/solicitacoes` | Menu não exibido; link mostra Acesso Negado | ✅ PASSOU | Sem menu da fila para aluna e representante; o link deu 403. |
+| CT-HU027-UI-010 | Falha de conexão | Servidor/Wi-Fi desligado ao abrir a fila, aprovar e reprovar | Mensagem de conexão; app não finge sucesso | ✅ PASSOU | Mensagem de erro de conexão; nada de sucesso falso; A4 continua pendente. |
 
 ## Detalhamento dos casos
 
@@ -85,8 +85,9 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- A fila mostrou só A1 a A4, na ordem de envio: Zuleide, Bruno, Marta, Ana ✅.
+- Busca e filtros **Novos**/**Renovações** funcionaram ✅ (não havia renovação na massa).
+- Status: ✅ PASSOU.
 
 ---
 
@@ -108,8 +109,11 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- E-mail, telefone, `UFC - Quixadá`, curso, período, turno e nascimento batem com a API (`GET /alunos/2`) ✅.
+- **Bairro** aparece `-`, mas a API tem `bairro: "Centro"`: a tela lê `bairro_id`, que a API não manda → #366.
+- A etiqueta é sempre “Pendente: vínculo em análise”, mesmo para cadastro novo; e o avatar mostra `AL` antes de carregar a foto → #367.
+- A foto exibida é a do aluno (imagem de teste com o nome dele) ✅.
+- Status: ❌ FALHOU.
 
 ---
 
@@ -131,8 +135,8 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Os cards **Comprovante de Matrícula** e **Comprovante de Residência** não têm ação de toque (`[id].tsx`, sem `onPress`), embora a API tenha `id_comprovante_*` e as rotas `/arquivos/{id}/view` e `/download` → #368. Fechado por leitura do código e conferência na API: a falha já estava clara no código.
+- Status: ❌ FALHOU.
 
 ---
 
@@ -158,8 +162,9 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Cancelar fechou o aviso; confirmar aprovou, o pop-up de sucesso apareceu e a fila recarregou sem A1 ✅. Na API, A1 está `ativado` ✅.
+- Texto exibido: “O cadastro do aluno foi aprovado com sucesso!” (título “Solicitação Aprovada”); o AC-08 pede “Solicitação avaliada com sucesso” → #369.
+- Status: ❌ FALHOU.
 
 ---
 
@@ -179,8 +184,9 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Mailpit: e-mail “Cadastro aprovado - GOUCE” para A1, informando que o acesso foi liberado ✅.
+- A1 entrou no app ✅.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -204,8 +210,10 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Abriu **Detalhar Recusa**; após confirmar, a fila recarregou sem A2 ✅. Na API, A2 está `rejeitado` com os dois documentos e o motivo ✅.
+- E-mail “Documentos pendentes de reenvio” recebido com o motivo ✅ (o texto do e-mail tem problemas registrados no CT-008).
+- Texto exibido: “A solicitação foi recusada com sucesso e o aluno foi notificado para ajuste.” (título “Solicitação Recusada”), em vez de “Solicitação avaliada com sucesso” → #369.
+- Status: ❌ FALHOU.
 
 ---
 
@@ -226,8 +234,9 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Os três motivos foram bloqueados com o campo destacado ✅.
+- Na API, A3 continua `pendente`, sem documentos indicados ✅.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -251,8 +260,10 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Sem documento marcado, o código envia `comprovante_matricula` por conta própria, em vez de pedir para marcar → #370. Fechado por leitura do código e conferência na API: a falha já estava clara no código.
+- O motivo é um só e vai para todos os documentos marcados: no CT-006 a residência do A2 foi indicada com “Comprovante de matrícula desatualizado.” (API e e-mail) → #370.
+- O e-mail escreve “Comprovante Matricula” e “Comprovante Residencia”, sem acento (`email_service.py`, `replace('_', ' ').title()`) → #371.
+- Status: ❌ FALHOU.
 
 ---
 
@@ -275,8 +286,9 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Larissa (aluna) e Pedro (representante): a fila não aparece nos menus ✅.
+- `localhost:3000/solicitacoes` mostrou acesso negado (403) para os dois ✅.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -299,8 +311,9 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Com a API parada, a fila, a aprovação e a reprovação mostraram erro de servidor/conexão, sem “Solicitação Aprovada” nem “Solicitação Recusada” ✅.
+- Na API, A4 continua `pendente` ✅.
+- Status: ✅ PASSOU.
 
 ## Rastreabilidade
 
@@ -320,7 +333,12 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-002 | Bairro aparece `-` na análise (a tela lê `bairro_id`; a API manda `bairro`) | #366 |
+| CT-002 | Etiqueta fixa “Pendente: vínculo em análise” e iniciais `AL` antes de carregar | #367 |
+| CT-003 | Comprovantes de matrícula e residência não abrem | #368 |
+| CT-004, 006 | Mensagens de sucesso diferentes de “Solicitação avaliada com sucesso” (AC-08) | #369 |
+| CT-006, 008 | Sem documento marcado, o app indica a matrícula; um único motivo repetido para todos os documentos | #370 |
+| CT-006, 008 | E-mail de reenvio com “Comprovante Matricula/Residencia” sem acento | #371 |
 
 ## Observações gerais
 
@@ -335,3 +353,4 @@ Executar na ordem abaixo. São **10 casos essenciais**, em três seções. Os ID
   - a fila carrega duas vezes ao abrir (efeito e foco); anotar se a lista pisca ou duplica (CT-001).
 - As renovações de vínculo aparecem na mesma fila, mas a avaliação delas é testada na HU-028.
 - Ocultar senhas e dados pessoais nas evidências.
+- **Execução (29/10/2026):** massa montada pela IA pelo fluxo real de cadastro (A1 a A4 pendentes; Larissa aprovada; Pedro representante), cada aluno com documentos e foto próprios (imagens de teste com o nome escrito). CT-003 e parte do CT-008 fechados por leitura do código, a pedido do testador; os demais executados na web, com conferência na API e no Mailpit.
