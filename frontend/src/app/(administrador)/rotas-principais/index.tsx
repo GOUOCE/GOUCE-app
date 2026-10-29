@@ -84,10 +84,11 @@ export default function RotasPrincipaisListScreen() {
             onConfirm: fecharSucesso,
           });
         } catch (error: any) {
+          const msg = getErrorMessage(error, 'Erro ao inativar rota principal.');
           showPopup({
             type: 'error',
-            title: 'Inativação Bloqueada',
-            message: error.message || 'Erro ao inativar rota principal.',
+            title: msg.startsWith('Erro de conexão') ? 'Erro de Conexão' : 'Inativação Bloqueada',
+            message: msg,
             confirmText: 'Entendido',
           });
         }
@@ -114,7 +115,13 @@ export default function RotasPrincipaisListScreen() {
             onConfirm: fecharSucesso,
           });
         } catch (err) {
-          console.error('Erro ao reativar rota principal:', err);
+          const msg = getErrorMessage(err, 'Erro ao reativar rota principal.');
+          showPopup({
+            type: 'error',
+            title: msg.startsWith('Erro de conexão') ? 'Erro de Conexão' : 'Reativação Bloqueada',
+            message: msg,
+            confirmText: 'Entendido',
+          });
         }
       },
     });

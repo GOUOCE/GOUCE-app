@@ -128,17 +128,10 @@ export const rotaPrincipalService = {
     return mapearRota(response.data?.data || response.data);
   },
 
+  // Os bloqueios (complementar ativa, base inativa, agendamentos) vêm só da API, em error.message,
+  // e a tela lê com getErrorMessage (#334, #348)
   async inativarRotaPrincipal(id: number): Promise<void> {
-    // O bloqueio por agendamentos vem só da API; a lista local não decide a inativação
-    try {
-      await api.patch(`/rotas-principais/${id}/inativar`);
-    } catch (error: any) {
-      if (error.response?.status === 409 || error.response?.data?.detail) {
-        const msg = error.response.data.detail || error.response.data.message;
-        if (msg) throw new Error(msg);
-      }
-      throw error;
-    }
+    await api.patch(`/rotas-principais/${id}/inativar`);
   },
 
   async reativarRotaPrincipal(id: number): Promise<void> {

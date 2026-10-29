@@ -103,3 +103,24 @@ describe('rotaPrincipalService - nome em uso (HU-011, #347)', () => {
     expect(getErrorMessage(conflito)).toBe('Já existe uma rota com este nome.');
   });
 });
+
+describe('rotaPrincipalService - bloqueios de inativação e reativação (HU-011, #348)', () => {
+  beforeEach(() => {
+    mockPatch.mockReset();
+  });
+
+  it('mantém a mensagem da API, sem "Request failed with status code 409"', async () => {
+    const mensagem =
+      'Esta rota possui rotas complementares ativas vinculadas. Inative ou desvincule as rotas complementares antes de continuar.';
+    const bloqueio = Object.assign(new Error('Request failed with status code 409'), {
+      response: { status: 409, data: { success: false, error: { code: 'CONFLICT', message: mensagem } } },
+    });
+    mockPatch.mockRejectedValue(bloqueio);
+
+    const erroInativar = await rotaPrincipalService.inativarRotaPrincipal(2).catch((e) => e);
+    const erroReativar = await rotaPrincipalService.reativarRotaPrincipal(2).catch((e) => e);
+
+    expect(getErrorMessage(erroInativar)).toBe(mensagem);
+    expect(getErrorMessage(erroReativar)).toBe(mensagem);
+  });
+});
