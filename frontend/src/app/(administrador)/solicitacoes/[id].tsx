@@ -12,6 +12,18 @@ import { api } from '@/api/api';
 import { formatarCelular } from '@/utils/formatarTelefone';
 import { formatarDataNascimento } from '@/utils/formatarData';
 
+type TipoDocumento = 'comprovante_matricula' | 'comprovante_residencia' | 'foto_perfil';
+
+// Documentos que o administrador pode pedir para reenviar, cada um com o seu motivo (#370)
+const DOCUMENTOS: { tipo: TipoDocumento; rotulo: string }[] = [
+  { tipo: 'comprovante_matricula', rotulo: 'Comprovante de Matrícula' },
+  { tipo: 'comprovante_residencia', rotulo: 'Comprovante de Residência' },
+  { tipo: 'foto_perfil', rotulo: 'Foto de Perfil' },
+];
+const SEM_MARCACAO: Record<TipoDocumento, boolean> = { comprovante_matricula: false, comprovante_residencia: false, foto_perfil: false };
+const SEM_MOTIVO: Record<TipoDocumento, string> = { comprovante_matricula: '', comprovante_residencia: '', foto_perfil: '' };
+const MOTIVO_MINIMO = 5;
+
 export default function AnalisarSolicitacaoScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -25,11 +37,9 @@ export default function AnalisarSolicitacaoScreen() {
   const [modalReprovarVisible, setModalReprovarVisible] = useState(false);
 
   // Campos de recusa
-  const [docMatriculaChecked, setDocMatriculaChecked] = useState(false);
-  const [docResidenciaChecked, setDocResidenciaChecked] = useState(false);
-  const [docFotoChecked, setDocFotoChecked] = useState(false);
-  const [motivoRecusa, setMotivoRecusa] = useState('');
-  const [erroMotivo, setErroMotivo] = useState(false);
+  const [marcados, setMarcados] = useState<Record<TipoDocumento, boolean>>(SEM_MARCACAO);
+  const [motivos, setMotivos] = useState<Record<TipoDocumento, string>>(SEM_MOTIVO);
+  const [tentouReprovar, setTentouReprovar] = useState(false);
 
   // Toast / Snackbar
   const [toastMessage, setToastMessage] = useState('');
@@ -79,11 +89,9 @@ export default function AnalisarSolicitacaoScreen() {
         setAluno(null);
         setModalAprovarVisible(false);
         setModalReprovarVisible(false);
-        setDocMatriculaChecked(false);
-        setDocResidenciaChecked(false);
-        setDocFotoChecked(false);
-        setMotivoRecusa('');
-        setErroMotivo(false);
+        setMarcados(SEM_MARCACAO);
+        setMotivos(SEM_MOTIVO);
+        setTentouReprovar(false);
         setToastVisible(false);
       };
 
@@ -137,26 +145,29 @@ export default function AnalisarSolicitacaoScreen() {
     }
   };
 
+  const tiposMarcados = DOCUMENTOS.filter((d) => marcados[d.tipo]).map((d) => d.tipo);
+  const motivoInvalido = (tipo: TipoDocumento) => motivos[tipo].trim().length < MOTIVO_MINIMO;
+  // Os erros só aparecem depois da primeira tentativa de confirmar
+  const erroSemDocumento = tentouReprovar && tiposMarcados.length === 0;
+
+  const alternarDocumento = (tipo: TipoDocumento) => {
+    setMarcados((atuais) => ({ ...atuais, [tipo]: !atuais[tipo] }));
+  };
+
   const handleReprovar = async () => {
-    if (!motivoRecusa || motivoRecusa.trim().length < 5) {
-      setErroMotivo(true);
-      return;
-    }
-    setErroMotivo(false);
+    setTentouReprovar(true);
+    // Sem documento marcado não reprova: o app não escolhe um documento pelo administrador (#370)
+    if (tiposMarcados.length === 0 || tiposMarcados.some(motivoInvalido)) return;
+
     setModalReprovarVisible(false);
     setIsLoading(true);
 
-    const documentosReenvio: { tipo: string; motivo: string }[] = [];
-    if (docMatriculaChecked) documentosReenvio.push({ tipo: 'comprovante_matricula', motivo: motivoRecusa });
-    if (docResidenciaChecked) documentosReenvio.push({ tipo: 'comprovante_residencia', motivo: motivoRecusa });
-    if (docFotoChecked) documentosReenvio.push({ tipo: 'foto_perfil', motivo: motivoRecusa });
-
-    if (documentosReenvio.length === 0) {
-      documentosReenvio.push({ tipo: 'comprovante_matricula', motivo: motivoRecusa });
-    }
+    const documentosReenvio = tiposMarcados.map((tipo) => ({ tipo, motivo: motivos[tipo].trim() }));
+    // O motivo geral (até 255 caracteres na API) junta os motivos de cada documento, sem repetir
+    const motivoGeral = Array.from(new Set(documentosReenvio.map((d) => d.motivo))).join(' | ').slice(0, 255);
 
     try {
-      await solicitacaoService.reprovarSolicitacao(Number(id), motivoRecusa, documentosReenvio);
+      await solicitacaoService.reprovarSolicitacao(Number(id), motivoGeral, documentosReenvio);
       setIsLoading(false);
       showPopup({
         type: 'success',
@@ -343,7 +354,7 @@ export default function AnalisarSolicitacaoScreen() {
 
         {/* Botões de Ação */}
         <View style={styles.actionButtonsBox}>
-          <TouchableOpacity onPress={() => setModalReprovarVisible(true)}>
+          <TouchableOpacity onPress={() => { setTentouReprovar(false); setModalReprovarVisible(true); }}>
             <Text style={styles.reprovarText}>Reprovar cadastro</Text>
           </TouchableOpacity>
 
@@ -387,39 +398,39 @@ export default function AnalisarSolicitacaoScreen() {
             <View style={[styles.modalContent, { maxHeight: '90%' }]}>
               <Text variant="headlineSmall" style={styles.modalTitle}>Detalhar Recusa</Text>
               <Text variant="bodySmall" style={{ color: '#666', marginBottom: 16 }}>
-                Selecione quais partes apresentaram inconsistências e informe o motivo.
+                Selecione quais partes apresentaram inconsistências e informe o motivo de cada uma.
               </Text>
 
               <ScrollView showsVerticalScrollIndicator={false}>
-                <TouchableOpacity style={styles.checkboxRow} onPress={() => setDocMatriculaChecked(!docMatriculaChecked)}>
-                  {docMatriculaChecked ? <CheckSquare size={22} color="#3E5F90" /> : <Square size={22} color="#666" />}
-                  <Text style={styles.checkboxLabel}>Comprovante de Matrícula</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.checkboxRow} onPress={() => setDocResidenciaChecked(!docResidenciaChecked)}>
-                  {docResidenciaChecked ? <CheckSquare size={22} color="#3E5F90" /> : <Square size={22} color="#666" />}
-                  <Text style={styles.checkboxLabel}>Comprovante de Residência</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.checkboxRow} onPress={() => setDocFotoChecked(!docFotoChecked)}>
-                  {docFotoChecked ? <CheckSquare size={22} color="#3E5F90" /> : <Square size={22} color="#666" />}
-                  <Text style={styles.checkboxLabel}>Foto de Perfil</Text>
-                </TouchableOpacity>
-
-                <View style={{ marginTop: 16 }}>
-                  <TextInput
-                    label="Motivo da recusa *"
-                    mode="outlined"
-                    placeholder="ex.: Documento ilegível ou desatualizado."
-                    value={motivoRecusa}
-                    onChangeText={setMotivoRecusa}
-                    multiline
-                    numberOfLines={3}
-                    error={erroMotivo}
-                    style={{ backgroundColor: '#fff' }}
-                  />
-                  {erroMotivo && <Text style={styles.errorText}>Informe um motivo com pelo menos 5 caracteres.</Text>}
-                </View>
+                {DOCUMENTOS.map(({ tipo, rotulo }) => (
+                  <View key={tipo}>
+                    <TouchableOpacity style={styles.checkboxRow} onPress={() => alternarDocumento(tipo)}>
+                      {marcados[tipo] ? <CheckSquare size={22} color="#3E5F90" /> : <Square size={22} color="#666" />}
+                      <Text style={styles.checkboxLabel}>{rotulo}</Text>
+                    </TouchableOpacity>
+                    {marcados[tipo] && (
+                      <View style={styles.motivoBox}>
+                        <TextInput
+                          label="Motivo *"
+                          mode="outlined"
+                          placeholder="ex.: Documento ilegível ou desatualizado."
+                          value={motivos[tipo]}
+                          onChangeText={(texto) => setMotivos((atuais) => ({ ...atuais, [tipo]: texto }))}
+                          multiline
+                          maxLength={255}
+                          error={tentouReprovar && motivoInvalido(tipo)}
+                          style={{ backgroundColor: '#fff' }}
+                        />
+                        {tentouReprovar && motivoInvalido(tipo) && (
+                          <Text style={styles.errorText}>Informe um motivo com pelo menos 5 caracteres.</Text>
+                        )}
+                      </View>
+                    )}
+                  </View>
+                ))}
+                {erroSemDocumento && (
+                  <Text style={styles.errorText}>Selecione ao menos um documento para reenvio.</Text>
+                )}
               </ScrollView>
 
               <View style={[styles.modalButtons, { marginTop: 24 }]}>
@@ -607,6 +618,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     gap: 12,
+  },
+  motivoBox: {
+    marginLeft: 34,
+    marginBottom: 8,
   },
   checkboxLabel: {
     color: '#333',
