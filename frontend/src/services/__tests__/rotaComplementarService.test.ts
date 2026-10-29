@@ -12,6 +12,7 @@ jest.mock('../../api/api', () => ({
 }));
 
 import { rotaComplementarService } from '../rotaComplementarService';
+import { getErrorMessage } from '../../utils/errorUtils';
 
 const semConexao = Object.assign(new Error('Network Error'), { request: {} });
 
@@ -84,5 +85,22 @@ describe('rotaComplementarService - só dados da API (HU-012, #351 e #352)', () 
     await rotaComplementarService.inativarRotaComplementar(1);
 
     expect(mockPatch).toHaveBeenCalledWith('/rotas-complementares/1/inativar', undefined);
+  });
+
+  it('nome em uso chega à tela com a mensagem da API, no cadastro e na edição (#361)', async () => {
+    const conflito = Object.assign(new Error('Request failed with status code 409'), {
+      response: {
+        status: 409,
+        data: { success: false, error: { code: 'CONFLICT', message: 'Já existe uma rota com este nome.' } },
+      },
+    });
+    mockPost.mockRejectedValue(conflito);
+    mockPatch.mockRejectedValue(conflito);
+
+    const erroCadastro = await rotaComplementarService.criarRotaComplementar(dados).catch((e) => e);
+    const erroEdicao = await rotaComplementarService.atualizarRotaComplementar(1, dados).catch((e) => e);
+
+    expect(getErrorMessage(erroCadastro)).toBe('Já existe uma rota com este nome.');
+    expect(getErrorMessage(erroEdicao)).toBe('Já existe uma rota com este nome.');
   });
 });
