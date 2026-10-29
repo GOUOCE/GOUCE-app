@@ -4,7 +4,7 @@ import { Text, TextInput, Button, Checkbox, RadioButton, ActivityIndicator } fro
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, GitCommit, Clock, Building2, ChevronDown, Trash2 } from 'lucide-react-native';
+import { ChevronLeft, GitCommit, Building2, ChevronDown, Trash2 } from 'lucide-react-native';
 
 import { rotaPrincipalSchema, RotaPrincipalFormData } from '@/schemas/rotaPrincipalSchema';
 import {
@@ -13,9 +13,9 @@ import {
   BairroOpcao,
 } from '@/services/rotaPrincipalService';
 import { getErrorMessage } from '@/utils/errorUtils';
-import { formatarHorario } from '@/utils/formatarHorario';
 import { formatarInstituicao } from '@/utils/formatarInstituicao';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
+import { CampoHorario } from '@/components/ui/CampoHorario';
 
 // Campo fechado: "SIGLA - Campus", como em Faculdades; sem sigla, o nome no lugar (#344)
 const rotuloFaculdade = (f: FaculdadeOpcao) =>
@@ -314,51 +314,37 @@ export default function EditarRotaPrincipalScreen() {
           {errors.nome && <Text style={styles.errorText}>{errors.nome.message}</Text>}
         </View>
 
-        {/* Horários de Saída e Retorno */}
-        <View style={styles.rowInputs}>
-          <View style={styles.halfInputBox}>
-            <Controller
-              control={control}
-              name="horarioSaida"
-              render={({ field: { value } }) => (
-                <TextInput
-                  label="Horário de Saída *"
-                  mode="outlined"
-                  placeholder="HH:mm"
-                  value={value}
-                  onChangeText={(texto) => atualizarCampo('horarioSaida', formatarHorario(texto))}
-                  keyboardType="number-pad"
-                  maxLength={5}
-                  error={!!errors.horarioSaida}
-                  left={<TextInput.Icon icon={() => <Clock size={20} color="#666" />} />}
-                  style={styles.input}
-                />
-              )}
-            />
-            {errors.horarioSaida && <Text style={styles.errorText}>{errors.horarioSaida.message}</Text>}
-          </View>
+        {/* Horários de Saída e Retorno: relógio de 24 h (#340) */}
+        <View style={styles.inputBox}>
+          <Controller
+            control={control}
+            name="horarioSaida"
+            render={({ field: { value } }) => (
+              <CampoHorario
+                label="Horário de saída *"
+                value={value}
+                onChange={(horario) => atualizarCampo('horarioSaida', horario)}
+                error={!!errors.horarioSaida}
+              />
+            )}
+          />
+          {errors.horarioSaida && <Text style={styles.errorText}>{errors.horarioSaida.message}</Text>}
+        </View>
 
-          <View style={styles.halfInputBox}>
-            <Controller
-              control={control}
-              name="horarioRetorno"
-              render={({ field: { value } }) => (
-                <TextInput
-                  label="Horário de Retorno *"
-                  mode="outlined"
-                  placeholder="HH:mm"
-                  value={value}
-                  onChangeText={(texto) => atualizarCampo('horarioRetorno', formatarHorario(texto))}
-                  keyboardType="number-pad"
-                  maxLength={5}
-                  error={!!errors.horarioRetorno}
-                  left={<TextInput.Icon icon={() => <Clock size={20} color="#666" />} />}
-                  style={styles.input}
-                />
-              )}
-            />
-            {errors.horarioRetorno && <Text style={styles.errorText}>{errors.horarioRetorno.message}</Text>}
-          </View>
+        <View style={styles.inputBox}>
+          <Controller
+            control={control}
+            name="horarioRetorno"
+            render={({ field: { value } }) => (
+              <CampoHorario
+                label="Horário de retorno *"
+                value={value}
+                onChange={(horario) => atualizarCampo('horarioRetorno', horario)}
+                error={!!errors.horarioRetorno}
+              />
+            )}
+          />
+          {errors.horarioRetorno && <Text style={styles.errorText}>{errors.horarioRetorno.message}</Text>}
         </View>
 
         {/* Faculdades de Ida (Destino) */}
@@ -572,14 +558,6 @@ const styles = StyleSheet.create({
   },
   inputBox: {
     marginBottom: 20,
-  },
-  rowInputs: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
-  },
-  halfInputBox: {
-    flex: 1,
   },
   input: {
     backgroundColor: '#fff',
