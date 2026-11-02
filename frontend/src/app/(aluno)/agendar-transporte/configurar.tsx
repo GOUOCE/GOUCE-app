@@ -44,7 +44,7 @@ export default function ConfigurarAgendamentoScreen() {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
-  const { control, handleSubmit, setValue, watch, formState: { errors }, reset } = useForm<AgendamentoDiaFormData>({
+  const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm<AgendamentoDiaFormData>({
     resolver: zodResolver(agendamentoDiaSchema),
     defaultValues: {
       dataIso: dataIsoAtual,
@@ -70,7 +70,7 @@ export default function ConfigurarAgendamentoScreen() {
 
   useEffect(() => {
     setValue('dataIso', dataIsoAtual);
-  }, [dataIsoAtual]);
+  }, [dataIsoAtual, setValue]);
 
   const carregarOpcoes = async () => {
     const opts = await agendamentoService.obterOpcoesAgendamento();
@@ -111,7 +111,7 @@ export default function ConfigurarAgendamentoScreen() {
           pathname: '/(aluno)/agendar-transporte/sucesso',
           params: { agendamentosJson: JSON.stringify(novaLista) },
         } as any);
-      } catch (err) {
+      } catch (_err) {
         setIsLoading(false);
         setSnackbarMessage('Agendamento realizado com sucesso!');
         setSnackbarVisivel(true);

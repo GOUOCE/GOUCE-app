@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 
-import { agendamentoService, AgendamentoDia } from '@/services/agendamentoService';
-import { AppPopup, PopupType } from '@/components/ui/AppPopup';
+import { agendamentoService } from '@/services/agendamentoService';
+import { AppPopup } from '@/components/ui/AppPopup';
 
 interface DiaSemana {
   sigla: string;
@@ -20,19 +20,13 @@ export default function SelecaoDiasScreen() {
 
   const [dias, setDias] = useState<DiaSemana[]>([]);
   const [diasSelecionados, setDiasSelecionados] = useState<string[]>([]);
-  const [agendamentosAtivos, setAgendamentosAtivos] = useState<AgendamentoDia[]>([]);
   const [diaParaEditar, setDiaParaEditar] = useState<DiaSemana | null>(null);
 
   // Popup de Agendamento Existente (FA-001)
   const [popupEditarVisible, setPopupEditarVisible] = useState(false);
 
-  useEffect(() => {
-    carregarDados();
-  }, []);
-
-  const carregarDados = async () => {
-    const ativos = await agendamentoService.listarAgendamentosAtivos();
-    setAgendamentosAtivos(ativos);
+  const carregarDados = useCallback(async () => {
+    await agendamentoService.listarAgendamentosAtivos();
 
     // Gerar dias da semana atual (31 de Ago a 06 de Set)
     const datasExemplo: DiaSemana[] = [
@@ -49,7 +43,11 @@ export default function SelecaoDiasScreen() {
     // Pré-selecionar os disponíveis por padrão
     const disponiveis = datasExemplo.filter(d => d.status === 'disponivel').map(d => d.dataIso);
     setDiasSelecionados(disponiveis);
-  };
+  }, []);
+
+  useEffect(() => {
+    carregarDados();
+  }, [carregarDados]);
 
   const handleToggleDia = (dia: DiaSemana) => {
     if (dia.status === 'indisponivel' || dia.status === 'feriado') return;

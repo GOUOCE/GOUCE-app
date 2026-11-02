@@ -35,7 +35,7 @@ export const agendamentoService = {
     try {
       const response = await api.get('/agendamentos/opcoes');
       return response.data;
-    } catch (err) {
+    } catch (_err) {
       // Fallback para demonstracao e testes offline com dados reais de Quixadá
       return {
         horariosIda: [
@@ -75,7 +75,7 @@ export const agendamentoService = {
     try {
       const response = await api.get('/agendamentos/meus');
       return response.data;
-    } catch (err) {
+    } catch (_err) {
       return [];
     }
   },
@@ -84,7 +84,7 @@ export const agendamentoService = {
     try {
       const response = await api.post('/agendamentos', { agendamentos });
       return response.data;
-    } catch (err) {
+    } catch (_err) {
       // Retorna sucesso para simulação caso o backend ainda não tenha o endpoint
       return { success: true, count: agendamentos.length };
     }
@@ -94,7 +94,7 @@ export const agendamentoService = {
     try {
       const response = await api.delete(`/agendamentos/${idAgendamento}`);
       return response.data;
-    } catch (err) {
+    } catch (_err) {
       return { success: true };
     }
   },
