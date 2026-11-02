@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { useRouter } from 'expo-router';
@@ -15,39 +15,38 @@ interface DiaSemana {
   nomeExtenso: string;
 }
 
+const DATAS_EXEMPLO: DiaSemana[] = [
+  { sigla: 'SEG', diaNum: 31, dataIso: '2026-08-31', status: 'disponivel', nomeExtenso: 'Segunda-Feira (31)' },
+  { sigla: 'TER', diaNum: 1, dataIso: '2026-09-01', status: 'disponivel', nomeExtenso: 'Terça-Feira (01)' },
+  { sigla: 'QUA', diaNum: 2, dataIso: '2026-09-02', status: 'disponivel', nomeExtenso: 'Quarta-Feira (02)' },
+  { sigla: 'QUI', diaNum: 3, dataIso: '2026-09-03', status: 'agendado', nomeExtenso: 'Quinta-Feira (03)' },
+  { sigla: 'SEX', diaNum: 4, dataIso: '2026-09-04', status: 'disponivel', nomeExtenso: 'Sexta-Feira (04)' },
+  { sigla: 'SÁB', diaNum: 5, dataIso: '2026-09-05', status: 'indisponivel', nomeExtenso: 'Sábado (05)' },
+  { sigla: 'DOM', diaNum: 6, dataIso: '2026-09-06', status: 'feriado', nomeExtenso: 'Domingo (06)' },
+];
+
 export default function SelecaoDiasScreen() {
   const router = useRouter();
 
-  const [dias, setDias] = useState<DiaSemana[]>([]);
-  const [diasSelecionados, setDiasSelecionados] = useState<string[]>([]);
+  const [dias] = useState<DiaSemana[]>(DATAS_EXEMPLO);
+  const [diasSelecionados, setDiasSelecionados] = useState<string[]>(() =>
+    DATAS_EXEMPLO.filter(d => d.status === 'disponivel').map(d => d.dataIso)
+  );
   const [diaParaEditar, setDiaParaEditar] = useState<DiaSemana | null>(null);
 
   // Popup de Agendamento Existente (FA-001)
   const [popupEditarVisible, setPopupEditarVisible] = useState(false);
 
-  const carregarDados = useCallback(async () => {
-    await agendamentoService.listarAgendamentosAtivos();
-
-    // Gerar dias da semana atual (31 de Ago a 06 de Set)
-    const datasExemplo: DiaSemana[] = [
-      { sigla: 'SEG', diaNum: 31, dataIso: '2026-08-31', status: 'disponivel', nomeExtenso: 'Segunda-Feira (31)' },
-      { sigla: 'TER', diaNum: 1, dataIso: '2026-09-01', status: 'disponivel', nomeExtenso: 'Terça-Feira (01)' },
-      { sigla: 'QUA', diaNum: 2, dataIso: '2026-09-02', status: 'disponivel', nomeExtenso: 'Quarta-Feira (02)' },
-      { sigla: 'QUI', diaNum: 3, dataIso: '2026-09-03', status: 'agendado', nomeExtenso: 'Quinta-Feira (03)' },
-      { sigla: 'SEX', diaNum: 4, dataIso: '2026-09-04', status: 'disponivel', nomeExtenso: 'Sexta-Feira (04)' },
-      { sigla: 'SÁB', diaNum: 5, dataIso: '2026-09-05', status: 'indisponivel', nomeExtenso: 'Sábado (05)' },
-      { sigla: 'DOM', diaNum: 6, dataIso: '2026-09-06', status: 'feriado', nomeExtenso: 'Domingo (06)' },
-    ];
-
-    setDias(datasExemplo);
-    // Pré-selecionar os disponíveis por padrão
-    const disponiveis = datasExemplo.filter(d => d.status === 'disponivel').map(d => d.dataIso);
-    setDiasSelecionados(disponiveis);
-  }, []);
-
   useEffect(() => {
-    carregarDados();
-  }, [carregarDados]);
+    let mounted = true;
+    agendamentoService.listarAgendamentosAtivos().catch(() => {
+      if (!mounted) return;
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleToggleDia = (dia: DiaSemana) => {
     if (dia.status === 'indisponivel' || dia.status === 'feriado') return;

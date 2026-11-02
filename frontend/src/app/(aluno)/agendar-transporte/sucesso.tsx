@@ -15,7 +15,7 @@ export default function AgendamentoSucessoScreen() {
     if (params.agendamentosJson) {
       agendamentos = JSON.parse(params.agendamentosJson);
     }
-  } catch (_err) {
+  } catch {
     agendamentos = [];
   }
 

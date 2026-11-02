@@ -111,7 +111,7 @@ export default function ConfigurarAgendamentoScreen() {
           pathname: '/(aluno)/agendar-transporte/sucesso',
           params: { agendamentosJson: JSON.stringify(novaLista) },
         } as any);
-      } catch (_err) {
+      } catch {
         setIsLoading(false);
         setSnackbarMessage('Agendamento realizado com sucesso!');
         setSnackbarVisivel(true);
