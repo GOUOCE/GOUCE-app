@@ -3,18 +3,28 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
+const isPrivateHost = (host: string) =>
+  host === 'localhost' ||
+  host === '127.0.0.1' ||
+  host === '10.0.2.2' ||
+  /^192\.168\.\d{1,3}\.\d{1,3}$/.test(host) ||
+  /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host) ||
+  /^172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}$/.test(host);
+
 const getBaseUrl = () => {
+  const envUrl = process.env.EXPO_PUBLIC_API_URL;
   const hostUri = Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost;
+
+  // Só usa o host do Metro quando ele é um IP de rede local. Em modo túnel
+  // (exp.direct/ngrok) esse host não expõe a porta 8000, então caímos no env.
   if (hostUri) {
     const hostIp = hostUri.split(':')[0];
-    if (hostIp && hostIp !== 'localhost' && hostIp !== '127.0.0.1') {
-      const url = `http://${hostIp}:8000`;
-      return url;
+    if (isPrivateHost(hostIp) && hostIp !== '10.0.2.2') {
+      return `http://${hostIp}:8000`;
     }
   }
 
-  const envUrl = process.env.EXPO_PUBLIC_API_URL;
-  if (envUrl && !envUrl.includes('ngrok')) {
+  if (envUrl) {
     return envUrl;
   }
 
