@@ -2,12 +2,15 @@ import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, Surface, useTheme, Button } from 'react-native-paper';
 import { CalendarPlus, ClipboardList, Megaphone, Contact } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+
 import { useAuth } from '@contexts/AuthContext';
 import { QuickAction } from '@/components/dashboard/QuickAction';
 
 export default function StudentHomeScreen() {
   const theme = useTheme();
   const { user } = useAuth();
+  const router = useRouter();
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
@@ -23,12 +26,12 @@ export default function StudentHomeScreen() {
         <Text variant="titleMedium" style={styles.sectionTitle}>Sua viagem hoje</Text>
         <Surface style={styles.tripCard} elevation={1}>
           <View style={styles.tripInfo}>
-            <Text variant="titleMedium" style={styles.busName}>Ônibus 04 - Placa OCR-1234</Text>
-            <Text variant="bodyMedium" style={styles.routeDetails}>Rota Centro → UFC | Saída 06:40</Text>
+            <Text variant="titleMedium" style={styles.busName}>Ônibus 01 - Placa QXD2E46</Text>
+            <Text variant="bodyMedium" style={styles.routeDetails}>Rota Centro → UFC | Saída 05:30</Text>
           </View>
           <Button
             mode="contained"
-            onPress={() => {}}
+            onPress={() => router.push('/(aluno)/agenda' as any)}
             style={styles.detailsBtn}
             buttonColor="#3e5f90"
           >
@@ -41,10 +44,26 @@ export default function StudentHomeScreen() {
       <View style={styles.section}>
         <Text variant="titleMedium" style={styles.sectionTitle}>Acesso Rápido</Text>
         <View style={styles.actionGrid}>
-          <QuickAction title="Agendar Transporte" Icone={CalendarPlus} />
-          <QuickAction title="Meus Agendamentos" Icone={ClipboardList} />
-          <QuickAction title="Mural de Avisos" Icone={Megaphone} />
-          <QuickAction title="Carteirinha Digital" Icone={Contact} />
+          <QuickAction
+            title="Agendar Transporte"
+            Icone={CalendarPlus}
+            onPress={() => router.push('/(aluno)/agendar-transporte' as any)}
+          />
+          <QuickAction
+            title="Meus Agendamentos"
+            Icone={ClipboardList}
+            onPress={() => router.push('/(aluno)/agenda' as any)}
+          />
+          <QuickAction
+            title="Mural de Avisos"
+            Icone={Megaphone}
+            onPress={() => router.push('/(aluno)/avisos' as any)}
+          />
+          <QuickAction
+            title="Carteirinha Digital"
+            Icone={Contact}
+            onPress={() => router.push('/(aluno)/carteirinha-digital' as any)}
+          />
         </View>
       </View>
     </ScrollView>
