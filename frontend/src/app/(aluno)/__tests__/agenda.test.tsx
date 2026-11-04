@@ -12,6 +12,22 @@ jest.mock('expo-router', () => ({
   useFocusEffect: (cb: any) => cb(),
 }));
 
+jest.mock('react-native-paper', () => ({
+  Text: 'Text',
+  Surface: 'Surface',
+  Snackbar: 'Snackbar',
+  Button: 'Button',
+}));
+
+jest.mock('lucide-react-native', () => ({
+  ChevronLeft: 'ChevronLeft',
+  ChevronRight: 'ChevronRight',
+  ChevronDown: 'ChevronDown',
+  Pencil: 'Pencil',
+  Trash2: 'Trash2',
+  X: 'X',
+}));
+
 jest.mock('@/services/agendamentoService', () => ({
   agendamentoService: {
     listarAgendamentosAtivos: jest.fn(),
