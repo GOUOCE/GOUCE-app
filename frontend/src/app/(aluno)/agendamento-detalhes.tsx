@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, Surface } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -15,14 +15,14 @@ export default function AgendamentoDetalhesScreen() {
 
   const [detalhes, setDetalhes] = useState<DetalhesViagemResponse | null>(null);
 
-  useEffect(() => {
-    carregarDetalhes();
-  }, [dataIso]);
-
-  const carregarDetalhes = async () => {
+  const carregarDetalhes = useCallback(async () => {
     const dados = await agendamentoService.obterDetalhesViagem(dataIso, temComplementar);
     setDetalhes(dados);
-  };
+  }, [dataIso, temComplementar]);
+
+  useEffect(() => {
+    carregarDetalhes();
+  }, [carregarDetalhes]);
 
   if (!detalhes) return null;
 
