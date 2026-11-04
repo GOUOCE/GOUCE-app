@@ -66,7 +66,7 @@ const DIAS_DO_MES: DiaCalendario[] = [
 export default function MeusAgendamentosScreen() {
   const router = useRouter();
 
-  const [agendamentos, setAgendamentos] = useState<AgendamentoDia[]>(AGENDAMENTOS_DEMO);
+  const [agendamentos, setAgendamentos] = useState<AgendamentoDia[]>([]);
   const [diaSelecionado, setDiaSelecionado] = useState<DiaCalendario | null>(null);
 
   // Modais de Ação e Confirmação
