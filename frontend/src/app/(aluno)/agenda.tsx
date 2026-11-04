@@ -81,9 +81,7 @@ export default function MeusAgendamentosScreen() {
   const carregarAgendamentos = useCallback(async () => {
     try {
       const lista = await agendamentoService.listarAgendamentosAtivos();
-      if (lista && lista.length > 0) {
-        setAgendamentos(lista);
-      }
+      setAgendamentos(lista || []);
     } catch {
       // Mantem lista inicial sem quebrar UI
     }
