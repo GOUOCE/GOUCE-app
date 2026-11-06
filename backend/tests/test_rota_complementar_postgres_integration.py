@@ -331,8 +331,8 @@ class RotaComplementarPostgreSQLIntegrationTest(unittest.TestCase):
         aplicadas = {r.revision for r in script.walk_revisions(base="base", head=revision)}
         self.assertIn("77_create_rota_complementar", aplicadas)
         self.assertIn("76_ponto_unico_por_bairro", aplicadas)
-        # A 78 une as duas heads da develop (#318)
-        self.assertEqual(script.get_heads(), ["78_horario_retorno_rota_complementar"])
+        # A 78 une as duas heads da develop (#318); 79 is the current head.
+        self.assertEqual(script.get_heads(), ["79_create_agendamentos"])
         coluna = next(
             c for c in inspector.get_columns("rota_complementar") if c["name"] == "horario_retorno"
         )
@@ -544,7 +544,7 @@ class RotaComplementarPostgreSQLIntegrationTest(unittest.TestCase):
 class Migration77PostgreSQLTest(unittest.TestCase):
     """Roda downgrade e upgrade da 77 e da 78 no banco isolado e restaura o estado original."""
 
-    HEAD = "78_horario_retorno_rota_complementar"
+    HEAD = "79_create_agendamentos"
 
     def setUp(self):
         self.config = Config()
