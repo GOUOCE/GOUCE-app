@@ -437,6 +437,8 @@ class RotaPrincipalRepository:
         return {
             "id": faculdade.id_faculdade,
             "nome": faculdade.nome_faculdade,
+            # As telas mostram "SIGLA - Campus" no campo fechado (#344)
+            "sigla": faculdade.sigla,
             "campus": faculdade.campus_faculdade,
         }
 

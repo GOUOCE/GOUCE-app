@@ -9,6 +9,7 @@ import { api } from '../../api/api';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 import { formatarCelular } from '../../utils/formatarTelefone';
 import { calcularStatusAluno } from '../../utils/statusAluno';
+import { formatarInstituicao } from '../../utils/formatarInstituicao';
 
 export default function PerfilScreen() {
   const theme = useTheme();
@@ -25,7 +26,7 @@ export default function PerfilScreen() {
             name: perfilApi.nome || perfilApi.nome_completo,
             email: perfilApi.email,
             telefone: perfilApi.telefone,
-            faculdade: perfilApi.faculdade_id,
+            faculdade: formatarInstituicao(perfilApi),
             bairro: perfilApi.bairro_id,
             curso: perfilApi.curso,
             periodo_ingresso: perfilApi.periodo_ingresso,
@@ -146,7 +147,7 @@ export default function PerfilScreen() {
             </View>
             <View style={styles.infoItem}>
               <Text variant="labelSmall" style={styles.infoLabel}>Instituição - Campus</Text>
-              <Text variant="bodyMedium" style={styles.infoValue}>{user?.faculdade || 'UFC - Campus Quixadá'}</Text>
+              <Text variant="bodyMedium" style={styles.infoValue}>{user?.faculdade || '-'}</Text>
             </View>
             <View style={styles.infoItem}>
               <Text variant="labelSmall" style={styles.infoLabel}>Curso</Text>

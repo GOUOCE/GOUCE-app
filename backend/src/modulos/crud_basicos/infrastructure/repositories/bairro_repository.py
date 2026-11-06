@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timezone
 from typing import Callable, Optional
 
@@ -8,6 +9,12 @@ from sqlalchemy.orm import Session, selectinload
 from src.modulos.crud_basicos.domain.entities.bairro import BairroORM
 from src.modulos.crud_basicos.domain.entities.ponto_de_parada import (
     PontoDeParadaORM,
+)
+from src.modulos.crud_basicos.infrastructure.repositories.ponto_parada_repository import (
+    PontoDeParadaComRotaAtivaError,
+    PontoDeParadaJaAtivadoError,
+    PontoDeParadaJaDesativadoError,
+    PontoDeParadaNaoEncontradoError,
 )
 from src.shared.infrastructure.audit_model import LogAuditoriaORM
 
@@ -29,6 +36,10 @@ class BairroJaDesativadoError(ValueError):
 
 
 class PontoDeParadaJaCadastradoError(ValueError):
+    pass
+
+
+class UltimoPontoAtivoError(ValueError):
     pass
 
 
@@ -138,6 +149,7 @@ class BairroRepository:
         self,
         nome: str,
         pontos_de_parada: list[str],
+        usuario_executor_id: Optional[int] = None,
     ) -> BairroORM:
         if nome is None:
             raise ValueError("O nome do bairro não pode ser vazio.")
@@ -169,6 +181,14 @@ class BairroRepository:
 
         try:
             self.session.add(bairro)
+            self.session.flush()
+            self._registrar(
+                usuario_executor_id,
+                "CRIAR",
+                bairro.bairro_id,
+                None,
+                self._snapshot(bairro),
+            )
             self.session.commit()
             self.session.refresh(bairro)
 
@@ -183,12 +203,16 @@ class BairroRepository:
             raise BairroJaCadastradoError(
                 "Esta localidade já está cadastrada."
             )
+        except Exception:
+            self.session.rollback()
+            raise
 
     def atualizar(
         self,
         bairro_id: int,
         nome: Optional[str] = None,
         pontos_de_parada: Optional[list[str]] = None,
+        usuario_executor_id: Optional[int] = None,
     ) -> BairroORM:
         bairro = self.buscar_por_id(bairro_id)
 
@@ -196,6 +220,8 @@ class BairroRepository:
             raise BairroNaoEncontradoError(
                 "Bairro não encontrado."
             )
+
+        antes = self._snapshot(bairro)
 
         if nome is not None:
             nome_limpo = str(nome).strip()
@@ -245,6 +271,12 @@ class BairroRepository:
                     )
 
         try:
+            self.session.flush()
+            depois = self._snapshot(bairro)
+            if depois != antes:
+                self._registrar(
+                    usuario_executor_id, "EDITAR", bairro.bairro_id, antes, depois
+                )
             self.session.commit()
             self.session.refresh(bairro)
 
@@ -259,6 +291,9 @@ class BairroRepository:
             raise BairroJaCadastradoError(
                 "Esta localidade já está cadastrada."
             )
+        except Exception:
+            self.session.rollback()
+            raise
 
     def possui_rota_ativa(self, bairro_id: int) -> bool:
         if self._rota_ativa_checker is not None:
@@ -347,3 +382,123 @@ class BairroRepository:
         except Exception:
             self.session.rollback()
             raise
+
+    def ativar_ponto(
+        self,
+        bairro_id: int,
+        ponto_id: int,
+        usuario_executor_id: Optional[int] = None,
+    ) -> BairroORM:
+        return self._alterar_status_ponto(
+            bairro_id, ponto_id, True, usuario_executor_id
+        )
+
+    def inativar_ponto(
+        self,
+        bairro_id: int,
+        ponto_id: int,
+        usuario_executor_id: Optional[int] = None,
+    ) -> BairroORM:
+        return self._alterar_status_ponto(
+            bairro_id, ponto_id, False, usuario_executor_id
+        )
+
+    def _alterar_status_ponto(
+        self,
+        bairro_id: int,
+        ponto_id: int,
+        ativo: bool,
+        usuario_executor_id: Optional[int],
+    ) -> BairroORM:
+        bairro = self.buscar_por_id(bairro_id)
+
+        if not bairro:
+            raise BairroNaoEncontradoError("Bairro não encontrado.")
+
+        ponto = next(
+            (p for p in bairro.pontos_de_parada if p.ponto_id == ponto_id),
+            None,
+        )
+
+        if ponto is None:
+            raise PontoDeParadaNaoEncontradoError(
+                "Ponto de parada não encontrado."
+            )
+
+        if bool(ponto.ativo) == ativo:
+            raise (
+                PontoDeParadaJaAtivadoError("Ponto de parada já está ativado.")
+                if ativo
+                else PontoDeParadaJaDesativadoError(
+                    "Ponto de parada já está desativado."
+                )
+            )
+
+        if not ativo:
+            # A rota vincula bairros: o ponto está em rota ativa quando o bairro está.
+            if self.possui_rota_ativa(bairro_id):
+                raise PontoDeParadaComRotaAtivaError(
+                    "Este ponto de parada não pode ser inativado pois pertence a uma rota ativa. Remova-o da rota antes de continuar."
+                )
+
+            if sum(1 for p in bairro.pontos_de_parada if p.ativo) <= 1:
+                raise UltimoPontoAtivoError(
+                    "O bairro precisa ter ao menos um ponto de parada ativo."
+                )
+
+        ponto.ativo = ativo
+
+        try:
+            self._registrar(
+                usuario_executor_id,
+                "ATIVAR" if ativo else "INATIVAR",
+                ponto_id,
+                "inativo" if ativo else "ativo",
+                "ativo" if ativo else "inativo",
+                entidade="ponto_de_parada",
+            )
+            self.session.commit()
+            self.session.refresh(bairro)
+            return self.buscar_por_id(bairro_id)
+
+        except Exception:
+            self.session.rollback()
+            raise
+
+    def _registrar(
+        self,
+        usuario_id: Optional[int],
+        acao: str,
+        entidade_id: int,
+        valor_anterior: Optional[str],
+        valor_novo: Optional[str],
+        entidade: str = "bairro",
+    ) -> None:
+        self.session.add(
+            LogAuditoriaORM(
+                usuario_id=usuario_id,
+                acao=acao,
+                entidade=entidade,
+                entidade_id=entidade_id,
+                valor_anterior=valor_anterior,
+                valor_novo=valor_novo,
+                criado_em=datetime.now(timezone.utc),
+            )
+        )
+
+    @staticmethod
+    def _snapshot(bairro: BairroORM) -> str:
+        return json.dumps(
+            {
+                "nome": bairro.nome,
+                "pontos_de_parada": [
+                    {"ponto_id": p.ponto_id, "nome": p.nome, "ativo": bool(p.ativo)}
+                    for p in sorted(
+                        bairro.pontos_de_parada,
+                        key=lambda p: (p.ponto_id or 0, p.nome),
+                    )
+                ],
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+        )

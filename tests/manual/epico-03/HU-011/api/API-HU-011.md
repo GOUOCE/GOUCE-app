@@ -9,16 +9,16 @@
 | Camada | API |
 | Tipo de teste | Funcional manual — suíte essencial (baseada em risco) |
 | Endpoints | `GET /rotas-principais`, `GET /rotas-principais/opcoes`, `GET /rotas-principais/{id}`, `POST /rotas-principais`, `PATCH /rotas-principais/{id}`, `PATCH /rotas-principais/{id}/inativar` e `PATCH /rotas-principais/{id}/reativar` — `application/json`. Corpo: `{"nome": "...", "horario_saida": "HH:MM", "horario_retorno": "HH:MM", "bairros_ids": [..], "faculdades_ida_ids": [..], "faculdades_volta_ids": [..]}` |
-| Ambiente | A preencher — URL, branch e commit testados (planejado sobre a `develop` `7c3d72d8`) |
+| Ambiente | HTTP local `http://127.0.0.1:18811`; PostgreSQL 15/MinIO QA isolados; branch `feat/front-hu011`, aplicação `671a6e0df3d00016e87477deb326dfdb7c33b364`; plano `939921e3` |
 | Total de casos | 14 |
-| Última execução | Não realizada |
-| Testador | Cauan Ricardo — execução com apoio de IA (Claude Code) |
+| Última execução | 2026-10-27 — HTTP real e consultas ao PostgreSQL; JSONs dos defeitos nas issues |
+| Testador | Cauan Ricardo — execução com apoio do Codex |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 14 | 0 | 0 | 0 | 0 | 14 |
+| ⚠️ Concluída com pendências | 14 | 11 | 1 | 1 | 1 | 0 |
 
 ## Pré-condições
 
@@ -38,20 +38,20 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU011-API-001 | Listar, filtrar e consultar rotas | Sem filtro; `incluir_inativos=true`; `nome`; `GET /{id}`; `/opcoes` | HTTP 200; padrão só ativas; inativas com o filtro; opções só com base ativa | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-002 | Cadastrar rota principal válida | RP1: `Rota Centro - UFC`, 06:30/17:30, B1, F1 na ida e na volta | HTTP 201 “Operação realizada com sucesso”; ativa; vínculos e horários corretos | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-003 | Vários vínculos e volta independente da ida | RP2: B1+B2, ida F1+F2+F3, volta F1; RP3: ida F1+F2, volta F3 | HTTP 201; cada lista gravada como enviada, sem copiar a ida na volta | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-004 | Nome único entre todas as rotas (#208) | Nome igual; maiúsculas/espaços; nome de rota inativa; nome de complementar; edição para nome em uso | HTTP 409; nada criado nem alterado | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-005 | Obrigatórios, listas vazias e limites | Sem cada campo; nome em branco; listas `[]`; nome com 151 caracteres; edição esvaziando lista | HTTP 422 com campo e mensagem em português; nada gravado | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-006 | Formato e ordem dos horários (#208) | `6:30`, `24:00`, `06:60`, `06:30:00`, texto; retorno igual e anterior à saída; 00:00/23:59 | Fora de `HH:MM` ou retorno ≤ saída: 422; sem faixa mínima/máxima | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-007 | Vínculo com bairro ou faculdade inativo ou inexistente | B0; F0 na ida e na volta; id inexistente; ids repetidos; id `0`, negativo e texto | HTTP 422 no campo da lista; nenhuma rota nem vínculo inválido gravado | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-008 | Editar dados e vínculos da rota | RP1: só nome; só horários; trocar listas; `{}`; campo `ativo`; id inexistente | HTTP 200 no mesmo id; 422 sem campo ou com campo extra; 404 inexistente | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-009 | Inativar e reativar (soft delete) | RP2: inativar, repetir, reativar, repetir; id inexistente | HTTP 200 nas válidas; registro e vínculos mantidos; 409 nas repetidas; 404 | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-010 | Bloquear inativação com complementar ativa (#208) | RP1 com RC1 ativa; depois RC1 inativada | HTTP 409 com a mensagem do PO; rota segue ativa; sem RC1 ativa, inativa | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-011 | Bairro e faculdade em rota ativa (#208) | Inativar B1 e F1 usados por RP3 ativa; inativar RP3 e repetir; reativar RP3 | 409 com as mensagens da HU-007 e do PO; liberados com a rota inativa | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-012 | Auditoria das operações de escrita | Operações dos CT-002, 008 e 009; recusas dos CT-004 a 011 | Um registro por escrita efetiva; nenhum para recusa ou edição sem mudança | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-013 | Acesso sem privilégio | Token de aluno; token de representante; sem token | HTTP 403 (aluno e representante) e 401 (sem token) em todas as rotas | ⏳ PENDENTE | Não executado. |
-| CT-HU011-API-014 | Agendamentos futuros e rota inativa no agendamento | Rota com aluno agendado para amanhã; rota inativa na agenda do aluno | HTTP 409 “Esta rota possui agendamentos pendentes e não pode ser inativada no momento.”; inativa fora da agenda | ⏳ PENDENTE | Depende da HU-013. Sem ela, marcar 🚫. |
+| CT-HU011-API-001 | Listar, filtrar e consultar rotas | Sem filtro; `incluir_inativos=true`; `nome`; `GET /{id}`; `/opcoes` | HTTP 200; padrão só ativas; inativas com o filtro; opções só com base ativa | ✅ APROVADO | Lista vazia retornou 200/[]; filtros por nome respeitam maiúsculas/minúsculas, padrão oculta inativas e /opcoes exclui B0/F0. Consulta por id existente/inativo e 404 conferidos.  |
+| CT-HU011-API-002 | Cadastrar rota principal válida | RP1: `Rota Centro - UFC`, 06:30/17:30, B1, F1 na ida e na volta | HTTP 201 “Operação realizada com sucesso”; ativa; vínculos e horários corretos | ✅ APROVADO | RP1 criada ativa, nome normalizado, 06:30/17:30 preservados e os três vínculos conferidos no GET e PostgreSQL.  |
+| CT-HU011-API-003 | Vários vínculos e volta independente da ida | RP2: B1+B2, ida F1+F2+F3, volta F1; RP3: ida F1+F2, volta F3 | HTTP 201; cada lista gravada como enviada, sem copiar a ida na volta | ✅ APROVADO | RP2 gravou dois bairros, três faculdades na ida e uma na volta; RP3 voltou por F3 sem copiá-la da ida. RP1 permaneceu inalterada.  |
+| CT-HU011-API-004 | Nome único entre todas as rotas (#208) | Nome igual; maiúsculas/espaços; nome de rota inativa; nome de complementar; edição para nome em uso | HTTP 409; nada criado nem alterado | ❌ FALHOU | Duplicidades no mesmo tipo foram recusadas, inclusive com case/trim e rota inativa. Porém, criar principal Van Trevo, nome já usado por complementar inativa, retornou 201 e persistiu o nome duplicado entre tabelas; esperado 409. [Evidência na issue](issues/BUG-HU011-API-001-nome-unico-entre-tipos.md) [#309](https://github.com/GOUOCE/GOUCE-app/issues/309) |
+| CT-HU011-API-005 | Obrigatórios, listas vazias e limites | Sem cada campo; nome em branco; listas `[]`; nome com 151 caracteres; edição esvaziando lista | HTTP 422 com campo e mensagem em português; nada gravado | ✅ APROVADO | Obrigatórios, nome em branco/nulo, listas ausentes/vazias, nome 151 e edição esvaziando vínculos foram recusados com 422/campo/mensagem. Controle de 150 aceito e inativado via API após captura.  |
+| CT-HU011-API-006 | Formato e ordem dos horários (#208) | `6:30`, `24:00`, `06:60`, `06:30:00`, texto; retorno igual e anterior à saída; 00:00/23:59 | Fora de `HH:MM` ou retorno ≤ saída: 422; sem faixa mínima/máxima | ✅ APROVADO | Formatos inválidos e retorno igual/anterior recusados; edição parcial usa o horário salvo. 00:00/23:59 e 13:15/13:16 aceitos sem conversão de fuso; controles inativados via API.  |
+| CT-HU011-API-007 | Vínculo com bairro ou faculdade inativo ou inexistente | B0; F0 na ida e na volta; id inexistente; ids repetidos; id `0`, negativo e texto | HTTP 422 no campo da lista; nenhuma rota nem vínculo inválido gravado | ✅ APROVADO | Bairro/faculdade inativos ou inexistentes, IDs repetidos, zero, negativo e string foram recusados com 422. A edição com nome + vínculo inválido permaneceu atômica; nome e vínculos originais preservados.  |
+| CT-HU011-API-008 | Editar dados e vínculos da rota | RP1: só nome; só horários; trocar listas; `{}`; campo `ativo`; id inexistente | HTTP 200 no mesmo id; 422 sem campo ou com campo extra; 404 inexistente | ✅ APROVADO | Nome, horários e listas editados no mesmo id; listas substituíram as antigas. Corpo vazio/campo ativo retornaram 422 e id inexistente 404. RP2/RP3 não mudaram.  |
+| CT-HU011-API-009 | Inativar e reativar (soft delete) | RP2: inativar, repetir, reativar, repetir; id inexistente | HTTP 200 nas válidas; registro e vínculos mantidos; 409 nas repetidas; 404 | ✅ APROVADO | Inativar/reativar retornaram 200; repetições 409 e inexistente 404. Linha e vínculos preservados no PostgreSQL; RP2 foi deixada inativa.  |
+| CT-HU011-API-010 | Bloquear inativação com complementar ativa (#208) | RP1 com RC1 ativa; depois RC1 inativada | HTTP 409 com a mensagem do PO; rota segue ativa; sem RC1 ativa, inativa | ⚠️ PARCIAL | Complementar ativa bloqueou a principal com 409 e sem auditoria da recusa; após inativar a complementar, a principal pôde ser inativada/reativada. Texto diferente do definido pelo PO: “Esta rota possui rotas complementares ativas e não pode ser inativada. Inative ou reassocie as complementares antes.” [Evidência na issue](issues/BUG-HU011-API-002-mensagem-complementar-ativa.md) [#311](https://github.com/GOUOCE/GOUCE-app/issues/311) |
+| CT-HU011-API-011 | Bairro e faculdade em rota ativa (#208) | Inativar B1 e F1 usados por RP3 ativa; inativar RP3 e repetir; reativar RP3 | 409 com as mensagens da HU-007 e do PO; liberados com a rota inativa | ✅ APROVADO | B1 e F3 (somente na volta) protegidos por 409/mensagens corretas; liberados quando não havia rota ativa usando a base. Reativação com base inativa foi recusada. Base, RP1 e RP3 restauradas ativas por API.  |
+| CT-HU011-API-012 | Auditoria das operações de escrita | Operações dos CT-002, 008 e 009; recusas dos CT-004 a 011 | Um registro por escrita efetiva; nenhum para recusa ou edição sem mudança | ✅ APROVADO | Auditados cadastro, edição, inativação e reativação: uma linha por operação efetiva, executor correto, ação/id/data e snapshots de campos/vínculos. Recusas e edição sem mudança não criaram logs.  |
+| CT-HU011-API-013 | Acesso sem privilégio | Token de aluno; token de representante; sem token | HTTP 403 (aluno e representante) e 401 (sem token) em todas as rotas | ✅ APROVADO | As sete operações negaram 403 à conta de aluno e à conta ativa de representante, e 401 sem token; rotas e auditoria preservadas. O login da conta de representante devolve roles legados aluno/supervisor; a evidência registra esse contrato real, não um JWT fabricado nem teste do seletor visual de perfil.  |
+| CT-HU011-API-014 | Agendamentos futuros e rota inativa no agendamento | Rota com aluno agendado para amanhã; rota inativa na agenda do aluno | HTTP 409 “Esta rota possui agendamentos pendentes e não pode ser inativada no momento.”; inativa fora da agenda | 🚫 BLOQUEADO | HU-013 ausente: /openapi.json não expõe endpoints de agendamento e o checker permanece TODO no código. As partes de agenda futura/opções/histórico não foram simuladas nem aprovadas.  |
 
 ## Detalhamento dos casos
 
@@ -76,8 +76,10 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Lista vazia retornou 200/[]; filtros por nome respeitam maiúsculas/minúsculas, padrão oculta inativas e /opcoes exclui B0/F0. Consulta por id existente/inativo e 404 conferidos.
+- 9 chamadas HTTP; 30 verificações registradas. Status observados: 200 (8×), 404 (1×).
+
+- Status: ✅ APROVADO.
 
 ---
 
@@ -100,8 +102,10 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- RP1 criada ativa, nome normalizado, 06:30/17:30 preservados e os três vínculos conferidos no GET e PostgreSQL.
+- 2 chamadas HTTP; 11 verificações registradas. Status observados: 200 (1×), 201 (1×).
+
+- Status: ✅ APROVADO.
 
 ---
 
@@ -127,8 +131,10 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- RP2 gravou dois bairros, três faculdades na ida e uma na volta; RP3 voltou por F3 sem copiá-la da ida. RP1 permaneceu inalterada.
+- 6 chamadas HTTP; 13 verificações registradas. Status observados: 200 (4×), 201 (2×).
+
+- Status: ✅ APROVADO.
 
 ---
 
@@ -157,8 +163,11 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Duplicidades no mesmo tipo foram recusadas, inclusive com case/trim e rota inativa. Porém, criar principal Van Trevo, nome já usado por complementar inativa, retornou 201 e persistiu o nome duplicado entre tabelas; esperado 409.
+- 8 chamadas HTTP; 23 verificações registradas. Status observados: 200 (2×), 201 (1×), 409 (5×).
+- Evidência JSON: [requisição e resposta na issue](issues/BUG-HU011-API-001-nome-unico-entre-tipos.md).
+- Defeito(s): [#309](https://github.com/GOUOCE/GOUCE-app/issues/309).
+- Status: ❌ FALHOU.
 
 ---
 
@@ -191,8 +200,10 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Obrigatórios, nome em branco/nulo, listas ausentes/vazias, nome 151 e edição esvaziando vínculos foram recusados com 422/campo/mensagem. Controle de 150 aceito e inativado via API após captura.
+- 17 chamadas HTTP; 87 verificações registradas. Status observados: 200 (1×), 201 (1×), 422 (15×).
+
+- Status: ✅ APROVADO.
 
 ---
 
@@ -219,8 +230,10 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Formatos inválidos e retorno igual/anterior recusados; edição parcial usa o horário salvo. 00:00/23:59 e 13:15/13:16 aceitos sem conversão de fuso; controles inativados via API.
+- 16 chamadas HTTP; 64 verificações registradas. Status observados: 200 (4×), 201 (2×), 422 (10×).
+
+- Status: ✅ APROVADO.
 
 ---
 
@@ -249,8 +262,10 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Bairro/faculdade inativos ou inexistentes, IDs repetidos, zero, negativo e string foram recusados com 422. A edição com nome + vínculo inválido permaneceu atômica; nome e vínculos originais preservados.
+- 11 chamadas HTTP; 60 verificações registradas. Status observados: 200 (1×), 422 (10×).
+
+- Status: ✅ APROVADO.
 
 ---
 
@@ -280,8 +295,10 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Nome, horários e listas editados no mesmo id; listas substituíram as antigas. Corpo vazio/campo ativo retornaram 422 e id inexistente 404. RP2/RP3 não mudaram.
+- 13 chamadas HTTP; 40 verificações registradas. Status observados: 200 (10×), 404 (1×), 422 (2×).
+
+- Status: ✅ APROVADO.
 
 ---
 
@@ -306,8 +323,10 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Inativar/reativar retornaram 200; repetições 409 e inexistente 404. Linha e vínculos preservados no PostgreSQL; RP2 foi deixada inativa.
+- 8 chamadas HTTP; 18 verificações registradas. Status observados: 200 (5×), 404 (1×), 409 (2×).
+
+- Status: ✅ APROVADO.
 
 ---
 
@@ -330,8 +349,11 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Complementar ativa bloqueou a principal com 409 e sem auditoria da recusa; após inativar a complementar, a principal pôde ser inativada/reativada. Texto diferente do definido pelo PO: “Esta rota possui rotas complementares ativas e não pode ser inativada. Inative ou reassocie as complementares antes.”
+- 6 chamadas HTTP; 11 verificações registradas. Status observados: 200 (4×), 201 (1×), 409 (1×).
+- Evidência JSON: [requisição e resposta na issue](issues/BUG-HU011-API-002-mensagem-complementar-ativa.md).
+- Defeito(s): [#311](https://github.com/GOUOCE/GOUCE-app/issues/311).
+- Status: ⚠️ PARCIAL.
 
 ---
 
@@ -357,8 +379,10 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- B1 e F3 (somente na volta) protegidos por 409/mensagens corretas; liberados quando não havia rota ativa usando a base. Reativação com base inativa foi recusada. Base, RP1 e RP3 restauradas ativas por API.
+- 11 chamadas HTTP; 19 verificações registradas. Status observados: 200 (8×), 409 (3×).
+
+- Status: ✅ APROVADO.
 
 ---
 
@@ -380,8 +404,10 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Auditados cadastro, edição, inativação e reativação: uma linha por operação efetiva, executor correto, ação/id/data e snapshots de campos/vínculos. Recusas e edição sem mudança não criaram logs.
+- 2 chamadas HTTP; 166 verificações registradas. Status observados: 200 (2×).
+
+- Status: ✅ APROVADO.
 
 ---
 
@@ -402,8 +428,10 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- As sete operações negaram 403 à conta de aluno e à conta ativa de representante, e 401 sem token; rotas e auditoria preservadas. O login da conta de representante devolve roles legados aluno/supervisor; a evidência registra esse contrato real, não um JWT fabricado nem teste do seletor visual de perfil.
+- 21 chamadas HTTP; 68 verificações registradas. Status observados: 401 (7×), 403 (14×).
+
+- Status: ✅ APROVADO.
 
 ---
 
@@ -425,8 +453,11 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- HU-013 ausente: /openapi.json não expõe endpoints de agendamento e o checker permanece TODO no código. As partes de agenda futura/opções/histórico não foram simuladas nem aprovadas.
+- 1 chamadas HTTP; 1 verificações registradas. Status observados: 200 (1×).
+
+- Impedimento: HU-013 não implementada nesta versão: sem entidade/endpoints de agendamentos. Não foi criada agenda diretamente no banco e não houve simulação do checker.
+- Status: 🚫 BLOQUEADO.
 
 ## Rastreabilidade
 
@@ -455,13 +486,14 @@ Executar na ordem abaixo. São **14 casos essenciais**. Todas as chamadas usam o
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-HU011-API-004 | [HU-011/HU-012: nome de rota já usado no outro tipo é aceito com 201](issues/BUG-HU011-API-001-nome-unico-entre-tipos.md) | [#309](https://github.com/GOUOCE/GOUCE-app/issues/309) |
+| CT-HU011-API-010 | [HU-011/HU-012: bloqueio por complementar ativa usa mensagem diferente da aprovada pelo PO](issues/BUG-HU011-API-002-mensagem-complementar-ativa.md) | [#311](https://github.com/GOUOCE/GOUCE-app/issues/311) |
 
 ## Observações gerais
 
 - Referências: [HU-011, seção 7.4.1](../../../../../docs/requisitos.md), [cenários BDD](../../../../../bdd/features/epico-03/HU-011.feature), [decisões do PO (#208)](https://github.com/GOUOCE/GOUCE-app/issues/208), [decisões do épico 02 (#207)](https://github.com/GOUOCE/GOUCE-app/issues/207) e [suíte de UI](../ui/UI-HU-011.md).
 - **O que mudou desde o planejamento anterior** (base `5554bc90`, 24/10/2026): o PO respondeu a #208 e confirmou todas as sugestões; os requisitos passaram a listar só ativas com a chave “Mostrar inativos”, auditoria das quatro operações, nome obrigatório e a mensagem de bloqueio por agendamentos; e o backend de rotas entrou na `develop`. Os casos agora usam o contrato real e as regras decididas, sem “a confirmar”.
-- **Riscos mapeados no código** (backend em `backend/src/modulos/rotas/`, `develop` `7c3d72d8`), que orientaram a escolha dos casos:
+- **Riscos mapeados no planejamento (histórico; resultados reproduzidos acima)** (backend em `backend/src/modulos/rotas/`, `develop` `7c3d72d8`), que orientaram a escolha dos casos:
   - o nome é conferido só entre **rotas principais**; uma principal com o nome de uma complementar é aceita, o que contraria o item 1 da #208 (CT-004);
   - a mensagem de bloqueio por complementar ativa é “Esta rota possui rotas complementares ativas e não pode ser inativada. Inative ou reassocie as complementares antes.”, diferente do texto definido pelo PO (CT-010);
   - a checagem de agendamentos futuros sempre responde “sem agendamentos” até a HU-013 existir (`TODO(HU-013)` no repository): o bloqueio do AC-06 nunca dispara hoje (CT-014);

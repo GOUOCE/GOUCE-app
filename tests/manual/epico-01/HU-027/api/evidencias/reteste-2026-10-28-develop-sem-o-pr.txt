@@ -1,0 +1,121 @@
+== PREPARAÇÃO ==
+admin logado; id no banco: 1
+faculdade: 201
+ids: {'A1': 2, 'A2': 3, 'A3': 4, 'A4': 5, 'AP': 6}
+
+== CT-HU027-API-004 — notificar o aluno da aprovação (#313) ==
+  [OK ] aprovar A1 por /aprovar
+         esperado: 200 ativado
+         obtido  : 200 {"aluno_id": 2, "status_cadastro": "ativado", "mensagem": "Cadastro do aluno aprovado com sucesso!"}
+  [OK ] e-mail de aprovação do A1 no Mailpit
+         esperado: 1 e-mail 'Cadastro aprovado - GOUCE'
+         obtido  : [('Cadastro aprovado - GOUCE', 'Cadastro aprovado! Olá Zuleide Ramos Costa, Seu cadastro no GOUCE foi aprovado! Você já pode acessar a platafo')]
+  [OK ] aprovar AP por /status (ativado) também avisa
+         esperado: 200 + 1 e-mail
+         obtido  : 200; [('Cadastro aprovado - GOUCE', 'Cadastro aprovado! Olá Pedro Aprovado Silva, Seu cadastro no GOUCE foi aprovado! Você já pode acessar a plataf')]
+
+== CT-HU027-API-005 — reprovar com motivo por documento (controle) ==
+  [OK ] reprovar A2
+         esperado: 200 rejeitado com os 2 documentos
+         obtido  : 200 {"aluno_id": 3, "status_cadastro": "rejeitado", "motivo_reprovacao": "Cadastro com dados inconsistentes.", "documentos_reenvio": [{"tipo": "comprovante_matricula", "motivo": "Documento ilegível."}, {"tipo": "comprovante_residencia
+  [OK ] e-mail de reprovação do A2
+         esperado: 1 e-mail de documentos pendentes
+         obtido  : [('Documentos pendentes para reenvio - GOUCE', 'Documentos pendentes de reenvio Olá Bruno Alves Lima, Foram identificados documentos do seu cadastro que preci')]
+
+== CT-HU027-API-006 — validações da reprovação (#314, #317) ==
+  [ERRO] 1 sem motivo e sem documentos
+         esperado: 422 success/error, texto em português, aluno segue pendente
+         obtido  : 422 [] | pendente |
+  [ERRO] 2 motivo geral '   ' e sem documentos
+         esperado: 422 success/error, texto em português, aluno segue pendente
+         obtido  : 422 [] | pendente |
+  [ERRO] 3a documento com motivo ''
+         esperado: 422 success/error, texto em português, aluno segue pendente
+         obtido  : 422 [] | pendente |
+  [ERRO] 3b documento com motivo '   ' sem motivo geral
+         esperado: 422 success/error, texto em português, aluno segue pendente
+         obtido  : 422 [] | pendente |
+  [ERRO] 3c motivo geral válido + documento com motivo '   '
+         esperado: 422 success/error, texto em português, aluno segue pendente
+         obtido  : 200 [] | rejeitado |
+  [ERRO] 4 tipo 'rg'
+         esperado: 422 success/error, texto em português, aluno segue pendente
+         obtido  : 422 [] | pendente |
+  [ERRO] 5 motivo geral com 256 caracteres
+         esperado: 422 success/error, texto em português, aluno segue pendente
+         obtido  : 422 [] | pendente |
+
+== CT-HU027-API-007 — avaliar quem não está na fila (#315) ==
+  [ERRO] 1a aprovar AP (já ativo)
+         esperado: HTTP 409 com mensagem clara, sem e-mail
+         obtido  : 200 {"aluno_id": 6, "status_cadastro": "ativado", "mensagem": "Cadastro do aluno aprovado com sucesso!"} | e-mails: 1
+  [ERRO] 1b reprovar AP (já ativo)
+         esperado: HTTP 409 com mensagem clara, sem e-mail
+         obtido  : 200 {"aluno_id": 6, "status_cadastro": "rejeitado", "motivo_reprovacao": "Cadastro com dados inconsistentes.", "documentos_reenvio": [{"tipo": "comprovante_matricula", "motivo": "Ilegível."}], "mensagem": "Documentos rejeitados e marc | e-mails: 1
+  [ERRO] 2 aprovar A2 (rejeitado, sem reenvio)
+         esperado: HTTP 409 com mensagem clara, sem e-mail
+         obtido  : 200 {"aluno_id": 3, "status_cadastro": "ativado", "mensagem": "Cadastro do aluno aprovado com sucesso!"} | e-mails: 1
+  [ERRO] 3 aprovar A1 de novo
+         esperado: HTTP 409 com mensagem clara, sem e-mail
+         obtido  : 200 {"aluno_id": 2, "status_cadastro": "ativado", "mensagem": "Cadastro do aluno aprovado com sucesso!"} | e-mails: 1
+  [ERRO] 3b aprovar A1 de novo por /status
+         esperado: HTTP 409 com mensagem clara, sem e-mail
+         obtido  : 200 {"aluno_id": 2, "status_cadastro": "ativado", "motivo_reprovacao": null, "documentos_reenvio": null, "mensagem": "Cadastro do aluno aprovado com sucesso!"} | e-mails: 1
+  [OK ] 4 aluno 999999
+         esperado: HTTP 404 com mensagem clara, sem e-mail
+         obtido  : 404 {"detail": "Aluno não encontrado"} | e-mails: 0
+  [ERRO] status e validade de AP, A1 e A2 intactos
+         esperado: {'AP': '6 | ativado | 2027-04-28 16:25:31.917783+00', 'A1': '2 | ativado | 2027-04-28 16:25:29.833735+00', 'A2': '3 | rejeitado |'}
+         obtido  : {'AP': '6 | rejeitado | 2027-04-28 16:25:36.976192+00', 'A1': '2 | ativado | 2027-04-28 16:25:41.391921+00', 'A2': '3 | ativado | 2027-04-28 16:25:39.190212+00'}
+  [ERRO] nenhum registro de auditoria para as recusas
+         esperado: 4
+         obtido  : 9
+
+== CT-HU027-API-008 — aluno consegue corrigir depois da reprovação (#314) ==
+  [OK ] reprovar A3 só com motivo geral
+         esperado: 422, A3 continua pendente
+         obtido  : 422 {"detail": [{"type": "value_error", "loc": ["body"], "msg": "Value error, documentos_reenvio é obrigatório quando status_cadastro é rejeitado.", "input": {"status_cadastro": "rejeitado", "motivo_reprovacao": "Cadastro com dados in | 4 | pendente |
+  [ERRO] atalho do 3c: documento com motivo em branco
+         esperado: 422, A4 continua pendente
+         obtido  : 200 | 5 | rejeitado |
+  [OK ] reprovar A3 com 1 documento válido
+         esperado: 200 rejeitado
+         obtido  : 200 {"aluno_id": 4, "status_cadastro": "rejeitado", "motivo_reprovacao": "Cadastro com dados inconsistentes.", "documentos_reenvio": [{"tipo": "comprovante_matricula", "motivo": "Ilegível."}], "mensagem": "Documentos rejeitados e marc
+  [OK ] A3 vê o documento a reenviar
+         esperado: 200 com 1 documento (motivo sem espaços nas pontas)
+         obtido  : 200 {"documentos": [{"tipo": "comprovante_matricula", "motivo": "Ilegível."}]}
+
+== CT-HU027-API-009 — auditoria (#316) ==
+2 | 2 | UPDATE_STATUS | 2 | ativado | ativado
+3 | 6 | UPDATE_STATUS | 6 | ativado | ativado
+4 | 3 | UPDATE_STATUS | 3 | rejeitado | rejeitado
+5 | 5 | UPDATE_STATUS | 5 | rejeitado | rejeitado
+6 | 6 | UPDATE_STATUS | 6 | ativado | ativado
+7 | 6 | UPDATE_STATUS | 6 | rejeitado | rejeitado
+8 | 3 | UPDATE_STATUS | 3 | ativado | ativado
+9 | 2 | UPDATE_STATUS | 2 | ativado | ativado
+10 | 2 | UPDATE_STATUS | 2 | ativado | ativado
+11 | 5 | UPDATE_STATUS | 5 | rejeitado | rejeitado
+12 | 4 | UPDATE_STATUS | 4 | rejeitado | rejeitado
+  [ERRO] um registro por avaliação efetiva, autor = admin (id 1), anterior e novo corretos
+         esperado: [(2, 'admin=1', 'pendente', 'ativado'), (6, 'admin=1', 'pendente', 'ativado'), (3, 'admin=1', 'pendente', 'rejeitado'), (4, 'admin=1', 'pendente', 'rejeitado')]
+         obtido  : 11 registros
+
+== RESUMO ==
+9/25 verificações OK
+  FALHOU: 006 1 sem motivo e sem documentos
+  FALHOU: 006 2 motivo geral '   ' e sem documentos
+  FALHOU: 006 3a documento com motivo ''
+  FALHOU: 006 3b documento com motivo '   ' sem motivo geral
+  FALHOU: 006 3c motivo geral válido + documento com motivo '   '
+  FALHOU: 006 4 tipo 'rg'
+  FALHOU: 006 5 motivo geral com 256 caracteres
+  FALHOU: 007 1a aprovar AP (já ativo)
+  FALHOU: 007 1b reprovar AP (já ativo)
+  FALHOU: 007 2 aprovar A2 (rejeitado, sem reenvio)
+  FALHOU: 007 3 aprovar A1 de novo
+  FALHOU: 007 3b aprovar A1 de novo por /status
+  FALHOU: 007 status e validade de AP, A1 e A2 intactos
+  FALHOU: 007 nenhum registro de auditoria para as recusas
+  FALHOU: 008 atalho do 3c: documento com motivo em branco
+  FALHOU: 009 um registro por avaliação efetiva, autor = admin (id 1), anterior e novo corretos

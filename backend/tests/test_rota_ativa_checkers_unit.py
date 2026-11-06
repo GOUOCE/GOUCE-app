@@ -189,7 +189,7 @@ class FaculdadeComCheckerTest(unittest.TestCase):
     def repositorio(self, resultado_do_checker):
         self.checker = MagicMock(return_value=resultado_do_checker)
         repo = FaculdadeRepository(self.session, rota_ativa_checker=self.checker)
-        for nome, retorno in (("buscar_por_id", self.entidade), ("existe_por_nome_e_campus", False)):
+        for nome, retorno in (("_buscar_para_atualizar", self.entidade), ("existe_por_nome_e_campus", False)):
             patcher = patch.object(repo, nome, return_value=retorno)
             self.addCleanup(patcher.stop)
             patcher.start()

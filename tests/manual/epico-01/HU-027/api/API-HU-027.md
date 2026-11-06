@@ -10,15 +10,19 @@
 | Tipo de teste | Funcional manual — suíte essencial (baseada em risco) |
 | Endpoints | `GET /usuarios/alunos?status=&ordem=` (fila), `GET /alunos/{id}` (detalhes), `GET /arquivos/{id}/view` (documento), `PATCH /usuarios/alunos/{id}/aprovar` e `PATCH /usuarios/alunos/{id}/status` — `application/json`. Corpo da reprovação: `{"status_cadastro": "rejeitado", "motivo_reprovacao": "...", "documentos_reenvio": [{"tipo": "comprovante_matricula", "motivo": "..."}]}` |
 | Ambiente | Branch `feature/testes-api-hu-027-hu-031` — Docker local isolado (projeto `atu-api`), `http://localhost:8001`, Mailpit em `http://localhost:58025`, `develop` no commit `4bf26d55`, com o contorno das migrations descrito nas [observações](#observações-gerais) |
+| Ambiente do reteste | Branch `fix/issues-hu027-313-317` ([PR #327](https://github.com/GOUOCE/GOUCE-app/pull/327)), a partir da `develop` `e68f88e7` — Docker local isolado (projeto `hu027fix`), `http://localhost:8001`, Mailpit em `http://localhost:58025`, banco novo e **sem** contorno de migrations (a `develop` agora tem uma head só) |
 | Total de casos | 10 |
-| Última execução | 27/10/2026 |
+| Última execução | 27/10/2026 (execução) · 28/10/2026 (reteste dos defeitos) |
 | Testador | Cauan Ricardo — execução com apoio de IA (Claude Code) |
 
 ## Resultado geral
 
-| Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ❌ Reprovada | 10 | 5 | 5 | 0 | 0 | 0 |
+| Execução | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 27/10/2026 — execução | ❌ Reprovada | 10 | 5 | 5 | 0 | 0 | 0 |
+| 28/10/2026 — reteste ([PR #327](https://github.com/GOUOCE/GOUCE-app/pull/327)) | ✅ Aprovada | 10 | 10 | 0 | 0 | 0 | 0 |
+
+Histórico: na execução de 27/10 falharam os CT-004, 006, 007, 008 e 009. No reteste de 28/10, depois das correções, os cinco passaram (o registro de cada falha continua nas colunas e seções de 27/10). Os CT-001 e CT-002 não foram reexecutados, porque o PR não altera a fila nem os detalhes, e valem os ✅ de 27/10. Detalhes por caso na coluna **Reteste (28/10)** e nas seções abaixo.
 
 ## Pré-condições
 
@@ -34,18 +38,18 @@
 
 Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o token do administrador A, exceto onde indicado.
 
-| ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
-| --- | --- | --- | --- | --- | --- |
-| CT-HU027-API-001 | Fila de solicitações pendentes | `status=pendente` com e sem `ordem=asc`; `status=xyz` | Só pendentes, do envio mais antigo para o mais recente; status inválido recusado | ✅ PASSOU | Fila só com pendentes, do envio mais antigo para o mais recente, com e sem `ordem`; `xyz` dá 400. |
-| CT-HU027-API-002 | Dados e documentos do aluno | `GET /alunos/{A1}`; `GET /arquivos/{id}/view` dos comprovantes; id inexistente | Dados pessoais e acadêmicos completos; documentos abrem; 404 | ✅ PASSOU | Dados completos, os dois PDFs abrem, 404 para inexistente; sem senha nem token. |
-| CT-HU027-API-003 | Aprovar solicitação | `PATCH /usuarios/alunos/{A1}/aprovar` | HTTP 200; status `ativado`; sai da fila; aluno consegue logar | ✅ PASSOU | 200; A1 `ativado`, fora da fila, login OK e validade de 6 meses. |
-| CT-HU027-API-004 | Notificar o aluno da aprovação | Caixa do A1 no Mailpit depois do CT-003 | E-mail informando a liberação do acesso | ❌ FALHOU | Nenhum e-mail ao A1; o SMTP funciona (o e-mail da reprovação chegou). [BUG-HU027-API-001](issues/BUG-HU027-API-001-aprovacao-nao-notifica-o-aluno.md) · [#313](https://github.com/GOUOCE/GOUCE-app/issues/313) |
-| CT-HU027-API-005 | Reprovar com motivo por documento | A2: matrícula e residência com motivos diferentes | HTTP 200; status `rejeitado`; motivos gravados; sai da fila; e-mail com cada motivo | ✅ PASSOU | 200; motivos por documento gravados; A2 fora da fila; e-mail com cada motivo. |
-| CT-HU027-API-006 | Motivo obrigatório na reprovação | Sem motivo; motivo em branco; tipo inválido; 256 caracteres | Recusado com mensagem clara; status do aluno não muda | ❌ FALHOU | Bloqueia os 6 itens planejados, mas aceita documento com motivo só de espaços e o descarta; 3 recusas em inglês. [BUG-002](issues/BUG-HU027-API-002-reprovacao-aceita-documento-com-motivo-em-branco.md) · [#314](https://github.com/GOUOCE/GOUCE-app/issues/314), [BUG-005](issues/BUG-HU027-API-005-mensagens-de-validacao-em-ingles.md) · [#317](https://github.com/GOUOCE/GOUCE-app/issues/317) |
-| CT-HU027-API-007 | Avaliar quem não está na fila | Aprovar/reprovar aluno já ativo, já rejeitado e inexistente; repetir a aprovação | Recusado (fora da fila) ou 404; nada alterado | ❌ FALHOU | Aprovou e reprovou o AP ativo, aprovou o A2 rejeitado e renovou a validade do A1. [BUG-HU027-API-003](issues/BUG-HU027-API-003-avaliacao-aceita-aluno-fora-da-fila.md) · [#315](https://github.com/GOUOCE/GOUCE-app/issues/315) |
-| CT-HU027-API-008 | Reprovação deixa o aluno conseguir corrigir | A3 reprovado só com `motivo_reprovacao`, sem documentos | Recusado, ou o aluno recebe ao menos um documento para reenviar | ❌ FALHOU | Sem documento é recusado (422), mas pelo atalho do CT-006 o A3 fica rejeitado sem nada para reenviar. [BUG-HU027-API-002](issues/BUG-HU027-API-002-reprovacao-aceita-documento-com-motivo-em-branco.md) · [#314](https://github.com/GOUOCE/GOUCE-app/issues/314) |
-| CT-HU027-API-009 | Auditoria da avaliação | Operações dos CT-003, 005 e 007 | Um registro por avaliação, com o administrador, status anterior e novo | ❌ FALHOU | Os 13 registros gravam o id do aluno como usuário e o status anterior igual ao novo. [BUG-HU027-API-004](issues/BUG-HU027-API-004-auditoria-grava-o-aluno-e-o-status-errado.md) · [#316](https://github.com/GOUOCE/GOUCE-app/issues/316) |
-| CT-HU027-API-010 | Acesso sem privilégio | Token de aluno, de representante e sem token | 403 (aluno e representante) e 401 (sem token); nada alterado | ✅ PASSOU | 403 para aluno e representante, 401 sem token; documento de outro aluno dá 404; A4 segue pendente. |
+| ID | Cenário | Dados de entrada | Resultado esperado | Status (27/10) | Observações (27/10) | Reteste (28/10) |
+| --- | --- | --- | --- | --- | --- | --- |
+| CT-HU027-API-001 | Fila de solicitações pendentes | `status=pendente` com e sem `ordem=asc`; `status=xyz` | Só pendentes, do envio mais antigo para o mais recente; status inválido recusado | ✅ PASSOU | Fila só com pendentes, do envio mais antigo para o mais recente, com e sem `ordem`; `xyz` dá 400. | ➖ Não reexecutado (o PR não altera a fila); vale o ✅ de 27/10. |
+| CT-HU027-API-002 | Dados e documentos do aluno | `GET /alunos/{A1}`; `GET /arquivos/{id}/view` dos comprovantes; id inexistente | Dados pessoais e acadêmicos completos; documentos abrem; 404 | ✅ PASSOU | Dados completos, os dois PDFs abrem, 404 para inexistente; sem senha nem token. | ➖ Não reexecutado (o PR não altera os detalhes); vale o ✅ de 27/10. |
+| CT-HU027-API-003 | Aprovar solicitação | `PATCH /usuarios/alunos/{A1}/aprovar` | HTTP 200; status `ativado`; sai da fila; aluno consegue logar | ✅ PASSOU | 200; A1 `ativado`, fora da fila, login OK e validade de 6 meses. | ➖ A aprovação (HTTP 200, `ativado`) foi reexecutada como passo do CT-004; login e validade não; vale o ✅ de 27/10. |
+| CT-HU027-API-004 | Notificar o aluno da aprovação | Caixa do A1 no Mailpit depois do CT-003 | E-mail informando a liberação do acesso | ❌ FALHOU | Nenhum e-mail ao A1; o SMTP funciona (o e-mail da reprovação chegou). [BUG-HU027-API-001](issues/BUG-HU027-API-001-aprovacao-nao-notifica-o-aluno.md) · [#313](https://github.com/GOUOCE/GOUCE-app/issues/313) | ✅ PASSOU — o A1 recebe o e-mail “Cadastro aprovado - GOUCE” por `/aprovar` e o AP por `/status`. Correção do [PR #326](https://github.com/GOUOCE/GOUCE-app/pull/326), já na `develop`. [#313](https://github.com/GOUOCE/GOUCE-app/issues/313) fechada. |
+| CT-HU027-API-005 | Reprovar com motivo por documento | A2: matrícula e residência com motivos diferentes | HTTP 200; status `rejeitado`; motivos gravados; sai da fila; e-mail com cada motivo | ✅ PASSOU | 200; motivos por documento gravados; A2 fora da fila; e-mail com cada motivo. | ✅ PASSOU — reexecutado como controle: 200 e e-mail com cada motivo; sem regressão. |
+| CT-HU027-API-006 | Motivo obrigatório na reprovação | Sem motivo; motivo em branco; tipo inválido; 256 caracteres | Recusado com mensagem clara; status do aluno não muda | ❌ FALHOU | Bloqueia os 6 itens planejados, mas aceita documento com motivo só de espaços e o descarta; 3 recusas em inglês. [BUG-002](issues/BUG-HU027-API-002-reprovacao-aceita-documento-com-motivo-em-branco.md) · [#314](https://github.com/GOUOCE/GOUCE-app/issues/314), [BUG-005](issues/BUG-HU027-API-005-mensagens-de-validacao-em-ingles.md) · [#317](https://github.com/GOUOCE/GOUCE-app/issues/317) | ✅ PASSOU — os 7 itens dão `422` em português, por campo e no formato `success/error/details`; o item 3c deixou de passar; A3 e A4 seguem `pendente`. [#314](https://github.com/GOUOCE/GOUCE-app/issues/314) e [#317](https://github.com/GOUOCE/GOUCE-app/issues/317) fechadas. |
+| CT-HU027-API-007 | Avaliar quem não está na fila | Aprovar/reprovar aluno já ativo, já rejeitado e inexistente; repetir a aprovação | Recusado (fora da fila) ou 404; nada alterado | ❌ FALHOU | Aprovou e reprovou o AP ativo, aprovou o A2 rejeitado e renovou a validade do A1. [BUG-HU027-API-003](issues/BUG-HU027-API-003-avaliacao-aceita-aluno-fora-da-fila.md) · [#315](https://github.com/GOUOCE/GOUCE-app/issues/315) | ✅ PASSOU — aluno ativo, rejeitado e aprovação repetida dão `409` com a situação do aluno; status, validade e e-mails intactos; inexistente dá `404`. [#315](https://github.com/GOUOCE/GOUCE-app/issues/315) fechada. |
+| CT-HU027-API-008 | Reprovação deixa o aluno conseguir corrigir | A3 reprovado só com `motivo_reprovacao`, sem documentos | Recusado, ou o aluno recebe ao menos um documento para reenviar | ❌ FALHOU | Sem documento é recusado (422), mas pelo atalho do CT-006 o A3 fica rejeitado sem nada para reenviar. [BUG-HU027-API-002](issues/BUG-HU027-API-002-reprovacao-aceita-documento-com-motivo-em-branco.md) · [#314](https://github.com/GOUOCE/GOUCE-app/issues/314) | ✅ PASSOU — só com motivo geral e com documento em branco dão `422`; com um documento válido dá `200` e o A3 vê o documento para reenviar. [#314](https://github.com/GOUOCE/GOUCE-app/issues/314) fechada. |
+| CT-HU027-API-009 | Auditoria da avaliação | Operações dos CT-003, 005 e 007 | Um registro por avaliação, com o administrador, status anterior e novo | ❌ FALHOU | Os 13 registros gravam o id do aluno como usuário e o status anterior igual ao novo. [BUG-HU027-API-004](issues/BUG-HU027-API-004-auditoria-grava-o-aluno-e-o-status-errado.md) · [#316](https://github.com/GOUOCE/GOUCE-app/issues/316) | ✅ PASSOU — 4 registros, todos com o administrador (id 1) em `usuario_id` e `pendente` como status anterior. [#316](https://github.com/GOUOCE/GOUCE-app/issues/316) fechada. |
+| CT-HU027-API-010 | Acesso sem privilégio | Token de aluno, de representante e sem token | 403 (aluno e representante) e 401 (sem token); nada alterado | ✅ PASSOU | 403 para aluno e representante, 401 sem token; documento de outro aluno dá 404; A4 segue pendente. | ✅ PASSOU nas duas rotas alteradas: sem token `401`, aluno `403`, A4 segue `pendente`. Representante e documento de outro aluno não reexecutados. |
 
 ## Detalhamento dos casos
 
@@ -149,13 +153,21 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 - Um e-mail (ou push) informando que o cadastro foi aprovado e o acesso liberado (AC-04).
 - Se não houver nenhum e-mail, registrar como falha. A rota de aprovação **não chama** o serviço de e-mail no código atual.
 
-**Resultado obtido**
+**Resultado obtido (27/10/2026)**
 
 - Evidência: [`CT-HU027-API-004.json`](evidencias/CT-HU027-API-004.json). A caixa do Mailpit foi limpa logo antes da aprovação do CT-003.
 - Mailpit depois da aprovação: `{"total": 0, "mensagens": []}`. Nenhum e-mail para o A1.
 - Controle: na mesma stack, a reprovação do A2 (CT-005) chegou ao Mailpit. O SMTP funciona; a rota de aprovação é que não chama o serviço de e-mail.
 - Defeito: [BUG-HU027-API-001](issues/BUG-HU027-API-001-aprovacao-nao-notifica-o-aluno.md).
 - Status: ❌ Falhou.
+
+**Reteste (28/10/2026)**
+
+- Evidência: [`reteste-2026-10-28-resultado.txt`](evidencias/reteste-2026-10-28-resultado.txt). Caixa do Mailpit limpa antes da aprovação; banco novo; branch do [PR #327](https://github.com/GOUOCE/GOUCE-app/pull/327).
+- `PATCH /usuarios/alunos/2/aprovar`: HTTP `200` `ativado`. No Mailpit chega **um** e-mail “Cadastro aprovado - GOUCE” para o A1 (“Cadastro aprovado! Olá Zuleide Ramos Costa, Seu cadastro no GOUCE foi aprovado! …”).
+- `PATCH /usuarios/alunos/6/status` com `ativado` (AP): HTTP `200` e o mesmo e-mail para o AP.
+- O envio vem da correção do [PR #326](https://github.com/GOUOCE/GOUCE-app/pull/326), que já estava na `develop`; o [PR #327](https://github.com/GOUOCE/GOUCE-app/pull/327) acrescenta os testes que travam o comportamento, inclusive o de que a falha de envio vira log e não desfaz a aprovação.
+- Status: ✅ Passou. Issue [#313](https://github.com/GOUOCE/GOUCE-app/issues/313) fechada.
 
 ---
 
@@ -177,7 +189,7 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 - E-mail ao A2 listando cada documento com o motivo informado (AC-07).
 - Os comprovantes antigos continuam guardados até o reenvio.
 
-**Resultado obtido**
+**Resultado obtido (27/10/2026)**
 
 - Evidência: [`CT-HU027-API-005.json`](evidencias/CT-HU027-API-005.json).
 - `PATCH /usuarios/alunos/3/status`: HTTP `200`, `status_cadastro` `rejeitado`, `mensagem` “Documentos rejeitados e marcados para reenvio.” e os dois documentos com **os seus próprios motivos**.
@@ -185,6 +197,11 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 - E-mail ao A2 (“Documentos pendentes para reenvio - GOUCE”): lista “Comprovante Matricula: Comprovante de matrícula desatualizado.” e “Comprovante Residencia: Comprovante com mais de 3 meses.”.
 - Banco: `motivo_reprovacao`, `documentos_reenvio` gravados; os ids dos comprovantes continuam os antigos.
 - Observação: o e-mail não traz o motivo geral, e os nomes dos documentos saem sem acento (“Matricula”, “Residencia”).
+- Status: ✅ Passou.
+
+**Reteste (28/10/2026)**
+
+- Reexecutado como controle: `PATCH /usuarios/alunos/3/status` com dois documentos, HTTP `200` `rejeitado`; o e-mail “Documentos pendentes para reenvio - GOUCE” chega ao A2. Sem regressão.
 - Status: ✅ Passou.
 
 ---
@@ -211,7 +228,7 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 - O A3 continua `pendente` e na fila; nenhum e-mail enviado.
 - Registrar o código e o texto de cada recusa.
 
-**Resultado obtido**
+**Resultado obtido (27/10/2026)**
 
 - Evidência: [`CT-HU027-API-006.json`](evidencias/CT-HU027-API-006.json). A3 = id 4.
 - Itens 1, 2 e 3b (sem motivo, motivo geral `"   "`, documento com motivo `"   "` sem motivo geral): HTTP `422` “Value error, motivo_reprovacao é obrigatório quando status_cadastro é rejeitado.”.
@@ -223,6 +240,17 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 - Três das recusas estão em inglês e duas começam com “Value error,”.
 - Defeitos: [BUG-HU027-API-002](issues/BUG-HU027-API-002-reprovacao-aceita-documento-com-motivo-em-branco.md) (item 3c) e [BUG-HU027-API-005](issues/BUG-HU027-API-005-mensagens-de-validacao-em-ingles.md) (mensagens).
 - Status: ❌ Falhou.
+
+**Reteste (28/10/2026)**
+
+- Evidência: [`reteste-2026-10-28-resultado.txt`](evidencias/reteste-2026-10-28-resultado.txt).
+- Os 7 itens (sem motivo; motivo geral `"   "`; documento com motivo `""`; documento com `"   "` sem motivo geral; **documento com `"   "` e motivo geral válido (item 3c)**; `tipo` `rg`; 256 caracteres): HTTP `422` no formato `{"success": false, "error": {"code": "REQUEST_VALIDATION_ERROR", "message": "Requisição inválida", "details": [{"field", "message"}]}}`, com o campo indicado e o texto em português, sem o prefixo “Value error,”:
+  - sem motivo e sem documentos, ou motivo geral só com espaços: “Informe o motivo da reprovação.” e “Informe ao menos um documento para o aluno reenviar, com o motivo.”;
+  - documento com motivo vazio ou só com espaços: “Informe o motivo do documento.”;
+  - tipo inválido: “Tipo de documento inválido. Use comprovante_matricula, comprovante_residencia ou foto_perfil.”;
+  - 256 caracteres: “O motivo da reprovação deve ter no máximo 255 caracteres.”
+- O item 3c, que antes dava `200` e descartava o documento, agora dá `422`. O A3 e o A4 continuaram `pendente`.
+- Status: ✅ Passou. Issues [#314](https://github.com/GOUOCE/GOUCE-app/issues/314) e [#317](https://github.com/GOUOCE/GOUCE-app/issues/317) fechadas.
 
 ---
 
@@ -247,7 +275,7 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 - Item 4: HTTP `404` “Aluno não encontrado”.
 - Se a API aceitar algum item, registrar qual campo mudou (por exemplo, a `validade_acesso` do A1 renovada de novo).
 
-**Resultado obtido**
+**Resultado obtido (27/10/2026)**
 
 - Evidência: [`CT-HU027-API-007.json`](evidencias/CT-HU027-API-007.json).
 - Item 1: aprovar o AP já ativo deu HTTP `200`; reprovar o AP deu HTTP `200` e o deixou **rejeitado**.
@@ -257,6 +285,16 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 - Massa restaurada pela API depois (AP aprovado de novo e A2 reprovado de novo; PREP-12 e PREP-13).
 - Defeito: [BUG-HU027-API-003](issues/BUG-HU027-API-003-avaliacao-aceita-aluno-fora-da-fila.md).
 - Status: ❌ Falhou.
+
+**Reteste (28/10/2026)**
+
+- Evidência: [`reteste-2026-10-28-resultado.txt`](evidencias/reteste-2026-10-28-resultado.txt).
+- Item 1: aprovar e reprovar o AP já ativo: HTTP `409` “Este aluno já está com o cadastro aprovado. Só é possível aprovar ou reprovar cadastros na fila de solicitações.”.
+- Item 2: aprovar o A2 rejeitado, sem reenvio: HTTP `409` “Este aluno está com o cadastro rejeitado, aguardando o reenvio dos documentos. Só é possível aprovar ou reprovar cadastros na fila de solicitações.”.
+- Item 3: aprovar o A1 de novo, por `/aprovar` e por `/status`: HTTP `409`.
+- Item 4: HTTP `404` “Aluno não encontrado”.
+- Conferido no banco: status e `validade_acesso` de AP, A1 e A2 intactos; nenhum e-mail enviado nas recusas; o total de registros em `log_auditoria` não mudou com as recusas.
+- Status: ✅ Passou. Issue [#315](https://github.com/GOUOCE/GOUCE-app/issues/315) fechada.
 
 ---
 
@@ -277,7 +315,7 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
   - o aluno consegue reenviar ao menos um documento.
 - Se a reprovação for aceita e o aluno não conseguir reenviar nada (“Este documento não foi solicitado...”), registrar como falha: o aluno fica preso como rejeitado.
 
-**Resultado obtido**
+**Resultado obtido (27/10/2026)**
 
 - Evidência: [`CT-HU027-API-008.json`](evidencias/CT-HU027-API-008.json).
 - Reprovação do A3 só com `motivo_reprovacao`: HTTP `422` “Value error, documentos_reenvio é obrigatório quando status_cadastro é rejeitado.”. O caminho direto está protegido.
@@ -285,6 +323,15 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 - O A3 loga (`rejeitado`), `GET /usuarios/reenvio_documento` devolve `{"documentos": []}` e cada reenvio (matrícula, residência, foto) dá HTTP `400` “Este documento não foi solicitado pelo administrador: …”. O aluno fica preso como rejeitado (RN-012).
 - Defeito: [BUG-HU027-API-002](issues/BUG-HU027-API-002-reprovacao-aceita-documento-com-motivo-em-branco.md).
 - Status: ❌ Falhou.
+
+**Reteste (28/10/2026)**
+
+- Evidência: [`reteste-2026-10-28-resultado.txt`](evidencias/reteste-2026-10-28-resultado.txt).
+- Reprovação do A3 só com `motivo_reprovacao`: HTTP `422`, campo `documentos_reenvio`, “Informe ao menos um documento para o aluno reenviar, com o motivo.”.
+- Atalho do item 3c do CT-006 (documento com motivo `"   "`) no A4: HTTP `422`; o A4 continua `pendente`.
+- Reprovação do A3 com **um** documento válido (`comprovante_matricula`, “Ilegível.”): HTTP `200` `rejeitado`; o A3 loga e `GET /usuarios/reenvio_documento` devolve HTTP `200` com esse documento. O aluno deixa de ficar sem nada para reenviar.
+- O reenvio em si (`PUT /usuarios/reenvio_documento`) não foi reexecutado; ele é coberto pela HU-031.
+- Status: ✅ Passou. Issue [#314](https://github.com/GOUOCE/GOUCE-app/issues/314) fechada.
 
 ---
 
@@ -302,7 +349,7 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 - Nenhum registro para as recusas.
 - Riscos no código: o registro grava o `id` do **aluno** como usuário e lê o status anterior depois de já trocá-lo (anterior igual ao novo).
 
-**Resultado obtido**
+**Resultado obtido (27/10/2026)**
 
 - Evidência: [`CT-HU027-API-009.json`](evidencias/CT-HU027-API-009.json).
 - `log_auditoria` (`entidade = 'aluno'`): 13 registros com a ação `UPDATE_STATUS`, um por avaliação aceita; nenhum para as recusas.
@@ -310,6 +357,22 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 - Em todos, `valor_anterior` é igual a `valor_novo` (ex.: aprovação do A1: `ativado | ativado`, quando o anterior era `pendente`).
 - Defeito: [BUG-HU027-API-004](issues/BUG-HU027-API-004-auditoria-grava-o-aluno-e-o-status-errado.md).
 - Status: ❌ Falhou.
+
+**Reteste (28/10/2026)**
+
+- Evidência: [`reteste-2026-10-28-resultado.txt`](evidencias/reteste-2026-10-28-resultado.txt).
+- `log_auditoria` (`entidade = 'aluno'`) depois de duas aprovações (A1 e AP) e duas reprovações (A2 e A3): 4 registros `UPDATE_STATUS`, todos com o **administrador** (id 1) em `usuario_id`, o id do aluno em `entidade_id`, `pendente` em `valor_anterior` e o status novo em `valor_novo`:
+
+```text
+id | usuario_id | acao          | aluno | anterior | novo
+2  | 1          | UPDATE_STATUS | 2     | pendente | ativado
+3  | 1          | UPDATE_STATUS | 6     | pendente | ativado
+4  | 1          | UPDATE_STATUS | 3     | pendente | rejeitado
+5  | 1          | UPDATE_STATUS | 4     | pendente | rejeitado
+```
+
+- As recusas do CT-007 e do CT-006 não geraram registro.
+- Status: ✅ Passou. Issue [#316](https://github.com/GOUOCE/GOUCE-app/issues/316) fechada.
 
 ---
 
@@ -330,13 +393,19 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 - Sem token: HTTP `401`.
 - O A4 continua `pendente`.
 
-**Resultado obtido**
+**Resultado obtido (27/10/2026)**
 
 - Evidência: [`CT-HU027-API-010.json`](evidencias/CT-HU027-API-010.json). Representante criada pela API (aluna 7 aprovada e promovida em `POST /representantes/promover`; perfis `aluno` e `supervisor`).
 - AP e representante: HTTP `403` na fila, nos detalhes, na aprovação e na reprovação.
 - Comprovante do A4 com o token do AP ou da representante: HTTP `404` “Arquivo não encontrado”.
 - Sem token: HTTP `401` em todas.
 - O A4 continuou `pendente`.
+- Status: ✅ Passou.
+
+**Reteste (28/10/2026)**
+
+- Conferido de novo só nas duas rotas que o PR alterou (`PATCH /usuarios/alunos/5/aprovar` e `/status`): sem token, HTTP `401`; com o token do A1 (aluno ativo), HTTP `403` “Acesso negado”; o A4 continuou `pendente`. A fila (`GET /usuarios/alunos?status=pendente`) com o administrador segue HTTP `200`.
+- Não reexecutados: token de representante e abrir o documento de outro aluno.
 - Status: ✅ Passou.
 
 ## Rastreabilidade
@@ -356,14 +425,14 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 
 ## Defeitos encontrados
 
-| Caso | Defeito | Issue |
-| --- | --- | --- |
-| Ambiente | A `develop` não sobe em banco vazio: duas heads de migration | [BUG-HU027-API-006](issues/BUG-HU027-API-006-develop-nao-sobe-em-banco-vazio-duas-heads.md) · [#318](https://github.com/GOUOCE/GOUCE-app/issues/318) |
-| CT-HU027-API-004 | A aprovação não envia e-mail ao aluno | [BUG-HU027-API-001](issues/BUG-HU027-API-001-aprovacao-nao-notifica-o-aluno.md) · [#313](https://github.com/GOUOCE/GOUCE-app/issues/313) |
-| CT-HU027-API-006, 008 | Reprovação aceita documento com motivo em branco e deixa o aluno sem nada para reenviar | [BUG-HU027-API-002](issues/BUG-HU027-API-002-reprovacao-aceita-documento-com-motivo-em-branco.md) · [#314](https://github.com/GOUOCE/GOUCE-app/issues/314) |
-| CT-HU027-API-007 | Avaliação aceita aluno que não está na fila | [BUG-HU027-API-003](issues/BUG-HU027-API-003-avaliacao-aceita-aluno-fora-da-fila.md) · [#315](https://github.com/GOUOCE/GOUCE-app/issues/315) |
-| CT-HU027-API-009 | Auditoria grava o aluno como usuário e o status anterior igual ao novo | [BUG-HU027-API-004](issues/BUG-HU027-API-004-auditoria-grava-o-aluno-e-o-status-errado.md) · [#316](https://github.com/GOUOCE/GOUCE-app/issues/316) |
-| CT-HU027-API-006 | Mensagens de validação da reprovação em inglês | [BUG-HU027-API-005](issues/BUG-HU027-API-005-mensagens-de-validacao-em-ingles.md) · [#317](https://github.com/GOUOCE/GOUCE-app/issues/317) |
+| Caso | Defeito | Issue | Situação (28/10) |
+| --- | --- | --- | --- |
+| Ambiente | A `develop` não sobe em banco vazio: duas heads de migration | [BUG-HU027-API-006](issues/BUG-HU027-API-006-develop-nao-sobe-em-banco-vazio-duas-heads.md) · [#318](https://github.com/GOUOCE/GOUCE-app/issues/318) | Issue ainda aberta. Na `develop` `e68f88e7` o banco novo subiu sem o contorno (uma head só, migration 78). |
+| CT-HU027-API-004 | A aprovação não envia e-mail ao aluno | [BUG-HU027-API-001](issues/BUG-HU027-API-001-aprovacao-nao-notifica-o-aluno.md) · [#313](https://github.com/GOUOCE/GOUCE-app/issues/313) | ✅ Corrigido ([PR #326](https://github.com/GOUOCE/GOUCE-app/pull/326)) e retestado no CT-004; issue fechada. |
+| CT-HU027-API-006, 008 | Reprovação aceita documento com motivo em branco e deixa o aluno sem nada para reenviar | [BUG-HU027-API-002](issues/BUG-HU027-API-002-reprovacao-aceita-documento-com-motivo-em-branco.md) · [#314](https://github.com/GOUOCE/GOUCE-app/issues/314) | ✅ Corrigido no [PR #327](https://github.com/GOUOCE/GOUCE-app/pull/327) e retestado nos CT-006 e CT-008; issue fechada. |
+| CT-HU027-API-007 | Avaliação aceita aluno que não está na fila | [BUG-HU027-API-003](issues/BUG-HU027-API-003-avaliacao-aceita-aluno-fora-da-fila.md) · [#315](https://github.com/GOUOCE/GOUCE-app/issues/315) | ✅ Corrigido no [PR #327](https://github.com/GOUOCE/GOUCE-app/pull/327) e retestado no CT-007; issue fechada. |
+| CT-HU027-API-009 | Auditoria grava o aluno como usuário e o status anterior igual ao novo | [BUG-HU027-API-004](issues/BUG-HU027-API-004-auditoria-grava-o-aluno-e-o-status-errado.md) · [#316](https://github.com/GOUOCE/GOUCE-app/issues/316) | ✅ Corrigido no [PR #327](https://github.com/GOUOCE/GOUCE-app/pull/327) e retestado no CT-009; issue fechada. |
+| CT-HU027-API-006 | Mensagens de validação da reprovação em inglês | [BUG-HU027-API-005](issues/BUG-HU027-API-005-mensagens-de-validacao-em-ingles.md) · [#317](https://github.com/GOUOCE/GOUCE-app/issues/317) | ✅ Corrigido no [PR #327](https://github.com/GOUOCE/GOUCE-app/pull/327) e retestado no CT-006; issue fechada. |
 
 ## Observações gerais
 
@@ -378,5 +447,7 @@ Executar na ordem abaixo. São **10 casos essenciais**. Todas as chamadas usam o
 - Renovações de vínculo (`analise_renovacao`) entram na mesma fila do app, mas são testadas na HU-028.
 - **Ambiente da execução (27/10/2026):** banco novo na stack isolada `atu-api`. A `develop` (`4bf26d55`) não sobe em banco vazio porque tem duas heads de migration (`76_ponto_unico_por_bairro` e `77_create_rota_complementar`): ver [evidência](evidencias/00-ambiente-migrations.json) e [BUG-HU027-API-006](issues/BUG-HU027-API-006-develop-nao-sobe-em-banco-vazio-duas-heads.md). Contorno usado só na stack: cópia das migrations com uma migration de merge vazia. O banco novo também não tem faculdade: a UFC foi criada pela API (PREP-01).
 - **Resultado da leitura de código × execução:** confirmados os riscos da aprovação sem e-mail, da avaliação sem conferir o status e da auditoria. Não se confirmou que a reprovação aceite motivo geral em branco nem sem documentos (o DTO recusa os dois); o defeito real é o motivo do documento em branco, descartado sem aviso.
-- Estado final: A1 (2) `ativado`, A2 (3) `rejeitado`, A3 (4) `rejeitado` sem documentos (CT-008), A4 (5) `pendente`, AP (6) `ativado` e representante (7) ativa, sem apagar registros.
+- Estado final (27/10): A1 (2) `ativado`, A2 (3) `rejeitado`, A3 (4) `rejeitado` sem documentos (CT-008), A4 (5) `pendente`, AP (6) `ativado` e representante (7) ativa, sem apagar registros.
+- **Reteste dos defeitos (28/10/2026):** as issues [#313](https://github.com/GOUOCE/GOUCE-app/issues/313) a [#317](https://github.com/GOUOCE/GOUCE-app/issues/317) foram corrigidas pelo [PR #327](https://github.com/GOUOCE/GOUCE-app/pull/327) (branch `fix/issues-hu027-313-317`, a partir da `develop` `e68f88e7`; a #313 já vinha do [PR #326](https://github.com/GOUOCE/GOUCE-app/pull/326)) e retestadas em stack isolada nova (`hu027fix`, API em `http://localhost:8001`, Mailpit em `:58025`), banco novo e sem contorno de migrations. Os passos dos CT-004 a CT-009 foram refeitos com massa criada pelo fluxo real de cadastro (A1 = 2, A2 = 3, A3 = 4, A4 = 5, AP = 6): **25 de 25 verificações OK**. Os mesmos passos contra o `backend/src` da `develop` sem o PR dão 9 OK e **16 falhas**, o que confirma que o roteiro enxerga os defeitos (a #313 já passava lá). Evidências: [`reteste-2026-10-28-resultado.txt`](evidencias/reteste-2026-10-28-resultado.txt) e [`reteste-2026-10-28-develop-sem-o-pr.txt`](evidencias/reteste-2026-10-28-develop-sem-o-pr.txt). O backend inteiro também passou nos testes automatizados (873 testes, 24 novos em `backend/tests/test_avaliacao_cadastro_aluno.py`). As cinco issues foram comentadas com o resultado e fechadas.
+- Estado final do reteste: A1 (2) `ativado`, A2 (3) `rejeitado`, A3 (4) `rejeitado` com o documento `comprovante_matricula` para reenviar, A4 (5) `pendente` e AP (6) `ativado`. Representante não criado nesta stack.
 - Ocultar senhas, tokens e dados pessoais nas evidências.

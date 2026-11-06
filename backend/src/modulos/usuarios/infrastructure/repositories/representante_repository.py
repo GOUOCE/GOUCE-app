@@ -102,6 +102,8 @@ class RepresentanteRepository:
         if not is_aprovado or not is_ativo:
             raise AlunoNaoAprovadoOuInativoError("Aluno não aprovado ou inativo.")
 
+        if validade_acesso is not None and validade_acesso.tzinfo is None:
+            validade_acesso = validade_acesso.replace(tzinfo=timezone.utc)
         if (
             validade_acesso is not None
             and validade_acesso < datetime.now(timezone.utc)

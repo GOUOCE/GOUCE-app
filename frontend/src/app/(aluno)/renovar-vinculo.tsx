@@ -344,7 +344,7 @@ export default function RenovarVinculoScreen() {
             <View style={styles.footer}>
               <Button
                 mode="contained"
-                onPress={passo === 4 ? handleSubmit(onSubmit) : proximoPasso}
+                onPress={passo === 4 ? handleSubmit(onSubmit) as any : proximoPasso}
                 loading={isLoading}
                 disabled={isLoading}
                 style={styles.primaryButton}

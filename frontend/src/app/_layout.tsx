@@ -4,6 +4,7 @@ import { PaperProvider } from 'react-native-paper';
 import {
   useFonts,
   Poppins_400Regular,
+  Poppins_500Medium,
   Poppins_600SemiBold,
   Poppins_700Bold
 } from '@expo-google-fonts/poppins';
@@ -24,6 +25,7 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Poppins_400Regular,
+    Poppins_500Medium, // labelLarge dos botões; sem ela o web cai em fonte serifada
     Poppins_600SemiBold,
     Poppins_700Bold,
     Inter_400Regular,

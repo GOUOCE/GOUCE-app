@@ -220,10 +220,17 @@ async def buscar_faculdade(
 async def criar_faculdade(
     dados: CriarFaculdadeDTO,
     service: FaculdadeService = Depends(get_service),
-    _: dict = Depends(admin_required),
+    current_user: dict = Depends(admin_required),
 ):
     try:
-        faculdade = service.criar(nome=dados.nome, campus=dados.campus, sigla=dados.sigla)
+        user_id = current_user.get("current_user_id") or current_user.get("sub")
+        usuario_executor_id = int(user_id) if user_id is not None else None
+        faculdade = service.criar(
+            nome=dados.nome,
+            campus=dados.campus,
+            sigla=dados.sigla,
+            usuario_executor_id=usuario_executor_id,
+        )
         return _montar_resposta_operacao(faculdade, "Operação realizada com sucesso")
     except FaculdadeJaCadastradaError as error:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error))

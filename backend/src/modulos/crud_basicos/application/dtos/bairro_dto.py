@@ -19,7 +19,7 @@ class PontoDeParadaResponseDTO(BaseModel):
 class CriarBairroDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    nome: str = Field(..., alias="nome_bairro", min_length=3, max_length=100)
+    nome: str = Field(..., alias="nome_bairro", max_length=100)
     pontos_de_parada: list[str] = Field(..., min_length=1)
 
     @field_validator("nome", mode="before")
@@ -27,11 +27,24 @@ class CriarBairroDTO(BaseModel):
     def normalizar_nome(cls, valor: object) -> str:
         if valor is None:
             raise ValueError("O nome do bairro é obrigatório.")
+
         valor_str = str(valor).strip()
+
         if not valor_str or len(valor_str) < 3:
-            raise ValueError("Informe o nome do bairro com pelo menos 3 caracteres")
+            raise ValueError(
+                "Informe o nome do bairro com pelo menos 3 caracteres."
+            )
+
+        if len(valor_str) > 100:
+            raise ValueError(
+                "O nome do bairro deve ter no máximo 100 caracteres."
+            )
+
         if not REGEX_BAIRRO.match(valor_str):
-            raise ValueError("Use apenas letras, espaços, hífen ou apóstrofo")
+            raise ValueError(
+                "Use apenas letras, espaços, hífen ou apóstrofo."
+            )
+
         return valor_str
 
     @field_validator("pontos_de_parada", mode="before")

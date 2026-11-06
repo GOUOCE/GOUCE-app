@@ -270,7 +270,7 @@ class CadastroTest(RotaComplementarHttpTestBase):
 
     async def test_ct_hu012_api_003_retorno_valido_e_gravado_e_devolvido(self):
         # #310 / #208, item 2: horário de retorno no cadastro, na edição e na consulta
-        rota = await self.criar(nome="Van Retorno 17:40", horario_saida="06:00", horario_retorno="17:40")
+        rota = await self.criar(nome="Van Retorno 17h40", horario_saida="06:00", horario_retorno="17:40")
         self.assertEqual(rota["horario_retorno"], "17:40")
 
         status, corpo = await self.requisitar("PATCH", f"{BASE}/{rota['id']}", {"horario_retorno": "17:45"})
@@ -285,7 +285,7 @@ class CadastroTest(RotaComplementarHttpTestBase):
             with self.subTest(retorno=retorno):
                 status, corpo = await self.requisitar(
                     "POST", BASE,
-                    dados_complementar(nome=f"Van Retorno {retorno}", horario_saida="06:00", horario_retorno=retorno),
+                    dados_complementar(nome=f"Van Retorno {retorno.replace(':', 'h')}", horario_saida="06:00", horario_retorno=retorno),
                 )
                 self.assertEqual(status, 422)
                 self.assertEqual(

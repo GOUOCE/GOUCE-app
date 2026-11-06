@@ -249,7 +249,7 @@ export default function RedefinirSenhaScreen() {
 
           <Button
             mode="contained"
-            onPress={handleSubmit(onSubmit)}
+            onPress={() => { void handleSubmit(onSubmit)(); }}
             loading={isLoading}
             disabled={isLoading || !isValid}
             style={styles.button}
