@@ -9,6 +9,7 @@ from src.modulos.agendamentos.infrastructure.repositories.agendamento_repository
 )
 from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
 from src.modulos.crud_basicos.domain.entities.ponto_de_parada import PontoDeParadaORM
+from src.modulos.rotas.model.entities.rota_complementar import RotaComplementarORM
 
 
 class GerenciarAgendamentosUseCase:
@@ -150,13 +151,91 @@ class GerenciarAgendamentosUseCase:
         if item is None:
             raise AgendamentoError("RESOURCE_NOT_FOUND", "Agendamento não encontrado.", 404)
         if not data.usa_ida and not data.usa_volta:
-            raise AgendamentoError(
-                "CANCELAMENTO_PENDENTE",
-                "A alteração deve ser encaminhada ao fluxo de cancelamento.",
-                409,
-            )
+            # HU-013 CA-16: ida=Não e volta=Não equivale ao cancelamento (HU-014).
+            return self.cancel(aluno_id, item_id)
         self._validate_payload(aluno_id, data, item_id)
         return self.repository.update(aluno_id, item, data)
+
+    def _get_owned(self, aluno_id: int, item_id: int):
+        item = self.repository.get_active(aluno_id, item_id)
+        if item is None:
+            raise AgendamentoError(
+                "RESOURCE_NOT_FOUND", "Agendamento não encontrado.", 404
+            )
+        return item
+
+    def cancel(self, aluno_id: int, item_id: int):
+        """Cancela (logicamente) um agendamento futuro, sem prazo mínimo (RN-005)."""
+        item = self._get_owned(aluno_id, item_id)
+        today, _ = self._bounds()
+        if item.data < today:
+            raise AgendamentoError(
+                "AGENDAMENTO_PASSADO",
+                "Não é possível cancelar agendamento de data já passada.",
+                422,
+            )
+        return self.repository.cancel(aluno_id, item)
+
+    def summary(self, aluno_id: int):
+        today, _ = self._bounds()
+        return {
+            "ativos": self.repository.count_active_from(aluno_id, today),
+            "limite": self.active_limit,
+        }
+
+    def detail(self, aluno_id: int, item_id: int):
+        item = self._get_owned(aluno_id, item_id)
+        return self._detail(item)
+
+    def my_bookings(self, aluno_id: int):
+        today, _ = self._bounds()
+        items = self.repository.list_active_from(aluno_id, today)
+        return {
+            "agendamentos": [self._detail(item) for item in items],
+            "ativos": len(items),
+            "limite": self.active_limit,
+        }
+
+    def _detail(self, item):
+        today, _ = self._bounds()
+        name = self.repository.reference_name
+        future = item.data >= today
+        return {
+            "id": item.id,
+            "aluno_id": item.aluno_id,
+            "data": item.data,
+            "usa_ida": item.usa_ida,
+            "usa_volta": item.usa_volta,
+            "ponto_embarque_id": item.ponto_embarque_id,
+            "ies_destino_id": item.ies_destino_id,
+            "rota_complementar_ida_id": item.rota_complementar_ida_id,
+            "ies_origem_id": item.ies_origem_id,
+            "ponto_desembarque_id": item.ponto_desembarque_id,
+            "rota_complementar_volta_id": item.rota_complementar_volta_id,
+            "status": item.status,
+            "ponto_embarque_nome": name(PontoDeParadaORM, item.ponto_embarque_id, "nome"),
+            "ies_destino_nome": name(FaculdadeORM, item.ies_destino_id, "nome_faculdade"),
+            "rota_complementar_ida_nome": name(
+                RotaComplementarORM, item.rota_complementar_ida_id, "nome"
+            ),
+            "ies_origem_nome": name(FaculdadeORM, item.ies_origem_id, "nome_faculdade"),
+            "ponto_desembarque_nome": name(
+                PontoDeParadaORM, item.ponto_desembarque_id, "nome"
+            ),
+            "rota_complementar_volta_nome": name(
+                RotaComplementarORM, item.rota_complementar_volta_id, "nome"
+            ),
+            "pode_remover": future,
+            "pode_editar": future,
+        }
+
+    def calendar_view(self, aluno_id: int, month: str):
+        days = self.calendar(aluno_id, month)
+        return {
+            "mes": month,
+            "dias": days,
+            **self.summary(aluno_id),
+        }
 
     def calendar(self, aluno_id: int, month: str):
         try:
@@ -168,7 +247,7 @@ class GerenciarAgendamentosUseCase:
             )
         today, last = self._bounds()
         next_month = date(year + (month_number == 12), month_number % 12 + 1, 1)
-        start, end = max(first, today), min(next_month - timedelta(days=1), last)
+        start, end = first, min(next_month - timedelta(days=1), last)
         if start > end:
             return []
         bookings = {
@@ -179,17 +258,26 @@ class GerenciarAgendamentosUseCase:
         result = []
         current = start
         while current <= end:
-            holiday = self.repository.holiday(current)
+            past = current < today
+            if past and current not in bookings:
+                # Dias passados só aparecem se tiveram agendamento (histórico).
+                current += timedelta(days=1)
+                continue
+            holiday = None if past else self.repository.holiday(current)
+            booking = bookings.get(current)
             state = (
                 holiday.tipo if holiday else
-                "AGENDADO" if current in bookings else
+                "AGENDADO" if booking else
                 "DISPONIVEL" if has_route else "INDISPONIVEL"
             )
             result.append({
                 "data": current,
                 "estado": state,
                 "descricao": holiday.descricao if holiday else None,
-                "pode_agendar": not holiday and current not in bookings and has_route,
+                "pode_agendar": not past and not holiday and not booking and has_route,
+                "agendamento_id": booking.id if booking else None,
+                "pode_remover": bool(booking) and not past,
+                "pode_editar": bool(booking) and not past,
             })
             current += timedelta(days=1)
         return result
