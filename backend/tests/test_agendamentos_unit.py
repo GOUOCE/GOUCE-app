@@ -293,13 +293,16 @@ class GerenciarAgendamentosUseCaseTest(unittest.TestCase):
         self.assertEqual(context.exception.code, "RESOURCE_NOT_FOUND")
         self.assertEqual(context.exception.status_code, 404)
 
-    def test_edicao_sem_trechos_remete_ao_cancelamento(self):
-        item = SimpleNamespace(id=8)
+    def test_edicao_sem_trechos_efetiva_o_cancelamento(self):
+        item = SimpleNamespace(
+            id=8, aluno_id=7, data=date(2026, 11, 10), usa_ida=True,
+            usa_volta=False, status="ATIVO", cancelled_at=None,
+        )
         self.session.query.return_value = FakeQuery(first_value=item)
-        with self.assertRaises(AgendamentoError) as context:
-            self.service.update(7, 8, payload(usa_ida=False, usa_volta=False))
-        self.assertEqual(context.exception.code, "CANCELAMENTO_PENDENTE")
-        self.assertEqual(context.exception.status_code, 409)
+        result = self.service.update(7, 8, payload(usa_ida=False, usa_volta=False))
+        self.assertIs(result, item)
+        self.assertEqual(item.status, "CANCELADO")
+        self.session.commit.assert_called_once()
 
     def test_edicao_registra_valores_anterior_e_novo(self):
         item = SimpleNamespace(
@@ -350,7 +353,7 @@ class GerenciarAgendamentosUseCaseTest(unittest.TestCase):
             return_value=(self.today, self.today + timedelta(days=3))
         )
         holiday = SimpleNamespace(tipo="FERIADO", descricao="Municipal")
-        booking = SimpleNamespace(data=self.today + timedelta(days=1))
+        booking = SimpleNamespace(id=5, data=self.today + timedelta(days=1))
         active_route = SimpleNamespace(id=1)
         self.session.query.side_effect = [
             FakeQuery(rows=[booking]),
@@ -449,6 +452,164 @@ class GerenciarAgendamentosUseCaseTest(unittest.TestCase):
         self.assertIn("uq_agendamento_aluno_data_ativo", indexes)
         self.assertIn("ix_agendamento_aluno_data_status", indexes)
         self.assertIsNotNone(AgendamentoORM.status.default)
+
+    # ---- HU-014: cancelamento, listagem e calendário ----
+
+    def _booking(self, **overrides):
+        values = dict(
+            id=8, aluno_id=7, data=self.today + timedelta(days=4), usa_ida=True,
+            usa_volta=True, ponto_embarque_id=None, ies_destino_id=None,
+            rota_complementar_ida_id=None, ies_origem_id=None,
+            ponto_desembarque_id=None, rota_complementar_volta_id=None,
+            status="ATIVO", cancelled_at=None,
+        )
+        values.update(overrides)
+        return SimpleNamespace(**values)
+
+    def test_cancelar_agendamento_futuro_faz_cancelamento_logico_com_auditoria(self):
+        item = self._booking()
+        self.session.query.return_value = FakeQuery(first_value=item)
+        self.service.cancel(7, 8)
+        self.assertEqual(item.status, "CANCELADO")
+        self.assertIsNotNone(item.cancelled_at)
+        log = self.session.add.call_args.args[0]
+        self.assertEqual(log.acao, "CANCELAR")
+        self.assertEqual(log.entidade_id, 8)
+        self.assertEqual(log.usuario_id, 7)
+        self.assertIn("ATIVO", log.valor_anterior)
+        self.session.commit.assert_called_once()
+
+    def test_cancelar_agendamento_de_hoje_e_permitido_sem_prazo_minimo(self):
+        item = self._booking(data=self.today)
+        self.session.query.return_value = FakeQuery(first_value=item)
+        self.service.cancel(7, 8)
+        self.assertEqual(item.status, "CANCELADO")
+
+    def test_cancelar_agendamento_passado_retorna_422_sem_alterar(self):
+        item = self._booking(data=self.today - timedelta(days=1))
+        self.session.query.return_value = FakeQuery(first_value=item)
+        with self.assertRaises(AgendamentoError) as context:
+            self.service.cancel(7, 8)
+        self.assertEqual(context.exception.code, "AGENDAMENTO_PASSADO")
+        self.assertEqual(context.exception.status_code, 422)
+        self.assertEqual(item.status, "ATIVO")
+        self.session.commit.assert_not_called()
+
+    def test_cancelar_agendamento_inexistente_de_outro_aluno_ou_ja_cancelado_retorna_404(self):
+        self.session.query.return_value = FakeQuery(first_value=None)
+        with self.assertRaises(AgendamentoError) as context:
+            self.service.cancel(7, 99)
+        self.assertEqual(context.exception.code, "RESOURCE_NOT_FOUND")
+        self.assertEqual(context.exception.status_code, 404)
+
+    def test_falha_no_commit_faz_rollback_e_nao_cancela_parcialmente(self):
+        item = self._booking()
+        self.session.query.return_value = FakeQuery(first_value=item)
+        self.session.commit.side_effect = RuntimeError("db fora do ar")
+        with self.assertRaises(RuntimeError):
+            self.service.cancel(7, 8)
+        self.session.rollback.assert_called_once()
+
+    def test_gancho_de_alocacao_e_chamado_antes_do_cancelamento(self):
+        item = self._booking()
+        self.session.query.return_value = FakeQuery(first_value=item)
+        self.service.repository.remove_allocations = MagicMock()
+        self.service.cancel(7, 8)
+        self.service.repository.remove_allocations.assert_called_once_with(item)
+
+    def test_falha_na_alocacao_impede_cancelamento(self):
+        item = self._booking()
+        self.session.query.return_value = FakeQuery(first_value=item)
+        self.service.repository.remove_allocations = MagicMock(
+            side_effect=RuntimeError("falha")
+        )
+        with self.assertRaises(RuntimeError):
+            self.service.cancel(7, 8)
+        self.assertEqual(item.status, "ATIVO")
+        self.session.rollback.assert_called_once()
+
+    def test_dia_cancelado_fica_livre_para_novo_agendamento(self):
+        # active_for_day só considera status ATIVO; o índice único é parcial.
+        self.session.query.return_value = FakeQuery(first_value=None)
+        self.assertIsNone(self.service.active_for_day(7, self.today))
+        index = {i.name: i for i in AgendamentoORM.__table__.indexes}[
+            "uq_agendamento_aluno_data_ativo"
+        ]
+        self.assertIn("ATIVO", str(index.dialect_options["postgresql"]["where"]))
+
+    def test_resumo_conta_ativos_futuros_e_informa_limite(self):
+        self.session.query.return_value = FakeQuery(rows=[object()] * 3)
+        self.assertEqual(self.service.summary(7), {"ativos": 3, "limite": 22})
+
+    def test_meus_agendamentos_vazio_retorna_zero_ativos(self):
+        self.session.query.return_value = FakeQuery()
+        result = self.service.my_bookings(7)
+        self.assertEqual(result, {"agendamentos": [], "ativos": 0, "limite": 22})
+
+    def test_detalhe_futuro_permite_remover_e_editar(self):
+        self.session.query.return_value = FakeQuery(first_value=self._booking())
+        self.session.get.return_value = None
+        result = self.service.detail(7, 8)
+        self.assertTrue(result["pode_remover"])
+        self.assertTrue(result["pode_editar"])
+
+    def test_detalhe_passado_nao_permite_remover_nem_editar(self):
+        item = self._booking(data=self.today - timedelta(days=2))
+        self.session.query.return_value = FakeQuery(first_value=item)
+        self.session.get.return_value = None
+        result = self.service.detail(7, 8)
+        self.assertFalse(result["pode_remover"])
+        self.assertFalse(result["pode_editar"])
+
+    def test_detalhe_de_agendamento_inexistente_retorna_404(self):
+        self.session.query.return_value = FakeQuery()
+        with self.assertRaises(AgendamentoError) as context:
+            self.service.detail(7, 1)
+        self.assertEqual(context.exception.status_code, 404)
+
+    def test_calendario_inclui_dias_passados_com_agendamento_somente_leitura(self):
+        self.service._bounds = MagicMock(
+            return_value=(self.today, self.today + timedelta(days=1))
+        )
+        past = SimpleNamespace(id=3, data=self.today - timedelta(days=2))
+        future = SimpleNamespace(id=4, data=self.today + timedelta(days=1))
+        self.session.query.side_effect = [
+            FakeQuery(rows=[past, future]),
+            FakeQuery(first_value=SimpleNamespace(id=1)),
+            FakeQuery(),
+            FakeQuery(),
+        ]
+
+        result = self.service.calendar(7, "2026-11")
+
+        by_date = {item["data"]: item for item in result}
+        past_day = by_date[past.data]
+        self.assertEqual(past_day["estado"], "AGENDADO")
+        self.assertEqual(past_day["agendamento_id"], 3)
+        self.assertFalse(past_day["pode_remover"])
+        self.assertFalse(past_day["pode_editar"])
+        future_day = by_date[future.data]
+        self.assertEqual(future_day["agendamento_id"], 4)
+        self.assertTrue(future_day["pode_remover"])
+        self.assertTrue(future_day["pode_editar"])
+        self.assertEqual(len(result), 3)
+        free_day = by_date[self.today]
+        self.assertIsNone(free_day["agendamento_id"])
+        self.assertFalse(free_day["pode_remover"])
+
+    def test_calendario_nao_lista_dias_passados_sem_agendamento(self):
+        self.service._bounds = MagicMock(return_value=(self.today, self.today))
+        self.session.query.side_effect = [FakeQuery(), FakeQuery(), FakeQuery()]
+        result = self.service.calendar(7, "2026-11")
+        self.assertEqual([item["data"] for item in result], [self.today])
+
+    def test_calendario_view_inclui_contador_e_limite(self):
+        self.service.calendar = MagicMock(return_value=[])
+        self.session.query.return_value = FakeQuery(rows=[object()] * 2)
+        result = self.service.calendar_view(7, "2026-11")
+        self.assertEqual(
+            result, {"mes": "2026-11", "dias": [], "ativos": 2, "limite": 22}
+        )
 
     def test_modelo_tem_campos_de_cancelamento(self):
         self.assertIn("cancelled_at", AgendamentoORM.__table__.columns)
