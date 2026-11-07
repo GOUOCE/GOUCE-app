@@ -16,8 +16,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.drop_column("agendamento", "horario_volta")
-    op.drop_column("agendamento", "horario_ida")
+    op.execute("ALTER TABLE agendamento DROP COLUMN IF EXISTS horario_volta")
+    op.execute("ALTER TABLE agendamento DROP COLUMN IF EXISTS horario_ida")
 
 
 def downgrade() -> None:
