@@ -14,6 +14,7 @@ from src.modulos.crud_basicos.interface.http.bairro_routes import router as bair
 from src.modulos.rotas.interface.http.rota_principal_routes import router as rota_principal_router
 from src.modulos.rotas.interface.http.rota_complementar_routes import router as rota_complementar_router
 from src.modulos.agendamentos.interface.http.agendamento_routes import router as agendamento_router
+from src.modulos.avisos.interface.http.aviso_routes import router as aviso_router
 
 app = FastAPI(
     title="API GOUCE",
@@ -44,6 +45,7 @@ app.include_router(bairro_router)
 app.include_router(rota_principal_router)
 app.include_router(rota_complementar_router)
 app.include_router(agendamento_router)
+app.include_router(aviso_router)
 
 
 @app.get("/health", include_in_schema=False)
