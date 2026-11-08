@@ -11,17 +11,17 @@ interface DiaCalendario {
   diaNum: number;
   dataIso: string; // YYYY-MM-DD
   status: 'agendado' | 'indisponivel' | 'feriado' | 'normal';
-  idAgendamento?: string | number;
+  idAgendamento?: number;
   ehPassado?: boolean;
 }
 
 const DIAS_DO_MES: DiaCalendario[] = [
   // Semana 1 (31/08 a 05/09)
-  { diaNum: 31, dataIso: '2026-08-31', status: 'agendado', idAgendamento: '1' },
-  { diaNum: 1, dataIso: '2026-09-01', status: 'agendado', idAgendamento: '2' },
-  { diaNum: 2, dataIso: '2026-09-02', status: 'agendado', idAgendamento: '3' },
-  { diaNum: 3, dataIso: '2026-09-03', status: 'agendado', idAgendamento: '4' },
-  { diaNum: 4, dataIso: '2026-09-04', status: 'agendado', idAgendamento: '5' },
+  { diaNum: 31, dataIso: '2026-08-31', status: 'agendado', idAgendamento: 1 },
+  { diaNum: 1, dataIso: '2026-09-01', status: 'agendado', idAgendamento: 2 },
+  { diaNum: 2, dataIso: '2026-09-02', status: 'agendado', idAgendamento: 3 },
+  { diaNum: 3, dataIso: '2026-09-03', status: 'agendado', idAgendamento: 4 },
+  { diaNum: 4, dataIso: '2026-09-04', status: 'agendado', idAgendamento: 5 },
   { diaNum: 5, dataIso: '2026-09-05', status: 'indisponivel' },
   // Semana 2
   { diaNum: 6, dataIso: '2026-09-06', status: 'indisponivel' },
@@ -77,11 +77,11 @@ export default function MeusAgendamentosScreen() {
       } else {
         // Dados padrao de demonstracao
         setAgendamentos([
-          { dataIso: '2026-08-31', usaIda: true, horarioIda: '05:30:00', usaVolta: true, horarioVolta: '17:00:00', idAgendamento: '1' },
-          { dataIso: '2026-09-01', usaIda: true, horarioIda: '05:30:00', usaVolta: true, horarioVolta: '17:00:00', idAgendamento: '2' },
-          { dataIso: '2026-09-02', usaIda: true, horarioIda: '05:30:00', usaVolta: true, horarioVolta: '17:00:00', idAgendamento: '3' },
-          { dataIso: '2026-09-03', usaIda: true, horarioIda: '05:30:00', usaVolta: true, horarioVolta: '17:00:00', idAgendamento: '4' },
-          { dataIso: '2026-09-04', usaIda: true, horarioIda: '05:30:00', usaVolta: true, horarioVolta: '17:00:00', idAgendamento: '5' },
+          { dataIso: '2026-08-31', usaIda: true, usaVolta: true, idAgendamento: 1 },
+          { dataIso: '2026-09-01', usaIda: true, usaVolta: true, idAgendamento: 2 },
+          { dataIso: '2026-09-02', usaIda: true, usaVolta: true, idAgendamento: 3 },
+          { dataIso: '2026-09-03', usaIda: true, usaVolta: true, idAgendamento: 4 },
+          { dataIso: '2026-09-04', usaIda: true, usaVolta: true, idAgendamento: 5 },
         ]);
       }
     } catch {
