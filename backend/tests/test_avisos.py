@@ -211,7 +211,7 @@ class AvisoUseCaseAndRepositoryTest(unittest.TestCase):
         todas = self.use_case.listar_notificacoes()
         self.assertEqual(len(todas), 3)
         self.assertEqual(todas[0]["tipo"], "realocacao")
-        self.assertEqual(todas[0]["app_nome"], "TRANSPORTE UFC")
+        self.assertEqual(todas[0]["app_nome"], "GOUOCE")
         self.assertEqual(todas[0]["titulo"], "Você foi realocado")
         self.assertIn("ônibus 07", todas[0]["mensagem"])
 
@@ -357,7 +357,7 @@ class AvisoRoutesTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(notif_resp.status_code, 200)
         notificacoes = notif_resp.json()
         self.assertEqual(len(notificacoes), 1)
-        self.assertEqual(notificacoes[0]["app_nome"], "TRANSPORTE UFC")
+        self.assertEqual(notificacoes[0]["app_nome"], "GOUOCE")
         self.assertEqual(notificacoes[0]["titulo"], "Aviso Oficial")
         self.assertEqual(
             notificacoes[0]["mensagem"],
