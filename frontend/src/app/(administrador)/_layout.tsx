@@ -95,6 +95,7 @@ export default function AdminLayout() {
       <Tabs.Screen name="representantes" options={{ href: null }} />
       <Tabs.Screen name="rotas-principais" options={{ href: null }} />
       <Tabs.Screen name="rotas-complementares" options={{ href: null }} />
+      <Tabs.Screen name="notificacoes" options={{ href: null }} />
       <Tabs.Screen name="cadastrar-administrador" options={{ href: null }} />
     </Tabs>
   );
