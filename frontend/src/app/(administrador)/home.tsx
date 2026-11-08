@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text } from 'react-native-paper';
-import { Contact, UserCog } from 'lucide-react-native';
+import { Contact, UserCog, Bell } from 'lucide-react-native';
 import { SummaryCard } from '@/components/dashboard/SummaryCard';
 import { ActionItem } from '@/components/dashboard/ActionItem';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -78,6 +78,20 @@ export default function AdminHomeScreen() {
           title="Gestão de administradores"
           Icone={UserCog}
           onPress={() => router.push('/(administrador)/administradores')}
+        />
+
+        <View style={styles.divider} />
+
+        <ActionItem
+          title="Notificações"
+          subtitle="gerenciar avisos e comunicados globais"
+          Icone={Bell}
+          onPress={() =>
+            router.push({
+              pathname: '/(administrador)/notificacoes',
+              params: { origem: 'home' },
+            } as any)
+          }
         />
       </View>
     </ScrollView>
