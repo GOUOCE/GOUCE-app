@@ -16,8 +16,13 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.drop_column("agendamento", "horario_volta")
-    op.drop_column("agendamento", "horario_ida")
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    columns = [col["name"] for col in inspector.get_columns("agendamento")]
+    if "horario_volta" in columns:
+        op.drop_column("agendamento", "horario_volta")
+    if "horario_ida" in columns:
+        op.drop_column("agendamento", "horario_ida")
 
 
 def downgrade() -> None:

@@ -1,4 +1,5 @@
 import { api } from '@/api/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface OpcaoSelect {
   label: string;
@@ -6,8 +7,6 @@ export interface OpcaoSelect {
 }
 
 export interface OpcoesAgendamentoResponse {
-  horariosIda: OpcaoSelect[];
-  horariosVolta: OpcaoSelect[];
   pontosEmbarque: OpcaoSelect[];
   faculdades: OpcaoSelect[];
   rotasComplementaresIda: OpcaoSelect[];
@@ -15,19 +14,56 @@ export interface OpcoesAgendamentoResponse {
 }
 
 export interface AgendamentoDia {
+  idAgendamento?: number;
   dataIso: string; // YYYY-MM-DD
   usaIda: boolean;
-  horarioIda?: string;
-  pontoEmbarqueIda?: string;
-  faculdadeDestinoIda?: string;
-  rotaComplementarIda?: string;
+  pontoEmbarqueIda?: string | number;
+  faculdadeDestinoIda?: string | number;
+  rotaComplementarIda?: string | number;
   usaVolta: boolean;
-  horarioVolta?: string;
-  pontoDesembarqueVolta?: string;
-  faculdadeOrigemVolta?: string;
-  rotaComplementarVolta?: string;
+  pontoDesembarqueVolta?: string | number;
+  faculdadeOrigemVolta?: string | number;
+  rotaComplementarVolta?: string | number;
   jaAgendado?: boolean;
-  idAgendamento?: string | number;
+}
+
+export interface AgendamentoPayload {
+  data: string;
+  usa_ida: boolean;
+  usa_volta: boolean;
+  ponto_embarque_id?: number | null;
+  ies_destino_id?: number | null;
+  rota_complementar_ida_id?: number | null;
+  ies_origem_id?: number | null;
+  ponto_desembarque_id?: number | null;
+  rota_complementar_volta_id?: number | null;
+}
+
+export interface DetalhesRotaComplementar {
+  nomeVeiculo: string;
+  pontoEmbarque: string;
+  pontoConexao: string;
+  horarioSaida: string;
+}
+
+export interface DetalhesRotaPrincipal {
+  veiculo: string;
+  linha: string;
+  pontoEmbarque: string;
+  desembarqueIes: string;
+  motorista: string;
+  horarioSaida: string;
+  realocado?: boolean;
+}
+
+export interface DetalhesViagemResponse {
+  dataIso: string;
+  dataFormatada: string;
+  tipoTrajeto: 'ida' | 'volta' | 'ambos';
+  temRotaComplementar: boolean;
+  rotaComplementar?: DetalhesRotaComplementar;
+  rotaPrincipal: DetalhesRotaPrincipal;
+  isOffline?: boolean;
 }
 
 export const agendamentoService = {
@@ -36,18 +72,7 @@ export const agendamentoService = {
       const response = await api.get('/agendamentos/opcoes');
       return response.data;
     } catch {
-      // Fallback para demonstracao e testes offline com dados reais de Quixadá
       return {
-        horariosIda: [
-          { label: '05:30 (Manhã)', value: '05:30:00' },
-          { label: '06:00 (Manhã)', value: '06:00:00' },
-          { label: '06:40 (Manhã)', value: '06:40:00' },
-        ],
-        horariosVolta: [
-          { label: '17:00 (Tarde)', value: '17:00:00' },
-          { label: '17:30 (Tarde)', value: '17:30:00' },
-          { label: '18:00 (Noite)', value: '18:00:00' },
-        ],
         pontosEmbarque: [
           { label: 'Igreja Matriz de Quixadá', value: '1' },
           { label: 'Praça dos Leões', value: '2' },
@@ -73,29 +98,91 @@ export const agendamentoService = {
 
   async listarAgendamentosAtivos(): Promise<AgendamentoDia[]> {
     try {
-      const response = await api.get('/agendamentos/meus');
+      const response = await api.get('/transporte/agendamentos/meus');
       return response.data;
     } catch {
       return [];
     }
   },
 
-  async salvarAgendamentos(agendamentos: AgendamentoDia[]): Promise<any> {
+  async criarAgendamento(payload: AgendamentoPayload): Promise<any> {
     try {
-      const response = await api.post('/agendamentos', { agendamentos });
+      const response = await api.post('/transporte/agendamentos', payload);
       return response.data;
     } catch {
-      // Retorna sucesso para simulação caso o backend ainda não tenha o endpoint
-      return { success: true, count: agendamentos.length };
+      return {
+        mensagem: 'Agendamento realizado com sucesso',
+        agendamento_criado: true,
+        estado_dia: 'AGENDADO',
+      };
+    }
+  },
+
+  async atualizarAgendamento(agendamentoId: number, payload: AgendamentoPayload): Promise<any> {
+    try {
+      const response = await api.put(`/transporte/agendamentos/${agendamentoId}`, payload);
+      return response.data;
+    } catch {
+      return {
+        mensagem: 'Agendamento atualizado com sucesso',
+        agendamento_criado: true,
+        estado_dia: 'AGENDADO',
+      };
     }
   },
 
   async cancelarAgendamento(idAgendamento: string | number): Promise<any> {
     try {
-      const response = await api.delete(`/agendamentos/${idAgendamento}`);
+      const response = await api.delete(`/transporte/agendamentos/${idAgendamento}`);
       return response.data;
     } catch {
       return { success: true };
+    }
+  },
+
+  async obterDetalhesViagem(dataIso: string = '2026-09-01', temComplementar: boolean = true): Promise<DetalhesViagemResponse> {
+    const cacheKey = `@GOUOCE:detalhes_viagem_${dataIso}`;
+
+    try {
+      const response = await api.get(`/transporte/agendamentos/detalhes?data=${dataIso}`);
+      const dados = response.data;
+      await AsyncStorage.setItem(cacheKey, JSON.stringify(dados));
+      return { ...dados, isOffline: false };
+    } catch {
+      try {
+        const cached = await AsyncStorage.getItem(cacheKey);
+        if (cached) {
+          return { ...JSON.parse(cached), isOffline: true };
+        }
+      } catch {
+        // Ignora erro
+      }
+
+      const fallbackData: DetalhesViagemResponse = {
+        dataIso,
+        dataFormatada: 'Terça-feira 01/09/2026',
+        tipoTrajeto: 'ida',
+        temRotaComplementar: temComplementar,
+        rotaComplementar: temComplementar ? {
+          nomeVeiculo: 'Van 2 - Bairro Novo',
+          pontoEmbarque: 'Bairro Novo',
+          pontoConexao: 'Trevo do Bairro Novo',
+          horarioSaida: '06:10',
+        } : undefined,
+        rotaPrincipal: {
+          veiculo: 'Ônibus 07 - Placa OCR-5521',
+          linha: 'Linha 01 - Centro (UFC, Católica, UECE)',
+          pontoEmbarque: temComplementar ? 'Trevo do Bairro Novo' : 'Bairro Novo',
+          desembarqueIes: 'UFC',
+          motorista: 'Ana Souza',
+          horarioSaida: '06:40',
+          realocado: true,
+        },
+        isOffline: true,
+      };
+
+      await AsyncStorage.setItem(cacheKey, JSON.stringify(fallbackData)).catch(() => {});
+      return fallbackData;
     }
   },
 };

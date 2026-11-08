@@ -1,17 +1,15 @@
 import { agendamentoDiaSchema } from '../agendamentoSchema';
 
-describe('agendamentoDiaSchema - HU-013 Validação de Formulário', () => {
+describe('agendamentoDiaSchema - HU-013 Validação de Formulário (Requisitos Atualizados)', () => {
 
-  it('deve validar com sucesso quando ida e volta são Sim e todos os campos estão preenchidos', () => {
+  it('deve validar com sucesso quando ida e volta são Sim e os campos obrigatórios estão preenchidos', () => {
     const dados = {
       dataIso: '2026-09-02',
       usaIda: true,
-      horarioIda: '05:30:00',
       pontoEmbarqueIda: '1',
       faculdadeDestinoIda: '1',
       rotaComplementarIda: '',
       usaVolta: true,
-      horarioVolta: '17:00:00',
       pontoDesembarqueVolta: '1',
       faculdadeOrigemVolta: '1',
       rotaComplementarVolta: '',
@@ -25,7 +23,6 @@ describe('agendamentoDiaSchema - HU-013 Validação de Formulário', () => {
     const dados = {
       dataIso: '2026-09-02',
       usaIda: true,
-      horarioIda: '05:30:00',
       pontoEmbarqueIda: '2',
       faculdadeDestinoIda: '1',
       usaVolta: false,
@@ -40,7 +37,6 @@ describe('agendamentoDiaSchema - HU-013 Validação de Formulário', () => {
       dataIso: '2026-09-02',
       usaIda: false,
       usaVolta: true,
-      horarioVolta: '17:00:00',
       pontoDesembarqueVolta: '2',
       faculdadeOrigemVolta: '1',
     };
@@ -53,7 +49,6 @@ describe('agendamentoDiaSchema - HU-013 Validação de Formulário', () => {
     const dados = {
       dataIso: '2026-09-02',
       usaIda: true,
-      horarioIda: '',
       pontoEmbarqueIda: '',
       faculdadeDestinoIda: '',
       usaVolta: false,
@@ -64,7 +59,6 @@ describe('agendamentoDiaSchema - HU-013 Validação de Formulário', () => {
 
     if (!resultado.success) {
       const msgs = resultado.error.issues.map((i) => i.message);
-      expect(msgs).toContain('Selecione o horário de ida');
       expect(msgs).toContain('Selecione o ponto de embarque');
       expect(msgs).toContain('Selecione a faculdade (IES) de destino');
     }
@@ -75,7 +69,6 @@ describe('agendamentoDiaSchema - HU-013 Validação de Formulário', () => {
       dataIso: '2026-09-02',
       usaIda: false,
       usaVolta: true,
-      horarioVolta: '',
       pontoDesembarqueVolta: '',
       faculdadeOrigemVolta: '',
     };
@@ -85,7 +78,6 @@ describe('agendamentoDiaSchema - HU-013 Validação de Formulário', () => {
 
     if (!resultado.success) {
       const msgs = resultado.error.issues.map((i) => i.message);
-      expect(msgs).toContain('Selecione o horário de volta');
       expect(msgs).toContain('Selecione o ponto de desembarque');
       expect(msgs).toContain('Selecione a faculdade (IES) de origem');
     }

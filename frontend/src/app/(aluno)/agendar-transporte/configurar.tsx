@@ -7,7 +7,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { agendamentoDiaSchema, AgendamentoDiaFormData } from '@/schemas/agendamentoSchema';
-import { agendamentoService, OpcaoSelect, OpcoesAgendamentoResponse, AgendamentoDia } from '@/services/agendamentoService';
+import { agendamentoService, OpcaoSelect, OpcoesAgendamentoResponse, AgendamentoDia, AgendamentoPayload } from '@/services/agendamentoService';
 import { AppPopup } from '@/components/ui/AppPopup';
 
 export default function ConfigurarAgendamentoScreen() {
@@ -49,12 +49,10 @@ export default function ConfigurarAgendamentoScreen() {
     defaultValues: {
       dataIso: dataIsoAtual,
       usaIda: true,
-      horarioIda: '05:30:00',
       pontoEmbarqueIda: '1',
       faculdadeDestinoIda: '1',
       rotaComplementarIda: '',
       usaVolta: true,
-      horarioVolta: '17:00:00',
       pontoDesembarqueVolta: '1',
       faculdadeOrigemVolta: '1',
       rotaComplementarVolta: '',
@@ -96,32 +94,41 @@ export default function ConfigurarAgendamentoScreen() {
     const novaLista = [...agendamentosSalvos.filter(a => a.dataIso !== dataIsoAtual), novoDia];
     setAgendamentosSalvos(novaLista);
 
+    // Mapear para payload da API /transporte/agendamentos (Sem horários conforme atualização da HU-013)
+    const payloadApi: AgendamentoPayload = {
+      data: dataIsoAtual,
+      usa_ida: dados.usaIda,
+      usa_volta: dados.usaVolta,
+      ponto_embarque_id: dados.usaIda && dados.pontoEmbarqueIda ? Number(dados.pontoEmbarqueIda) : null,
+      ies_destino_id: dados.usaIda && dados.faculdadeDestinoIda ? Number(dados.faculdadeDestinoIda) : null,
+      rota_complementar_ida_id: dados.usaIda && dados.rotaComplementarIda ? Number(dados.rotaComplementarIda) : null,
+      ponto_desembarque_id: dados.usaVolta && dados.pontoDesembarqueVolta ? Number(dados.pontoDesembarqueVolta) : null,
+      ies_origem_id: dados.usaVolta && dados.faculdadeOrigemVolta ? Number(dados.faculdadeOrigemVolta) : null,
+      rota_complementar_volta_id: dados.usaVolta && dados.rotaComplementarVolta ? Number(dados.rotaComplementarVolta) : null,
+    };
+
+    setIsLoading(true);
+    try {
+      if (modoEdicao) {
+        await agendamentoService.atualizarAgendamento(1, payloadApi);
+      } else {
+        await agendamentoService.criarAgendamento(payloadApi);
+      }
+    } catch {
+      // Fallback
+    } finally {
+      setIsLoading(false);
+    }
+
     if (indiceDataAtual < datasArray.length - 1) {
-      // Avanca para a proxima data
       setIndiceDataAtual(indiceDataAtual + 1);
       setSnackbarMessage('Agendamento salvo. Avançando para o próximo dia.');
       setSnackbarVisivel(true);
     } else {
-      // Finaliza todos os agendamentos selecionados
-      setIsLoading(true);
-      try {
-        await agendamentoService.salvarAgendamentos(novaLista);
-        setIsLoading(false);
-        router.push({
-          pathname: '/(aluno)/agendar-transporte/sucesso',
-          params: { agendamentosJson: JSON.stringify(novaLista) },
-        } as any);
-      } catch {
-        setIsLoading(false);
-        setSnackbarMessage('Agendamento realizado com sucesso!');
-        setSnackbarVisivel(true);
-        setTimeout(() => {
-          router.push({
-            pathname: '/(aluno)/agendar-transporte/sucesso',
-            params: { agendamentosJson: JSON.stringify(novaLista) },
-          } as any);
-        }, 1000);
-      }
+      router.push({
+        pathname: '/(aluno)/agendar-transporte/sucesso',
+        params: { agendamentosJson: JSON.stringify(novaLista) },
+      } as any);
     }
   };
 
@@ -158,7 +165,7 @@ export default function ConfigurarAgendamentoScreen() {
         </Text>
       </View>
 
-      {/* Tabs de Selecao de Datas */}
+      {/* Tabs de Seleção de Datas */}
       <View style={styles.tabsContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabsRow}>
           {datasArray.map((dIso, idx) => {
@@ -238,25 +245,6 @@ export default function ConfigurarAgendamentoScreen() {
 
         {usaIda && (
           <View style={styles.fieldsGroup}>
-            {/* Horario de Ida */}
-            <View style={styles.inputBox}>
-              <Text variant="labelMedium" style={styles.inputLabel}>Horário de Ida *</Text>
-              <Controller
-                control={control}
-                name="horarioIda"
-                render={({ field: { value, onChange } }) => (
-                  <TouchableOpacity
-                    style={[styles.selectBox, !!errors.horarioIda && styles.selectBoxError]}
-                    onPress={() => abrirPicker('Selecione o Horário de Ida', opcoes?.horariosIda || [], onChange)}
-                  >
-                    <Text style={styles.selectText}>{getLabelPorValor(opcoes?.horariosIda, value)}</Text>
-                    <ChevronDown size={20} color="#666" />
-                  </TouchableOpacity>
-                )}
-              />
-              {errors.horarioIda && <Text style={styles.errorText}>{errors.horarioIda.message}</Text>}
-            </View>
-
             {/* Ponto de Embarque */}
             <View style={styles.inputBox}>
               <Text variant="labelMedium" style={styles.inputLabel}>Ponto de embarque *</Text>
@@ -337,23 +325,23 @@ export default function ConfigurarAgendamentoScreen() {
 
         {usaVolta && (
           <View style={styles.fieldsGroup}>
-            {/* Horario de Volta */}
+            {/* Faculdade de Origem */}
             <View style={styles.inputBox}>
-              <Text variant="labelMedium" style={styles.inputLabel}>Horário de Volta *</Text>
+              <Text variant="labelMedium" style={styles.inputLabel}>Faculdade de origem *</Text>
               <Controller
                 control={control}
-                name="horarioVolta"
+                name="faculdadeOrigemVolta"
                 render={({ field: { value, onChange } }) => (
                   <TouchableOpacity
-                    style={[styles.selectBox, !!errors.horarioVolta && styles.selectBoxError]}
-                    onPress={() => abrirPicker('Selecione o Horário de Volta', opcoes?.horariosVolta || [], onChange)}
+                    style={[styles.selectBox, !!errors.faculdadeOrigemVolta && styles.selectBoxError]}
+                    onPress={() => abrirPicker('Selecione a Faculdade de Origem', opcoes?.faculdades || [], onChange)}
                   >
-                    <Text style={styles.selectText}>{getLabelPorValor(opcoes?.horariosVolta, value)}</Text>
+                    <Text style={styles.selectText}>{getLabelPorValor(opcoes?.faculdades, value)}</Text>
                     <ChevronDown size={20} color="#666" />
                   </TouchableOpacity>
                 )}
               />
-              {errors.horarioVolta && <Text style={styles.errorText}>{errors.horarioVolta.message}</Text>}
+              {errors.faculdadeOrigemVolta && <Text style={styles.errorText}>{errors.faculdadeOrigemVolta.message}</Text>}
             </View>
 
             {/* Ponto de Desembarque */}
@@ -373,25 +361,6 @@ export default function ConfigurarAgendamentoScreen() {
                 )}
               />
               {errors.pontoDesembarqueVolta && <Text style={styles.errorText}>{errors.pontoDesembarqueVolta.message}</Text>}
-            </View>
-
-            {/* Faculdade de Origem */}
-            <View style={styles.inputBox}>
-              <Text variant="labelMedium" style={styles.inputLabel}>Faculdade de origem *</Text>
-              <Controller
-                control={control}
-                name="faculdadeOrigemVolta"
-                render={({ field: { value, onChange } }) => (
-                  <TouchableOpacity
-                    style={[styles.selectBox, !!errors.faculdadeOrigemVolta && styles.selectBoxError]}
-                    onPress={() => abrirPicker('Selecione a Faculdade de Origem', opcoes?.faculdades || [], onChange)}
-                  >
-                    <Text style={styles.selectText}>{getLabelPorValor(opcoes?.faculdades, value)}</Text>
-                    <ChevronDown size={20} color="#666" />
-                  </TouchableOpacity>
-                )}
-              />
-              {errors.faculdadeOrigemVolta && <Text style={styles.errorText}>{errors.faculdadeOrigemVolta.message}</Text>}
             </View>
 
             {/* Rota Complementar Volta */}

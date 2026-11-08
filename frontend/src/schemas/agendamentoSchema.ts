@@ -4,26 +4,17 @@ export const agendamentoDiaSchema = z
   .object({
     dataIso: z.string().min(1, 'Selecione uma data para agendamento'),
     usaIda: z.boolean(),
-    horarioIda: z.string().optional(),
     pontoEmbarqueIda: z.string().optional(),
     faculdadeDestinoIda: z.string().optional(),
     rotaComplementarIda: z.string().optional(),
     usaVolta: z.boolean(),
-    horarioVolta: z.string().optional(),
     pontoDesembarqueVolta: z.string().optional(),
     faculdadeOrigemVolta: z.string().optional(),
     rotaComplementarVolta: z.string().optional(),
   })
   .superRefine((dados, ctx) => {
-    // FA-003: Se marcou Sim para Ida, exige horário, ponto de embarque e IES de destino
+    // FA-003 (Requisitos Atualizados): Se 'Sim' para Ida, exige ponto de embarque e faculdade (IES) de destino
     if (dados.usaIda) {
-      if (!dados.horarioIda || dados.horarioIda.trim() === '') {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['horarioIda'],
-          message: 'Selecione o horário de ida',
-        });
-      }
       if (!dados.pontoEmbarqueIda || dados.pontoEmbarqueIda.trim() === '') {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -40,15 +31,8 @@ export const agendamentoDiaSchema = z
       }
     }
 
-    // FA-003: Se marcou Sim para Volta, exige horário, ponto de desembarque e IES de origem
+    // FA-003 (Requisitos Atualizados): Se 'Sim' para Volta, exige ponto de desembarque e faculdade (IES) de origem
     if (dados.usaVolta) {
-      if (!dados.horarioVolta || dados.horarioVolta.trim() === '') {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['horarioVolta'],
-          message: 'Selecione o horário de volta',
-        });
-      }
       if (!dados.pontoDesembarqueVolta || dados.pontoDesembarqueVolta.trim() === '') {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
