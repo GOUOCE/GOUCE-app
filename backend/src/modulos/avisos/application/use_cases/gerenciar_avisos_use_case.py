@@ -11,6 +11,9 @@ from src.modulos.avisos.application.dtos.aviso_dto import (
 from src.modulos.avisos.infrastructure.repositories.aviso_repository import (
     AvisoRepository,
 )
+from src.modulos.avisos.infrastructure.services.notificacao_push_service import (
+    NotificacaoPushService,
+)
 
 
 class AvisoValidationError(ValueError):
@@ -24,18 +27,29 @@ class AvisoValidationError(ValueError):
 class GerenciarAvisosUseCase:
     """Coordena validações de negócio e operações do repositório de avisos."""
 
-    def __init__(self, repository: AvisoRepository):
+    def __init__(
+        self,
+        repository: AvisoRepository,
+        notificacao_service: NotificacaoPushService | None = None,
+    ):
         self.repository = repository
+        self.notificacao_service = notificacao_service or NotificacaoPushService()
 
     def criar(self, titulo: str, descricao: str, autor_id: int) -> dict:
         self._validar_id(autor_id, "autor_id")
         titulo_validado = self._validar_titulo(titulo)
         descricao_validada = self._validar_descricao(descricao)
-        return self.repository.criar(
+        aviso_criado = self.repository.criar(
             titulo=titulo_validado,
             descricao=descricao_validada,
             autor_id=autor_id,
         )
+        try:
+            self.notificacao_service.disparar_novo_aviso(aviso_criado)
+        except Exception:
+            # O disparo de push é desacoplado e não deve reverter a publicação do aviso.
+            pass
+        return aviso_criado
 
     def listar(self, titulo: str | None = None) -> list[dict]:
         if titulo is not None:
@@ -47,6 +61,24 @@ class GerenciarAvisosUseCase:
             titulo = titulo.strip()
 
         return self.repository.listar(titulo=titulo)
+
+    def listar_notificacoes(
+        self,
+        apos_id: int | None = None,
+        limite: int = 10,
+    ) -> list[dict]:
+        if apos_id is not None:
+            if isinstance(apos_id, bool) or not isinstance(apos_id, int) or apos_id < 0:
+                raise AvisoValidationError(
+                    "apos_id",
+                    "O identificador de referência deve ser um número inteiro não negativo.",
+                )
+        avisos_persistidos = self.repository.listar()
+        return self.notificacao_service.listar_eventos_recentes(
+            avisos_persistidos=avisos_persistidos,
+            apos_id=apos_id,
+            limite=limite,
+        )
 
     @staticmethod
     def _validar_titulo(valor: str) -> str:

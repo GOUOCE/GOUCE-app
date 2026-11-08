@@ -59,3 +59,21 @@ class OperacaoAvisoResponseDTO(BaseModel):
     success: bool = True
     message: str
     data: AvisoResponseDTO | None = None
+
+
+class NotificacaoAvisoResponseDTO(BaseModel):
+    """Representação de uma notificação push de aviso ou realocação (HU-024)."""
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        extra="forbid",
+    )
+
+    id: int
+    tipo: str
+    app_nome: str
+    titulo: str
+    mensagem: str
+    aviso_id: int | None = None
+    data_criacao: datetime
+

@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from src.modulos.avisos.application.dtos.aviso_dto import (
     AvisoResponseDTO,
     CriarAvisoDTO,
+    NotificacaoAvisoResponseDTO,
     OperacaoAvisoResponseDTO,
 )
 from src.modulos.avisos.application.use_cases.gerenciar_avisos_use_case import (
@@ -154,6 +155,17 @@ async def listar_avisos(
 ):
     termo_busca = titulo if titulo is not None else busca
     return use_case.listar(titulo=termo_busca)
+
+
+@router.get("/notificacoes", response_model=list[NotificacaoAvisoResponseDTO])
+async def listar_notificacoes_avisos(
+    apos_id: int | None = Query(default=None, ge=0),
+    limite: int = Query(default=10, ge=1, le=50),
+    use_case: GerenciarAvisosUseCase = Depends(get_use_case),
+    _: dict = Depends(verify_any_user),
+):
+    return use_case.listar_notificacoes(apos_id=apos_id, limite=limite)
+
 
 
 @router.post(
