@@ -73,4 +73,60 @@ describe('avisoService (HU-023)', () => {
     expect(criado.id).toBe(10);
     expect(criado.titulo).toBe('Reajuste no ponto de embarque');
   });
+
+  it('lista notificacoes recentes com parametro apos_id e nome do app GOUOCE (HU-024)', async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: [
+        {
+          id: 5,
+          tipo: 'aviso',
+          app_nome: 'GOUOCE',
+          titulo: 'Alteração de horário',
+          mensagem: 'A saída da rota Linha 02 passa a ser às 06h30.',
+          aviso_id: 5,
+          data_criacao: '2026-09-01T07:30:00Z',
+        },
+      ],
+    } as any);
+
+    const notificacoes = await avisoService.listarNotificacoes(4, 2);
+
+    expect(mockedGet).toHaveBeenCalledWith('/avisos/notificacoes', {
+      params: { apos_id: 4, limite: 2 },
+    });
+    expect(notificacoes).toHaveLength(1);
+    expect(notificacoes[0].app_nome).toBe('GOUOCE');
+    expect(notificacoes[0].titulo).toBe('Alteração de horário');
+  });
+
+  it('dispara notificacao nativa do sistema com nome GOUOCE e icone do app (HU-024)', () => {
+    const mockNotificationCtor = jest.fn();
+    (mockNotificationCtor as any).permission = 'granted';
+    const originalNotification = (globalThis as any).Notification;
+    (globalThis as any).Notification = mockNotificationCtor;
+
+    try {
+      const disparou = avisoService.dispararNotificacaoSistema({
+        id: 7,
+        tipo: 'aviso',
+        app_nome: 'GOUOCE',
+        titulo: 'Alteração de horário',
+        mensagem: 'Saída às 06h30.',
+        aviso_id: 7,
+        data_criacao: '2026-09-01T07:30:00Z',
+      });
+
+      expect(disparou).toBe(true);
+      expect(mockNotificationCtor).toHaveBeenCalledWith(
+        'GOUOCE • Alteração de horário',
+        expect.objectContaining({
+          body: 'Saída às 06h30.',
+          icon: expect.stringMatching(/^data:image\//),
+          badge: expect.stringMatching(/^data:image\//),
+        })
+      );
+    } finally {
+      (globalThis as any).Notification = originalNotification;
+    }
+  });
 });

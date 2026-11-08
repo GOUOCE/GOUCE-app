@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import GerenciarAvisosScreen from '../../app/(administrador)/notificacoes';
 import CadastrarAvisoScreen from '../../app/(administrador)/notificacoes/cadastrar';
+import MuralAvisosAlunoScreen from '../../app/(aluno)/avisos';
 import { avisoService, AvisoItem } from '../../services/avisoService';
 
 const renderer = jest.requireActual<any>('react-test-renderer');
@@ -42,6 +43,7 @@ jest.mock('../../services/avisoService', () => ({
   avisoService: {
     listarAvisos: jest.fn(),
     criarAviso: jest.fn(),
+    inscreverAtualizacaoMural: jest.fn(() => () => {}),
   },
 }));
 
@@ -56,6 +58,10 @@ const mockListar = avisoService.listarAvisos as jest.MockedFunction<
 const mockCriar = avisoService.criarAviso as jest.MockedFunction<
   typeof avisoService.criarAviso
 >;
+const mockInscrever =
+  avisoService.inscreverAtualizacaoMural as jest.MockedFunction<
+    typeof avisoService.inscreverAtualizacaoMural
+  >;
 
 const avisosMock: AvisoItem[] = [
   {
@@ -74,7 +80,7 @@ const avisosMock: AvisoItem[] = [
   },
 ];
 
-describe('Telas de Gerenciar Avisos e Novo Aviso (HU-023)', () => {
+describe('Telas de Gerenciar Avisos e Mural de Avisos (HU-023 / HU-024)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockSearchParams = {};
@@ -126,6 +132,37 @@ describe('Telas de Gerenciar Avisos e Novo Aviso (HU-023)', () => {
     });
 
     expect(mockReplace).toHaveBeenCalledWith('/(administrador)/home');
+    await renderer.act(async () => {
+      root.unmount();
+    });
+  });
+
+  it('renderiza o Mural de Avisos na visão do aluno e recarrega automaticamente ao receber nova notificação (HU-024)', async () => {
+    let callbackAtualizacao: (() => void) | undefined;
+    mockInscrever.mockImplementation((cb: () => void) => {
+      callbackAtualizacao = cb;
+      return () => {};
+    });
+
+    mockListar
+      .mockResolvedValueOnce([avisosMock[0]])
+      .mockResolvedValueOnce(avisosMock);
+
+    let root: any;
+    await renderer.act(async () => {
+      root = renderer.create(<MuralAvisosAlunoScreen />);
+    });
+
+    expect(mockListar).toHaveBeenCalledTimes(1);
+    expect(root.root.findAllByType('Plus')).toHaveLength(0);
+
+    // Simula chegada de nova notificação de aviso disparando recarregamento automático
+    await renderer.act(async () => {
+      callbackAtualizacao?.();
+    });
+
+    expect(mockListar).toHaveBeenCalledTimes(2);
+
     await renderer.act(async () => {
       root.unmount();
     });
