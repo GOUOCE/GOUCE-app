@@ -56,8 +56,10 @@ export default function CarteirinhaDigitalScreen() {
   const nomeAluno = carteirinhaData?.nome || user?.name || 'João Neves';
   const emailAluno = carteirinhaData?.email || user?.email || 'joao@email.com';
 
-  const inst = carteirinhaData?.faculdade_id || user?.faculdade || 'UFC';
-  const campus = carteirinhaData?.campus || 'Campus Quixadá';
+  const instRaw = carteirinhaData?.faculdade_id || user?.faculdade || 'UFC';
+  const inst = String(instRaw);
+  const campusRaw = carteirinhaData?.campus || 'Campus Quixadá';
+  const campus = String(campusRaw);
   const instituicaoTexto = inst.includes('Campus') ? inst : `${inst} - ${campus.includes('Campus') ? campus : `Campus ${campus}`}`;
 
   const cursoAluno = carteirinhaData?.curso || user?.curso || 'Engenharia de Software';

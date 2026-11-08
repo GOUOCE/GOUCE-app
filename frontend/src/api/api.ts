@@ -3,18 +3,33 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
+const isPrivateHost = (host: string) =>
+  host === 'localhost' ||
+  host === '127.0.0.1' ||
+  host === '10.0.2.2' ||
+  /^192\.168\.\d{1,3}\.\d{1,3}$/.test(host) ||
+  /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host) ||
+  /^172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}$/.test(host);
+
 const getBaseUrl = () => {
-  const hostUri = Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost;
-  if (hostUri) {
-    const hostIp = hostUri.split(':')[0];
-    if (hostIp && hostIp !== 'localhost' && hostIp !== '127.0.0.1') {
-      const url = `http://${hostIp}:8000`;
-      return url;
+  if (Platform.OS === 'web') {
+    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+      return `http://${window.location.hostname}:8000`;
     }
+    return 'http://localhost:8000';
   }
 
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
-  if (envUrl && !envUrl.includes('ngrok')) {
+  const hostUri = Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost;
+
+  if (hostUri) {
+    const hostIp = hostUri.split(':')[0];
+    if (isPrivateHost(hostIp) && hostIp !== '10.0.2.2') {
+      return `http://${hostIp}:8000`;
+    }
+  }
+
+  if (envUrl) {
     return envUrl;
   }
 
@@ -45,8 +60,7 @@ api.interceptors.request.use(async (config) => {
 let isRefreshing = false;
 let failedQueue: any[] = [];
 
-// Rotas públicas de autenticação: um 401 aqui é resposta de negócio
-// (senha errada, conta pendente, token inválido), não sessão expirada.
+// Rotas públicas de autenticação
 const ROTAS_SEM_REFRESH = [
   '/auth/login',
   '/auth/refresh',
@@ -58,7 +72,6 @@ const ROTAS_SEM_REFRESH = [
 const deveTentarRefresh = (config: any) => {
   if (!config || config._retry) return false;
   if (ROTAS_SEM_REFRESH.some(rota => config.url?.startsWith(rota))) return false;
-  // Requisição sem token não tem sessão para renovar
   return Boolean(config.headers?.Authorization);
 };
 
@@ -128,7 +141,6 @@ api.interceptors.response.use(
           await AsyncStorage.removeItem('@GOUOCE:user');
         }
 
-        // Devolve o erro original para a tela mostrar a mensagem da API
         return Promise.reject(error);
       }
     }

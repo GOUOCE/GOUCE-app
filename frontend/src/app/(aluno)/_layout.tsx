@@ -20,8 +20,12 @@ export default function StudentLayout() {
     return <Redirect href="/acesso-negado" />;
   }
 
-  if ((user.status || '').toLowerCase() === 'pendente') {
+  const statusAluno = (user.status || '').toLowerCase();
+  if (statusAluno === 'pendente') {
     return <Redirect href="/(autenticacao)/cadastro-pendente" />;
+  }
+  if (statusAluno === 'rejeitado') {
+    return <Redirect href="/(autenticacao)/cadastro-rejeitado" />;
   }
 
   return (
@@ -57,11 +61,6 @@ export default function StudentLayout() {
               <ClipboardList size={24} color={focused ? '#000' : '#666'} />
             </View>
           ),
-          tabBarButton: ({ children, style }) => (
-            <View style={style} pointerEvents="none">
-              {children}
-            </View>
-          ),
         }}
       />
       <Tabs.Screen
@@ -71,11 +70,6 @@ export default function StudentLayout() {
           tabBarIcon: ({ focused }) => (
             <View style={[styles.iconContainer, focused && styles.activeIconContainer]}>
               <Megaphone size={24} color={focused ? '#000' : '#666'} />
-            </View>
-          ),
-          tabBarButton: ({ children, style }) => (
-            <View style={style} pointerEvents="none">
-              {children}
             </View>
           ),
         }}
@@ -111,6 +105,18 @@ export default function StudentLayout() {
       />
       <Tabs.Screen
         name="renovar-vinculo"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="agendar-transporte"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="agendamento-detalhes"
         options={{
           href: null,
         }}
