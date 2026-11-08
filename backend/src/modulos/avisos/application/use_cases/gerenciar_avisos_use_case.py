@@ -73,7 +73,11 @@ class GerenciarAvisosUseCase:
                     "apos_id",
                     "O identificador de referência deve ser um número inteiro não negativo.",
                 )
-        avisos_persistidos = self.repository.listar()
+        avisos_persistidos = (
+            []
+            if self.notificacao_service.possui_eventos_em_memoria()
+            else self.repository.listar()
+        )
         return self.notificacao_service.listar_eventos_recentes(
             avisos_persistidos=avisos_persistidos,
             apos_id=apos_id,

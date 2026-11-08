@@ -80,7 +80,7 @@ class NotificacaoPushService:
             aviso_id = int(aviso["id"])
             chave = ("aviso", aviso_id)
             if chave not in por_chave:
-                por_chave[chave] = {
+                evento_persistido = {
                     "id": aviso_id,
                     "tipo": "aviso",
                     "app_nome": APP_NOME_NOTIFICACAO,
@@ -89,6 +89,13 @@ class NotificacaoPushService:
                     "aviso_id": aviso_id,
                     "data_criacao": _normalizar_data_utc(aviso.get("data_criacao")),
                 }
+                por_chave[chave] = evento_persistido
+                with self._lock:
+                    if not any(
+                        e["tipo"] == "aviso" and int(e["id"]) == aviso_id
+                        for e in self._eventos
+                    ):
+                        self._eventos.append(evento_persistido)
 
         itens = list(por_chave.values())
         if apos_id is not None:
@@ -107,6 +114,11 @@ class NotificacaoPushService:
             reverse=True,
         )
         return itens[: max(1, min(limite, 50))]
+
+    def possui_eventos_em_memoria(self) -> bool:
+        """Indica se o buffer em memória já está aquecido, evitando queries desnecessárias ao banco."""
+        with self._lock:
+            return len(self._eventos) > 0
 
     @classmethod
     def limpar_eventos_memoria(cls) -> None:
