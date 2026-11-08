@@ -1,5 +1,5 @@
 import json
-from datetime import date
+from datetime import date, datetime, timezone
 
 from sqlalchemy.orm import Session
 
@@ -131,6 +131,68 @@ class AgendamentoRepository:
         )
         self.session.commit()
         self.session.refresh(item)
+        return item
+
+    def list_active_from(self, aluno_id: int, target: date):
+        return (
+            self.session.query(AgendamentoORM)
+            .filter(
+                AgendamentoORM.aluno_id == aluno_id,
+                AgendamentoORM.status == "ATIVO",
+                AgendamentoORM.data >= target,
+            )
+            .order_by(AgendamentoORM.data)
+            .all()
+        )
+
+    def count_active_from(self, aluno_id: int, target: date) -> int:
+        return len(self.list_active_from(aluno_id, target))
+
+    def get_by_id(self, aluno_id: int, item_id: int):
+        """Agendamento ATIVO do aluno (qualquer data, inclusive passada)."""
+        return self.get_active(aluno_id, item_id)
+
+    def reference_name(self, model, value, attr: str):
+        if value is None:
+            return None
+        item = self.session.get(model, value)
+        return getattr(item, attr, None) if item is not None else None
+
+    def remove_allocations(self, agendamento) -> None:
+        """Gancho para remover a alocação veículo/dia do agendamento.
+
+        No-op até a tabela de alocação (HU-016/HU-018) existir. Quando existir,
+        deve apagar/atualizar a alocação vinculada usando a mesma sessão, sem
+        commit próprio, para que o cancelamento permaneça atômico (RNF-012).
+        """
+        return None
+
+    def cancel(self, aluno_id: int, item):
+        """Cancelamento lógico em transação única (sem cancelamento parcial)."""
+        try:
+            before = {
+                "data": item.data,
+                "usa_ida": item.usa_ida,
+                "usa_volta": item.usa_volta,
+                "status": item.status,
+            }
+            self.remove_allocations(item)
+            item.status = "CANCELADO"
+            item.cancelled_at = datetime.now(timezone.utc)
+            self.session.add(
+                LogAuditoriaORM(
+                    usuario_id=aluno_id,
+                    acao="CANCELAR",
+                    entidade="agendamento",
+                    entidade_id=item.id,
+                    valor_anterior=json.dumps(before, default=str),
+                    valor_novo=json.dumps({"status": "CANCELADO"}),
+                )
+            )
+            self.session.commit()
+        except Exception:
+            self.session.rollback()
+            raise
         return item
 
     def rollback(self):
