@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, TextInput } from 'react-native-paper';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Plus, Search, X } from 'lucide-react-native';
 
 import { avisoService, AvisoItem } from '@/services/avisoService';
@@ -11,6 +11,7 @@ import { CardAviso } from '@/components/avisos/CardAviso';
 
 export default function GerenciarAvisosScreen() {
   const router = useRouter();
+  const { origem } = useLocalSearchParams<{ origem?: string }>();
 
   const [busca, setBusca] = useState('');
   const [avisos, setAvisos] = useState<AvisoItem[]>([]);
@@ -59,11 +60,27 @@ export default function GerenciarAvisosScreen() {
     }, [carregarAvisos])
   );
 
+  const handleVoltar = () => {
+    if (origem === 'home') {
+      router.replace('/(administrador)/home');
+      return;
+    }
+    if (origem === 'mais') {
+      router.replace('/(administrador)/mais');
+      return;
+    }
+    if (typeof (router as any).canGoBack === 'function' && (router as any).canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/(administrador)/mais');
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.replace('/(administrador)/mais')}>
+        <TouchableOpacity onPress={handleVoltar}>
           <ArrowLeft size={26} color="#191C20" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>
@@ -71,7 +88,12 @@ export default function GerenciarAvisosScreen() {
         </Text>
         <TouchableOpacity
           style={styles.novoButton}
-          onPress={() => router.push('/(administrador)/notificacoes/cadastrar' as any)}
+          onPress={() =>
+            router.push({
+              pathname: '/(administrador)/notificacoes/cadastrar',
+              params: origem ? { origem } : undefined,
+            } as any)
+          }
         >
           <Plus size={20} color="#3E5F90" />
           <Text style={styles.novoText}>Novo</Text>

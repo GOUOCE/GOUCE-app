@@ -120,7 +120,12 @@ export default function MaisMenuScreen() {
             icon={Bell}
             title="Notificações"
             subtitle="Gerenciar avisos e comunicados globais"
-            onPress={() => router.push('/(administrador)/notificacoes' as any)}
+            onPress={() =>
+              router.push({
+                pathname: '/(administrador)/notificacoes',
+                params: { origem: 'mais' },
+              } as any)
+            }
           />
         </View>
       </View>

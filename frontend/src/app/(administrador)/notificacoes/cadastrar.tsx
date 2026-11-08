@@ -8,7 +8,7 @@ import {
   Platform,
 } from 'react-native';
 import { Text, TextInput, Button } from 'react-native-paper';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft } from 'lucide-react-native';
@@ -25,6 +25,7 @@ import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 export default function CadastrarAvisoScreen() {
   const router = useRouter();
+  const { origem } = useLocalSearchParams<{ origem?: string }>();
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -97,7 +98,10 @@ export default function CadastrarAvisoScreen() {
 
   const voltarParaListagem = () => {
     closePopup();
-    router.replace('/(administrador)/notificacoes' as any);
+    router.replace({
+      pathname: '/(administrador)/notificacoes',
+      params: origem ? { origem } : undefined,
+    } as any);
   };
 
   const onSubmit = async (dados: AvisoFormData) => {
