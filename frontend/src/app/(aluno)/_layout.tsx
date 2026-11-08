@@ -73,11 +73,6 @@ export default function StudentLayout() {
               <Megaphone size={24} color={focused ? '#000' : '#666'} />
             </View>
           ),
-          tabBarButton: ({ children, style }) => (
-            <View style={style} pointerEvents="none">
-              {children}
-            </View>
-          ),
         }}
       />
       <Tabs.Screen
