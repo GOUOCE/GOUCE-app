@@ -22,10 +22,10 @@ export default function AgendamentoSucessoScreen() {
   // Se nao veio via params, gera lista mockada equivalente ao prototipo para exibicao
   if (agendamentos.length === 0) {
     agendamentos = [
-      { dataIso: '2026-08-31', usaIda: true, horarioIda: '06:40', usaVolta: true, horarioVolta: '17:30' },
-      { dataIso: '2026-09-02', usaIda: true, horarioIda: '06:40', usaVolta: false },
-      { dataIso: '2026-09-03', usaIda: false, usaVolta: true, horarioVolta: '17:30' },
-      { dataIso: '2026-09-04', usaIda: true, horarioIda: '06:40', usaVolta: true, horarioVolta: '17:30' },
+      { dataIso: '2026-08-31', usaIda: true, usaVolta: true },
+      { dataIso: '2026-09-02', usaIda: true, usaVolta: false },
+      { dataIso: '2026-09-03', usaIda: false, usaVolta: true },
+      { dataIso: '2026-09-04', usaIda: true, usaVolta: true },
     ];
   }
 
@@ -37,27 +37,15 @@ export default function AgendamentoSucessoScreen() {
                        item.dataIso === '2026-09-04' ? 'Sex, 04/09' : item.dataIso;
 
     if (item.usaIda && item.usaVolta) {
-      return {
-        titulo: rotuloData,
-        descricao: `Ida às ${item.horarioIda || '06:40'} e volta às ${item.horarioVolta || '17:30'}`,
-      };
+      return { titulo: rotuloData, descricao: 'Ida e Volta confirmadas' };
     }
     if (item.usaIda) {
-      return {
-        titulo: rotuloData,
-        descricao: `Somente ida - ${item.horarioIda || '06:40'}`,
-      };
+      return { titulo: rotuloData, descricao: 'Somente Ida confirmada' };
     }
     if (item.usaVolta) {
-      return {
-        titulo: rotuloData,
-        descricao: `Somente volta - ${item.horarioVolta || '17:30'}`,
-      };
+      return { titulo: rotuloData, descricao: 'Somente Volta confirmada' };
     }
-    return {
-      titulo: rotuloData,
-      descricao: 'Nenhum ônibus selecionado',
-    };
+    return { titulo: rotuloData, descricao: 'Nenhum ônibus selecionado' };
   };
 
   return (
@@ -90,7 +78,7 @@ export default function AgendamentoSucessoScreen() {
         <View style={styles.buttonGroup}>
           <Button
             mode="outlined"
-            onPress={() => router.replace('/(aluno)/home' as any)}
+            onPress={() => router.replace('/(aluno)/(tabs)/home' as any)}
             style={styles.btnHome}
             contentStyle={styles.btnContent}
             textColor="#00639A"
@@ -100,7 +88,7 @@ export default function AgendamentoSucessoScreen() {
 
           <Button
             mode="contained"
-            onPress={() => router.replace('/(aluno)/agenda' as any)}
+            onPress={() => router.replace('/(aluno)/(tabs)/agenda' as any)}
             style={styles.btnAgenda}
             contentStyle={styles.btnContent}
             buttonColor="#3E5F90"
