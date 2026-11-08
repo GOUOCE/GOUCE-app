@@ -9,9 +9,12 @@ import { avisoService, AvisoItem } from '../../services/avisoService';
 const renderer = jest.requireActual<any>('react-test-renderer');
 const mockPush = jest.fn();
 const mockReplace = jest.fn();
+const mockBack = jest.fn();
+let mockSearchParams: { origem?: string } = {};
 
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush, replace: mockReplace }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace, back: mockBack }),
+  useLocalSearchParams: () => mockSearchParams,
   useFocusEffect: (effect: () => void) =>
     jest.requireActual<typeof React>('react').useEffect(effect, [effect]),
 }));
@@ -74,6 +77,7 @@ const avisosMock: AvisoItem[] = [
 describe('Telas de Gerenciar Avisos e Novo Aviso (HU-023)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockSearchParams = {};
   });
 
   it('lista avisos publicados e permite expandir/recolher o card', async () => {
@@ -99,6 +103,29 @@ describe('Telas de Gerenciar Avisos e Novo Aviso (HU-023)', () => {
     });
 
     expect(root.root.findAllByType('ChevronDown')).toHaveLength(2);
+    await renderer.act(async () => {
+      root.unmount();
+    });
+  });
+
+  it('retorna para a aba de origem correta (Painel ou Mais) ao tocar em voltar', async () => {
+    mockListar.mockResolvedValue(avisosMock);
+    mockSearchParams = { origem: 'home' };
+
+    let root: any;
+    await renderer.act(async () => {
+      root = renderer.create(<GerenciarAvisosScreen />);
+    });
+
+    const botaoVoltar = root.root
+      .findAllByType(TouchableOpacity)
+      .find((btn: any) => btn.findAllByType('ArrowLeft').length === 1);
+
+    await renderer.act(async () => {
+      botaoVoltar.props.onPress();
+    });
+
+    expect(mockReplace).toHaveBeenCalledWith('/(administrador)/home');
     await renderer.act(async () => {
       root.unmount();
     });
