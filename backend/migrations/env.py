@@ -16,6 +16,7 @@ from src.modulos.arquivos.model.entities.arquivo import ArquivoORM
 from src.modulos.motoristas.model.entities.motorista import MotoristaORM
 from src.modulos.crud_basicos.domain.entities.bairro import BairroORM
 from src.modulos.crud_basicos.domain.entities.ponto_de_parada import PontoDeParadaORM
+from src.modulos.avisos.model.entities.aviso import AvisoORM
 
 config = context.config
 

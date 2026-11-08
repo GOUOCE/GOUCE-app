@@ -9,3 +9,5 @@ from src.modulos.rotas.model.entities.rota_principal import RotaPrincipalORM  # 
 from src.modulos.rotas.model.entities.rota_complementar import RotaComplementarORM  # noqa: F401
 from src.modulos.agendamentos.model.entities.agendamento import AgendamentoORM  # noqa: F401
 from src.modulos.agendamentos.model.entities.feriado import FeriadoORM  # noqa: F401
+from src.modulos.avisos.model.entities.aviso import AvisoORM  # noqa: F401
+
