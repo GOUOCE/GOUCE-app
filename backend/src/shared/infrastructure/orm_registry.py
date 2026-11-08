@@ -7,3 +7,5 @@ from src.modulos.motoristas.model.entities.motorista import MotoristaORM  # noqa
 from src.modulos.auth.domain.entities.password_reset_token import PasswordResetTokenORM  # noqa: F401
 from src.modulos.rotas.model.entities.rota_principal import RotaPrincipalORM  # noqa: F401
 from src.modulos.rotas.model.entities.rota_complementar import RotaComplementarORM  # noqa: F401
+from src.modulos.agendamentos.model.entities.agendamento import AgendamentoORM  # noqa: F401
+from src.modulos.agendamentos.model.entities.feriado import FeriadoORM  # noqa: F401
