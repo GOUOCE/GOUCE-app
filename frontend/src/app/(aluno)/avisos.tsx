@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
 import { Text, TextInput } from 'react-native-paper';
 import { useFocusEffect } from 'expo-router';
@@ -53,6 +53,34 @@ export default function MuralAvisosAlunoScreen() {
       carregarAvisos();
     }, [carregarAvisos])
   );
+
+  useEffect(() => {
+    const cancelarInscricao = avisoService.inscreverAtualizacaoMural(
+      (novosAvisos) => {
+        if (Array.isArray(novosAvisos) && novosAvisos.length > 0) {
+          const termoFiltro = busca.trim().toLowerCase();
+          const filtrados = termoFiltro
+            ? novosAvisos.filter((item) =>
+                item.titulo.toLowerCase().includes(termoFiltro)
+              )
+            : novosAvisos;
+
+          if (filtrados.length > 0) {
+            setAvisos((atuais) => {
+              const idsExistentes = new Set(atuais.map((item) => item.id));
+              const ineditos = filtrados.filter(
+                (item) => !idsExistentes.has(item.id)
+              );
+              return ineditos.length > 0 ? [...ineditos, ...atuais] : atuais;
+            });
+          }
+          return;
+        }
+        carregarAvisos();
+      }
+    );
+    return cancelarInscricao;
+  }, [busca, carregarAvisos]);
 
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
