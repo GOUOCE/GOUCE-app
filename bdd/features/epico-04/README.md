@@ -27,13 +27,13 @@ As tags `@depende_de_HU0XX` seguem o padrão do épico 02. Neste épico, indicam
 **HU-013: Agendamento de Transporte**
 
 - Fluxo: o aluno escolhe um dia disponível no calendário mensal, seleciona "Novo agendamento", responde "Sim" ou "Não" para a ida e para a volta e preenche, em listas suspensas com dados ativos, os campos de cada trecho; a confirmação exibe "Agendamento realizado com sucesso" e atualiza o dia para "Agendado"
-- Calendário: estados Agendado, Disponível, Indisponível, Feriado e Recesso; feriado e recesso bloqueiam o "Novo agendamento"; janela máxima de 30 dias corridos, contando o dia atual (AC-02 e AC-18)
-- Limite: no máximo 22 agendamentos ativos por aluno (AC-02)
-- Combinações válidas: apenas ida, apenas volta, ida e volta; "Não" nos dois trechos não cria agendamento e informa isso sem erro (AC-10 e AC-11)
+- Calendário: estados Agendado, Disponível e Indisponível (AC-01); janela de 30 dias corridos, contando o dia atual, e limite de 22 agendamentos ativos por aluno, ambos padrões configuráveis por variáveis de ambiente (AC-02)
+- Campos: ida com ponto de embarque, faculdade de destino e rota complementar; volta com faculdade de origem, ponto de desembarque (podendo ser de outro bairro ou rota) e rota complementar; a seleção não tem horário (AC-05 e AC-08)
+- Combinações válidas: apenas ida, apenas volta, ida e volta; "Não" nos dois trechos não cria agendamento e informa isso sem erro (AC-09 e AC-10)
 - Bloqueios: dia com agendamento ativo (FA-001), trajeto sem rota principal ativa (FA-002), campos obrigatórios do trecho ausentes (FA-003) e cadastros inativos
-- Edição: "Não" para ida e volta equivale ao cancelamento da HU-014, com o mesmo alerta de confirmação (AC-17)
+- Edição: "Não" para ida e volta equivale ao cancelamento da HU-014, com o mesmo alerta de confirmação (AC-16)
 - Organizado em blocos `Regra:` (escolha do dia no calendário, ida e volta e confirmação, agendamentos inválidos, edição e cancelamento por edição, acesso do aluno)
-- Cenários: 1 estados do calendário + 1 dia disponível + 1 feriado e recesso + 1 feriado na API + 1 janela de 30 dias (calendário) + 1 janela de 30 dias (API) + 1 navegação entre meses + 1 fluxo principal + 1 campos da ida + 1 ida "Não" + 1 campos da volta + 1 combinações válidas + 1 faculdade de origem diferente + 1 rota complementar + 1 "Não" para ida e volta + 1 listas só de ativos + 1 rotas inativas fora das opções + 1 desempenho + 4 sobreposição (tela, API, simultâneas e reagendamento) + 2 trajeto sem rota (tela e API) + 2 obrigatórios (tela e API) + 1 cadastro inativo (API) + 2 limite de 22 (tela e API) + 4 edição (sucesso, cancelamento por edição, desistência e API) + 3 acesso (titularidade, perfis sem acesso e sem token)
+- Cenários: 1 estados do calendário + 1 dia disponível + 1 janela de 30 dias (calendário) + 1 janela de 30 dias (API) + 1 janela e limite configuráveis (API) + 1 navegação entre meses + 1 fluxo principal + 1 campos da ida + 1 ida "Não" + 1 campos da volta + 1 combinações válidas + 1 faculdade de origem diferente + 1 ponto de desembarque de outro bairro + 1 rota complementar + 1 "Não" para ida e volta + 1 listas só de ativos + 1 rotas inativas fora das opções + 1 desempenho + 4 sobreposição (tela, API, simultâneas e reagendamento) + 2 trajeto sem rota (tela e API) + 2 obrigatórios (tela e API) + 1 cadastro inativo (API) + 2 limite de 22 (tela e API) + 4 edição (sucesso, cancelamento por edição, desistência e API) + 3 acesso (titularidade, perfis sem acesso e sem token)
 
 **HU-014: Visualização e Cancelamento de Agendamentos (Meus Agendamentos)**
 
@@ -73,14 +73,25 @@ As tags `@depende_de_HU0XX` seguem o padrão do épico 02. Neste épico, indicam
 
 ## Divergências encontradas entre requisitos e implementação
 
-Os cenários seguem os requisitos. Os pontos abaixo mostram onde a implementação atual da `develop` (`99bbf2c6`) ainda se afasta do que foi especificado e devem ser decididos pelo PO ou corrigidos pelo time.
+Os cenários seguem os requisitos. A seção 7.5.1 (HU-013) foi atualizada em 09/11/2026 com a versão revisada do PO/time. Os pontos abaixo mostram o que ainda não bate com a implementação da `develop` (`99bbf2c6`) e devem ser decididos ou corrigidos.
+
+**Resolvidas com a atualização da HU-013 em `docs/requisitos.md`:**
+
+- Horário de ida e de volta saiu dos campos do agendamento, o que resolve a diferença com o contrato da API, que nunca recebeu horário.
+- A janela de agendamento deixou de ter um segundo critério com o exemplo "15 a 30 dias" e passou a ser configurável (padrão de 30 dias e de 22 agendamentos ativos), como já fazem `AGENDAMENTO_JANELA_DIAS` e `AGENDAMENTO_LIMITE_ATIVOS` no backend.
+- O critério de rota sem atendimento (FA-002) ficou por trecho: ponto e faculdade de destino na ida, faculdade de origem e ponto de desembarque na volta, como a API valida.
+- O ponto de desembarque da volta pode ser de outro bairro ou rota; a API já valida cada trecho de forma independente.
+- Feriado e recesso saíram dos critérios da HU-013, e os cenários correspondentes foram removidos.
 
 **Pendentes:**
 
-- **HU-013, AC-11 ("Não" para ida e volta):** o requisito pede que o sistema não crie o agendamento e informe isso sem erro. A API de criação responde `422` com o código `FA-003` e a mensagem "Selecione pelo menos um trecho: ida ou volta."; o ramo que devolveria "Nenhum agendamento foi criado." nunca é alcançado. O cenário usa a mensagem "Nenhum agendamento foi criado.", que já existe no código.
-- **HU-013, AC-06 e AC-09 (horário de ida e de volta):** o requisito lista "horário de ida" e "horário de volta" como campos do agendamento, mas o contrato da API (`AgendamentoInputDTO`) não recebe nem guarda horário. Os cenários de interface incluem os campos; não há cenário de API para o horário até a definição do contrato.
-- **HU-013, AC-02 e AC-18 (janela de agendamento):** os dois critérios tratam da janela, e o AC-18 ainda cita "15 a 30 dias" como exemplo. Os cenários adotam 30 dias corridos contando o dia atual, o último dia selecionável é 29 dias depois de hoje, como no código. Sugestão: remover o exemplo do AC-18.
-- **HU-013, FA-001 (mensagem de sobreposição):** o requisito pede uma mensagem que oriente a editar ou cancelar o agendamento existente; a API devolve só "Já existe agendamento ativo para este dia.". A orientação precisa vir da tela.
+- **HU-013, AC-10 ("Não" para ida e volta):** o requisito pede que não crie o agendamento e informe isso sem erro. A API de criação responde `422` com o código `FA-003` e a mensagem "Selecione pelo menos um trecho: ida ou volta."; o ramo que devolveria "Nenhum agendamento foi criado." nunca é alcançado. O cenário usa a mensagem "Nenhum agendamento foi criado.", que já existe no código.
+- **HU-013, AC-11 (mensagem de sobreposição):** o requisito pede uma mensagem que oriente a editar ou cancelar o agendamento existente; a API devolve só "Já existe agendamento ativo para este dia.". A orientação precisa vir da tela.
+- **HU-013 × HU-014 × backend (feriado e recesso):** a HU-013 não cita mais feriado nem recesso, mas a HU-014 (AC-01) ainda lista "Feriado" entre os status do calendário, e o backend mantém a tabela de feriados: o calendário devolve `FERIADO` e `RECESSO` e o agendamento nesses dias é recusado com `DATA_INDISPONIVEL`. É preciso decidir se feriado e recesso continuam no produto; se continuarem, a HU-013 precisa voltar a descrevê-los.
+- **HU-013, AC-01 (dia "indisponível"):** o critério não define o que torna um dia indisponível. No código, o dia fica `INDISPONIVEL` quando não existe nenhuma rota principal ativa no sistema. Os cenários só verificam a indicação visual do estado.
+- **HU-013, fluxo principal (passo 22):** a lista de campos da volta cita faculdade de origem e rota complementar, mas não o ponto de desembarque, que o AC-08 inclui. Os cenários seguem o AC-08.
+- **HU-013, AC-02 (contagem da janela):** "30 dias corridos a partir da data atual" não diz se o dia atual conta. Os cenários seguem o código: hoje é o primeiro dia, e o último selecionável é 29 dias depois.
+- **HU-013, AC-05 e AC-08 (listas suspensas):** o caso de uso tem a montagem das opções do dia (`options`), mas nenhuma rota HTTP a expõe no router de agendamentos; o time precisa confirmar de onde a tela obtém as opções.
 - **HU-014, AC-03 (nome da ação):** o requisito usa "Remover agendamento", mas a tela já existente na branch `feature/front-hu013` mostra "Cancelar agendamento" no menu. Os cenários seguem o requisito.
 - **HU-015, AC-01 (dados da rota complementar):** o detalhe do agendamento da API devolve apenas o identificador e o nome da rota complementar. O horário de saída e o ponto de conexão exigidos pelo critério não são devolvidos, e o veículo e o motorista do dia dependem das HU-016, HU-017 e HU-018.
 - **HU-014, AC-06 (alocação):** a remoção da alocação do aluno no veículo ainda é um gancho sem efeito (`remove_allocations`) até a entrega das HU-016 e HU-018; os cenários dependentes carregam `@depende_de_HU016` e `@depende_de_HU018`.
