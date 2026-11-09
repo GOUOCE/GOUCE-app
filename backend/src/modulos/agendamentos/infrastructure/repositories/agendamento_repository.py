@@ -152,6 +152,16 @@ class AgendamentoRepository:
         """Agendamento ATIVO do aluno (qualquer data, inclusive passada)."""
         return self.get_active(aluno_id, item_id)
 
+    def get_active_by_date(self, aluno_id: int, target: date):
+        """Agendamento ATIVO do aluno numa data (qualquer data, inclusive passada).
+
+        No máximo um resultado: ``uq_agendamento_aluno_data_ativo`` garante um
+        único agendamento ATIVO por (aluno_id, data).
+        """
+        return self.session.query(AgendamentoORM).filter_by(
+            aluno_id=aluno_id, data=target, status="ATIVO"
+        ).first()
+
     def reference_name(self, model, value, attr: str):
         if value is None:
             return None
