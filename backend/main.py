@@ -13,6 +13,7 @@ from src.modulos.crud_basicos.interface.http.onibus_routes import router as onib
 from src.modulos.crud_basicos.interface.http.bairro_routes import router as bairro_router
 from src.modulos.rotas.interface.http.rota_principal_routes import router as rota_principal_router
 from src.modulos.rotas.interface.http.rota_complementar_routes import router as rota_complementar_router
+from src.modulos.agendamentos.interface.http.agendamento_routes import router as agendamento_router
 
 app = FastAPI(
     title="API GOUCE",
@@ -22,13 +23,7 @@ app = FastAPI(
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:3001",
-        "frontend:3000",
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -48,6 +43,7 @@ app.include_router(motorista_router)
 app.include_router(bairro_router)
 app.include_router(rota_principal_router)
 app.include_router(rota_complementar_router)
+app.include_router(agendamento_router)
 
 
 @app.get("/health", include_in_schema=False)
