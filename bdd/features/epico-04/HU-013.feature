@@ -11,7 +11,7 @@
 Funcionalidade: Agendamento de Transporte
   Como aluno
   Quero acessar um formulário inteligente para agendar meus dias de utilização do transporte,
-  informando a faculdade, os horários de ida e volta e o ponto de embarque por opções padronizadas
+  informando a faculdade de destino, a faculdade de origem no retorno e os pontos de embarque e desembarque por opções padronizadas
   Para garantir minha vaga de forma rápida e sem erros de digitação
 
 
@@ -23,7 +23,7 @@ Funcionalidade: Agendamento de Transporte
       E o aplicativo possui conexão ativa com a API
 
 
-    # AC-01, AC-19 - Calendário mensal com o estado de cada dia
+    # AC-01, AC-17 - Calendário mensal com o estado de cada dia
     @fluxo_feliz @smoke @prioridade_alta
     Esquema do Cenário: Sistema identifica visualmente o estado de cada dia no calendário mensal
       Dado que, no calendário mensal, existe um dia no estado "<estado>"
@@ -35,11 +35,9 @@ Funcionalidade: Agendamento de Transporte
         | Agendado     |
         | Disponível   |
         | Indisponível |
-        | Feriado      |
-        | Recesso      |
 
 
-    # AC-04 - Dia disponível exibe apenas a data e o botão de ação
+    # AC-03 - Dia disponível exibe apenas a data e o botão de ação
     @fluxo_feliz @prioridade_alta
     Cenário: Aluno seleciona um dia disponível e visualiza apenas a data e o botão "Novo agendamento"
       Dado que o dia "10/11/2026" está disponível para agendamento
@@ -49,34 +47,11 @@ Funcionalidade: Agendamento de Transporte
       E não exibe nenhum outro detalhe de agendamento
 
 
-    # AC-03 - Feriado e recesso bloqueiam o novo agendamento
-    @fluxo_infeliz @validacao_campos @prioridade_alta
-    Esquema do Cenário: Sistema bloqueia o novo agendamento em dia de <tipo_dia>
-      Dado que o dia "12/11/2026" está sinalizado no sistema como "<tipo_dia>"
-      Quando o aluno seleciona o dia "12/11/2026" no calendário
-      Então o sistema exibe apenas um estado informativo na área de detalhes
-      E o botão "Novo agendamento" não é exibido
-
-      Exemplos:
-        | tipo_dia |
-        | Feriado  |
-        | Recesso  |
-
-
-    # AC-03 - API recusa o agendamento em dia de feriado ou recesso
-    @fluxo_infeliz @regra_negocio @teste_api @nao_automatizavel_via_appium @prioridade_media
-    Cenário: API recusa o agendamento em um dia sinalizado como feriado
-      Dado que o dia "12/11/2026" está sinalizado como feriado com a descrição "Feriado Municipal"
-      Quando o aluno envia uma requisição para agendar o dia "12/11/2026"
-      Então a API responde com o status "422 Unprocessable Entity"
-      E a resposta informa o código "DATA_INDISPONIVEL" e a mensagem "Data indisponível: Feriado Municipal."
-      E o agendamento não é criado
-
-
-    # AC-02, AC-18 - Janela máxima de 30 dias corridos (valor-limite)
+    # AC-02 - Janela máxima de 30 dias corridos (valor-limite)
     @fluxo_infeliz @validacao_campos @prioridade_alta
     Esquema do Cenário: Sistema limita a seleção de datas à janela máxima de 30 dias corridos
-      Dado que hoje é o dia "09/11/2026"
+      Dado que a janela de agendamento está na configuração padrão de 30 dias
+      E hoje é o dia "09/11/2026"
       Quando o aluno visualiza o calendário de agendamento
       Então o dia "<dia>" <resultado>
 
@@ -88,10 +63,11 @@ Funcionalidade: Agendamento de Transporte
         | 08/11/2026 | não pode ser selecionado nem fica disponível |
 
 
-    # AC-02, AC-18 - API valida a janela de agendamento (valor-limite)
+    # AC-02 - API valida a janela de agendamento (valor-limite)
     @fluxo_infeliz @validacao_campos @teste_api @nao_automatizavel_via_appium @prioridade_alta
     Esquema do Cenário: API valida a janela de agendamento para o dia <dia>
-      Dado que hoje é o dia "09/11/2026"
+      Dado que a janela de agendamento está na configuração padrão de 30 dias
+      E hoje é o dia "09/11/2026"
       Quando o aluno envia uma requisição para agendar o dia "<dia>" com ida e volta válidas
       Então a API responde com o status "<status>"
       E <resultado>
@@ -103,7 +79,23 @@ Funcionalidade: Agendamento de Transporte
         | 08/11/2026 | 422 Unprocessable Entity | a resposta informa a mensagem "A data está fora da janela de agendamento." |
 
 
-    # AC-19 - Calendário mensal sem paginação
+    # AC-02 - Janela e limite de agendamentos ativos configuráveis por variáveis de ambiente
+    @regra_negocio @teste_api @nao_automatizavel_via_appium @prioridade_media
+    Esquema do Cenário: API aplica o valor configurado em "<variavel>"
+      Dado que a variável de ambiente "<variavel>" está configurada com o valor "<valor>"
+      E hoje é o dia "09/11/2026"
+      Quando o aluno envia uma requisição de agendamento <situacao>
+      Então a API responde com o status "<status>"
+
+      Exemplos:
+        | variavel                  | valor | situacao                                               | status                   |
+        | AGENDAMENTO_JANELA_DIAS   | 15    | para o dia "23/11/2026", o último dia da janela        | 200 OK                   |
+        | AGENDAMENTO_JANELA_DIAS   | 15    | para o dia "24/11/2026", o primeiro dia fora da janela | 422 Unprocessable Entity |
+        | AGENDAMENTO_LIMITE_ATIVOS | 5     | com o aluno possuindo 4 agendamentos ativos            | 200 OK                   |
+        | AGENDAMENTO_LIMITE_ATIVOS | 5     | com o aluno já possuindo 5 agendamentos ativos         | 422 Unprocessable Entity |
+
+
+    # AC-17 - Calendário mensal sem paginação
     @fluxo_feliz @prioridade_media
     Cenário: Aluno navega entre os meses da janela de agendamento sem paginação
       Dado que a janela de agendamento abrange os meses de novembro e dezembro de 2026
@@ -124,7 +116,7 @@ Funcionalidade: Agendamento de Transporte
       E o dia "10/11/2026" está disponível para agendamento
 
 
-    # FLUXO PRINCIPAL (CAMINHO FELIZ) - AC-05, AC-06, AC-08, AC-09, AC-10, AC-15
+    # FLUXO PRINCIPAL (CAMINHO FELIZ) - AC-04, AC-05, AC-07, AC-08, AC-09, AC-14
     @fluxo_feliz @smoke @prioridade_alta
     Cenário: Aluno agenda o transporte com ida e volta
       Quando o aluno seleciona o dia "10/11/2026" no calendário
@@ -132,7 +124,6 @@ Funcionalidade: Agendamento de Transporte
       E responde "Sim" para a utilização do ônibus na ida
       E informa os dados da ida:
         | campo                | valor           |
-        | Horário de ida       | 06:30           |
         | Ponto de embarque    | Praça da Matriz |
         | Faculdade de destino | UFC             |
       E responde "Sim" para a utilização do ônibus na volta
@@ -140,23 +131,22 @@ Funcionalidade: Agendamento de Transporte
         | campo                | valor           |
         | Faculdade de origem  | UFC             |
         | Ponto de desembarque | Praça da Matriz |
-        | Horário de volta     | 17:30           |
       E confirma o agendamento
       Então o sistema exibe a mensagem "Agendamento realizado com sucesso"
       E o dia "10/11/2026" passa a ser exibido no calendário com o estado "Agendado"
 
 
-    # AC-05, AC-06 - Resposta "Sim" para a ida exibe os campos da ida
+    # AC-04, AC-05 - Resposta "Sim" para a ida exibe os campos da ida
     @fluxo_feliz @prioridade_alta
     Cenário: Sistema exibe os campos da ida quando o aluno responde "Sim"
       Quando o aluno seleciona o dia "10/11/2026" no calendário
       E seleciona "Novo agendamento"
       E responde "Sim" para a utilização do ônibus na ida
-      Então o sistema exibe, em lista suspensa, os campos "Horário de ida", "Ponto de embarque", "Faculdade de destino" e "Rota complementar de ida"
+      Então o sistema exibe, em lista suspensa, os campos "Ponto de embarque", "Faculdade de destino" e "Rota complementar de ida"
       E o sistema pergunta se o aluno utilizará o ônibus na volta
 
 
-    # AC-07 - Resposta "Não" para a ida dispensa os campos da ida
+    # AC-06 - Resposta "Não" para a ida dispensa os campos da ida
     @fluxo_feliz @prioridade_alta
     Cenário: Sistema não exige os campos da ida quando o aluno responde "Não"
       Quando o aluno seleciona o dia "10/11/2026" no calendário
@@ -166,17 +156,17 @@ Funcionalidade: Agendamento de Transporte
       E o sistema pergunta se o aluno utilizará o ônibus na volta
 
 
-    # AC-08, AC-09 - Resposta "Sim" para a volta exibe os campos da volta
+    # AC-07, AC-08 - Resposta "Sim" para a volta exibe os campos da volta
     @fluxo_feliz @prioridade_alta
     Cenário: Sistema exibe os campos da volta quando o aluno responde "Sim", independentemente da resposta da ida
       Quando o aluno seleciona o dia "10/11/2026" no calendário
       E seleciona "Novo agendamento"
       E responde "Não" para a utilização do ônibus na ida
       E responde "Sim" para a utilização do ônibus na volta
-      Então o sistema exibe, em lista suspensa, os campos "Faculdade de origem", "Ponto de desembarque", "Horário de volta" e "Rota complementar de volta"
+      Então o sistema exibe, em lista suspensa, os campos "Faculdade de origem", "Ponto de desembarque" e "Rota complementar de volta"
 
 
-    # AC-10 - Combinações válidas de ida e volta
+    # AC-09 - Combinações válidas de ida e volta
     @fluxo_feliz @prioridade_alta
     Esquema do Cenário: Aluno confirma o agendamento com a combinação "<combinacao>"
       Quando o aluno seleciona o dia "10/11/2026" no calendário
@@ -196,7 +186,7 @@ Funcionalidade: Agendamento de Transporte
         | ida e volta  | Sim | Sim   | os trechos da ida e da volta |
 
 
-    # AC-09 - Faculdade de origem da volta diferente da faculdade de destino da ida
+    # AC-08 - Faculdade de origem da volta diferente da faculdade de destino da ida
     @fluxo_feliz @prioridade_media
     Cenário: Aluno agenda a volta partindo de uma faculdade diferente da faculdade de destino da ida
       Dado que a rota principal "Rota Centro - UFC" também atende a faculdade "IFCE" na volta
@@ -209,7 +199,21 @@ Funcionalidade: Agendamento de Transporte
       E o agendamento registra a faculdade de destino "UFC" na ida e a faculdade de origem "IFCE" na volta
 
 
-    # AC-06, AC-09, RN-010 - Rota complementar na ida e na volta
+    # AC-08 - Ponto de desembarque de bairro e rota diferentes dos da ida
+    @fluxo_feliz @prioridade_media
+    Cenário: Aluno agenda a volta com ponto de desembarque de um bairro e de uma rota diferentes dos da ida
+      Dado que existe a rota principal ativa "Rota Campo Velho - UFC" atendendo o bairro "Campo Velho" e a faculdade "UFC" na volta
+      E o ponto "Praça do Campo Velho" pertence ao bairro "Campo Velho"
+      Quando o aluno seleciona o dia "10/11/2026" no calendário
+      E seleciona "Novo agendamento"
+      E informa a ida com o ponto de embarque "Praça da Matriz" e a faculdade de destino "UFC"
+      E informa a volta com a faculdade de origem "UFC" e o ponto de desembarque "Praça do Campo Velho"
+      E confirma o agendamento
+      Então o sistema exibe a mensagem "Agendamento realizado com sucesso"
+      E o agendamento registra o ponto de embarque "Praça da Matriz" na ida e o ponto de desembarque "Praça do Campo Velho" na volta
+
+
+    # AC-05, AC-08, RN-010 - Rota complementar na ida e na volta
     @fluxo_feliz @RN010 @prioridade_media
     Cenário: Aluno agenda a ida e a volta utilizando rota complementar
       Dado que existe a rota complementar ativa "Van 2 - Bairro Novo" vinculada à rota principal "Rota Centro - UFC"
@@ -221,7 +225,7 @@ Funcionalidade: Agendamento de Transporte
       E o agendamento registra a rota complementar "Van 2 - Bairro Novo" na ida e na volta
 
 
-    # AC-11 - Ida "Não" e volta "Não" não cria agendamento
+    # AC-10 - Ida "Não" e volta "Não" não cria agendamento
     @fluxo_feliz @prioridade_alta
     Cenário: Sistema não cria agendamento quando o aluno responde "Não" para a ida e para a volta
       Quando o aluno seleciona o dia "10/11/2026" no calendário
@@ -234,7 +238,7 @@ Funcionalidade: Agendamento de Transporte
       E o dia "10/11/2026" permanece no calendário com o estado "Disponível"
 
 
-    # AC-06 - Listas suspensas exibem apenas cadastros ativos
+    # AC-05 - Listas suspensas exibem apenas cadastros ativos
     @fluxo_infeliz @validacao_campos @prioridade_alta
     Esquema do Cenário: Sistema não oferece cadastros inativos de <cadastro> nas listas do agendamento
       Dado que o cadastro de <cadastro> "<ativo>" está ativo
@@ -266,7 +270,7 @@ Funcionalidade: Agendamento de Transporte
         | rota complementar | Van Antiga   |
 
 
-    # AC-16, RNF-001 - Tempo de resposta do agendamento
+    # AC-15, RNF-001 - Tempo de resposta do agendamento
     @nao_funcional @desempenho @RNF001 @teste_api @nao_automatizavel_via_appium @prioridade_media
     Cenário: Tempo de resposta do agendamento não ultrapassa 3 segundos
       Dado que a conexão com a internet está em condições normais
@@ -284,7 +288,7 @@ Funcionalidade: Agendamento de Transporte
       E o dia "10/11/2026" está disponível para agendamento
 
 
-    # FA-001 - Sobreposição de agendamento (AC-12)
+    # FA-001 - Sobreposição de agendamento (AC-11)
     @fluxo_infeliz @FA001 @prioridade_alta
     Cenário: Sistema bloqueia o agendamento de um dia que já possui solicitação ativa
       Dado que o aluno já possui um agendamento ativo para o dia "10/11/2026"
@@ -295,7 +299,7 @@ Funcionalidade: Agendamento de Transporte
       E o aluno continua com apenas um agendamento ativo no dia "10/11/2026"
 
 
-    # FA-001 - API recusa a sobreposição de agendamento (AC-12)
+    # FA-001 - API recusa a sobreposição de agendamento (AC-11)
     @fluxo_infeliz @FA001 @RNF012 @teste_api @nao_automatizavel_via_appium @prioridade_alta
     Cenário: API recusa um segundo agendamento ativo para o mesmo dia
       Dado que o aluno já possui um agendamento ativo para o dia "10/11/2026"
@@ -324,7 +328,7 @@ Funcionalidade: Agendamento de Transporte
       E o agendamento cancelado permanece registrado com o status "CANCELADO"
 
 
-    # FA-002 - Combinação de ponto e faculdade sem rota ativa (AC-13)
+    # FA-002 - Combinação de ponto e faculdade sem rota ativa (AC-12)
     @fluxo_infeliz @FA002 @validacao_campos @prioridade_alta
     Esquema do Cenário: Sistema informa a indisponibilidade quando não há rota ativa para o trajeto da <trecho>
       Dado que nenhuma rota principal ativa atende o ponto "<ponto>" e a faculdade "<faculdade>" no trecho da <trecho>
@@ -343,7 +347,7 @@ Funcionalidade: Agendamento de Transporte
         | volta  | Praça da Matriz | Faculdade Sem Rota |
 
 
-    # FA-002 - API recusa a combinação sem rota ativa (AC-13)
+    # FA-002 - API recusa a combinação sem rota ativa (AC-12)
     @fluxo_infeliz @FA002 @RNF012 @teste_api @nao_automatizavel_via_appium @prioridade_alta
     Esquema do Cenário: API recusa o agendamento sem rota principal ativa para o trajeto da <trecho>
       Dado que nenhuma rota principal ativa atende o ponto "Ponto Sem Rota" e a faculdade "UFC" no trecho da <trecho>
@@ -359,7 +363,7 @@ Funcionalidade: Agendamento de Transporte
         | volta  | ponto_desembarque_id | ies_origem_id   |
 
 
-    # FA-003 - Campos condicionais obrigatórios ausentes (AC-14)
+    # FA-003 - Campos condicionais obrigatórios ausentes (AC-13)
     @fluxo_infeliz @FA003 @validacao_campos @prioridade_alta
     Esquema do Cenário: Sistema bloqueia o salvamento quando o campo "<campo_obrigatorio>" da <trecho> não é preenchido
       Quando o aluno seleciona o dia "10/11/2026" no calendário
@@ -379,7 +383,7 @@ Funcionalidade: Agendamento de Transporte
         | volta  | Ponto de desembarque |
 
 
-    # FA-003 - API recusa os campos obrigatórios ausentes (AC-14)
+    # FA-003 - API recusa os campos obrigatórios ausentes (AC-13)
     @fluxo_infeliz @FA003 @validacao_campos @teste_api @nao_automatizavel_via_appium @prioridade_alta
     Esquema do Cenário: API recusa o agendamento da <trecho> sem os campos obrigatórios
       Quando o aluno envia uma requisição para agendar o dia "10/11/2026" com a <trecho> marcada como utilizada e sem "<campos>"
@@ -394,7 +398,7 @@ Funcionalidade: Agendamento de Transporte
         | volta  | ies_origem_id, ponto_desembarque_id | Informe os campos obrigatórios da volta. |
 
 
-    # AC-06 - API recusa cadastros inativos ou inexistentes
+    # AC-05 - API recusa cadastros inativos ou inexistentes
     @fluxo_infeliz @RNF012 @validacao_campos @teste_api @nao_automatizavel_via_appium @prioridade_media
     Esquema do Cenário: API recusa o agendamento com o campo "<campo>" apontando para um cadastro inativo ou inexistente
       Dado que o cadastro informado no campo "<campo>" está inativo ou não existe
@@ -455,7 +459,7 @@ Funcionalidade: Agendamento de Transporte
       E o agendamento do dia "10/11/2026" passa a registrar somente o trecho da ida
 
 
-    # AC-17 - Edição com "Não" para ida e volta é tratada como cancelamento (HU-014)
+    # AC-16 - Edição com "Não" para ida e volta é tratada como cancelamento (HU-014)
     @fluxo_feliz @prioridade_alta
     Cenário: Sistema trata a edição com "Não" para ida e volta como cancelamento e pede confirmação
       Quando o aluno seleciona o dia "10/11/2026" no calendário
@@ -469,7 +473,7 @@ Funcionalidade: Agendamento de Transporte
       E o dia "10/11/2026" passa a ser exibido no calendário com o estado "Disponível"
 
 
-    # AC-17, HU-014 FA-002 - Desistência do cancelamento por edição
+    # AC-16, HU-014 FA-002 - Desistência do cancelamento por edição
     @fluxo_infeliz @prioridade_media
     Cenário: Aluno desiste do cancelamento por edição ao acionar "Cancelar" no alerta de confirmação
       Quando o aluno seleciona o dia "10/11/2026" no calendário
@@ -482,7 +486,7 @@ Funcionalidade: Agendamento de Transporte
       E o agendamento do dia "10/11/2026" permanece ativo sem alterações
 
 
-    # AC-17 - API trata o PUT sem nenhum trecho como cancelamento
+    # AC-16 - API trata o PUT sem nenhum trecho como cancelamento
     @regra_negocio @RNF012 @teste_api @nao_automatizavel_via_appium @prioridade_media
     Cenário: API cancela o agendamento quando a edição informa "Não" para ida e volta
       Quando o aluno envia uma requisição de edição do agendamento do dia "10/11/2026" com ida e volta marcadas como não utilizadas
