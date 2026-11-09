@@ -47,6 +47,13 @@ class RotaComplementarORM(Base):
         default=lambda: datetime.now(timezone.utc),
         server_default=text("CURRENT_TIMESTAMP"),
     )
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
 
     rota_principal = relationship(RotaPrincipalORM)
 

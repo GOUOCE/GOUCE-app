@@ -193,7 +193,7 @@ class RotaPrincipalPostgreSQLIntegrationTest(unittest.TestCase):
         ):
             self.assertIn(tabela, inspector.get_table_names())
         self.assertEqual(
-            {"id", "nome", "horario_saida", "horario_retorno", "ativo", "data_criacao"},
+            {"id", "nome", "horario_saida", "horario_retorno", "ativo", "data_criacao", "updated_at"},
             {c["name"] for c in inspector.get_columns("rota_principal")},
         )
         indice_nome = next(

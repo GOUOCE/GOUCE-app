@@ -316,7 +316,7 @@ class RotaComplementarPostgreSQLIntegrationTest(unittest.TestCase):
         self.assertIn("rota_complementar", inspector.get_table_names())
         self.assertEqual(
             {"id", "rota_principal_id", "nome", "horario_saida", "horario_retorno", "ponto_conexao",
-             "ativo", "data_criacao"},
+             "ativo", "data_criacao", "updated_at"},
             {c["name"] for c in inspector.get_columns("rota_complementar")},
         )
         indices = {i["name"]: i for i in inspector.get_indexes("rota_complementar")}
@@ -544,7 +544,7 @@ class RotaComplementarPostgreSQLIntegrationTest(unittest.TestCase):
 class Migration77PostgreSQLTest(unittest.TestCase):
     """Roda downgrade e upgrade da 77 e da 78 no banco isolado e restaura o estado original."""
 
-    HEAD = "79_create_agendamentos"
+    HEAD = "81_add_updated_at_rotas"
 
     def setUp(self):
         self.config = Config()
