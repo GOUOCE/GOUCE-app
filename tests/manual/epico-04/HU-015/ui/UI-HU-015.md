@@ -21,7 +21,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Em execução (5 reprovados por leitura do código) | 10 | 0 | 5 | 0 | 0 | 5 |
+| ⏳ Em execução (6 reprovados: 5 por leitura do código e 1 na tela) | 10 | 0 | 6 | 0 | 0 | 4 |
 
 ## Pré-condições
 
@@ -43,7 +43,7 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU015-UI-001 | Abrir os detalhes da reserva selecionada | AI e AV em datas distintas, usuário A; link de detalhes sem `dataIso` e com parâmetro inválido, quando o ambiente permitir. | Agenda abre o dia correto; parâmetros ausentes/inválidos não geram viagem fictícia. | ⏳ PENDENTE | BDD: consulta em Meus Agendamentos; robustez de navegação. |
+| CT-HU015-UI-001 | Abrir os detalhes da reserva selecionada | AI e AV em datas distintas, usuário A; link de detalhes sem `dataIso` e com parâmetro inválido, quando o ambiente permitir. | Agenda abre o dia correto; parâmetros ausentes/inválidos não geram viagem fictícia. | ❌ FALHOU | O erro de uma consulta anterior continua na tela ao abrir uma reserva válida; a seta de voltar leva ao painel. #432, #417 |
 | CT-HU015-UI-002 | Transferência clara e correta em cada trecho | AI, AV, AIV, AM1 e AM2; C1 05:45/18:15, C2 06:05/19:10; nome da complementar e ponto de conexão com 150 caracteres em uma variação. | Linha/horário/conexão corretos por trecho, incluindo resumo da Agenda e trajetos mistos. | ❌ FALHOU | Reprovado por leitura do código: resumo da Agenda reaproveita nome e conexão da ida na volta; cartões e rótulos da volta invertidos nos detalhes. #429, #418 |
 | CT-HU015-UI-003 | Trajeto direto e ocultação sem alocação | AD direta e AI/AIV com complementar; API confirma `onibus`/`motorista` nulos. | Direto sem complementar; campos de veículo/motorista ocultos quando nulos. | ❌ FALHOU | Reprovado: Veículo e Motorista aparecem como “A definir” (visto na tela na HU-014); a decisão do PO é ocultar. #428 |
 | CT-HU015-UI-004 | Resumo da viagem do dia no Início | AH em D com complementar; depois reserva de hoje direta; cenário sem reserva de hoje. Usar dia útil e data real do servidor/aparelho. | Resumo/atalho do dia correspondem à reserva real, com e sem complementar. | ❌ FALHOU | Reprovado por leitura do código: o resumo “Sua viagem hoje” é texto fixo e o botão não faz nada. #427 |
@@ -89,8 +89,11 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Sem data (`/agendamento-detalhes`): a tela mostra “Não foi possível carregar a viagem — Data da viagem não informada.”, sem escolher data fixa e com a seta de voltar.
+- Data inválida (`?dataIso=abc`): “Data deve estar no formato YYYY-MM-DD.”, com **Tentar novamente** e sem viagem inventada.
+- Depois desses erros, ao abrir uma reserva válida pela Agenda, a tela continuou mostrando o erro anterior (#432).
+- A seta de voltar da tela de detalhes e da tela de erro leva ao painel, não à Agenda (#417).
+- Status: ❌ Falhou. Issues: #432, #417.
 
 ---
 
@@ -359,6 +362,7 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
+| CT-001 | Depois de um erro na tela de detalhes, abrir uma reserva válida continua mostrando o erro anterior; a seta de voltar leva ao painel. | #432, #417 |
 | CT-002 | O resumo da Agenda reaproveita nome e conexão da ida na volta; na volta, os rótulos e a ordem dos cartões estão invertidos. | #429, #418 |
 | CT-003 | Veículo e Motorista aparecem como “A definir” sem alocação; o PO decidiu ocultar. | #428 |
 | CT-004 | O resumo “Sua viagem hoje” do Início é texto fixo e o botão não faz nada. | #427 |
@@ -375,5 +379,5 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 - [Suíte de API](../api/API-HU-015.md). Preparação e conferência pela LLM não substituem a observação manual da UI por Cauan.
 - Os cenários do BDD para Início são explicitamente cobertos, mesmo que o caminho básico do AC-01 possa ser atendido pela Agenda.
 - Alocação ausente implica ocultar campos atualmente, conforme o PO; exibição de veículo por data é dependência futura, não motivo para bloquear os demais cenários.
-- **Execução de 10/11/2026 (parcial):** os CT-002, 003, 004, 009 e 010 foram reprovados por leitura do código do commit `4ac87b46`, a pedido do testador, para não gastar execução manual em falhas já evidentes; a evidência de cada um está no detalhamento, e a execução na tela será refeita no reteste. Os CT-001, 006, 007 e 008 e a variação 1 do CT-005 seguem pendentes de execução manual. A decisão sobre qual front vale (PR #378 ou #379) cabe ao time.
+- **Execução de 10/11/2026 (parcial):** os CT-002, 003, 004, 009 e 010 foram reprovados por leitura do código do commit `4ac87b46`, a pedido do testador, para não gastar execução manual em falhas já evidentes; a evidência de cada um está no detalhamento, e a execução na tela será refeita no reteste. O CT-001 foi executado na tela e reprovado; os CT-006, 007 e 008 e a variação 1 do CT-005 seguem pendentes de execução manual. A decisão sobre qual front vale (PR #378 ou #379) cabe ao time.
 - Registrar dispositivos, mensagens e resultado de cada variação somente durante a execução. Evidências futuras em JSON simples, sem pastas de executor/evidências. Nenhuma execução ou issue faz parte desta revisão do planejamento.
