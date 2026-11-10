@@ -1,6 +1,6 @@
 # Testes manuais — Épico 04 — Agendamento de Transporte (Aluno)
 
-Planejamento essencial das **HU-014 — Visualização e Cancelamento de Agendamentos** e **HU-015 — Consulta de Rota Complementar e Transferência**: **37 casos, sendo 17 de API e 20 de UI**, todos pendentes. Segue a organização e os campos das suítes do épico 03. A HU-013 entra como dependência de preparação e integração; sua suíte completa não faz parte deste planejamento.
+Planejamento essencial das **HU-014 — Visualização e Cancelamento de Agendamentos** e **HU-015 — Consulta de Rota Complementar e Transferência**: **37 casos, sendo 17 de API e 20 de UI**. A API da HU-014 foi executada em 09/11/2026: **9 passaram e 1 parcial**; os outros **27 casos permanecem pendentes**. Segue a organização e os campos das suítes do épico 03. A HU-013 entra como dependência de preparação e integração; sua suíte completa não faz parte deste planejamento.
 
 ## Índice das suítes
 
@@ -8,7 +8,7 @@ Planejamento essencial das **HU-014 — Visualização e Cancelamento de Agendam
 | --- | --- | --- | --- | --- |
 | HU-014 | Meus agendamentos e cancelamento | [10 casos](HU-014/api/API-HU-014.md) | [11 casos](HU-014/ui/UI-HU-014.md) | HU-013 para massa; HU-011/012 para rotas; HU-016/018 para alocação real; [PR #378](https://github.com/GOUOCE/GOUCE-app/pull/378) para UI |
 | HU-015 | Rota complementar e transferência | [7 casos](HU-015/api/API-HU-015.md) | [9 casos](HU-015/ui/UI-HU-015.md) | HU-013/014 para reservas; HU-012 para complementares; detalhe integrado e alocação diária; [PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379) para UI |
-| **Total** | **2 HUs** | **17** | **20** | **37 pendentes** |
+| **Total** | **2 HUs** | **17** | **20** | **9 passaram; 1 parcial; 27 pendentes** |
 
 ## Escopo e organização
 
@@ -105,6 +105,6 @@ Os PRs #378 e #379 alteram `agenda.tsx` e `agendamentoService.ts`. Após integra
 
 ## Registro dos resultados
 
-Preencher ambiente/commit, data, resultado obtido, status, resumo, totais e defeitos apenas na execução. Em caso parcialmente verificável, separar o que passou, falhou e ficou bloqueado; não aprovar o caso inteiro se houver impedimento. Preservar o esperado mesmo quando a implementação divergir. Contabilização inicial: **37 pendentes, zero executados** (21 da HU-014 e 16 da HU-015).
+Preencher ambiente/commit, data, resultado obtido, status, resumo, totais e defeitos apenas na execução. Em caso parcialmente verificável, separar o que passou, falhou e ficou bloqueado; não aprovar o caso inteiro se houver impedimento. Preservar o esperado mesmo quando a implementação divergir. Contabilização em 09/11/2026: **9 passaram, 1 parcial e 27 pendentes**. Os 10 casos de API da HU-014 foram abordados; o CT-010 ficou parcial porque a integração com alocação real ainda não existe. Os 11 casos de UI da HU-014 e os 16 casos da HU-015 permanecem pendentes. [Resumo JSON da execução de API da HU-014](HU-014/api/EVIDENCIAS-HU-014.json).
 
 Registrar HTTP e corpo na API, evidências visuais na UI e consultas de persistência quando pedidas. Omitir credenciais, tokens e dados pessoais dos registros. Preparar relatos `.md` após reprodução; publicação no GitHub fica para a etapa de execução e revisão.
