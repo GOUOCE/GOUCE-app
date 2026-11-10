@@ -11,16 +11,16 @@
 | Operações | `GET /transporte/agendamentos/calendario?mes=YYYY-MM`, `GET /transporte/agendamentos/meus`, `GET /transporte/agendamentos/{id}`, `POST /transporte/agendamentos`, `PUT /transporte/agendamentos/{id}`; opções usadas pelo front a conferir no contrato |
 | Branch de resultados | `feature/testes-api-hu-013`, criada da `develop` `4e44913d` |
 | Código a testar | `feature/front-hu013`, commit `ee305857954fcb23f3919f3ebfe7e163fcbc167a`, [PR #377](https://github.com/GOUOCE/GOUCE-app/pull/377) |
-| Ambiente | API e PostgreSQL reais em stack isolada; URL, data e versões serão registradas na execução |
+| Ambiente | Docker isolado `atu-qa-hu013`; `http://127.0.0.1:8013`; PostgreSQL 15.17; Alembic `80_remove_horarios_agendamento`; America/Fortaleza. [Resumo JSON](EVIDENCIAS-HU-013.json) |
 | Total de casos | 12 |
-| Última execução | Não realizada |
+| Última execução | 09/11/2026 — CT-001 falhou; CT-002 a CT-012 bloqueados pela integração |
 | Testador | LLM — execução de API; Cauan Ricardo — revisão |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 12 | 0 | 0 | 0 | 0 | 12 |
+| 🚫 Execução bloqueada pela integração | 12 | 0 | 1 | 0 | 11 | 0 |
 
 ## Pré-condições
 
@@ -40,28 +40,28 @@
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU013-API-001 | API publicada na aplicação real | Health, OpenAPI, GET/POST/PUT autenticados | Health 200; operações de agendamento presentes e acessíveis conforme contrato | ⏳ PENDENTE | Verificar registro do router antes dos demais casos. |
-| CT-HU013-API-002 | Calendário, opções e dias úteis | Mês de D/adjacente; dia útil/sábado/domingo; sem rota ativa | Estados coerentes, somente D a D+29 disponíveis; fim de semana/sem rota indisponíveis; opções reais ativas | ⏳ PENDENTE | Sem cobrança de feriado/recesso (#389). |
-| CT-HU013-API-003 | Criar ida, volta e ambos | Três reservas válidas; IES/ponto da volta independentes; C1/C2 | 200, mensagem de sucesso, vínculo ao aluno e trechos corretos no banco | ⏳ PENDENTE | Conferir persistência e calendário. |
-| CT-HU013-API-004 | Novo cadastro sem nenhum trecho | POST com `usa_ida=false` e `usa_volta=false` | 200, “Nenhum agendamento foi criado.”, sem nova reserva nem erro | ⏳ PENDENTE | AC-11 e decisão #389. |
+| CT-HU013-API-001 | API publicada na aplicação real | Health, OpenAPI, GET/POST/PUT autenticados | Health 200; operações de agendamento presentes e acessíveis conforme contrato | ❌ FALHOU | Health/login 200, sete caminhos 404 genérico e OpenAPI sem agendamentos. BUG-HU013-API-001. |
+| CT-HU013-API-002 | Calendário, opções e dias úteis | Mês de D/adjacente; dia útil/sábado/domingo; sem rota ativa | Estados coerentes, somente D a D+29 disponíveis; fim de semana/sem rota indisponíveis; opções reais ativas | 🚫 BLOQUEADO | Calendário e opções sem operação publicada; estados, fins de semana e opções ativas não avaliados. Causa: BUG-HU013-API-001. |
+| CT-HU013-API-003 | Criar ida, volta e ambos | Três reservas válidas; IES/ponto da volta independentes; C1/C2 | 200, mensagem de sucesso, vínculo ao aluno e trechos corretos no banco | 🚫 BLOQUEADO | POST não alcança o módulo; combinações de trechos, referências e persistência não avaliadas. Causa: BUG-HU013-API-001. |
+| CT-HU013-API-004 | Novo cadastro sem nenhum trecho | POST com `usa_ida=false` e `usa_volta=false` | 200, “Nenhum agendamento foi criado.”, sem nova reserva nem erro | 🚫 BLOQUEADO | Sem operação POST roteada; comportamento de Não/Não não avaliado. Causa: BUG-HU013-API-001. |
 
 ### Seção B — Validações e limites
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU013-API-005 | Obrigatórios condicionais | Sim sem cada ponto/IES; Não sem campos do trecho | 422 FA-003 com campos para trecho utilizado; não exigir trecho não utilizado | ⏳ PENDENTE | Partições ida/volta. |
-| CT-HU013-API-006 | Referências e itinerário | Inativo/inexistente; id inválido; ponto/IES sem rota; complementar incompatível | 422; sem vínculo inválido; FA-002 na combinação não atendida | ⏳ PENDENTE | RN-010 e RNF-012. |
-| CT-HU013-API-007 | Duplicidade e concorrência | Mesmo aluno/data; duas chamadas simultâneas; outro aluno | 409 FA-001 orientando editar/cancelar; no máximo um ativo por aluno/data | ⏳ PENDENTE | BDD e mensagem do PO #389. |
-| CT-HU013-API-008 | Limites da janela | D−1, D, D+29, D+30 e data inválida | Datas permitidas aceitas se úteis; fora da janela/formato inválido 422 | ⏳ PENDENTE | Hoje é o primeiro dos 30 dias (#389). |
-| CT-HU013-API-009 | Limite de ativos e configuração | 21 → 22; tentativa com 22; limite configurado 5 | Limite não ultrapassado; 422 LIMITE_AGENDAMENTOS; edição não acrescenta reserva | ⏳ PENDENTE | Massa sem conflito de aluno/data. |
+| CT-HU013-API-005 | Obrigatórios condicionais | Sim sem cada ponto/IES; Não sem campos do trecho | 422 FA-003 com campos para trecho utilizado; não exigir trecho não utilizado | 🚫 BLOQUEADO | Sem operação POST roteada; validação condicional de campos não exercitada. Causa: BUG-HU013-API-001. |
+| CT-HU013-API-006 | Referências e itinerário | Inativo/inexistente; id inválido; ponto/IES sem rota; complementar incompatível | 422; sem vínculo inválido; FA-002 na combinação não atendida | 🚫 BLOQUEADO | Sem operação POST roteada; validação de referências e itinerário não exercitada. Causa: BUG-HU013-API-001. |
+| CT-HU013-API-007 | Duplicidade e concorrência | Mesmo aluno/data; duas chamadas simultâneas; outro aluno | 409 FA-001 orientando editar/cancelar; no máximo um ativo por aluno/data | 🚫 BLOQUEADO | Criação indisponível; duplicidade, concorrência e reagendamento não exercitados. Causa: BUG-HU013-API-001. |
+| CT-HU013-API-008 | Limites da janela | D−1, D, D+29, D+30 e data inválida | Datas permitidas aceitas se úteis; fora da janela/formato inválido 422 | 🚫 BLOQUEADO | Criação/calendário indisponíveis; limites de datas não exercitados. Causa: BUG-HU013-API-001. |
+| CT-HU013-API-009 | Limite de ativos e configuração | 21 → 22; tentativa com 22; limite configurado 5 | Limite não ultrapassado; 422 LIMITE_AGENDAMENTOS; edição não acrescenta reserva | 🚫 BLOQUEADO | Criação indisponível; contagem e configuração de limite/janela não exercitadas. Causa: BUG-HU013-API-001. |
 
 ### Seção C — Edição, acesso e integridade
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU013-API-010 | Editar e cancelar sem trechos | PUT válido, PUT para outro dia ocupado e PUT com ambos false | Mesmo id atualizado; conflito 409; sem trechos equivale a cancelamento persistido | ⏳ PENDENTE | Modal é UI; alocação real depende de HU-016/018. |
-| CT-HU013-API-011 | Autorização e propriedade | Sem token/inválido; admin; aluno sem acesso regular; outro dono | 401/403 conforme credencial; dados de outro aluno protegidos; sem mutação | ⏳ PENDENTE | Não aprovar segurança com 404 de rota ausente. |
-| CT-HU013-API-012 | Persistência, rollback e tempo | Criação válida; recusa; falha controlada antes do commit | Banco consistente; sem gravação parcial; resposta de referência até 3 s | ⏳ PENDENTE | Sem mock ou alteração do produto. |
+| CT-HU013-API-010 | Editar e cancelar sem trechos | PUT válido, PUT para outro dia ocupado e PUT com ambos false | Mesmo id atualizado; conflito 409; sem trechos equivale a cancelamento persistido | 🚫 BLOQUEADO | Criação/edição indisponíveis; edição e cancelamento por PUT não exercitados. Causa: BUG-HU013-API-001. |
+| CT-HU013-API-011 | Autorização e propriedade | Sem token/inválido; admin; aluno sem acesso regular; outro dono | 401/403 conforme credencial; dados de outro aluno protegidos; sem mutação | 🚫 BLOQUEADO | 404 de rota ausente impede atingir autenticação/autorização do módulo; segurança não aprovada. Causa: BUG-HU013-API-001. |
+| CT-HU013-API-012 | Persistência, rollback e tempo | Criação válida; recusa; falha controlada antes do commit | Banco consistente; sem gravação parcial; resposta de referência até 3 s | 🚫 BLOQUEADO | Sem operação de negócio acessível; persistência, rollback e tempo de agendamento não avaliados. Causa: BUG-HU013-API-001. |
 
 ## Detalhamento dos casos
 
@@ -87,8 +87,11 @@
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Backend exato `ee305857` iniciado com todas as migrations em banco vazio. Health e OpenAPI retornaram 200; login real do aluno A (id 2, ativado e com vínculo válido) retornou 200. Bairro/ponto/IES/rota ativa preparados por HTTP 201.
+- GET `/meus`, GET `/calendario`, GET por id, POST e PUT sob `/transporte/agendamentos` retornaram 404 `{"detail":"Not Found"}`. Os dois caminhos de opções conferidos também retornaram 404. Nenhuma operação de agendamento aparece no OpenAPI.
+- POST usou data útil 10/11/2026, ponto/IES id 1 e rota ativa atendendo ambos os trechos; a tabela de agendamentos e sua auditoria permaneceram com zero registros. Foram 14 requisições reais incluindo preparação/login/metadados, das quais sete diagnosticaram os caminhos indisponíveis.
+- [Bug de integração reproduzido](issues/BUG-HU013-API-001-rotas-agendamento-nao-publicadas.md); [respostas e resumo JSON](EVIDENCIAS-HU-013.json). O backend não foi corrigido nem substituído pelo da develop.
+- Status: ❌ Falhou.
 
 ---
 
@@ -112,8 +115,10 @@
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Calendário e opções sem operação publicada; estados, fins de semana e opções ativas não avaliados.
+- Bloqueio comum: [BUG-HU013-API-001](issues/BUG-HU013-API-001-rotas-agendamento-nao-publicadas.md), reproduzido no CT-001. Este caso não foi contabilizado como nova falha nem como aprovação.
+- Reexecutar após publicação das operações no backend da feature. [Registro JSON](EVIDENCIAS-HU-013.json).
+- Status: 🚫 Bloqueado.
 
 ---
 
@@ -137,8 +142,10 @@
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- POST não alcança o módulo; combinações de trechos, referências e persistência não avaliadas.
+- Bloqueio comum: [BUG-HU013-API-001](issues/BUG-HU013-API-001-rotas-agendamento-nao-publicadas.md), reproduzido no CT-001. Este caso não foi contabilizado como nova falha nem como aprovação.
+- Reexecutar após publicação das operações no backend da feature. [Registro JSON](EVIDENCIAS-HU-013.json).
+- Status: 🚫 Bloqueado.
 
 ---
 
@@ -160,8 +167,10 @@
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Sem operação POST roteada; comportamento de Não/Não não avaliado.
+- Bloqueio comum: [BUG-HU013-API-001](issues/BUG-HU013-API-001-rotas-agendamento-nao-publicadas.md), reproduzido no CT-001. Este caso não foi contabilizado como nova falha nem como aprovação.
+- Reexecutar após publicação das operações no backend da feature. [Registro JSON](EVIDENCIAS-HU-013.json).
+- Status: 🚫 Bloqueado.
 
 ---
 
@@ -185,8 +194,10 @@
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Sem operação POST roteada; validação condicional de campos não exercitada.
+- Bloqueio comum: [BUG-HU013-API-001](issues/BUG-HU013-API-001-rotas-agendamento-nao-publicadas.md), reproduzido no CT-001. Este caso não foi contabilizado como nova falha nem como aprovação.
+- Reexecutar após publicação das operações no backend da feature. [Registro JSON](EVIDENCIAS-HU-013.json).
+- Status: 🚫 Bloqueado.
 
 ---
 
@@ -208,8 +219,10 @@
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Sem operação POST roteada; validação de referências e itinerário não exercitada.
+- Bloqueio comum: [BUG-HU013-API-001](issues/BUG-HU013-API-001-rotas-agendamento-nao-publicadas.md), reproduzido no CT-001. Este caso não foi contabilizado como nova falha nem como aprovação.
+- Reexecutar após publicação das operações no backend da feature. [Registro JSON](EVIDENCIAS-HU-013.json).
+- Status: 🚫 Bloqueado.
 
 ---
 
@@ -233,8 +246,10 @@
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Criação indisponível; duplicidade, concorrência e reagendamento não exercitados.
+- Bloqueio comum: [BUG-HU013-API-001](issues/BUG-HU013-API-001-rotas-agendamento-nao-publicadas.md), reproduzido no CT-001. Este caso não foi contabilizado como nova falha nem como aprovação.
+- Reexecutar após publicação das operações no backend da feature. [Registro JSON](EVIDENCIAS-HU-013.json).
+- Status: 🚫 Bloqueado.
 
 ---
 
@@ -256,8 +271,10 @@
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Criação/calendário indisponíveis; limites de datas não exercitados.
+- Bloqueio comum: [BUG-HU013-API-001](issues/BUG-HU013-API-001-rotas-agendamento-nao-publicadas.md), reproduzido no CT-001. Este caso não foi contabilizado como nova falha nem como aprovação.
+- Reexecutar após publicação das operações no backend da feature. [Registro JSON](EVIDENCIAS-HU-013.json).
+- Status: 🚫 Bloqueado.
 
 ---
 
@@ -280,8 +297,10 @@
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Criação indisponível; contagem e configuração de limite/janela não exercitadas.
+- Bloqueio comum: [BUG-HU013-API-001](issues/BUG-HU013-API-001-rotas-agendamento-nao-publicadas.md), reproduzido no CT-001. Este caso não foi contabilizado como nova falha nem como aprovação.
+- Reexecutar após publicação das operações no backend da feature. [Registro JSON](EVIDENCIAS-HU-013.json).
+- Status: 🚫 Bloqueado.
 
 ---
 
@@ -306,8 +325,10 @@
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Criação/edição indisponíveis; edição e cancelamento por PUT não exercitados.
+- Bloqueio comum: [BUG-HU013-API-001](issues/BUG-HU013-API-001-rotas-agendamento-nao-publicadas.md), reproduzido no CT-001. Este caso não foi contabilizado como nova falha nem como aprovação.
+- Reexecutar após publicação das operações no backend da feature. [Registro JSON](EVIDENCIAS-HU-013.json).
+- Status: 🚫 Bloqueado.
 
 ---
 
@@ -329,8 +350,10 @@
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- 404 de rota ausente impede atingir autenticação/autorização do módulo; segurança não aprovada.
+- Bloqueio comum: [BUG-HU013-API-001](issues/BUG-HU013-API-001-rotas-agendamento-nao-publicadas.md), reproduzido no CT-001. Este caso não foi contabilizado como nova falha nem como aprovação.
+- Reexecutar após publicação das operações no backend da feature. [Registro JSON](EVIDENCIAS-HU-013.json).
+- Status: 🚫 Bloqueado.
 
 ---
 
@@ -354,8 +377,10 @@
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Sem operação de negócio acessível; persistência, rollback e tempo de agendamento não avaliados.
+- Bloqueio comum: [BUG-HU013-API-001](issues/BUG-HU013-API-001-rotas-agendamento-nao-publicadas.md), reproduzido no CT-001. Este caso não foi contabilizado como nova falha nem como aprovação.
+- Reexecutar após publicação das operações no backend da feature. [Registro JSON](EVIDENCIAS-HU-013.json).
+- Status: 🚫 Bloqueado.
 
 ## Rastreabilidade e fontes
 
@@ -380,10 +405,12 @@
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. | — |
+| CT-HU013-API-001 | Operações de agendamento não publicadas na aplicação real; bloqueia CT-002 a CT-012. | [BUG-HU013-API-001](issues/BUG-HU013-API-001-rotas-agendamento-nao-publicadas.md) — relato local, sem publicação no GitHub |
 
 ## Observações gerais
 
 - Esta suíte cobre apenas API. Não há execução nem nova suíte de UI nesta entrega.
 - Evidência final em um único JSON simples, sem pastas de executor/evidências e sem credenciais. Riscos de leitura só serão chamados de defeitos após reprodução HTTP.
 - O gate do CT-001 impede que uma indisponibilidade de integração seja contabilizada como doze defeitos diferentes ou como aprovação de regras nunca exercitadas.
+
+- Rodada encerrada pelo defeito de integração: **0 aprovados, 1 falhou, 11 bloqueados**. Uma causa comum reproduzida, sem afirmar execução das regras bloqueadas. [Resumo da evidência](EVIDENCIAS-HU-013.json).

@@ -1,6 +1,6 @@
 # Testes manuais — Épico 04 — Agendamento de Transporte (Aluno)
 
-Suítes essenciais das **HU-013 — Agendamento de Transporte**, **HU-014 — Visualização e Cancelamento de Agendamentos** e **HU-015 — Consulta de Rota Complementar e Transferência**: **49 casos, sendo 29 de API e 20 de UI**. A API da HU-014 tem **9 casos aprovados e 1 parcial**; os outros **39 casos permanecem pendentes**. A inclusão da HU-013 nesta entrega cobre somente API, seguindo o padrão dos outros épicos.
+Suítes essenciais das **HU-013 — Agendamento de Transporte**, **HU-014 — Visualização e Cancelamento de Agendamentos** e **HU-015 — Consulta de Rota Complementar e Transferência**: **49 casos, sendo 29 de API e 20 de UI**. A API da HU-014 tem **9 casos aprovados e 1 parcial**; a API da HU-013 teve **1 falha e 11 bloqueados** por integração indisponível. Os outros **27 casos permanecem pendentes**. A inclusão da HU-013 nesta entrega cobre somente API, seguindo o padrão dos outros épicos.
 
 ## Índice das suítes
 
@@ -9,7 +9,7 @@ Suítes essenciais das **HU-013 — Agendamento de Transporte**, **HU-014 — Vi
 | HU-013 | Agendamento de transporte | [12 casos](HU-013/api/API-HU-013.md) | — (fora desta entrega) | Backend exato de `feature/front-hu013`, [PR #377](https://github.com/GOUOCE/GOUCE-app/pull/377); rotas/cadastros e regras da #389 |
 | HU-014 | Meus agendamentos e cancelamento | [10 casos](HU-014/api/API-HU-014.md) | [11 casos](HU-014/ui/UI-HU-014.md) | HU-013 para massa; HU-011/012 para rotas; HU-016/018 para alocação real; [PR #378](https://github.com/GOUOCE/GOUCE-app/pull/378) para UI |
 | HU-015 | Rota complementar e transferência | [7 casos](HU-015/api/API-HU-015.md) | [9 casos](HU-015/ui/UI-HU-015.md) | HU-013/014 para reservas; HU-012 para complementares; detalhe integrado e alocação diária; [PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379) para UI |
-| **Total** | **3 HUs** | **29** | **20** | **9 passaram; 1 parcial; 39 pendentes** |
+| **Total** | **3 HUs** | **29** | **20** | **9 passaram; 1 falhou; 1 parcial; 11 bloqueados; 27 pendentes** |
 
 ## Escopo e organização
 
@@ -80,11 +80,11 @@ Leitura realizada em **09/11/2026**. Não há arquivo BDD da HU-014 na base anal
 
 ## Riscos mapeados no código
 
-São hipóteses para orientar a execução, **não defeitos reproduzidos**.
+Os riscos de leitura orientam a execução. Achados confirmados por HTTP são identificados como reproduzidos e vinculados aos seus relatos.
 
 **HU-013**
 
-- O `backend/main.py` da feature não importa nem registra o router de agendamentos; o CT-001 deve confirmar a publicação por HTTP.
+- Confirmado por HTTP no commit `ee305857`: sete caminhos de agendamento retornam 404 genérico, apesar de health/login 200, e nenhuma operação do módulo aparece no OpenAPI. [BUG-HU013-API-001](HU-013/api/issues/BUG-HU013-API-001-rotas-agendamento-nao-publicadas.md). CT-001 falhou; CT-002 a CT-012 bloqueados. [Resumo JSON](HU-013/api/EVIDENCIAS-HU-013.json).
 - O front captura erros de criação/edição e pode devolver sucesso de fallback. Somente resposta HTTP real e banco validam a API; nenhuma conclusão de UI é feita por essa leitura.
 
 **HU-014**
@@ -127,6 +127,6 @@ Os PRs #378 e #379 alteram `agenda.tsx` e `agendamentoService.ts`. Após integra
 
 ## Registro dos resultados
 
-Preencher ambiente/commit, data, resultado obtido, status, resumo, totais e defeitos apenas na execução. Em caso parcialmente verificável, separar o que passou, falhou e ficou bloqueado; não aprovar o caso inteiro se houver impedimento. Preservar o esperado mesmo quando a implementação divergir. Contabilização em 09/11/2026: **9 passaram, 1 parcial e 27 pendentes**. Os 10 casos de API da HU-014 foram abordados; o CT-010 ficou parcial porque a integração com alocação real ainda não existe. Os 11 casos de UI da HU-014 e os 16 casos da HU-015 permanecem pendentes. [Resumo JSON da execução de API da HU-014](HU-014/api/EVIDENCIAS-HU-014.json).
+Preencher ambiente/commit, data, resultado obtido, status, resumo, totais e defeitos apenas na execução. Em caso parcialmente verificável, separar o que passou, falhou e ficou bloqueado; não aprovar o caso inteiro se houver impedimento. Preservar o esperado mesmo quando a implementação divergir. Contabilização em 09/11/2026: **9 passaram, 1 falhou, 1 parcial, 11 bloqueados e 27 pendentes**. Na HU-013, CT-001 falhou por falta de publicação das rotas na feature; os outros 11 casos estão bloqueados por essa causa e não tiveram as regras de negócio exercitadas. Os 10 casos de API da HU-014 foram abordados; o CT-010 ficou parcial porque a integração com alocação real ainda não existe. Os 11 casos de UI da HU-014 e os 16 casos da HU-015 permanecem pendentes. [Resumo JSON da execução de API da HU-014](HU-014/api/EVIDENCIAS-HU-014.json).
 
 Registrar HTTP e corpo na API, evidências visuais na UI e consultas de persistência quando pedidas. Omitir credenciais, tokens e dados pessoais dos registros. Preparar relatos `.md` após reprodução; publicação no GitHub fica para a etapa de execução e revisão.

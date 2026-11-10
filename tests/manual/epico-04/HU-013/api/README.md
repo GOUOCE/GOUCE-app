@@ -1,6 +1,6 @@
 # Testes de API — HU-013
 
-Execução pela LLM, com revisão de Cauan Ricardo. [Suíte com 12 casos essenciais](API-HU-013.md).
+Execução pela LLM, com revisão de Cauan Ricardo. [Suíte com 12 casos essenciais](API-HU-013.md). Resultado em 09/11/2026: **1 falhou e 11 bloqueados**. A API da feature iniciou e autenticou o aluno, mas não publicou as rotas de agendamento. [Evidência JSON](EVIDENCIAS-HU-013.json) e [relato local do bug](issues/BUG-HU013-API-001-rotas-agendamento-nao-publicadas.md). Nenhuma issue foi publicada no GitHub.
 
 Os resultados são versionados na branch `feature/testes-api-hu-013`, criada da develop. O código testado é o backend de `feature/front-hu013`, commit `ee305857954fcb23f3919f3ebfe7e163fcbc167a` ([PR #377](https://github.com/GOUOCE/GOUCE-app/pull/377)), preparado em checkout separado para manter o PR de resultados restrito aos testes.
 
