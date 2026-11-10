@@ -164,7 +164,9 @@ cucumber --tags "@EP001"
 ## Próximos Passos
 
 - [x] Épico 02 (HU-007 a HU-010, HU-030) — Gestão de Cadastros Base ([`../epico-02/`](../epico-02/README.md))
-- [ ] Épico 03+ — Demais histórias
+- [x] Épico 03 (HU-011 e HU-012) — Gestão de Rotas e Horários ([`../epico-03/`](../epico-03/README.md))
+- [x] Épico 04 (HU-013 a HU-015) — Agendamento de Transporte ([`../epico-04/`](../epico-04/README.md))
+- [ ] Épico 05+ — Demais histórias
 - [ ] Step definitions em Cucumber.js
 - [ ] Integração com CI/CD
 - [ ] Documento `docs/regras-validacao.md` — regras técnicas detalhadas
