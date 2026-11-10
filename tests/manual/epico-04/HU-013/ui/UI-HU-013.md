@@ -266,6 +266,7 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 | CT-003 | O formulário usa listas fixas do app (a rota de opções não existe) e abre com Sim, ponto e IES pré-selecionados. | #438 |
 | CT-004, 005, 006, 007, 009 | Quando a API recusa, o serviço devolve uma resposta de sucesso inventada e a tela mostra sucesso; as mensagens do PO reais não aparecem. | #439 |
 | CT-008 | A edição atualiza sempre o id 1 e o cancelamento usa a data como id, com sucesso inventado se a API recusar. | #440 |
+| Exploratório | A barra de abas do aluno mostra “(tabs)/home”, “(tabs)/agenda” e uma aba “agendar-tra…”, com ícones padrão, porque as telas foram movidas para `(tabs)` sem atualizar o layout. | #442 |
 | CT-001, 005, 006 | Sábado e domingo disponíveis, “Não” para ida e volta e mensagem de duplicidade fora do requisito (back). | #390 |
 | CT-004, 009 | Toast escuro nas mensagens do fluxo (no Figma da HU-013 é o desenho; confirmar o padrão com o design). | #413 |
 
