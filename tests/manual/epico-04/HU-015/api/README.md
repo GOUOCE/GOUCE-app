@@ -1,51 +1,58 @@
 # Como executar os testes manuais de API — HU-015
 
-Execução pela **LLM**, com revisão de **Cauan Ricardo**. Esta entrega é de planejamento: todos os casos estão pendentes. A consulta offline é exercitada na [UI](../ui/UI-HU-015.md), porque o cache pertence ao dispositivo, não à API.
+Execução pela **LLM**, com revisão de **Cauan Ricardo**. [Suíte de API: 8 casos](API-HU-015.md). A [UI tem 10 casos](../ui/UI-HU-015.md) para execução manual por Cauan. Esta revisão contém somente planejamento: **18 casos pendentes**, sem chamadas funcionais, aprovações ou bugs reproduzidos.
 
-## 1. Branch e fontes
+## Base e fontes
 
-Depois da revisão e integração do planejamento em `develop`, criar a branch de execução conforme o [CONTRIBUTING](../../../../../docs/CONTRIBUTING.md):
+O planejamento está na branch `test/planejamento-api-ui-hu-015-integrado`, criada diretamente de **`feature/front-hu015` `4ac87b4623b493af2d56012d60b8c3b875c3af7e`** ([PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379)). Backend e front desta versão devem ser usados juntos.
 
-```bash
-git switch develop
-git pull --ff-only
-git switch -c feature/testes-api-hu-015
+Ler os [requisitos, seção 7.5.3](../../../../../docs/requisitos.md), o [BDD HU-015](../../../../../bdd/features/epico-04/HU-015.feature) e as [decisões do PO na #389](https://github.com/GOUOCE/GOUCE-app/issues/389#issuecomment-6756236002). O BDD já existe no checkout; os casos têm rastreabilidade para seus cenários. Esta versão substitui o planejamento anterior baseado no front `b2111a9c` e na develop `99bbf2c6`.
+
+## 1. Preparar a execução
+
+1. Quando a execução for solicitada, criar uma branch própria de testes e registrar o commit exato do build, preservando alterações locais em worktree separada quando necessário.
+2. Usar API e PostgreSQL reais em stack isolada; aplicar as migrations do commit alvo, incluindo `81_add_updated_at_rotas`. Anotar URL, revisão, data/fuso e SHAs.
+3. Confirmar no OpenAPI `GET /transporte/agendamentos/detalhes?data=YYYY-MM-DD`, `GET /transporte/agendamentos/{id}` e `GET /transporte/agendamentos/meus`. O router já está registrado no código desta base; isso ainda precisa ser verificado por HTTP durante API-001.
+4. Preparar A/B e os demais perfis descritos na suíte. Obter tokens em `POST /auth/login` e mantê-los fora do Git.
+
+O resultado da HU-013 em `ee305857` é de outra branch/versão; não marcar este planejamento como bloqueado ou aprovado por aquele resultado.
+
+## 2. Preparar a massa
+
+Usar o mapa das pré-condições da suíte: P1/P2, C1/C2, AI/AV/AIV/AM1/AM2/AD, BI e AC. Preparar por API administrativa as rotas, bairros/pontos e IES reais. As principais devem atender às combinações de ponto/IES e às complementares de cada trecho.
+
+Criar reservas por `POST /transporte/agendamentos` da HU-013; usar dias úteis válidos na janela e ids efetivamente retornados. Exemplo com ids ilustrativos, que devem ser substituídos pela massa real:
+
+```json
+{
+  "data": "<data útil válida em YYYY-MM-DD>",
+  "usa_ida": true,
+  "usa_volta": true,
+  "ponto_embarque_id": 123,
+  "ies_destino_id": 456,
+  "rota_complementar_ida_id": 789,
+  "ies_origem_id": 654,
+  "ponto_desembarque_id": 321,
+  "rota_complementar_volta_id": 987
+}
 ```
 
-Preservar alterações locais usando worktree quando necessário. Ler a [suíte](API-HU-015.md), os [requisitos, seção 7.5.3](../../../../../docs/requisitos.md), o [índice do épico](../../README.md) e o [exemplo preenchido da HU-001](../../../epico-01/HU-001/api/API-HU-001.md).
+Horários são obtidos dos cadastros de rota; não enviar campos legados de horário no payload do agendamento. A LLM prepara e registra o mapa de ids/datas/donos/trechos, sem presumir ids fixos nem tratar dados de exemplo do app como massa de teste.
 
-Não havia BDD da HU-015 na base analisada. Se ele for adicionado, comparar seus cenários aos quatro critérios de aceite e às duas alternativas antes da execução; registrar divergências para revisão sem alterar o esperado apenas para fazer o teste passar.
+## 3. Executar e conferir
 
-## 2. Confirmar o contrato antes de executar
+Executar API-001 a API-008 na ordem. Usar token do aluno em consultas e token de administrador somente na preparação/conferência dos cadastros. Comparar os três retornos reais (por data, id e lista) com os dados do banco, preservando a distinção de ida/volta e de rota direta.
 
-| Origem | Operação | Situação na análise |
-| --- | --- | --- |
-| Backend `develop` `99bbf2c6` | `GET /transporte/agendamentos/meus` e `GET /transporte/agendamentos/{id}` | Reais; retornam reservas do aluno e ids/nomes das complementares por trecho |
-| Front do PR #379 `b2111a9c` | `GET /agendamentos/detalhes?data=YYYY-MM-DD` | Chamado pelo serviço; não encontrado no backend analisado |
-| Cadastro administrativo | `GET /rotas-complementares/{id}` | Existe, exige administrador; serve de referência para preparar/conferir massa, não como permissão a ser dada ao aluno |
+- Confirmar o nome da linha, os dois horários e o ponto de conexão; a UI deve usar saída na ida e retorno na volta.
+- Sem alocação, `onibus` e `motorista` nulos são o esperado; ocultação visual pertence à UI. Apenas API-008 depende do épico 5 para comprovar programação de veículo/motorista real.
+- Em validação por data, conferir também a mensagem definida no BDD. Um 422 genérico pode aplicar a recusa e ainda divergir do texto esperado.
+- No API-007, conferir os valores e `atualizado_em` após mudanças de referências; o cliente usa essa versão para decidir se regrava o cache. Não exigir header ETag não implementado.
+- GET no servidor ou teste unitário com mock não comprova consulta offline no dispositivo. A LLM apoia os passos de UI com conferência da fonte de dados, sem substituir a observação de Cauan.
 
-Executar CT-001 e guardar OpenAPI, URL e resposta real. Os campos de `DetalhesViagemResponse` no TypeScript são uma expectativa do front, não prova de um contrato HTTP implementado. Não inventar endpoint, response ou códigos de erro para operações ainda ausentes. Quando houver contrato integrado, anotar o endpoint efetivo usado no build e executar os casos dependentes nele.
+## 4. Registrar e entregar
 
-## 3. Ambiente e massa
+Preencher ambiente/commit, última execução, resultado obtido por variação, status, resumo, totais e defeitos. Usar ✅ passou, ❌ falhou, ⚠️ parcial, 🚫 bloqueado e ⏳ pendente; registrar a dependência específica quando impedir uma parte.
 
-1. Usar API e PostgreSQL reais em ambiente isolado; registrar URL, SHA do backend e fuso. Não modificar dados compartilhados.
-2. Autenticar alunos A e B aprovados e com vínculo válido em `POST /auth/login`; separar token de administrador para preparar cadastros e conferir referências.
-3. Pela API de cadastros, preparar bairro/pontos, IES e rota principal ativa. Criar duas complementares distintas com `horario_saida`, `horario_retorno`, `ponto_conexao` e vínculo à principal (HU-012).
-4. Criar reservas pelo `POST /transporte/agendamentos` da HU-013: uma só com complementar na ida; outra só na volta; outra com complementares diferentes na ida/volta; uma direta; e reserva de B para a mesma data de uma reserva de A. Usar dias válidos na janela e ids reais, sem presumir `id = 1`.
-5. Conferir e guardar o mapa aluno/data/id/trechos/complementares antes de chamar o detalhe. Os dados devem diferir do protótipo fixo do front para detectar fallback.
-6. Para conferir veículo/motorista por operação/dia, preparar alocação real das HU-016/017/018 quando disponível. Sem modelo/operação implementada, registrar a dependência; não inferir que o nome cadastrado da rota é o veículo escalado.
+Guardar a evidência da execução em **um JSON simples**, quando houver resultados reais. Não criar pastas de executor/evidências nem incluir credenciais. Preparar relatos reproduzidos em `api/issues/` pelo [modelo de API](../../../modelos/ISSUE-BUG-API.md), vinculando a issue quando publicada. Os esperados não devem ser ajustados para fazer um caso passar.
 
-## 4. Executar e registrar
-
-Executar CT-001 a CT-007. Chamadas de leitura não devem alterar reservas, alocação ou contador. Guardar HTTP e corpo sem tokens, campos ausentes, referência consultada e estado antes/depois quando houver preparação entre chamadas.
-
-- Nos endpoints existentes, usar os códigos e campos documentados na suíte.
-- Nos casos de detalhe completo/veículo diário, ausência do contrato ou da alocação bloqueia a comprovação dependente. Um 404 de rota inexistente não aprova controle de acesso nem comportamento de viagem sem reserva.
-- Se o front exibir dados apesar de o HTTP falhar, isso é verificado na UI: não contar como API aprovada, sincronização ou cache de dados reais.
-- Testes com mock existentes no PR não substituem chamadas HTTP reais. Um GET no servidor não comprova cache offline persistente.
-
-## 5. Revisão e entrega
-
-Preencher ambiente/SHA, última execução, resultado obtido por variação, status, resumo, totais e defeitos. Usar ✅ passou, ❌ falhou, ⚠️ parcial, 🚫 bloqueado e ⏳ pendente; separar o que foi verificado do que a dependência impediu.
-
-Para falha reproduzida, preparar `api/issues/BUG-HU015-API-001-<resumo>.md` usando o [modelo de API](../../../modelos/ISSUE-BUG-API.md), com referência na suíte. Cauan revisa os registros antes de publicar relatos. Commitar somente os resultados/relatos pertinentes, com sua autoria e sem coautoria, em PR de execução destinado à `develop`.
+Commits seguem o [CONTRIBUTING](../../../../../docs/CONTRIBUTING.md), com autoria de Cauan e sem coautoria. Nesta etapa não há resultado de execução, JSON de evidência ou issue a publicar.
