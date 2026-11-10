@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Text, Surface, Button } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -10,35 +10,48 @@ export default function AgendamentoDetalhesScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ dataIso?: string; idAgendamento?: string }>();
 
-  const [loading, setLoading] = useState(false);
   const [detalhe, setDetalhe] = useState<any>(null);
-
-  const carregarDetalhe = useCallback(async () => {
-    try {
-      if (params.idAgendamento) {
-        const dados = await agendamentoService.detalharAgendamento(Number(params.idAgendamento));
-        setDetalhe(dados);
-      } else {
-        // Tenta buscar nos agendamentos do aluno para a data
-        const lista = await agendamentoService.listarAgendamentosAtivos();
-        const achado = lista.find((a: any) => a.dataIso === params.dataIso || a.data === params.dataIso);
-        if (achado && achado.idAgendamento) {
-          const dados = await agendamentoService.detalharAgendamento(Number(achado.idAgendamento));
-          setDetalhe(dados);
-        } else {
-          setDetalhe(achado);
-        }
-      }
-    } catch {
-      setDetalhe(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [params.idAgendamento, params.dataIso]);
+  const [carregado, setCarregado] = useState(false);
 
   useEffect(() => {
-    carregarDetalhe();
-  }, [carregarDetalhe]);
+    let ativo = true;
+    async function carregar() {
+      try {
+        if (params.idAgendamento) {
+          const dados = await agendamentoService.detalharAgendamento(Number(params.idAgendamento));
+          if (ativo) {
+            setDetalhe(dados);
+            setCarregado(true);
+          }
+        } else {
+          // Tenta buscar nos agendamentos do aluno para a data
+          const lista = await agendamentoService.listarAgendamentosAtivos();
+          const achado = lista.find((a: any) => a.dataIso === params.dataIso || a.data === params.dataIso);
+          if (achado && achado.idAgendamento) {
+            const dados = await agendamentoService.detalharAgendamento(Number(achado.idAgendamento));
+            if (ativo) {
+              setDetalhe(dados);
+              setCarregado(true);
+            }
+          } else {
+            if (ativo) {
+              setDetalhe(achado);
+              setCarregado(true);
+            }
+          }
+        }
+      } catch {
+        if (ativo) {
+          setDetalhe(null);
+          setCarregado(true);
+        }
+      }
+    }
+    carregar();
+    return () => {
+      ativo = false;
+    };
+  }, [params.idAgendamento, params.dataIso]);
 
   const formatarData = (dataStr?: string) => {
     if (!dataStr) return 'Detalhes da Viagem';
@@ -58,7 +71,7 @@ export default function AgendamentoDetalhesScreen() {
         </Text>
       </View>
 
-      {loading ? (
+      {!carregado ? (
         <View style={styles.loadingBox}>
           <ActivityIndicator size="large" color="#3E5F90" />
         </View>
