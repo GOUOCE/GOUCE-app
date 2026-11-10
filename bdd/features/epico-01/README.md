@@ -16,7 +16,8 @@ bdd/
 │       ├── HU-006.feature  (Gerenciamento de Admins)
 │       ├── HU-027.feature  (Avaliação de Cadastro)
 │       ├── HU-028.feature  (Renovação de Vínculo)
-│       └── HU-029.feature  (Carteirinha Digital)
+│       ├── HU-029.feature  (Carteirinha Digital)
+│       └── HU-031.feature  (Consultar Pendência de Cadastro)
 └── steps/  (step definitions — a implementar)
 ```
 
@@ -117,6 +118,16 @@ Cada cenário é rastreável aos requisitos via **tags e IDs**:
 - Validação: aceita PDF/JPG/PNG até 5MB
 - Cenários: 1 sucesso + 1 sem anexo + 1 formato/tamanho inválido + 1 falha API + 1 acesso bloqueado
 
+**HU-031: Consultar Pendência de Cadastro**
+
+- Fluxo: aluno com cadastro reprovado acessa "Status do Cadastro" → vê os documentos reprovados e o motivo de cada um → corrige e reenvia → cadastro volta para "Pendente de aprovação" e para a fila do administrador
+- Status exibidos: Pendente de aprovação, Aprovado e Reprovado; aprovado informa que não há pendências e pendente aguarda a avaliação
+- Regra: só os documentos reprovados podem ser reenviados, e todos os reprovados precisam ser reenviados juntos (AC-07); o reenvio é permitido somente para cadastro reprovado (RN-012)
+- Falhas no envio (FA-003): conexão perdida e arquivo vazio, acima de 5MB ou em formato não permitido mantêm o cadastro reprovado e não gravam nada
+- Textos definidos a partir do que o app já exibe e registrados em `docs/requisitos.md`: "Não há pendências no seu cadastro. Todos os seus documentos foram analisados e aprovados!" (AC-08), "Cadastro enviado para análise" (FA-002) e "Sua documentação foi reenviada com sucesso. Seu status foi atualizado para Pendente de Aprovação." (AC-06); a relação de documentos do AC-03 é a dos três documentos do cadastro (matrícula, residência e foto), com os reprovados marcados a partir da consulta de pendências
+- Organizado em blocos `Regra:` (status, documentos e motivos, reenvio, falhas no envio, acesso)
+- Cenários: 1 acesso ao status + 1 esquema de status + 1 aprovado + 1 pendente + 1 login por situação (API) + 1 agendamento negado (API) + 1 documentos e motivos + 1 documentos e motivos (API) + 1 lista vazia (API) + 1 só o próprio cadastro + 1 reenvio + 1 reenvio (API) + 1 volta à fila + 1 sessão mantida + 1 documento não reprovado (tela) + 1 documento não reprovado (API) + 1 documento faltante + 1 sem arquivo + 1 reenvio só para reprovado + 1 conexão perdida + 1 arquivo inválido (tela) + 1 arquivo inválido (API) + 2 acesso (sem token e administrador) + 1 HTTPS
+
 **HU-029: Carteirinha Digital do Aluno**
 
 - Fluxo: aluno aprovado → visualiza carteirinha com foto + dados + QR Code
@@ -125,7 +136,7 @@ Cada cenário é rastreável aos requisitos via **tags e IDs**:
 
 ### Resumo de Cobertura
 
-- **9 histórias** = 48 cenários (incluindo data-driven)
+- **10 histórias** = 91 cenários (incluindo data-driven)
 - **3 perfis de usuário** cobertos (Aluno, Representante, Admin)
 - **Rastreabilidade 100%**: cada cenário liga a RF/RNF/RN específica
 - **Não-funcionais separados**: marcados como `@teste_api` (não rodam via Appium)
