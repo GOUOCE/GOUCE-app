@@ -81,7 +81,7 @@ Executar na ordem abaixo. São **8 casos essenciais**, em três seções. Os IDs
 - No **Perfil**, o selo mostrou **Aprovado** (azul), embora a API devolva `status_cadastro: rejeitado` no login do R1.
 - Abrindo `http://localhost:3031/cadastro-rejeitado` com o R1 logado, a tela apareceu por uma fração de segundo (com o ícone verde de “sem pendências”) e o app redirecionou para o painel.
 - Código: nenhuma tela navega para `cadastro-rejeitado`; o `AuthContext` manda o usuário logado que cai em rota de autenticação para a home; o selo do Perfil trata como “Aprovado” tudo que não é expirado nem pendente.
-- Status: ❌ Falhou. Issues: ISS1 (sem caminho), ISS2 (selo “Aprovado”).
+- Status: ❌ Falhou. Issues: #392 (sem caminho), #393 (selo “Aprovado”).
 
 ---
 
@@ -128,7 +128,7 @@ Executar na ordem abaixo. São **8 casos essenciais**, em três seções. Os IDs
 **Resultado obtido**
 
 - Bloqueado: os motivos só aparecem na tela de status, que o aluno não alcança (CT-001).
-- Na API, `GET /usuarios/me` responde `403` para R1 e R2, o que impede a tela de ler os motivos (ISS3).
+- Na API, `GET /usuarios/me` responde `403` para R1 e R2, o que impede a tela de ler os motivos (#394).
 - Status: 🚫 Bloqueado.
 
 ---
@@ -150,7 +150,7 @@ Executar na ordem abaixo. São **8 casos essenciais**, em três seções. Os IDs
 
 - AP entrou e só tem o selo **Aprovado** no Perfil. Não há tela nem mensagem de “não há pendências”.
 - A tela de status (que traz o texto “Nenhuma pendência encontrada”) não é acessível ao aluno aprovado nem ao reprovado.
-- Status: ❌ Falhou. Issue: ISS4.
+- Status: ❌ Falhou. Issue: #395.
 
 ---
 
@@ -176,7 +176,7 @@ Executar na ordem abaixo. São **8 casos essenciais**, em três seções. Os IDs
 **Resultado obtido**
 
 - Bloqueado: o botão **Corrigir documentação** fica dentro da tela de status, inacessível (CT-001).
-- Conferido no código e na API, sem executar pela tela: `userService.reenviarDocumentos` chama `PATCH /usuarios/me/reenviar`, rota que **não existe** na API (existe `/usuarios/reenvio_documento`), e `reenviar-documentos.tsx` engole o erro, mostra “Documentos Reenviados” e troca o status para pendente só no app (ISS5).
+- Conferido no código e na API, sem executar pela tela: `userService.reenviarDocumentos` chama `PATCH /usuarios/me/reenviar`, rota que **não existe** na API (existe `/usuarios/reenvio_documento`), e `reenviar-documentos.tsx` engole o erro, mostra “Documentos Reenviados” e troca o status para pendente só no app (#396).
 - Status: 🚫 Bloqueado. Reexecutar depois da correção das issues.
 
 ---
@@ -224,7 +224,7 @@ Executar na ordem abaixo. São **8 casos essenciais**, em três seções. Os IDs
 **Resultado obtido**
 
 - Bloqueado: a tela de reenvio só abre pelo botão da tela de status (CT-001).
-- No código, o erro de envio é engolido e o app simula sucesso (ISS5), o que contraria este caso.
+- No código, o erro de envio é engolido e o app simula sucesso (#396), o que contraria este caso.
 - Status: 🚫 Bloqueado.
 
 ---
@@ -269,11 +269,11 @@ Executar na ordem abaixo. São **8 casos essenciais**, em três seções. Os IDs
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| CT-001 | Nenhuma tela leva ao **Status do Cadastro** nem ao **Corrigir documentação**; o aluno reprovado cai na home. | ISS1 |
-| CT-001 | O Perfil mostra o selo **Aprovado** para aluno reprovado. | ISS2 |
-| CT-003 | A tela de status mostra “Nenhuma pendência encontrada” para aluno reprovado, porque `GET /usuarios/me` responde `403`. | ISS3 |
-| CT-004 | O aluno aprovado não tem mensagem de “não há pendências”. | ISS4 |
-| CT-005 | O reenvio chama `PATCH /usuarios/me/reenviar` (inexistente) e simula sucesso no app. Achado por leitura do código e da API; a tela não foi executada. | ISS5 |
+| CT-001 | Nenhuma tela leva ao **Status do Cadastro** nem ao **Corrigir documentação**; o aluno reprovado cai na home. | #392 |
+| CT-001 | O Perfil mostra o selo **Aprovado** para aluno reprovado. | #393 |
+| CT-003 | A tela de status mostra “Nenhuma pendência encontrada” para aluno reprovado, porque `GET /usuarios/me` responde `403`. | #394 |
+| CT-004 | O aluno aprovado não tem mensagem de “não há pendências”. | #395 |
+| CT-005 | O reenvio chama `PATCH /usuarios/me/reenviar` (inexistente) e simula sucesso no app. Achado por leitura do código e da API; a tela não foi executada. | #396 |
 
 ## Observações gerais
 
@@ -286,4 +286,4 @@ Executar na ordem abaixo. São **8 casos essenciais**, em três seções. Os IDs
   - a tela de reenvio mostra sempre os três documentos como obrigatórios, sem olhar quais foram reprovados (CT-006);
   - o login recusa aluno pendente, e o backend derruba a sessão do aluno logo depois do reenvio (CT-002, CT-008).
 - Ocultar senhas e dados pessoais nas evidências.
-- **Execução de 09/11/2026:** stack isolada (web 3031, API 8030, Mailpit 8031) na `develop` `3e3bb13c`, que já inclui a correção do login do pendente (#319). Massa pelo fluxo real: R1, R2, P1 e AP. R1 e R2 seguem reprovados, sem reenvio. Os CT-003 e CT-005 a CT-008 ficam para **reteste** depois da correção das issues ISS1, ISS3 e ISS5.
+- **Execução de 09/11/2026:** stack isolada (web 3031, API 8030, Mailpit 8031) na `develop` `3e3bb13c`, que já inclui a correção do login do pendente (#319). Massa pelo fluxo real: R1, R2, P1 e AP. R1 e R2 seguem reprovados, sem reenvio. Os CT-003 e CT-005 a CT-008 ficam para **reteste** depois da correção das issues #392, #394 e #396 (e #393 e #395 no reteste do CT-001 e do CT-004).
