@@ -37,6 +37,43 @@ Funcionalidade: Agendamento de Transporte
         | Indisponível |
 
 
+    # AC-01 - Sábado e domingo são indisponíveis (decisão do PO na #389, item 2)
+    @fluxo_infeliz @validacao_campos @prioridade_alta
+    Esquema do Cenário: Sistema bloqueia o novo agendamento em <dia_semana>
+      Dado que o dia "<dia>" é <dia_semana>
+      Quando o aluno visualiza o calendário de agendamento
+      Então o sistema exibe o dia "<dia>" como "Indisponível"
+      E o dia "<dia>" não pode ser selecionado para um novo agendamento
+
+      Exemplos:
+        | dia_semana | dia        |
+        | sábado     | 14/11/2026 |
+        | domingo    | 15/11/2026 |
+
+
+    # AC-01 - Dia sem nenhuma rota principal ativa é indisponível (decisão do PO na #389, item 2)
+    @fluxo_infeliz @validacao_campos @prioridade_media
+    Cenário: Sistema exibe como indisponível o dia em que não existe nenhuma rota principal ativa
+      Dado que não existe nenhuma rota principal ativa
+      Quando o aluno visualiza o calendário de agendamento
+      Então o sistema exibe os dias úteis da janela de agendamento como "Indisponível"
+      E o botão "Novo agendamento" não é exibido para esses dias
+
+
+    # AC-01 - API recusa o agendamento em sábado ou domingo
+    @fluxo_infeliz @regra_negocio @teste_api @nao_automatizavel_via_appium @prioridade_alta
+    Esquema do Cenário: API recusa o agendamento em <dia_semana>
+      Dado que o dia "<dia>" é <dia_semana>
+      Quando o aluno envia uma requisição para agendar o dia "<dia>" com ida e volta válidas
+      Então a API responde com o status "422 Unprocessable Entity"
+      E o agendamento não é criado
+
+      Exemplos:
+        | dia_semana | dia        |
+        | sábado     | 14/11/2026 |
+        | domingo    | 15/11/2026 |
+
+
     # AC-03 - Dia disponível exibe apenas a data e o botão de ação
     @fluxo_feliz @prioridade_alta
     Cenário: Aluno seleciona um dia disponível e visualiza apenas a data e o botão "Novo agendamento"
@@ -294,8 +331,7 @@ Funcionalidade: Agendamento de Transporte
       Dado que o aluno já possui um agendamento ativo para o dia "10/11/2026"
       Quando o aluno tenta registrar um novo agendamento para o dia "10/11/2026"
       Então o sistema bloqueia a ação
-      E exibe um alerta informando que já existe um agendamento para este período
-      E orienta o aluno a editar ou cancelar o agendamento existente
+      E exibe o alerta "Já existe um agendamento ativo para este dia. Edite ou cancele o agendamento existente."
       E o aluno continua com apenas um agendamento ativo no dia "10/11/2026"
 
 
@@ -305,7 +341,7 @@ Funcionalidade: Agendamento de Transporte
       Dado que o aluno já possui um agendamento ativo para o dia "10/11/2026"
       Quando o aluno envia uma requisição para agendar o dia "10/11/2026"
       Então a API responde com o status "409 Conflict"
-      E a resposta informa o código "FA-001" e a mensagem "Já existe agendamento ativo para este dia."
+      E a resposta informa o código "FA-001" e a mensagem "Já existe um agendamento ativo para este dia. Edite ou cancele o agendamento existente."
       E o aluno continua com apenas um agendamento ativo no dia "10/11/2026"
 
 

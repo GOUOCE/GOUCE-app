@@ -19,7 +19,7 @@ Funcionalidade: Consulta de Rota Complementar e Transferência
     Contexto:
       Dado que o aluno "Maria Souza" está autenticado no sistema com cadastro aprovado e vínculo válido
       E existe a rota principal ativa "Rota Centro - UFC"
-      E existe a rota complementar ativa "Van 2 - Bairro Novo" vinculada à rota principal "Rota Centro - UFC", com saída às "05:45" e ponto de conexão "Trevo do Bairro Novo"
+      E existe a rota complementar ativa "Van 2 - Bairro Novo" vinculada à rota principal "Rota Centro - UFC", com saída às "05:45", retorno às "18:15" e ponto de conexão "Trevo do Bairro Novo"
       E o aluno possui um agendamento ativo para o dia "10/11/2026" com ida utilizando a rota complementar "Van 2 - Bairro Novo"
       E o aplicativo possui conexão ativa com a API
 
@@ -51,6 +51,28 @@ Funcionalidade: Consulta de Rota Complementar e Transferência
       E seleciona o agendamento do dia "10/11/2026"
       Então o sistema exibe a rota complementar "Van 2 - Bairro Novo" antes da rota principal "Rota Centro - UFC"
       E o ponto de conexão "Trevo do Bairro Novo" é apresentado como o local da transferência para o ônibus da rota principal
+
+
+    # AC-01 - Horário de retorno no trecho da volta (decisão do PO na #389, item 6)
+    @fluxo_feliz @prioridade_alta
+    Cenário: Sistema exibe o horário de retorno da rota complementar no trecho da volta
+      Dado que o aluno possui um agendamento ativo para o dia "11/11/2026" com volta utilizando a rota complementar "Van 2 - Bairro Novo"
+      Quando o aluno acessa a área "Meus Agendamentos"
+      E seleciona o agendamento do dia "11/11/2026"
+      Então a seção da rota complementar do trecho da volta informa o horário "18:15"
+      E informa o nome da linha "Van 2 - Bairro Novo" e o ponto de conexão "Trevo do Bairro Novo"
+      E não informa o horário de saída "05:45"
+
+
+    # AC-02 - Ônibus e motorista ocultos sem alocação diária (decisão do PO na #389, item 7)
+    @fluxo_feliz @prioridade_alta
+    Cenário: Sistema oculta o ônibus e o motorista da rota principal enquanto não existe alocação do dia
+      Dado que ainda não existe alocação diária de ônibus e motorista para o dia "10/11/2026"
+      Quando o aluno acessa a área "Meus Agendamentos"
+      E seleciona o agendamento do dia "10/11/2026"
+      Então o sistema exibe a seção da rota complementar "Van 2 - Bairro Novo"
+      E exibe as informações da rota principal "Rota Centro - UFC"
+      E não exibe os campos de ônibus e de motorista
 
 
     # AC-01 - Rota complementar por trecho
@@ -105,7 +127,37 @@ Funcionalidade: Consulta de Rota Complementar e Transferência
     Cenário: API informa nome da linha, horário e ponto de conexão da rota complementar
       Quando o aluno consulta o detalhe do agendamento do dia "10/11/2026" pela API
       Então a API responde com o status "200 OK"
-      E a resposta informa, para a rota complementar do trecho da ida, o nome da linha "Van 2 - Bairro Novo", o horário de saída "05:45" e o ponto de conexão "Trevo do Bairro Novo"
+      E a resposta informa, para a rota complementar do trecho da ida, o nome da linha "Van 2 - Bairro Novo", o horário de saída "05:45", o horário de retorno "18:15" e o ponto de conexão "Trevo do Bairro Novo"
+
+
+    # AC-01 - API consulta o detalhe do agendamento ativo de uma data
+    @regra_negocio @RN010 @teste_api @nao_automatizavel_via_appium @prioridade_alta
+    Cenário: API informa o detalhe do agendamento ativo do aluno em uma data
+      Quando o aluno consulta pela API o detalhe do agendamento da data "2026-11-10"
+      Então a API responde com o status "200 OK"
+      E a resposta informa o agendamento do dia "10/11/2026" com a rota complementar "Van 2 - Bairro Novo" no trecho da ida
+
+
+    # AC-01 - API recusa a consulta por data sem agendamento ativo ou com data inválida
+    @fluxo_infeliz @validacao_campos @teste_api @nao_automatizavel_via_appium @prioridade_media
+    Esquema do Cenário: API recusa a consulta do detalhe por data <situacao>
+      Quando o aluno consulta pela API o detalhe do agendamento da data "<data>"
+      Então a API responde com o status "<status>"
+      E a resposta informa a mensagem "<mensagem>"
+
+      Exemplos:
+        | situacao                      | data       | status                   | mensagem                                 |
+        | sem agendamento ativo na data | 2026-11-12 | 404 Not Found            | Nenhum agendamento ativo para esta data. |
+        | com formato inválido          | 10-11-2026 | 422 Unprocessable Entity | Data deve estar no formato YYYY-MM-DD.   |
+
+
+    # AC-02 - API não informa ônibus e motorista sem alocação diária (decisão do PO na #389, item 7)
+    @regra_negocio @RN010 @teste_api @nao_automatizavel_via_appium @prioridade_media
+    Cenário: API não preenche ônibus e motorista da rota principal enquanto não existe alocação do dia
+      Dado que ainda não existe alocação diária de ônibus e motorista para o dia "10/11/2026"
+      Quando o aluno consulta o detalhe do agendamento do dia "10/11/2026" pela API
+      Então a API responde com o status "200 OK"
+      E a resposta informa a rota principal "Rota Centro - UFC" com os campos de ônibus e de motorista sem valor
 
 
     # AC-01 - A lista de agendamentos também informa a rota complementar
@@ -131,7 +183,8 @@ Funcionalidade: Consulta de Rota Complementar e Transferência
       Quando o aluno acessa a área "Meus Agendamentos"
       E seleciona o agendamento do dia "10/11/2026"
       Então o sistema não exibe nenhuma seção relacionada a rota complementar
-      E exibe apenas as informações do ônibus e do motorista da rota principal "Rota Centro - UFC"
+      E exibe as informações da rota principal "Rota Centro - UFC"
+      E exibe o ônibus e o motorista apenas quando já existe alocação do dia
 
 
     # FA-001 (AC-03) - Resumo da viagem do dia sem rota complementar

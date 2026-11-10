@@ -41,8 +41,8 @@ Funcionalidade: Visualização e Cancelamento de Agendamentos (Meus Agendamentos
       Exemplos:
         | status                        |
         | Agendado                      |
+        | Disponível                    |
         | Indisponível para agendamento |
-        | Feriado                       |
 
 
     # AC-01 - Contador de agendamentos ativos (valores-limite)
@@ -99,11 +99,12 @@ Funcionalidade: Visualização e Cancelamento de Agendamentos (Meus Agendamentos
     @regra_negocio @teste_api @nao_automatizavel_via_appium @prioridade_media
     Cenário: API informa o estado de cada dia do mês consultado e o contador de agendamentos ativos
       Dado que "Maria Souza" possui um agendamento ativo para o dia "10/11/2026"
-      E o dia "12/11/2026" está sinalizado como feriado
+      E o dia "14/11/2026" é um sábado
       Quando "Maria Souza" consulta o calendário do mês "2026-11" pela API
       Então a API responde com o status "200 OK"
       E o dia "10/11/2026" é informado como "AGENDADO" com as opções de remover e editar habilitadas
-      E o dia "12/11/2026" é informado como "FERIADO" sem a opção de agendar
+      E o dia "11/11/2026" é informado como "DISPONIVEL" com a opção de agendar
+      E o dia "14/11/2026" é informado como "INDISPONIVEL" sem a opção de agendar
       E a resposta informa 1 agendamento ativo e o limite de 22
 
 
