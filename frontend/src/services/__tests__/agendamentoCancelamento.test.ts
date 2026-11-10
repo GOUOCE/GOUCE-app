@@ -9,6 +9,12 @@ jest.mock('@/api/api', () => ({
   },
 }));
 
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+}));
+
 describe('HU-014: Visualização e Cancelamento de Agendamentos (Regras de Negócio)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
