@@ -10,7 +10,7 @@
 | Tipo de teste | Funcional manual essencial, integração, consulta offline e isolamento de sessão — baseado em risco |
 | Telas | Agenda → reserva → Ver detalhes; resumo do dia no Início; cache local e recuperação de erros. |
 | Base do planejamento | `feature/front-hu015` `4ac87b4623b493af2d56012d60b8c3b875c3af7e` ([PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379)) |
-| Branch de planejamento | `test/planejamento-api-ui-hu-015-integrado`, criada diretamente da feature acima |
+| Branch de planejamento | `test/planejamento-api-ui-hu-015-integrado`, com entrega para `develop`; código de referência na feature acima |
 | Revisão do planejamento | 10/11/2026 — contrato integrado, BDD e decisões do PO |
 | Ambiente | A preencher na execução — dispositivo/navegador, URL, commits de app/API e fuso |
 | Total de casos | 10 |

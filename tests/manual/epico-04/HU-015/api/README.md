@@ -4,7 +4,7 @@ Execução pela **LLM**, com revisão de **Cauan Ricardo**. [Suíte de API: 8 ca
 
 ## Base e fontes
 
-O planejamento está na branch `test/planejamento-api-ui-hu-015-integrado`, criada diretamente de **`feature/front-hu015` `4ac87b4623b493af2d56012d60b8c3b875c3af7e`** ([PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379)). Backend e front desta versão devem ser usados juntos.
+O planejamento está na branch `test/planejamento-api-ui-hu-015-integrado`, com PR destinado à `develop`. O código de referência analisado é **`feature/front-hu015` `4ac87b4623b493af2d56012d60b8c3b875c3af7e`** ([PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379)); backend e front desse build devem ser usados juntos na execução. A entrega de planejamento contém somente documentação.
 
 Ler os [requisitos, seção 7.5.3](../../../../../docs/requisitos.md), o [BDD HU-015](../../../../../bdd/features/epico-04/HU-015.feature) e as [decisões do PO na #389](https://github.com/GOUOCE/GOUCE-app/issues/389#issuecomment-6756236002). O BDD já existe no checkout; os casos têm rastreabilidade para seus cenários. Esta versão substitui o planejamento anterior baseado no front `b2111a9c` e na develop `99bbf2c6`.
 

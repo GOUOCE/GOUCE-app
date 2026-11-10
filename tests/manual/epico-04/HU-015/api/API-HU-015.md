@@ -10,7 +10,7 @@
 | Tipo de teste | Funcional manual essencial, integração, autorização e atualização de dados — baseado em risco |
 | Endpoints | `GET /transporte/agendamentos/detalhes?data=YYYY-MM-DD`, `GET /transporte/agendamentos/{id}` e `GET /transporte/agendamentos/meus`. Preparação pela HU-013/014 e cadastros administrativos. |
 | Base do planejamento | `feature/front-hu015` `4ac87b4623b493af2d56012d60b8c3b875c3af7e` ([PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379)) |
-| Branch de planejamento | `test/planejamento-api-ui-hu-015-integrado`, criada diretamente da feature acima |
+| Branch de planejamento | `test/planejamento-api-ui-hu-015-integrado`, com entrega para `develop`; código de referência na feature acima |
 | Revisão do planejamento | 10/11/2026 — contrato integrado, BDD e decisões do PO |
 | Ambiente | A preencher na execução — URL, commit, revisão do banco e fuso |
 | Total de casos | 8 |

@@ -74,7 +74,7 @@ Leitura realizada em **09/11/2026**. Não há arquivo BDD da HU-014 na base anal
 **HU-015 — planejamento revisado no build integrado**
 
 1. [Requisitos, seção 7.5.3](../../../docs/requisitos.md) e [BDD HU-015](../../../bdd/features/epico-04/HU-015.feature), presentes no checkout. Os cenários do BDD já cobrem consulta por data, trechos independentes, retorno na volta, dados nulos sem alocação, direto, offline, atualização e acesso.
-2. Backend e front: `feature/front-hu015` **`4ac87b4623b493af2d56012d60b8c3b875c3af7e`** ([PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379)). Branch de planejamento **`test/planejamento-api-ui-hu-015-integrado`**, criada diretamente dessa feature a pedido do usuário.
+2. Backend e front: `feature/front-hu015` **`4ac87b4623b493af2d56012d60b8c3b875c3af7e`** ([PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379)). Branch de planejamento **`test/planejamento-api-ui-hu-015-integrado`**, com entrega para `develop`; a feature indicada permanece como referência do código analisado.
 3. [Resposta do PO na #389](https://github.com/GOUOCE/GOUCE-app/issues/389#issuecomment-6756236002), itens 6 e 7: saída na ida/retorno na volta e ônibus/motorista ocultos sem alocação diária.
 4. Código: `backend/src/modulos/agendamentos/`, migration `81_add_updated_at_rotas`, `frontend/src/services/agendamentoService.ts` e telas `agenda.tsx`, `agendamento-detalhes.tsx` e `home.tsx`. O planejamento anterior em `b2111a9c`/`99bbf2c6` foi substituído para a HU-015; os resultados das HU-013/014 em outros SHAs permanecem como histórico.
 
@@ -119,7 +119,7 @@ Os riscos de leitura orientam a execução. Achados confirmados por HTTP são id
 
 ## Dependências e critérios de bloqueio
 
-- **HU-015:** usar back e front do mesmo commit `4ac87b46`; a branch de planejamento deriva diretamente da feature. A integração de detalhe já está no código e deve ser conferida em API-001. O resultado da HU-013 em outra feature/commit não bloqueia nem aprova automaticamente este build.
+- **HU-015:** usar back e front do mesmo commit `4ac87b46`; o planejamento é entregue para `develop` e referencia esse build da feature. A integração de detalhe já está no código e deve ser conferida em API-001. O resultado da HU-013 em outra feature/commit não bloqueia nem aprova automaticamente este build.
 - **Massa HU-015:** a LLM prepara pela API as reservas da HU-013 e os cadastros de rota principal/complementar, pontos e IES; registra ids/datas reais e as mudanças de referência. Se a tela de criação não permitir montar a massa, preparar pela API e registrar a origem.
 - **Alocação HU-015:** ausência de veículo/motorista é o estado esperado atual; API-003 e UI-003 verificam nulos/ocultação. API-008 e a parte futura de UI-008 dependem de alocação real HU-016/017/018. Não bloquear os demais casos nem criar objeto simulado para aprovar veículo diário.
 - **Offline HU-015:** comprovar sincronização HTTP efetiva antes de desligar a rede. Validar detalhe já aberto e dados completos sincronizados apenas na Agenda; distinguir ausência de cache próprio de cache de outra conta. Teste com mock não aprova consulta offline no dispositivo.
