@@ -122,7 +122,7 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 - A grade tem dois dias 31: o 31/08 e o 31/09, que não existe.
 - Contador “3 de 22 agendamentos ativos”, igual à API (único dado real da tela).
 - Código: `DIAS_DO_MES` fixo em `agenda.tsx`; setas sem `onPress`.
-- Status: ❌ Falhou. Issues: ISS1 (grade fixa), ISS2 (navegação de mês).
+- Status: ❌ Falhou. Issues: #406 (grade fixa), #407 (navegação de mês).
 
 ---
 
@@ -151,7 +151,7 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 - O menu tem **Ver detalhes**, **Editar agendamento** e **Cancelar agendamento**. O requisito chama a terceira ação de **Remover agendamento**; texto real registrado, sem tratar a diferença como falha por si só.
 - **Ver detalhes** do dia 01/09 mostra “Data: 2026-09-01”, “Ida (05:30) e Volta (17:00)”, “Igreja Matriz de Quixadá” e “UFC - Campus Quixadá”: textos escritos no código, sem relação com as reservas da A (Praça José de Barros, Terminal do Planalto, Praça do Campo Velho).
 - **Editar agendamento** abre a tela preta do Expo (rota `/(aluno)/agendar-transporte/configurar` inexistente neste build; ela pertence ao PR #377, da HU-013).
-- Status: ❌ Falhou. Issues: ISS1, ISS3, ISS4.
+- Status: ❌ Falhou. Issues: #406, #408, #409.
 
 ---
 
@@ -180,7 +180,7 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 
 - Em um dia fixo de setembro (01/09), o modal mostrou o título **“Cancelar agendamento?”**, o aviso **“Esta ação não poderá ser desfeita.”** e os botões **Cancelar** e **Confirmar**.
 - Ao desistir, o modal fechou sem mensagem de sucesso, e o contador continuou “3 de 22”. Banco e API sem alteração.
-- Limite do teste: executado em dia fixo, porque as reservas reais não são selecionáveis (ISS1).
+- Limite do teste: executado em dia fixo, porque as reservas reais não são selecionáveis (#406).
 - Status: ✅ Passou.
 
 ---
@@ -207,7 +207,7 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 
 **Resultado obtido**
 
-- Bloqueado: a reserva R1 (id 101) não é selecionável (ISS1).
+- Bloqueado: a reserva R1 (id 101) não é selecionável (#406).
 - Por leitura do código, a confirmação usaria o id fixo do dia da grade (1 a 5), nunca o id de banco da reserva. Não foi executado em dia fixo, porque os ids 1 e 2 pertencem a registros reais de outras contas.
 - Status: 🚫 Bloqueado.
 
@@ -233,7 +233,7 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 
 **Resultado obtido**
 
-- Bloqueado: o dia de hoje (10/11) não existe na grade fixa de setembro (ISS1).
+- Bloqueado: o dia de hoje (10/11) não existe na grade fixa de setembro (#406).
 - Status: 🚫 Bloqueado.
 
 ---
@@ -261,7 +261,7 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 - Nos dias fixos 31/08 e 01/09, que já são passados, o menu oferece **Cancelar agendamento**.
 - O histórico real (RP, 09/11) não aparece na grade, então a parte de histórico consultável ficou bloqueada.
 - Código: a flag `ehPassado` nunca é preenchida, e `pode_remover`, enviada pela API, é ignorada.
-- Status: ❌ Falhou. Issue: ISS5.
+- Status: ❌ Falhou. Issue: #410.
 
 ---
 
@@ -291,7 +291,7 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 - Com o navegador offline (DevTools, Network), ao tocar em **Confirmar** o app mostrou “Agendamento cancelado com sucesso”, em toast preto, e não a mensagem de falha de conexão.
 - API: nenhum `DELETE` recebido e banco intacto, ou seja, o sucesso é falso.
 - Código: `cancelarAgendamento` captura qualquer erro e devolve `{ success: true }`.
-- Status: ❌ Falhou. Issues: ISS6 (sucesso falso), ISS8 (mensagem fora do padrão).
+- Status: ❌ Falhou. Issues: #411 (sucesso falso), #413 (mensagem fora do padrão).
 
 ---
 
@@ -316,9 +316,9 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 **Resultado obtido**
 
 - Parte 1: com o navegador offline, ao voltar à aba **Agenda** o app mostrou “Você ainda não possui agendamentos futuros.”, embora a A tenha 3 reservas; ao religar, a lista voltou ao normal.
-- Parte 2 (reserva cancelada em outra sessão): bloqueada, porque a R3 não é selecionável (ISS1).
+- Parte 2 (reserva cancelada em outra sessão): bloqueada, porque a R3 não é selecionável (#406).
 - Código: `listarAgendamentosAtivos` devolve lista vazia em qualquer falha.
-- Status: ❌ Falhou. Issue: ISS7.
+- Status: ❌ Falhou. Issue: #412.
 
 ---
 
@@ -369,7 +369,7 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 
 **Resultado obtido**
 
-- Bloqueado: depende de cancelar e reagendar reservas reais (ISS1) e da tela de agendamento da HU-013 (PR #377).
+- Bloqueado: depende de cancelar e reagendar reservas reais (#406) e da tela de agendamento da HU-013 (PR #377).
 - Status: 🚫 Bloqueado.
 
 ## Rastreabilidade
@@ -392,14 +392,14 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| CT-002, 003, 005, 006, 007, 011 | A grade do calendário é fixa em setembro/2026 e não mostra as reservas reais, o feriado e o recesso; há um dia 31 inexistente. | ISS1 |
-| CT-002 | O seletor de mês e as setas de navegação não funcionam. | ISS2 |
-| CT-003 | **Ver detalhes** mostra data, trajeto, embarque e destino escritos no código. | ISS3 |
-| CT-003 | **Editar agendamento** abre a tela preta do Expo (rota inexistente no build). | ISS4 |
-| CT-007 | O menu oferece **Cancelar agendamento** em dias passados. | ISS5 |
-| CT-008 | Com a conexão caída, o app mostra “Agendamento cancelado com sucesso”. | ISS6 |
-| CT-009 | Falha ao carregar mostra “Você ainda não possui agendamentos futuros.”. | ISS7 |
-| CT-008 | Mensagens de sucesso e erro usam toast preto fora do padrão de popup do app. | ISS8 |
+| CT-002, 003, 005, 006, 007, 011 | A grade do calendário é fixa em setembro/2026 e não mostra as reservas reais, o feriado e o recesso; há um dia 31 inexistente. | #406 |
+| CT-002 | O seletor de mês e as setas de navegação não funcionam. | #407 |
+| CT-003 | **Ver detalhes** mostra data, trajeto, embarque e destino escritos no código. | #408 |
+| CT-003 | **Editar agendamento** abre a tela preta do Expo (rota inexistente no build). | #409 |
+| CT-007 | O menu oferece **Cancelar agendamento** em dias passados. | #410 |
+| CT-008 | Com a conexão caída, o app mostra “Agendamento cancelado com sucesso”. | #411 |
+| CT-009 | Falha ao carregar mostra “Você ainda não possui agendamentos futuros.”. | #412 |
+| CT-008 | Mensagens de sucesso e erro usam toast preto fora do padrão de popup do app. | #413 |
 
 ## Observações gerais
 
