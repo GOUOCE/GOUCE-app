@@ -118,8 +118,9 @@ def atualizar(
 ):
     try:
         item = service.update(_student_id(user), agendamento_id, payload)
-        mensagem = "Agendamento cancelado com sucesso" if item is None else "Agendamento atualizado com sucesso"
-        estado_dia = "DISPONIVEL" if item is None else "AGENDADO"
+        is_cancel = item is None or (not payload.usa_ida and not payload.usa_volta)
+        mensagem = "Agendamento cancelado com sucesso" if is_cancel else "Agendamento atualizado com sucesso"
+        estado_dia = "DISPONIVEL" if is_cancel else "AGENDADO"
         return OperacaoAgendamentoDTO(
             mensagem=mensagem,
             agendamento=item,
