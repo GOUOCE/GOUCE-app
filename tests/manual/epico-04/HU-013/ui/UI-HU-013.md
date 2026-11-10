@@ -20,7 +20,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ❌ Reprovada (9 por leitura do código) | 9 | 0 | 9 | 0 | 0 | 0 |
+| ❌ Reprovada (8 ❌ e 1 ⚠️, todos por leitura do código) | 9 | 0 | 8 | 1 | 0 | 0 |
 
 ## Pré-condições
 
@@ -34,14 +34,14 @@
 
 ## Resumo da execução
 
-Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede ligada e desligada ficaram de fora, exceto o CT-009, que só confere a mensagem exibida quando o servidor recusa ou não responde. A análise do código do commit `ee305857` (PR #377) mostra que a tela de agendamento ainda é um protótipo; por isso, a pedido do testador, os nove casos foram reprovados por **leitura do código**, com a evidência de cada um no detalhamento. A execução na tela será feita no reteste.
+Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede ligada e desligada ficaram de fora, exceto o CT-009, que só confere a mensagem exibida quando o servidor recusa ou não responde. A análise do código do commit `ee305857` (PR #377) mostra que a tela de agendamento ainda é um protótipo; por isso, a pedido do testador, os nove casos foram reprovados por **leitura do código** (o CT-002 como divergência entre requisito e protótipo), com a evidência de cada um no detalhamento. A execução na tela será feita no reteste.
 
 ### Seção A — Escolher o dia
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU013-UI-001 | Calendário mensal com os dias reais | A sem reservas; mês atual e o seguinte | Calendário mensal com Disponível, Agendado e Indisponível vindos da API; sábado e domingo e dias fora de D a D+29 indisponíveis; navegação entre os meses | ❌ FALHOU | A tela mostra uma semana fixa de 31/08 a 06/09/2026, sem API nem navegação. #437 |
-| CT-HU013-UI-002 | Selecionar um dia disponível | Um dia útil disponível | Só a data selecionada e o botão **Novo agendamento** | ❌ FALHOU | A tela permite marcar vários dias e usa o botão **Continuar**. #437 |
+| CT-HU013-UI-001 | Dias reais vindos da API | A sem reservas; semana atual e as seguintes da janela | Dias, estados (Disponível, Agendado, Indisponível) e janela de D a D+29 vindos da API; sábado e domingo indisponíveis; sem feriado | ❌ FALHOU | A tela mostra uma semana fixa de 31/08 a 06/09/2026, escrita no código, com todos os dias já selecionados. #437 |
+| CT-HU013-UI-002 | Selecionar um dia disponível | Um dia útil disponível | Só a data selecionada e o botão **Novo agendamento** (requisito, AC-03) | ⚠️ PARCIAL | A tela e o Figma usam seleção de vários dias e **Continuar**; o requisito diz outra coisa. Divergência a decidir com o PO. #437 |
 
 ### Seção B — Novo agendamento
 
@@ -63,13 +63,13 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU013-UI-009 | Falha do servidor ou sem conexão ao salvar | Servidor recusa; servidor indisponível | Mensagem clara no padrão de popup do app; nada é gravado; sem sucesso falso | ❌ FALHOU | Nenhum erro é exibido ao salvar, e as mensagens do fluxo são toast preto (#413). #439 |
+| CT-HU013-UI-009 | Falha do servidor ou sem conexão ao salvar | Servidor recusa; servidor indisponível | Mensagem clara no padrão de popup do app; nada é gravado; sem sucesso falso | ❌ FALHOU | Nenhum erro é exibido ao salvar; o serviço inventa o sucesso. #439 |
 
 ## Detalhamento dos casos
 
 ### Seção A — Escolher o dia
 
-#### CT-HU013-UI-001 — Calendário mensal com os dias reais
+#### CT-HU013-UI-001 — Dias reais vindos da API
 
 **Dados de entrada:** A sem reservas futuras; mês atual e o seguinte.
 
@@ -81,7 +81,7 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 
 **Resultado esperado**
 
-- Calendário mensal interativo com **Disponível**, **Agendado** e **Indisponível**; sábado e domingo e dias sem rota ativa indisponíveis; só de D a D+29 selecionáveis; navegação entre os meses da janela (AC-01, AC-02, AC-17; decisões 1 a 3 do PO).
+- Os dias e seus estados (**Disponível**, **Agendado** e **Indisponível**) vêm da API; sábado e domingo e dias sem rota ativa indisponíveis; só de D a D+29 selecionáveis; sem feriado (AC-01, AC-02; decisões 1 a 3 do PO). O requisito fala em calendário mensal (AC-17), mas o Figma da HU-013 mostra seletor semanal; o formato fica como pergunta ao PO.
 
 **Resultado obtido**
 
@@ -107,8 +107,9 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 
 **Resultado obtido**
 
-- Reprovado por leitura do código: o toque alterna uma seleção de **vários dias**, mostra “N dias selecionados” e o botão **Continuar**, que abre o formulário dia a dia. Não existe o botão **Novo agendamento**.
-- Status: ❌ Falhou (por leitura do código). Issue: #437.
+- O toque alterna uma seleção de **vários dias**, mostra “N dias selecionados” e o botão **Continuar**, que abre o formulário dia a dia; não existe o botão **Novo agendamento**.
+- O Figma da HU-013 (telas 42 a 45) mostra exatamente esse desenho (seletor semanal, vários dias, **Continuar**), e o texto do requisito (AC-03) diz outra coisa. É divergência entre requisito e protótipo, não defeito do código; fica como pergunta ao PO.
+- Status: ⚠️ Parcial (divergência de requisito). Issue: #437.
 
 ---
 
@@ -240,7 +241,7 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 
 **Resultado obtido**
 
-- Reprovado por leitura do código: ao salvar, nenhum erro é exibido (o serviço devolve sucesso inventado e o `catch` da tela está vazio) e a tela segue para o sucesso. As mensagens do fluxo usam o `Snackbar` preto, fora do padrão de popup do app (#413).
+- Reprovado por leitura do código: ao salvar, nenhum erro é exibido (o serviço devolve sucesso inventado e o `catch` da tela está vazio) e a tela segue para o sucesso. As mensagens de sucesso do fluxo usam o `Snackbar` escuro, que no Figma da HU-013 faz parte do desenho (ver #413).
 - Status: ❌ Falhou (por leitura do código). Issue: #439.
 
 ## Rastreabilidade
@@ -261,16 +262,17 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| CT-001, 002, 007 | A tela **Agendar Transporte** é uma semana fixa de 31/08 a 06/09/2026, com datas passadas, sem calendário mensal, sem API e com seleção de vários dias. | #437 |
+| CT-001, 002, 007 | A tela **Agendar Transporte** usa uma semana fixa de 31/08 a 06/09/2026 escrita no código (datas passadas, sem API, todos os dias já selecionados). | #437 |
 | CT-003 | O formulário usa listas fixas do app (a rota de opções não existe) e abre com Sim, ponto e IES pré-selecionados. | #438 |
 | CT-004, 005, 006, 007, 009 | Quando a API recusa, o serviço devolve uma resposta de sucesso inventada e a tela mostra sucesso; as mensagens do PO reais não aparecem. | #439 |
 | CT-008 | A edição atualiza sempre o id 1 e o cancelamento usa a data como id, com sucesso inventado se a API recusar. | #440 |
 | CT-001, 005, 006 | Sábado e domingo disponíveis, “Não” para ida e volta e mensagem de duplicidade fora do requisito (back). | #390 |
-| CT-004, 009 | Mensagens em toast preto fora do padrão de popup. | #413 |
+| CT-004, 009 | Toast escuro nas mensagens do fluxo (no Figma da HU-013 é o desenho; confirmar o padrão com o design). | #413 |
 
 ## Observações gerais
 
 - Execução de 10/11/2026: análise do código do commit `ee305857` do PR #377 (branch da HU-013) e conferência da API da `develop` em execução. No PR #378, que incorporou estas telas, o serviço já não inventa a resposta de `criarAgendamento` e a edição usa o id recebido, mas a semana fixa, as listas fixas, o `catch` vazio da tela e os toasts pretos continuam iguais. Os nove casos foram reprovados por leitura do código, a pedido do testador, para não gastar execução manual em falhas evidentes; a execução na tela será feita no reteste, quando o front deixar de usar a semana fixa e as listas fixas.
 - O back ainda tem as divergências da #390: fim de semana disponível, `Não` para ida e volta com `422`, mensagem de duplicidade antiga e ausência de rota de opções para o aluno.
+- **Figma da HU-013 (telas 42 a 45):** seletor semanal com seleção de vários dias e **Continuar**, formulário “Novo Agendamento” com campos que começam em “Selecionar”, tela “N agendamentos realizados com sucesso!”, “Editar Agendamento” com **Cancelar Agendamento** e **Salvar alterações**, e faixas escuras para “cancelado” e “alterado com sucesso”. O código segue esse desenho; o texto do requisito (calendário mensal, botão **Novo agendamento**) é que diverge, e a decisão cabe ao PO.
 - O índice do épico indicava a UI da HU-013 como “fora desta entrega”; esta suíte a acrescenta, com nove casos de foco funcional.
 - Registrar dispositivos, mensagens e o resultado de cada variação somente durante a execução na tela.
