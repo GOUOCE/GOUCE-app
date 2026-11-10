@@ -1,6 +1,6 @@
 # Testes manuais — Épico 04 — Agendamento de Transporte (Aluno)
 
-Suítes essenciais das **HU-013 — Agendamento de Transporte**, **HU-014 — Visualização e Cancelamento de Agendamentos** e **HU-015 — Consulta de Rota Complementar e Transferência**: **49 casos, sendo 29 de API e 20 de UI**. A API da HU-014 tem **9 casos aprovados e 1 parcial**; a API da HU-013 teve **1 falha e 11 bloqueados** por integração indisponível. Os outros **27 casos permanecem pendentes**. A inclusão da HU-013 nesta entrega cobre somente API, seguindo o padrão dos outros épicos.
+Suítes essenciais das **HU-013 — Agendamento de Transporte**, **HU-014 — Visualização e Cancelamento de Agendamentos** e **HU-015 — Consulta de Rota Complementar e Transferência**: **51 casos, sendo 30 de API e 21 de UI**. A API da HU-014 tem **9 casos aprovados e 1 parcial**; a API da HU-013 teve **1 falha e 11 bloqueados** por integração indisponível. Os outros **29 casos permanecem pendentes**. A HU-013 cobre somente API; o planejamento da HU-015 foi revisado sobre o build integrado em 10/11/2026, seguindo o padrão dos outros épicos.
 
 ## Índice das suítes
 
@@ -8,8 +8,8 @@ Suítes essenciais das **HU-013 — Agendamento de Transporte**, **HU-014 — Vi
 | --- | --- | --- | --- | --- |
 | HU-013 | Agendamento de transporte | [12 casos](HU-013/api/API-HU-013.md) | — (fora desta entrega) | Backend exato de `feature/front-hu013`, [PR #377](https://github.com/GOUOCE/GOUCE-app/pull/377); rotas/cadastros e regras da #389 |
 | HU-014 | Meus agendamentos e cancelamento | [10 casos](HU-014/api/API-HU-014.md) | [11 casos](HU-014/ui/UI-HU-014.md) | HU-013 para massa; HU-011/012 para rotas; HU-016/018 para alocação real; [PR #378](https://github.com/GOUOCE/GOUCE-app/pull/378) para UI |
-| HU-015 | Rota complementar e transferência | [7 casos](HU-015/api/API-HU-015.md) | [9 casos](HU-015/ui/UI-HU-015.md) | HU-013/014 para reservas; HU-012 para complementares; detalhe integrado e alocação diária; [PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379) para UI |
-| **Total** | **3 HUs** | **29** | **20** | **9 passaram; 1 falhou; 1 parcial; 11 bloqueados; 27 pendentes** |
+| HU-015 | Rota complementar e transferência | [8 casos](HU-015/api/API-HU-015.md) | [10 casos](HU-015/ui/UI-HU-015.md) | Back/front integrados em `feature/front-hu015` `4ac87b46` ([PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379)); BDD e #389; alocação futura somente nos casos indicados |
+| **Total** | **3 HUs** | **30** | **21** | **9 passaram; 1 falhou; 1 parcial; 11 bloqueados; 29 pendentes** |
 
 ## Escopo e organização
 
@@ -17,7 +17,7 @@ Suítes essenciais das **HU-013 — Agendamento de Transporte**, **HU-014 — Vi
 - **UI:** execução manual por Cauan Ricardo no celular ou web; a LLM prepara massa e confere persistência/API quando solicitado.
 - Estrutura: `epico-04/HU-013/api/`, `epico-04/HU-014/` e `epico-04/HU-015/`; as duas últimas têm `api/` e `ui/`. Defeitos reproduzidos são registrados em `api/issues/` ou `ui/issues/` para revisão.
 - Tipos: funcional positivo/negativo, integração com persistência, autorização e integridade. Medição básica do tempo de resposta nos fluxos principais (RNF-001), sem substituir teste de carga.
-- IDs: `CT-HU013-API-001` a `012`, `CT-HU014-API-001` a `010`, `CT-HU014-UI-001` a `011`, `CT-HU015-API-001` a `007` e `CT-HU015-UI-001` a `009`. Cada caso contém dados, passos, esperado e espaço para resultado obtido.
+- IDs: `CT-HU013-API-001` a `012`, `CT-HU014-API-001` a `010`, `CT-HU014-UI-001` a `011`, `CT-HU015-API-001` a `008` e `CT-HU015-UI-001` a `010`. Cada caso contém dados, passos, esperado e espaço para resultado obtido.
 - As branches de planejamento contêm somente documentação. Depois da revisão e integração em `develop`, criar branch própria de execução da HU correspondente; não registrar aprovação de casos por leitura do código.
 
 ## Técnicas e cobertura essencial
@@ -43,16 +43,16 @@ Suítes essenciais das **HU-013 — Agendamento de Transporte**, **HU-014 — Vi
 
 O resumo de cada suíte indica as seções A/B/C; os detalhes identificam a técnica aplicada. Não acrescentar combinações repetidas sem risco distinto.
 
-**HU-015**
+**HU-015 — planejamento revisado sobre a integração**
 
 | Técnica | Partições ou transições | Casos API | Casos UI |
 | --- | --- | --- | --- |
-| Partição de equivalência | Complementar/direto; ida/volta; conta própria/outra; cache válido/ausente/inválido | 002, 003, 006, 007 | 002 a 005, 008, 009 |
-| Tabela de decisão | Trecho × complementar; data × programação; rede × cache × conta | 002, 004, 005 | 002, 004, 005, 007, 008 |
-| Transição de estado | Online → offline; nova sincronização; complementar → direto; cancelamento conhecido; troca de conta | 005, 007 | 004, 006, 008, 009 |
-| Valor-limite | Primeiro acesso sem dados; nome/ponto com 150 caracteres, no limite cadastral válido para leitura | — | 002, 005 |
+| Partição de equivalência | Direto/complementar; trechos; parâmetros; perfis; cache válido/ausente/inválido | 001 a 006 | 001 a 006, 009, 010 |
+| Tabela de decisão | Trecho × complementar; data × programação; rede × cache × conta | 002, 003, 005, 008 | 002, 003, 005, 008, 009 |
+| Transição de estado | Mudança de referência; online/offline/reconectado; troca de conta; cancelamento conhecido | 004, 007, 008 | 005, 007, 009, 010 |
+| Valor-limite | Primeira consulta sem cache; nome/ponto com 150 caracteres | — | 002, 006 |
 
-A tabela de decisão essencial da HU-015 é: reserva com complementar mostra transferência; direta oculta a seção; offline com cache próprio válido mostra o último dado sincronizado; offline sem cache próprio informa indisponibilidade. Cache de outra conta ou outra data nunca substitui a viagem selecionada.
+Matriz essencial: trecho com complementar apresenta transferência; direto oculta a seção; sem alocação oculta veículo/motorista; offline com informação própria sincronizada preserva a consulta; offline sem cache próprio informa indisponibilidade.
 
 ## Fontes e versões analisadas
 
@@ -60,7 +60,7 @@ A tabela de decisão essencial da HU-015 é: reserva com complementar mostra tra
 
 - Resultados partem da develop `4e44913d8df632666b3433d32358bb49fc91c6a8`, já com a HU-014 integrada. O código a testar é `feature/front-hu013` `ee305857954fcb23f3919f3ebfe7e163fcbc167a` ([PR #377](https://github.com/GOUOCE/GOUCE-app/pull/377)), sem incorporar a feature ao PR de testes.
 - [Requisitos, seção 7.5.1](../../../docs/requisitos.md); [BDD da HU-013 em d7c952ad](https://github.com/GOUOCE/GOUCE-app/blob/d7c952adfd56eb858aa86f48a68afdab206fc913/bdd/features/epico-04/HU-013.feature), ainda fora dessa develop; [resposta do PO na #389](https://github.com/GOUOCE/GOUCE-app/issues/389#issuecomment-6756236002).
-- As decisões da #389 prevalecem nas divergências: não cobrar feriado/recesso, bloquear sábado/domingo, janela de D a D+29 e mensagens definidas pelo PO. Fontes antigas da HU-014/015 abaixo permanecem como histórico do planejamento/execução anterior, sem reexecutá-las nesta entrega.
+- As decisões da #389 prevalecem nas divergências: não cobrar feriado/recesso, bloquear sábado/domingo, janela de D a D+29 e mensagens definidas pelo PO. As referências da HU-014 abaixo preservam o histórico anterior; a HU-015 foi revisada sobre o build integrado, sem reexecutar as outras HUs.
 
 **HU-014 — referências preservadas do planejamento inicial**
 
@@ -71,12 +71,16 @@ A tabela de decisão essencial da HU-015 é: reserva com complementar mostra tra
 
 Leitura realizada em **09/11/2026**. Não há arquivo BDD da HU-014 na base analisada; a rastreabilidade usa diretamente os requisitos. Anotar novos commits na execução, pois o PR pode mudar.
 
-**HU-015 — planejamento adicionado em 09/11/2026**
+**HU-015 — planejamento revisado no build integrado**
 
-1. [Requisitos, seção 7.5.3](../../../docs/requisitos.md): AC-01 a AC-04, FA-001/002, RN-010, RF-029 e RNF-015. Os itens depois dos quatro critérios são fluxos e referências.
-2. API: `origin/develop` **`99bbf2c6df8bd3b4a9d76f22267d63e11b45f126`**, já com o planejamento da HU-014 integrado pelo [PR #385](https://github.com/GOUOCE/GOUCE-app/pull/385). Endpoints e DTOs em `backend/src/modulos/agendamentos/`; cadastro de referência em `backend/src/modulos/rotas/`.
-3. UI: [PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379), branch **`feature/front-hu015`**, commit **`b2111a9c0c9c29b8e39eb78746b44a6a0088e94b`**. Arquivos: `agendamento-detalhes.tsx`, `agenda.tsx`, `agendamentoService.ts` e testes unitários do serviço.
-4. Não há BDD da HU-015 na base analisada. Quando adicionado, revisar a correspondência com as suítes sem presumir que cenários ainda ausentes foram cobertos. A ausência do BDD não impede este planejamento pelos requisitos e pelo PR.
+1. [Requisitos, seção 7.5.3](../../../docs/requisitos.md) e [BDD HU-015](../../../bdd/features/epico-04/HU-015.feature), presentes no checkout. Os cenários do BDD já cobrem consulta por data, trechos independentes, retorno na volta, dados nulos sem alocação, direto, offline, atualização e acesso.
+2. Backend e front: `feature/front-hu015` **`4ac87b4623b493af2d56012d60b8c3b875c3af7e`** ([PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379)). Branch de planejamento **`test/planejamento-api-ui-hu-015-integrado`**, com entrega para `develop`; a feature indicada permanece como referência do código analisado.
+3. [Resposta do PO na #389](https://github.com/GOUOCE/GOUCE-app/issues/389#issuecomment-6756236002), itens 6 e 7: saída na ida/retorno na volta e ônibus/motorista ocultos sem alocação diária.
+4. Código: `backend/src/modulos/agendamentos/`, migration `81_add_updated_at_rotas`, `frontend/src/services/agendamentoService.ts` e telas `agenda.tsx`, `agendamento-detalhes.tsx` e `home.tsx`. O planejamento anterior em `b2111a9c`/`99bbf2c6` foi substituído para a HU-015; os resultados das HU-013/014 em outros SHAs permanecem como histórico.
+
+**Contrato atual da HU-015**
+
+`GET /transporte/agendamentos/detalhes?data=YYYY-MM-DD`, `GET /transporte/agendamentos/{id}` e `GET /transporte/agendamentos/meus`. O router está registrado em `backend/main.py`. O detalhe contém resumos independentes de complementar/principal por trecho e `atualizado_em`; `onibus`/`motorista` ficam nulos até o épico 5. Leitura de código não equivale a execução HTTP.
 
 ## Riscos mapeados no código
 
@@ -98,35 +102,34 @@ Os riscos de leitura orientam a execução. Achados confirmados por HTTP são id
 | Remoção indevida de histórico | A tela verifica `ehPassado`, mas a grade não preenche esse campo nem usa `pode_remover` retornado pela API | API-006, UI-007 |
 | Vaga no veículo continua ocupada | `AgendamentoRepository.remove_allocations` é um gancho sem efeito até HU-016/018 | API-010 e parte de UI-005 |
 
-**HU-015**
+**HU-015 — riscos a verificar; nenhum reproduzido nesta revisão**
 
-| Risco | Evidência de leitura | Cobertura |
+| Risco | Evidência de leitura do build `4ac87b46` | Cobertura |
 | --- | --- | --- |
-| Detalhe não integra com a API disponível | Front consulta `/agendamentos/detalhes?data=...`; backend tem `/transporte/agendamentos/{id}`, sem o DTO completo de viagem | API-001, API-004; UI-001/002 |
-| Exemplos aparecem como informação offline sincronizada | Sem resposta nem cache, o serviço constrói viagem fixa de setembro/2026 e a grava no AsyncStorage | UI-004, UI-005, UI-009 |
-| Dados de A reaproveitados por B | Chave `@GOUOCE:detalhes_viagem_${dataIso}` depende só da data, sem identificação da conta | UI-008 |
-| Duas transferências viram uma informação de ida | Modelo do front tem uma `rotaComplementar`; a tela usa “Volta” só quando `tipoTrajeto === 'volta'`, tratando `ambos` como “Ida” | API-002/004; UI-002/007 |
-| Viagem direta recebe complementar de exemplo | Tela/serviço usam data fixa e `temComplementar=true` por padrão quando faltam parâmetros/dados reais | UI-001, UI-003 |
-| Recusa HTTP ou falha de gravação vira falso offline | Um único `catch` trata requisição e escrita no storage, depois usa cache/fallback para qualquer erro | UI-005, UI-006, UI-009 |
-| Navegação usa reservas fixas | `agenda.tsx` do PR inicia com demonstração e calendário de setembro/2026; `/agendamentos/meus` também difere do prefixo real | UI-001 |
-| Veículo diário não pode ser conferido | Detalhe atual do backend não entrega programação/alocação da operação | API-005; UI-002/007 |
+| Campo visível com origem/destino incorretos na volta | `mapearTrecho` usa ponto de desembarque como embarque da complementar; o card da principal rotula `pontoDesembarque` como Origem (IES) na volta | UI-002 |
+| Resumo da Agenda mistura complementares distintas | O resumo escolhe nome/conexão por ida ou volta em um único card; conferir AIV com C1 e C2 diferentes | API-002; UI-002 |
+| Ônibus/motorista visíveis sem alocação | `CardRotaPrincipal` renderiza ambos os campos com “A definir” quando nulos; o PO determinou ocultá-los | API-003; UI-003 |
+| Resumo do Início continua estático | `home.tsx` tem ônibus/linha fixos e botão Ver detalhes sem ação | UI-004 |
+| Dados sincronizados só na Agenda não chegam ao detalhe offline | `/meus` e calendário têm caches próprios; detalhe lê somente a chave de detalhe por data | UI-005 |
+| Cache antigo reutilizado após recusa HTTP | Serviço de detalhe e Agenda tentam cache em qualquer erro, inclusive resposta 401/403/404 | UI-010 |
+| Dados de A aparecem para B | Chaves da lista/calendário/detalhe não incluem conta; `signOut` remove tokens/usuário, sem remover essas chaves | API-005/006; UI-009 |
+| Payload muda sem renovar a versão persistida | O front só regrava detalhe quando `atualizado_em` difere; `_version` considera reserva/principais/complementares, sem os cadastros independentes de ponto/IES | API-007; UI-007 |
+| Erro permanece após retorno de foco com sucesso | A busca da tela define erro no catch; o caminho de sucesso não o limpa explicitamente | UI-007 |
+| Mensagem de data inválida difere do BDD | Regex da query pode gerar validação genérica antes da mensagem de domínio em português | API-004; UI-001/010 |
 
 ## Dependências e critérios de bloqueio
 
-Usar a `develop` analisada para API e o build do PR #378 (HU-014) ou #379 (HU-015) para UI, com os SHAs anotados. As versões de `develop` analisadas não contêm essas telas. As branches de documentação não incorporam código das features.
-
-- A LLM prepara alunos A e B aprovados, rotas ativas e reservas pela API da HU-013. Sem uma dependência, marcar somente a parte afetada como 🚫 e indicar a causa.
-- Histórico e feriado/recesso exigem massa de fixture/seed em banco isolado, porque não há endpoint para criar reserva no passado nem para cadastrar feriado no router analisado. Documentar exatamente a preparação; não alterar o relógio do sistema nem dados compartilhados.
-- Falta da alocação real bloqueia a comprovação de liberação da vaga e atomicidade com a alocação (API-010); um DELETE 200 sozinho não comprova AC-06 inteiro.
-- Para simular falha transacional, é necessário mecanismo controlado no ambiente de teste. Sem ele, registrar a parte como bloqueada, sem chamar teste com mock de integração real.
-- Na HU-014 (AC-08), testar primeiro erro antes de a requisição chegar à API. Se só a resposta se perder após o commit, consultar novamente o estado no servidor antes de concluir se houve cancelamento parcial.
-
-Para a **HU-015**, confirmar o contrato real no CT-HU015-API-001 antes de tentar comprovar detalhe completo/veículo diário. Os ids/nomes das complementares nos endpoints atuais podem ser conferidos independentemente. Ausência de endpoint integrado não deve ser confundida com ausência de reserva nem aprovada por um fallback do front. Falta da alocação real limita RN-010 e os dados de ônibus/motorista. O cache offline só pode ser aprovado após sincronização HTTP efetiva de dados reais; testes unitários com mock não suprem essa dependência.
-
-Os PRs #378 e #379 alteram `agenda.tsx` e `agendamentoService.ts`. Após integração, revisar o build final para conferir prefixos de API, navegação entre as duas HUs e preservação do comportamento de cache. Não pressupor que os dois PRs já estão combinados neste planejamento.
+- **HU-015:** usar back e front do mesmo commit `4ac87b46`; o planejamento é entregue para `develop` e referencia esse build da feature. A integração de detalhe já está no código e deve ser conferida em API-001. O resultado da HU-013 em outra feature/commit não bloqueia nem aprova automaticamente este build.
+- **Massa HU-015:** a LLM prepara pela API as reservas da HU-013 e os cadastros de rota principal/complementar, pontos e IES; registra ids/datas reais e as mudanças de referência. Se a tela de criação não permitir montar a massa, preparar pela API e registrar a origem.
+- **Alocação HU-015:** ausência de veículo/motorista é o estado esperado atual; API-003 e UI-003 verificam nulos/ocultação. API-008 e a parte futura de UI-008 dependem de alocação real HU-016/017/018. Não bloquear os demais casos nem criar objeto simulado para aprovar veículo diário.
+- **Offline HU-015:** comprovar sincronização HTTP efetiva antes de desligar a rede. Validar detalhe já aberto e dados completos sincronizados apenas na Agenda; distinguir ausência de cache próprio de cache de outra conta. Teste com mock não aprova consulta offline no dispositivo.
+- **HU-014, histórico:** alocação ausente mantém a limitação documentada no CT-HU014-API-010. Os resultados anteriores usam seus próprios SHAs e não são reexecutados nesta revisão.
+- Registrar cada parte verificada, falha ou impedimento. Os PRs #378 e #379 alteram telas/serviço compartilhados; revisar o build que vier a ser executado, preservando a rastreabilidade da versão.
 
 ## Registro dos resultados
 
-Preencher ambiente/commit, data, resultado obtido, status, resumo, totais e defeitos apenas na execução. Em caso parcialmente verificável, separar o que passou, falhou e ficou bloqueado; não aprovar o caso inteiro se houver impedimento. Preservar o esperado mesmo quando a implementação divergir. Contabilização em 09/11/2026: **9 passaram, 1 falhou, 1 parcial, 11 bloqueados e 27 pendentes**. Na HU-013, CT-001 falhou por falta de publicação das rotas na feature; os outros 11 casos estão bloqueados por essa causa e não tiveram as regras de negócio exercitadas. Os 10 casos de API da HU-014 foram abordados; o CT-010 ficou parcial porque a integração com alocação real ainda não existe. Os 11 casos de UI da HU-014 e os 16 casos da HU-015 permanecem pendentes. [Resumo JSON da execução de API da HU-014](HU-014/api/EVIDENCIAS-HU-014.json).
+Preencher ambiente/commit, data, resultado obtido, status, resumo, totais e defeitos apenas na execução. Em caso parcialmente verificável, separar o que passou, falhou e ficou bloqueado; não aprovar o caso inteiro se houver impedimento. Preservar o esperado mesmo quando a implementação divergir. Contabilização na revisão de 10/11/2026: **9 passaram, 1 falhou, 1 parcial, 11 bloqueados e 29 pendentes**. Na HU-013, CT-001 falhou por falta de publicação das rotas na feature; os outros 11 casos estão bloqueados por essa causa e não tiveram as regras de negócio exercitadas. Os 10 casos de API da HU-014 foram abordados; o CT-010 ficou parcial porque a integração com alocação real ainda não existe. Os 11 casos de UI da HU-014 e os 18 casos da HU-015 permanecem pendentes. [Resumo JSON da execução de API da HU-014](HU-014/api/EVIDENCIAS-HU-014.json).
 
 Registrar HTTP e corpo na API, evidências visuais na UI e consultas de persistência quando pedidas. Omitir credenciais, tokens e dados pessoais dos registros. Preparar relatos `.md` após reprodução; publicação no GitHub fica para a etapa de execução e revisão.
+
+O planejamento revisado da HU-015 tem **8 casos de API e 10 de UI**, todos pendentes. Não foram executados testes, produzidos resultados de evidência ou abertas issues nesta etapa. Na execução futura, guardar somente um JSON simples de evidência, conforme o padrão combinado.

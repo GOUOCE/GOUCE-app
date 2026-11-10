@@ -7,11 +7,13 @@
 | Módulo | Agendamento de Transporte — Aluno (EP-004) |
 | Funcionalidade | HU-015 — Consulta de Rota Complementar e Transferência |
 | Camada | API |
-| Tipo de teste | Funcional manual essencial, integração e autorização — baseado em risco |
-| Endpoints reais | `GET /transporte/agendamentos/meus`, `GET /transporte/agendamentos/{id}`; preparação pela HU-013 e cadastro administrativo de complementares |
-| Integração a confirmar | O PR #379 chama `GET /agendamentos/detalhes?data=YYYY-MM-DD`, ausente no backend analisado; detalhes completos e alocação diária dependem de contrato integrado |
-| Ambiente | A preencher — URL, SHA testado, banco e fuso; base analisada `develop` `99bbf2c6` |
-| Total de casos | 7 |
+| Tipo de teste | Funcional manual essencial, integração, autorização e atualização de dados — baseado em risco |
+| Endpoints | `GET /transporte/agendamentos/detalhes?data=YYYY-MM-DD`, `GET /transporte/agendamentos/{id}` e `GET /transporte/agendamentos/meus`. Preparação pela HU-013/014 e cadastros administrativos. |
+| Base do planejamento | `feature/front-hu015` `4ac87b4623b493af2d56012d60b8c3b875c3af7e` ([PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379)) |
+| Branch de planejamento | `test/planejamento-api-ui-hu-015-integrado`, com entrega para `develop`; código de referência na feature acima |
+| Revisão do planejamento | 10/11/2026 — contrato integrado, BDD e decisões do PO |
+| Ambiente | A preencher na execução — URL, commit, revisão do banco e fuso |
+| Total de casos | 8 |
 | Última execução | Não realizada |
 | Testador | LLM — execução de API; Cauan Ricardo — revisão |
 
@@ -19,66 +21,76 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 7 | 0 | 0 | 0 | 0 | 7 |
+| ⏳ Não executada | 8 | 0 | 0 | 0 | 0 | 8 |
 
 ## Pré-condições
 
 | ID | Descrição |
 | --- | --- |
-| PC-01 | API e PostgreSQL reais em ambiente isolado, migrations aplicadas e leitura das referências de agendamento/rota; seguir o [guia](README.md). Registrar SHAs de back/front e contrato efetivamente disponível. |
-| PC-02 | Tokens de A e B, alunos aprovados com vínculo válido. Administrador para preparar massa; aluno sem acesso regular para CT-006. Tokens fora dos registros versionados. |
-| PC-03 | Principal P atendendo ponto/IES nos dois trechos; complementares C1 e C2 ativas e ligadas a P, com nomes, pontos de conexão e horários diferentes entre si e do protótipo. C1 com saída `05:45` e retorno `18:15`; C2 com saída `06:05` e retorno `19:10`, desde que válidos na configuração preparada. |
-| PC-04 | Reservas próprias em dias válidos distintos: AI (só ida com C1), AV (só volta com C2), AIV (ida com C1 e volta com C2), AD (direta, sem complementar); B tem BI em uma das mesmas datas de A, com outra complementar. Criar pela HU-013 e anotar ids/datas reais. |
-| PC-05 | Reserva AC própria cancelada via API da HU-014 antes do CT-007 e id numérico comprovadamente inexistente. Não confundir reserva cancelada com rota HTTP ausente. |
-| PC-06 | Contrato de detalhe completo para CT-004 e alocação real por veículo/dia para CT-005. Nenhum dos dois foi encontrado completo no backend analisado; dependências serão avaliadas na execução. |
+| PC-01 | API e PostgreSQL reais em ambiente isolado, com migrations do commit alvo até `81_add_updated_at_rotas`. Registrar URL, SHAs, data/fuso e revisão aplicada. Não usar `create_all`/mock para substituir a integração HTTP. [Guia](README.md). |
+| PC-02 | Tokens reais de A e B, alunos aprovados e com vínculo válido; administrador para preparar referências; pendente, reprovado e vínculo vencido para API-006. Credenciais fora do Git. |
+| PC-03 | P1 **Rota Centro - UFC**, saída 06:30/retorno 17:30, atendendo bairro/ponto/IES da ida; P2 **Rota Campo - IFCE**, 06:40/18:40, atendendo a volta independente. C1 **Van 2 - Bairro Novo**, 05:45/18:15, conexão **Trevo do Bairro Novo**, ligada a P1. C2 **Van 5 - Planalto**, 06:05/19:10, conexão **Conexão Planalto**, ligada a P2. |
+| PC-04 | Reservas de A em dias úteis distintos dentro da janela: **AI** só ida C1; **AV** só volta C2; **AIV** C1 na ida/C2 na volta; **AM1** C1 na ida/volta direta; **AM2** ida direta/C2 na volta; **AD** ambos diretos. Criar pela API da HU-013, registrando ids/datas/referências reais. P1/P2 atendem as combinações usadas; não presumir id 1. |
+| PC-05 | B possui **BI** na mesma data de AIV, com outra linha/conexão; preparar ainda uma data reservada somente por B, **AC** própria cancelada via HU-014 e uma data sem reserva de qualquer aluno. |
+| PC-06 | D é a data local do servidor. Escolher datas válidas e atuais, sem alterar relógio do host. As datas fixas do BDD são exemplos e devem ser adaptadas; os dados de linha/horário/conexão permanecem identificáveis. |
+| PC-07 | Sem alocação nesta base, `onibus` e `motorista` nulos são esperados e não bloqueiam API-003. Apenas API-008 e a parte futura de UI-008 dependem da implementação real do épico 5. |
+
+## Contrato de referência
+
+- `AgendamentoDetalheDTO`: campos da reserva, nomes das referências e objetos independentes `rota_complementar_ida/volta` e `rota_principal_ida/volta`, além de `atualizado_em`, `pode_remover` e `pode_editar`.
+- Complementar: `id`, `nome`, `horario_saida`, `horario_retorno` e `ponto_conexao`. Principal: `id`, `nome`, os dois horários, `faculdades` e `onibus`/`motorista` nulos até existir alocação.
+- Consulta por data já existe e está declarada antes de `/{id}`; o router já está incluído em `backend/main.py`. Confirmar no ambiente durante API-001, sem tratar a leitura como teste executado.
+- Não há header HTTP ETag exigido: a versão usada pelo front é `atualizado_em` no corpo. O cache do dispositivo pertence à suíte de UI.
 
 ## Resumo da execução
 
-Executar na ordem, usando token de A salvo indicação. Todos os casos permanecem pendentes; dependências ausentes serão registradas por parte na execução. O cache offline pertence à suíte de UI.
+Executar na ordem e registrar cada variação. Os casos dependentes da alocação futura trazem a dependência no próprio detalhe. Todos permanecem pendentes nesta entrega.
 
-### Seção A — Contrato e vínculos
-
-| ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
-| --- | --- | --- | --- | --- | --- |
-| CT-HU015-API-001 | Contrato consumido pelo front | OpenAPI; GET do PR e GET real do agendamento | Contrato integrado permite obter a viagem selecionada sem fallback; registrar incompatibilidades reais | ⏳ PENDENTE | Endpoint do PR não localizado na análise. |
-| CT-HU015-API-002 | Complementares por trecho e dono | GET `/meus` e `/{id}` de AI/AV/AIV | 200; ids/nomes corretos, ida e volta independentes; sem BI | ⏳ PENDENTE | Executável no contrato atual. |
-| CT-HU015-API-003 | Reserva direta | GET de AD | 200; campos de complementar nulos por trecho; nenhum vínculo fictício | ⏳ PENDENTE | Executável no contrato atual. |
-
-### Seção B — Informação para transferência
+### Seção A — Contrato e consulta
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU015-API-004 | Detalhes completos da transferência | AI/AV/AIV; referências C1/C2/P | Nome da linha, horário do trecho e ponto exato de conexão coerentes com a reserva | ⏳ PENDENTE | Depende de resposta integrada; DTO atual expõe somente ids/nomes das complementares. |
-| CT-HU015-API-005 | Veículo conforme programação do dia | Mesma linha em duas datas, veículos diferentes | Cada consulta informa veículo e programação da operação correspondente | ⏳ PENDENTE | Depende de alocação real e detalhe integrado (RN-010). |
+| CT-HU015-API-001 | Consultar por data, id e lista | A autenticado; AIV com id/data conhecidos; GET `/transporte/agendamentos/detalhes?data=<data de AIV>`, GET `/transporte/agendamentos/{id}` e GET `/transporte/agendamentos/meus`. | 200; data/id/lista concordam com a mesma reserva e o contrato atual. | ⏳ PENDENTE | BDD: consulta por data, lista e dados da transferência. |
+| CT-HU015-API-002 | Rotas e complementares independentes por trecho | AI (só ida C1), AV (só volta C2), AIV (C1 na ida/C2 na volta), AM1 (C1 na ida/volta direta) e AM2 (ida direta/C2 na volta). | 200; C1/C2 e principais corretas em cada trecho, incluindo trajetos mistos. | ⏳ PENDENTE | BDD: complementar por trecho e informação necessária à transferência. |
+| CT-HU015-API-003 | Trajeto direto e campos sem alocação | AD com ida e volta diretas; AI/AIV sem alocação diária de veículo/motorista. | 200; direto sem complementar; principais preservadas e ônibus/motorista nulos. | ⏳ PENDENTE | BDD: trajeto direto e dados nulos sem alocação. |
 
-### Seção C — Acesso e disponibilidade do registro
+### Seção B — Recusas e controle de acesso
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU015-API-006 | Autenticação e isolamento por aluno | Sem token, inválido, administrador, aluno sem acesso; A tentando BI | 401/403 conforme credencial; 404 para id de outro aluno; nenhuma exposição | ⏳ PENDENTE | Repetir no detalhe integrado quando existir. |
-| CT-HU015-API-007 | Cancelado, inexistente e parâmetro inválido | GET AC, id inexistente, texto; data sem reserva/ inválida no contrato integrado | 404 para ids indisponíveis, 422 para id textual; detalhe integrado sem viagem inventada | ⏳ PENDENTE | Códigos de consulta por data dependem do contrato que vier a ser documentado. |
+| CT-HU015-API-004 | Consulta ausente, cancelada ou com parâmetro inválido | AC cancelada; data sem reserva ativa; id numérico inexistente; id `abc`; query `data` ausente, `10-11-2026` e `2026-02-30`. | 404 para recurso indisponível; 422 para parâmetro inválido, com mensagens conferidas. | ⏳ PENDENTE | BDD: recusas por data, identificador inválido e agendamento indisponível. |
+| CT-HU015-API-005 | Isolamento entre alunos na mesma data | AIV de A e BI de B na mesma data, com linhas/pontos distintos; outra data reservada somente por B. | Somente dados do dono; id/data exclusivos de outro aluno não vazam informações. | ⏳ PENDENTE | BDD: lista restrita e detalhe de outro aluno. |
+| CT-HU015-API-006 | Autenticação e perfis sem acesso regular | Sem token; token inválido; administrador; aluno pendente, reprovado e com vínculo vencido; aluno aprovado como controle. | 401 sem credencial válida; 403 para perfil/estado sem acesso; dados preservados. | ⏳ PENDENTE | BDD: perfis negados e ausência de autenticação. |
+
+### Seção C — Atualização e programação
+
+| ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
+| --- | --- | --- | --- | --- | --- |
+| CT-HU015-API-007 | Versão da informação e atualização das referências | AI e AIV já consultadas; `atualizado_em` anotado; mudanças reais de horário/ponto da complementar, nome/faculdades da principal e nome de ponto/IES. | Dados alterados reaparecem nos três GETs e a versão sustenta a atualização do cache. | ⏳ PENDENTE | Integração do atualizado_em e BDD de reconexão/atualização. |
+| CT-HU015-API-008 | Programação diária quando houver alocação real | Mesma linha em D1/D2; ônibus V1/V2 e motorista definidos pelo fluxo real das HU-016/017/018; depois realocação de D1. | Veículo corresponde à data e muda com a programação, após integração da alocação. | ⏳ PENDENTE | BDD: veículo por dia e alteração; depende de HU-016/017/018. |
 
 ## Detalhamento dos casos
 
-### Seção A — Contrato e vínculos
+### Seção A — Contrato e consulta
 
-#### CT-HU015-API-001 — Contrato consumido pelo front
+#### CT-HU015-API-001 — Consultar por data, id e lista
 
-**Técnica/tipo:** análise de contrato e integração funcional; partição operação disponível/ausente.
+**Técnica/tipo:** Integração de contrato; partição por operação de consulta.
 
-**Dados de entrada:** aluno A, reserva AI; OpenAPI da API real; `GET /agendamentos/detalhes?data=<data de AI>` usado pelo PR; `GET /transporte/agendamentos/{AI}` existente.
+**Dados de entrada:** A autenticado; AIV com id/data conhecidos; GET `/transporte/agendamentos/detalhes?data=<data de AIV>`, GET `/transporte/agendamentos/{id}` e GET `/transporte/agendamentos/meus`.
 
 **Passos**
 
-1. Anotar versões e procurar no OpenAPI a operação chamada pelo build do front.
-2. Enviar as duas chamadas com token de A e guardar HTTP/corpo real; comparar com os campos usados pela tela.
-3. Identificar se existe adaptação efetiva entre a reserva e o detalhe completo. Se o build mudar o caminho, registrar o endpoint real e repetir nele.
+1. Conferir health, OpenAPI e revisão Alembic do build indicado nas pré-condições.
+2. Consultar a mesma reserva por data e por id; localizá-la também em `/meus`.
+3. Comparar campos e referências com o banco em nova conexão; guardar HTTP e corpo sem credenciais.
 
 **Resultado esperado**
 
-- A integração deve permitir consultar a viagem selecionada e fornecer os dados necessários aos AC-01/02/03; não basta renderizar exemplos após erro HTTP.
-- Contrato atual do backend: GET por id retorna 200 com `AgendamentoDetalheDTO`. A chamada `/agendamentos/detalhes` não foi encontrada na análise e o DTO real não contém ponto/horário da complementar nem veículo/motorista diário.
-- Registrar incompatibilidade de integração se reproduzida. Enquanto não houver contrato completo, bloquear somente as partes dependentes de API-004/005 e prosseguir nos endpoints existentes. Não declarar que o caminho ausente deveria retornar determinado JSON nem considerar um 404 como consulta bem-sucedida.
+- HTTP 200 nas três operações; a consulta por data identifica a reserva de A e não é interpretada como id textual.
+- Mesmo `id`, `aluno_id`, `data`, trechos, referências e resumos de rotas nos três retornos. `/meus` contém `agendamentos`, `ativos` e `limite`.
+- O detalhe contém `rota_complementar_ida/volta`, `rota_principal_ida/volta` e `atualizado_em` no contrato descrito abaixo. GET não muda reservas nem contador.
+- Se as operações não estiverem publicadas, registrar o bloqueio de integração antes de concluir sobre regras dependentes; não inserir router em app de teste para aprovar a aplicação real.
 
 **Resultado obtido**
 
@@ -87,23 +99,24 @@ Executar na ordem, usando token de A salvo indicação. Todos os casos permanece
 
 ---
 
-#### CT-HU015-API-002 — Complementares por trecho e dono
+#### CT-HU015-API-002 — Rotas e complementares independentes por trecho
 
-**Técnica/tipo:** tabela de decisão ida/volta × com/sem complementar; funcional positivo e integridade dos vínculos.
+**Técnica/tipo:** Tabela de decisão trecho utilizado × complementar presente; integração com referências.
 
-**Dados de entrada:** GET `/transporte/agendamentos/meus` e `/{id}` de AI, AV e AIV; BI pertence a B.
+**Dados de entrada:** AI (só ida C1), AV (só volta C2), AIV (C1 na ida/C2 na volta), AM1 (C1 na ida/volta direta) e AM2 (ida direta/C2 na volta).
 
 **Passos**
 
-1. Conferir a massa criada pela HU-013 e guardar os ids de C1/C2.
-2. Consultar lista e detalhe das três reservas como A; comparar com `agendamento` e referências.
-3. Consultar BI como B para confirmar que os dados das duas contas são distintos.
+1. Consultar cada reserva por id e por data, com token de A.
+2. Conferir nomes, ids, horários, conexão, principal e faculdades do trecho contra os cadastros reais.
+3. Comparar os cinco arranjos sem reutilizar a resposta de uma data como esperado da outra.
 
 **Resultado esperado**
 
-- 200; AI com `usa_ida: true`, `usa_volta: false`, `rota_complementar_ida_id/nome` de C1 e campos da complementar de volta nulos. AV apresenta somente C2 na volta.
-- AIV mantém C1 na ida e C2 na volta, sem copiar/restringir um trecho pelo outro. Data, aluno, ponto e IES correspondem à reserva consultada (AC-01/02, RF-029).
-- `/meus` não inclui BI. Leituras não alteram reservas nem contador. Esta verificação de ids/nomes não aprova os horários/ponto de conexão ainda ausentes do detalhe atual.
+- Cada complementar presente retorna `id`, `nome`, `horario_saida`, `horario_retorno` e `ponto_conexao` reais. C1: 05:45/18:15 e Trevo do Bairro Novo; C2: 06:05/19:10 e Conexão Planalto.
+- AI tem somente ida e AV somente volta; trecho não utilizado não recebe principal/complementar fictícias.
+- AIV preserva C1/P1 na ida e C2/P2 na volta. AM1 e AM2 têm `null` apenas no objeto de complementar do trecho direto, com principal correspondente presente.
+- Ponto, IES e faculdades atendidas pertencem à principal de cada trecho. A resposta fornece ambos os horários; a escolha visual de saída na ida e retorno na volta é conferida em UI-002.
 
 **Resultado obtido**
 
@@ -112,22 +125,24 @@ Executar na ordem, usando token de A salvo indicação. Todos os casos permanece
 
 ---
 
-#### CT-HU015-API-003 — Reserva direta
+#### CT-HU015-API-003 — Trajeto direto e campos sem alocação
 
-**Técnica/tipo:** partição com/sem complementar; funcional positivo.
+**Técnica/tipo:** Partição com/sem complementar e com/sem alocação; funcional positivo.
 
-**Dados de entrada:** AD, com ida e volta diretas e campos de complementar omitidos ou nulos no cadastro válido.
+**Dados de entrada:** AD com ida e volta diretas; AI/AIV sem alocação diária de veículo/motorista.
 
 **Passos**
 
-1. Consultar AD em `/meus` e `/{id}`; comparar com a reserva no banco.
-2. Quando houver detalhe integrado, consultar AD também nele e comparar as informações da principal com a massa.
+1. Consultar AD por data, por id e na lista.
+2. Conferir objetos de complementar, principais e campos `onibus`/`motorista`; repetir com AI/AIV.
+3. Comparar ids/nomes de pontos, IES e principais com a massa.
 
 **Resultado esperado**
 
-- No contrato atual: 200 e os quatro campos `rota_complementar_ida_id`, `rota_complementar_ida_nome`, `rota_complementar_volta_id` e `rota_complementar_volta_nome` nulos.
-- No detalhe integrado: trajeto direto sem instrução de transferência fictícia; informação da principal e de sua operação quando alocada. Não exigir uma chave JSON futura específica (AC-03, FA-001).
-- A ocultação visual é UI-003; reserva não deve ser classificada como complementar por parâmetro de navegação ou valor padrão do front.
+- AD retorna 200, ids/nomes de complementar e objetos `rota_complementar_ida/volta` nulos; principais dos trechos usados continuam presentes.
+- Enquanto não existir alocação, `onibus: null` e `motorista: null` em cada principal, inclusive em viagens com complementar. Não preencher com dados do protótipo.
+- A ausência de alocação é o estado esperado atual (AC-02; #389 item 7), sem bloquear a consulta básica. A ocultação dos campos na tela é UI-003.
+- Quando a alocação existir, validar programação em API-008; não exigir objetos de veículo fictícios para aprovar este caso.
 
 **Resultado obtido**
 
@@ -136,26 +151,26 @@ Executar na ordem, usando token de A salvo indicação. Todos os casos permanece
 
 ---
 
-### Seção B — Informação para transferência
+### Seção B — Recusas e controle de acesso
 
-#### CT-HU015-API-004 — Detalhes completos da transferência
+#### CT-HU015-API-004 — Consulta ausente, cancelada ou com parâmetro inválido
 
-**Técnica/tipo:** partição por trecho e comparação com fonte de dados; integração positiva.
+**Técnica/tipo:** Partições ativo/cancelado/inexistente e formato/data civil válidos ou inválidos.
 
-**Dados de entrada:** AI/AV/AIV; C1 `05:45`/`18:15`, C2 `06:05`/`19:10`, pontos de conexão distintos e principal P. Usar dados efetivamente preparados, documentando qualquer ajuste.
+**Dados de entrada:** AC cancelada; data sem reserva ativa; id numérico inexistente; id `abc`; query `data` ausente, `10-11-2026` e `2026-02-30`.
 
 **Passos**
 
-1. Confirmar o contrato integrado no CT-001. Sem ele, registrar a dependência em vez de fabricar resposta de serviço.
-2. Como administrador, consultar `GET /rotas-complementares/{C1 ou C2}` para conferir os cadastros; como A, consultar o detalhe integrado das reservas.
-3. Comparar nome da linha, ponto exato de conexão, horário do trecho e vínculo à principal. Em AIV, conferir os dois trechos separadamente.
+1. Confirmar AC e a ausência de reserva nas datas negativas.
+2. Enviar as consultas por data e id; registrar cada resposta separadamente.
+3. Conferir que não houve mutação nem retorno de detalhes de outra reserva.
 
 **Resultado esperado**
 
-- A resposta usada pela tela fornece informação suficiente para localizar a transferência: linha, horário correto e ponto de conexão, sem depender de acesso administrativo do aluno (AC-01/02, RF-029).
-- Ida usa o horário de ida e volta usa o de retorno; na massa padrão, AI usa C1 `05:45`, AV usa C2 `19:10`, AIV preserva ambos. Se a programação diária tiver ajuste documentado, comparar com a operação efetiva em vez de presumir que o cadastro prevalece.
-- Não substituir ponto de conexão por ponto de embarque nem nome de linha por motorista. Informação não disponível deve ser descrita como tal, sem valores fictícios.
-- GET administrativo serve só de referência: conceder ao aluno acesso à gestão de rotas não é requisito. DTO atual de agendamento só com ids/nomes deixa a comprovação completa bloqueada até integração.
+- Por id cancelado/inexistente: 404 `RESOURCE_NOT_FOUND`, “Agendamento não encontrado.”. Por data sem reserva ativa, incluindo a cancelada: 404 `RESOURCE_NOT_FOUND`, “Nenhum agendamento ativo para esta data.”.
+- Id textual e query ausente/formato inválido/data civil impossível: 422; sem erro 500 ou interpretação de `/detalhes` como identificador numérico.
+- Para formato inválido, o BDD define “Data deve estar no formato YYYY-MM-DD.”. Se a validação do router devolver 422 com outro texto técnico, registrar a divergência de mensagem separadamente da recusa correta.
+- Nenhuma recusa informa uma viagem inventada nem muda reserva, contador ou auditoria.
 
 **Resultado obtido**
 
@@ -164,23 +179,24 @@ Executar na ordem, usando token de A salvo indicação. Todos os casos permanece
 
 ---
 
-#### CT-HU015-API-005 — Veículo conforme programação do dia
+#### CT-HU015-API-005 — Isolamento entre alunos na mesma data
 
-**Técnica/tipo:** tabela de decisão data × operação e transição de programação; integração (RN-010).
+**Técnica/tipo:** Autorização por objeto; tabela dono × id/data consultados.
 
-**Dados de entrada:** duas reservas próprias em datas válidas D1/D2 na mesma linha complementar; veículo V1 em D1 e V2 em D2, com principal/motorista escalados quando disponíveis.
+**Dados de entrada:** AIV de A e BI de B na mesma data, com linhas/pontos distintos; outra data reservada somente por B.
 
 **Passos**
 
-1. Preparar a programação diária pelo fluxo real de alocação; guardar os ids e dados antes da consulta.
-2. Consultar os detalhes de D1 e D2 alternadamente.
-3. Atualizar somente a programação de D1 por fluxo permitido e consultar ambas novamente.
+1. Como A, consultar `/meus`, AIV por data e BI por id.
+2. Consultar como A a data que possui reserva apenas de B; repetir as consultas como B para confirmar a massa.
+3. Conferir que cada retorno autorizado contém somente o dono correto e que os dados persistidos não mudaram.
 
 **Resultado esperado**
 
-- A informação da complementar usa rota, horário, ponto de conexão e veículo definidos para a operação daquele dia; D1 e D2 não se misturam (RN-010).
-- Alteração de D1 aparece em nova consulta online e não altera os dados de D2. Não fixar o veículo pelo nome cadastrado da linha nem pelo protótipo.
-- Se alocação/consulta por dia não estiver implementada, registrar o bloqueio. Nomes de linha retornados por GET de agendamento não comprovam veículo escalado. Cache e atualização no dispositivo são UI-006/007.
+- A recebe apenas suas reservas e dados de transferência. Na data compartilhada, a consulta por data retorna AIV para A e BI para B.
+- A pedindo o id de BI recebe 404 `RESOURCE_NOT_FOUND` / “Agendamento não encontrado.”, sem expor dono/rota de B.
+- Data com reserva somente de B retorna 404 de ausência para A; `/meus` de A não contém BI. Leituras não alteram dados.
+- O isolamento independe do cache do cliente, verificado separadamente em UI-009.
 
 **Resultado obtido**
 
@@ -189,25 +205,24 @@ Executar na ordem, usando token de A salvo indicação. Todos os casos permanece
 
 ---
 
-### Seção C — Acesso e disponibilidade do registro
+#### CT-HU015-API-006 — Autenticação e perfis sem acesso regular
 
-#### CT-HU015-API-006 — Autenticação e isolamento por aluno
+**Técnica/tipo:** Partição de credenciais/perfis; controle de acesso negativo.
 
-**Técnica/tipo:** partição de credenciais e autorização por objeto; teste negativo de acesso.
-
-**Dados de entrada:** GET `/meus`, GET `/{AI}` e, quando integrado, detalhe da data de AI; sem token, token inválido, administrador, aluno pendente ou com vínculo vencido; token de A para `/{BI}`.
+**Dados de entrada:** Sem token; token inválido; administrador; aluno pendente, reprovado e com vínculo vencido; aluno aprovado como controle.
 
 **Passos**
 
-1. Confirmar os perfis/estados reais das contas e executar a matriz de credenciais.
-2. Como A, tentar consultar BI por id; consultar a data compartilhada por A/B no detalhe integrado quando disponível.
-3. Como B, conferir que BI existe e continua íntegra.
+1. Confirmar o estado real das contas via login/consulta administrativa permitida, sem versionar tokens.
+2. Para cada credencial, consultar `/meus`, `/detalhes?data=<data de AI>` e `/{id de AI}`.
+3. Reler as reservas como o aluno legítimo; anotar qualquer credencial que não foi possível preparar.
 
 **Resultado esperado**
 
-- Endpoints existentes: 401 sem token/inválido; 403 para administrador e aluno sem acesso regular; 404 `RESOURCE_NOT_FOUND` quando A pede BI por id.
-- Na data compartilhada, cada aluno recebe somente a própria viagem, sem dados de B na sessão de A (consulta pessoal da HU-015; integração com controle de acesso).
-- Não há mutações por GET. Repetir as proteções no endpoint integrado quando existir, com códigos documentados para ele; 404 de caminho ausente não comprova autorização adequada.
+- Sem token/inválido: 401. Administrador e aluno sem acesso regular: 403 em todas as consultas do módulo.
+- Nenhuma resposta recusada expõe complementar, principal ou dados pessoais; nenhum GET recusado altera a massa.
+- Aprovado com vínculo válido continua consultando com 200. Token expirado renovado com sucesso não conta como recusa de autenticação efetivamente exercitada.
+- 404 de caminho inexistente não comprova autorização e deve ser separado de 401/403 de operação publicada.
 
 **Resultado obtido**
 
@@ -216,49 +231,87 @@ Executar na ordem, usando token de A salvo indicação. Todos os casos permanece
 
 ---
 
-#### CT-HU015-API-007 — Cancelado, inexistente e parâmetro inválido
+### Seção C — Atualização e programação
 
-**Técnica/tipo:** partição ativo/cancelado/inexistente e formato válido/inválido; funcional negativo.
+#### CT-HU015-API-007 — Versão da informação e atualização das referências
 
-**Dados de entrada:** GET `/transporte/agendamentos/{AC}`, id numérico inexistente e `/transporte/agendamentos/abc`; no detalhe integrado, data válida sem reserva e data inválida como `2026-02-30`.
+**Técnica/tipo:** Transição de estado online; integração entre dado visível e versão de cache.
+
+**Dados de entrada:** AI e AIV já consultadas; `atualizado_em` anotado; mudanças reais de horário/ponto da complementar, nome/faculdades da principal e nome de ponto/IES.
 
 **Passos**
 
-1. Confirmar que AC foi cancelada e guardar o estado de uma reserva ativa de controle.
-2. Executar as chamadas aos ids atuais; depois as variações por data, somente quando o endpoint integrado estiver documentado.
-3. Conferir respostas e ausência de alteração em reservas/alocação.
+1. Ler a reserva duas vezes sem alterar dados; comparar versão e persistência.
+2. Pela API administrativa, alterar um campo por vez da referência de teste e consultar novamente por data/id/lista.
+3. Confirmar os valores atuais e comparar `atualizado_em`; restaurar a massa antes das próximas variações.
 
 **Resultado esperado**
 
-- AC e inexistente: 404 `RESOURCE_NOT_FOUND`, “Agendamento não encontrado.”. Id textual: 422. Nenhuma viagem ativa ou transferência é inventada para esses registros.
-- No contrato integrado: data sem reserva deve indicar ausência de viagem e data inválida deve ser rejeitada conforme o contrato documentado; não prescrever códigos ainda não definidos nem aceitar detalhes fictícios como resposta válida.
-- Respostas de ausência/recusa recebidas online não comprovam falha de rede. O comportamento do cache após cancelamento conhecido é verificado em UI-006/009.
+- A resposta reflete as alterações reais nas referências corretas, mantendo id/dono/data da reserva.
+- `atualizado_em` é um timestamp válido com informação temporal utilizável pelo cliente, estável sem mudança e sem regressão após alteração.
+- Quando uma informação exibida muda, a versão deve permitir atualizar o cache. Conferir também ponto/IES e faculdades, porque o cliente só regrava o detalhe se a versão mudar. Se o payload mudar com versão antiga, registrar risco confirmado para a persistência offline em UI-007.
+- GET não cria edição, cancelamento ou log de escrita. Esta verificação usa o campo do corpo; não exige header HTTP ETag inexistente no contrato.
 
 **Resultado obtido**
 
 - Não executado.
 - Status: ⏳ Pendente.
+
+---
+
+#### CT-HU015-API-008 — Programação diária quando houver alocação real
+
+**Técnica/tipo:** Tabela data × veículo e transição de programação; integração futura RN-010.
+
+**Dados de entrada:** Mesma linha em D1/D2; ônibus V1/V2 e motorista definidos pelo fluxo real das HU-016/017/018; depois realocação de D1.
+
+**Passos**
+
+1. Confirmar que a alocação real já está implementada no build testado e preparar a programação pelos fluxos suportados.
+2. Consultar as duas datas e comparar com as alocações efetivas.
+3. Alterar somente D1 por operação real, consultar novamente e conferir a versão da informação.
+
+**Resultado esperado**
+
+- Cada consulta informa o ônibus/motorista da própria data; alterar D1 atualiza o retorno de D1 e preserva D2, mantendo a transferência correspondente.
+- Não usar o nome cadastrado da linha como prova de veículo escalado nem montar objeto de ônibus por mock.
+- Na base analisada esses campos são nulos e a alocação futura não existe: manter este caso pendente no planejamento e marcar 🚫 na execução enquanto faltar a dependência.
+- Essa dependência não bloqueia os casos de contrato, transferência e ocultação sem alocação (API-001 a API-007).
+
+**Resultado obtido**
+
+- Não executado.
+- Status: ⏳ Pendente.
+
+---
 
 ## Rastreabilidade
 
-| Critério/regra | Casos API | Complemento UI |
-| --- | --- | --- |
-| AC-01 — linha, horário e conexão destacados | 001, 002, 004 | UI-001, UI-002 |
-| AC-02 — informação clara para transferência | 004, 005 | UI-002 |
-| AC-03 / FA-001 — trajeto direto | 003 | UI-003 |
-| AC-04 / FA-002 — consulta offline sincronizada | API fornece dados de origem; cache não se aplica ao servidor | UI-004 a UI-009 |
-| RN-010 — programação e veículo da operação | 004, 005 | UI-006, UI-007 |
-| RF-029 — consulta aplicável à própria viagem | 001 a 007 | UI-001 a UI-003, UI-008 |
-| RNF-015 — informação previamente disponibilizada offline | Não aprovado apenas por GET | UI-004, UI-005, UI-007 |
+| Critério/regra | Cenários BDD de referência | Casos API | Complemento UI |
+| --- | --- | --- | --- |
+| AC-01 — consulta e dados de transferência | API informa o detalhe ativo de uma data; dados da transferência; lista de Meus agendamentos | 001, 002 | 001, 002, 004 |
+| AC-01 — complementar por trecho | API informa a complementar de cada trecho | 002 | 002 |
+| AC-02 / #389 item 7 — sem alocação | API não preenche ônibus e motorista sem alocação | 003 | 003 |
+| AC-03 / FA-001 — direto | API não informa complementar para trajeto direto | 003 | 003, 004 |
+| AC-04 / FA-002 / RNF-015 — offline | Cache, mesmos dados, ausência de cache, atualização ao reconectar | 007 fornece a versão; offline não se aprova por GET | 005 a 010 |
+| RN-010 — programação | Veículo por dia; alteração do veículo | 008, dependente do épico 5 | 008, parte futura |
+| RF-029 — recurso indisponível | Recusa por data, cancelado/inexistente, identificador inválido | 004 | 001, 010 |
+| RF-029 — titularidade | Detalhe de outro aluno; lista restrita | 005 | 009 |
+| RF-029 — acesso regular | Perfis sem acesso; sem autenticação | 006 | 009, 010 |
+| Revalidação da informação | Atualização ao restabelecer a conexão, complementada pelo risco de atualizado_em | 007 | 007 |
 
 ## Defeitos encontrados
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. Incompatibilidades de leitura estão no índice do épico. | — |
+| — | Nenhuma execução realizada. Riscos de leitura estão no índice do épico. | — |
 
-## Observações gerais
+## Fontes e observações
 
-- Fontes: [requisitos, seção 7.5.3](../../../../../docs/requisitos.md), [PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379), [índice/versões](../../README.md) e [suíte UI](../ui/UI-HU-015.md).
-- BDD da HU-015 não encontrado na base analisada. Rastreabilidade provisoriamente direta aos quatro critérios e às duas alternativas; revisar o BDD quando for adicionado.
-- Não executar os casos usando uma API simulada e declarar integração real aprovada. Partes verificáveis do contrato atual e partes dependentes de nova consulta/alocação devem ter conclusões separadas.
+- [Requisitos, seção 7.5.3](../../../../../docs/requisitos.md): AC-01 a AC-04, FA-001/002, RN-010, RF-029 e RNF-015.
+- [BDD HU-015](../../../../../bdd/features/epico-04/HU-015.feature) e [README do BDD](../../../../../bdd/features/epico-04/README.md), presentes neste checkout; os títulos na rastreabilidade correspondem aos cenários reais. Não foram modificados nesta entrega.
+- [Resposta do PO na #389](https://github.com/GOUOCE/GOUCE-app/issues/389#issuecomment-6756236002), itens 6 e 7: saída na ida, retorno na volta e campos de ônibus/motorista ocultos sem alocação.
+- [PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379), branch `feature/front-hu015`, commit **`4ac87b4623b493af2d56012d60b8c3b875c3af7e`**, com backend e front no mesmo checkout.
+- Este planejamento substitui as premissas anteriores de endpoint de detalhe ausente e DTO incompleto. Nenhum resultado da execução da HU-013 em outro commit é aplicado automaticamente aqui.
+- Na execução, registrar HTTP/corpo e persistência, preservando o esperado. Evidência final em um único JSON simples; não criar pastas de executor/evidências nem registrar senhas/tokens.
+- Se o código retornar outro texto para uma recusa ou não atualizar a versão de dados visíveis, registrar o comportamento real. Riscos não são relatados como defeitos antes da reprodução.
