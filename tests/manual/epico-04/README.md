@@ -1,25 +1,36 @@
 # Testes manuais — Épico 04 — Agendamento de Transporte (Aluno)
 
-Planejamento essencial das **HU-014 — Visualização e Cancelamento de Agendamentos** e **HU-015 — Consulta de Rota Complementar e Transferência**: **37 casos, sendo 17 de API e 20 de UI**. A API da HU-014 foi executada em 09/11/2026: **9 passaram e 1 parcial**; os outros **27 casos permanecem pendentes**. Segue a organização e os campos das suítes do épico 03. A HU-013 entra como dependência de preparação e integração; sua suíte completa não faz parte deste planejamento.
+Suítes essenciais das **HU-013 — Agendamento de Transporte**, **HU-014 — Visualização e Cancelamento de Agendamentos** e **HU-015 — Consulta de Rota Complementar e Transferência**: **49 casos, sendo 29 de API e 20 de UI**. A API da HU-014 tem **9 casos aprovados e 1 parcial**; a API da HU-013 teve **1 falha e 11 bloqueados** por integração indisponível. Os outros **27 casos permanecem pendentes**. A inclusão da HU-013 nesta entrega cobre somente API, seguindo o padrão dos outros épicos.
 
 ## Índice das suítes
 
 | HU | Funcionalidade | API | UI | Dependências principais |
 | --- | --- | --- | --- | --- |
+| HU-013 | Agendamento de transporte | [12 casos](HU-013/api/API-HU-013.md) | — (fora desta entrega) | Backend exato de `feature/front-hu013`, [PR #377](https://github.com/GOUOCE/GOUCE-app/pull/377); rotas/cadastros e regras da #389 |
 | HU-014 | Meus agendamentos e cancelamento | [10 casos](HU-014/api/API-HU-014.md) | [11 casos](HU-014/ui/UI-HU-014.md) | HU-013 para massa; HU-011/012 para rotas; HU-016/018 para alocação real; [PR #378](https://github.com/GOUOCE/GOUCE-app/pull/378) para UI |
 | HU-015 | Rota complementar e transferência | [7 casos](HU-015/api/API-HU-015.md) | [9 casos](HU-015/ui/UI-HU-015.md) | HU-013/014 para reservas; HU-012 para complementares; detalhe integrado e alocação diária; [PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379) para UI |
-| **Total** | **2 HUs** | **17** | **20** | **9 passaram; 1 parcial; 27 pendentes** |
+| **Total** | **3 HUs** | **29** | **20** | **9 passaram; 1 falhou; 1 parcial; 11 bloqueados; 27 pendentes** |
 
 ## Escopo e organização
 
-- **API:** execução pela LLM, com revisão de Cauan Ricardo; chamadas HTTP contra API e banco reais em ambiente isolado. Guias: [HU-014](HU-014/api/README.md) e [HU-015](HU-015/api/README.md).
+- **API:** execução pela LLM, com revisão de Cauan Ricardo; chamadas HTTP contra API e banco reais em ambiente isolado. Guias: [HU-013](HU-013/api/README.md), [HU-014](HU-014/api/README.md) e [HU-015](HU-015/api/README.md).
 - **UI:** execução manual por Cauan Ricardo no celular ou web; a LLM prepara massa e confere persistência/API quando solicitado.
-- Estrutura: `epico-04/HU-014/` e `epico-04/HU-015/`, cada uma com `api/` e `ui/`. Defeitos reproduzidos serão registrados em `api/issues/` ou `ui/issues/` durante a execução, seguindo os outros épicos.
+- Estrutura: `epico-04/HU-013/api/`, `epico-04/HU-014/` e `epico-04/HU-015/`; as duas últimas têm `api/` e `ui/`. Defeitos reproduzidos são registrados em `api/issues/` ou `ui/issues/` para revisão.
 - Tipos: funcional positivo/negativo, integração com persistência, autorização e integridade. Medição básica do tempo de resposta nos fluxos principais (RNF-001), sem substituir teste de carga.
-- IDs: `CT-HU014-API-001` a `010`, `CT-HU014-UI-001` a `011`, `CT-HU015-API-001` a `007` e `CT-HU015-UI-001` a `009`. Cada caso contém dados, passos, esperado e espaço para resultado obtido.
+- IDs: `CT-HU013-API-001` a `012`, `CT-HU014-API-001` a `010`, `CT-HU014-UI-001` a `011`, `CT-HU015-API-001` a `007` e `CT-HU015-UI-001` a `009`. Cada caso contém dados, passos, esperado e espaço para resultado obtido.
 - As branches de planejamento contêm somente documentação. Depois da revisão e integração em `develop`, criar branch própria de execução da HU correspondente; não registrar aprovação de casos por leitura do código.
 
 ## Técnicas e cobertura essencial
+
+**HU-013 — somente API**
+
+| Técnica | Cobertura | Casos |
+| --- | --- | --- |
+| Integração e contrato | Publicação das operações antes das regras de negócio | 001 |
+| Partição de equivalência | Dias, referências, credenciais e dono | 002, 005, 006, 011 |
+| Tabela de decisão | Ida/volta; dia útil/rota disponível | 002, 003, 004, 005 |
+| Valor-limite | D−1/D/D+29/D+30; 21/22 ativos; configuração 15 dias/5 ativos | 008, 009 |
+| Transição de estado e persistência | Duplicidade, concorrência, edição, cancelamento e rollback | 007, 010, 012 |
 
 **HU-014**
 
@@ -45,6 +56,12 @@ A tabela de decisão essencial da HU-015 é: reserva com complementar mostra tra
 
 ## Fontes e versões analisadas
 
+**HU-013 — execução solicitada sobre a feature**
+
+- Resultados partem da develop `4e44913d8df632666b3433d32358bb49fc91c6a8`, já com a HU-014 integrada. O código a testar é `feature/front-hu013` `ee305857954fcb23f3919f3ebfe7e163fcbc167a` ([PR #377](https://github.com/GOUOCE/GOUCE-app/pull/377)), sem incorporar a feature ao PR de testes.
+- [Requisitos, seção 7.5.1](../../../docs/requisitos.md); [BDD da HU-013 em d7c952ad](https://github.com/GOUOCE/GOUCE-app/blob/d7c952adfd56eb858aa86f48a68afdab206fc913/bdd/features/epico-04/HU-013.feature), ainda fora dessa develop; [resposta do PO na #389](https://github.com/GOUOCE/GOUCE-app/issues/389#issuecomment-6756236002).
+- As decisões da #389 prevalecem nas divergências: não cobrar feriado/recesso, bloquear sábado/domingo, janela de D a D+29 e mensagens definidas pelo PO. Fontes antigas da HU-014/015 abaixo permanecem como histórico do planejamento/execução anterior, sem reexecutá-las nesta entrega.
+
 **HU-014 — referências preservadas do planejamento inicial**
 
 1. [Requisitos, seção 7.5.2](../../../docs/requisitos.md): AC-01 a AC-08, FA-001 a FA-004, RF-016, RN-005, RNF-001 e RNF-012. AC refere-se somente aos oito critérios de aceite; os itens seguintes do documento são fluxos e referências.
@@ -63,7 +80,12 @@ Leitura realizada em **09/11/2026**. Não há arquivo BDD da HU-014 na base anal
 
 ## Riscos mapeados no código
 
-São hipóteses para orientar a execução, **não defeitos reproduzidos**.
+Os riscos de leitura orientam a execução. Achados confirmados por HTTP são identificados como reproduzidos e vinculados aos seus relatos.
+
+**HU-013**
+
+- Confirmado por HTTP no commit `ee305857`: sete caminhos de agendamento retornam 404 genérico, apesar de health/login 200, e nenhuma operação do módulo aparece no OpenAPI. [BUG-HU013-API-001](HU-013/api/issues/BUG-HU013-API-001-rotas-agendamento-nao-publicadas.md). CT-001 falhou; CT-002 a CT-012 bloqueados. [Resumo JSON](HU-013/api/EVIDENCIAS-HU-013.json).
+- O front captura erros de criação/edição e pode devolver sucesso de fallback. Somente resposta HTTP real e banco validam a API; nenhuma conclusão de UI é feita por essa leitura.
 
 **HU-014**
 
@@ -105,6 +127,6 @@ Os PRs #378 e #379 alteram `agenda.tsx` e `agendamentoService.ts`. Após integra
 
 ## Registro dos resultados
 
-Preencher ambiente/commit, data, resultado obtido, status, resumo, totais e defeitos apenas na execução. Em caso parcialmente verificável, separar o que passou, falhou e ficou bloqueado; não aprovar o caso inteiro se houver impedimento. Preservar o esperado mesmo quando a implementação divergir. Contabilização em 09/11/2026: **9 passaram, 1 parcial e 27 pendentes**. Os 10 casos de API da HU-014 foram abordados; o CT-010 ficou parcial porque a integração com alocação real ainda não existe. Os 11 casos de UI da HU-014 e os 16 casos da HU-015 permanecem pendentes. [Resumo JSON da execução de API da HU-014](HU-014/api/EVIDENCIAS-HU-014.json).
+Preencher ambiente/commit, data, resultado obtido, status, resumo, totais e defeitos apenas na execução. Em caso parcialmente verificável, separar o que passou, falhou e ficou bloqueado; não aprovar o caso inteiro se houver impedimento. Preservar o esperado mesmo quando a implementação divergir. Contabilização em 09/11/2026: **9 passaram, 1 falhou, 1 parcial, 11 bloqueados e 27 pendentes**. Na HU-013, CT-001 falhou por falta de publicação das rotas na feature; os outros 11 casos estão bloqueados por essa causa e não tiveram as regras de negócio exercitadas. Os 10 casos de API da HU-014 foram abordados; o CT-010 ficou parcial porque a integração com alocação real ainda não existe. Os 11 casos de UI da HU-014 e os 16 casos da HU-015 permanecem pendentes. [Resumo JSON da execução de API da HU-014](HU-014/api/EVIDENCIAS-HU-014.json).
 
 Registrar HTTP e corpo na API, evidências visuais na UI e consultas de persistência quando pedidas. Omitir credenciais, tokens e dados pessoais dos registros. Preparar relatos `.md` após reprodução; publicação no GitHub fica para a etapa de execução e revisão.
