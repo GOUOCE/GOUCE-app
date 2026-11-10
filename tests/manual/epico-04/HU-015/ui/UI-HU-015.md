@@ -12,7 +12,7 @@
 | Base do planejamento | `feature/front-hu015` `4ac87b4623b493af2d56012d60b8c3b875c3af7e` ([PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379)) |
 | Branch de planejamento | `test/planejamento-api-ui-hu-015-integrado`, com entrega para `develop`; código de referência na feature acima |
 | Revisão do planejamento | 10/11/2026 — contrato integrado, BDD e decisões do PO |
-| Ambiente | Navegador (versão web) em `http://localhost:3114`, front do PR #379 `4ac87b46`; API da `develop` `735bfdee` em `http://localhost:8014`, banco limpo, fuso America/Fortaleza |
+| Ambiente | Navegador (versão web) em `http://localhost:3114`, front do PR #379 `4ac87b46`; API da `develop` em `http://localhost:8014` (`735bfdee`; atualizada para `36f3cb52`, com o PR #433, antes do CT-007), banco limpo, fuso America/Fortaleza |
 | Total de casos | 10 |
 | Última execução | 10/11/2026 (parcial: análise do código; execução na tela em andamento) |
 | Testador | Cauan Ricardo — execução manual; LLM — apoio de massa e conferência de API/banco |
@@ -21,7 +21,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Em execução (6 reprovados: 5 por leitura do código e 1 na tela; 1 passou) | 10 | 1 | 6 | 0 | 0 | 3 |
+| ❌ Reprovada (7 ❌: 5 por leitura do código e 2 na tela; 1 ✅; 1 ⚠️; 1 não executado) | 10 | 1 | 7 | 1 | 0 | 1 |
 
 ## Pré-condições
 
@@ -52,10 +52,10 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU015-UI-005 | Consulta offline após sincronizar e reabrir | Duas variações no mesmo usuário: detalhe de AI aberto online; depois uma nova reserva AO preparada pela LLM, cuja informação completa foi sincronizada somente na Agenda por `/meus`, sem abrir seu detalhe antes do offline. | Informações previamente sincronizadas continuam acessíveis após perda de rede e reinício. | ⏳ PENDENTE | Variação 2 reprovada por leitura do código (#430); variação 1 pendente de execução. |
+| CT-HU015-UI-005 | Consulta offline após sincronizar e reabrir | Duas variações no mesmo usuário: detalhe de AI aberto online; depois uma nova reserva AO preparada pela LLM, cuja informação completa foi sincronizada somente na Agenda por `/meus`, sem abrir seu detalhe antes do offline. | Informações previamente sincronizadas continuam acessíveis após perda de rede e reinício. | ❌ FALHOU | Variação 2 reprovada por leitura do código (#430); variação 1 não executada por decisão do testador. |
 | CT-HU015-UI-006 | Offline sem dados próprios válidos | Reserva nunca sincronizada neste dispositivo; depois chave de teste com JSON inválido/estrutura incompleta. Preparação isolada com apoio da LLM, quando possível. | Indisponibilidade clara sem cache válido; recuperação online sem dados inventados. | ✅ PASSOU | Offline sem dados próprios, a tela informou a indisponibilidade e permitiu recuperar; cache inválido não travou. |
-| CT-HU015-UI-007 | Reconectar e atualizar o cache com a versão atual | AI previamente sincronizada; C1 saída alterada de 05:45 para 05:50; depois principal/ponto/IES alterados separadamente por API administrativa. | Reconexão exibe e preserva a última informação real, limpando o estado de erro/offline. | ⏳ PENDENTE | BDD: atualização ao restabelecer conexão; risco de revalidação por atualizado_em. |
-| CT-HU015-UI-008 | Separação por data e programação diária | AIV e outra reserva de A com linhas/horários distintos; quando alocação existir, V1 em D1 e V2 em D2 e alteração de D1. | Datas e trechos isolados; veículo diário coberto quando a alocação existir. | ⏳ PENDENTE | BDD: mesmos dados offline, veículo por data e alteração de programação. |
+| CT-HU015-UI-007 | Reconectar e atualizar o cache com a versão atual | AI previamente sincronizada; C1 saída alterada de 05:45 para 05:50; depois principal/ponto/IES alterados separadamente por API administrativa. | Reconexão exibe e preserva a última informação real, limpando o estado de erro/offline. | ⚠️ PARCIAL | Horário da C1 atualizado após reconectar (passou); variações de ponto, IES e principal não executadas na tela. |
+| CT-HU015-UI-008 | Separação por data e programação diária | AIV e outra reserva de A com linhas/horários distintos; quando alocação existir, V1 em D1 e V2 em D2 e alteração de D1. | Datas e trechos isolados; veículo diário coberto quando a alocação existir. | ⏳ PENDENTE | Não executado por decisão do testador (priorizar a funcionalidade); o cache por data usa o mesmo mecanismo do CT-006 e do CT-007. |
 
 ### Seção C — Conta e recusas do servidor
 
@@ -257,8 +257,9 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Horário da C1: com o detalhe da AI (11/11) guardado em 05:45, o navegador foi colocado offline e a C1 foi alterada para 05:50 pelo cadastro administrativo (a API renovou o `atualizado_em`). Ao reconectar, o detalhe mostrou 05:50 e a faixa offline saiu; offline de novo, continuou em 05:50. Passou, segundo o testador.
+- Ponto, IES e principal: não executados na tela, por decisão do testador. Na API, a correção do PR #433 (issue #404) passou a renovar `atualizado_em` nesses casos: verificado renomeando a IES (a versão mudou) e revertendo depois. Como a tela regrava o cache quando a versão muda, esperava-se que passassem, mas isso não foi confirmado na tela.
+- Status: ⚠️ Parcial.
 
 ---
 
@@ -283,7 +284,7 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 **Resultado obtido**
 
-- Não executado.
+- Não executado por decisão do testador, para priorizar a verificação de funcionalidade em vez de repetir cenários de rede ligada e desligada. A parte da alocação segue dependendo do épico 5.
 - Status: ⏳ Pendente.
 
 ---
@@ -381,5 +382,5 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 - [Suíte de API](../api/API-HU-015.md). Preparação e conferência pela LLM não substituem a observação manual da UI por Cauan.
 - Os cenários do BDD para Início são explicitamente cobertos, mesmo que o caminho básico do AC-01 possa ser atendido pela Agenda.
 - Alocação ausente implica ocultar campos atualmente, conforme o PO; exibição de veículo por data é dependência futura, não motivo para bloquear os demais cenários.
-- **Execução de 10/11/2026 (parcial):** os CT-002, 003, 004, 009 e 010 foram reprovados por leitura do código do commit `4ac87b46`, a pedido do testador, para não gastar execução manual em falhas já evidentes; a evidência de cada um está no detalhamento, e a execução na tela será refeita no reteste. O CT-001 foi executado na tela e reprovado, e o CT-006 passou; os CT-007 e 008 e a variação 1 do CT-005 seguem pendentes de execução manual. A decisão sobre qual front vale (PR #378 ou #379) cabe ao time.
+- **Execução de 10/11/2026 (parcial):** os CT-002, 003, 004, 009 e 010 foram reprovados por leitura do código do commit `4ac87b46`, a pedido do testador, para não gastar execução manual em falhas já evidentes; a evidência de cada um está no detalhamento, e a execução na tela será refeita no reteste. O CT-001 foi reprovado e o CT-006 passou na tela; o CT-007 foi executado só na variação do horário da C1 (passou). Por decisão do testador, de priorizar a funcionalidade em vez de repetir cenários de rede ligada e desligada, o CT-008 e as demais variações offline (CT-005 variação 1 e CT-007 ponto, IES e principal) não foram executados. A decisão sobre qual front vale (PR #378 ou #379) cabe ao time.
 - Registrar dispositivos, mensagens e resultado de cada variação somente durante a execução. Evidências futuras em JSON simples, sem pastas de executor/evidências. Nenhuma execução ou issue faz parte desta revisão do planejamento.
