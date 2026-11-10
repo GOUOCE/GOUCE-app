@@ -104,6 +104,7 @@ Complementa a suíte [UI-HU-014](UI-HU-014.md), executada antes no [PR #378](htt
 
 ## Observações gerais
 
+- As issues #416, #419 e #421 foram unificadas às #409, #413 e #412 (mesmo defeito já registrado na execução do PR #378); a #419 e as demais continuam citadas nesta tabela pelo histórico.
 - O front do PR #378 (HU-014) e o deste PR (#379) alteram a mesma `agenda.tsx` e o `home.tsx` de formas diferentes: o atalho do Início está ligado só no #378, e o calendário real só no #379. A decisão sobre qual versão vale cabe ao time.
 - Ao recarregar a página em `/home` (web), apareceu a tela “Acesso Negado”; a causa provável é a rota `home` existir em três grupos (aluno, administrador e representante), e a URL não indicar o grupo. Ocorre também na `develop`, fora do escopo desta HU, e não foi investigado.
 - Massa feita por API e fixture no banco isolado: alunas A e B aprovadas, rotas e instituições, feriado, recesso e histórico de ontem; reagendamento do CT-011 e cancelamento em outra sessão do CT-009 feitos pela API.
