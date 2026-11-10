@@ -12,16 +12,18 @@
 | Base do planejamento | `feature/front-hu015` `4ac87b4623b493af2d56012d60b8c3b875c3af7e` ([PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379)) |
 | Branch de planejamento | `test/planejamento-api-ui-hu-015-integrado`, com entrega para `develop`; código de referência na feature acima |
 | Revisão do planejamento | 10/11/2026 — contrato integrado, BDD e decisões do PO |
-| Ambiente | A preencher na execução — URL, commit, revisão do banco e fuso |
+| Ambiente | HTTP real `http://127.0.0.1:8015`; Docker `atu-qa-hu015`; PostgreSQL 15; Alembic `81_add_updated_at_rotas`; `America/Fortaleza` |
 | Total de casos | 8 |
-| Última execução | Não realizada |
+| Última execução | 10/11/2026, 00:51:47–00:51:53 (−03:00); LLM |
+| Branch de execução | `feature/testes-api-hu-015`, criada da develop `e177426e49aa798103fe969fac85db4aa3749801` |
+| Código executado | `feature/front-hu015` `4ac87b4623b493af2d56012d60b8c3b875c3af7e`; checkout separado e sem mudanças |
 | Testador | LLM — execução de API; Cauan Ricardo — revisão |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 8 | 0 | 0 | 0 | 0 | 8 |
+| ❌ Executada com falhas e dependência | 8 | 5 | 2 | 0 | 1 | 0 |
 
 ## Pré-condições
 
@@ -44,30 +46,30 @@
 
 ## Resumo da execução
 
-Executar na ordem e registrar cada variação. Os casos dependentes da alocação futura trazem a dependência no próprio detalhe. Todos permanecem pendentes nesta entrega.
+Execução real em 10/11/2026: **205 chamadas HTTP**, incluindo preparação e seis logins reais; **447 verificações**, 440 satisfeitas e sete divergências agrupadas em dois defeitos. API-001 a API-007 executados; API-008 bloqueado pela alocação futura. [Evidência em JSON](EVIDENCIAS-HU-015.json). Os 10 casos de UI permanecem pendentes.
 
 ### Seção A — Contrato e consulta
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU015-API-001 | Consultar por data, id e lista | A autenticado; AIV com id/data conhecidos; GET `/transporte/agendamentos/detalhes?data=<data de AIV>`, GET `/transporte/agendamentos/{id}` e GET `/transporte/agendamentos/meus`. | 200; data/id/lista concordam com a mesma reserva e o contrato atual. | ⏳ PENDENTE | BDD: consulta por data, lista e dados da transferência. |
-| CT-HU015-API-002 | Rotas e complementares independentes por trecho | AI (só ida C1), AV (só volta C2), AIV (C1 na ida/C2 na volta), AM1 (C1 na ida/volta direta) e AM2 (ida direta/C2 na volta). | 200; C1/C2 e principais corretas em cada trecho, incluindo trajetos mistos. | ⏳ PENDENTE | BDD: complementar por trecho e informação necessária à transferência. |
-| CT-HU015-API-003 | Trajeto direto e campos sem alocação | AD com ida e volta diretas; AI/AIV sem alocação diária de veículo/motorista. | 200; direto sem complementar; principais preservadas e ônibus/motorista nulos. | ⏳ PENDENTE | BDD: trajeto direto e dados nulos sem alocação. |
+| CT-HU015-API-001 | Consultar por data, id e lista | A autenticado; AIV com id/data conhecidos; GET `/transporte/agendamentos/detalhes?data=<data de AIV>`, GET `/transporte/agendamentos/{id}` e GET `/transporte/agendamentos/meus`. | 200; data/id/lista concordam com a mesma reserva e o contrato atual. | ✅ PASSOU | BDD: consulta por data, lista e dados da transferência. |
+| CT-HU015-API-002 | Rotas e complementares independentes por trecho | AI (só ida C1), AV (só volta C2), AIV (C1 na ida/C2 na volta), AM1 (C1 na ida/volta direta) e AM2 (ida direta/C2 na volta). | 200; C1/C2 e principais corretas em cada trecho, incluindo trajetos mistos. | ✅ PASSOU | BDD: complementar por trecho e informação necessária à transferência. |
+| CT-HU015-API-003 | Trajeto direto e campos sem alocação | AD com ida e volta diretas; AI/AIV sem alocação diária de veículo/motorista. | 200; direto sem complementar; principais preservadas e ônibus/motorista nulos. | ✅ PASSOU | BDD: trajeto direto e dados nulos sem alocação. |
 
 ### Seção B — Recusas e controle de acesso
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU015-API-004 | Consulta ausente, cancelada ou com parâmetro inválido | AC cancelada; data sem reserva ativa; id numérico inexistente; id `abc`; query `data` ausente, `10-11-2026` e `2026-02-30`. | 404 para recurso indisponível; 422 para parâmetro inválido, com mensagens conferidas. | ⏳ PENDENTE | BDD: recusas por data, identificador inválido e agendamento indisponível. |
-| CT-HU015-API-005 | Isolamento entre alunos na mesma data | AIV de A e BI de B na mesma data, com linhas/pontos distintos; outra data reservada somente por B. | Somente dados do dono; id/data exclusivos de outro aluno não vazam informações. | ⏳ PENDENTE | BDD: lista restrita e detalhe de outro aluno. |
-| CT-HU015-API-006 | Autenticação e perfis sem acesso regular | Sem token; token inválido; administrador; aluno pendente, reprovado e com vínculo vencido; aluno aprovado como controle. | 401 sem credencial válida; 403 para perfil/estado sem acesso; dados preservados. | ⏳ PENDENTE | BDD: perfis negados e ausência de autenticação. |
+| CT-HU015-API-004 | Consulta ausente, cancelada ou com parâmetro inválido | AC cancelada; data sem reserva ativa; id numérico inexistente; id `abc`; query `data` ausente, `10-11-2026` e `2026-02-30`. | 404 para recurso indisponível; 422 para parâmetro inválido, com mensagens conferidas. | ❌ FALHOU | BDD: recusas por data, identificador inválido e agendamento indisponível. |
+| CT-HU015-API-005 | Isolamento entre alunos na mesma data | AIV de A e BI de B na mesma data, com linhas/pontos distintos; outra data reservada somente por B. | Somente dados do dono; id/data exclusivos de outro aluno não vazam informações. | ✅ PASSOU | BDD: lista restrita e detalhe de outro aluno. |
+| CT-HU015-API-006 | Autenticação e perfis sem acesso regular | Sem token; token inválido; administrador; aluno pendente, reprovado e com vínculo vencido; aluno aprovado como controle. | 401 sem credencial válida; 403 para perfil/estado sem acesso; dados preservados. | ✅ PASSOU | BDD: perfis negados e ausência de autenticação. |
 
 ### Seção C — Atualização e programação
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU015-API-007 | Versão da informação e atualização das referências | AI e AIV já consultadas; `atualizado_em` anotado; mudanças reais de horário/ponto da complementar, nome/faculdades da principal e nome de ponto/IES. | Dados alterados reaparecem nos três GETs e a versão sustenta a atualização do cache. | ⏳ PENDENTE | Integração do atualizado_em e BDD de reconexão/atualização. |
-| CT-HU015-API-008 | Programação diária quando houver alocação real | Mesma linha em D1/D2; ônibus V1/V2 e motorista definidos pelo fluxo real das HU-016/017/018; depois realocação de D1. | Veículo corresponde à data e muda com a programação, após integração da alocação. | ⏳ PENDENTE | BDD: veículo por dia e alteração; depende de HU-016/017/018. |
+| CT-HU015-API-007 | Versão da informação e atualização das referências | AI e AIV já consultadas; `atualizado_em` anotado; mudanças reais de horário/ponto da complementar, nome/faculdades da principal e nome de ponto/IES. | Dados alterados reaparecem nos três GETs e a versão sustenta a atualização do cache. | ❌ FALHOU | Integração do atualizado_em e BDD de reconexão/atualização. |
+| CT-HU015-API-008 | Programação diária quando houver alocação real | Mesma linha em D1/D2; ônibus V1/V2 e motorista definidos pelo fluxo real das HU-016/017/018; depois realocação de D1. | Veículo corresponde à data e muda com a programação, após integração da alocação. | 🚫 BLOQUEADO | BDD: veículo por dia e alteração; depende de HU-016/017/018. |
 
 ## Detalhamento dos casos
 
@@ -94,8 +96,8 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Health/OpenAPI 200; migration 81 aplicada em banco vazio. AIV id 3, 13/11/2026: data/id/lista retornaram 200 com corpos iguais e campos conferidos contra o PostgreSQL em nova conexão. Flags e contador corretos; GETs preservaram reservas/auditoria.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -120,8 +122,8 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- AI id 1 (11/11), AV id 2 (12/11), AIV id 3 (13/11), AM1 id 4 (16/11) e AM2 id 5 (17/11), todos de 2026: data/id/lista 200 e equivalentes. C1/P1 na ida e C2/P2 na volta, horários/conexões/IES corretos. Trecho não usado sem objetos; trecho direto sem complementar e com principal.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -146,8 +148,8 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- AD id 6, 18/11/2026: data/id/lista 200; ids/nomes/objetos das complementares nulos e principais preservadas. AD, AI e AIV retornaram onibus/motorista nulos em cada principal utilizada, conforme o estado sem alocação.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -174,8 +176,8 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Oito variações: AC id 7 cancelada (19/11/2026), id inexistente e datas sem reserva retornaram 404 RESOURCE_NOT_FOUND com as mensagens previstas; abc, query ausente, formato inválido e data impossível retornaram 422. Em data=10-11-2026, a mensagem veio técnica em inglês, divergindo do BDD. A data civil impossível retornou a mensagem correta em português. Reservas/auditoria preservadas. Falha de mensagem: BUG-HU015-API-001.
+- Status: ❌ FALHOU.
 
 ---
 
@@ -200,8 +202,8 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- A (aluno 2) e B (aluno 3) consultaram reservas distintas na mesma data 13/11/2026: AIV id 3 com C1 na ida e BI id 8 com C2. Id alheio retornou 404 para ambos; listas restritas ao dono. Data 20/11/2026 só de B retornou 404 para A e 200 para B. Sem mutação.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -226,8 +228,8 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- 18 recusas nos três GETs: sem token e token inválido 401; administrador, pendente, rejeitado e vínculo vencido 403. Contas sintéticas confirmadas por login HTTP 200; A aprovado manteve consultas 200. Sem exposição dos detalhes e sem escrita em reservas/auditoria.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -254,8 +256,8 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Leituras estáveis e timestamp ISO8601 com fuso confirmados. PATCHs reais de horário/conexão da complementar e nome da principal atualizaram payload e versão em AI/AIV. Adição isolada de faculdade na principal, mudança de capitalização do mesmo ponto e renomeação da IES mudaram os dados nos três GETs sem mudar atualizado_em: seis divergências (três alterações × duas reservas). Massa restaurada por PATCH após cada variação; reservas preservadas e GETs sem escrita. BUG-HU015-API-002. Cache no dispositivo não executado.
+- Status: ❌ FALHOU.
 
 ---
 
@@ -280,8 +282,8 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Bloqueado: o build não integra alocação diária real de ônibus/motorista HU-016/017/018. Campos nulos foram confirmados em API-003; não houve simulação de programação para aprovar este caso.
+- Status: 🚫 BLOQUEADO.
 
 ---
 
@@ -304,7 +306,8 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. Riscos de leitura estão no índice do épico. | — |
+| CT-HU015-API-004 | Mensagem técnica para data em formato inválido; 422 correto, mensagem do BDD descumprida. | [BUG-HU015-API-001](issues/BUG-HU015-API-001-mensagem-data-invalida.md), relato local |
+| CT-HU015-API-007 | Payload de ponto/IES/faculdades muda com versão antiga, prejudicando a revalidação do cache. | [BUG-HU015-API-002](issues/BUG-HU015-API-002-versao-desatualizada-detalhe.md), relato local |
 
 ## Fontes e observações
 
