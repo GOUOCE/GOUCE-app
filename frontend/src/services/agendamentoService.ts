@@ -1,4 +1,5 @@
 import { api } from '@/api/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface OpcaoSelect {
   label: string;
@@ -61,6 +62,17 @@ export interface CalendarioResponse {
   limite: number;
 }
 
+async function getCachePrefix(): Promise<string> {
+  try {
+    const userJson = await AsyncStorage.getItem('@GOUOCE:user');
+    if (userJson) {
+      const u = JSON.parse(userJson);
+      return `_u_${u.id || u.email || 'guest'}`;
+    }
+  } catch {}
+  return '_u_guest';
+}
+
 export const agendamentoService = {
   async obterOpcoesAgendamento(): Promise<OpcoesAgendamentoResponse> {
     try {
@@ -102,26 +114,56 @@ export const agendamentoService = {
   },
 
   async listarCalendarioMes(mesIso: string = '2026-09'): Promise<CalendarioResponse> {
-    const response = await api.get(`/transporte/agendamentos/calendario?mes=${mesIso}`);
-    return response.data;
+    const prefix = await getCachePrefix();
+    const cacheKey = `@GOUOCE:calendario_${prefix}_${mesIso}`;
+
+    try {
+      const response = await api.get(`/transporte/agendamentos/calendario?mes=${mesIso}`);
+      const dados = response.data;
+      await AsyncStorage.setItem(cacheKey, JSON.stringify(dados));
+      return { ...dados, isOffline: false };
+    } catch {
+      try {
+        const cached = await AsyncStorage.getItem(cacheKey);
+        if (cached) {
+          return { ...JSON.parse(cached), isOffline: true };
+        }
+      } catch {}
+      throw new Error('Erro de conexão ao carregar calendário');
+    }
   },
 
   async listarAgendamentosAtivos(): Promise<AgendamentoDia[]> {
-    const response = await api.get('/transporte/agendamentos/meus');
-    const dados = response.data;
-    const lista = dados.agendamentos || dados;
-    return (lista || []).map((item: any) => ({
-      idAgendamento: item.id,
-      dataIso: item.data,
-      usaIda: item.usa_ida,
-      usaVolta: item.usa_volta,
-      pontoEmbarqueIda: item.ponto_embarque_id ? String(item.ponto_embarque_id) : undefined,
-      faculdadeDestinoIda: item.ies_destino_id ? String(item.ies_destino_id) : undefined,
-      pontoDesembarqueVolta: item.ponto_desembarque_id ? String(item.ponto_desembarque_id) : undefined,
-      faculdadeOrigemVolta: item.ies_origem_id ? String(item.ies_origem_id) : undefined,
-      pode_remover: item.pode_remover,
-      pode_editar: item.pode_editar,
-    }));
+    const prefix = await getCachePrefix();
+    const cacheKey = `@GOUOCE:meus_agendamentos_${prefix}`;
+
+    try {
+      const response = await api.get('/transporte/agendamentos/meus');
+      const dados = response.data;
+      const lista = dados.agendamentos || dados;
+      const mapeados = (lista || []).map((item: any) => ({
+        idAgendamento: item.id,
+        dataIso: item.data,
+        usaIda: item.usa_ida,
+        usaVolta: item.usa_volta,
+        pontoEmbarqueIda: item.ponto_embarque_id ? String(item.ponto_embarque_id) : undefined,
+        faculdadeDestinoIda: item.ies_destino_id ? String(item.ies_destino_id) : undefined,
+        pontoDesembarqueVolta: item.ponto_desembarque_id ? String(item.ponto_desembarque_id) : undefined,
+        faculdadeOrigemVolta: item.ies_origem_id ? String(item.ies_origem_id) : undefined,
+        pode_remover: item.pode_remover,
+        pode_editar: item.pode_editar,
+      }));
+      await AsyncStorage.setItem(cacheKey, JSON.stringify(mapeados));
+      return mapeados;
+    } catch {
+      try {
+        const cached = await AsyncStorage.getItem(cacheKey);
+        if (cached) {
+          return JSON.parse(cached);
+        }
+      } catch {}
+      throw new Error('Erro de conexão ao carregar agendamentos');
+    }
   },
 
   async criarAgendamento(payload: AgendamentoPayload): Promise<any> {
@@ -140,7 +182,42 @@ export const agendamentoService = {
   },
 
   async detalharAgendamento(idAgendamento: string | number): Promise<any> {
-    const response = await api.get(`/transporte/agendamentos/${idAgendamento}`);
-    return response.data;
+    const prefix = await getCachePrefix();
+    const cacheKey = `@GOUOCE:detalhes_viagem_${prefix}_${idAgendamento}`;
+
+    try {
+      const response = await api.get(`/transporte/agendamentos/${idAgendamento}`);
+      const dados = response.data;
+      await AsyncStorage.setItem(cacheKey, JSON.stringify(dados));
+      return dados;
+    } catch {
+      try {
+        const cached = await AsyncStorage.getItem(cacheKey);
+        if (cached) {
+          return JSON.parse(cached);
+        }
+      } catch {}
+      throw new Error('Erro de conexão ao carregar detalhes');
+    }
+  },
+
+  async obterDetalhesViagem(dataIso: string = '2026-09-01', temComplementar: boolean = true): Promise<any> {
+    const prefix = await getCachePrefix();
+    const cacheKey = `@GOUOCE:detalhes_viagem_${prefix}_${dataIso}`;
+
+    try {
+      const response = await api.get(`/transporte/agendamentos/detalhes?data=${dataIso}`);
+      const dados = response.data;
+      await AsyncStorage.setItem(cacheKey, JSON.stringify(dados));
+      return { ...dados, isOffline: false };
+    } catch {
+      try {
+        const cached = await AsyncStorage.getItem(cacheKey);
+        if (cached) {
+          return { ...JSON.parse(cached), isOffline: true };
+        }
+      } catch {}
+      throw new Error('Erro de conexão ao carregar detalhes da viagem');
+    }
   },
 };

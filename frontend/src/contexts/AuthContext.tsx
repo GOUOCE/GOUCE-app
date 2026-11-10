@@ -156,9 +156,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signOut() {
-    await AsyncStorage.removeItem('@GOUOCE:token');
-    await AsyncStorage.removeItem('@GOUOCE:refreshToken');
-    await AsyncStorage.removeItem('@GOUOCE:user');
+    try {
+      const keys = await AsyncStorage.getAllKeys();
+      const gouceKeys = keys.filter(k => k.startsWith('@GOUOCE:'));
+      await AsyncStorage.multiRemove(gouceKeys);
+    } catch {}
     setPendingCredentials(null);
     setUser(null);
     setToken(null);
