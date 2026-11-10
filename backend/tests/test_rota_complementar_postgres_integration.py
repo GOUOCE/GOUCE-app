@@ -316,7 +316,7 @@ class RotaComplementarPostgreSQLIntegrationTest(unittest.TestCase):
         self.assertIn("rota_complementar", inspector.get_table_names())
         self.assertEqual(
             {"id", "rota_principal_id", "nome", "horario_saida", "horario_retorno", "ponto_conexao",
-             "ativo", "data_criacao"},
+             "ativo", "data_criacao", "updated_at"},
             {c["name"] for c in inspector.get_columns("rota_complementar")},
         )
         indices = {i["name"]: i for i in inspector.get_indexes("rota_complementar")}
@@ -331,8 +331,10 @@ class RotaComplementarPostgreSQLIntegrationTest(unittest.TestCase):
         aplicadas = {r.revision for r in script.walk_revisions(base="base", head=revision)}
         self.assertIn("77_create_rota_complementar", aplicadas)
         self.assertIn("76_ponto_unico_por_bairro", aplicadas)
-        # A 78 une as duas heads da develop (#318); 79 is the current head.
-        self.assertEqual(script.get_heads(), ["79_create_agendamentos"])
+        self.assertIn("78_horario_retorno_rota_compl", aplicadas)
+        # A 78 une as duas heads da develop (#318) numa cadeia linear única;
+        # não fixar o nome do head aqui, pois toda nova migration o desloca.
+        self.assertEqual(len(script.get_heads()), 1)
         coluna = next(
             c for c in inspector.get_columns("rota_complementar") if c["name"] == "horario_retorno"
         )
@@ -544,11 +546,12 @@ class RotaComplementarPostgreSQLIntegrationTest(unittest.TestCase):
 class Migration77PostgreSQLTest(unittest.TestCase):
     """Roda downgrade e upgrade da 77 e da 78 no banco isolado e restaura o estado original."""
 
-    HEAD = "79_create_agendamentos"
-
     def setUp(self):
         self.config = Config()
         self.config.set_main_option("script_location", os.path.abspath(MIGRATIONS_DIR))
+        # Dinâmico de propósito: fixar o nome do head aqui é o que quebrou
+        # este teste quando as migrations 80/81 foram adicionadas (#404).
+        self.HEAD = ScriptDirectory(os.path.abspath(MIGRATIONS_DIR)).get_heads()[0]
 
     def versoes(self) -> set[str]:
         with engine.connect() as conn:

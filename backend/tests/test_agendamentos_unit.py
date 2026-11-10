@@ -1,5 +1,5 @@
 import unittest
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta, timezone
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
@@ -462,6 +462,7 @@ class GerenciarAgendamentosUseCaseTest(unittest.TestCase):
             rota_complementar_ida_id=None, ies_origem_id=None,
             ponto_desembarque_id=None, rota_complementar_volta_id=None,
             status="ATIVO", cancelled_at=None,
+            updated_at=datetime(2026, 11, 6, 8, 0, tzinfo=timezone.utc),
         )
         values.update(overrides)
         return SimpleNamespace(**values)
@@ -566,6 +567,305 @@ class GerenciarAgendamentosUseCaseTest(unittest.TestCase):
         with self.assertRaises(AgendamentoError) as context:
             self.service.detail(7, 1)
         self.assertEqual(context.exception.status_code, 404)
+
+    # ---- HU-015: resumo de rota complementar/principal e consulta por data ----
+
+    def test_detalhe_completo_traz_resumo_das_rotas_complementar_e_principal(self):
+        item = self._booking(
+            ponto_embarque_id=1, ies_destino_id=2, rota_complementar_ida_id=10,
+            ponto_desembarque_id=3, ies_origem_id=4, rota_complementar_volta_id=20,
+            updated_at=datetime(2026, 11, 1, tzinfo=timezone.utc),
+        )
+        self.session.query.return_value = FakeQuery(first_value=item)
+
+        complementar_ida = SimpleNamespace(
+            id=10, nome="Van Bairro Novo", horario_saida=time(6, 0),
+            horario_retorno=time(17, 40), ponto_conexao="Trevo do Bairro Novo",
+            rota_principal_id=100, updated_at=datetime(2026, 11, 5, tzinfo=timezone.utc),
+        )
+        complementar_volta = SimpleNamespace(
+            id=20, nome="Van Centro", horario_saida=time(6, 30),
+            horario_retorno=time(18, 10), ponto_conexao="Praça Central",
+            rota_principal_id=200, updated_at=datetime(2026, 11, 2, tzinfo=timezone.utc),
+        )
+        principal_ida = SimpleNamespace(
+            id=100, nome="Rota Centro", horario_saida=time(6, 30),
+            horario_retorno=time(17, 30), updated_at=datetime(2026, 11, 3, tzinfo=timezone.utc),
+            # Fora de ordem de propósito: espera-se saída ordenada por nome (RF da HU-015).
+            faculdades_ida=[
+                SimpleNamespace(id_faculdade=3, nome_faculdade="UFC",
+                                 updated_at=datetime(2026, 10, 1, tzinfo=timezone.utc)),
+                SimpleNamespace(id_faculdade=1, nome_faculdade="Católica",
+                                 updated_at=datetime(2026, 10, 1, tzinfo=timezone.utc)),
+                SimpleNamespace(id_faculdade=2, nome_faculdade="UECE",
+                                 updated_at=datetime(2026, 10, 1, tzinfo=timezone.utc)),
+            ],
+        )
+        principal_volta = SimpleNamespace(
+            id=200, nome="Rota Integrada", horario_saida=time(7, 0),
+            horario_retorno=time(18, 0), updated_at=datetime(2026, 11, 7, tzinfo=timezone.utc),
+            # Rota de volta sem faculdades cadastradas: lista deve vir vazia, nunca null.
+            faculdades_volta=[],
+        )
+        ponto_embarque = SimpleNamespace(
+            nome="Ponto Embarque", updated_at=datetime(2026, 10, 1, tzinfo=timezone.utc)
+        )
+        ies_destino = SimpleNamespace(
+            nome_faculdade="IES Destino", updated_at=datetime(2026, 10, 1, tzinfo=timezone.utc)
+        )
+        ponto_desembarque = SimpleNamespace(
+            nome="Ponto Desembarque", updated_at=datetime(2026, 10, 1, tzinfo=timezone.utc)
+        )
+        ies_origem = SimpleNamespace(
+            nome_faculdade="IES Origem", updated_at=datetime(2026, 10, 1, tzinfo=timezone.utc)
+        )
+        referencias = {
+            1: ponto_embarque, 2: ies_destino, 3: ponto_desembarque, 4: ies_origem,
+            10: complementar_ida, 20: complementar_volta,
+        }
+        self.service.repository.reference = MagicMock(
+            side_effect=lambda model, value: referencias.get(value)
+        )
+        self.service.repository.route_for = MagicMock(
+            side_effect=lambda point, faculty, direction, route_id: (
+                principal_ida if direction == "ida" else principal_volta
+            )
+        )
+
+        result = self.service.detail(7, 8)
+
+        self.assertEqual(result["rota_complementar_ida"], {
+            "id": 10, "nome": "Van Bairro Novo", "horario_saida": "06:00",
+            "horario_retorno": "17:40", "ponto_conexao": "Trevo do Bairro Novo",
+        })
+        self.assertEqual(result["rota_complementar_volta"], {
+            "id": 20, "nome": "Van Centro", "horario_saida": "06:30",
+            "horario_retorno": "18:10", "ponto_conexao": "Praça Central",
+        })
+        self.assertEqual(result["rota_principal_ida"], {
+            "id": 100, "nome": "Rota Centro", "horario_saida": "06:30",
+            "horario_retorno": "17:30",
+            "faculdades": [
+                {"id": 1, "nome": "Católica"},
+                {"id": 2, "nome": "UECE"},
+                {"id": 3, "nome": "UFC"},
+            ],
+        })
+        self.assertEqual(result["rota_principal_volta"], {
+            "id": 200, "nome": "Rota Integrada", "horario_saida": "07:00",
+            "horario_retorno": "18:00", "faculdades": [],
+        })
+        # Maior updated_at entre agendamento, rotas, ponto/IES e faculdades resolvidas.
+        self.assertEqual(result["atualizado_em"], datetime(2026, 11, 7, tzinfo=timezone.utc))
+
+        chamadas = self.service.repository.route_for.call_args_list
+        self.assertEqual(chamadas[0].args[2:], ("ida", 100))
+        self.assertEqual(chamadas[1].args[2:], ("volta", 200))
+
+        # Sem duplicidade: 1 fetch por ponto/IES/complementar, não 2 (ids 1,2,3,4,10,20).
+        self.assertEqual(self.service.repository.reference.call_count, 6)
+
+    def test_detalhe_trajeto_direto_oculta_complementar_mas_mantem_principal(self):
+        item = self._booking(
+            ponto_embarque_id=1, ies_destino_id=2, rota_complementar_ida_id=None,
+            usa_volta=False, ponto_desembarque_id=None, ies_origem_id=None,
+            rota_complementar_volta_id=None,
+        )
+        self.session.query.return_value = FakeQuery(first_value=item)
+
+        principal_ida = SimpleNamespace(
+            id=5, nome="Rota Direta", horario_saida=time(6, 0),
+            horario_retorno=time(17, 0), updated_at=item.updated_at,
+            faculdades_ida=[
+                SimpleNamespace(
+                    id_faculdade=9, nome_faculdade="IES Qualquer", updated_at=item.updated_at
+                )
+            ],
+        )
+        self.service.repository.reference = MagicMock(
+            return_value=SimpleNamespace(
+                nome="Ponto Qualquer", nome_faculdade="IES Qualquer", updated_at=item.updated_at
+            )
+        )
+        self.service.repository.route_for = MagicMock(return_value=principal_ida)
+
+        result = self.service.detail(7, 8)
+
+        self.assertIsNone(result["rota_complementar_ida"])
+        self.assertIsNone(result["rota_complementar_volta"])
+        self.assertEqual(result["rota_principal_ida"]["id"], 5)
+        self.assertEqual(
+            result["rota_principal_ida"]["faculdades"],
+            [{"id": 9, "nome": "IES Qualquer"}],
+        )
+        self.assertIsNone(result["rota_principal_volta"])
+        # Sem complementar, route_for é chamado sem vínculo fixo a uma rota (FA-001).
+        self.service.repository.route_for.assert_called_once()
+        self.assertIsNone(self.service.repository.route_for.call_args.args[3])
+
+    # ---- HU-015 (issue #404): _version considera ponto/IES/faculdades ----
+
+    def test_version_usa_updated_at_do_ponto_ou_ies_quando_mais_recente_que_as_rotas(self):
+        item = self._booking(updated_at=datetime(2026, 11, 1, tzinfo=timezone.utc))
+        rota = SimpleNamespace(updated_at=datetime(2026, 11, 2, tzinfo=timezone.utc))
+        ponto_mais_recente = SimpleNamespace(
+            nome="Ponto Renomeado", updated_at=datetime(2026, 11, 9, tzinfo=timezone.utc)
+        )
+
+        resultado = self.service._version(item, rota, ponto_mais_recente)
+
+        self.assertEqual(resultado, datetime(2026, 11, 9, tzinfo=timezone.utc))
+
+    def test_version_ignora_entidades_com_updated_at_none_sem_quebrar(self):
+        item = self._booking(updated_at=datetime(2026, 11, 1, tzinfo=timezone.utc))
+        sem_timestamp = SimpleNamespace(nome="Sem timestamp", updated_at=None)
+        rota = SimpleNamespace(updated_at=datetime(2026, 11, 2, tzinfo=timezone.utc))
+
+        resultado = self.service._version(item, None, sem_timestamp, rota)
+
+        self.assertEqual(resultado, datetime(2026, 11, 2, tzinfo=timezone.utc))
+
+    def test_version_nao_mistura_datetime_naive_com_aware(self):
+        item = self._booking(updated_at=datetime(2026, 11, 1, tzinfo=timezone.utc))
+        with self.assertRaises(TypeError):
+            self.service._version(item, SimpleNamespace(updated_at=datetime(2026, 11, 2)))
+
+    def test_detalhe_usa_faculdades_ida_na_ida_e_faculdades_volta_na_volta(self):
+        """Garante que _version não troca as listas: ida usa faculdades_ida,
+        volta usa faculdades_volta, nunca a lista do outro sentido."""
+        item = self._booking(
+            ponto_embarque_id=1, ies_destino_id=2, rota_complementar_ida_id=None,
+            ponto_desembarque_id=3, ies_origem_id=4, rota_complementar_volta_id=None,
+            updated_at=datetime(2026, 11, 1, tzinfo=timezone.utc),
+        )
+        self.session.query.return_value = FakeQuery(first_value=item)
+
+        faculdade_ida_recente = SimpleNamespace(
+            id_faculdade=1, nome_faculdade="Faculdade Ida",
+            updated_at=datetime(2026, 11, 20, tzinfo=timezone.utc),
+        )
+        faculdade_volta_antiga = SimpleNamespace(
+            id_faculdade=2, nome_faculdade="Faculdade Volta",
+            updated_at=datetime(2026, 10, 1, tzinfo=timezone.utc),
+        )
+        principal_ida = SimpleNamespace(
+            id=100, nome="Rota Ida", horario_saida=time(6, 0), horario_retorno=time(17, 0),
+            updated_at=datetime(2026, 11, 1, tzinfo=timezone.utc),
+            faculdades_ida=[faculdade_ida_recente],
+            faculdades_volta=[SimpleNamespace(
+                id_faculdade=99, nome_faculdade="Nao deveria entrar na ida",
+                updated_at=datetime(2026, 11, 25, tzinfo=timezone.utc),
+            )],
+        )
+        principal_volta = SimpleNamespace(
+            id=200, nome="Rota Volta", horario_saida=time(7, 0), horario_retorno=time(18, 0),
+            updated_at=datetime(2026, 11, 1, tzinfo=timezone.utc),
+            faculdades_volta=[faculdade_volta_antiga],
+            faculdades_ida=[SimpleNamespace(
+                id_faculdade=98, nome_faculdade="Nao deveria entrar na volta",
+                updated_at=datetime(2026, 11, 25, tzinfo=timezone.utc),
+            )],
+        )
+        pontos_e_ies = SimpleNamespace(
+            nome="Ref", nome_faculdade="Ref",
+            updated_at=datetime(2026, 11, 1, tzinfo=timezone.utc),
+        )
+        self.service.repository.reference = MagicMock(return_value=pontos_e_ies)
+        self.service.repository.route_for = MagicMock(
+            side_effect=lambda point, faculty, direction, route_id: (
+                principal_ida if direction == "ida" else principal_volta
+            )
+        )
+
+        result = self.service.detail(7, 8)
+
+        # A faculdade "não deveria entrar" (de 11-25) tem o maior updated_at de
+        # todos, mas pertence ao sentido errado do resumo de cada rota: se
+        # _version a incluísse por engano, o resultado seria 2026-11-25.
+        self.assertEqual(result["atualizado_em"], datetime(2026, 11, 20, tzinfo=timezone.utc))
+
+    def test_faculdades_da_rota_principal_sao_ordenadas_de_forma_estavel_por_nome_e_id(self):
+        # Nomes iguais ignorando caixa: desempate estável pelo id (mesmo critério
+        # usado em rota_principal_repository._ref_faculdade/por_nome).
+        rota = SimpleNamespace(
+            id=1, nome="Rota Teste", horario_saida=time(6, 0), horario_retorno=time(17, 0),
+            faculdades_ida=[
+                SimpleNamespace(id_faculdade=20, nome_faculdade="ufc"),
+                SimpleNamespace(id_faculdade=5, nome_faculdade="UFC"),
+                SimpleNamespace(id_faculdade=1, nome_faculdade="Alfa"),
+            ],
+        )
+
+        resumo = self.service._principal_summary(rota, "ida")
+
+        self.assertEqual(resumo["faculdades"], [
+            {"id": 1, "nome": "Alfa"},
+            {"id": 5, "nome": "UFC"},
+            {"id": 20, "nome": "ufc"},
+        ])
+
+    def test_detail_by_date_retorna_detalhe_do_dia(self):
+        item = self._booking()
+        self.service.repository.get_active_by_date = MagicMock(return_value=item)
+        self.service._detail = MagicMock(return_value={"id": 8})
+
+        result = self.service.detail_by_date(7, "2026-11-10")
+
+        self.service.repository.get_active_by_date.assert_called_once_with(
+            7, date(2026, 11, 10)
+        )
+        self.assertEqual(result, {"id": 8})
+
+    def test_detail_by_date_sem_agendamento_ativo_retorna_404(self):
+        self.service.repository.get_active_by_date = MagicMock(return_value=None)
+        with self.assertRaises(AgendamentoError) as context:
+            self.service.detail_by_date(7, "2026-11-10")
+        self.assertEqual(context.exception.code, "RESOURCE_NOT_FOUND")
+        self.assertEqual(context.exception.status_code, 404)
+
+    def test_detail_by_date_rejeita_data_com_calendario_invalido(self):
+        with self.assertRaises(AgendamentoError) as context:
+            self.service.detail_by_date(7, "2026-02-30")
+        self.assertEqual(context.exception.code, "VALIDATION_ERROR")
+        self.assertEqual(context.exception.status_code, 422)
+
+    def test_detail_by_date_rejeita_formatos_invalidos(self):
+        casos = [
+            "10-11-2026",
+            "20261110",
+            "2026-W46-2",
+            "2026-1-5",
+            "2026-11-10T00:00",
+            " 2026-11-10",
+            "2026-11-10 ",
+            "2026-11-10\n",
+            "２０２６-11-10",
+            "",
+        ]
+        for data in casos:
+            with self.subTest(data=data):
+                with self.assertRaises(AgendamentoError) as context:
+                    self.service.detail_by_date(7, data)
+                self.assertEqual(context.exception.code, "VALIDATION_ERROR")
+                self.assertEqual(context.exception.status_code, 422)
+                self.assertEqual(
+                    context.exception.message,
+                    "Data deve estar no formato YYYY-MM-DD.",
+                )
+
+    def test_get_active_by_date_retorna_no_maximo_um_agendamento(self):
+        # uq_agendamento_aluno_data_ativo garante um único ATIVO por (aluno, data).
+        query = MagicMock()
+        query.filter_by.return_value = query
+        query.first.return_value = SimpleNamespace(id=9)
+        self.session.query.return_value = query
+
+        resultado = self.service.repository.get_active_by_date(7, self.today)
+
+        self.assertEqual(resultado.id, 9)
+        query.filter_by.assert_called_once_with(
+            aluno_id=7, data=self.today, status="ATIVO"
+        )
 
     def test_calendario_inclui_dias_passados_com_agendamento_somente_leitura(self):
         self.service._bounds = MagicMock(

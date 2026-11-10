@@ -115,6 +115,19 @@ def meus(
     return service.my_bookings(_student_id(user))
 
 
+# Declarada antes de "/{agendamento_id}" para "detalhes" não ser lido como um id.
+@router.get("/detalhes", response_model=AgendamentoDetalheDTO)
+def detalhes_por_data(
+    data: Annotated[str, Query()],
+    service: GerenciarAgendamentosUseCase = Depends(_use_case),
+    user: dict = Depends(verify_student_standard_access),
+):
+    try:
+        return service.detail_by_date(_student_id(user), data)
+    except AgendamentoError as error:
+        return _error(error)
+
+
 @router.get("/{agendamento_id}", response_model=AgendamentoDetalheDTO)
 def detalhar(
     agendamento_id: int,
