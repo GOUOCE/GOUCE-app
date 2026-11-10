@@ -1,73 +1,148 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal } from 'react-native';
-import { Text, Surface, Snackbar, Button } from 'react-native-paper';
+import { Text, Surface, Snackbar, ActivityIndicator } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { ChevronLeft, ChevronRight, ChevronDown, Pencil, Trash2, X } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Trash2, X, WifiOff } from 'lucide-react-native';
 
-import { agendamentoService, AgendamentoDia } from '@/services/agendamentoService';
+import {
+  agendamentoService,
+  AgendamentoDetalhe,
+  CalendarioDia,
+  formatarData,
+} from '@/services/agendamentoService';
 import { AppPopup } from '@/components/ui/AppPopup';
 
-interface DiaCalendario {
-  diaNum: number;
-  dataIso: string; // YYYY-MM-DD
-  status: 'agendado' | 'indisponivel' | 'feriado' | 'normal';
-  idAgendamento?: string | number;
-  ehPassado?: boolean;
+const MESES = [
+  'Janeiro',
+  'Fevereiro',
+  'Março',
+  'Abril',
+  'Maio',
+  'Junho',
+  'Julho',
+  'Agosto',
+  'Setembro',
+  'Outubro',
+  'Novembro',
+  'Dezembro',
+];
+
+function mesAtual(): string {
+  const agora = new Date();
+  return `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}`;
 }
 
-const AGENDAMENTOS_DEMO: AgendamentoDia[] = [
-  { dataIso: '2026-08-31', usaIda: true, horarioIda: '05:30:00', usaVolta: true, horarioVolta: '17:00:00', idAgendamento: '1' },
-  { dataIso: '2026-09-01', usaIda: true, horarioIda: '05:30:00', usaVolta: true, horarioVolta: '17:00:00', idAgendamento: '2' },
-  { dataIso: '2026-09-02', usaIda: true, horarioIda: '05:30:00', usaVolta: true, horarioVolta: '17:00:00', idAgendamento: '3' },
-  { dataIso: '2026-09-03', usaIda: true, horarioIda: '05:30:00', usaVolta: true, horarioVolta: '17:00:00', idAgendamento: '4' },
-  { dataIso: '2026-09-04', usaIda: true, horarioIda: '05:30:00', usaVolta: true, horarioVolta: '17:00:00', idAgendamento: '5' },
-];
+function mesSeguinte(mes: string): string {
+  const [ano, m] = mes.split('-').map(Number);
+  const proximo = new Date(ano, m, 1);
+  return `${proximo.getFullYear()}-${String(proximo.getMonth() + 1).padStart(2, '0')}`;
+}
 
-const DIAS_DO_MES: DiaCalendario[] = [
-  // Semana 1 (31/08 a 05/09)
-  { diaNum: 31, dataIso: '2026-08-31', status: 'agendado', idAgendamento: '1' },
-  { diaNum: 1, dataIso: '2026-09-01', status: 'agendado', idAgendamento: '2' },
-  { diaNum: 2, dataIso: '2026-09-02', status: 'agendado', idAgendamento: '3' },
-  { diaNum: 3, dataIso: '2026-09-03', status: 'agendado', idAgendamento: '4' },
-  { diaNum: 4, dataIso: '2026-09-04', status: 'agendado', idAgendamento: '5' },
-  { diaNum: 5, dataIso: '2026-09-05', status: 'indisponivel' },
-  // Semana 2
-  { diaNum: 6, dataIso: '2026-09-06', status: 'indisponivel' },
-  { diaNum: 7, dataIso: '2026-09-07', status: 'feriado' },
-  { diaNum: 8, dataIso: '2026-09-08', status: 'normal' },
-  { diaNum: 9, dataIso: '2026-09-09', status: 'normal' },
-  { diaNum: 10, dataIso: '2026-09-10', status: 'normal' },
-  { diaNum: 11, dataIso: '2026-09-11', status: 'normal' },
-  { diaNum: 12, dataIso: '2026-09-12', status: 'indisponivel' },
-  // Semana 3
-  { diaNum: 13, dataIso: '2026-09-13', status: 'indisponivel' },
-  { diaNum: 14, dataIso: '2026-09-14', status: 'normal' },
-  { diaNum: 15, dataIso: '2026-09-15', status: 'normal' },
-  { diaNum: 16, dataIso: '2026-09-16', status: 'normal' },
-  { diaNum: 17, dataIso: '2026-09-17', status: 'normal' },
-  { diaNum: 18, dataIso: '2026-09-18', status: 'normal' },
-  { diaNum: 19, dataIso: '2026-09-19', status: 'indisponivel' },
-  // Semana 4
-  { diaNum: 20, dataIso: '2026-09-20', status: 'indisponivel' },
-  { diaNum: 21, dataIso: '2026-09-21', status: 'normal' },
-  { diaNum: 22, dataIso: '2026-09-22', status: 'normal' },
-  { diaNum: 23, dataIso: '2026-09-23', status: 'normal' },
-  { diaNum: 24, dataIso: '2026-09-24', status: 'normal' },
-  { diaNum: 25, dataIso: '2026-09-25', status: 'normal' },
-  { diaNum: 26, dataIso: '2026-09-26', status: 'indisponivel' },
-  // Semana 5
-  { diaNum: 27, dataIso: '2026-09-27', status: 'indisponivel' },
-  { diaNum: 28, dataIso: '2026-09-28', status: 'normal' },
-  { diaNum: 29, dataIso: '2026-09-29', status: 'normal' },
-  { diaNum: 30, dataIso: '2026-09-30', status: 'normal' },
-  { diaNum: 31, dataIso: '2026-09-31', status: 'normal' },
-];
+function mesAnterior(mes: string): string {
+  const [ano, m] = mes.split('-').map(Number);
+  const anterior = new Date(ano, m - 2, 1);
+  return `${anterior.getFullYear()}-${String(anterior.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function rotuloMes(mes: string): string {
+  const [ano, m] = mes.split('-').map(Number);
+  return `${MESES[m - 1]} de ${ano}`;
+}
+
+function CardRotaComplementar({ agendamento }: { agendamento: AgendamentoDetalhe }) {
+  const linhas: string[] = [];
+  if (agendamento.rota_complementar_ida) {
+    linhas.push(
+      `Ida: saída ${agendamento.rota_complementar_ida.horario_saida}`
+    );
+  }
+  if (agendamento.rota_complementar_volta) {
+    linhas.push(
+      `Volta: retorno ${agendamento.rota_complementar_volta.horario_retorno}`
+    );
+  }
+  const conexao =
+    agendamento.rota_complementar_ida?.ponto_conexao ??
+    agendamento.rota_complementar_volta?.ponto_conexao ??
+    '';
+  const nome =
+    agendamento.rota_complementar_ida?.nome ??
+    agendamento.rota_complementar_volta?.nome ??
+    '';
+
+  return (
+    <View style={styles.complementarBox}>
+      <Text style={styles.complementarLabel}>
+        Rota complementar (obrigatória p/ transferência)
+      </Text>
+      <Text style={styles.complementarNome}>{nome}</Text>
+      {linhas.length > 0 && (
+        <Text style={styles.complementarInfo}>{linhas.join('  •  ')}</Text>
+      )}
+      <Text style={styles.complementarInfo}>Ponto de conexão: {conexao}</Text>
+    </View>
+  );
+}
+
+function CardAgendamento({
+  agendamento,
+  onPress,
+}: {
+  agendamento: AgendamentoDetalhe;
+  onPress: () => void;
+}) {
+  const { diaSemana, dataFormatada } = formatarData(agendamento.data);
+  const trechos: string[] = [];
+  if (agendamento.usa_ida) trechos.push('Ida');
+  if (agendamento.usa_volta) trechos.push('Volta');
+
+  return (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
+      <Surface style={styles.agendamentoCard} elevation={1}>
+        <View style={styles.agendamentoHeader}>
+          <Text style={styles.agendamentoData}>{dataFormatada}</Text>
+          <View style={styles.trechosRow}>
+            {trechos.map((trecho) => (
+              <View key={trecho} style={styles.trechoChip}>
+                <Text style={styles.trechoChipText}>{trecho}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+        <Text style={styles.agendamentoDiaSemana}>{diaSemana}</Text>
+
+        {agendamento.usa_ida && (
+          <Text style={styles.agendamentoTrecho} numberOfLines={1}>
+            Ida: {agendamento.ponto_embarque_nome} → {agendamento.ies_destino_nome}
+          </Text>
+        )}
+        {agendamento.usa_volta && (
+          <Text style={styles.agendamentoTrecho} numberOfLines={1}>
+            Volta: {agendamento.ies_origem_nome} → {agendamento.ponto_desembarque_nome}
+          </Text>
+        )}
+
+        {/* HU-015 / AC-01: dados destacados da rota complementar */}
+        {(agendamento.rota_complementar_ida || agendamento.rota_complementar_volta) && (
+          <CardRotaComplementar agendamento={agendamento} />
+        )}
+      </Surface>
+    </TouchableOpacity>
+  );
+}
 
 export default function MeusAgendamentosScreen() {
   const router = useRouter();
 
-  const [agendamentos, setAgendamentos] = useState<AgendamentoDia[]>(AGENDAMENTOS_DEMO);
-  const [diaSelecionado, setDiaSelecionado] = useState<DiaCalendario | null>(null);
+  const [mes, setMes] = useState(mesAtual());
+  const [diasCalendario, setDiasCalendario] = useState<CalendarioDia[]>([]);
+  const [agendamentos, setAgendamentos] = useState<AgendamentoDetalhe[]>([]);
+  const [ativos, setAtivos] = useState(0);
+  const [limite, setLimite] = useState(22);
+  const [semConexao, setSemConexao] = useState(false);
+  const [carregando, setCarregando] = useState(true);
+  const [jaCarregou, setJaCarregou] = useState(false);
+  const [diaSelecionado, setDiaSelecionado] = useState<CalendarioDia | null>(null);
 
   // Modais de Ação e Confirmação
   const [menuOpcoesVisible, setMenuOpcoesVisible] = useState(false);
@@ -77,36 +152,82 @@ export default function MeusAgendamentosScreen() {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
-  const carregarAgendamentos = useCallback(async () => {
+  const carregarDados = useCallback(async (mesAlvo: string) => {
+    setCarregando(true);
     try {
-      const lista = await agendamentoService.listarAgendamentosAtivos();
-      if (lista && lista.length > 0) {
-        setAgendamentos(lista);
-      }
+      const [meus, calendario] = await Promise.all([
+        agendamentoService.listarAgendamentosAtivos(),
+        agendamentoService.obterCalendario(mesAlvo),
+      ]);
+      setAgendamentos(meus.agendamentos);
+      setAtivos(meus.ativos);
+      setLimite(meus.limite);
+      setDiasCalendario(calendario.dias);
+      setSemConexao(false);
     } catch {
-      // Mantem lista inicial de demonstracao
+      // Sem internet: usa a última sincronização guardada no dispositivo (RNF-015)
+      const meusCache = await agendamentoService.listarAgendamentosCache();
+      const calendarioCache = await agendamentoService.obterCalendarioCache(mesAlvo);
+      if (meusCache) {
+        setAgendamentos(meusCache.agendamentos);
+        setAtivos(meusCache.ativos);
+        setLimite(meusCache.limite);
+        setSemConexao(true);
+      }
+      if (calendarioCache) {
+        setDiasCalendario(calendarioCache.dias);
+      }
+      if (!meusCache && !calendarioCache) {
+        setSemConexao(true);
+      }
+    } finally {
+      setCarregando(false);
+      setJaCarregou(true);
     }
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      let cancelado = false;
-      carregarAgendamentos().then(() => {
-        if (cancelado) return;
-      });
-      return () => {
-        cancelado = true;
-      };
-    }, [carregarAgendamentos])
+      carregarDados(mes);
+    }, [carregarDados, mes])
   );
 
-  const datasAgendadasSet = new Set(agendamentos.map(a => a.dataIso));
+  const diasMap = useMemo(() => {
+    const map = new Map<string, CalendarioDia>();
+    diasCalendario.forEach((dia) => map.set(dia.data, dia));
+    return map;
+  }, [diasCalendario]);
 
-  const handleSelecionarDia = (dia: DiaCalendario) => {
-    if (datasAgendadasSet.has(dia.dataIso) || dia.status === 'agendado') {
-      setDiaSelecionado(dia);
-      setMenuOpcoesVisible(true);
+  const celulasCalendario = useMemo(() => {
+    const [ano, m] = mes.split('-').map(Number);
+    const primeiroDiaSemana = new Date(ano, m - 1, 1).getDay();
+    const totalDias = new Date(ano, m, 0).getDate();
+    const celulas: (
+      | { vazio: true }
+      | { vazio: false; diaNum: number; dataIso: string; dia: CalendarioDia | null }
+    )[] = [];
+    for (let i = 0; i < primeiroDiaSemana; i += 1) {
+      celulas.push({ vazio: true });
     }
+    for (let diaNum = 1; diaNum <= totalDias; diaNum += 1) {
+      const dataIso = `${mes}-${String(diaNum).padStart(2, '0')}`;
+      celulas.push({ vazio: false, diaNum, dataIso, dia: diasMap.get(dataIso) ?? null });
+    }
+    return celulas;
+  }, [mes, diasMap]);
+
+  const mudarMes = (direcao: 1 | -1) => {
+    const atual = mesAtual();
+    const proximo = direcao === 1 ? mesSeguinte(mes) : mesAnterior(mes);
+    // Janela de agendamento: mês atual e próximo
+    if (proximo < atual || proximo > mesSeguinte(atual)) return;
+    setMes(proximo);
+  };
+
+  const handleSelecionarDia = (dia: CalendarioDia) => {
+    if (dia.estado !== 'AGENDADO') return;
+    setDiaSelecionado(dia);
+    setMenuOpcoesVisible(true);
   };
 
   const handleVerDetalhes = () => {
@@ -114,17 +235,7 @@ export default function MeusAgendamentosScreen() {
     if (diaSelecionado) {
       router.push({
         pathname: '/(aluno)/agendamento-detalhes',
-        params: { dataIso: diaSelecionado.dataIso },
-      } as any);
-    }
-  };
-
-  const handleEditar = () => {
-    setMenuOpcoesVisible(false);
-    if (diaSelecionado) {
-      router.push({
-        pathname: '/(aluno)/agendar-transporte/configurar',
-        params: { datasIso: diaSelecionado.dataIso, modoEdicao: 'true' },
+        params: { dataIso: diaSelecionado.data },
       } as any);
     }
   };
@@ -136,21 +247,27 @@ export default function MeusAgendamentosScreen() {
 
   const handleConfirmarCancelamento = async () => {
     setModalCancelarVisible(false);
-    if (!diaSelecionado) return;
+    if (!diaSelecionado?.agendamento_id) return;
 
     try {
-      await agendamentoService.cancelarAgendamento(diaSelecionado.idAgendamento || diaSelecionado.dataIso);
-      setAgendamentos(agendamentos.filter(a => a.dataIso !== diaSelecionado.dataIso));
+      await agendamentoService.cancelarAgendamento(
+        diaSelecionado.agendamento_id,
+        diaSelecionado.data
+      );
       setSnackbarMessage('Agendamento cancelado com sucesso');
       setSnackbarVisivel(true);
+      carregarDados(mes);
     } catch {
       // FA-004: Falha de comunicação mantém o agendamento ativo
-      setSnackbarMessage('Não foi possível processar o cancelamento. Verifique sua conexão e tente novamente');
+      setSnackbarMessage(
+        'Não foi possível processar o cancelamento. Verifique sua conexão e tente novamente'
+      );
       setSnackbarVisivel(true);
     }
   };
 
-  const semAgendamentosFuturos = agendamentos.length === 0;
+  const semAgendamentosFuturos = jaCarregou && agendamentos.length === 0;
+  const carregandoInicial = carregando && !jaCarregou;
 
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
@@ -158,7 +275,22 @@ export default function MeusAgendamentosScreen() {
         {/* Título Principal */}
         <Text variant="headlineMedium" style={styles.mainTitle}>Meus agendamentos</Text>
 
-        {semAgendamentosFuturos ? (
+        {/* Aviso de Consulta Offline (RNF-015) */}
+        {semConexao && (
+          <Surface style={styles.offlineBanner} elevation={0}>
+            <WifiOff size={16} color="#00639A" />
+            <Text style={styles.offlineText}>
+              Visualização Offline (Dados salvos no dispositivo)
+            </Text>
+          </Surface>
+        )}
+
+        {carregandoInicial ? (
+          /* Primeira carga: evita exibir o calendário vazio antes dos dados */
+          <View style={styles.emptyContainer}>
+            <ActivityIndicator animating color="#00639A" />
+          </View>
+        ) : semAgendamentosFuturos ? (
           /* FA-001: Estado Vazio */
           <View style={styles.emptyContainer}>
             <Text variant="bodyLarge" style={styles.emptyText}>
@@ -174,20 +306,19 @@ export default function MeusAgendamentosScreen() {
 
             {/* Contador de Agendamentos Ativos */}
             <Text variant="bodyMedium" style={styles.counterText}>
-              {agendamentos.length} de 22 agendamentos ativos
+              {ativos} de {limite} agendamentos ativos
             </Text>
 
             {/* Seletor de Mês */}
             <View style={styles.monthSelectorRow}>
               <TouchableOpacity style={styles.monthDropdown}>
-                <Text style={styles.monthText}>Setembro 2026</Text>
-                <ChevronDown size={18} color="#333" />
+                <Text style={styles.monthText}>{rotuloMes(mes)}</Text>
               </TouchableOpacity>
               <View style={styles.navArrows}>
-                <TouchableOpacity style={styles.arrowBtn}>
+                <TouchableOpacity style={styles.arrowBtn} onPress={() => mudarMes(-1)}>
                   <ChevronLeft size={20} color="#666" />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.arrowBtn}>
+                <TouchableOpacity style={styles.arrowBtn} onPress={() => mudarMes(1)}>
                   <ChevronRight size={20} color="#666" />
                 </TouchableOpacity>
               </View>
@@ -204,24 +335,30 @@ export default function MeusAgendamentosScreen() {
 
               {/* Dias do Mês */}
               <View style={styles.daysGrid}>
-                {/* Espaço em branco antes do dia 31 (Domingo inicial) */}
-                <View style={styles.dayCell} />
-
-                {DIAS_DO_MES.map((dia) => {
-                  const isAgendado = datasAgendadasSet.has(dia.dataIso);
-                  const isIndisponivel = dia.status === 'indisponivel';
-                  const isFeriado = dia.status === 'feriado';
+                {celulasCalendario.map((celula, idx) => {
+                  if (celula.vazio) {
+                    return <View key={`vazio-${idx}`} style={styles.dayCell} />;
+                  }
+                  const { diaNum, dataIso, dia } = celula;
+                  const isAgendado = dia?.estado === 'AGENDADO';
+                  const isFeriado =
+                    !!dia &&
+                    dia.estado !== 'AGENDADO' &&
+                    dia.estado !== 'DISPONIVEL' &&
+                    dia.estado !== 'INDISPONIVEL';
+                  // Dia ausente da resposta: passado sem agendamento ou fora da janela
+                  const isIndisponivel = !dia || dia.estado === 'INDISPONIVEL';
 
                   return (
                     <TouchableOpacity
-                      key={dia.dataIso}
-                      onPress={() => handleSelecionarDia(dia)}
+                      key={dataIso}
+                      onPress={() => dia && handleSelecionarDia(dia)}
                       style={styles.dayCell}
                       activeOpacity={isAgendado ? 0.7 : 1}
                     >
                       {isAgendado ? (
                         <View style={styles.agendadoCircle}>
-                          <Text style={styles.agendadoText}>{dia.diaNum}</Text>
+                          <Text style={styles.agendadoText}>{diaNum}</Text>
                         </View>
                       ) : (
                         <Text style={[
@@ -229,7 +366,7 @@ export default function MeusAgendamentosScreen() {
                           isIndisponivel && styles.indisponivelText,
                           isFeriado && styles.feriadoText,
                         ]}>
-                          {dia.diaNum}
+                          {diaNum}
                         </Text>
                       )}
                     </TouchableOpacity>
@@ -255,6 +392,23 @@ export default function MeusAgendamentosScreen() {
                 <Text style={styles.legendText}>Feriado</Text>
               </View>
             </View>
+
+            {/* Agendamentos Ativos (HU-015 / AC-01: rota complementar destacada) */}
+            <Text variant="titleMedium" style={styles.listaTitle}>
+              Próximas viagens
+            </Text>
+            {agendamentos.map((agendamento) => (
+              <CardAgendamento
+                key={agendamento.id}
+                agendamento={agendamento}
+                onPress={() =>
+                  router.push({
+                    pathname: '/(aluno)/agendamento-detalhes',
+                    params: { dataIso: agendamento.data },
+                  } as any)
+                }
+              />
+            ))}
           </View>
         )}
       </ScrollView>
@@ -267,13 +421,8 @@ export default function MeusAgendamentosScreen() {
               <Text style={styles.menuText}>Ver detalhes</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.menuRow} onPress={handleEditar}>
-              <Text style={styles.menuText}>Editar agendamento</Text>
-              <Pencil size={18} color="#333" />
-            </TouchableOpacity>
-
             {/* Regra de Negócio: Não exibir remoção para datas passadas (FA-003 / Critério 7) */}
-            {!(diaSelecionado?.ehPassado) && (
+            {(diaSelecionado?.pode_remover ?? false) && (
               <TouchableOpacity style={styles.menuRow} onPress={handleIniciarRemocao}>
                 <Text style={[styles.menuText, { color: '#8B261D' }]}>Cancelar agendamento</Text>
                 <Trash2 size={18} color="#8B261D" />
@@ -326,6 +475,20 @@ const styles = StyleSheet.create({
     color: '#191C20',
     marginBottom: 20,
     fontSize: 28,
+  },
+  offlineBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#C2E7FF',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    marginBottom: 16,
+  },
+  offlineText: {
+    color: '#001D36',
+    fontSize: 12,
+    fontWeight: '600',
   },
   emptyContainer: {
     flex: 1,
@@ -446,6 +609,75 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#43474E',
   },
+  listaTitle: {
+    fontWeight: 'bold',
+    color: '#191C20',
+    fontSize: 18,
+    marginTop: 24,
+    marginBottom: 12,
+  },
+  agendamentoCard: {
+    backgroundColor: '#F1F3F9',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 16,
+    gap: 6,
+  },
+  agendamentoHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  agendamentoData: {
+    fontWeight: 'bold',
+    color: '#191C20',
+    fontSize: 16,
+  },
+  trechosRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  trechoChip: {
+    backgroundColor: '#00639A',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  trechoChipText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  agendamentoDiaSemana: {
+    color: '#74777F',
+    fontSize: 13,
+  },
+  agendamentoTrecho: {
+    color: '#43474E',
+    fontSize: 14,
+  },
+  complementarBox: {
+    backgroundColor: '#C2E7FF',
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 8,
+    gap: 4,
+  },
+  complementarLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#001D36',
+  },
+  complementarNome: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#03537D',
+  },
+  complementarInfo: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#001D36',
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
@@ -468,32 +700,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#191C20',
-  },
-  detalhesContent: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 24,
-    gap: 16,
-  },
-  detalhesTitle: {
-    fontWeight: 'bold',
-    color: '#191C20',
-  },
-  detalheItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  detalheLabel: {
-    fontWeight: '600',
-    color: '#666',
-  },
-  detalheVal: {
-    color: '#333',
-  },
-  fecharBtn: {
-    marginTop: 12,
-    borderRadius: 8,
-    backgroundColor: '#3E5F90',
   },
   snackbar: {
     backgroundColor: '#322F35',

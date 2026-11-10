@@ -1,30 +1,182 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, Surface } from 'react-native-paper';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Text, Surface, ActivityIndicator } from 'react-native-paper';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { ChevronLeft, WifiOff } from 'lucide-react-native';
 
-import { agendamentoService, DetalhesViagemResponse } from '@/services/agendamentoService';
+import {
+  agendamentoService,
+  DetalhesViagemResponse,
+  TrechoDetalhesViagem,
+  extrairMensagemErro,
+} from '@/services/agendamentoService';
+
+function CardRotaComplementar({ trecho }: { trecho: TrechoDetalhesViagem }) {
+  const rota = trecho.rotaComplementar!;
+  return (
+    <Surface style={styles.cardComplementar} elevation={1}>
+      <Text variant="labelLarge" style={styles.cardCategoryLabel}>
+        Rota complementar (obrigatória p/ transferência)
+      </Text>
+      <Text variant="titleMedium" style={styles.cardHeaderTitle}>
+        {rota.nomeLinha}
+      </Text>
+
+      <View style={styles.gridRow}>
+        <View style={styles.col}>
+          <Text style={styles.fieldLabel}>Ponto de Embarque</Text>
+          <Text style={styles.fieldVal}>{rota.pontoEmbarque}</Text>
+        </View>
+        <View style={styles.col}>
+          <Text style={styles.fieldLabel}>Ponto de conexão</Text>
+          <Text style={styles.fieldVal}>{rota.pontoConexao}</Text>
+        </View>
+      </View>
+
+      <View style={styles.gridRow}>
+        <View style={styles.col}>
+          <Text style={styles.fieldLabel}>Horário de Saída</Text>
+          <Text style={styles.fieldVal}>{rota.horarioSaida}</Text>
+        </View>
+      </View>
+    </Surface>
+  );
+}
+
+function CardRotaPrincipal({ trecho }: { trecho: TrechoDetalhesViagem }) {
+  const rota = trecho.rotaPrincipal;
+  return (
+    <Surface style={styles.cardPrincipal} elevation={1}>
+      <Text variant="labelLarge" style={styles.cardCategoryLabel}>
+        Rota principal
+      </Text>
+
+      <Text variant="titleMedium" style={styles.cardHeaderTitle}>
+        {rota.nomeLinha}
+      </Text>
+
+      {rota.faculdadesAtendidas.length > 0 && (
+        <Text variant="bodySmall" style={styles.cardSubtitle}>
+          Atende: {rota.faculdadesAtendidas.join(', ')}
+        </Text>
+      )}
+
+      <View style={[styles.gridRow, { marginTop: 16 }]}>
+        <View style={styles.col}>
+          <Text style={styles.fieldLabel}>Ponto de Embarque</Text>
+          <Text style={styles.fieldVal}>{rota.pontoEmbarque}</Text>
+        </View>
+        <View style={styles.col}>
+          <Text style={styles.fieldLabel}>
+            {trecho.sentido === 'ida' ? 'Seu Desembarque (IES)' : 'Origem (IES)'}
+          </Text>
+          <Text style={styles.fieldVal}>{rota.pontoDesembarque}</Text>
+        </View>
+      </View>
+
+      <View style={styles.gridRow}>
+        <View style={styles.col}>
+          <Text style={styles.fieldLabel}>Veículo</Text>
+          <Text style={styles.fieldVal}>{rota.veiculo ?? 'A definir'}</Text>
+        </View>
+        <View style={styles.col}>
+          <Text style={styles.fieldLabel}>Motorista</Text>
+          <Text style={styles.fieldVal}>{rota.motorista ?? 'A definir'}</Text>
+        </View>
+      </View>
+
+      <View style={styles.gridRow}>
+        <View style={styles.col}>
+          <Text style={styles.fieldLabel}>Horário de Saída</Text>
+          <Text style={styles.fieldVal}>{rota.horarioSaida}</Text>
+        </View>
+      </View>
+    </Surface>
+  );
+}
+
+function TelaErro({
+  mensagem,
+  onTentarNovamente,
+}: {
+  mensagem: string;
+  onTentarNovamente?: () => void;
+}) {
+  const router = useRouter();
+  return (
+    <View style={[styles.container, styles.center]}>
+      <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <ChevronLeft size={32} color="#333" />
+      </TouchableOpacity>
+      <Text variant="titleMedium" style={styles.erroTitulo}>
+        Não foi possível carregar a viagem
+      </Text>
+      <Text variant="bodyMedium" style={styles.erroTexto}>
+        {mensagem}
+      </Text>
+      {onTentarNovamente && (
+        <TouchableOpacity style={styles.tentarNovamente} onPress={onTentarNovamente}>
+          <Text style={styles.tentarNovamenteTexto}>Tentar novamente</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
 
 export default function AgendamentoDetalhesScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ dataIso?: string; semComplementar?: string }>();
+  const params = useLocalSearchParams<{ dataIso?: string }>();
 
-  const dataIso = params.dataIso || '2026-09-01';
-  const temComplementar = params.semComplementar !== 'true';
+  const dataIso = params.dataIso || '';
 
   const [detalhes, setDetalhes] = useState<DetalhesViagemResponse | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
+  const [carregando, setCarregando] = useState(true);
 
-  const carregarDetalhes = useCallback(async () => {
-    const dados = await agendamentoService.obterDetalhesViagem(dataIso, temComplementar);
-    setDetalhes(dados);
-  }, [dataIso, temComplementar]);
+  const executarBusca = useCallback(async () => {
+    try {
+      const dados = await agendamentoService.obterDetalhesViagem(dataIso);
+      setDetalhes(dados);
+    } catch (e) {
+      setErro(extrairMensagemErro(e));
+    } finally {
+      setCarregando(false);
+    }
+  }, [dataIso]);
 
-  useEffect(() => {
-    carregarDetalhes();
-  }, [carregarDetalhes]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!dataIso) return;
+      executarBusca();
+    }, [executarBusca])
+  );
 
-  if (!detalhes) return null;
+  const tentarNovamente = useCallback(async () => {
+    setCarregando(true);
+    setErro(null);
+    executarBusca();
+  }, [executarBusca]);
+
+  if (!dataIso) {
+    return <TelaErro mensagem="Data da viagem não informada." />;
+  }
+
+  if (carregando) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator animating color="#00639A" />
+      </View>
+    );
+  }
+
+  if (erro || !detalhes) {
+    return (
+      <TelaErro
+        mensagem={erro || 'Nenhum agendamento ativo para esta data.'}
+        onTentarNovamente={tentarNovamente}
+      />
+    );
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
@@ -35,10 +187,10 @@ export default function AgendamentoDetalhesScreen() {
         </TouchableOpacity>
         <View>
           <Text variant="headlineSmall" style={styles.headerTitle}>
-            {detalhes.dataFormatada.split(' ')[0]}
+            {detalhes.diaSemana}
           </Text>
           <Text variant="bodySmall" style={styles.headerSubtitle}>
-            {detalhes.dataFormatada.split(' ')[1] || '01/09/2026'}
+            {detalhes.dataFormatada}
           </Text>
         </View>
       </View>
@@ -52,83 +204,19 @@ export default function AgendamentoDetalhesScreen() {
       )}
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Seção Ida */}
-        <Text variant="titleLarge" style={styles.sectionTitle}>
-          {detalhes.tipoTrajeto === 'volta' ? 'Volta' : 'Ida'}
-        </Text>
-
-        {/* CARD 1: ROTA COMPLEMENTAR (Exibida somente se houver transferência - FA-001 / Critério 3) */}
-        {detalhes.temRotaComplementar && detalhes.rotaComplementar && (
-          <Surface style={styles.cardComplementar} elevation={1}>
-            <Text variant="labelLarge" style={styles.cardCategoryLabel}>
-              Rota complementar (obrigatória p/ transferência)
-            </Text>
-            <Text variant="titleMedium" style={styles.cardHeaderTitle}>
-              {detalhes.rotaComplementar.nomeVeiculo}
+        {detalhes.trechos.map((trecho) => (
+          <View key={trecho.sentido}>
+            <Text variant="titleLarge" style={styles.sectionTitle}>
+              {trecho.sentido === 'ida' ? 'Ida' : 'Volta'}
             </Text>
 
-            <View style={styles.gridRow}>
-              <View style={styles.col}>
-                <Text style={styles.fieldLabel}>Ponto de Embarque</Text>
-                <Text style={styles.fieldVal}>{detalhes.rotaComplementar.pontoEmbarque}</Text>
-              </View>
-              <View style={styles.col}>
-                <Text style={styles.fieldLabel}>Ponto de conexão</Text>
-                <Text style={styles.fieldVal}>{detalhes.rotaComplementar.pontoConexao}</Text>
-              </View>
-            </View>
+            {/* CARD 1: ROTA COMPLEMENTAR (somente quando há transferência - FA-001 / Critério 3) */}
+            {trecho.rotaComplementar && <CardRotaComplementar trecho={trecho} />}
 
-            <View style={styles.gridRow}>
-              <View style={styles.col}>
-                <Text style={styles.fieldLabel}>Horário de Saída</Text>
-                <Text style={styles.fieldVal}>{detalhes.rotaComplementar.horarioSaida}</Text>
-              </View>
-            </View>
-          </Surface>
-        )}
-
-        {/* CARD 2: ROTA PRINCIPAL */}
-        <Surface style={styles.cardPrincipal} elevation={1}>
-          <Text variant="labelLarge" style={styles.cardCategoryLabel}>
-            Rota principal
-          </Text>
-
-          <Text variant="titleMedium" style={styles.cardHeaderTitle}>
-            {detalhes.rotaPrincipal.veiculo}
-          </Text>
-
-          <Text variant="bodySmall" style={styles.cardSubtitle}>
-            {detalhes.rotaPrincipal.linha}
-          </Text>
-
-          <View style={[styles.gridRow, { marginTop: 16 }]}>
-            <View style={styles.col}>
-              <Text style={styles.fieldLabel}>Ponto de Embarque</Text>
-              <Text style={styles.fieldVal}>{detalhes.rotaPrincipal.pontoEmbarque}</Text>
-            </View>
-            <View style={styles.col}>
-              <Text style={styles.fieldLabel}>Seu Desembarque (IES)</Text>
-              <Text style={styles.fieldVal}>{detalhes.rotaPrincipal.desembarqueIes}</Text>
-            </View>
+            {/* CARD 2: ROTA PRINCIPAL */}
+            <CardRotaPrincipal trecho={trecho} />
           </View>
-
-          <View style={styles.gridRow}>
-            <View style={styles.col}>
-              <Text style={styles.fieldLabel}>Motorista</Text>
-              <Text style={styles.fieldVal}>{detalhes.rotaPrincipal.motorista}</Text>
-            </View>
-            <View style={styles.col}>
-              <Text style={styles.fieldLabel}>Horário de Saída</Text>
-              <Text style={styles.fieldVal}>{detalhes.rotaPrincipal.horarioSaida}</Text>
-            </View>
-          </View>
-
-          {detalhes.rotaPrincipal.realocado && (
-            <Surface style={styles.badgeRealocado} elevation={0}>
-              <Text style={styles.badgeText}>Realocado</Text>
-            </Surface>
-          )}
-        </Surface>
+        ))}
       </ScrollView>
     </View>
   );
@@ -138,6 +226,36 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 60,
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  backBtn: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  },
+  erroTitulo: {
+    fontWeight: 'bold',
+    color: '#191C20',
+    marginBottom: 8,
+  },
+  erroTexto: {
+    color: '#43474E',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  tentarNovamente: {
+    backgroundColor: '#3E5F90',
+    borderRadius: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+  },
+  tentarNovamenteTexto: {
+    color: '#FFF',
+    fontWeight: '600',
   },
   header: {
     flexDirection: 'row',
@@ -227,18 +345,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#191C20',
-  },
-  badgeRealocado: {
-    backgroundColor: '#D3E3FD',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    marginTop: 8,
-  },
-  badgeText: {
-    color: '#041E49',
-    fontSize: 13,
-    fontWeight: 'bold',
   },
 });

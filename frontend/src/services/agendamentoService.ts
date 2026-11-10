@@ -31,31 +31,234 @@ export interface AgendamentoDia {
   idAgendamento?: string | number;
 }
 
+// ===== HU-015: Consulta de Rota Complementar e Transferência =====
+// Contrato do backend: /transporte/agendamentos (AgendamentoDetalheDTO)
+
+export interface RotaComplementarResumo {
+  id: number;
+  nome: string;
+  horario_saida: string;
+  horario_retorno: string;
+  ponto_conexao: string;
+}
+
+export interface RotaPrincipalResumo {
+  id: number;
+  nome: string;
+  horario_saida: string;
+  horario_retorno: string;
+  faculdades: { id: number; nome: string }[];
+  // Alocação de ônibus/motorista só será preenchida no EP-005 (null nesta HU).
+  onibus: Record<string, any> | null;
+  motorista: Record<string, any> | null;
+}
+
+export interface AgendamentoDetalhe {
+  id: number;
+  aluno_id: number;
+  data: string; // YYYY-MM-DD
+  usa_ida: boolean;
+  usa_volta: boolean;
+  ponto_embarque_id: number | null;
+  ies_destino_id: number | null;
+  rota_complementar_ida_id: number | null;
+  ies_origem_id: number | null;
+  ponto_desembarque_id: number | null;
+  rota_complementar_volta_id: number | null;
+  status: string;
+  ponto_embarque_nome: string | null;
+  ies_destino_nome: string | null;
+  rota_complementar_ida_nome: string | null;
+  ies_origem_nome: string | null;
+  ponto_desembarque_nome: string | null;
+  rota_complementar_volta_nome: string | null;
+  rota_complementar_ida: RotaComplementarResumo | null;
+  rota_complementar_volta: RotaComplementarResumo | null;
+  rota_principal_ida: RotaPrincipalResumo | null;
+  rota_principal_volta: RotaPrincipalResumo | null;
+  atualizado_em: string;
+  pode_remover: boolean;
+  pode_editar: boolean;
+}
+
+export interface MeusAgendamentosResponse {
+  agendamentos: AgendamentoDetalhe[];
+  ativos: number;
+  limite: number;
+  isOffline?: boolean;
+}
+
+export interface CalendarioDia {
+  data: string; // YYYY-MM-DD
+  estado: string; // AGENDADO | DISPONIVEL | INDISPONIVEL | tipo de feriado/recesso
+  descricao: string | null;
+  pode_agendar: boolean;
+  agendamento_id: number | null;
+  pode_remover: boolean;
+  pode_editar: boolean;
+}
+
+export interface CalendarioResponse {
+  mes: string; // YYYY-MM
+  dias: CalendarioDia[];
+  ativos: number;
+  limite: number;
+  isOffline?: boolean;
+}
+
 export interface DetalhesRotaComplementar {
-  nomeVeiculo: string;
+  nomeLinha: string;
   pontoEmbarque: string;
   pontoConexao: string;
   horarioSaida: string;
 }
 
 export interface DetalhesRotaPrincipal {
-  veiculo: string;
-  linha: string;
+  nomeLinha: string;
   pontoEmbarque: string;
-  desembarqueIes: string;
-  motorista: string;
+  pontoDesembarque: string;
   horarioSaida: string;
-  realocado?: boolean;
+  veiculo: string | null;
+  motorista: string | null;
+  faculdadesAtendidas: string[];
+}
+
+export interface TrechoDetalhesViagem {
+  sentido: 'ida' | 'volta';
+  rotaComplementar?: DetalhesRotaComplementar;
+  rotaPrincipal: DetalhesRotaPrincipal;
 }
 
 export interface DetalhesViagemResponse {
+  agendamentoId: number;
   dataIso: string;
-  dataFormatada: string;
-  tipoTrajeto: 'ida' | 'volta' | 'ambos';
+  diaSemana: string;
+  dataFormatada: string; // DD/MM/AAAA
+  trechos: TrechoDetalhesViagem[];
   temRotaComplementar: boolean;
-  rotaComplementar?: DetalhesRotaComplementar;
-  rotaPrincipal: DetalhesRotaPrincipal;
+  atualizadoEm: string;
   isOffline?: boolean;
+}
+
+const CACHE_MEUS = '@GOUOCE:meus_agendamentos';
+const CACHE_CALENDARIO = (mes: string) => `@GOUOCE:calendario_${mes}`;
+const CACHE_DETALHES = (dataIso: string) => `@GOUOCE:detalhes_viagem_${dataIso}`;
+
+const DIAS_SEMANA = [
+  'Domingo',
+  'Segunda-feira',
+  'Terça-feira',
+  'Quarta-feira',
+  'Quinta-feira',
+  'Sexta-feira',
+  'Sábado',
+];
+
+export function formatarData(dataIso: string): { diaSemana: string; dataFormatada: string } {
+  const [ano, mes, dia] = dataIso.split('-').map(Number);
+  const date = new Date(ano, mes - 1, dia);
+  const dataFormatada = `${String(dia).padStart(2, '0')}/${String(mes).padStart(2, '0')}/${ano}`;
+  return { diaSemana: DIAS_SEMANA[date.getDay()], dataFormatada };
+}
+
+export function extrairMensagemErro(erro: any): string {
+  return (
+    erro?.response?.data?.error?.message ||
+    erro?.response?.data?.detail ||
+    'Não foi possível concluir a operação. Verifique sua conexão e tente novamente.'
+  );
+}
+
+function labelVeiculo(onibus: Record<string, any> | null | undefined): string | null {
+  if (!onibus) return null;
+  const apelido = onibus.apelido_onibus ?? onibus.apelido;
+  const placa = onibus.placa_onibus ?? onibus.placa;
+  if (apelido && placa) return `${apelido} - Placa ${placa}`;
+  return apelido || (placa ? `Placa ${placa}` : null) || null;
+}
+
+function labelMotorista(motorista: Record<string, any> | null | undefined): string | null {
+  if (!motorista) return null;
+  return motorista.nome ?? motorista.nome_completo ?? null;
+}
+
+function mapearTrecho(
+  detalhe: AgendamentoDetalhe,
+  sentido: 'ida' | 'volta',
+): TrechoDetalhesViagem {
+  const complementar =
+    sentido === 'ida' ? detalhe.rota_complementar_ida : detalhe.rota_complementar_volta;
+  const principal =
+    sentido === 'ida' ? detalhe.rota_principal_ida : detalhe.rota_principal_volta;
+  const pontoOrigem =
+    sentido === 'ida' ? detalhe.ponto_embarque_nome : detalhe.ponto_desembarque_nome;
+  const iesDoTrecho =
+    sentido === 'ida' ? detalhe.ies_destino_nome : detalhe.ies_origem_nome;
+
+  return {
+    sentido,
+    // Ausente em trajeto direto: a seção de rota complementar não é exibida (FA-001).
+    rotaComplementar: complementar
+      ? {
+          nomeLinha: complementar.nome,
+          pontoEmbarque: pontoOrigem ?? 'A definir',
+          pontoConexao: complementar.ponto_conexao,
+          // Ida: a van sai do bairro; volta: a van sai do ponto de conexão.
+          horarioSaida:
+            sentido === 'ida' ? complementar.horario_saida : complementar.horario_retorno,
+        }
+      : undefined,
+    rotaPrincipal: {
+      nomeLinha: principal?.nome ?? 'A definir',
+      // Ida: com transferência, o embarque na principal ocorre no ponto de conexão.
+      // Volta: a principal parte da IES; o desembarque para transferência é o ponto de conexão.
+      pontoEmbarque:
+        sentido === 'ida'
+          ? complementar
+            ? complementar.ponto_conexao
+            : detalhe.ponto_embarque_nome ?? 'A definir'
+          : iesDoTrecho ?? 'A definir',
+      pontoDesembarque:
+        sentido === 'ida'
+          ? iesDoTrecho ?? 'A definir'
+          : complementar
+            ? complementar.ponto_conexao
+            : detalhe.ponto_desembarque_nome ?? 'A definir',
+      horarioSaida:
+        sentido === 'ida'
+          ? principal?.horario_saida ?? 'A definir'
+          : principal?.horario_retorno ?? 'A definir',
+      veiculo: labelVeiculo(principal?.onibus),
+      motorista: labelMotorista(principal?.motorista),
+      faculdadesAtendidas: (principal?.faculdades ?? []).map((f) => f.nome),
+    },
+  };
+}
+
+export function mapearDetalhe(detalhe: AgendamentoDetalhe): DetalhesViagemResponse {
+  const trechos: TrechoDetalhesViagem[] = [];
+  if (detalhe.usa_ida) trechos.push(mapearTrecho(detalhe, 'ida'));
+  if (detalhe.usa_volta) trechos.push(mapearTrecho(detalhe, 'volta'));
+  const { diaSemana, dataFormatada } = formatarData(detalhe.data);
+  return {
+    agendamentoId: detalhe.id,
+    dataIso: detalhe.data,
+    diaSemana,
+    dataFormatada,
+    trechos,
+    temRotaComplementar: trechos.some((t) => t.rotaComplementar !== undefined),
+    atualizadoEm: detalhe.atualizado_em,
+    isOffline: false,
+  };
+}
+
+async function lerCache<T>(chave: string): Promise<T | null> {
+  try {
+    const cached = await AsyncStorage.getItem(chave);
+    return cached ? (JSON.parse(cached) as T) : null;
+  } catch {
+    return null;
+  }
 }
 
 export const agendamentoService = {
@@ -98,13 +301,31 @@ export const agendamentoService = {
     }
   },
 
-  async listarAgendamentosAtivos(): Promise<AgendamentoDia[]> {
-    try {
-      const response = await api.get('/agendamentos/meus');
-      return response.data;
-    } catch {
-      return [];
-    }
+  async listarAgendamentosAtivos(): Promise<MeusAgendamentosResponse> {
+    const response = await api.get('/transporte/agendamentos/meus');
+    const dados: MeusAgendamentosResponse = response.data;
+    // Guarda para consulta offline das rotas complementares (FA-002 / RNF-015).
+    await AsyncStorage.setItem(CACHE_MEUS, JSON.stringify(dados)).catch(() => {});
+    return dados;
+  },
+
+  async listarAgendamentosCache(): Promise<MeusAgendamentosResponse | null> {
+    return lerCache<MeusAgendamentosResponse>(CACHE_MEUS);
+  },
+
+  async obterCalendario(mes: string): Promise<CalendarioResponse> {
+    const response = await api.get(`/transporte/agendamentos/calendario`, {
+      params: { mes },
+    });
+    const dados: CalendarioResponse = response.data;
+    await AsyncStorage.setItem(CACHE_CALENDARIO(mes), JSON.stringify(dados)).catch(
+      () => {}
+    );
+    return dados;
+  },
+
+  async obterCalendarioCache(mes: string): Promise<CalendarioResponse | null> {
+    return lerCache<CalendarioResponse>(CACHE_CALENDARIO(mes));
   },
 
   async salvarAgendamentos(agendamentos: AgendamentoDia[]): Promise<any> {
@@ -116,63 +337,45 @@ export const agendamentoService = {
     }
   },
 
-  async cancelarAgendamento(idAgendamento: string | number): Promise<any> {
-    try {
-      const response = await api.delete(`/agendamentos/${idAgendamento}`);
-      return response.data;
-    } catch {
-      return { success: true };
+  async cancelarAgendamento(
+    idAgendamento: string | number,
+    dataIso?: string
+  ): Promise<any> {
+    // FA-004: falhas devem propagar para a tela avisar o aluno, sem sucesso falso.
+    const response = await api.delete(`/transporte/agendamentos/${idAgendamento}`);
+    await AsyncStorage.removeItem(CACHE_MEUS).catch(() => {});
+    if (dataIso) {
+      await AsyncStorage.removeItem(CACHE_DETALHES(dataIso)).catch(() => {});
+      await AsyncStorage.removeItem(CACHE_CALENDARIO(dataIso.slice(0, 7))).catch(
+        () => {}
+      );
     }
+    return response.data;
   },
 
-  // HU-015: Obter detalhes da viagem com suporte a Rota Complementar e Cache Offline (FA-002)
-  async obterDetalhesViagem(dataIso: string = '2026-09-01', temComplementar: boolean = true): Promise<DetalhesViagemResponse> {
-    const cacheKey = `@GOUOCE:detalhes_viagem_${dataIso}`;
+  // HU-015: detalhes da viagem por data, com rota complementar e cache offline (FA-002)
+  async obterDetalhesViagem(dataIso: string): Promise<DetalhesViagemResponse> {
+    const cacheKey = CACHE_DETALHES(dataIso);
 
     try {
-      const response = await api.get(`/agendamentos/detalhes?data=${dataIso}`);
-      const dados = response.data;
-      // Salva no cache offline (FA-002)
-      await AsyncStorage.setItem(cacheKey, JSON.stringify(dados));
-      return { ...dados, isOffline: false };
-    } catch {
-      // Tenta recuperar do cache local do dispositivo
-      try {
-        const cached = await AsyncStorage.getItem(cacheKey);
-        if (cached) {
-          return { ...JSON.parse(cached), isOffline: true };
-        }
-      } catch {
-        // Ignora erro de leitura do storage
+      const response = await api.get('/transporte/agendamentos/detalhes', {
+        params: { data: dataIso },
+      });
+      const detalhe: AgendamentoDetalhe = response.data;
+      // Revalidação do cache pelo atualizado_em: só regrava quando muda.
+      const emCache = await lerCache<AgendamentoDetalhe>(cacheKey);
+      if (!emCache || emCache.atualizado_em !== detalhe.atualizado_em) {
+        await AsyncStorage.setItem(cacheKey, JSON.stringify(detalhe)).catch(() => {});
       }
-
-      // Fallback de exibicao correspondente ao prototipo da HU-015
-      const fallbackData: DetalhesViagemResponse = {
-        dataIso,
-        dataFormatada: 'Terça-feira 01/09/2026',
-        tipoTrajeto: 'ida',
-        temRotaComplementar: temComplementar,
-        rotaComplementar: temComplementar ? {
-          nomeVeiculo: 'Van 2 - Bairro Novo',
-          pontoEmbarque: 'Bairro Novo',
-          pontoConexao: 'Trevo do Bairro Novo',
-          horarioSaida: '06:10',
-        } : undefined,
-        rotaPrincipal: {
-          veiculo: 'Ônibus 07 - Placa OCR-5521',
-          linha: 'Linha 01 - Centro (UFC, Católica, UECE)',
-          pontoEmbarque: temComplementar ? 'Trevo do Bairro Novo' : 'Bairro Novo',
-          desembarqueIes: 'UFC',
-          motorista: 'Ana Souza',
-          horarioSaida: '06:40',
-          realocado: true,
-        },
-        isOffline: true,
-      };
-
-      // Guarda no cache local
-      await AsyncStorage.setItem(cacheKey, JSON.stringify(fallbackData)).catch(() => {});
-      return fallbackData;
+      return mapearDetalhe(detalhe);
+    } catch (erro: any) {
+      // Sem internet: exibe a última sincronização guardada no dispositivo.
+      const emCache = await lerCache<AgendamentoDetalhe>(cacheKey);
+      if (emCache) {
+        return { ...mapearDetalhe(emCache), isOffline: true };
+      }
+      // Sem cache sincronizado não há dados para exibir: propaga o erro real.
+      throw erro;
     }
   },
 };

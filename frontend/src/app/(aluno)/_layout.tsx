@@ -57,11 +57,6 @@ export default function StudentLayout() {
               <ClipboardList size={24} color={focused ? '#000' : '#666'} />
             </View>
           ),
-          tabBarButton: ({ children, style }) => (
-            <View style={style} pointerEvents="none">
-              {children}
-            </View>
-          ),
         }}
       />
       <Tabs.Screen
@@ -89,6 +84,12 @@ export default function StudentLayout() {
               <UserCircle size={24} color={focused ? '#000' : '#666'} />
             </View>
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="agendamento-detalhes"
+        options={{
+          href: null,
         }}
       />
       <Tabs.Screen
