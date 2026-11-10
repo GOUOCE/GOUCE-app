@@ -40,30 +40,30 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU013-UI-001 | Calendário mensal com os dias reais | A sem reservas; mês atual e o seguinte | Calendário mensal com Disponível, Agendado e Indisponível vindos da API; sábado e domingo e dias fora de D a D+29 indisponíveis; navegação entre os meses | ❌ FALHOU | A tela mostra uma semana fixa de 31/08 a 06/09/2026, sem API nem navegação. ISS1 |
-| CT-HU013-UI-002 | Selecionar um dia disponível | Um dia útil disponível | Só a data selecionada e o botão **Novo agendamento** | ❌ FALHOU | A tela permite marcar vários dias e usa o botão **Continuar**. ISS1 |
+| CT-HU013-UI-001 | Calendário mensal com os dias reais | A sem reservas; mês atual e o seguinte | Calendário mensal com Disponível, Agendado e Indisponível vindos da API; sábado e domingo e dias fora de D a D+29 indisponíveis; navegação entre os meses | ❌ FALHOU | A tela mostra uma semana fixa de 31/08 a 06/09/2026, sem API nem navegação. #437 |
+| CT-HU013-UI-002 | Selecionar um dia disponível | Um dia útil disponível | Só a data selecionada e o botão **Novo agendamento** | ❌ FALHOU | A tela permite marcar vários dias e usa o botão **Continuar**. #437 |
 
 ### Seção B — Novo agendamento
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU013-UI-003 | Perguntas de ida e volta, campos condicionais e listas ativas | Ida Sim/Não e volta Sim/Não | Campos de cada trecho só quando a resposta é Sim; listas só com pontos, IES e complementares ativos cadastrados pelo administrador | ❌ FALHOU | As listas vêm de dados fixos do app (a rota de opções não existe), e o formulário abre com tudo pré-selecionado. ISS2 |
-| CT-HU013-UI-004 | Criar só ida, só volta e ida e volta | Três combinações válidas | Mensagem “Agendamento realizado com sucesso”, reserva gravada com os dados escolhidos e dia marcado como agendado | ❌ FALHOU | Só dias passados podem ser escolhidos, a API recusa e a tela mostra sucesso mesmo assim. ISS3 |
-| CT-HU013-UI-005 | Não para ida e volta | Ida Não e volta Não | Nenhuma reserva criada e mensagem “Nenhum agendamento foi criado.”, sem erro | ❌ FALHOU | A mensagem não existe no app nem na API (#390). ISS3 |
+| CT-HU013-UI-003 | Perguntas de ida e volta, campos condicionais e listas ativas | Ida Sim/Não e volta Sim/Não | Campos de cada trecho só quando a resposta é Sim; listas só com pontos, IES e complementares ativos cadastrados pelo administrador | ❌ FALHOU | As listas vêm de dados fixos do app (a rota de opções não existe), e o formulário abre com tudo pré-selecionado. #438 |
+| CT-HU013-UI-004 | Criar só ida, só volta e ida e volta | Três combinações válidas | Mensagem “Agendamento realizado com sucesso”, reserva gravada com os dados escolhidos e dia marcado como agendado | ❌ FALHOU | Só dias passados podem ser escolhidos, a API recusa e a tela mostra sucesso mesmo assim. #439 |
+| CT-HU013-UI-005 | Não para ida e volta | Ida Não e volta Não | Nenhuma reserva criada e mensagem “Nenhum agendamento foi criado.”, sem erro | ❌ FALHOU | A mensagem não existe no app nem na API (#390). #439 |
 
 ### Seção C — Regras e recusas
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU013-UI-006 | Duplicidade, trajeto sem rota e campos obrigatórios | Dia já agendado; ponto e IES sem rota; Sim sem ponto ou IES | Cada recusa mostra a mensagem correspondente e nada é gravado | ❌ FALHOU | Erros do servidor são engolidos e a tela segue para a confirmação. ISS3 |
-| CT-HU013-UI-007 | Limite de 22 agendamentos e janela de datas | A com 22 ativos; dia D+30 | Recusa com mensagem; nenhuma reserva a mais; só D a D+29 selecionáveis | ❌ FALHOU | Mesmo erro engolido; a janela é uma semana fixa. ISS1, ISS3 |
-| CT-HU013-UI-008 | Editar e cancelar o dia agendado | Reserva existente; alterar trechos; Não para ida e volta | A edição atualiza a mesma reserva; Não para ida e volta é tratado como cancelamento, com confirmação | ❌ FALHOU | A edição cria nova reserva e o cancelamento usa a data como id. ISS4 |
+| CT-HU013-UI-006 | Duplicidade, trajeto sem rota e campos obrigatórios | Dia já agendado; ponto e IES sem rota; Sim sem ponto ou IES | Cada recusa mostra a mensagem correspondente e nada é gravado | ❌ FALHOU | Erros do servidor são engolidos e a tela segue para a confirmação. #439 |
+| CT-HU013-UI-007 | Limite de 22 agendamentos e janela de datas | A com 22 ativos; dia D+30 | Recusa com mensagem; nenhuma reserva a mais; só D a D+29 selecionáveis | ❌ FALHOU | Mesmo erro engolido; a janela é uma semana fixa. #437, #439 |
+| CT-HU013-UI-008 | Editar e cancelar o dia agendado | Reserva existente; alterar trechos; Não para ida e volta | A edição atualiza a mesma reserva; Não para ida e volta é tratado como cancelamento, com confirmação | ❌ FALHOU | A edição cria nova reserva e o cancelamento usa a data como id. #440 |
 
 ### Seção D — Mensagem de falha
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU013-UI-009 | Falha do servidor ou sem conexão ao salvar | Servidor recusa; servidor indisponível | Mensagem clara no padrão de popup do app; nada é gravado; sem sucesso falso | ❌ FALHOU | Nenhum erro é exibido ao salvar, e as mensagens do fluxo são toast preto (#413). ISS3 |
+| CT-HU013-UI-009 | Falha do servidor ou sem conexão ao salvar | Servidor recusa; servidor indisponível | Mensagem clara no padrão de popup do app; nada é gravado; sem sucesso falso | ❌ FALHOU | Nenhum erro é exibido ao salvar, e as mensagens do fluxo são toast preto (#413). #439 |
 
 ## Detalhamento dos casos
 
@@ -88,7 +88,7 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 - Reprovado por leitura do código do commit `ee305857`, sem executar a tela.
 - `index.tsx` desenha a lista fixa `DATAS_EXEMPLO`: segunda 31/08 a domingo 06/09/2026, com 03/09 “agendado”, sábado “indisponível” e o domingo como “feriado” (o PO decidiu retirar feriado e recesso do calendário). O subtítulo diz “nesta semana”. Não há chamada ao calendário da API nem navegação de mês, e todas as datas são anteriores a hoje (10/11/2026). Ao abrir a tela, todos os dias disponíveis já vêm selecionados.
 - Back (conferido na API em 10/11/2026): sábado 14/11 e domingo 15/11 voltam como `DISPONIVEL` no calendário, e o `POST` em um sábado foi aceito (#390, item 1).
-- Status: ❌ Falhou (por leitura do código). Issue: ISS1.
+- Status: ❌ Falhou (por leitura do código). Issue: #437.
 
 ---
 
@@ -108,7 +108,7 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 **Resultado obtido**
 
 - Reprovado por leitura do código: o toque alterna uma seleção de **vários dias**, mostra “N dias selecionados” e o botão **Continuar**, que abre o formulário dia a dia. Não existe o botão **Novo agendamento**.
-- Status: ❌ Falhou (por leitura do código). Issue: ISS1.
+- Status: ❌ Falhou (por leitura do código). Issue: #437.
 
 ---
 
@@ -133,7 +133,7 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 - Reprovado por leitura do código. Os controles Sim/Não existem e alternam os campos (a conferir na tela no reteste).
 - As listas não vêm do administrador: `obterOpcoesAgendamento` chama `GET /agendamentos/opcoes`, rota que **não existe** (a API de agendamento não tem rota de opções para o aluno; `GET /transporte/agendamentos/opcoes` responde `422`, #390 item 3), e cai numa lista fixa do app (“Igreja Matriz de Quixadá”, “Praça dos Leões”, “Terminal Rodoviário de Quixadá”, “Acesso ao Campus da UFC”; “UFC”, “IFCE” e “UECE - FECLEISC”). Os valores dessas opções são ids que não correspondem aos cadastros reais (na massa, o id 1 é “Praça do Campo Velho”).
 - O formulário abre com ida **Sim**, volta **Sim**, ponto `1` e IES `1` já escolhidos, o que impede perceber um campo vazio.
-- Status: ❌ Falhou (por leitura do código). Issue: ISS2.
+- Status: ❌ Falhou (por leitura do código). Issue: #438.
 
 ---
 
@@ -154,7 +154,7 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 
 - Reprovado por leitura do código. Só as datas de 31/08 a 06/09/2026 são escolhíveis, e todas são passadas; a API recusa data fora da janela (`422 DATA_FORA_DA_JANELA`).
 - `criarAgendamento`, no serviço, captura qualquer falha e **devolve uma resposta inventada** (`mensagem: 'Agendamento realizado com sucesso'`, `estado_dia: 'AGENDADO'`); além disso, `handleSalvarDia` tem um `catch` vazio (“Fallback”). Em qualquer recusa da API a tela segue para a confirmação “N agendamentos realizados com sucesso!”, sem reserva gravada. Com mais de um dia, mostra o toast preto “Agendamento salvo. Avançando para o próximo dia.”.
-- Status: ❌ Falhou (por leitura do código). Issue: ISS3.
+- Status: ❌ Falhou (por leitura do código). Issue: #439.
 
 ---
 
@@ -174,7 +174,7 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 **Resultado obtido**
 
 - Reprovado por leitura do código: o texto “Nenhum agendamento foi criado.” não existe no app. A tela envia o `POST` com os dois trechos falsos; a API (conferida em 10/11/2026) responde `422 FA-003` (“Selecione pelo menos um trecho: ida ou volta.”) em vez de `200` com a mensagem (#390, item 5), e a tela engole o erro e mostra a confirmação de sucesso.
-- Status: ❌ Falhou (por leitura do código). Issue: ISS3.
+- Status: ❌ Falhou (por leitura do código). Issue: #439.
 
 ---
 
@@ -192,7 +192,7 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 
 - Reprovado por leitura do código. A API devolve `409 FA-001` (texto antigo, “Já existe agendamento ativo para este dia.”, #390 item 2) e `422 FA-002` com a mensagem do trajeto, mas o serviço devolve uma resposta de sucesso inventada e a tela vai à confirmação. Para os dias fixos marcados como agendados, a tela abre o popup “Agendamento já existente — Deseja editar o agendamento existente?”, que não é a mensagem do requisito.
 - Os avisos de campo obrigatório existem no esquema de validação (“Selecione o ponto de embarque”, “Selecione a faculdade (IES) de destino” e equivalentes da volta), mas o formulário abre pré-preenchido; essa parte fica para confirmar na tela.
-- Status: ❌ Falhou (por leitura do código). Issue: ISS3.
+- Status: ❌ Falhou (por leitura do código). Issue: #439.
 
 ---
 
@@ -206,8 +206,8 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 
 **Resultado obtido**
 
-- Reprovado por leitura do código. A API recusa com `422 LIMITE_AGENDAMENTOS` (conferido em 10/11/2026) e `422 DATA_FORA_DA_JANELA`, mas o serviço devolve sucesso inventado (ISS3) e a tela não tem janela real, só a semana fixa (ISS1).
-- Status: ❌ Falhou (por leitura do código). Issues: ISS1, ISS3.
+- Reprovado por leitura do código. A API recusa com `422 LIMITE_AGENDAMENTOS` (conferido em 10/11/2026) e `422 DATA_FORA_DA_JANELA`, mas o serviço devolve sucesso inventado (#439) e a tela não tem janela real, só a semana fixa (#437).
+- Status: ❌ Falhou (por leitura do código). Issues: #437, #439.
 
 ---
 
@@ -224,7 +224,7 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 - Reprovado por leitura do código. No modo de edição, `handleSalvarDia` chama `atualizarAgendamento(1, payloadApi)`: o id **1 está escrito no código**, então a edição tenta alterar `PUT /transporte/agendamentos/1`, que não é a reserva do dia.
 - `handleConfirmarCancelamento` chama `cancelarAgendamento(dataIsoAtual)`, ou seja, `DELETE /transporte/agendamentos/2026-09-02`, com a data no lugar do id; se a API recusa, o serviço devolve `{ success: true }` e a tela mostra “Agendamento cancelado com sucesso” em toast preto e volta ao Início.
 - Não foi identificado no código o tratamento de “Não para ida e volta” como cancelamento.
-- Status: ❌ Falhou (por leitura do código). Issue: ISS4.
+- Status: ❌ Falhou (por leitura do código). Issue: #440.
 
 ---
 
@@ -241,7 +241,7 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 **Resultado obtido**
 
 - Reprovado por leitura do código: ao salvar, nenhum erro é exibido (o serviço devolve sucesso inventado e o `catch` da tela está vazio) e a tela segue para o sucesso. As mensagens do fluxo usam o `Snackbar` preto, fora do padrão de popup do app (#413).
-- Status: ❌ Falhou (por leitura do código). Issue: ISS3.
+- Status: ❌ Falhou (por leitura do código). Issue: #439.
 
 ## Rastreabilidade
 
@@ -261,10 +261,10 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| CT-001, 002, 007 | A tela **Agendar Transporte** é uma semana fixa de 31/08 a 06/09/2026, com datas passadas, sem calendário mensal, sem API e com seleção de vários dias. | ISS1 |
-| CT-003 | O formulário usa listas fixas do app (a rota de opções não existe) e abre com Sim, ponto e IES pré-selecionados. | ISS2 |
-| CT-004, 005, 006, 007, 009 | Quando a API recusa, o serviço devolve uma resposta de sucesso inventada e a tela mostra sucesso; as mensagens do PO reais não aparecem. | ISS3 |
-| CT-008 | A edição atualiza sempre o id 1 e o cancelamento usa a data como id, com sucesso inventado se a API recusar. | ISS4 |
+| CT-001, 002, 007 | A tela **Agendar Transporte** é uma semana fixa de 31/08 a 06/09/2026, com datas passadas, sem calendário mensal, sem API e com seleção de vários dias. | #437 |
+| CT-003 | O formulário usa listas fixas do app (a rota de opções não existe) e abre com Sim, ponto e IES pré-selecionados. | #438 |
+| CT-004, 005, 006, 007, 009 | Quando a API recusa, o serviço devolve uma resposta de sucesso inventada e a tela mostra sucesso; as mensagens do PO reais não aparecem. | #439 |
+| CT-008 | A edição atualiza sempre o id 1 e o cancelamento usa a data como id, com sucesso inventado se a API recusar. | #440 |
 | CT-001, 005, 006 | Sábado e domingo disponíveis, “Não” para ida e volta e mensagem de duplicidade fora do requisito (back). | #390 |
 | CT-004, 009 | Mensagens em toast preto fora do padrão de popup. | #413 |
 
