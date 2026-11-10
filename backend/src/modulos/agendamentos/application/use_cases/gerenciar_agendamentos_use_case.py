@@ -187,6 +187,20 @@ class GerenciarAgendamentosUseCase:
         item = self._get_owned(aluno_id, item_id)
         return self._detail(item)
 
+    def detail_by_date(self, aluno_id: int, data: str):
+        try:
+            target = date.fromisoformat(data)
+        except ValueError:
+            raise AgendamentoError(
+                "VALIDATION_ERROR", "Data deve estar no formato YYYY-MM-DD.", 422
+            )
+        item = self.repository.get_active_by_date(aluno_id, target)
+        if item is None:
+            raise AgendamentoError(
+                "RESOURCE_NOT_FOUND", "Nenhum agendamento ativo para esta data.", 404
+            )
+        return self._detail(item)
+
     def my_bookings(self, aluno_id: int):
         today, _ = self._bounds()
         items = self.repository.list_active_from(aluno_id, today)
@@ -196,10 +210,89 @@ class GerenciarAgendamentosUseCase:
             "limite": self.active_limit,
         }
 
+    def _complementary_for(self, complementary_id):
+        if complementary_id is None:
+            return None
+        return self.repository.reference(RotaComplementarORM, complementary_id)
+
+    def _point_for(self, point_id):
+        if point_id is None:
+            return None
+        return self.repository.reference(PontoDeParadaORM, point_id)
+
+    def _faculty_for(self, faculty_id):
+        if faculty_id is None:
+            return None
+        return self.repository.reference(FaculdadeORM, faculty_id)
+
+    def _principal_for(self, point, faculty, direction, complementary):
+        """Resolve a rota principal do trecho reaproveitando ``route_for``,
+        a mesma consulta usada na validação/criação do agendamento (RN-010).
+
+        Recebe ``point``/``faculty`` já carregados (não ids) para não repetir
+        a busca que ``_detail`` já fez para montar os campos ``*_nome``.
+        """
+        if point is None or faculty is None:
+            return None
+        route_id = complementary.rota_principal_id if complementary else None
+        return self.repository.route_for(point, faculty, direction, route_id)
+
+    @staticmethod
+    def _complementary_summary(rota):
+        if rota is None:
+            return None
+        return {
+            "id": rota.id,
+            "nome": rota.nome,
+            "horario_saida": rota.horario_saida.strftime("%H:%M"),
+            "horario_retorno": rota.horario_retorno.strftime("%H:%M"),
+            "ponto_conexao": rota.ponto_conexao,
+        }
+
+    @staticmethod
+    def _principal_summary(rota, direction):
+        if rota is None:
+            return None
+        faculdades = rota.faculdades_ida if direction == "ida" else rota.faculdades_volta
+        return {
+            "id": rota.id,
+            "nome": rota.nome,
+            "horario_saida": rota.horario_saida.strftime("%H:%M"),
+            "horario_retorno": rota.horario_retorno.strftime("%H:%M"),
+            "faculdades": sorted(
+                (
+                    {"id": faculdade.id_faculdade, "nome": faculdade.nome_faculdade}
+                    for faculdade in faculdades
+                ),
+                key=lambda item: (item["nome"].casefold(), item["id"]),
+            ),
+        }
+
+    @staticmethod
+    def _version(item, *rotas):
+        """Maior updated_at entre o agendamento e as rotas resolvidas (ETag do cache offline)."""
+        candidatos = [item.updated_at] + [
+            rota.updated_at for rota in rotas if rota is not None
+        ]
+        return max(candidatos)
+
     def _detail(self, item):
         today, _ = self._bounds()
-        name = self.repository.reference_name
         future = item.data >= today
+
+        complementar_ida = self._complementary_for(item.rota_complementar_ida_id)
+        complementar_volta = self._complementary_for(item.rota_complementar_volta_id)
+        ponto_embarque = self._point_for(item.ponto_embarque_id)
+        ies_destino = self._faculty_for(item.ies_destino_id)
+        ponto_desembarque = self._point_for(item.ponto_desembarque_id)
+        ies_origem = self._faculty_for(item.ies_origem_id)
+        principal_ida = self._principal_for(
+            ponto_embarque, ies_destino, "ida", complementar_ida
+        )
+        principal_volta = self._principal_for(
+            ponto_desembarque, ies_origem, "volta", complementar_volta
+        )
+
         return {
             "id": item.id,
             "aluno_id": item.aluno_id,
@@ -213,17 +306,22 @@ class GerenciarAgendamentosUseCase:
             "ponto_desembarque_id": item.ponto_desembarque_id,
             "rota_complementar_volta_id": item.rota_complementar_volta_id,
             "status": item.status,
-            "ponto_embarque_nome": name(PontoDeParadaORM, item.ponto_embarque_id, "nome"),
-            "ies_destino_nome": name(FaculdadeORM, item.ies_destino_id, "nome_faculdade"),
-            "rota_complementar_ida_nome": name(
-                RotaComplementarORM, item.rota_complementar_ida_id, "nome"
+            "ponto_embarque_nome": ponto_embarque.nome if ponto_embarque else None,
+            "ies_destino_nome": ies_destino.nome_faculdade if ies_destino else None,
+            "rota_complementar_ida_nome": complementar_ida.nome if complementar_ida else None,
+            "ies_origem_nome": ies_origem.nome_faculdade if ies_origem else None,
+            "ponto_desembarque_nome": (
+                ponto_desembarque.nome if ponto_desembarque else None
             ),
-            "ies_origem_nome": name(FaculdadeORM, item.ies_origem_id, "nome_faculdade"),
-            "ponto_desembarque_nome": name(
-                PontoDeParadaORM, item.ponto_desembarque_id, "nome"
+            "rota_complementar_volta_nome": (
+                complementar_volta.nome if complementar_volta else None
             ),
-            "rota_complementar_volta_nome": name(
-                RotaComplementarORM, item.rota_complementar_volta_id, "nome"
+            "rota_complementar_ida": self._complementary_summary(complementar_ida),
+            "rota_complementar_volta": self._complementary_summary(complementar_volta),
+            "rota_principal_ida": self._principal_summary(principal_ida, "ida"),
+            "rota_principal_volta": self._principal_summary(principal_volta, "volta"),
+            "atualizado_em": self._version(
+                item, complementar_ida, complementar_volta, principal_ida, principal_volta
             ),
             "pode_remover": future,
             "pode_editar": future,
