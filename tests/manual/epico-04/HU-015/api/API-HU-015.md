@@ -306,8 +306,8 @@ Execução real em 10/11/2026: **205 chamadas HTTP**, incluindo preparação e s
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| CT-HU015-API-004 | Mensagem técnica para data em formato inválido; 422 correto, mensagem do BDD descumprida. | [BUG-HU015-API-001](issues/BUG-HU015-API-001-mensagem-data-invalida.md), relato local |
-| CT-HU015-API-007 | Payload de ponto/IES/faculdades muda com versão antiga, prejudicando a revalidação do cache. | [BUG-HU015-API-002](issues/BUG-HU015-API-002-versao-desatualizada-detalhe.md), relato local |
+| CT-HU015-API-004 | Mensagem técnica para data em formato inválido; 422 correto, mensagem do BDD descumprida. | [BUG-HU015-API-001](issues/BUG-HU015-API-001-mensagem-data-invalida.md); [#403](https://github.com/GOUOCE/GOUCE-app/issues/403) |
+| CT-HU015-API-007 | Payload de ponto/IES/faculdades muda com versão antiga, prejudicando a revalidação do cache. | [BUG-HU015-API-002](issues/BUG-HU015-API-002-versao-desatualizada-detalhe.md); [#404](https://github.com/GOUOCE/GOUCE-app/issues/404) |
 
 ## Fontes e observações
 

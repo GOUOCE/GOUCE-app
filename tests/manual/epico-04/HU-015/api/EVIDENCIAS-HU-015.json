@@ -258,7 +258,10 @@
     }
   },
   "bugs_reproduzidos": 2,
-  "issues_abertas": [],
+  "issues_abertas": [
+    "https://github.com/GOUOCE/GOUCE-app/issues/403",
+    "https://github.com/GOUOCE/GOUCE-app/issues/404"
+  ],
   "defeitos": [
     {
       "id": "BUG-HU015-API-001",
@@ -283,7 +286,8 @@
             }
           }
         ]
-      }
+      },
+      "issue": "https://github.com/GOUOCE/GOUCE-app/issues/403"
     },
     {
       "id": "BUG-HU015-API-002",
@@ -416,7 +420,8 @@
             }
           }
         }
-      ]
+      ],
+      "issue": "https://github.com/GOUOCE/GOUCE-app/issues/404"
     }
   ],
   "persistencia": "Snapshots completos de agendamento e log_auditoria em conexões novas permaneceram iguais durante GETs/recusas. No API-007, mudanças administrativas produziram apenas as escritas esperadas; leituras posteriores preservaram os snapshots e nenhuma reserva foi alterada.",
@@ -424,6 +429,6 @@
   "observacoes": [
     "Esperados preservados. Falha apenas de mensagem continua sendo falha do caso, apesar do HTTP correto.",
     "Código de produto e testes de UI não alterados; UI não executada.",
-    "Relatos locais para revisão; nenhuma issue publicada nesta execução."
+    "Issues #403 e #404 publicadas em 10/11/2026 após autorização de Cauan; os resultados da execução foram preservados."
   ]
 }

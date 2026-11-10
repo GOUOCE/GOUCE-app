@@ -8,6 +8,7 @@
 | Branch do relato | `feature/testes-api-hu-015`, criada da develop `e177426e` |
 | Caso relacionado | CT-HU015-API-004 |
 | Documentação | [Suíte de API](../API-HU-015.md#ct-hu015-api-004--consulta-ausente-cancelada-ou-com-parâmetro-inválido); [BDD HU-015](../../../../../../bdd/features/epico-04/HU-015.feature) |
+| Issue publicada | [#403](https://github.com/GOUOCE/GOUCE-app/issues/403) |
 | Evidência | [JSON da execução](../EVIDENCIAS-HU-015.json), `defeitos[0]` |
 
 ### Pré-condição
@@ -60,4 +61,4 @@ No alvo, `backend/src/modulos/agendamentos/interface/http/agendamento_routes.py`
 
 ### 📎 Evidência
 
-Reproduzido pela LLM em **10/11/2026, 00:51:47–00:51:53, America/Fortaleza**. Relato local para revisão de Cauan; nenhuma issue publicada no GitHub nesta execução. A evidência está no único JSON da suíte, sem tokens ou senhas.
+Reproduzido pela LLM em **10/11/2026, 00:51:47–00:51:53, America/Fortaleza**. Publicado como [#403](https://github.com/GOUOCE/GOUCE-app/issues/403), após autorização de Cauan, em 10/11/2026. A evidência está no único JSON da suíte, sem tokens ou senhas.

@@ -8,6 +8,7 @@
 | Branch do relato | `feature/testes-api-hu-015`, criada da develop `e177426e` |
 | Caso relacionado | CT-HU015-API-007; complemento UI-007 ainda não executado |
 | Documentação | [Suíte de API](../API-HU-015.md#ct-hu015-api-007--versão-da-informação-e-atualização-das-referências); AC-04/FA-002/RNF-015 |
+| Issue publicada | [#404](https://github.com/GOUOCE/GOUCE-app/issues/404) |
 | Evidência | [JSON da execução](../EVIDENCIAS-HU-015.json), `defeitos[1].reproducoes` |
 
 ### Pré-condição
@@ -73,4 +74,4 @@ A API confirma que o conteúdo pode mudar sem renovar a versão. No mesmo commit
 
 ### 📎 Evidência
 
-Reproduzido pela LLM em **10/11/2026, 00:51:47–00:51:53, America/Fortaleza**, com HTTP e PostgreSQL reais. Massa restaurada após cada variação; código do produto preservado. Relato local para revisão de Cauan, sem publicação de issue no GitHub nesta execução.
+Reproduzido pela LLM em **10/11/2026, 00:51:47–00:51:53, America/Fortaleza**, com HTTP e PostgreSQL reais. Massa restaurada após cada variação; código do produto preservado. Publicado como [#404](https://github.com/GOUOCE/GOUCE-app/issues/404), após autorização de Cauan, em 10/11/2026.
