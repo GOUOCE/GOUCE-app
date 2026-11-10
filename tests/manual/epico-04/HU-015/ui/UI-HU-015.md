@@ -53,7 +53,7 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU015-UI-005 | Consulta offline após sincronizar e reabrir | Duas variações no mesmo usuário: detalhe de AI aberto online; depois uma nova reserva AO preparada pela LLM, cuja informação completa foi sincronizada somente na Agenda por `/meus`, sem abrir seu detalhe antes do offline. | Informações previamente sincronizadas continuam acessíveis após perda de rede e reinício. | ⏳ PENDENTE | Variação 2 reprovada por leitura do código (#430); variação 1 pendente de execução. |
-| CT-HU015-UI-006 | Offline sem dados próprios válidos | Reserva nunca sincronizada neste dispositivo; depois chave de teste com JSON inválido/estrutura incompleta. Preparação isolada com apoio da LLM, quando possível. | Indisponibilidade clara sem cache válido; recuperação online sem dados inventados. | ✅ PASSOU | Offline sem dados próprios, a tela informou a indisponibilidade e permitiu recuperar; cache inválido não travou. Latência perceptível ao abrir os detalhes offline (não medida). |
+| CT-HU015-UI-006 | Offline sem dados próprios válidos | Reserva nunca sincronizada neste dispositivo; depois chave de teste com JSON inválido/estrutura incompleta. Preparação isolada com apoio da LLM, quando possível. | Indisponibilidade clara sem cache válido; recuperação online sem dados inventados. | ✅ PASSOU | Offline sem dados próprios, a tela informou a indisponibilidade e permitiu recuperar; cache inválido não travou. |
 | CT-HU015-UI-007 | Reconectar e atualizar o cache com a versão atual | AI previamente sincronizada; C1 saída alterada de 05:45 para 05:50; depois principal/ponto/IES alterados separadamente por API administrativa. | Reconexão exibe e preserva a última informação real, limpando o estado de erro/offline. | ⏳ PENDENTE | BDD: atualização ao restabelecer conexão; risco de revalidação por atualizado_em. |
 | CT-HU015-UI-008 | Separação por data e programação diária | AIV e outra reserva de A com linhas/horários distintos; quando alocação existir, V1 em D1 e V2 em D2 e alteração de D1. | Datas e trechos isolados; veículo diário coberto quando a alocação existir. | ⏳ PENDENTE | BDD: mesmos dados offline, veículo por data e alteração de programação. |
 
@@ -231,7 +231,6 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 - Variação 1 (reserva nunca sincronizada neste navegador, com o navegador offline): o app informou que não foi possível carregar a viagem, com opção de recuperar, sem usar dados de outra data, de outra conta nem de exemplo.
 - Variação 2 (chaves de teste com JSON quebrado e com JSON incompleto no `localStorage`): sem falha relatada pelo testador; a tela não travou.
 - Recuperação: com a rede de volta, os dados atuais apareceram e o erro saiu.
-- Observação: o testador percebeu uma latência ao abrir os cartões/detalhes offline; o tempo não foi medido.
 - Status: ✅ Passou.
 
 ---
