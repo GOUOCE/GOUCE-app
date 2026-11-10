@@ -39,6 +39,10 @@ def create_tables():
     from src.shared.infrastructure.audit_model import LogAuditoriaORM
     from src.modulos.agendamentos.model.entities.agendamento import AgendamentoORM
     from src.modulos.agendamentos.model.entities.feriado import FeriadoORM
+    from src.modulos.alocacao_diaria.model.entities.alocacao import (
+        AlocacaoAlunoORM,
+        AlocacaoDiariaORM,
+    )
 
     Base.metadata.create_all(bind=engine)
 
