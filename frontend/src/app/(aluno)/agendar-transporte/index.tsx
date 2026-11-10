@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, Button, Surface } from 'react-native-paper';
+import { Text, Button } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 

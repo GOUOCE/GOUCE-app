@@ -10,11 +10,10 @@ export default function AgendamentoDetalhesScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ dataIso?: string; idAgendamento?: string }>();
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [detalhe, setDetalhe] = useState<any>(null);
 
   const carregarDetalhe = useCallback(async () => {
-    setLoading(true);
     try {
       if (params.idAgendamento) {
         const dados = await agendamentoService.detalharAgendamento(Number(params.idAgendamento));
