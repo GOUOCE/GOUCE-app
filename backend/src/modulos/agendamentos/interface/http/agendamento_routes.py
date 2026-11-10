@@ -25,6 +25,46 @@ from src.shared.infrastructure.db import get_session
 router = APIRouter(prefix="/transporte/agendamentos", tags=["Agendamentos"])
 
 
+@router.get("/opcoes")
+def opcoes(
+    session: Annotated[Session, Depends(get_session)],
+    user: dict = Depends(verify_student_standard_access),
+):
+    from src.modulos.crud_basicos.domain.entities.ponto_de_parada import PontoDeParadaORM
+    from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
+    from src.modulos.rotas.model.entities.rota_complementar import RotaComplementarORM
+
+    pontos = session.query(PontoDeParadaORM).filter(PontoDeParadaORM.ativo == True).all()
+    faculdades = session.query(FaculdadeORM).filter(FaculdadeORM.ativo == True).all()
+    rotas_comp = session.query(RotaComplementarORM).all()
+
+    return {
+        "pontosEmbarque": [{"label": p.nome, "value": str(p.ponto_id)} for p in pontos],
+        "faculdades": [{"label": f"{f.sigla} - {f.nome_faculdade}", "value": str(f.id_faculdade)} for f in faculdades],
+        "rotasComplementaresIda": [{"label": "Nenhuma (Rota Direta)", "value": ""}] + [{"label": rc.nome, "value": str(rc.id)} for rc in rotas_comp],
+        "rotasComplementaresVolta": [{"label": "Nenhuma (Rota Direta)", "value": ""}] + [{"label": rc.nome, "value": str(rc.id)} for rc in rotas_comp],
+    }
+
+
+router_legacy = APIRouter(prefix="/agendamentos", tags=["Agendamentos Legacy"])
+
+
+@router_legacy.get("/opcoes")
+def opcoes_legacy(
+    session: Annotated[Session, Depends(get_session)],
+    user: dict = Depends(verify_student_standard_access),
+):
+    return opcoes(session, user)
+
+
+@router_legacy.get("/meus")
+def meus_legacy(
+    service: GerenciarAgendamentosUseCase = Depends(_use_case),
+    user: dict = Depends(verify_student_standard_access),
+):
+    return service.my_bookings(_student_id(user))
+
+
 def _student_id(user: dict) -> int:
     return int(user["current_user_id"])
 
