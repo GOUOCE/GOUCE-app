@@ -1,4 +1,5 @@
 import os
+import re
 from datetime import date, datetime, timedelta
 
 from sqlalchemy.exc import IntegrityError
@@ -10,6 +11,9 @@ from src.modulos.agendamentos.infrastructure.repositories.agendamento_repository
 from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
 from src.modulos.crud_basicos.domain.entities.ponto_de_parada import PontoDeParadaORM
 from src.modulos.rotas.model.entities.rota_complementar import RotaComplementarORM
+
+
+_DATA_PATTERN = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 
 
 class GerenciarAgendamentosUseCase:
@@ -188,6 +192,10 @@ class GerenciarAgendamentosUseCase:
         return self._detail(item)
 
     def detail_by_date(self, aluno_id: int, data: str):
+        if not _DATA_PATTERN.fullmatch(data):
+            raise AgendamentoError(
+                "VALIDATION_ERROR", "Data deve estar no formato YYYY-MM-DD.", 422
+            )
         try:
             target = date.fromisoformat(data)
         except ValueError:
