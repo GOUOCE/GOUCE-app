@@ -1,7 +1,7 @@
 """Testes da camada HTTP da HU-014 (use case simulado, sem banco)."""
 
 import unittest
-from datetime import date
+from datetime import date, datetime, timezone
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -17,6 +17,26 @@ DETALHE = {
     "id": 8, "aluno_id": 7, "data": date(2026, 11, 10), "usa_ida": True,
     "usa_volta": False, "status": "ATIVO", "pode_remover": True,
     "pode_editar": True,
+    "atualizado_em": datetime(2026, 11, 10, 8, 0, tzinfo=timezone.utc),
+}
+
+# HU-015: ônibus e motorista são sempre null nesta fase (alocação fica para o EP-005).
+ROTA_PRINCIPAL_IDA = {
+    "id": 100, "nome": "Rota Centro", "horario_saida": "06:30", "horario_retorno": "17:30",
+}
+ROTA_PRINCIPAL_VOLTA = {
+    "id": 200, "nome": "Rota Integrada", "horario_saida": "07:00", "horario_retorno": "18:00",
+}
+DETALHE_COM_ROTA_PRINCIPAL = {
+    **DETALHE,
+    "usa_volta": True,
+    "rota_principal_ida": ROTA_PRINCIPAL_IDA,
+    "rota_principal_volta": ROTA_PRINCIPAL_VOLTA,
+}
+DETALHE_TRAJETO_DIRETO = {
+    **DETALHE,
+    "rota_principal_ida": ROTA_PRINCIPAL_IDA,
+    "rota_principal_volta": None,
 }
 
 
@@ -97,6 +117,65 @@ class AgendamentoRoutesHu014Test(unittest.IsolatedAsyncioTestCase):
         status, body = await self.call("GET", f"{BASE}/8")
         self.assertEqual(status, 200)
         self.assertTrue(body["pode_remover"])
+
+    async def test_detalhes_por_data_nao_e_confundido_com_id(self):
+        # /detalhes precisa estar declarada antes de /{agendamento_id} (HU-015).
+        self.service.detail_by_date.return_value = DETALHE
+        status, body = await self.call("GET", f"{BASE}/detalhes?data=2026-11-10")
+        self.assertEqual(status, 200)
+        self.assertTrue(body["pode_remover"])
+        self.service.detail_by_date.assert_called_once_with(7, "2026-11-10")
+        self.service.detail.assert_not_called()
+
+    async def test_detalhes_por_data_exige_data_no_formato_esperado(self):
+        status, _ = await self.call("GET", f"{BASE}/detalhes?data=10-11-2026")
+        self.assertEqual(status, 422)
+        self.service.detail_by_date.assert_not_called()
+
+    async def test_detalhes_por_data_propaga_erro_do_use_case(self):
+        self.service.detail_by_date.side_effect = AgendamentoError(
+            "RESOURCE_NOT_FOUND", "Nenhum agendamento ativo para esta data.", 404
+        )
+        status, body = await self.call("GET", f"{BASE}/detalhes?data=2026-11-10")
+        self.assertEqual(status, 404)
+        self.assertEqual(body["error"]["code"], "RESOURCE_NOT_FOUND")
+
+    # ---- HU-015: ônibus/motorista provisoriamente null na rota principal ----
+
+    def _assert_onibus_e_motorista_null(self, rota_principal):
+        self.assertIsNone(rota_principal["onibus"])
+        self.assertIsNone(rota_principal["motorista"])
+
+    async def test_detalhe_traz_onibus_e_motorista_null_na_rota_principal(self):
+        self.service.detail.return_value = DETALHE_COM_ROTA_PRINCIPAL
+        status, body = await self.call("GET", f"{BASE}/8")
+        self.assertEqual(status, 200)
+        self._assert_onibus_e_motorista_null(body["rota_principal_ida"])
+        self._assert_onibus_e_motorista_null(body["rota_principal_volta"])
+
+    async def test_detalhe_trajeto_direto_tambem_traz_onibus_e_motorista_null(self):
+        self.service.detail.return_value = DETALHE_TRAJETO_DIRETO
+        status, body = await self.call("GET", f"{BASE}/8")
+        self.assertEqual(status, 200)
+        self._assert_onibus_e_motorista_null(body["rota_principal_ida"])
+        self.assertIsNone(body["rota_principal_volta"])
+
+    async def test_detalhes_por_data_traz_onibus_e_motorista_null_na_rota_principal(self):
+        self.service.detail_by_date.return_value = DETALHE_COM_ROTA_PRINCIPAL
+        status, body = await self.call("GET", f"{BASE}/detalhes?data=2026-11-10")
+        self.assertEqual(status, 200)
+        self._assert_onibus_e_motorista_null(body["rota_principal_ida"])
+        self._assert_onibus_e_motorista_null(body["rota_principal_volta"])
+
+    async def test_meus_traz_onibus_e_motorista_null_na_rota_principal(self):
+        self.service.my_bookings.return_value = {
+            "agendamentos": [DETALHE_COM_ROTA_PRINCIPAL], "ativos": 1, "limite": 22,
+        }
+        status, body = await self.call("GET", f"{BASE}/meus")
+        self.assertEqual(status, 200)
+        agendamento = body["agendamentos"][0]
+        self._assert_onibus_e_motorista_null(agendamento["rota_principal_ida"])
+        self._assert_onibus_e_motorista_null(agendamento["rota_principal_volta"])
 
     async def test_put_sem_trechos_responde_cancelamento(self):
         self.service.update.return_value = SimpleNamespace(

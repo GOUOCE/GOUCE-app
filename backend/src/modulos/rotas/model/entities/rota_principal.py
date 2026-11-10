@@ -100,6 +100,13 @@ class RotaPrincipalORM(Base):
         default=lambda: datetime.now(timezone.utc),
         server_default=text("CURRENT_TIMESTAMP"),
     )
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
 
     bairros = relationship(BairroORM, secondary=rota_principal_bairro)
     faculdades_ida = relationship(

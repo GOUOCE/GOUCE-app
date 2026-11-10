@@ -890,12 +890,12 @@ Como aluno, quero visualizar o resultado da avaliação do meu cadastro e identi
 
 1. O aluno deve conseguir acessar a tela de 'Status do Cadastro' após realizar login.
 2. O sistema deve exibir o status atual da solicitação do cadastro (Pendente de aprovação, Aprovado, Reprovado).
-3. Quando reprovado, apresentar a relação dos documentos enviados e indicar quais foram reprovados.
+3. Quando reprovado, apresentar a relação dos documentos enviados (comprovante de matrícula, comprovante de residência e foto de perfil) e indicar quais foram reprovados.
 4. Para cada documento reprovado, exibir o motivo informado pelo administrador.
 5. O aluno deve conseguir selecionar um documento reprovado para reenvio.
-6. Após o reenvio, o status deve ser atualizado para Pendente de Aprovação.
+6. Após o reenvio, o status deve ser atualizado para Pendente de Aprovação, com a mensagem "Sua documentação foi reenviada com sucesso. Seu status foi atualizado para Pendente de Aprovação.".
 7. O sistema deve impedir que o aluno altere documentos já aprovados.
-8. Informar quando não houver pendências.
+8. Informar quando não houver pendências, com a mensagem "Não há pendências no seu cadastro. Todos os seus documentos foram analisados e aprovados!".
    **Fluxo Principal:**
 9. O aluno realiza login.
 10. Acessa 'Status do Cadastro'.
@@ -909,8 +909,8 @@ Como aluno, quero visualizar o resultado da avaliação do meu cadastro e identi
 
     **Fluxos Alternativos:**
 
-18. FA-001 \- Cadastro aprovado.
-19. FA-002 \- Cadastro ainda pendente.
+18. FA-001 \- Cadastro aprovado: o sistema exibe o status "Aprovado" e informa que não há pendências (AC-08), sem opção de reenvio.
+19. FA-002 \- Cadastro ainda pendente: o sistema exibe o status "Pendente de aprovação" com o título "Cadastro enviado para análise" e a mensagem "Sua solicitação será avaliada pela coordenação. Você será notificado quando houver uma resposta.", sem opção de reenvio.
 20. FA-003 \- Falha no envio.  
     **Regras de Negócio Relacionadas:**
 21. RN-011
@@ -1442,70 +1442,67 @@ Este épico reúne todas as funcionalidades voltadas para a experiência diária
 
 | ID     | Épico  | Prioridade | Complexidade | Story Points | Sprint | Status |
 | :----- | :----- | :--------- | :----------- | :----------- | :----- | :----- |
-| HU-013 | EP-004 |            |              |              |        |        |
+| HU-013 | EP-004 |            |              | 5            | S4     |        |
 
 Fonte: Elaborado pelo autor (2026).
 
 **LINK DO FORMULÁRIO:**  
 https\://docs.google.com/forms/d/e/1FAIpQLSfONfUZbgCZ4WRnP_77biJ1ES7p9mSsiu8-vOvEnUhw_pv6Bg/viewform  
 **História de Usuário:**  
-Como aluno, quero acessar um formulário inteligente no aplicativo para agendar meus dias de utilização do transporte, informando a faculdade de destino, horários de ida e volta, e o ponto de embarque através de opções padronizadas, para garantir minha vaga de forma rápida e sem erros de digitação.  
+Como aluno, quero acessar um formulário inteligente no aplicativo para agendar meus dias de utilização do transporte, informando a faculdade de destino, a faculdade de origem no retorno e os pontos de embarque e desembarque através de opções padronizadas, para garantir minha vaga de forma rápida e sem erros de digitação.  
 **Critérios de Aceite:**
 
-1.  O aluno acessa "Agendamento de Transporte" e visualiza um calendário mensal interativo, com indicação visual clara dos dias agendados, disponíveis, indisponíveis e feriados.
-2.  O sistema deve limitar a seleção de datas futuras a uma janela máxima de 30 dias corridos a partir da data atual. Além disso, um aluno pode ter no máximo 22 agendamentos ativos (o equivalente a um mês letivo cheio de dias úteis).
-3.  Dias sinalizados no sistema como "Feriado" ou "Recesso" devem ter indicação visual própria e bloquear o botão de "Novo agendamento", exibindo apenas um estado informativo na área de detalhes
-4.  Ao selecionar um dia disponível no calendário, o sistema deve exibir na área inferior apenas a data selecionada e o botão de ação “Novo agendamento”.
-5.  Na tela de “Novo Agendamento”, o sistema pergunta se o aluno utilizará o ônibus na ida (Sim/Não).
-6.  "Se 'Sim' para ida, o sistema exibe os campos (em lista suspensa, puxando apenas dados ativos cadastrados pelo admin): horário de ida, ponto de embarque, faculdade (IES) de destino e rota complementar de ida (se aplicável)
-7.  Se "Não" para ida, o sistema não exige preenchimento dos campos de ida.
-8.  Independente da resposta sobre a ida, o sistema pergunta se o aluno utilizará o ônibus na volta (Sim/Não).
-9.  Se 'Sim' para volta, o sistema exibe os campos: faculdade de origem (podendo ser diferente da faculdade de ida, desde que atendida por uma rota ativa no retorno), ponto de desembarque, horário de volta e rota complementar de volta (se aplicável)
-10. Aluno consegue confirmar um agendamento com qualquer combinação válida: apenas ida, apenas volta, ou ida e volta.
-11. Se o aluno responder "Não" tanto para ida quanto para volta, o sistema não cria agendamento para aquele dia e informa isso de forma clara (sem erro).
-12. Tentativa de agendar um dia que já possui uma solicitação ativa é bloqueada, com mensagem orientando o aluno a editar ou cancelar o agendamento existente (FA-001).
-13. Selecionar uma combinação de ponto de embarque/desembarque e faculdade que não esteja contemplada no itinerário de nenhuma rota ativa para aquele turno/horário bloqueia a seleção ou exibe mensagem de indisponibilidade (FA-002).
-14. Responder "Sim" para ida ou volta e tentar salvar sem preencher a IES ou o ponto de embarque correspondente bloqueia o salvamento e destaca os campos pendentes (FA-003).
-15. Confirmação bem-sucedida exibe mensagem de sucesso ("Agendamento realizado com sucesso") e atualiza visualmente o status do dia selecionado na tela.
-16. Tempo de resposta do agendamento deve ser de até 3 segundos em condições normais de conexão (RNF-001)
-17. Se o aluno editar um agendamento existente e alterar as respostas de ida e volta para 'Não' em ambas, o sistema deve tratar essa ação como um cancelamento (equivalente à HU-014), exibindo o mesmo alerta de confirmação antes de remover a alocação vinculada.
-18. O sistema deve limitar a janela de agendamento a um período máximo predefinido (por exemplo, mês em curso ou limite de 15 a 30 dias de antecedência). O aluno não poderá visualizar ou selecionar dias disponíveis que ultrapassem esta janela no calendário.
-19. O sistema deve apresentar as datas num formato de calendário mensal interativo ou numa lista contínua estritamente limitada à janela de dias permitidos, eliminando a necessidade de paginação.  
+1.  O aluno acessa "Agendamento de Transporte" e visualiza um calendário mensal interativo, com indicação visual clara dos dias agendados, disponíveis e indisponíveis. Sábados e domingos (o transporte opera em dias úteis) e dias em que não existe nenhuma rota principal ativa são indisponíveis para agendamento.
+2.  O sistema deve limitar a seleção de datas futuras a uma janela máxima configurável via variáveis de ambiente (com valor padrão de 30 dias corridos a partir da data atual, contando o dia atual como o 1º dia; o último dia agendável é a data atual + 29 dias) e permitir um limite máximo configurável de agendamentos ativos por aluno (com valor padrão de 22 agendamentos ativos). O aluno não poderá visualizar ou selecionar dias disponíveis que ultrapassem essa janela no calendário.
+3.  Ao selecionar um dia disponível no calendário, o sistema deve exibir na área inferior apenas a data selecionada e o botão de ação “Novo agendamento”.
+4.  Na tela de “Novo Agendamento”, o sistema pergunta se o aluno utilizará o ônibus na ida (Sim/Não).
+5.  Se 'Sim' para ida, o sistema exibe os campos (em lista suspensa, puxando apenas dados ativos cadastrados pelo admin): ponto de embarque, faculdade (IES) de destino e rota complementar de ida (se aplicável).
+6.  Se "Não" para ida, o sistema não exige preenchimento dos campos de ida.
+7.  Independente da resposta sobre a ida, o sistema pergunta se o aluno utilizará o ônibus na volta (Sim/Não).
+8.  Se 'Sim' para volta, o sistema exibe os campos: faculdade de origem (podendo ser diferente da faculdade de ida, desde que atendida por uma rota ativa no retorno), ponto de desembarque (podendo pertencer a um bairro/rota diferente do utilizado na ida) e rota complementar de volta (se aplicável).
+9.  Aluno consegue confirmar um agendamento com qualquer combinação válida: apenas ida, apenas volta, ou ida e volta.
+10. Se o aluno responder "Não" tanto para ida quanto para volta, o sistema não cria agendamento para aquele dia e informa isso de forma clara (sem erro), com a mensagem "Nenhum agendamento foi criado.".
+11. Tentativa de agendar um dia que já possui uma solicitação ativa é bloqueada, com a mensagem "Já existe um agendamento ativo para este dia. Edite ou cancele o agendamento existente." (FA-001).
+12. Selecionar uma combinação de ponto de embarque e faculdade de destino (na ida) ou faculdade de origem e ponto de desembarque (na volta) que não esteja contemplada em nenhuma rota ativa correspondente bloqueia a seleção ou exibe mensagem de indisponibilidade (FA-002).
+13. Responder "Sim" para ida ou volta e tentar salvar sem preencher a IES ou o ponto de embarque correspondente bloqueia o salvamento e destaca os campos pendentes (FA-003).
+14. Confirmação bem-sucedida exibe mensagem de sucesso ("Agendamento realizado com sucesso") e atualiza visualmente o status do dia selecionado na tela.
+15. Tempo de resposta do agendamento deve ser de até 3 segundos em condições normais de conexão (RNF-001)
+16. Se o aluno editar um agendamento existente e alterar as respostas de ida e volta para 'Não' em ambas, o sistema deve tratar essa ação como um cancelamento (equivalente à HU-014), exibindo o mesmo alerta de confirmação antes de remover a alocação vinculada.
+17. O sistema deve apresentar as datas num formato de calendário mensal interativo ou numa lista contínua estritamente limitada à janela de dias permitidos, eliminando a necessidade de paginação.  
     **Fluxo Principal:**
-20. O aluno acessa o menu de "Agendamento de Transporte" no aplicativo.
-21. O sistema exibe os dias disponíveis para reserva.
-22. O aluno seleciona a data desejada.
-23. O sistema questiona se o aluno utilizará o ônibus na ida. Se "Sim", o sistema exibe os seguintes campos (todos em formato de lista suspensa/seleção, puxando dados cadastrados pelo admin):
-    -     \- Horário de ida.
+18. O aluno acessa o menu de "Agendamento de Transporte" no aplicativo.
+19. O sistema exibe os dias disponíveis para reserva.
+20. O aluno seleciona a data desejada.
+21. O sistema questiona se o aluno utilizará o ônibus na ida. Se "Sim", o sistema exibe os seguintes campos (todos em formato de lista suspensa/seleção, puxando dados cadastrados pelo admin):
     -     \- Ponto de embarque.
     -     \- Faculdade (IES) de destino.
     -     \- Rota complementar de ida (se aplicável).
-24. O sistema questiona se o aluno utilizará o ônibus na volta. Se "Sim", exibe os campos correspondentes para o retorno (Faculdade de origem, horário, rota complementar).
-25. O aluno aciona o botão para confirmar o agendamento.
-26. O sistema valida os dados e vincula o agendamento ao perfil logado do aluno.
-27. O sistema exibe uma mensagem de sucesso ("Agendamento realizado com sucesso") e atualiza o status do dia selecionado.  
+22. O sistema questiona se o aluno utilizará o ônibus na volta. Se "Sim", exibe os campos correspondentes para o retorno (Faculdade de origem, ponto de desembarque e rota complementar, se aplicável).
+23. O aluno aciona o botão para confirmar o agendamento.
+24. O sistema valida os dados e vincula o agendamento ao perfil logado do aluno.
+25. O sistema exibe uma mensagem de sucesso ("Agendamento realizado com sucesso") e atualiza o status do dia selecionado.  
     **Fluxos Alternativos:**
-28. **FA-001 \- Sobreposição de agendamento.**
+26. **FA-001 \- Sobreposição de agendamento.**
     1. O aluno tenta registrar um agendamento para um dia onde já possui uma solicitação ativa.
-    2. O sistema bloqueia a ação e exibe um alerta informando que já existe um agendamento para este período, orientando-o a editar ou cancelar o existente.
-29. **FA-002 \- Opções não disponíveis para o dia/horário.**
-    1. O aluno seleciona uma faculdade ou bairro que não possui rotas ativas cadastradas para aquele horário.
+    2. O sistema bloqueia a ação e exibe o alerta "Já existe um agendamento ativo para este dia. Edite ou cancele o agendamento existente.", informando que já existe um agendamento para este período e orientando-o a editar ou cancelar o existente.
+27. **FA-002 \- Opções não disponíveis para o dia.**
+    1. O aluno seleciona uma faculdade ou bairro que não possui rotas ativas cadastradas para aquele trecho.
     2. O sistema bloqueia a seleção ou exibe uma mensagem informando que não há rotas disponíveis para o trajeto selecionado.
-30. **FA-003 \- Campos condicionais obrigatórios ausentes.**
+28. **FA-003 \- Campos condicionais obrigatórios ausentes.**
     1. O aluno marca "Sim" para ida ou volta, mas tenta salvar sem preencher a IES ou o ponto de embarque correspondente.
     2. O sistema destaca os campos pendentes e bloqueia o salvamento.
 
     **Regras de Negócio Relacionadas:**
 
-31. RN-010  
+29. RN-010  
     **Requisitos Relacionados:**  
      **FUNCIONAIS:**
-32. RF-015
+30. RF-015
 
     **NÃO FUNCIONAIS:**
 
-33. RNF-001
-34. RNF-012  
+31. RNF-001
+32. RNF-012  
     **Protótipo da Interface:**  
     **\[A inserir\]**
 
@@ -1522,7 +1519,7 @@ Fonte: Elaborado pelo autor (2026).
 Como aluno, quero acessar a tela "Meus agendamentos" para visualizar minhas viagens programadas no calendário e poder remover um agendamento futuro quando necessário, para acompanhar meu limite mensal de vagas e liberar minha vaga para a logística caso eu não vá utilizar o transporte.  
 **Critérios de Aceite:**
 
-1. O aluno acessa a aba "Agenda" ("Meus agendamentos") e visualiza o calendário mensal interativo destacando os dias com status "Agendado", "Indisponível para agendamento" e "Feriado", além do contador de limite mensal ("X de 22 agendamentos ativos").
+1. O aluno acessa a aba "Agenda" ("Meus agendamentos") e visualiza o calendário mensal interativo destacando os dias com status "Agendado", "Disponível" e "Indisponível para agendamento", além do contador de limite mensal ("X de 22 agendamentos ativos").
 2. Caso o aluno não possua nenhum agendamento ativo para datas futuras, o sistema exibe a tela em estado vazio com a mensagem: "Você ainda não possui agendamentos futuros."
 3. Ao selecionar um dia com status "Agendado" no calendário, o sistema exibe um menu de opções contendo as ações: "Ver detalhes", "Editar agendamento" e "Remover agendamento".
 4. Ao acionar a opção "Remover agendamento" em uma data futura, o sistema exibe um modal de confirmação com o título "Cancelar agendamento?", o aviso "Esta ação não poderá ser desfeita." e os botões "Cancelar" e "Confirmar".
@@ -1580,14 +1577,14 @@ Fonte: Elaborado pelo autor (2026).
 Como aluno com um agendamento ativo, quero consultar de forma rápida os detalhes da minha rota complementar, para saber exatamente o horário e o ponto de conexão necessários para realizar a transferência para o ônibus da rota principal.  
 **Critérios de Aceite:**
 
-1. Aluno com agendamento ativo que inclui rota complementar visualiza, na área "Meus Agendamentos" ou na tela inicial, os dados destacados dessa rota: horário de saída da Van/Micro-ônibus, nome da linha e ponto exato de conexão.
-2. Informações da rota complementar são claras o suficiente para o aluno realizar a transferência com segurança para o ônibus da rota principal.
+1. Aluno com agendamento ativo que inclui rota complementar visualiza, na área "Meus Agendamentos" ou na tela inicial, os dados destacados dessa rota: horário da Van/Micro-ônibus (horário de saída no trecho de ida e horário de retorno no trecho de volta), nome da linha e ponto exato de conexão.
+2. Informações da rota complementar são claras o suficiente para o aluno realizar a transferência com segurança para o ônibus da rota principal. Enquanto não existir a alocação diária de ônibus e motorista (Épico 05), esses campos da rota principal ficam ocultos.
 3. Aluno cujo trajeto é direto (sem rota complementar) não visualiza nenhuma seção relacionada a rota complementar; a tela exibe apenas as informações do ônibus/motorista da rota principal.
 4. Aluno consegue consultar as informações da rota complementar mesmo sem conexão com a internet, desde que os dados já tenham sido previamente sincronizados (exibidos a partir do cache local do dispositivo).  
    **Fluxo Principal:**
 5. O aluno acessa a área de "Meus Agendamentos" ou a tela inicial com o resumo da sua viagem do dia.
 6. O sistema identifica que o trajeto agendado pelo aluno inclui a utilização de uma rota complementar.
-7. O sistema exibe de forma destacada as informações específicas dessa rota (ex: horário de saída da Van/Micro-ônibus, nome da linha e o ponto exato de conexão).
+7. O sistema exibe de forma destacada as informações específicas dessa rota (ex: horário da Van/Micro-ônibus, sendo o de saída na ida e o de retorno na volta, nome da linha e o ponto exato de conexão).
 8. O aluno visualiza as instruções e horários para realizar a transferência com segurança para a rota principal de destino.  
    **Fluxos Alternativos:**
 9. FA-001 \- Aluno sem rota complementar associada.  

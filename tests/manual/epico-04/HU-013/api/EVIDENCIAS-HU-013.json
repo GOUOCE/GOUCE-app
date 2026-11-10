@@ -1,0 +1,246 @@
+{
+  "historia": "HU-013",
+  "executado_em": "2026-11-09T22:40:38.279441-03:00",
+  "branch_resultados": "feature/testes-api-hu-013",
+  "base_resultados": "4e44913d8df632666b3433d32358bb49fc91c6a8",
+  "branch_testada": "feature/front-hu013",
+  "commit_testado": "ee305857954fcb23f3919f3ebfe7e163fcbc167a",
+  "ambiente": {
+    "url": "http://127.0.0.1:8013",
+    "projeto_docker": "atu-qa-hu013",
+    "banco": "PostgreSQL 15.17 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+    "migration": "80_remove_horarios_agendamento",
+    "fuso": "America/Fortaleza",
+    "health": {
+      "http": 200,
+      "resposta": {
+        "status": "ok"
+      }
+    },
+    "openapi": {
+      "http": 200,
+      "rotas_de_agendamento": []
+    }
+  },
+  "resultado": {
+    "total": 12,
+    "passaram": 0,
+    "falharam": 1,
+    "parciais": 0,
+    "bloqueados": 11,
+    "pendentes": 0,
+    "requisicoes_reais_incluindo_preparacao": 14
+  },
+  "precondicoes_confirmadas": {
+    "administrador": {
+      "http": 200,
+      "id": 1,
+      "perfil": "administrador",
+      "status": null,
+      "vinculo_vencido": null
+    },
+    "aluno_A": {
+      "http": 200,
+      "id": 2,
+      "perfil": "aluno",
+      "status": "ativado",
+      "vinculo_vencido": false
+    },
+    "bairro_id": 2,
+    "ponto_id": 1,
+    "ies_id": 1,
+    "rota_id": 1,
+    "preparacao_referencias": "Bairro/ponto/IES/rota criados por HTTP 201; conta sintética com vínculo válido por fixture e login HTTP 200."
+  },
+  "casos": [
+    {
+      "id": "CT-HU013-API-001",
+      "cenario": "API publicada na aplicação real",
+      "status": "FALHOU",
+      "resultado_obtido": "Health/login 200; sete caminhos do módulo com 404 genérico; nenhuma rota de agendamento no OpenAPI."
+    },
+    {
+      "id": "CT-HU013-API-002",
+      "cenario": "Calendário, opções e dias úteis",
+      "status": "BLOQUEADO",
+      "resultado_obtido": "BUG-HU013-API-001: módulo de agendamentos não publicado no main:app do commit testado."
+    },
+    {
+      "id": "CT-HU013-API-003",
+      "cenario": "Criar ida, volta e ambos",
+      "status": "BLOQUEADO",
+      "resultado_obtido": "BUG-HU013-API-001: módulo de agendamentos não publicado no main:app do commit testado."
+    },
+    {
+      "id": "CT-HU013-API-004",
+      "cenario": "Novo cadastro sem nenhum trecho",
+      "status": "BLOQUEADO",
+      "resultado_obtido": "BUG-HU013-API-001: módulo de agendamentos não publicado no main:app do commit testado."
+    },
+    {
+      "id": "CT-HU013-API-005",
+      "cenario": "Obrigatórios condicionais",
+      "status": "BLOQUEADO",
+      "resultado_obtido": "BUG-HU013-API-001: módulo de agendamentos não publicado no main:app do commit testado."
+    },
+    {
+      "id": "CT-HU013-API-006",
+      "cenario": "Referências e itinerário",
+      "status": "BLOQUEADO",
+      "resultado_obtido": "BUG-HU013-API-001: módulo de agendamentos não publicado no main:app do commit testado."
+    },
+    {
+      "id": "CT-HU013-API-007",
+      "cenario": "Duplicidade e concorrência",
+      "status": "BLOQUEADO",
+      "resultado_obtido": "BUG-HU013-API-001: módulo de agendamentos não publicado no main:app do commit testado."
+    },
+    {
+      "id": "CT-HU013-API-008",
+      "cenario": "Limites da janela",
+      "status": "BLOQUEADO",
+      "resultado_obtido": "BUG-HU013-API-001: módulo de agendamentos não publicado no main:app do commit testado."
+    },
+    {
+      "id": "CT-HU013-API-009",
+      "cenario": "Limite de ativos e configuração",
+      "status": "BLOQUEADO",
+      "resultado_obtido": "BUG-HU013-API-001: módulo de agendamentos não publicado no main:app do commit testado."
+    },
+    {
+      "id": "CT-HU013-API-010",
+      "cenario": "Editar e cancelar sem trechos",
+      "status": "BLOQUEADO",
+      "resultado_obtido": "BUG-HU013-API-001: módulo de agendamentos não publicado no main:app do commit testado."
+    },
+    {
+      "id": "CT-HU013-API-011",
+      "cenario": "Autorização e propriedade",
+      "status": "BLOQUEADO",
+      "resultado_obtido": "BUG-HU013-API-001: módulo de agendamentos não publicado no main:app do commit testado."
+    },
+    {
+      "id": "CT-HU013-API-012",
+      "cenario": "Persistência, rollback e tempo",
+      "status": "BLOQUEADO",
+      "resultado_obtido": "BUG-HU013-API-001: módulo de agendamentos não publicado no main:app do commit testado."
+    }
+  ],
+  "respostas_diagnostico": [
+    {
+      "metodo": "GET",
+      "caminho": "/transporte/agendamentos/meus",
+      "ator": "A",
+      "corpo_enviado": null,
+      "http": 404,
+      "resposta": {
+        "detail": "Not Found"
+      },
+      "duracao_ms": 1.076
+    },
+    {
+      "metodo": "GET",
+      "caminho": "/transporte/agendamentos/calendario?mes=2026-11",
+      "ator": "A",
+      "corpo_enviado": null,
+      "http": 404,
+      "resposta": {
+        "detail": "Not Found"
+      },
+      "duracao_ms": 0.8
+    },
+    {
+      "metodo": "GET",
+      "caminho": "/transporte/agendamentos/999999999",
+      "ator": "A",
+      "corpo_enviado": null,
+      "http": 404,
+      "resposta": {
+        "detail": "Not Found"
+      },
+      "duracao_ms": 0.716
+    },
+    {
+      "metodo": "POST",
+      "caminho": "/transporte/agendamentos",
+      "ator": "A",
+      "corpo_enviado": {
+        "data": "2026-11-10",
+        "usa_ida": true,
+        "usa_volta": true,
+        "ponto_embarque_id": 1,
+        "ies_destino_id": 1,
+        "ies_origem_id": 1,
+        "ponto_desembarque_id": 1
+      },
+      "http": 404,
+      "resposta": {
+        "detail": "Not Found"
+      },
+      "duracao_ms": 0.863
+    },
+    {
+      "metodo": "PUT",
+      "caminho": "/transporte/agendamentos/999999999",
+      "ator": "A",
+      "corpo_enviado": {
+        "data": "2026-11-10",
+        "usa_ida": true,
+        "usa_volta": true,
+        "ponto_embarque_id": 1,
+        "ies_destino_id": 1,
+        "ies_origem_id": 1,
+        "ponto_desembarque_id": 1
+      },
+      "http": 404,
+      "resposta": {
+        "detail": "Not Found"
+      },
+      "duracao_ms": 0.69
+    },
+    {
+      "metodo": "GET",
+      "caminho": "/agendamentos/opcoes",
+      "ator": "A",
+      "corpo_enviado": null,
+      "http": 404,
+      "resposta": {
+        "detail": "Not Found"
+      },
+      "duracao_ms": 0.796
+    },
+    {
+      "metodo": "GET",
+      "caminho": "/transporte/agendamentos/opcoes",
+      "ator": "A",
+      "corpo_enviado": null,
+      "http": 404,
+      "resposta": {
+        "detail": "Not Found"
+      },
+      "duracao_ms": 0.717
+    }
+  ],
+  "persistencia": {
+    "antes": {
+      "agendamentos": 0,
+      "auditoria_agendamento": 0
+    },
+    "depois": {
+      "agendamentos": 0,
+      "auditoria_agendamento": 0
+    }
+  },
+  "bug_reproduzido": {
+    "id": "BUG-HU013-API-001",
+    "severidade": "Alta — bloqueia os testes funcionais",
+    "relato": "issues/BUG-HU013-API-001-rotas-agendamento-nao-publicadas.md"
+  },
+  "issues_publicadas_no_github": [],
+  "observacoes": [
+    "Nenhuma alteração no backend do commit testado, sem mock ou router inserido por instrumentação.",
+    "Os 11 casos bloqueados não tiveram suas regras de negócio executadas.",
+    "A API da develop é outra versão; seus resultados anteriores não aprovam a feature/front-hu013.",
+    "Regras do PO #389 consultadas; feriado/recesso não cobrado. UI não executada."
+  ]
+}
