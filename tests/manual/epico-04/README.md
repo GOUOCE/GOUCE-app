@@ -114,9 +114,9 @@ Os riscos de leitura orientam a execução. Achados confirmados por HTTP são id
 | Dados sincronizados só na Agenda não chegam ao detalhe offline | `/meus` e calendário têm caches próprios; detalhe lê somente a chave de detalhe por data | UI-005 |
 | Cache antigo reutilizado após recusa HTTP | Serviço de detalhe e Agenda tentam cache em qualquer erro, inclusive resposta 401/403/404 | UI-010 |
 | Dados de A aparecem para B | Chaves da lista/calendário/detalhe não incluem conta; `signOut` remove tokens/usuário, sem remover essas chaves | API-005/006; UI-009 |
-| Payload muda sem renovar a versão persistida | **Reproduzido na API:** mudança de faculdades atendidas, nome do ponto e nome da IES mantém a versão antiga em AI/AIV e nos três GETs. [Relato local](HU-015/api/issues/BUG-HU015-API-002-versao-desatualizada-detalhe.md); efeito no dispositivo ainda depende de UI | API-007 falhou; UI-007 pendente |
+| Payload muda sem renovar a versão persistida | **Reproduzido na API:** mudança de faculdades atendidas, nome do ponto e nome da IES mantém a versão antiga em AI/AIV e nos três GETs. [Relato](HU-015/api/issues/BUG-HU015-API-002-versao-desatualizada-detalhe.md) / [#404](https://github.com/GOUOCE/GOUCE-app/issues/404); efeito no dispositivo ainda depende de UI | API-007 falhou; UI-007 pendente |
 | Erro permanece após retorno de foco com sucesso | A busca da tela define erro no catch; o caminho de sucesso não o limpa explicitamente | UI-007 |
-| Mensagem de data inválida difere do BDD | **Reproduzido:** `data=10-11-2026` retorna 422 com texto técnico em inglês, em vez da mensagem em português. [Relato local](HU-015/api/issues/BUG-HU015-API-001-mensagem-data-invalida.md) | API-004 falhou; UI-001/010 pendentes |
+| Mensagem de data inválida difere do BDD | **Reproduzido:** `data=10-11-2026` retorna 422 com texto técnico em inglês, em vez da mensagem em português. [Relato](HU-015/api/issues/BUG-HU015-API-001-mensagem-data-invalida.md) / [#403](https://github.com/GOUOCE/GOUCE-app/issues/403) | API-004 falhou; UI-001/010 pendentes |
 
 ## Dependências e critérios de bloqueio
 
@@ -133,4 +133,4 @@ Preencher ambiente/commit, data, resultado obtido, status, resumo, totais e defe
 
 Registrar HTTP e corpo na API, evidências visuais na UI e consultas de persistência quando pedidas. Omitir credenciais, tokens e dados pessoais dos registros. Preparar relatos `.md` após reprodução; publicação no GitHub fica para a etapa de execução e revisão.
 
-A HU-015 mantém **8 casos de API e 10 de UI**. A API foi exercitada no código exato da feature, sem incorporar seu código ao PR de resultados para `develop`. [Suíte com resultados](HU-015/api/API-HU-015.md), [JSON simples](HU-015/api/EVIDENCIAS-HU-015.json) e dois relatos locais de defeito; nenhuma issue foi publicada nesta execução. Sem pastas de executor/evidências, credenciais ou testes de UI executados.
+A HU-015 mantém **8 casos de API e 10 de UI**. A API foi exercitada no código exato da feature, sem incorporar seu código ao PR de resultados para `develop`. [Suíte com resultados](HU-015/api/API-HU-015.md), [JSON simples](HU-015/api/EVIDENCIAS-HU-015.json) e dois defeitos publicados após autorização: [#403](https://github.com/GOUOCE/GOUCE-app/issues/403) e [#404](https://github.com/GOUOCE/GOUCE-app/issues/404). Sem pastas de executor/evidências, credenciais ou testes de UI executados.

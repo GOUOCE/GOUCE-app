@@ -55,7 +55,7 @@ Preencher ambiente/commit, última execução, resultado obtido por variação, 
 
 Guardar a evidência da execução em **um JSON simples**, quando houver resultados reais. Não criar pastas de executor/evidências nem incluir credenciais. Preparar relatos reproduzidos em `api/issues/` pelo [modelo de API](../../../modelos/ISSUE-BUG-API.md), vinculando a issue quando publicada. Os esperados não devem ser ajustados para fazer um caso passar.
 
-Commits seguem o [CONTRIBUTING](../../../../../docs/CONTRIBUTING.md), com autoria de Cauan e sem coautoria. A execução atual registra os resultados nesta suíte e em `EVIDENCIAS-HU-015.json`; os dois relatos em `issues/` estão preparados para revisão, sem publicação no GitHub. Não há pastas de executor/evidências. A stack temporária foi usada somente para QA e seus dados são sintéticos.
+Commits seguem o [CONTRIBUTING](../../../../../docs/CONTRIBUTING.md), com autoria de Cauan e sem coautoria. A execução atual registra os resultados nesta suíte e em `EVIDENCIAS-HU-015.json`; os dois relatos em `issues/` estão publicados como [#403](https://github.com/GOUOCE/GOUCE-app/issues/403) e [#404](https://github.com/GOUOCE/GOUCE-app/issues/404). Não há pastas de executor/evidências. A stack temporária foi usada somente para QA e seus dados são sintéticos.
 
 ## Execução de 10/11/2026
 
