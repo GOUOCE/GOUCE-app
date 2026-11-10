@@ -1,0 +1,80 @@
+{
+  "historia": "HU-014",
+  "data_execucao": "2026-11-09",
+  "branch": "feature/testes-api-hu-014",
+  "commit_backend_testado": "e498c651c326038ccc1c613a7c6896acb30fc1bc",
+  "ambiente": "API HTTP real e PostgreSQL 15.17 em Docker isolado; America/Fortaleza",
+  "resultado": {
+    "total": 10,
+    "passaram": 9,
+    "falharam": 0,
+    "parciais": 1,
+    "pendentes": 0,
+    "requisicoes_registradas": 130,
+    "verificacoes_satisfeitas": 216
+  },
+  "bugs_reproduzidos": 0,
+  "issues_abertas": [],
+  "casos": [
+    {
+      "id": "CT-HU014-API-001",
+      "status": "PASSOU",
+      "resultado_obtido": "Lista de A com 0, 1 e 3 ativos; B vê somente sua reserva; histórico não entra no contador futuro."
+    },
+    {
+      "id": "CT-HU014-API-002",
+      "status": "PASSOU",
+      "resultado_obtido": "Calendários de novembro/dezembro, feriado, recesso, disponibilidade e flags corretos; mês inválido retorna 422."
+    },
+    {
+      "id": "CT-HU014-API-003",
+      "status": "PASSOU",
+      "resultado_obtido": "Detalhes próprios retornam 200; reserva de outro aluno e id inexistente retornam 404; sem alteração de dados."
+    },
+    {
+      "id": "CT-HU014-API-004",
+      "status": "PASSOU",
+      "resultado_obtido": "Cancelamentos futuros persistem como CANCELADO, com contador/calendário atualizados e um log por operação."
+    },
+    {
+      "id": "CT-HU014-API-005",
+      "status": "PASSOU",
+      "resultado_obtido": "Reservas de hoje canceladas antes e depois da saída, sem horário de corte."
+    },
+    {
+      "id": "CT-HU014-API-006",
+      "status": "PASSOU",
+      "resultado_obtido": "DELETE e PUT de ontem retornam 422 AGENDAMENTO_PASSADO; histórico e auditoria preservados."
+    },
+    {
+      "id": "CT-HU014-API-007",
+      "status": "PASSOU",
+      "resultado_obtido": "Repetição, outro dono e inexistente retornam 404; id textual retorna 422; sem dupla redução ou efeito em B."
+    },
+    {
+      "id": "CT-HU014-API-008",
+      "status": "PASSOU",
+      "resultado_obtido": "Sem token/inválido: 401. Administrador, aluno pendente e vínculo vencido: 403 nos quatro endpoints."
+    },
+    {
+      "id": "CT-HU014-API-009",
+      "status": "PASSOU",
+      "resultado_obtido": "Contador 22 → 21 → 22; reagendamento no mesmo dia com novo id; registro cancelado e reserva de B preservados."
+    },
+    {
+      "id": "CT-HU014-API-010",
+      "status": "PARCIAL",
+      "resultado_obtido": "Falha provocada antes do commit preservou reserva, contador e auditoria; nova tentativa funcionou. Liberação de vaga não validada: alocação HU-016/018 ainda ausente."
+    }
+  ],
+  "erro_controlado": {
+    "caso": "CT-HU014-API-010",
+    "http": 500,
+    "motivo": "Falha provocada intencionalmente no banco para verificar rollback. Era esperada nesse teste e não representa bug reproduzido."
+  },
+  "dependencia_pendente": "HU-016/018: alocação real de veículo/dia necessária para validar a liberação da vaga.",
+  "observacoes": [
+    "Resultados esperados da suíte preservados.",
+    "Testes de UI não executados nesta rodada."
+  ]
+}
