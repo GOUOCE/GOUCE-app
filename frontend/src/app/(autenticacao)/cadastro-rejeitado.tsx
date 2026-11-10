@@ -5,52 +5,60 @@ import { useRouter } from 'expo-router';
 import { AlertCircle, CheckCircle2 } from 'lucide-react-native';
 
 import { userService } from '@/services/userService';
-
-const OBSERVACOES_PADRAO = [
-  { tipo: 'foto_perfil', motivo: 'A foto enviada possui baixa resolução.' },
-  { tipo: 'comprovante_matricula', motivo: 'Documento estava ilegível, cortado ou com baixa resolução' },
-  { tipo: 'comprovante_residencia', motivo: 'O comprovante enviado é muito antigo. Enviar um comprovante de no máximo 3 meses atrás.' },
-];
+import { useAuth } from '@contexts/AuthContext';
 
 export default function CadastroRejeitadoScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const [documentosReenvio, setDocumentosReenvio] = useState<{ tipo: string; motivo: string }[]>([]);
+  const [erroCarregamento, setErroCarregamento] = useState(false);
+
+  const isAprovado = (user?.status || '').toLowerCase() === 'ativado' || (user?.status || '').toLowerCase() === 'aprovado';
 
   useEffect(() => {
-    async function carregarPerfil() {
+    async function carregarReenvio() {
+      setErroCarregamento(false);
       try {
-        const perfil = await userService.getProfile();
-        if (perfil && perfil.documentos_reenvio && perfil.documentos_reenvio.length > 0) {
-          setDocumentosReenvio(perfil.documentos_reenvio);
+        const res = await userService.getReenvioDocumento();
+        if (res && res.documentos_rejeitados && res.documentos_rejeitados.length > 0) {
+          setDocumentosReenvio(res.documentos_rejeitados);
+        } else if (res && res.documentos && res.documentos.length > 0) {
+          setDocumentosReenvio(res.documentos);
         } else {
-          setDocumentosReenvio(OBSERVACOES_PADRAO);
+          setDocumentosReenvio([]);
         }
       } catch (err) {
-        console.warn('Erro ao carregar documentos de reenvio, utilizando observações padrão:', err);
-        setDocumentosReenvio(OBSERVACOES_PADRAO);
+        console.warn('Erro ao carregar reenvio de documento:', err);
+        if (!isAprovado) {
+          setErroCarregamento(true);
+        } else {
+          setDocumentosReenvio([]);
+        }
       }
     }
-    carregarPerfil();
-  }, []);
+    carregarReenvio();
+  }, [isAprovado]);
 
   const formatarNomeTipo = (tipo: string) => {
     if (tipo === 'comprovante_matricula') return 'Comprovante de Matrícula';
-    if (tipo === 'comprovante_residencia') return 'Comprovante de residência';
+    if (tipo === 'comprovante_residencia') return 'Comprovante de Residência';
     if (tipo === 'foto_perfil') return 'Foto de Perfil';
     return tipo;
   };
 
-  const semPendencias = documentosReenvio.length === 0;
+  const semPendencias = isAprovado || documentosReenvio.length === 0;
 
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Status do Cadastro */}
-        <Surface style={styles.statusBadge} elevation={0}>
-          <Text style={styles.statusText}>Status do Cadastro: Reprovado</Text>
+        <Surface style={[styles.statusBadge, isAprovado && styles.statusBadgeAprovado]} elevation={0}>
+          <Text style={[styles.statusText, isAprovado && styles.statusTextAprovado]}>
+            Status do Cadastro: {isAprovado ? 'Aprovado' : 'Reprovado'}
+          </Text>
         </Surface>
 
-        {/* Ícone de Alerta */}
+        {/* Ícone */}
         <View style={styles.iconContainer}>
           {semPendencias ? (
             <CheckCircle2 size={80} color="#2E7D32" strokeWidth={1.5} />
@@ -70,7 +78,11 @@ export default function CadastroRejeitadoScreen() {
             : 'Sua documentação inicial foi recusada. Por gentileza, reenvie a documentação abaixo atentando-se às observações feitas pelo administrador.'}
         </Text>
 
-        {!semPendencias ? (
+        {erroCarregamento ? (
+          <Surface style={styles.errorCard} elevation={1}>
+            <Text style={styles.errorText}>Não foi possível carregar os motivos da reprovação. Verifique sua conexão e tente novamente.</Text>
+          </Surface>
+        ) : !semPendencias ? (
           <View style={styles.listSection}>
             {documentosReenvio.map((doc, idx) => (
               <Surface key={idx} style={styles.docCard} elevation={1}>
@@ -85,7 +97,7 @@ export default function CadastroRejeitadoScreen() {
           </Surface>
         )}
 
-        {!semPendencias && (
+        {!semPendencias && !erroCarregamento && (
           <Button
             mode="contained"
             onPress={() => router.push('/(autenticacao)/reenviar-documentos')}
@@ -117,10 +129,16 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginBottom: 16,
   },
+  statusBadgeAprovado: {
+    backgroundColor: '#E1F5FE',
+  },
   statusText: {
     color: '#B00020',
     fontWeight: 'bold',
     fontSize: 14,
+  },
+  statusTextAprovado: {
+    color: '#0288D1',
   },
   iconContainer: {
     marginVertical: 24,
@@ -169,6 +187,18 @@ const styles = StyleSheet.create({
   },
   noPendingText: {
     color: '#2E7D32',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  errorCard: {
+    backgroundColor: '#FFEBEE',
+    borderRadius: 12,
+    padding: 20,
+    width: '100%',
+    marginBottom: 32,
+  },
+  errorText: {
+    color: '#B00020',
     fontWeight: '600',
     textAlign: 'center',
   },

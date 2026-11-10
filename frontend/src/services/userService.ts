@@ -279,8 +279,13 @@ export const userService = {
     return response.data;
   },
 
+  async getReenvioDocumento(): Promise<any> {
+    const response = await api.get('/usuarios/reenvio_documento');
+    return response.data;
+  },
+
   async reenviarDocumentos(data: FormData): Promise<any> {
-    const response = await api.patch('/usuarios/me/reenviar', data, {
+    const response = await api.put('/usuarios/reenvio_documento', data, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
