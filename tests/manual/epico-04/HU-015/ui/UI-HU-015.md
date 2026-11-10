@@ -12,16 +12,16 @@
 | Base do planejamento | `feature/front-hu015` `4ac87b4623b493af2d56012d60b8c3b875c3af7e` ([PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379)) |
 | Branch de planejamento | `test/planejamento-api-ui-hu-015-integrado`, com entrega para `develop`; código de referência na feature acima |
 | Revisão do planejamento | 10/11/2026 — contrato integrado, BDD e decisões do PO |
-| Ambiente | A preencher na execução — dispositivo/navegador, URL, commits de app/API e fuso |
+| Ambiente | Navegador (versão web) em `http://localhost:3114`, front do PR #379 `4ac87b46`; API da `develop` `735bfdee` em `http://localhost:8014`, banco limpo, fuso America/Fortaleza |
 | Total de casos | 10 |
-| Última execução | Não realizada |
+| Última execução | 10/11/2026 (parcial: análise do código; execução na tela em andamento) |
 | Testador | Cauan Ricardo — execução manual; LLM — apoio de massa e conferência de API/banco |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 10 | 0 | 0 | 0 | 0 | 10 |
+| ⏳ Em execução (5 reprovados por leitura do código) | 10 | 0 | 5 | 0 | 0 | 5 |
 
 ## Pré-condições
 
@@ -44,15 +44,15 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU015-UI-001 | Abrir os detalhes da reserva selecionada | AI e AV em datas distintas, usuário A; link de detalhes sem `dataIso` e com parâmetro inválido, quando o ambiente permitir. | Agenda abre o dia correto; parâmetros ausentes/inválidos não geram viagem fictícia. | ⏳ PENDENTE | BDD: consulta em Meus Agendamentos; robustez de navegação. |
-| CT-HU015-UI-002 | Transferência clara e correta em cada trecho | AI, AV, AIV, AM1 e AM2; C1 05:45/18:15, C2 06:05/19:10; nome da complementar e ponto de conexão com 150 caracteres em uma variação. | Linha/horário/conexão corretos por trecho, incluindo resumo da Agenda e trajetos mistos. | ⏳ PENDENTE | BDD: destaque, principal de destino, retorno e complementar por trecho. |
-| CT-HU015-UI-003 | Trajeto direto e ocultação sem alocação | AD direta e AI/AIV com complementar; API confirma `onibus`/`motorista` nulos. | Direto sem complementar; campos de veículo/motorista ocultos quando nulos. | ⏳ PENDENTE | BDD: FA-001 e ônibus/motorista ocultos sem alocação. |
-| CT-HU015-UI-004 | Resumo da viagem do dia no Início | AH em D com complementar; depois reserva de hoje direta; cenário sem reserva de hoje. Usar dia útil e data real do servidor/aparelho. | Resumo/atalho do dia correspondem à reserva real, com e sem complementar. | ⏳ PENDENTE | BDD: tela inicial com complementar e resumo direto. |
+| CT-HU015-UI-002 | Transferência clara e correta em cada trecho | AI, AV, AIV, AM1 e AM2; C1 05:45/18:15, C2 06:05/19:10; nome da complementar e ponto de conexão com 150 caracteres em uma variação. | Linha/horário/conexão corretos por trecho, incluindo resumo da Agenda e trajetos mistos. | ❌ FALHOU | Reprovado por leitura do código: resumo da Agenda reaproveita nome e conexão da ida na volta; cartões e rótulos da volta invertidos nos detalhes. #429, #418 |
+| CT-HU015-UI-003 | Trajeto direto e ocultação sem alocação | AD direta e AI/AIV com complementar; API confirma `onibus`/`motorista` nulos. | Direto sem complementar; campos de veículo/motorista ocultos quando nulos. | ❌ FALHOU | Reprovado: Veículo e Motorista aparecem como “A definir” (visto na tela na HU-014); a decisão do PO é ocultar. #428 |
+| CT-HU015-UI-004 | Resumo da viagem do dia no Início | AH em D com complementar; depois reserva de hoje direta; cenário sem reserva de hoje. Usar dia útil e data real do servidor/aparelho. | Resumo/atalho do dia correspondem à reserva real, com e sem complementar. | ❌ FALHOU | Reprovado por leitura do código: o resumo “Sua viagem hoje” é texto fixo e o botão não faz nada. #427 |
 
 ### Seção B — Consulta offline e sincronização
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU015-UI-005 | Consulta offline após sincronizar e reabrir | Duas variações no mesmo usuário: detalhe de AI aberto online; depois uma nova reserva AO preparada pela LLM, cuja informação completa foi sincronizada somente na Agenda por `/meus`, sem abrir seu detalhe antes do offline. | Informações previamente sincronizadas continuam acessíveis após perda de rede e reinício. | ⏳ PENDENTE | BDD: cache, mesmos dados da última sincronização e FA-002. |
+| CT-HU015-UI-005 | Consulta offline após sincronizar e reabrir | Duas variações no mesmo usuário: detalhe de AI aberto online; depois uma nova reserva AO preparada pela LLM, cuja informação completa foi sincronizada somente na Agenda por `/meus`, sem abrir seu detalhe antes do offline. | Informações previamente sincronizadas continuam acessíveis após perda de rede e reinício. | ⏳ PENDENTE | Variação 2 reprovada por leitura do código (#430); variação 1 pendente de execução. |
 | CT-HU015-UI-006 | Offline sem dados próprios válidos | Reserva nunca sincronizada neste dispositivo; depois chave de teste com JSON inválido/estrutura incompleta. Preparação isolada com apoio da LLM, quando possível. | Indisponibilidade clara sem cache válido; recuperação online sem dados inventados. | ⏳ PENDENTE | BDD: offline sem dados sincronizados; robustez do cache. |
 | CT-HU015-UI-007 | Reconectar e atualizar o cache com a versão atual | AI previamente sincronizada; C1 saída alterada de 05:45 para 05:50; depois principal/ponto/IES alterados separadamente por API administrativa. | Reconexão exibe e preserva a última informação real, limpando o estado de erro/offline. | ⏳ PENDENTE | BDD: atualização ao restabelecer conexão; risco de revalidação por atualizado_em. |
 | CT-HU015-UI-008 | Separação por data e programação diária | AIV e outra reserva de A com linhas/horários distintos; quando alocação existir, V1 em D1 e V2 em D2 e alteração de D1. | Datas e trechos isolados; veículo diário coberto quando a alocação existir. | ⏳ PENDENTE | BDD: mesmos dados offline, veículo por data e alteração de programação. |
@@ -61,8 +61,8 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU015-UI-009 | Isolamento de conta e sessão no cache | AIV de A e BI de B na mesma data, com nomes/pontos distintos; A já sincronizou, B ainda não. | Troca de conta/logout não expõe informações sincronizadas por outro aluno. | ⏳ PENDENTE | BDD de dados do próprio aluno; risco de cache compartilhado. |
-| CT-HU015-UI-010 | Recusa HTTP e cancelamento conhecido sem falso offline | Detalhe em cache; reserva cancelada em outra sessão; acesso realmente recusado pela API; controle de rede para distinguir HTTP de erro sem resposta. | Recusas reais não viram consulta offline indevida; cancelamento conhecido invalida a viagem. | ⏳ PENDENTE | Integração com BDD de recurso indisponível e controle de acesso; FA-002. |
+| CT-HU015-UI-009 | Isolamento de conta e sessão no cache | AIV de A e BI de B na mesma data, com nomes/pontos distintos; A já sincronizou, B ainda não. | Troca de conta/logout não expõe informações sincronizadas por outro aluno. | ❌ FALHOU | Reprovado: cache de agenda e de detalhes sem dono, logout não limpa (reproduzido na HU-014). #423 |
+| CT-HU015-UI-010 | Recusa HTTP e cancelamento conhecido sem falso offline | Detalhe em cache; reserva cancelada em outra sessão; acesso realmente recusado pela API; controle de rede para distinguir HTTP de erro sem resposta. | Recusas reais não viram consulta offline indevida; cancelamento conhecido invalida a viagem. | ❌ FALHOU | Reprovado por leitura do código: recusa HTTP é tratada como offline e mostra a viagem guardada. #431 |
 
 ## Detalhamento dos casos
 
@@ -115,8 +115,10 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Reprovado por leitura do código do commit `4ac87b46`, sem executar a tela.
+- O resumo de rota complementar da Agenda usa um nome e uma conexão só (`ida?.nome ?? volta?.nome`): no AIV mostraria “Van 2 - Bairro Novo” e “Trevo do Bairro Novo” também para a volta (C2, Conexão Planalto) (#429).
+- Na tela de detalhes, na volta, o cartão da complementar vem antes do da principal e os rótulos estão invertidos: “Ponto de Embarque” da complementar mostra o ponto de desembarque, e “Origem (IES)” da principal mostra o ponto do bairro. A segunda parte foi vista na tela na execução da HU-014 (#418).
+- Status: ❌ Falhou (por leitura do código). Issues: #429, #418.
 
 ---
 
@@ -141,8 +143,9 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Os campos **Veículo** e **Motorista** aparecem como “A definir” sem alocação; foi visto na tela (detalhes de 11/11, na execução da HU-014) e confere com o código. A decisão do PO (#389, item 7) é ocultá-los.
+- A reserva direta (AD) não mostra seção de complementar, conforme o código.
+- Status: ❌ Falhou. Issue: #428.
 
 ---
 
@@ -167,8 +170,8 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Reprovado por leitura do código: em `home.tsx`, “Sua viagem hoje” é um cartão fixo (“Ônibus 04 - Placa OCR-1234”, “Rota Centro → UFC | Saída 06:40”) que aparece com ou sem reserva; o botão **Ver detalhes** tem `onPress` vazio e os atalhos do Acesso Rápido não têm ação.
+- Status: ❌ Falhou (por leitura do código). Issue: #427.
 
 ---
 
@@ -195,8 +198,9 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Variação 2 (reserva sincronizada só pela Agenda): reprovada por leitura do código; `obterDetalhesViagem` consulta apenas a chave de detalhes e propaga o erro, sem usar a lista guardada de `/meus` (#430).
+- Variação 1 (detalhe aberto online): pendente de execução na tela. Na web, o reinício offline depende de o navegador carregar o app sem rede; se não carregar, registrar a limitação do ambiente.
+- Status: ⏳ Pendente (variação 2 ❌).
 
 ---
 
@@ -302,8 +306,9 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Reprovado: o cache da Agenda sem dono e o logout sem limpeza foram reproduzidos na tela na execução da HU-014 (CT-HU014-UI-010, #423).
+- Por leitura do código, a chave dos detalhes (`@GOUOCE:detalhes_viagem_<data>`) também não tem o id do usuário, então B, offline e sem cache próprio, abriria o detalhe guardado por A na mesma data.
+- Status: ❌ Falhou. Issue: #423.
 
 ---
 
@@ -329,8 +334,8 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Reprovado por leitura do código: o `catch` de `obterDetalhesViagem` usa o cache em qualquer erro, inclusive 404, 401 e 403, e devolve `isOffline: true`; uma reserva cancelada em outra sessão reapareceria como viagem salva (#431).
+- Status: ❌ Falhou (por leitura do código). Issue: #431.
 
 ---
 
@@ -354,7 +359,12 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. Riscos de leitura estão no índice do épico. | — |
+| CT-002 | O resumo da Agenda reaproveita nome e conexão da ida na volta; na volta, os rótulos e a ordem dos cartões estão invertidos. | #429, #418 |
+| CT-003 | Veículo e Motorista aparecem como “A definir” sem alocação; o PO decidiu ocultar. | #428 |
+| CT-004 | O resumo “Sua viagem hoje” do Início é texto fixo e o botão não faz nada. | #427 |
+| CT-005 | Offline, o detalhe de uma reserva sincronizada só pela Agenda dá erro. | #430 |
+| CT-009 | O cache de agenda e de detalhes não tem dono, e o logout não o apaga. | #423 |
+| CT-010 | Recusa do servidor (404, 401, 403) é tratada como offline e mostra a viagem guardada. | #431 |
 
 ## Fontes e observações
 
@@ -365,4 +375,5 @@ Executar na ordem e registrar cada variação. Os casos dependentes da alocaçã
 - [Suíte de API](../api/API-HU-015.md). Preparação e conferência pela LLM não substituem a observação manual da UI por Cauan.
 - Os cenários do BDD para Início são explicitamente cobertos, mesmo que o caminho básico do AC-01 possa ser atendido pela Agenda.
 - Alocação ausente implica ocultar campos atualmente, conforme o PO; exibição de veículo por data é dependência futura, não motivo para bloquear os demais cenários.
+- **Execução de 10/11/2026 (parcial):** os CT-002, 003, 004, 009 e 010 foram reprovados por leitura do código do commit `4ac87b46`, a pedido do testador, para não gastar execução manual em falhas já evidentes; a evidência de cada um está no detalhamento, e a execução na tela será refeita no reteste. Os CT-001, 006, 007 e 008 e a variação 1 do CT-005 seguem pendentes de execução manual. A decisão sobre qual front vale (PR #378 ou #379) cabe ao time.
 - Registrar dispositivos, mensagens e resultado de cada variação somente durante a execução. Evidências futuras em JSON simples, sem pastas de executor/evidências. Nenhuma execução ou issue faz parte desta revisão do planejamento.
