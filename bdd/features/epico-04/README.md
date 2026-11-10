@@ -83,6 +83,7 @@ Os cenários seguem os requisitos. A seção 7.5.1 (HU-013) foi atualizada em 09
 - Feriado e recesso estão fora do escopo (PO, #389, item 1): saíram da HU-013 e do status do calendário da HU-014. A tabela da migration 79 permanece, mas nenhum teste ou tela cobra feriado.
 - Dia indisponível: sábado, domingo e dia sem nenhuma rota principal ativa (PO, #389, item 2).
 - Mensagens: "Já existe um agendamento ativo para este dia. Edite ou cancele o agendamento existente." e "Nenhum agendamento foi criado." (PO, #389, item 4).
+- Passo 22 do fluxo principal da HU-013 passou a citar o ponto de desembarque, como o AC-08.
 - Nome da ação da HU-014: "Remover agendamento" (PO, #389, item 5).
 - HU-015: horário de saída na ida e de retorno na volta; ônibus e motorista ocultos até existir alocação diária (PO, #389, itens 6 e 7).
 - O backend da HU-015 (PR #388) já devolve o horário de saída, o horário de retorno e o ponto de conexão da rota complementar, a consulta por data (`GET /transporte/agendamentos/detalhes?data=YYYY-MM-DD`) e ônibus e motorista nulos.
@@ -97,7 +98,3 @@ Os cenários seguem os requisitos. A seção 7.5.1 (HU-013) foi atualizada em 09
 - **Alocação ao cancelar (HU-014, AC-06):** `remove_allocations` ainda não faz nada até as HU-016 e HU-018.
 - **Bloqueio de inativação (HU-008, HU-011 e HU-012):** a consulta de agendamentos futuros nunca foi ligada (`TODO(HU-013)`).
 - **Tela da HU-015:** chama `/agendamentos/detalhes`, sem o prefixo `/transporte` da API.
-
-**Pendente na redação dos requisitos:**
-
-- **HU-013, fluxo principal (passo 22):** a lista de campos da volta cita faculdade de origem e rota complementar, mas não o ponto de desembarque, que o AC-08 inclui. Os cenários seguem o AC-08.

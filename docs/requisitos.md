@@ -1477,7 +1477,7 @@ Como aluno, quero acessar um formulário inteligente no aplicativo para agendar 
     -     \- Ponto de embarque.
     -     \- Faculdade (IES) de destino.
     -     \- Rota complementar de ida (se aplicável).
-22. O sistema questiona se o aluno utilizará o ônibus na volta. Se "Sim", exibe os campos correspondentes para o retorno (Faculdade de origem e rota complementar, se aplicável).
+22. O sistema questiona se o aluno utilizará o ônibus na volta. Se "Sim", exibe os campos correspondentes para o retorno (Faculdade de origem, ponto de desembarque e rota complementar, se aplicável).
 23. O aluno aciona o botão para confirmar o agendamento.
 24. O sistema valida os dados e vincula o agendamento ao perfil logado do aluno.
 25. O sistema exibe uma mensagem de sucesso ("Agendamento realizado com sucesso") e atualiza o status do dia selecionado.  
