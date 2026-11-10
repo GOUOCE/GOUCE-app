@@ -1,0 +1,58 @@
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: hu014_qa
+      POSTGRES_USER: hu014_qa
+      POSTGRES_PASSWORD: ${HU014_DB_PASSWORD:?Defina a senha temporaria do banco de teste}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U hu014_qa -d hu014_qa]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+  minio:
+    image: quay.io/minio/minio
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: hu014qa
+      MINIO_ROOT_PASSWORD: ${HU014_STORAGE_PASSWORD:?Defina a senha temporaria do storage}
+    volumes:
+      - storage_data:/data
+  api:
+    image: atu-app-backend:latest
+    user: "${HU014_UID:-1000}:${HU014_GID:-1000}"
+    working_dir: /app
+    command: [sh, -c, "alembic upgrade head && exec uvicorn main:app --host 0.0.0.0 --port 8000"]
+    environment:
+      DATABASE_URL: postgresql://hu014_qa:${HU014_DB_PASSWORD}@db:5432/hu014_qa
+      SECRET_KEY_JWT: ${HU014_JWT_SECRET:?Defina um segredo temporario de teste}
+      ALGORITHM: HS256
+      TZ: America/Fortaleza
+      DEFAULT_ADMIN_EMAIL: admin.hu014@example.com
+      DEFAULT_ADMIN_PASSWORD: ${HU014_ACCOUNT_PASSWORD:?Defina uma senha temporaria das contas sinteticas}
+      HU014_ACCOUNT_PASSWORD: ${HU014_ACCOUNT_PASSWORD}
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ROOT_USER: hu014qa
+      MINIO_ROOT_PASSWORD: ${HU014_STORAGE_PASSWORD}
+      MINIO_BUCKET: hu014-qa
+      EMAIL_SIMULATION_MODE: "true"
+      AGENDAMENTO_JANELA_DIAS: "30"
+      AGENDAMENTO_LIMITE_ATIVOS: "22"
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONPATH: /app
+    volumes:
+      - ${HU014_SOURCE_ROOT:?Defina a raiz do checkout testado}/backend:/app:ro
+      - ${HU014_SOURCE_ROOT}/tests/manual/epico-04/HU-014/api/execucao:/qa:ro
+      - ${HU014_EVIDENCE_DIR:?Defina o diretorio de evidencias}:/evidence
+    ports:
+      - "127.0.0.1:8014:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_started
+volumes:
+  db_data:
+  storage_data:
