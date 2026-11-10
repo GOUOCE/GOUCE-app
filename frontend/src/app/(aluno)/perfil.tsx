@@ -96,6 +96,16 @@ export default function PerfilScreen() {
       );
     }
 
+    if (status === 'rejeitado') {
+      return (
+        <Surface style={[styles.statusBadge, { backgroundColor: '#FFEBEE' }]} elevation={0}>
+          <Text style={[styles.statusText, { color: '#B00020' }]}>
+            Reprovado - Cadastro recusado
+          </Text>
+        </Surface>
+      );
+    }
+
     return (
       <Surface style={[styles.statusBadge, { backgroundColor: '#E1F5FE' }]} elevation={0}>
         <Text style={[styles.statusText, { color: '#0288D1' }]}>

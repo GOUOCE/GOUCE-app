@@ -20,8 +20,12 @@ export default function StudentLayout() {
     return <Redirect href="/acesso-negado" />;
   }
 
-  if ((user.status || '').toLowerCase() === 'pendente') {
+  const statusAluno = (user.status || '').toLowerCase();
+  if (statusAluno === 'pendente') {
     return <Redirect href="/(autenticacao)/cadastro-pendente" />;
+  }
+  if (statusAluno === 'rejeitado') {
+    return <Redirect href="/(autenticacao)/cadastro-rejeitado" />;
   }
 
   return (
