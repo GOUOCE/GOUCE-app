@@ -47,10 +47,9 @@ describe('HU-014 - Service Tests (Visualização e Cancelamento de Agendamentos)
     expect(api.delete).toHaveBeenCalledWith('/transporte/agendamentos/1');
   });
 
-  it('deve tratar falha na comunicação com a API ao tentar cancelar (FA-004)', async () => {
+  it('deve tratar falha na comunicação com a API ao tentar cancelar (FA-004 / Issue #411)', async () => {
     (api.delete as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
 
-    const resultado = await agendamentoService.cancelarAgendamento('1');
-    expect(resultado).toEqual({ success: true });
+    await expect(agendamentoService.cancelarAgendamento('1')).rejects.toThrow('Network error');
   });
 });

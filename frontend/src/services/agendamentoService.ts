@@ -44,6 +44,23 @@ export interface AgendamentoPayload {
   rota_complementar_volta_id?: number | null;
 }
 
+export interface CalendarioDiaResponse {
+  data: string; // YYYY-MM-DD
+  estado: string; // "AGENDADO", "DISPONIVEL", "INDISPONIVEL", "FERIADO", "RECESSO"
+  descricao?: string | null;
+  pode_agendar: boolean;
+  agendamento_id?: number | null;
+  pode_remover?: boolean;
+  pode_editar?: boolean;
+}
+
+export interface CalendarioResponse {
+  mes: string;
+  dias: CalendarioDiaResponse[];
+  ativos: number;
+  limite: number;
+}
+
 export const agendamentoService = {
   async obterOpcoesAgendamento(): Promise<OpcoesAgendamentoResponse> {
     try {
@@ -84,26 +101,27 @@ export const agendamentoService = {
     }
   },
 
+  async listarCalendarioMes(mesIso: string = '2026-09'): Promise<CalendarioResponse> {
+    const response = await api.get(`/transporte/agendamentos/calendario?mes=${mesIso}`);
+    return response.data;
+  },
+
   async listarAgendamentosAtivos(): Promise<AgendamentoDia[]> {
-    try {
-      const response = await api.get('/transporte/agendamentos/meus');
-      const dados = response.data;
-      const lista = dados.agendamentos || dados;
-      return (lista || []).map((item: any) => ({
-        idAgendamento: item.id,
-        dataIso: item.data,
-        usaIda: item.usa_ida,
-        usaVolta: item.usa_volta,
-        pontoEmbarqueIda: item.ponto_embarque_id ? String(item.ponto_embarque_id) : undefined,
-        faculdadeDestinoIda: item.ies_destino_id ? String(item.ies_destino_id) : undefined,
-        pontoDesembarqueVolta: item.ponto_desembarque_id ? String(item.ponto_desembarque_id) : undefined,
-        faculdadeOrigemVolta: item.ies_origem_id ? String(item.ies_origem_id) : undefined,
-        pode_remover: item.pode_remover,
-        pode_editar: item.pode_editar,
-      }));
-    } catch {
-      return [];
-    }
+    const response = await api.get('/transporte/agendamentos/meus');
+    const dados = response.data;
+    const lista = dados.agendamentos || dados;
+    return (lista || []).map((item: any) => ({
+      idAgendamento: item.id,
+      dataIso: item.data,
+      usaIda: item.usa_ida,
+      usaVolta: item.usa_volta,
+      pontoEmbarqueIda: item.ponto_embarque_id ? String(item.ponto_embarque_id) : undefined,
+      faculdadeDestinoIda: item.ies_destino_id ? String(item.ies_destino_id) : undefined,
+      pontoDesembarqueVolta: item.ponto_desembarque_id ? String(item.ponto_desembarque_id) : undefined,
+      faculdadeOrigemVolta: item.ies_origem_id ? String(item.ies_origem_id) : undefined,
+      pode_remover: item.pode_remover,
+      pode_editar: item.pode_editar,
+    }));
   },
 
   async criarAgendamento(payload: AgendamentoPayload): Promise<any> {
@@ -117,11 +135,12 @@ export const agendamentoService = {
   },
 
   async cancelarAgendamento(idAgendamento: string | number): Promise<any> {
-    try {
-      const response = await api.delete(`/transporte/agendamentos/${idAgendamento}`);
-      return response.data;
-    } catch {
-      return { success: true };
-    }
+    const response = await api.delete(`/transporte/agendamentos/${idAgendamento}`);
+    return response.data;
+  },
+
+  async detalharAgendamento(idAgendamento: string | number): Promise<any> {
+    const response = await api.get(`/transporte/agendamentos/${idAgendamento}`);
+    return response.data;
   },
 };

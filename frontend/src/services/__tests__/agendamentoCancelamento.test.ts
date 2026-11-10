@@ -39,11 +39,10 @@ describe('HU-014: Visualização e Cancelamento de Agendamentos (Regras de Negó
     expect(api.delete).toHaveBeenCalledWith('/transporte/agendamentos/123');
   });
 
-  it('deve tratar falha de conexão na API ao tentar cancelar, mantendo o estado de erro amigável', async () => {
+  it('deve tratar falha de conexão na API ao tentar cancelar, mantendo o estado de erro amigável (Issue #411)', async () => {
     (api.delete as jest.Mock).mockRejectedValueOnce(new Error('Erro de conexão com o servidor'));
 
-    const resultado = await agendamentoService.cancelarAgendamento('123');
-    expect(resultado).toEqual({ success: true });
+    await expect(agendamentoService.cancelarAgendamento('123')).rejects.toThrow('Erro de conexão com o servidor');
   });
 
   it('deve ocultar a opção de remoção para datas passadas (regra RN-005 e critério 1)', () => {

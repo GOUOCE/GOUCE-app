@@ -1,108 +1,116 @@
 import React, { useState, useCallback } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal } from 'react-native';
-import { Text, Surface, Snackbar, Button } from 'react-native-paper';
+import { Text, Surface, Button } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { ChevronLeft, ChevronRight, ChevronDown, Pencil, Trash2, X } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, ChevronDown, Pencil, Trash2 } from 'lucide-react-native';
 
-import { agendamentoService, AgendamentoDia } from '@/services/agendamentoService';
-import { AppPopup } from '@/components/ui/AppPopup';
+import { agendamentoService, CalendarioDiaResponse, CalendarioResponse } from '@/services/agendamentoService';
+import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
-interface DiaCalendario {
-  diaNum: number;
-  dataIso: string; // YYYY-MM-DD
-  status: 'agendado' | 'indisponivel' | 'feriado' | 'normal';
-  idAgendamento?: string | number;
-  ehPassado?: boolean;
-}
-
-const AGENDAMENTOS_DEMO: AgendamentoDia[] = [
-  { dataIso: '2026-08-31', usaIda: true, horarioIda: '05:30:00', usaVolta: true, horarioVolta: '17:00:00', idAgendamento: '1' },
-  { dataIso: '2026-09-01', usaIda: true, horarioIda: '05:30:00', usaVolta: true, horarioVolta: '17:00:00', idAgendamento: '2' },
-  { dataIso: '2026-09-02', usaIda: true, horarioIda: '05:30:00', usaVolta: true, horarioVolta: '17:00:00', idAgendamento: '3' },
-  { dataIso: '2026-09-03', usaIda: true, horarioIda: '05:30:00', usaVolta: true, horarioVolta: '17:00:00', idAgendamento: '4' },
-  { dataIso: '2026-09-04', usaIda: true, horarioIda: '05:30:00', usaVolta: true, horarioVolta: '17:00:00', idAgendamento: '5' },
-];
-
-const DIAS_DO_MES: DiaCalendario[] = [
-  // Semana 1 (31/08 a 05/09)
-  { diaNum: 31, dataIso: '2026-08-31', status: 'agendado', idAgendamento: '1' },
-  { diaNum: 1, dataIso: '2026-09-01', status: 'agendado', idAgendamento: '2' },
-  { diaNum: 2, dataIso: '2026-09-02', status: 'agendado', idAgendamento: '3' },
-  { diaNum: 3, dataIso: '2026-09-03', status: 'agendado', idAgendamento: '4' },
-  { diaNum: 4, dataIso: '2026-09-04', status: 'agendado', idAgendamento: '5' },
-  { diaNum: 5, dataIso: '2026-09-05', status: 'indisponivel' },
-  // Semana 2
-  { diaNum: 6, dataIso: '2026-09-06', status: 'indisponivel' },
-  { diaNum: 7, dataIso: '2026-09-07', status: 'feriado' },
-  { diaNum: 8, dataIso: '2026-09-08', status: 'normal' },
-  { diaNum: 9, dataIso: '2026-09-09', status: 'normal' },
-  { diaNum: 10, dataIso: '2026-09-10', status: 'normal' },
-  { diaNum: 11, dataIso: '2026-09-11', status: 'normal' },
-  { diaNum: 12, dataIso: '2026-09-12', status: 'indisponivel' },
-  // Semana 3
-  { diaNum: 13, dataIso: '2026-09-13', status: 'indisponivel' },
-  { diaNum: 14, dataIso: '2026-09-14', status: 'normal' },
-  { diaNum: 15, dataIso: '2026-09-15', status: 'normal' },
-  { diaNum: 16, dataIso: '2026-09-16', status: 'normal' },
-  { diaNum: 17, dataIso: '2026-09-17', status: 'normal' },
-  { diaNum: 18, dataIso: '2026-09-18', status: 'normal' },
-  { diaNum: 19, dataIso: '2026-09-19', status: 'indisponivel' },
-  // Semana 4
-  { diaNum: 20, dataIso: '2026-09-20', status: 'indisponivel' },
-  { diaNum: 21, dataIso: '2026-09-21', status: 'normal' },
-  { diaNum: 22, dataIso: '2026-09-22', status: 'normal' },
-  { diaNum: 23, dataIso: '2026-09-23', status: 'normal' },
-  { diaNum: 24, dataIso: '2026-09-24', status: 'normal' },
-  { diaNum: 25, dataIso: '2026-09-25', status: 'normal' },
-  { diaNum: 26, dataIso: '2026-09-26', status: 'indisponivel' },
-  // Semana 5
-  { diaNum: 27, dataIso: '2026-09-27', status: 'indisponivel' },
-  { diaNum: 28, dataIso: '2026-09-28', status: 'normal' },
-  { diaNum: 29, dataIso: '2026-09-29', status: 'normal' },
-  { diaNum: 30, dataIso: '2026-09-30', status: 'normal' },
-  { diaNum: 31, dataIso: '2026-09-31', status: 'normal' },
+const OPCOES_MESES = [
+  { label: 'Setembro 2026', value: '2026-09' },
+  { label: 'Outubro 2026', value: '2026-10' },
+  { label: 'Novembro 2026', value: '2026-11' },
+  { label: 'Dezembro 2026', value: '2026-12' },
+  { label: 'Janeiro 2027', value: '2027-01' },
 ];
 
 export default function MeusAgendamentosScreen() {
   const router = useRouter();
 
-  const [agendamentos, setAgendamentos] = useState<AgendamentoDia[]>([]);
-  const [diaSelecionado, setDiaSelecionado] = useState<DiaCalendario | null>(null);
+  // Mês selecionado no formato YYYY-MM
+  const [mesIso, setMesIso] = useState<string>('2026-09');
+  const [calendario, setCalendario] = useState<CalendarioResponse | null>(null);
+  const [diaSelecionado, setDiaSelecionado] = useState<CalendarioDiaResponse | null>(null);
+  const [erroCarregamento, setErroCarregamento] = useState(false);
 
-  // Modais de Ação e Confirmação
+  // Modais de Ação, Mês e Confirmação
+  const [modalMesesVisible, setModalMesesVisible] = useState(false);
   const [menuOpcoesVisible, setMenuOpcoesVisible] = useState(false);
   const [modalCancelarVisible, setModalCancelarVisible] = useState(false);
-  const [modalDetalhesVisible, setModalDetalhesVisible] = useState(false);
 
-  // Snackbar Toast
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
+  // Estado do Pop-up de Resultado (Sucesso ou Erro - Issue #413)
+  const [popupResultado, setPopupResultado] = useState<{
+    visible: boolean;
+    type?: PopupType;
+    title: string;
+    message: string;
+    confirmText?: string;
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+  });
 
-  const carregarAgendamentos = useCallback(async () => {
+  const showResultadoPopup = (type: PopupType, title: string, message: string) => {
+    setPopupResultado({
+      visible: true,
+      type,
+      title,
+      message,
+      confirmText: 'Entendido',
+    });
+  };
+
+  const carregarCalendario = useCallback(async (mes: string) => {
+    setErroCarregamento(false);
     try {
-      const lista = await agendamentoService.listarAgendamentosAtivos();
-      setAgendamentos(lista || []);
+      const res = await agendamentoService.listarCalendarioMes(mes);
+      setCalendario(res);
     } catch {
-      // Mantem lista inicial sem quebrar UI
+      setErroCarregamento(true);
+      setCalendario(null);
     }
   }, []);
 
   useFocusEffect(
     useCallback(() => {
       let cancelado = false;
-      carregarAgendamentos().then(() => {
+      carregarCalendario(mesIso).then(() => {
         if (cancelado) return;
       });
       return () => {
         cancelado = true;
       };
-    }, [carregarAgendamentos])
+    }, [carregarCalendario, mesIso])
   );
 
-  const datasAgendadasSet = new Set(agendamentos.map(a => a.dataIso));
+  const handleNavegarMes = (delta: number) => {
+    const [anoStr, mesStr] = mesIso.split('-');
+    let ano = parseInt(anoStr, 10);
+    let mes = parseInt(mesStr, 10) + delta;
 
-  const handleSelecionarDia = (dia: DiaCalendario) => {
-    if (datasAgendadasSet.has(dia.dataIso) || dia.status === 'agendado') {
+    if (mes > 12) {
+      mes = 1;
+      ano += 1;
+    } else if (mes < 1) {
+      mes = 12;
+      ano -= 1;
+    }
+
+    const novoMesIso = `${ano}-${String(mes).padStart(2, '0')}`;
+    setMesIso(novoMesIso);
+    carregarCalendario(novoMesIso);
+  };
+
+  const handleSelecionarMesOption = (novoMesIso: string) => {
+    setModalMesesVisible(false);
+    setMesIso(novoMesIso);
+    carregarCalendario(novoMesIso);
+  };
+
+  const formatarTituloMes = (iso: string) => {
+    const [anoStr, mesStr] = iso.split('-');
+    const mesNum = parseInt(mesStr, 10);
+    const meses = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    return `${meses[mesNum - 1] || 'Setembro'} ${anoStr}`;
+  };
+
+  const handleSelecionarDia = (dia: CalendarioDiaResponse) => {
+    if (dia.estado === 'AGENDADO') {
       setDiaSelecionado(dia);
       setMenuOpcoesVisible(true);
     }
@@ -110,7 +118,15 @@ export default function MeusAgendamentosScreen() {
 
   const handleVerDetalhes = () => {
     setMenuOpcoesVisible(false);
-    setModalDetalhesVisible(true);
+    if (diaSelecionado && diaSelecionado.agendamento_id) {
+      router.push({
+        pathname: '/(aluno)/agendamento-detalhes',
+        params: {
+          dataIso: diaSelecionado.data,
+          idAgendamento: String(diaSelecionado.agendamento_id),
+        },
+      } as any);
+    }
   };
 
   const handleEditar = () => {
@@ -118,7 +134,7 @@ export default function MeusAgendamentosScreen() {
     if (diaSelecionado) {
       router.push({
         pathname: '/(aluno)/agendar-transporte/configurar',
-        params: { datasIso: diaSelecionado.dataIso, modoEdicao: 'true' },
+        params: { datasIso: diaSelecionado.data, modoEdicao: 'true' },
       } as any);
     }
   };
@@ -130,21 +146,43 @@ export default function MeusAgendamentosScreen() {
 
   const handleConfirmarCancelamento = async () => {
     setModalCancelarVisible(false);
-    if (!diaSelecionado) return;
+    if (!diaSelecionado || !diaSelecionado.agendamento_id) return;
 
     try {
-      await agendamentoService.cancelarAgendamento(diaSelecionado.idAgendamento || diaSelecionado.dataIso);
-      setAgendamentos(agendamentos.filter(a => a.dataIso !== diaSelecionado.dataIso));
-      setSnackbarMessage('Agendamento cancelado com sucesso');
-      setSnackbarVisivel(true);
+      await agendamentoService.cancelarAgendamento(diaSelecionado.agendamento_id);
+      showResultadoPopup(
+        'success',
+        'Sucesso!',
+        'Agendamento cancelado com sucesso.'
+      );
+      carregarCalendario(mesIso);
     } catch {
-      // FA-004: Falha de comunicação mantém o agendamento ativo
-      setSnackbarMessage('Não foi possível processar o cancelamento. Verifique sua conexão e tente novamente');
-      setSnackbarVisivel(true);
+      showResultadoPopup(
+        'error',
+        'Falha no Cancelamento',
+        'Não foi possível processar o cancelamento. Verifique sua conexão e tente novamente.'
+      );
     }
   };
 
-  const semAgendamentosFuturos = agendamentos.length === 0;
+  const ativosCount = calendario?.ativos ?? 0;
+  const limiteMax = calendario?.limite ?? 22;
+
+  const hojeIso = new Date().toISOString().split('T')[0];
+  const podeRemoverDia = diaSelecionado
+    ? Boolean(diaSelecionado.pode_remover !== false && diaSelecionado.data >= hojeIso)
+    : false;
+
+  // Calculo de deslocamento de dias da semana para o 1º dia do mes
+  const calcularOffsetPrimeiroDia = (iso: string) => {
+    const [ano, mes] = iso.split('-').map(Number);
+    const primeiroDia = new Date(ano, mes - 1, 1);
+    return primeiroDia.getDay(); // 0 = Domingo, 1 = Segunda...
+  };
+
+  const offsetBranco = calcularOffsetPrimeiroDia(mesIso);
+  const listaDias = calendario?.dias || [];
+  const semAgendamentosFuturos = !erroCarregamento && calendario !== null && ativosCount === 0;
 
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
@@ -152,15 +190,30 @@ export default function MeusAgendamentosScreen() {
         {/* Título Principal */}
         <Text variant="headlineMedium" style={styles.mainTitle}>Meus agendamentos</Text>
 
-        {semAgendamentosFuturos ? (
-          /* FA-001: Estado Vazio */
+        {erroCarregamento ? (
+          /* FA-004 (AC-08 / Issue #412): Erro de Conexão na Leitura */
+          <View style={styles.emptyContainer}>
+            <Text variant="bodyLarge" style={[styles.emptyText, { color: '#B00020' }]}>
+              Não foi possível carregar seus agendamentos. Verifique sua conexão e tente novamente.
+            </Text>
+            <Button
+              mode="contained"
+              onPress={() => carregarCalendario(mesIso)}
+              style={styles.retryBtn}
+              buttonColor="#3E5F90"
+            >
+              Tentar novamente
+            </Button>
+          </View>
+        ) : semAgendamentosFuturos ? (
+          /* FA-001 (AC-02): Estado Vazio Confirmado pela API */
           <View style={styles.emptyContainer}>
             <Text variant="bodyLarge" style={styles.emptyText}>
               Você ainda não possui agendamentos futuros.
             </Text>
           </View>
         ) : (
-          /* Conteúdo com Calendário e Agendamentos Ativos */
+          /* Conteúdo do Calendário Mensal Dinâmico */
           <View style={styles.calendarSection}>
             <Text variant="bodyMedium" style={styles.subtitle}>
               Selecione um dia no calendário para gerenciar suas viagens. É possível realizar novos agendamentos com até 30 dias de antecedência.
@@ -168,26 +221,27 @@ export default function MeusAgendamentosScreen() {
 
             {/* Contador de Agendamentos Ativos */}
             <Text variant="bodyMedium" style={styles.counterText}>
-              {agendamentos.length} de 22 agendamentos ativos
+              {ativosCount} de {limiteMax} agendamentos ativos
             </Text>
 
-            {/* Seletor de Mês */}
+            {/* Seletor de Mês Interativo (Issue #407) */}
             <View style={styles.monthSelectorRow}>
-              <TouchableOpacity style={styles.monthDropdown}>
-                <Text style={styles.monthText}>Setembro 2026</Text>
+              <TouchableOpacity style={styles.monthDropdown} onPress={() => setModalMesesVisible(true)}>
+                <Text style={styles.monthText}>{formatarTituloMes(mesIso)}</Text>
                 <ChevronDown size={18} color="#333" />
               </TouchableOpacity>
+
               <View style={styles.navArrows}>
-                <TouchableOpacity style={styles.arrowBtn}>
+                <TouchableOpacity style={styles.arrowBtn} onPress={() => handleNavegarMes(-1)}>
                   <ChevronLeft size={20} color="#666" />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.arrowBtn}>
+                <TouchableOpacity style={styles.arrowBtn} onPress={() => handleNavegarMes(1)}>
                   <ChevronRight size={20} color="#666" />
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* Grade do Calendário */}
+            {/* Grade do Calendário Dinâmico */}
             <Surface style={styles.calendarSurface} elevation={0}>
               {/* Dias da Semana */}
               <View style={styles.weekHeadersRow}>
@@ -198,32 +252,40 @@ export default function MeusAgendamentosScreen() {
 
               {/* Dias do Mês */}
               <View style={styles.daysGrid}>
-                {/* Espaço em branco antes do dia 31 (Domingo inicial) */}
-                <View style={styles.dayCell} />
+                {/* Espaços em branco antes do 1º dia do mês */}
+                {Array.from({ length: offsetBranco }).map((_, idx) => (
+                  <View key={`empty-${idx}`} style={styles.dayCell} />
+                ))}
 
-                {DIAS_DO_MES.map((dia) => {
-                  const isAgendado = datasAgendadasSet.has(dia.dataIso);
-                  const isIndisponivel = dia.status === 'indisponivel';
-                  const isFeriado = dia.status === 'feriado';
+                {listaDias.map((dia) => {
+                  const [anoVal, mesVal, diaNum] = dia.data.split('-').map(Number);
+                  const dataObj = new Date(anoVal, mesVal - 1, diaNum);
+                  const diaDaSemana = dataObj.getDay(); // 0 = Domingo, 6 = Sábado
+                  const ehFimDeSemana = diaDaSemana === 0 || diaDaSemana === 6;
+
+                  const isAgendado = dia.estado === 'AGENDADO';
+                  const isIndisponivel = dia.estado === 'INDISPONIVEL' || (ehFimDeSemana && !isAgendado);
+                  const isFeriadoOuRecesso = dia.estado === 'FERIADO' || dia.estado === 'RECESSO';
 
                   return (
                     <TouchableOpacity
-                      key={dia.dataIso}
+                      key={dia.data}
                       onPress={() => handleSelecionarDia(dia)}
                       style={styles.dayCell}
                       activeOpacity={isAgendado ? 0.7 : 1}
+                      disabled={!isAgendado}
                     >
                       {isAgendado ? (
                         <View style={styles.agendadoCircle}>
-                          <Text style={styles.agendadoText}>{dia.diaNum}</Text>
+                          <Text style={styles.agendadoText}>{diaNum}</Text>
                         </View>
                       ) : (
                         <Text style={[
                           styles.dayNumText,
                           isIndisponivel && styles.indisponivelText,
-                          isFeriado && styles.feriadoText,
+                          isFeriadoOuRecesso && styles.feriadoText,
                         ]}>
-                          {dia.diaNum}
+                          {diaNum}
                         </Text>
                       )}
                     </TouchableOpacity>
@@ -246,12 +308,30 @@ export default function MeusAgendamentosScreen() {
 
               <View style={styles.legendItem}>
                 <View style={[styles.dot, { backgroundColor: '#8B4513' }]} />
-                <Text style={styles.legendText}>Feriado</Text>
+                <Text style={styles.legendText}>Feriado / Recesso</Text>
               </View>
             </View>
           </View>
         )}
       </ScrollView>
+
+      {/* Modal Seletor de Meses (Issue #407) */}
+      <Modal visible={modalMesesVisible} transparent animationType="fade" onRequestClose={() => setModalMesesVisible(false)}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalMesesVisible(false)}>
+          <Surface style={styles.menuContent} elevation={4}>
+            <Text variant="titleMedium" style={styles.modalTitle}>Selecionar Mês</Text>
+            {OPCOES_MESES.map((opt) => (
+              <TouchableOpacity
+                key={opt.value}
+                style={styles.optionRow}
+                onPress={() => handleSelecionarMesOption(opt.value)}
+              >
+                <Text style={[styles.optionText, opt.value === mesIso && styles.optionTextActive]}>{opt.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </Surface>
+        </TouchableOpacity>
+      </Modal>
 
       {/* Menu de Opções ao Selecionar Dia Agendado */}
       <Modal visible={menuOpcoesVisible} transparent animationType="fade" onRequestClose={() => setMenuOpcoesVisible(false)}>
@@ -266,8 +346,8 @@ export default function MeusAgendamentosScreen() {
               <Pencil size={18} color="#333" />
             </TouchableOpacity>
 
-            {/* Regra de Negócio: Não exibir remoção para datas passadas (FA-003 / Critério 7) */}
-            {!(diaSelecionado?.ehPassado) && (
+            {/* Oculta remoção para agendamentos passados (RN-005 / AC-07 / Issue #410) */}
+            {podeRemoverDia && (
               <TouchableOpacity style={styles.menuRow} onPress={handleIniciarRemocao}>
                 <Text style={[styles.menuText, { color: '#8B261D' }]}>Cancelar agendamento</Text>
                 <Trash2 size={18} color="#8B261D" />
@@ -277,40 +357,7 @@ export default function MeusAgendamentosScreen() {
         </TouchableOpacity>
       </Modal>
 
-      {/* Modal de Detalhes da Viagem */}
-      <Modal visible={modalDetalhesVisible} transparent animationType="fade" onRequestClose={() => setModalDetalhesVisible(false)}>
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalDetalhesVisible(false)}>
-          <Surface style={styles.detalhesContent} elevation={4}>
-            <Text variant="titleLarge" style={styles.detalhesTitle}>Detalhes da Viagem</Text>
-
-            <View style={styles.detalheItem}>
-              <Text style={styles.detalheLabel}>Data:</Text>
-              <Text style={styles.detalheVal}>{diaSelecionado?.dataIso}</Text>
-            </View>
-
-            <View style={styles.detalheItem}>
-              <Text style={styles.detalheLabel}>Trajeto:</Text>
-              <Text style={styles.detalheVal}>Ida (05:30) e Volta (17:00)</Text>
-            </View>
-
-            <View style={styles.detalheItem}>
-              <Text style={styles.detalheLabel}>Embarque:</Text>
-              <Text style={styles.detalheVal}>Igreja Matriz de Quixadá</Text>
-            </View>
-
-            <View style={styles.detalheItem}>
-              <Text style={styles.detalheLabel}>Destino:</Text>
-              <Text style={styles.detalheVal}>UFC - Campus Quixadá</Text>
-            </View>
-
-            <Button mode="contained" onPress={() => setModalDetalhesVisible(false)} style={styles.fecharBtn}>
-              Fechar
-            </Button>
-          </Surface>
-        </TouchableOpacity>
-      </Modal>
-
-      {/* Popup Modal de Confirmação de Cancelamento (HU-014 / FA-002) */}
+      {/* Popup Modal de Confirmação de Cancelamento (HU-014 / AC-04) */}
       <AppPopup
         visible={modalCancelarVisible}
         type="warning"
@@ -322,19 +369,16 @@ export default function MeusAgendamentosScreen() {
         onDismiss={() => setModalCancelarVisible(false)}
       />
 
-      {/* Snackbar Toast */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
+      {/* Pop-up de Resultado do Cancelamento (Sucesso ou Erro - Issue #413) */}
+      <AppPopup
+        visible={popupResultado.visible}
+        type={popupResultado.type}
+        title={popupResultado.title}
+        message={popupResultado.message}
+        confirmText={popupResultado.confirmText}
+        onConfirm={() => setPopupResultado((prev) => ({ ...prev, visible: false }))}
+        onDismiss={() => setPopupResultado((prev) => ({ ...prev, visible: false }))}
+      />
     </View>
   );
 }
@@ -360,6 +404,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
+    gap: 16,
   },
   emptyText: {
     textAlign: 'center',
@@ -367,6 +412,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 18,
     lineHeight: 26,
+  },
+  retryBtn: {
+    marginTop: 12,
+    borderRadius: 8,
   },
   calendarSection: {
     width: '100%',
@@ -485,6 +534,25 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 16,
   },
+  modalTitle: {
+    fontWeight: 'bold',
+    fontSize: 18,
+    color: '#191C20',
+    marginBottom: 8,
+  },
+  optionRow: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E2EC',
+  },
+  optionText: {
+    fontSize: 16,
+    color: '#191C20',
+  },
+  optionTextActive: {
+    fontWeight: 'bold',
+    color: '#00639A',
+  },
   menuRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -495,34 +563,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#191C20',
-  },
-  detalhesContent: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 24,
-    gap: 16,
-  },
-  detalhesTitle: {
-    fontWeight: 'bold',
-    color: '#191C20',
-  },
-  detalheItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  detalheLabel: {
-    fontWeight: '600',
-    color: '#666',
-  },
-  detalheVal: {
-    color: '#333',
-  },
-  fecharBtn: {
-    marginTop: 12,
-    borderRadius: 8,
-    backgroundColor: '#3E5F90',
-  },
-  snackbar: {
-    backgroundColor: '#322F35',
   },
 });
