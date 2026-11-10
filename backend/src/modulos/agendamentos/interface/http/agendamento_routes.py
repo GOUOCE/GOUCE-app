@@ -118,7 +118,7 @@ def meus(
 # Declarada antes de "/{agendamento_id}" para "detalhes" não ser lido como um id.
 @router.get("/detalhes", response_model=AgendamentoDetalheDTO)
 def detalhes_por_data(
-    data: Annotated[str, Query(pattern=r"^\d{4}-\d{2}-\d{2}$")],
+    data: Annotated[str, Query()],
     service: GerenciarAgendamentosUseCase = Depends(_use_case),
     user: dict = Depends(verify_student_standard_access),
 ):

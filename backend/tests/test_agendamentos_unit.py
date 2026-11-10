@@ -731,6 +731,30 @@ class GerenciarAgendamentosUseCaseTest(unittest.TestCase):
         self.assertEqual(context.exception.code, "VALIDATION_ERROR")
         self.assertEqual(context.exception.status_code, 422)
 
+    def test_detail_by_date_rejeita_formatos_invalidos(self):
+        casos = [
+            "10-11-2026",
+            "20261110",
+            "2026-W46-2",
+            "2026-1-5",
+            "2026-11-10T00:00",
+            " 2026-11-10",
+            "2026-11-10 ",
+            "2026-11-10\n",
+            "２０２６-11-10",
+            "",
+        ]
+        for data in casos:
+            with self.subTest(data=data):
+                with self.assertRaises(AgendamentoError) as context:
+                    self.service.detail_by_date(7, data)
+                self.assertEqual(context.exception.code, "VALIDATION_ERROR")
+                self.assertEqual(context.exception.status_code, 422)
+                self.assertEqual(
+                    context.exception.message,
+                    "Data deve estar no formato YYYY-MM-DD.",
+                )
+
     def test_get_active_by_date_retorna_no_maximo_um_agendamento(self):
         # uq_agendamento_aluno_data_ativo garante um único ATIVO por (aluno, data).
         query = MagicMock()
