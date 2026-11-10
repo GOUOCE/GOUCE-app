@@ -1,0 +1,830 @@
+{
+  "paths": {
+    "/transporte/agendamentos": {
+      "post": {
+        "tags": [
+          "Agendamentos"
+        ],
+        "summary": "Criar",
+        "operationId": "criar_transporte_agendamentos_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgendamentoInputDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperacaoAgendamentoDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/transporte/agendamentos/{agendamento_id}": {
+      "put": {
+        "tags": [
+          "Agendamentos"
+        ],
+        "summary": "Atualizar",
+        "operationId": "atualizar_transporte_agendamentos__agendamento_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "agendamento_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Agendamento Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgendamentoInputDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperacaoAgendamentoDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Agendamentos"
+        ],
+        "summary": "Detalhar",
+        "operationId": "detalhar_transporte_agendamentos__agendamento_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "agendamento_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Agendamento Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgendamentoDetalheDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Agendamentos"
+        ],
+        "summary": "Cancelar",
+        "operationId": "cancelar_transporte_agendamentos__agendamento_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "agendamento_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Agendamento Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancelamentoAgendamentoDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transporte/agendamentos/calendario": {
+      "get": {
+        "tags": [
+          "Agendamentos"
+        ],
+        "summary": "Calendario",
+        "operationId": "calendario_transporte_agendamentos_calendario_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "mes",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$",
+              "title": "Mes"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarioResponseDTO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transporte/agendamentos/meus": {
+      "get": {
+        "tags": [
+          "Agendamentos"
+        ],
+        "summary": "Meus",
+        "operationId": "meus_transporte_agendamentos_meus_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeusAgendamentosDTO"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    }
+  },
+  "schemas": {
+    "AgendamentoDetalheDTO": {
+      "properties": {
+        "id": {
+          "type": "integer",
+          "title": "Id"
+        },
+        "aluno_id": {
+          "type": "integer",
+          "title": "Aluno Id"
+        },
+        "data": {
+          "type": "string",
+          "format": "date",
+          "title": "Data"
+        },
+        "usa_ida": {
+          "type": "boolean",
+          "title": "Usa Ida"
+        },
+        "usa_volta": {
+          "type": "boolean",
+          "title": "Usa Volta"
+        },
+        "ponto_embarque_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ponto Embarque Id"
+        },
+        "ies_destino_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ies Destino Id"
+        },
+        "rota_complementar_ida_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Rota Complementar Ida Id"
+        },
+        "ies_origem_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ies Origem Id"
+        },
+        "ponto_desembarque_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ponto Desembarque Id"
+        },
+        "rota_complementar_volta_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Rota Complementar Volta Id"
+        },
+        "status": {
+          "type": "string",
+          "title": "Status"
+        },
+        "ponto_embarque_nome": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ponto Embarque Nome"
+        },
+        "ies_destino_nome": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ies Destino Nome"
+        },
+        "rota_complementar_ida_nome": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Rota Complementar Ida Nome"
+        },
+        "ies_origem_nome": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ies Origem Nome"
+        },
+        "ponto_desembarque_nome": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ponto Desembarque Nome"
+        },
+        "rota_complementar_volta_nome": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Rota Complementar Volta Nome"
+        },
+        "pode_remover": {
+          "type": "boolean",
+          "title": "Pode Remover"
+        },
+        "pode_editar": {
+          "type": "boolean",
+          "title": "Pode Editar"
+        }
+      },
+      "type": "object",
+      "required": [
+        "id",
+        "aluno_id",
+        "data",
+        "usa_ida",
+        "usa_volta",
+        "status",
+        "pode_remover",
+        "pode_editar"
+      ],
+      "title": "AgendamentoDetalheDTO"
+    },
+    "AgendamentoInputDTO": {
+      "properties": {
+        "data": {
+          "type": "string",
+          "format": "date",
+          "title": "Data"
+        },
+        "usa_ida": {
+          "type": "boolean",
+          "title": "Usa Ida"
+        },
+        "usa_volta": {
+          "type": "boolean",
+          "title": "Usa Volta"
+        },
+        "ponto_embarque_id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "exclusiveMinimum": 0.0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ponto Embarque Id"
+        },
+        "ies_destino_id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "exclusiveMinimum": 0.0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ies Destino Id"
+        },
+        "rota_complementar_ida_id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "exclusiveMinimum": 0.0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Rota Complementar Ida Id"
+        },
+        "ies_origem_id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "exclusiveMinimum": 0.0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ies Origem Id"
+        },
+        "ponto_desembarque_id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "exclusiveMinimum": 0.0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ponto Desembarque Id"
+        },
+        "rota_complementar_volta_id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "exclusiveMinimum": 0.0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Rota Complementar Volta Id"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "data",
+        "usa_ida",
+        "usa_volta"
+      ],
+      "title": "AgendamentoInputDTO"
+    },
+    "AgendamentoResponseDTO": {
+      "properties": {
+        "id": {
+          "type": "integer",
+          "title": "Id"
+        },
+        "aluno_id": {
+          "type": "integer",
+          "title": "Aluno Id"
+        },
+        "data": {
+          "type": "string",
+          "format": "date",
+          "title": "Data"
+        },
+        "usa_ida": {
+          "type": "boolean",
+          "title": "Usa Ida"
+        },
+        "usa_volta": {
+          "type": "boolean",
+          "title": "Usa Volta"
+        },
+        "ponto_embarque_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ponto Embarque Id"
+        },
+        "ies_destino_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ies Destino Id"
+        },
+        "rota_complementar_ida_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Rota Complementar Ida Id"
+        },
+        "ies_origem_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ies Origem Id"
+        },
+        "ponto_desembarque_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ponto Desembarque Id"
+        },
+        "rota_complementar_volta_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Rota Complementar Volta Id"
+        },
+        "status": {
+          "type": "string",
+          "title": "Status"
+        }
+      },
+      "type": "object",
+      "required": [
+        "id",
+        "aluno_id",
+        "data",
+        "usa_ida",
+        "usa_volta",
+        "status"
+      ],
+      "title": "AgendamentoResponseDTO"
+    },
+    "CalendarioDiaDTO": {
+      "properties": {
+        "data": {
+          "type": "string",
+          "format": "date",
+          "title": "Data"
+        },
+        "estado": {
+          "type": "string",
+          "title": "Estado"
+        },
+        "descricao": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Descricao"
+        },
+        "pode_agendar": {
+          "type": "boolean",
+          "title": "Pode Agendar"
+        },
+        "agendamento_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Agendamento Id"
+        },
+        "pode_remover": {
+          "type": "boolean",
+          "title": "Pode Remover",
+          "default": false
+        },
+        "pode_editar": {
+          "type": "boolean",
+          "title": "Pode Editar",
+          "default": false
+        }
+      },
+      "type": "object",
+      "required": [
+        "data",
+        "estado",
+        "pode_agendar"
+      ],
+      "title": "CalendarioDiaDTO"
+    },
+    "CalendarioResponseDTO": {
+      "properties": {
+        "mes": {
+          "type": "string",
+          "title": "Mes"
+        },
+        "dias": {
+          "items": {
+            "$ref": "#/components/schemas/CalendarioDiaDTO"
+          },
+          "type": "array",
+          "title": "Dias"
+        },
+        "ativos": {
+          "type": "integer",
+          "title": "Ativos"
+        },
+        "limite": {
+          "type": "integer",
+          "title": "Limite"
+        }
+      },
+      "type": "object",
+      "required": [
+        "mes",
+        "dias",
+        "ativos",
+        "limite"
+      ],
+      "title": "CalendarioResponseDTO"
+    },
+    "CancelamentoAgendamentoDTO": {
+      "properties": {
+        "mensagem": {
+          "type": "string",
+          "title": "Mensagem"
+        },
+        "estado_dia": {
+          "type": "string",
+          "title": "Estado Dia"
+        },
+        "ativos": {
+          "type": "integer",
+          "title": "Ativos"
+        },
+        "limite": {
+          "type": "integer",
+          "title": "Limite"
+        }
+      },
+      "type": "object",
+      "required": [
+        "mensagem",
+        "estado_dia",
+        "ativos",
+        "limite"
+      ],
+      "title": "CancelamentoAgendamentoDTO"
+    },
+    "MeusAgendamentosDTO": {
+      "properties": {
+        "agendamentos": {
+          "items": {
+            "$ref": "#/components/schemas/AgendamentoDetalheDTO"
+          },
+          "type": "array",
+          "title": "Agendamentos"
+        },
+        "ativos": {
+          "type": "integer",
+          "title": "Ativos"
+        },
+        "limite": {
+          "type": "integer",
+          "title": "Limite"
+        }
+      },
+      "type": "object",
+      "required": [
+        "agendamentos",
+        "ativos",
+        "limite"
+      ],
+      "title": "MeusAgendamentosDTO"
+    },
+    "OperacaoAgendamentoDTO": {
+      "properties": {
+        "mensagem": {
+          "type": "string",
+          "title": "Mensagem"
+        },
+        "agendamento_criado": {
+          "type": "boolean",
+          "title": "Agendamento Criado",
+          "default": true
+        },
+        "agendamento": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/AgendamentoResponseDTO"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "estado_dia": {
+          "type": "string",
+          "title": "Estado Dia"
+        }
+      },
+      "type": "object",
+      "required": [
+        "mensagem",
+        "estado_dia"
+      ],
+      "title": "OperacaoAgendamentoDTO"
+    }
+  }
+}

@@ -1,0 +1,830 @@
+{
+  "id": "CT-HU014-API-002",
+  "http": [
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/calendario?mes=2026-11",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 38.111,
+      "response": {
+        "mes": "2026-11",
+        "dias": [
+          {
+            "data": "2026-11-09",
+            "estado": "INDISPONIVEL",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-10",
+            "estado": "INDISPONIVEL",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-11",
+            "estado": "INDISPONIVEL",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-12",
+            "estado": "INDISPONIVEL",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-13",
+            "estado": "INDISPONIVEL",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-14",
+            "estado": "INDISPONIVEL",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-15",
+            "estado": "INDISPONIVEL",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-16",
+            "estado": "INDISPONIVEL",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-17",
+            "estado": "INDISPONIVEL",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-18",
+            "estado": "INDISPONIVEL",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-19",
+            "estado": "INDISPONIVEL",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-20",
+            "estado": "INDISPONIVEL",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-21",
+            "estado": "INDISPONIVEL",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-22",
+            "estado": "INDISPONIVEL",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-23",
+            "estado": "INDISPONIVEL",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-24",
+            "estado": "INDISPONIVEL",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-25",
+            "estado": "INDISPONIVEL",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-26",
+            "estado": "INDISPONIVEL",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-27",
+            "estado": "INDISPONIVEL",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-28",
+            "estado": "INDISPONIVEL",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-29",
+            "estado": "INDISPONIVEL",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-30",
+            "estado": "INDISPONIVEL",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          }
+        ],
+        "ativos": 0,
+        "limite": 22
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/transporte/agendamentos",
+      "actor": "A",
+      "request_body": {
+        "data": "2026-12-01",
+        "usa_ida": true,
+        "usa_volta": true,
+        "ponto_embarque_id": 1,
+        "ies_destino_id": 1,
+        "ies_origem_id": 1,
+        "ponto_desembarque_id": 1
+      },
+      "http": 200,
+      "elapsed_ms": 28.419,
+      "response": {
+        "mensagem": "Agendamento realizado com sucesso",
+        "agendamento_criado": true,
+        "agendamento": {
+          "id": 6,
+          "aluno_id": 2,
+          "data": "2026-12-01",
+          "usa_ida": true,
+          "usa_volta": true,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": 1,
+          "ponto_desembarque_id": 1,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO"
+        },
+        "estado_dia": "AGENDADO"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/calendario?mes=2026-11",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 38.836,
+      "response": {
+        "mes": "2026-11",
+        "dias": [
+          {
+            "data": "2026-11-08",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 5,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-09",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-10",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 2,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-11",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 3,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-12",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 4,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-13",
+            "estado": "FERIADO",
+            "descricao": "FERIADO sintetico HU014",
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-14",
+            "estado": "RECESSO",
+            "descricao": "RECESSO sintetico HU014",
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-15",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-16",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-17",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-18",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-19",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-20",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-21",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-22",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-23",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-24",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-25",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-26",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-27",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-28",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-29",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-30",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          }
+        ],
+        "ativos": 4,
+        "limite": 22
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/calendario?mes=2026-12",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 36.44,
+      "response": {
+        "mes": "2026-12",
+        "dias": [
+          {
+            "data": "2026-12-01",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 6,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-12-02",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-12-03",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-12-04",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-12-05",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-12-06",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-12-07",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-12-08",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          }
+        ],
+        "ativos": 4,
+        "limite": 22
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/transporte/agendamentos/6",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 26.634,
+      "response": {
+        "mensagem": "Agendamento cancelado com sucesso",
+        "estado_dia": "DISPONIVEL",
+        "ativos": 3,
+        "limite": 22
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/calendario?mes=2026-1",
+      "actor": "A",
+      "request_body": null,
+      "http": 422,
+      "elapsed_ms": 18.452,
+      "response": {
+        "detail": [
+          {
+            "type": "string_pattern_mismatch",
+            "loc": [
+              "query",
+              "mes"
+            ],
+            "msg": "String should match pattern '^\\d{4}-\\d{2}$'",
+            "input": "2026-1",
+            "ctx": {
+              "pattern": "^\\d{4}-\\d{2}$"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/calendario?mes=2026-13",
+      "actor": "A",
+      "request_body": null,
+      "http": 422,
+      "elapsed_ms": 17.723,
+      "response": {
+        "success": false,
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "Mês deve estar no formato YYYY-MM."
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/calendario",
+      "actor": "A",
+      "request_body": null,
+      "http": 422,
+      "elapsed_ms": 18.199,
+      "response": {
+        "detail": [
+          {
+            "type": "missing",
+            "loc": [
+              "query",
+              "mes"
+            ],
+            "msg": "Field required",
+            "input": null
+          }
+        ]
+      }
+    }
+  ],
+  "checks": [
+    {
+      "description": "Banco isolado sem rota ativa antes da preparação",
+      "passed": true,
+      "actual": null
+    },
+    {
+      "description": "GET /transporte/agendamentos/calendario?mes=2026-11: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "Dia sem rota ativa: INDISPONIVEL, sem permissão de agendar",
+      "passed": true,
+      "actual": {
+        "data": "2026-11-09",
+        "estado": "INDISPONIVEL",
+        "descricao": null,
+        "pode_agendar": false,
+        "agendamento_id": null,
+        "pode_remover": false,
+        "pode_editar": false
+      }
+    },
+    {
+      "description": "POST /transporte/agendamentos: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "GET /transporte/agendamentos/calendario?mes=2026-11: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "2026-11: datas válidas, únicas e no mês",
+      "passed": true,
+      "actual": null
+    },
+    {
+      "description": "2026-11: contador global de ativos igual a /meus",
+      "passed": true,
+      "actual": null
+    },
+    {
+      "description": "A1: AGENDADO com id/flags corretos",
+      "passed": true,
+      "actual": {
+        "data": "2026-11-10",
+        "estado": "AGENDADO",
+        "descricao": null,
+        "pode_agendar": false,
+        "agendamento_id": 2,
+        "pode_remover": true,
+        "pode_editar": true
+      }
+    },
+    {
+      "description": "Histórico AP com flags falsas",
+      "passed": true,
+      "actual": {
+        "data": "2026-11-08",
+        "estado": "AGENDADO",
+        "descricao": null,
+        "pode_agendar": false,
+        "agendamento_id": 5,
+        "pode_remover": false,
+        "pode_editar": false
+      }
+    },
+    {
+      "description": "Dia livre com rota: DISPONIVEL",
+      "passed": true,
+      "actual": null
+    },
+    {
+      "description": "FERIADO: bloqueado e com descrição",
+      "passed": true,
+      "actual": {
+        "data": "2026-11-13",
+        "estado": "FERIADO",
+        "descricao": "FERIADO sintetico HU014",
+        "pode_agendar": false,
+        "agendamento_id": null,
+        "pode_remover": false,
+        "pode_editar": false
+      }
+    },
+    {
+      "description": "RECESSO: bloqueado e com descrição",
+      "passed": true,
+      "actual": {
+        "data": "2026-11-14",
+        "estado": "RECESSO",
+        "descricao": "RECESSO sintetico HU014",
+        "pode_agendar": false,
+        "agendamento_id": null,
+        "pode_remover": false,
+        "pode_editar": false
+      }
+    },
+    {
+      "description": "GET /transporte/agendamentos/calendario?mes=2026-12: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "2026-12: datas válidas, únicas e no mês",
+      "passed": true,
+      "actual": null
+    },
+    {
+      "description": "2026-12: contador global de ativos igual a /meus",
+      "passed": true,
+      "actual": null
+    },
+    {
+      "description": "Reserva na virada do mês tem o id real",
+      "passed": true,
+      "actual": null
+    },
+    {
+      "description": "DELETE /transporte/agendamentos/6: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "GET /transporte/agendamentos/calendario?mes=2026-1: HTTP 422",
+      "passed": true,
+      "actual": 422
+    },
+    {
+      "description": "Validação do mês produz mensagem de erro",
+      "passed": true,
+      "actual": {
+        "detail": [
+          {
+            "type": "string_pattern_mismatch",
+            "loc": [
+              "query",
+              "mes"
+            ],
+            "msg": "String should match pattern '^\\d{4}-\\d{2}$'",
+            "input": "2026-1",
+            "ctx": {
+              "pattern": "^\\d{4}-\\d{2}$"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "description": "GET /transporte/agendamentos/calendario?mes=2026-13: HTTP 422",
+      "passed": true,
+      "actual": 422
+    },
+    {
+      "description": "Validação do mês produz mensagem de erro",
+      "passed": true,
+      "actual": {
+        "success": false,
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "Mês deve estar no formato YYYY-MM."
+        }
+      }
+    },
+    {
+      "description": "GET /transporte/agendamentos/calendario: HTTP 422",
+      "passed": true,
+      "actual": 422
+    },
+    {
+      "description": "Validação do mês produz mensagem de erro",
+      "passed": true,
+      "actual": {
+        "detail": [
+          {
+            "type": "missing",
+            "loc": [
+              "query",
+              "mes"
+            ],
+            "msg": "Field required",
+            "input": null
+          }
+        ]
+      }
+    }
+  ],
+  "database": [],
+  "blocked": [],
+  "finished_at": "2026-11-09T22:03:32.761872-03:00",
+  "status": "PASS"
+}

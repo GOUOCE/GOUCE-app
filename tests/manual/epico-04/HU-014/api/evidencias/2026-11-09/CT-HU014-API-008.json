@@ -1,0 +1,527 @@
+{
+  "id": "CT-HU014-API-008",
+  "http": [
+    {
+      "method": "POST",
+      "path": "/transporte/agendamentos",
+      "actor": "A",
+      "request_body": {
+        "data": "2026-11-18",
+        "usa_ida": true,
+        "usa_volta": true,
+        "ponto_embarque_id": 1,
+        "ies_destino_id": 1,
+        "ies_origem_id": 1,
+        "ponto_desembarque_id": 1
+      },
+      "http": 200,
+      "elapsed_ms": 22.831,
+      "response": {
+        "mensagem": "Agendamento realizado com sucesso",
+        "agendamento_criado": true,
+        "agendamento": {
+          "id": 9,
+          "aluno_id": 2,
+          "data": "2026-11-18",
+          "usa_ida": true,
+          "usa_volta": true,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": 1,
+          "ponto_desembarque_id": 1,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO"
+        },
+        "estado_dia": "AGENDADO"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/meus",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 19.786,
+      "response": {
+        "agendamentos": [
+          {
+            "id": 9,
+            "aluno_id": 2,
+            "data": "2026-11-18",
+            "usa_ida": true,
+            "usa_volta": true,
+            "ponto_embarque_id": 1,
+            "ies_destino_id": 1,
+            "rota_complementar_ida_id": null,
+            "ies_origem_id": 1,
+            "ponto_desembarque_id": 1,
+            "rota_complementar_volta_id": null,
+            "status": "ATIVO",
+            "ponto_embarque_nome": "Ponto QA HU014",
+            "ies_destino_nome": "Instituicao QA HU014",
+            "rota_complementar_ida_nome": null,
+            "ies_origem_nome": "Instituicao QA HU014",
+            "ponto_desembarque_nome": "Ponto QA HU014",
+            "rota_complementar_volta_nome": null,
+            "pode_remover": true,
+            "pode_editar": true
+          }
+        ],
+        "ativos": 1,
+        "limite": 22
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/meus",
+      "actor": null,
+      "request_body": null,
+      "http": 401,
+      "elapsed_ms": 1.749,
+      "response": {
+        "detail": "Não autenticado"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/calendario?mes=2026-11",
+      "actor": null,
+      "request_body": null,
+      "http": 401,
+      "elapsed_ms": 1.207,
+      "response": {
+        "detail": "Não autenticado"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/9",
+      "actor": null,
+      "request_body": null,
+      "http": 401,
+      "elapsed_ms": 1.338,
+      "response": {
+        "detail": "Não autenticado"
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/transporte/agendamentos/9",
+      "actor": null,
+      "request_body": null,
+      "http": 401,
+      "elapsed_ms": 1.304,
+      "response": {
+        "detail": "Não autenticado"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/meus",
+      "actor": "invalid",
+      "request_body": null,
+      "http": 401,
+      "elapsed_ms": 1.437,
+      "response": {
+        "detail": "Sessão inválida ou expirada"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/calendario?mes=2026-11",
+      "actor": "invalid",
+      "request_body": null,
+      "http": 401,
+      "elapsed_ms": 1.691,
+      "response": {
+        "detail": "Sessão inválida ou expirada"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/9",
+      "actor": "invalid",
+      "request_body": null,
+      "http": 401,
+      "elapsed_ms": 1.585,
+      "response": {
+        "detail": "Sessão inválida ou expirada"
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/transporte/agendamentos/9",
+      "actor": "invalid",
+      "request_body": null,
+      "http": 401,
+      "elapsed_ms": 1.799,
+      "response": {
+        "detail": "Sessão inválida ou expirada"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/meus",
+      "actor": "admin",
+      "request_body": null,
+      "http": 403,
+      "elapsed_ms": 14.94,
+      "response": {
+        "detail": "Acesso negado"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/calendario?mes=2026-11",
+      "actor": "admin",
+      "request_body": null,
+      "http": 403,
+      "elapsed_ms": 15.04,
+      "response": {
+        "detail": "Acesso negado"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/9",
+      "actor": "admin",
+      "request_body": null,
+      "http": 403,
+      "elapsed_ms": 17.362,
+      "response": {
+        "detail": "Acesso negado"
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/transporte/agendamentos/9",
+      "actor": "admin",
+      "request_body": null,
+      "http": 403,
+      "elapsed_ms": 13.39,
+      "response": {
+        "detail": "Acesso negado"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/meus",
+      "actor": "pending",
+      "request_body": null,
+      "http": 403,
+      "elapsed_ms": 16.236,
+      "response": {
+        "detail": "Acesso negado"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/calendario?mes=2026-11",
+      "actor": "pending",
+      "request_body": null,
+      "http": 403,
+      "elapsed_ms": 15.949,
+      "response": {
+        "detail": "Acesso negado"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/9",
+      "actor": "pending",
+      "request_body": null,
+      "http": 403,
+      "elapsed_ms": 14.87,
+      "response": {
+        "detail": "Acesso negado"
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/transporte/agendamentos/9",
+      "actor": "pending",
+      "request_body": null,
+      "http": 403,
+      "elapsed_ms": 14.141,
+      "response": {
+        "detail": "Acesso negado"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/meus",
+      "actor": "expired",
+      "request_body": null,
+      "http": 403,
+      "elapsed_ms": 17.234,
+      "response": {
+        "detail": "Acesso negado"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/calendario?mes=2026-11",
+      "actor": "expired",
+      "request_body": null,
+      "http": 403,
+      "elapsed_ms": 14.365,
+      "response": {
+        "detail": "Acesso negado"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/9",
+      "actor": "expired",
+      "request_body": null,
+      "http": 403,
+      "elapsed_ms": 18.654,
+      "response": {
+        "detail": "Acesso negado"
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/transporte/agendamentos/9",
+      "actor": "expired",
+      "request_body": null,
+      "http": 403,
+      "elapsed_ms": 18.233,
+      "response": {
+        "detail": "Acesso negado"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/meus",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 18.454,
+      "response": {
+        "agendamentos": [
+          {
+            "id": 9,
+            "aluno_id": 2,
+            "data": "2026-11-18",
+            "usa_ida": true,
+            "usa_volta": true,
+            "ponto_embarque_id": 1,
+            "ies_destino_id": 1,
+            "rota_complementar_ida_id": null,
+            "ies_origem_id": 1,
+            "ponto_desembarque_id": 1,
+            "rota_complementar_volta_id": null,
+            "status": "ATIVO",
+            "ponto_embarque_nome": "Ponto QA HU014",
+            "ies_destino_nome": "Instituicao QA HU014",
+            "rota_complementar_ida_nome": null,
+            "ies_origem_nome": "Instituicao QA HU014",
+            "ponto_desembarque_nome": "Ponto QA HU014",
+            "rota_complementar_volta_nome": null,
+            "pode_remover": true,
+            "pode_editar": true
+          }
+        ],
+        "ativos": 1,
+        "limite": 22
+      }
+    }
+  ],
+  "checks": [
+    {
+      "description": "POST /transporte/agendamentos: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "GET /transporte/agendamentos/meus: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "GET /transporte/agendamentos/meus: HTTP 401",
+      "passed": true,
+      "actual": 401
+    },
+    {
+      "description": "GET /transporte/agendamentos/calendario?mes=2026-11: HTTP 401",
+      "passed": true,
+      "actual": 401
+    },
+    {
+      "description": "GET /transporte/agendamentos/9: HTTP 401",
+      "passed": true,
+      "actual": 401
+    },
+    {
+      "description": "DELETE /transporte/agendamentos/9: HTTP 401",
+      "passed": true,
+      "actual": 401
+    },
+    {
+      "description": "GET /transporte/agendamentos/meus: HTTP 401",
+      "passed": true,
+      "actual": 401
+    },
+    {
+      "description": "GET /transporte/agendamentos/calendario?mes=2026-11: HTTP 401",
+      "passed": true,
+      "actual": 401
+    },
+    {
+      "description": "GET /transporte/agendamentos/9: HTTP 401",
+      "passed": true,
+      "actual": 401
+    },
+    {
+      "description": "DELETE /transporte/agendamentos/9: HTTP 401",
+      "passed": true,
+      "actual": 401
+    },
+    {
+      "description": "GET /transporte/agendamentos/meus: HTTP 403",
+      "passed": true,
+      "actual": 403
+    },
+    {
+      "description": "GET /transporte/agendamentos/calendario?mes=2026-11: HTTP 403",
+      "passed": true,
+      "actual": 403
+    },
+    {
+      "description": "GET /transporte/agendamentos/9: HTTP 403",
+      "passed": true,
+      "actual": 403
+    },
+    {
+      "description": "DELETE /transporte/agendamentos/9: HTTP 403",
+      "passed": true,
+      "actual": 403
+    },
+    {
+      "description": "GET /transporte/agendamentos/meus: HTTP 403",
+      "passed": true,
+      "actual": 403
+    },
+    {
+      "description": "GET /transporte/agendamentos/calendario?mes=2026-11: HTTP 403",
+      "passed": true,
+      "actual": 403
+    },
+    {
+      "description": "GET /transporte/agendamentos/9: HTTP 403",
+      "passed": true,
+      "actual": 403
+    },
+    {
+      "description": "DELETE /transporte/agendamentos/9: HTTP 403",
+      "passed": true,
+      "actual": 403
+    },
+    {
+      "description": "GET /transporte/agendamentos/meus: HTTP 403",
+      "passed": true,
+      "actual": 403
+    },
+    {
+      "description": "GET /transporte/agendamentos/calendario?mes=2026-11: HTTP 403",
+      "passed": true,
+      "actual": 403
+    },
+    {
+      "description": "GET /transporte/agendamentos/9: HTTP 403",
+      "passed": true,
+      "actual": 403
+    },
+    {
+      "description": "DELETE /transporte/agendamentos/9: HTTP 403",
+      "passed": true,
+      "actual": 403
+    },
+    {
+      "description": "GET /transporte/agendamentos/meus: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "Todas as recusas preservam reserva, contador e logs",
+      "passed": true,
+      "actual": null
+    }
+  ],
+  "database": [
+    {
+      "label": "antes_matriz_acesso",
+      "bookings": [
+        {
+          "id": 9,
+          "aluno_id": 2,
+          "data": "2026-11-18",
+          "usa_ida": true,
+          "usa_volta": true,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": 1,
+          "ponto_desembarque_id": 1,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO",
+          "created_at": "2026-11-10 01:05:32.627542+00:00",
+          "updated_at": "2026-11-10 01:05:32.627545+00:00",
+          "cancelled_at": null
+        }
+      ],
+      "logs": [
+        {
+          "id": 20,
+          "usuario_id": 2,
+          "acao": "CRIAR",
+          "entidade": "agendamento",
+          "entidade_id": "9",
+          "valor_anterior": null,
+          "valor_novo": "{\"data\": \"2026-11-18\", \"usa_ida\": true, \"usa_volta\": true, \"ponto_embarque_id\": 1, \"ies_destino_id\": 1, \"rota_complementar_ida_id\": null, \"ies_origem_id\": 1, \"ponto_desembarque_id\": 1, \"rota_complementar_volta_id\": null}",
+          "criado_em": "2026-11-10 01:05:32.628358+00:00"
+        }
+      ]
+    },
+    {
+      "label": "depois_matriz_acesso",
+      "bookings": [
+        {
+          "id": 9,
+          "aluno_id": 2,
+          "data": "2026-11-18",
+          "usa_ida": true,
+          "usa_volta": true,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": 1,
+          "ponto_desembarque_id": 1,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO",
+          "created_at": "2026-11-10 01:05:32.627542+00:00",
+          "updated_at": "2026-11-10 01:05:32.627545+00:00",
+          "cancelled_at": null
+        }
+      ],
+      "logs": [
+        {
+          "id": 20,
+          "usuario_id": 2,
+          "acao": "CRIAR",
+          "entidade": "agendamento",
+          "entidade_id": "9",
+          "valor_anterior": null,
+          "valor_novo": "{\"data\": \"2026-11-18\", \"usa_ida\": true, \"usa_volta\": true, \"ponto_embarque_id\": 1, \"ies_destino_id\": 1, \"rota_complementar_ida_id\": null, \"ies_origem_id\": 1, \"ponto_desembarque_id\": 1, \"rota_complementar_volta_id\": null}",
+          "criado_em": "2026-11-10 01:05:32.628358+00:00"
+        }
+      ]
+    }
+  ],
+  "blocked": [],
+  "finished_at": "2026-11-09T22:05:32.896422-03:00",
+  "status": "PASS"
+}

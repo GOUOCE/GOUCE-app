@@ -1,0 +1,711 @@
+{
+  "id": "CT-HU014-API-001",
+  "http": [
+    {
+      "method": "POST",
+      "path": "/bairros",
+      "actor": "admin",
+      "request_body": {
+        "nome_bairro": "Bairro QA HU",
+        "pontos_de_parada": [
+          "Ponto QA HU014"
+        ]
+      },
+      "http": 201,
+      "elapsed_ms": 70.6,
+      "response": {
+        "success": true,
+        "message": "Operação realizada com sucesso",
+        "data": {
+          "bairro_id": 2,
+          "nome": "Bairro QA HU",
+          "ativo": true,
+          "pontos_de_parada": [
+            {
+              "ponto_id": 1,
+              "nome": "Ponto QA HU014",
+              "bairro_id": 2,
+              "ativo": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/faculdades",
+      "actor": "admin",
+      "request_body": {
+        "nome": "Instituicao QA HU014",
+        "sigla": "QAHU",
+        "campus": "Campus Teste"
+      },
+      "http": 201,
+      "elapsed_ms": 47.959,
+      "response": {
+        "success": true,
+        "message": "Operação realizada com sucesso",
+        "data": {
+          "id_faculdade": 1,
+          "nome_faculdade": "Instituicao QA HU014",
+          "sigla": "QAHU",
+          "campus_faculdade": "Campus Teste",
+          "ativo": true
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/rotas-principais",
+      "actor": "admin",
+      "request_body": {
+        "nome": "Rota QA HU014",
+        "horario_saida": "06:30",
+        "horario_retorno": "18:30",
+        "bairros_ids": [
+          2
+        ],
+        "faculdades_ida_ids": [
+          1
+        ],
+        "faculdades_volta_ids": [
+          1
+        ]
+      },
+      "http": 201,
+      "elapsed_ms": 45.916,
+      "response": {
+        "success": true,
+        "message": "Operação realizada com sucesso",
+        "data": {
+          "id": 1,
+          "nome": "Rota QA HU014",
+          "horario_saida": "06:30",
+          "horario_retorno": "18:30",
+          "ativo": true,
+          "bairros": [
+            {
+              "id": 2,
+              "nome": "Bairro QA HU"
+            }
+          ],
+          "faculdades_ida": [
+            {
+              "id": 1,
+              "nome": "Instituicao QA HU014",
+              "sigla": "QAHU",
+              "campus": "Campus Teste"
+            }
+          ],
+          "faculdades_volta": [
+            {
+              "id": 1,
+              "nome": "Instituicao QA HU014",
+              "sigla": "QAHU",
+              "campus": "Campus Teste"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/transporte/agendamentos",
+      "actor": "B",
+      "request_body": {
+        "data": "2026-11-10",
+        "usa_ida": true,
+        "usa_volta": true,
+        "ponto_embarque_id": 1,
+        "ies_destino_id": 1,
+        "ies_origem_id": 1,
+        "ponto_desembarque_id": 1
+      },
+      "http": 200,
+      "elapsed_ms": 42.973,
+      "response": {
+        "mensagem": "Agendamento realizado com sucesso",
+        "agendamento_criado": true,
+        "agendamento": {
+          "id": 1,
+          "aluno_id": 3,
+          "data": "2026-11-10",
+          "usa_ida": true,
+          "usa_volta": true,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": 1,
+          "ponto_desembarque_id": 1,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO"
+        },
+        "estado_dia": "AGENDADO"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/meus",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 30.029,
+      "response": {
+        "agendamentos": [],
+        "ativos": 0,
+        "limite": 22
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/transporte/agendamentos",
+      "actor": "A",
+      "request_body": {
+        "data": "2026-11-10",
+        "usa_ida": true,
+        "usa_volta": true,
+        "ponto_embarque_id": 1,
+        "ies_destino_id": 1,
+        "ies_origem_id": 1,
+        "ponto_desembarque_id": 1
+      },
+      "http": 200,
+      "elapsed_ms": 31.059,
+      "response": {
+        "mensagem": "Agendamento realizado com sucesso",
+        "agendamento_criado": true,
+        "agendamento": {
+          "id": 2,
+          "aluno_id": 2,
+          "data": "2026-11-10",
+          "usa_ida": true,
+          "usa_volta": true,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": 1,
+          "ponto_desembarque_id": 1,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO"
+        },
+        "estado_dia": "AGENDADO"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/meus",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 22.656,
+      "response": {
+        "agendamentos": [
+          {
+            "id": 2,
+            "aluno_id": 2,
+            "data": "2026-11-10",
+            "usa_ida": true,
+            "usa_volta": true,
+            "ponto_embarque_id": 1,
+            "ies_destino_id": 1,
+            "rota_complementar_ida_id": null,
+            "ies_origem_id": 1,
+            "ponto_desembarque_id": 1,
+            "rota_complementar_volta_id": null,
+            "status": "ATIVO",
+            "ponto_embarque_nome": "Ponto QA HU014",
+            "ies_destino_nome": "Instituicao QA HU014",
+            "rota_complementar_ida_nome": null,
+            "ies_origem_nome": "Instituicao QA HU014",
+            "ponto_desembarque_nome": "Ponto QA HU014",
+            "rota_complementar_volta_nome": null,
+            "pode_remover": true,
+            "pode_editar": true
+          }
+        ],
+        "ativos": 1,
+        "limite": 22
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/transporte/agendamentos",
+      "actor": "A",
+      "request_body": {
+        "data": "2026-11-11",
+        "usa_ida": true,
+        "usa_volta": false,
+        "ponto_embarque_id": 1,
+        "ies_destino_id": 1,
+        "ies_origem_id": null,
+        "ponto_desembarque_id": null
+      },
+      "http": 200,
+      "elapsed_ms": 32.983,
+      "response": {
+        "mensagem": "Agendamento realizado com sucesso",
+        "agendamento_criado": true,
+        "agendamento": {
+          "id": 3,
+          "aluno_id": 2,
+          "data": "2026-11-11",
+          "usa_ida": true,
+          "usa_volta": false,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": null,
+          "ponto_desembarque_id": null,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO"
+        },
+        "estado_dia": "AGENDADO"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/transporte/agendamentos",
+      "actor": "A",
+      "request_body": {
+        "data": "2026-11-12",
+        "usa_ida": false,
+        "usa_volta": true,
+        "ponto_embarque_id": null,
+        "ies_destino_id": null,
+        "ies_origem_id": 1,
+        "ponto_desembarque_id": 1
+      },
+      "http": 200,
+      "elapsed_ms": 30.792,
+      "response": {
+        "mensagem": "Agendamento realizado com sucesso",
+        "agendamento_criado": true,
+        "agendamento": {
+          "id": 4,
+          "aluno_id": 2,
+          "data": "2026-11-12",
+          "usa_ida": false,
+          "usa_volta": true,
+          "ponto_embarque_id": null,
+          "ies_destino_id": null,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": 1,
+          "ponto_desembarque_id": 1,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO"
+        },
+        "estado_dia": "AGENDADO"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/meus",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 27.143,
+      "response": {
+        "agendamentos": [
+          {
+            "id": 2,
+            "aluno_id": 2,
+            "data": "2026-11-10",
+            "usa_ida": true,
+            "usa_volta": true,
+            "ponto_embarque_id": 1,
+            "ies_destino_id": 1,
+            "rota_complementar_ida_id": null,
+            "ies_origem_id": 1,
+            "ponto_desembarque_id": 1,
+            "rota_complementar_volta_id": null,
+            "status": "ATIVO",
+            "ponto_embarque_nome": "Ponto QA HU014",
+            "ies_destino_nome": "Instituicao QA HU014",
+            "rota_complementar_ida_nome": null,
+            "ies_origem_nome": "Instituicao QA HU014",
+            "ponto_desembarque_nome": "Ponto QA HU014",
+            "rota_complementar_volta_nome": null,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "id": 3,
+            "aluno_id": 2,
+            "data": "2026-11-11",
+            "usa_ida": true,
+            "usa_volta": false,
+            "ponto_embarque_id": 1,
+            "ies_destino_id": 1,
+            "rota_complementar_ida_id": null,
+            "ies_origem_id": null,
+            "ponto_desembarque_id": null,
+            "rota_complementar_volta_id": null,
+            "status": "ATIVO",
+            "ponto_embarque_nome": "Ponto QA HU014",
+            "ies_destino_nome": "Instituicao QA HU014",
+            "rota_complementar_ida_nome": null,
+            "ies_origem_nome": null,
+            "ponto_desembarque_nome": null,
+            "rota_complementar_volta_nome": null,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "id": 4,
+            "aluno_id": 2,
+            "data": "2026-11-12",
+            "usa_ida": false,
+            "usa_volta": true,
+            "ponto_embarque_id": null,
+            "ies_destino_id": null,
+            "rota_complementar_ida_id": null,
+            "ies_origem_id": 1,
+            "ponto_desembarque_id": 1,
+            "rota_complementar_volta_id": null,
+            "status": "ATIVO",
+            "ponto_embarque_nome": null,
+            "ies_destino_nome": null,
+            "rota_complementar_ida_nome": null,
+            "ies_origem_nome": "Instituicao QA HU014",
+            "ponto_desembarque_nome": "Ponto QA HU014",
+            "rota_complementar_volta_nome": null,
+            "pode_remover": true,
+            "pode_editar": true
+          }
+        ],
+        "ativos": 3,
+        "limite": 22
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/meus",
+      "actor": "B",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 19.65,
+      "response": {
+        "agendamentos": [
+          {
+            "id": 1,
+            "aluno_id": 3,
+            "data": "2026-11-10",
+            "usa_ida": true,
+            "usa_volta": true,
+            "ponto_embarque_id": 1,
+            "ies_destino_id": 1,
+            "rota_complementar_ida_id": null,
+            "ies_origem_id": 1,
+            "ponto_desembarque_id": 1,
+            "rota_complementar_volta_id": null,
+            "status": "ATIVO",
+            "ponto_embarque_nome": "Ponto QA HU014",
+            "ies_destino_nome": "Instituicao QA HU014",
+            "rota_complementar_ida_nome": null,
+            "ies_origem_nome": "Instituicao QA HU014",
+            "ponto_desembarque_nome": "Ponto QA HU014",
+            "rota_complementar_volta_nome": null,
+            "pode_remover": true,
+            "pode_editar": true
+          }
+        ],
+        "ativos": 1,
+        "limite": 22
+      }
+    }
+  ],
+  "checks": [
+    {
+      "description": "POST /bairros: HTTP 201",
+      "passed": true,
+      "actual": 201
+    },
+    {
+      "description": "POST /faculdades: HTTP 201",
+      "passed": true,
+      "actual": 201
+    },
+    {
+      "description": "POST /rotas-principais: HTTP 201",
+      "passed": true,
+      "actual": 201
+    },
+    {
+      "description": "POST /transporte/agendamentos: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "GET /transporte/agendamentos/meus: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "Lista vazia de A apesar da reserva de B",
+      "passed": true,
+      "actual": {
+        "agendamentos": [],
+        "ativos": 0,
+        "limite": 22
+      }
+    },
+    {
+      "description": "POST /transporte/agendamentos: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "GET /transporte/agendamentos/meus: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "Limite de um item, somente A1",
+      "passed": true,
+      "actual": null
+    },
+    {
+      "description": "POST /transporte/agendamentos: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "POST /transporte/agendamentos: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "GET /transporte/agendamentos/meus: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "Três ativos futuros ordenados, sem AP/B1",
+      "passed": true,
+      "actual": {
+        "agendamentos": [
+          {
+            "id": 2,
+            "aluno_id": 2,
+            "data": "2026-11-10",
+            "usa_ida": true,
+            "usa_volta": true,
+            "ponto_embarque_id": 1,
+            "ies_destino_id": 1,
+            "rota_complementar_ida_id": null,
+            "ies_origem_id": 1,
+            "ponto_desembarque_id": 1,
+            "rota_complementar_volta_id": null,
+            "status": "ATIVO",
+            "ponto_embarque_nome": "Ponto QA HU014",
+            "ies_destino_nome": "Instituicao QA HU014",
+            "rota_complementar_ida_nome": null,
+            "ies_origem_nome": "Instituicao QA HU014",
+            "ponto_desembarque_nome": "Ponto QA HU014",
+            "rota_complementar_volta_nome": null,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "id": 3,
+            "aluno_id": 2,
+            "data": "2026-11-11",
+            "usa_ida": true,
+            "usa_volta": false,
+            "ponto_embarque_id": 1,
+            "ies_destino_id": 1,
+            "rota_complementar_ida_id": null,
+            "ies_origem_id": null,
+            "ponto_desembarque_id": null,
+            "rota_complementar_volta_id": null,
+            "status": "ATIVO",
+            "ponto_embarque_nome": "Ponto QA HU014",
+            "ies_destino_nome": "Instituicao QA HU014",
+            "rota_complementar_ida_nome": null,
+            "ies_origem_nome": null,
+            "ponto_desembarque_nome": null,
+            "rota_complementar_volta_nome": null,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "id": 4,
+            "aluno_id": 2,
+            "data": "2026-11-12",
+            "usa_ida": false,
+            "usa_volta": true,
+            "ponto_embarque_id": null,
+            "ies_destino_id": null,
+            "rota_complementar_ida_id": null,
+            "ies_origem_id": 1,
+            "ponto_desembarque_id": 1,
+            "rota_complementar_volta_id": null,
+            "status": "ATIVO",
+            "ponto_embarque_nome": null,
+            "ies_destino_nome": null,
+            "rota_complementar_ida_nome": null,
+            "ies_origem_nome": "Instituicao QA HU014",
+            "ponto_desembarque_nome": "Ponto QA HU014",
+            "rota_complementar_volta_nome": null,
+            "pode_remover": true,
+            "pode_editar": true
+          }
+        ],
+        "ativos": 3,
+        "limite": 22
+      }
+    },
+    {
+      "description": "Dono, nomes de ponto/IES e flags consistentes",
+      "passed": true,
+      "actual": null
+    },
+    {
+      "description": "GET /transporte/agendamentos/meus: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "B vê somente B1",
+      "passed": true,
+      "actual": null
+    }
+  ],
+  "database": [
+    {
+      "label": "massa_por_consulta_independente",
+      "bookings": [
+        {
+          "id": 1,
+          "aluno_id": 3,
+          "data": "2026-11-10",
+          "usa_ida": true,
+          "usa_volta": true,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": 1,
+          "ponto_desembarque_id": 1,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO",
+          "created_at": "2026-11-10 01:03:32.320813+00:00",
+          "updated_at": "2026-11-10 01:03:32.320818+00:00",
+          "cancelled_at": null
+        },
+        {
+          "id": 2,
+          "aluno_id": 2,
+          "data": "2026-11-10",
+          "usa_ida": true,
+          "usa_volta": true,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": 1,
+          "ponto_desembarque_id": 1,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO",
+          "created_at": "2026-11-10 01:03:32.387277+00:00",
+          "updated_at": "2026-11-10 01:03:32.387280+00:00",
+          "cancelled_at": null
+        },
+        {
+          "id": 3,
+          "aluno_id": 2,
+          "data": "2026-11-11",
+          "usa_ida": true,
+          "usa_volta": false,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": null,
+          "ponto_desembarque_id": null,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO",
+          "created_at": "2026-11-10 01:03:32.443876+00:00",
+          "updated_at": "2026-11-10 01:03:32.443883+00:00",
+          "cancelled_at": null
+        },
+        {
+          "id": 4,
+          "aluno_id": 2,
+          "data": "2026-11-12",
+          "usa_ida": false,
+          "usa_volta": true,
+          "ponto_embarque_id": null,
+          "ies_destino_id": null,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": 1,
+          "ponto_desembarque_id": 1,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO",
+          "created_at": "2026-11-10 01:03:32.476634+00:00",
+          "updated_at": "2026-11-10 01:03:32.476639+00:00",
+          "cancelled_at": null
+        },
+        {
+          "id": 5,
+          "aluno_id": 2,
+          "data": "2026-11-08",
+          "usa_ida": true,
+          "usa_volta": false,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": null,
+          "ponto_desembarque_id": null,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO",
+          "created_at": "2026-11-10 01:03:32.483779+00:00",
+          "updated_at": "2026-11-10 01:03:32.483779+00:00",
+          "cancelled_at": null
+        }
+      ],
+      "logs": [
+        {
+          "id": 4,
+          "usuario_id": 3,
+          "acao": "CRIAR",
+          "entidade": "agendamento",
+          "entidade_id": "1",
+          "valor_anterior": null,
+          "valor_novo": "{\"data\": \"2026-11-10\", \"usa_ida\": true, \"usa_volta\": true, \"ponto_embarque_id\": 1, \"ies_destino_id\": 1, \"rota_complementar_ida_id\": null, \"ies_origem_id\": 1, \"ponto_desembarque_id\": 1, \"rota_complementar_volta_id\": null}",
+          "criado_em": "2026-11-10 01:03:32.322878+00:00"
+        },
+        {
+          "id": 5,
+          "usuario_id": 2,
+          "acao": "CRIAR",
+          "entidade": "agendamento",
+          "entidade_id": "2",
+          "valor_anterior": null,
+          "valor_novo": "{\"data\": \"2026-11-10\", \"usa_ida\": true, \"usa_volta\": true, \"ponto_embarque_id\": 1, \"ies_destino_id\": 1, \"rota_complementar_ida_id\": null, \"ies_origem_id\": 1, \"ponto_desembarque_id\": 1, \"rota_complementar_volta_id\": null}",
+          "criado_em": "2026-11-10 01:03:32.388719+00:00"
+        },
+        {
+          "id": 6,
+          "usuario_id": 2,
+          "acao": "CRIAR",
+          "entidade": "agendamento",
+          "entidade_id": "3",
+          "valor_anterior": null,
+          "valor_novo": "{\"data\": \"2026-11-11\", \"usa_ida\": true, \"usa_volta\": false, \"ponto_embarque_id\": 1, \"ies_destino_id\": 1, \"rota_complementar_ida_id\": null, \"ies_origem_id\": null, \"ponto_desembarque_id\": null, \"rota_complementar_volta_id\": null}",
+          "criado_em": "2026-11-10 01:03:32.445576+00:00"
+        },
+        {
+          "id": 7,
+          "usuario_id": 2,
+          "acao": "CRIAR",
+          "entidade": "agendamento",
+          "entidade_id": "4",
+          "valor_anterior": null,
+          "valor_novo": "{\"data\": \"2026-11-12\", \"usa_ida\": false, \"usa_volta\": true, \"ponto_embarque_id\": null, \"ies_destino_id\": null, \"rota_complementar_ida_id\": null, \"ies_origem_id\": 1, \"ponto_desembarque_id\": 1, \"rota_complementar_volta_id\": null}",
+          "criado_em": "2026-11-10 01:03:32.477738+00:00"
+        }
+      ]
+    }
+  ],
+  "blocked": [],
+  "finished_at": "2026-11-09T22:03:32.544597-03:00",
+  "status": "PASS"
+}

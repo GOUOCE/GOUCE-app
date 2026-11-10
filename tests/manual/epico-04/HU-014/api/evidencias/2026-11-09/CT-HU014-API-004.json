@@ -1,0 +1,1684 @@
+{
+  "id": "CT-HU014-API-004",
+  "http": [
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/meus",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 33.102,
+      "response": {
+        "agendamentos": [
+          {
+            "id": 2,
+            "aluno_id": 2,
+            "data": "2026-11-10",
+            "usa_ida": true,
+            "usa_volta": true,
+            "ponto_embarque_id": 1,
+            "ies_destino_id": 1,
+            "rota_complementar_ida_id": null,
+            "ies_origem_id": 1,
+            "ponto_desembarque_id": 1,
+            "rota_complementar_volta_id": null,
+            "status": "ATIVO",
+            "ponto_embarque_nome": "Ponto QA HU014",
+            "ies_destino_nome": "Instituicao QA HU014",
+            "rota_complementar_ida_nome": null,
+            "ies_origem_nome": "Instituicao QA HU014",
+            "ponto_desembarque_nome": "Ponto QA HU014",
+            "rota_complementar_volta_nome": null,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "id": 3,
+            "aluno_id": 2,
+            "data": "2026-11-11",
+            "usa_ida": true,
+            "usa_volta": false,
+            "ponto_embarque_id": 1,
+            "ies_destino_id": 1,
+            "rota_complementar_ida_id": null,
+            "ies_origem_id": null,
+            "ponto_desembarque_id": null,
+            "rota_complementar_volta_id": null,
+            "status": "ATIVO",
+            "ponto_embarque_nome": "Ponto QA HU014",
+            "ies_destino_nome": "Instituicao QA HU014",
+            "rota_complementar_ida_nome": null,
+            "ies_origem_nome": null,
+            "ponto_desembarque_nome": null,
+            "rota_complementar_volta_nome": null,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "id": 4,
+            "aluno_id": 2,
+            "data": "2026-11-12",
+            "usa_ida": false,
+            "usa_volta": true,
+            "ponto_embarque_id": null,
+            "ies_destino_id": null,
+            "rota_complementar_ida_id": null,
+            "ies_origem_id": 1,
+            "ponto_desembarque_id": 1,
+            "rota_complementar_volta_id": null,
+            "status": "ATIVO",
+            "ponto_embarque_nome": null,
+            "ies_destino_nome": null,
+            "rota_complementar_ida_nome": null,
+            "ies_origem_nome": "Instituicao QA HU014",
+            "ponto_desembarque_nome": "Ponto QA HU014",
+            "rota_complementar_volta_nome": null,
+            "pode_remover": true,
+            "pode_editar": true
+          }
+        ],
+        "ativos": 3,
+        "limite": 22
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/transporte/agendamentos/2",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 31.269,
+      "response": {
+        "mensagem": "Agendamento cancelado com sucesso",
+        "estado_dia": "DISPONIVEL",
+        "ativos": 2,
+        "limite": 22
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/meus",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 25.277,
+      "response": {
+        "agendamentos": [
+          {
+            "id": 3,
+            "aluno_id": 2,
+            "data": "2026-11-11",
+            "usa_ida": true,
+            "usa_volta": false,
+            "ponto_embarque_id": 1,
+            "ies_destino_id": 1,
+            "rota_complementar_ida_id": null,
+            "ies_origem_id": null,
+            "ponto_desembarque_id": null,
+            "rota_complementar_volta_id": null,
+            "status": "ATIVO",
+            "ponto_embarque_nome": "Ponto QA HU014",
+            "ies_destino_nome": "Instituicao QA HU014",
+            "rota_complementar_ida_nome": null,
+            "ies_origem_nome": null,
+            "ponto_desembarque_nome": null,
+            "rota_complementar_volta_nome": null,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "id": 4,
+            "aluno_id": 2,
+            "data": "2026-11-12",
+            "usa_ida": false,
+            "usa_volta": true,
+            "ponto_embarque_id": null,
+            "ies_destino_id": null,
+            "rota_complementar_ida_id": null,
+            "ies_origem_id": 1,
+            "ponto_desembarque_id": 1,
+            "rota_complementar_volta_id": null,
+            "status": "ATIVO",
+            "ponto_embarque_nome": null,
+            "ies_destino_nome": null,
+            "rota_complementar_ida_nome": null,
+            "ies_origem_nome": "Instituicao QA HU014",
+            "ponto_desembarque_nome": "Ponto QA HU014",
+            "rota_complementar_volta_nome": null,
+            "pode_remover": true,
+            "pode_editar": true
+          }
+        ],
+        "ativos": 2,
+        "limite": 22
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/2",
+      "actor": "A",
+      "request_body": null,
+      "http": 404,
+      "elapsed_ms": 28.886,
+      "response": {
+        "success": false,
+        "error": {
+          "code": "RESOURCE_NOT_FOUND",
+          "message": "Agendamento não encontrado."
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/calendario?mes=2026-11",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 49.85,
+      "response": {
+        "mes": "2026-11",
+        "dias": [
+          {
+            "data": "2026-11-08",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 5,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-09",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-10",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-11",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 3,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-12",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 4,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-13",
+            "estado": "FERIADO",
+            "descricao": "FERIADO sintetico HU014",
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-14",
+            "estado": "RECESSO",
+            "descricao": "RECESSO sintetico HU014",
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-15",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-16",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-17",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-18",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-19",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-20",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-21",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-22",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-23",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-24",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-25",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-26",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-27",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-28",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-29",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-30",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          }
+        ],
+        "ativos": 2,
+        "limite": 22
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/meus",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 39.649,
+      "response": {
+        "agendamentos": [
+          {
+            "id": 3,
+            "aluno_id": 2,
+            "data": "2026-11-11",
+            "usa_ida": true,
+            "usa_volta": false,
+            "ponto_embarque_id": 1,
+            "ies_destino_id": 1,
+            "rota_complementar_ida_id": null,
+            "ies_origem_id": null,
+            "ponto_desembarque_id": null,
+            "rota_complementar_volta_id": null,
+            "status": "ATIVO",
+            "ponto_embarque_nome": "Ponto QA HU014",
+            "ies_destino_nome": "Instituicao QA HU014",
+            "rota_complementar_ida_nome": null,
+            "ies_origem_nome": null,
+            "ponto_desembarque_nome": null,
+            "rota_complementar_volta_nome": null,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "id": 4,
+            "aluno_id": 2,
+            "data": "2026-11-12",
+            "usa_ida": false,
+            "usa_volta": true,
+            "ponto_embarque_id": null,
+            "ies_destino_id": null,
+            "rota_complementar_ida_id": null,
+            "ies_origem_id": 1,
+            "ponto_desembarque_id": 1,
+            "rota_complementar_volta_id": null,
+            "status": "ATIVO",
+            "ponto_embarque_nome": null,
+            "ies_destino_nome": null,
+            "rota_complementar_ida_nome": null,
+            "ies_origem_nome": "Instituicao QA HU014",
+            "ponto_desembarque_nome": "Ponto QA HU014",
+            "rota_complementar_volta_nome": null,
+            "pode_remover": true,
+            "pode_editar": true
+          }
+        ],
+        "ativos": 2,
+        "limite": 22
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/transporte/agendamentos/3",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 39.753,
+      "response": {
+        "mensagem": "Agendamento cancelado com sucesso",
+        "estado_dia": "DISPONIVEL",
+        "ativos": 1,
+        "limite": 22
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/meus",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 35.81,
+      "response": {
+        "agendamentos": [
+          {
+            "id": 4,
+            "aluno_id": 2,
+            "data": "2026-11-12",
+            "usa_ida": false,
+            "usa_volta": true,
+            "ponto_embarque_id": null,
+            "ies_destino_id": null,
+            "rota_complementar_ida_id": null,
+            "ies_origem_id": 1,
+            "ponto_desembarque_id": 1,
+            "rota_complementar_volta_id": null,
+            "status": "ATIVO",
+            "ponto_embarque_nome": null,
+            "ies_destino_nome": null,
+            "rota_complementar_ida_nome": null,
+            "ies_origem_nome": "Instituicao QA HU014",
+            "ponto_desembarque_nome": "Ponto QA HU014",
+            "rota_complementar_volta_nome": null,
+            "pode_remover": true,
+            "pode_editar": true
+          }
+        ],
+        "ativos": 1,
+        "limite": 22
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/3",
+      "actor": "A",
+      "request_body": null,
+      "http": 404,
+      "elapsed_ms": 24.739,
+      "response": {
+        "success": false,
+        "error": {
+          "code": "RESOURCE_NOT_FOUND",
+          "message": "Agendamento não encontrado."
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/calendario?mes=2026-11",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 42.576,
+      "response": {
+        "mes": "2026-11",
+        "dias": [
+          {
+            "data": "2026-11-08",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 5,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-09",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-10",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-11",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-12",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 4,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-13",
+            "estado": "FERIADO",
+            "descricao": "FERIADO sintetico HU014",
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-14",
+            "estado": "RECESSO",
+            "descricao": "RECESSO sintetico HU014",
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-15",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-16",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-17",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-18",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-19",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-20",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-21",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-22",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-23",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-24",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-25",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-26",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-27",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-28",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-29",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-30",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          }
+        ],
+        "ativos": 1,
+        "limite": 22
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/meus",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 27.334,
+      "response": {
+        "agendamentos": [
+          {
+            "id": 4,
+            "aluno_id": 2,
+            "data": "2026-11-12",
+            "usa_ida": false,
+            "usa_volta": true,
+            "ponto_embarque_id": null,
+            "ies_destino_id": null,
+            "rota_complementar_ida_id": null,
+            "ies_origem_id": 1,
+            "ponto_desembarque_id": 1,
+            "rota_complementar_volta_id": null,
+            "status": "ATIVO",
+            "ponto_embarque_nome": null,
+            "ies_destino_nome": null,
+            "rota_complementar_ida_nome": null,
+            "ies_origem_nome": "Instituicao QA HU014",
+            "ponto_desembarque_nome": "Ponto QA HU014",
+            "rota_complementar_volta_nome": null,
+            "pode_remover": true,
+            "pode_editar": true
+          }
+        ],
+        "ativos": 1,
+        "limite": 22
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/transporte/agendamentos/4",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 23.161,
+      "response": {
+        "mensagem": "Agendamento cancelado com sucesso",
+        "estado_dia": "DISPONIVEL",
+        "ativos": 0,
+        "limite": 22
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/meus",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 21.269,
+      "response": {
+        "agendamentos": [],
+        "ativos": 0,
+        "limite": 22
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/4",
+      "actor": "A",
+      "request_body": null,
+      "http": 404,
+      "elapsed_ms": 20.817,
+      "response": {
+        "success": false,
+        "error": {
+          "code": "RESOURCE_NOT_FOUND",
+          "message": "Agendamento não encontrado."
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/calendario?mes=2026-11",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 34.104,
+      "response": {
+        "mes": "2026-11",
+        "dias": [
+          {
+            "data": "2026-11-08",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 5,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-09",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-10",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-11",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-12",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-13",
+            "estado": "FERIADO",
+            "descricao": "FERIADO sintetico HU014",
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-14",
+            "estado": "RECESSO",
+            "descricao": "RECESSO sintetico HU014",
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-15",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-16",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-17",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-18",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-19",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-20",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-21",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-22",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-23",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-24",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-25",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-26",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-27",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-28",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-29",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-30",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          }
+        ],
+        "ativos": 0,
+        "limite": 22
+      }
+    }
+  ],
+  "checks": [
+    {
+      "description": "GET /transporte/agendamentos/meus: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "DELETE /transporte/agendamentos/2: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "Mensagem, estado e contador da resposta",
+      "passed": true,
+      "actual": {
+        "mensagem": "Agendamento cancelado com sucesso",
+        "estado_dia": "DISPONIVEL",
+        "ativos": 2,
+        "limite": 22
+      }
+    },
+    {
+      "description": "GET /transporte/agendamentos/meus: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "Reserva saiu da lista e contador reduziu uma vez",
+      "passed": true,
+      "actual": null
+    },
+    {
+      "description": "GET /transporte/agendamentos/2: HTTP 404",
+      "passed": true,
+      "actual": 404
+    },
+    {
+      "description": "Persistido CANCELADO com data; dono/data/trechos mantidos",
+      "passed": true,
+      "actual": null
+    },
+    {
+      "description": "Exatamente um log CANCELAR com executor e entidade corretos",
+      "passed": true,
+      "actual": [
+        {
+          "id": 10,
+          "usuario_id": 2,
+          "acao": "CANCELAR",
+          "entidade": "agendamento",
+          "entidade_id": "2",
+          "valor_anterior": "{\"data\": \"2026-11-10\", \"usa_ida\": true, \"usa_volta\": true, \"status\": \"ATIVO\"}",
+          "valor_novo": "{\"status\": \"CANCELADO\"}",
+          "criado_em": "2026-11-10 01:05:31.305455+00:00"
+        }
+      ]
+    },
+    {
+      "description": "Reserva de B preservada",
+      "passed": true,
+      "actual": null
+    },
+    {
+      "description": "GET /transporte/agendamentos/calendario?mes=2026-11: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "Calendário atualizado: dia disponível e contador real",
+      "passed": true,
+      "actual": {
+        "data": "2026-11-10",
+        "estado": "DISPONIVEL",
+        "descricao": null,
+        "pode_agendar": true,
+        "agendamento_id": null,
+        "pode_remover": false,
+        "pode_editar": false
+      }
+    },
+    {
+      "description": "DELETE de referência HTTP em até 3000 ms",
+      "passed": true,
+      "actual": 31.269
+    },
+    {
+      "description": "GET /transporte/agendamentos/meus: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "DELETE /transporte/agendamentos/3: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "Mensagem, estado e contador da resposta",
+      "passed": true,
+      "actual": {
+        "mensagem": "Agendamento cancelado com sucesso",
+        "estado_dia": "DISPONIVEL",
+        "ativos": 1,
+        "limite": 22
+      }
+    },
+    {
+      "description": "GET /transporte/agendamentos/meus: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "Reserva saiu da lista e contador reduziu uma vez",
+      "passed": true,
+      "actual": null
+    },
+    {
+      "description": "GET /transporte/agendamentos/3: HTTP 404",
+      "passed": true,
+      "actual": 404
+    },
+    {
+      "description": "Persistido CANCELADO com data; dono/data/trechos mantidos",
+      "passed": true,
+      "actual": null
+    },
+    {
+      "description": "Exatamente um log CANCELAR com executor e entidade corretos",
+      "passed": true,
+      "actual": [
+        {
+          "id": 11,
+          "usuario_id": 2,
+          "acao": "CANCELAR",
+          "entidade": "agendamento",
+          "entidade_id": "3",
+          "valor_anterior": "{\"data\": \"2026-11-11\", \"usa_ida\": true, \"usa_volta\": false, \"status\": \"ATIVO\"}",
+          "valor_novo": "{\"status\": \"CANCELADO\"}",
+          "criado_em": "2026-11-10 01:05:31.517108+00:00"
+        }
+      ]
+    },
+    {
+      "description": "Reserva de B preservada",
+      "passed": true,
+      "actual": null
+    },
+    {
+      "description": "GET /transporte/agendamentos/calendario?mes=2026-11: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "Calendário atualizado: dia disponível e contador real",
+      "passed": true,
+      "actual": {
+        "data": "2026-11-11",
+        "estado": "DISPONIVEL",
+        "descricao": null,
+        "pode_agendar": true,
+        "agendamento_id": null,
+        "pode_remover": false,
+        "pode_editar": false
+      }
+    },
+    {
+      "description": "GET /transporte/agendamentos/meus: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "DELETE /transporte/agendamentos/4: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "Mensagem, estado e contador da resposta",
+      "passed": true,
+      "actual": {
+        "mensagem": "Agendamento cancelado com sucesso",
+        "estado_dia": "DISPONIVEL",
+        "ativos": 0,
+        "limite": 22
+      }
+    },
+    {
+      "description": "GET /transporte/agendamentos/meus: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "Reserva saiu da lista e contador reduziu uma vez",
+      "passed": true,
+      "actual": null
+    },
+    {
+      "description": "GET /transporte/agendamentos/4: HTTP 404",
+      "passed": true,
+      "actual": 404
+    },
+    {
+      "description": "Persistido CANCELADO com data; dono/data/trechos mantidos",
+      "passed": true,
+      "actual": null
+    },
+    {
+      "description": "Exatamente um log CANCELAR com executor e entidade corretos",
+      "passed": true,
+      "actual": [
+        {
+          "id": 12,
+          "usuario_id": 2,
+          "acao": "CANCELAR",
+          "entidade": "agendamento",
+          "entidade_id": "4",
+          "valor_anterior": "{\"data\": \"2026-11-12\", \"usa_ida\": false, \"usa_volta\": true, \"status\": \"ATIVO\"}",
+          "valor_novo": "{\"status\": \"CANCELADO\"}",
+          "criado_em": "2026-11-10 01:05:31.713939+00:00"
+        }
+      ]
+    },
+    {
+      "description": "Reserva de B preservada",
+      "passed": true,
+      "actual": null
+    },
+    {
+      "description": "GET /transporte/agendamentos/calendario?mes=2026-11: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "Calendário atualizado: dia disponível e contador real",
+      "passed": true,
+      "actual": {
+        "data": "2026-11-12",
+        "estado": "DISPONIVEL",
+        "descricao": null,
+        "pode_agendar": true,
+        "agendamento_id": null,
+        "pode_remover": false,
+        "pode_editar": false
+      }
+    }
+  ],
+  "database": [
+    {
+      "label": "antes_delete_2",
+      "bookings": [
+        {
+          "id": 1,
+          "aluno_id": 3,
+          "data": "2026-11-10",
+          "usa_ida": true,
+          "usa_volta": true,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": 1,
+          "ponto_desembarque_id": 1,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO",
+          "created_at": "2026-11-10 01:03:32.320813+00:00",
+          "updated_at": "2026-11-10 01:03:32.320818+00:00",
+          "cancelled_at": null
+        },
+        {
+          "id": 2,
+          "aluno_id": 2,
+          "data": "2026-11-10",
+          "usa_ida": true,
+          "usa_volta": true,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": 1,
+          "ponto_desembarque_id": 1,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO",
+          "created_at": "2026-11-10 01:03:32.387277+00:00",
+          "updated_at": "2026-11-10 01:03:32.387280+00:00",
+          "cancelled_at": null
+        }
+      ],
+      "logs": [
+        {
+          "id": 4,
+          "usuario_id": 3,
+          "acao": "CRIAR",
+          "entidade": "agendamento",
+          "entidade_id": "1",
+          "valor_anterior": null,
+          "valor_novo": "{\"data\": \"2026-11-10\", \"usa_ida\": true, \"usa_volta\": true, \"ponto_embarque_id\": 1, \"ies_destino_id\": 1, \"rota_complementar_ida_id\": null, \"ies_origem_id\": 1, \"ponto_desembarque_id\": 1, \"rota_complementar_volta_id\": null}",
+          "criado_em": "2026-11-10 01:03:32.322878+00:00"
+        },
+        {
+          "id": 5,
+          "usuario_id": 2,
+          "acao": "CRIAR",
+          "entidade": "agendamento",
+          "entidade_id": "2",
+          "valor_anterior": null,
+          "valor_novo": "{\"data\": \"2026-11-10\", \"usa_ida\": true, \"usa_volta\": true, \"ponto_embarque_id\": 1, \"ies_destino_id\": 1, \"rota_complementar_ida_id\": null, \"ies_origem_id\": 1, \"ponto_desembarque_id\": 1, \"rota_complementar_volta_id\": null}",
+          "criado_em": "2026-11-10 01:03:32.388719+00:00"
+        }
+      ]
+    },
+    {
+      "label": "depois_delete_2",
+      "bookings": [
+        {
+          "id": 1,
+          "aluno_id": 3,
+          "data": "2026-11-10",
+          "usa_ida": true,
+          "usa_volta": true,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": 1,
+          "ponto_desembarque_id": 1,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO",
+          "created_at": "2026-11-10 01:03:32.320813+00:00",
+          "updated_at": "2026-11-10 01:03:32.320818+00:00",
+          "cancelled_at": null
+        },
+        {
+          "id": 2,
+          "aluno_id": 2,
+          "data": "2026-11-10",
+          "usa_ida": true,
+          "usa_volta": true,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": 1,
+          "ponto_desembarque_id": 1,
+          "rota_complementar_volta_id": null,
+          "status": "CANCELADO",
+          "created_at": "2026-11-10 01:03:32.387277+00:00",
+          "updated_at": "2026-11-10 01:05:31.304819+00:00",
+          "cancelled_at": "2026-11-10 01:05:31.304442+00:00"
+        }
+      ],
+      "logs": [
+        {
+          "id": 4,
+          "usuario_id": 3,
+          "acao": "CRIAR",
+          "entidade": "agendamento",
+          "entidade_id": "1",
+          "valor_anterior": null,
+          "valor_novo": "{\"data\": \"2026-11-10\", \"usa_ida\": true, \"usa_volta\": true, \"ponto_embarque_id\": 1, \"ies_destino_id\": 1, \"rota_complementar_ida_id\": null, \"ies_origem_id\": 1, \"ponto_desembarque_id\": 1, \"rota_complementar_volta_id\": null}",
+          "criado_em": "2026-11-10 01:03:32.322878+00:00"
+        },
+        {
+          "id": 5,
+          "usuario_id": 2,
+          "acao": "CRIAR",
+          "entidade": "agendamento",
+          "entidade_id": "2",
+          "valor_anterior": null,
+          "valor_novo": "{\"data\": \"2026-11-10\", \"usa_ida\": true, \"usa_volta\": true, \"ponto_embarque_id\": 1, \"ies_destino_id\": 1, \"rota_complementar_ida_id\": null, \"ies_origem_id\": 1, \"ponto_desembarque_id\": 1, \"rota_complementar_volta_id\": null}",
+          "criado_em": "2026-11-10 01:03:32.388719+00:00"
+        },
+        {
+          "id": 10,
+          "usuario_id": 2,
+          "acao": "CANCELAR",
+          "entidade": "agendamento",
+          "entidade_id": "2",
+          "valor_anterior": "{\"data\": \"2026-11-10\", \"usa_ida\": true, \"usa_volta\": true, \"status\": \"ATIVO\"}",
+          "valor_novo": "{\"status\": \"CANCELADO\"}",
+          "criado_em": "2026-11-10 01:05:31.305455+00:00"
+        }
+      ]
+    },
+    {
+      "label": "antes_delete_3",
+      "bookings": [
+        {
+          "id": 1,
+          "aluno_id": 3,
+          "data": "2026-11-10",
+          "usa_ida": true,
+          "usa_volta": true,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": 1,
+          "ponto_desembarque_id": 1,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO",
+          "created_at": "2026-11-10 01:03:32.320813+00:00",
+          "updated_at": "2026-11-10 01:03:32.320818+00:00",
+          "cancelled_at": null
+        },
+        {
+          "id": 3,
+          "aluno_id": 2,
+          "data": "2026-11-11",
+          "usa_ida": true,
+          "usa_volta": false,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": null,
+          "ponto_desembarque_id": null,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO",
+          "created_at": "2026-11-10 01:03:32.443876+00:00",
+          "updated_at": "2026-11-10 01:03:32.443883+00:00",
+          "cancelled_at": null
+        }
+      ],
+      "logs": [
+        {
+          "id": 4,
+          "usuario_id": 3,
+          "acao": "CRIAR",
+          "entidade": "agendamento",
+          "entidade_id": "1",
+          "valor_anterior": null,
+          "valor_novo": "{\"data\": \"2026-11-10\", \"usa_ida\": true, \"usa_volta\": true, \"ponto_embarque_id\": 1, \"ies_destino_id\": 1, \"rota_complementar_ida_id\": null, \"ies_origem_id\": 1, \"ponto_desembarque_id\": 1, \"rota_complementar_volta_id\": null}",
+          "criado_em": "2026-11-10 01:03:32.322878+00:00"
+        },
+        {
+          "id": 6,
+          "usuario_id": 2,
+          "acao": "CRIAR",
+          "entidade": "agendamento",
+          "entidade_id": "3",
+          "valor_anterior": null,
+          "valor_novo": "{\"data\": \"2026-11-11\", \"usa_ida\": true, \"usa_volta\": false, \"ponto_embarque_id\": 1, \"ies_destino_id\": 1, \"rota_complementar_ida_id\": null, \"ies_origem_id\": null, \"ponto_desembarque_id\": null, \"rota_complementar_volta_id\": null}",
+          "criado_em": "2026-11-10 01:03:32.445576+00:00"
+        }
+      ]
+    },
+    {
+      "label": "depois_delete_3",
+      "bookings": [
+        {
+          "id": 1,
+          "aluno_id": 3,
+          "data": "2026-11-10",
+          "usa_ida": true,
+          "usa_volta": true,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": 1,
+          "ponto_desembarque_id": 1,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO",
+          "created_at": "2026-11-10 01:03:32.320813+00:00",
+          "updated_at": "2026-11-10 01:03:32.320818+00:00",
+          "cancelled_at": null
+        },
+        {
+          "id": 3,
+          "aluno_id": 2,
+          "data": "2026-11-11",
+          "usa_ida": true,
+          "usa_volta": false,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": null,
+          "ponto_desembarque_id": null,
+          "rota_complementar_volta_id": null,
+          "status": "CANCELADO",
+          "created_at": "2026-11-10 01:03:32.443876+00:00",
+          "updated_at": "2026-11-10 01:05:31.516141+00:00",
+          "cancelled_at": "2026-11-10 01:05:31.515663+00:00"
+        }
+      ],
+      "logs": [
+        {
+          "id": 4,
+          "usuario_id": 3,
+          "acao": "CRIAR",
+          "entidade": "agendamento",
+          "entidade_id": "1",
+          "valor_anterior": null,
+          "valor_novo": "{\"data\": \"2026-11-10\", \"usa_ida\": true, \"usa_volta\": true, \"ponto_embarque_id\": 1, \"ies_destino_id\": 1, \"rota_complementar_ida_id\": null, \"ies_origem_id\": 1, \"ponto_desembarque_id\": 1, \"rota_complementar_volta_id\": null}",
+          "criado_em": "2026-11-10 01:03:32.322878+00:00"
+        },
+        {
+          "id": 6,
+          "usuario_id": 2,
+          "acao": "CRIAR",
+          "entidade": "agendamento",
+          "entidade_id": "3",
+          "valor_anterior": null,
+          "valor_novo": "{\"data\": \"2026-11-11\", \"usa_ida\": true, \"usa_volta\": false, \"ponto_embarque_id\": 1, \"ies_destino_id\": 1, \"rota_complementar_ida_id\": null, \"ies_origem_id\": null, \"ponto_desembarque_id\": null, \"rota_complementar_volta_id\": null}",
+          "criado_em": "2026-11-10 01:03:32.445576+00:00"
+        },
+        {
+          "id": 11,
+          "usuario_id": 2,
+          "acao": "CANCELAR",
+          "entidade": "agendamento",
+          "entidade_id": "3",
+          "valor_anterior": "{\"data\": \"2026-11-11\", \"usa_ida\": true, \"usa_volta\": false, \"status\": \"ATIVO\"}",
+          "valor_novo": "{\"status\": \"CANCELADO\"}",
+          "criado_em": "2026-11-10 01:05:31.517108+00:00"
+        }
+      ]
+    },
+    {
+      "label": "antes_delete_4",
+      "bookings": [
+        {
+          "id": 1,
+          "aluno_id": 3,
+          "data": "2026-11-10",
+          "usa_ida": true,
+          "usa_volta": true,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": 1,
+          "ponto_desembarque_id": 1,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO",
+          "created_at": "2026-11-10 01:03:32.320813+00:00",
+          "updated_at": "2026-11-10 01:03:32.320818+00:00",
+          "cancelled_at": null
+        },
+        {
+          "id": 4,
+          "aluno_id": 2,
+          "data": "2026-11-12",
+          "usa_ida": false,
+          "usa_volta": true,
+          "ponto_embarque_id": null,
+          "ies_destino_id": null,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": 1,
+          "ponto_desembarque_id": 1,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO",
+          "created_at": "2026-11-10 01:03:32.476634+00:00",
+          "updated_at": "2026-11-10 01:03:32.476639+00:00",
+          "cancelled_at": null
+        }
+      ],
+      "logs": [
+        {
+          "id": 4,
+          "usuario_id": 3,
+          "acao": "CRIAR",
+          "entidade": "agendamento",
+          "entidade_id": "1",
+          "valor_anterior": null,
+          "valor_novo": "{\"data\": \"2026-11-10\", \"usa_ida\": true, \"usa_volta\": true, \"ponto_embarque_id\": 1, \"ies_destino_id\": 1, \"rota_complementar_ida_id\": null, \"ies_origem_id\": 1, \"ponto_desembarque_id\": 1, \"rota_complementar_volta_id\": null}",
+          "criado_em": "2026-11-10 01:03:32.322878+00:00"
+        },
+        {
+          "id": 7,
+          "usuario_id": 2,
+          "acao": "CRIAR",
+          "entidade": "agendamento",
+          "entidade_id": "4",
+          "valor_anterior": null,
+          "valor_novo": "{\"data\": \"2026-11-12\", \"usa_ida\": false, \"usa_volta\": true, \"ponto_embarque_id\": null, \"ies_destino_id\": null, \"rota_complementar_ida_id\": null, \"ies_origem_id\": 1, \"ponto_desembarque_id\": 1, \"rota_complementar_volta_id\": null}",
+          "criado_em": "2026-11-10 01:03:32.477738+00:00"
+        }
+      ]
+    },
+    {
+      "label": "depois_delete_4",
+      "bookings": [
+        {
+          "id": 1,
+          "aluno_id": 3,
+          "data": "2026-11-10",
+          "usa_ida": true,
+          "usa_volta": true,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": 1,
+          "ponto_desembarque_id": 1,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO",
+          "created_at": "2026-11-10 01:03:32.320813+00:00",
+          "updated_at": "2026-11-10 01:03:32.320818+00:00",
+          "cancelled_at": null
+        },
+        {
+          "id": 4,
+          "aluno_id": 2,
+          "data": "2026-11-12",
+          "usa_ida": false,
+          "usa_volta": true,
+          "ponto_embarque_id": null,
+          "ies_destino_id": null,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": 1,
+          "ponto_desembarque_id": 1,
+          "rota_complementar_volta_id": null,
+          "status": "CANCELADO",
+          "created_at": "2026-11-10 01:03:32.476634+00:00",
+          "updated_at": "2026-11-10 01:05:31.713494+00:00",
+          "cancelled_at": "2026-11-10 01:05:31.713233+00:00"
+        }
+      ],
+      "logs": [
+        {
+          "id": 4,
+          "usuario_id": 3,
+          "acao": "CRIAR",
+          "entidade": "agendamento",
+          "entidade_id": "1",
+          "valor_anterior": null,
+          "valor_novo": "{\"data\": \"2026-11-10\", \"usa_ida\": true, \"usa_volta\": true, \"ponto_embarque_id\": 1, \"ies_destino_id\": 1, \"rota_complementar_ida_id\": null, \"ies_origem_id\": 1, \"ponto_desembarque_id\": 1, \"rota_complementar_volta_id\": null}",
+          "criado_em": "2026-11-10 01:03:32.322878+00:00"
+        },
+        {
+          "id": 7,
+          "usuario_id": 2,
+          "acao": "CRIAR",
+          "entidade": "agendamento",
+          "entidade_id": "4",
+          "valor_anterior": null,
+          "valor_novo": "{\"data\": \"2026-11-12\", \"usa_ida\": false, \"usa_volta\": true, \"ponto_embarque_id\": null, \"ies_destino_id\": null, \"rota_complementar_ida_id\": null, \"ies_origem_id\": 1, \"ponto_desembarque_id\": 1, \"rota_complementar_volta_id\": null}",
+          "criado_em": "2026-11-10 01:03:32.477738+00:00"
+        },
+        {
+          "id": 12,
+          "usuario_id": 2,
+          "acao": "CANCELAR",
+          "entidade": "agendamento",
+          "entidade_id": "4",
+          "valor_anterior": "{\"data\": \"2026-11-12\", \"usa_ida\": false, \"usa_volta\": true, \"status\": \"ATIVO\"}",
+          "valor_novo": "{\"status\": \"CANCELADO\"}",
+          "criado_em": "2026-11-10 01:05:31.713939+00:00"
+        }
+      ]
+    }
+  ],
+  "blocked": [],
+  "finished_at": "2026-11-09T22:05:31.827230-03:00",
+  "status": "PASS"
+}

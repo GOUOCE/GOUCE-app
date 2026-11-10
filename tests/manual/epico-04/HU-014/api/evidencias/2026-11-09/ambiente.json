@@ -1,0 +1,55 @@
+{
+  "started_at": "2026-11-09T22:03:30.832297-03:00",
+  "api_url": "http://127.0.0.1:8014",
+  "request_origin": "Cliente urllib em processo separado dentro do container, via TCP localhost:8000 para Uvicorn real.",
+  "python": "3.11.17",
+  "dependencies": {
+    "fastapi": "0.115.6",
+    "SQLAlchemy": "2.0.38",
+    "pydantic": "2.10.6",
+    "alembic": "1.14.0",
+    "psycopg2-binary": "2.9.10"
+  },
+  "timezone": "America/Fortaleza",
+  "database": [
+    {
+      "version": "PostgreSQL 15.17 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit"
+    }
+  ],
+  "alembic": [
+    {
+      "version_num": "80_remove_horarios_agendamento"
+    }
+  ],
+  "constraints": [
+    {
+      "indexname": "agendamento_pkey",
+      "indexdef": "CREATE UNIQUE INDEX agendamento_pkey ON public.agendamento USING btree (id)"
+    },
+    {
+      "indexname": "ix_agendamento_aluno_data_status",
+      "indexdef": "CREATE INDEX ix_agendamento_aluno_data_status ON public.agendamento USING btree (aluno_id, data, status)"
+    },
+    {
+      "indexname": "uq_agendamento_aluno_data_ativo",
+      "indexdef": "CREATE UNIQUE INDEX uq_agendamento_aluno_data_ativo ON public.agendamento USING btree (aluno_id, data) WHERE ((status)::text = 'ATIVO'::text)"
+    }
+  ],
+  "product_mutations": "Nenhuma alteração no código do produto, sem dependency override, sem mock.",
+  "project": "atu-qa-hu014-oficial",
+  "product_commit": "e498c651c326038ccc1c613a7c6896acb30fc1bc",
+  "backend_tree": "65df87b14c0d04a52f54fda2d036dd6ecdb4a8d7",
+  "backend_image": "sha256:8152694904414b5bf60020d85e899ee2c1f6305d0e61ea15ed3149f317622783",
+  "postgres_image": "sha256:09e4f20b14ddb3dfe3a0c825b206032aaf8f28300ba2070c0b60fc1c10c6abc7",
+  "preparation_commit": "36199c05",
+  "result": {
+    "passed": 9,
+    "failed": 0,
+    "partial": 1,
+    "blocked_cases": 0,
+    "pending": 0,
+    "http_records": 130,
+    "checks_passed": 216
+  },
+  "instrumentation": "Trigger temporario qa_hu014_fail_cancel no banco isolado, removido e ausencia conferida; nenhum override ou alteracao de produto."
+}

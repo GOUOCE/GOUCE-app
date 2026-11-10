@@ -1,6 +1,6 @@
 """Execução HTTP real da suíte manual HU-014; sem mocks ou override da API.
 
-Rodar no container isolado, por fases: consulta, cancelamento, integridade.
+Rodar no container isolado: consulta, cancelamento, integridade, conferencia.
 Credenciais são lidas do ambiente e nunca gravadas nas evidências.
 """
 
@@ -431,6 +431,24 @@ def integridade():
     finish('010')
 
 
+def conferencia():
+    # Fecha as leituras previstas na suíte após a massa ter sido consumida.
+    for number in ['006', '009']:
+        CASES[number] = json.loads((OUT / f'CT-HU014-API-{number}.json').read_text())
+    month = (date.fromisoformat(STATE['D']) - timedelta(days=1)).strftime('%Y-%m')
+    _, body, _ = request('GET', BASE + '/calendario?mes=' + month, number='006', expected=200)
+    past = next(day for day in body['dias'] if day['agendamento_id'] == STATE['AP'])
+    check('006', 'Calendário final mantém histórico e flags protegidos', past['estado'] == 'AGENDADO' and
+          not past['pode_remover'] and not past['pode_editar'], past)
+    finish('006')
+    after = snapshot('009', 'conferencia_final_B', [STATE['B1']])
+    old = next(entry for entry in CASES['009']['database'] if entry['label'] == 'cancelado_e_reagendado')
+    previous_b = [row for row in old['bookings'] if row['id'] == STATE['B1']]
+    actual_b = json.loads(json.dumps(after['bookings'], default=str))
+    check('009', 'B1 segue intacta após POST de reagendamento e integridade', previous_b == actual_b)
+    finish('009')
+
+
 def main_run():
     OUT.mkdir(exist_ok=True, parents=True)
     database = sql('SELECT current_database() AS name')[0]['name']
@@ -459,6 +477,8 @@ def main_run():
         cancelamento()
     elif phase == 'integridade':
         integridade()
+    elif phase == 'conferencia':
+        conferencia()
     else:
         raise RuntimeError('Fase inválida')
     if any(item.get('status') == 'FAIL' for item in CASES.values()):

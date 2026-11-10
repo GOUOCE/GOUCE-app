@@ -1,6 +1,6 @@
 # Como executar os testes manuais de API — HU-014
 
-Execução pela **LLM**, com revisão de **Cauan Ricardo**. Esta entrega planeja os testes; nenhuma chamada funcional foi executada e nenhum defeito foi reproduzido.
+Execução pela **LLM**, com revisão de **Cauan Ricardo**. Execução em 09/11/2026: **9 casos passaram e 1 ficou parcial** pela ausência da alocação real. Nenhum defeito foi reproduzido nas partes verificadas. Consulte os [resultados e evidências](evidencias/2026-11-09/README.md) e o [roteiro reproduzível](execucao/README.md). As instruções abaixo também servem para novas execuções em ambiente limpo.
 
 ```text
 tests/manual/epico-04/

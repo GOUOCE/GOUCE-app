@@ -9,16 +9,16 @@
 | Camada | API |
 | Tipo de teste | Funcional manual essencial, integração, autorização e integridade — baseado em risco |
 | Endpoints | Base `/transporte/agendamentos`: `GET /meus`, `GET /calendario?mes=YYYY-MM`, `GET /{id}` e `DELETE /{id}`. Apoio: `POST` e `PUT /{id}` da HU-013 |
-| Ambiente | A preencher — URL, SHA testado, banco e fuso; base analisada `develop` `3e3bb13c` |
+| Ambiente | Docker isolado `atu-qa-hu014-oficial`; `http://127.0.0.1:8014`; branch `feature/testes-api-hu-014`; backend `e498c651c326038ccc1c613a7c6896acb30fc1bc`; PostgreSQL 15.17; America/Fortaleza. [Evidências](evidencias/2026-11-09/README.md) |
 | Total de casos | 10 |
-| Última execução | Não realizada |
+| Última execução | 09/11/2026 — CT-001 a CT-010 por HTTP real; 9 passaram e 1 parcial |
 | Testador | LLM — execução de API; Cauan Ricardo — revisão |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 10 | 0 | 0 | 0 | 0 | 10 |
+| ⚠️ Execução parcial | 10 | 9 | 0 | 1 | 0 | 0 |
 
 ## Pré-condições
 
@@ -40,26 +40,26 @@ Todas as chamadas usam token de A, salvo indicação. Criar a massa conforme a o
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU014-API-001 | Lista vazia e reservas do próprio aluno | GET `/meus` antes/depois da massa | 200; zero antes; depois somente ativos de A desde D, ordenados e com contador correto | ⏳ PENDENTE | Não executado. |
-| CT-HU014-API-002 | Estados e mudança de mês | GET `/calendario`; mês válido e inválido | 200 com estados/ids/flags reais e limite 22; inválido 422 | ⏳ PENDENTE | Não executado. |
-| CT-HU014-API-003 | Detalhes e proteção de propriedade | A1, A2, A3, AP, B1 e inexistente | 200 com dados reais dos próprios registros; 404 para B1 e inexistente | ⏳ PENDENTE | Não executado. |
+| CT-HU014-API-001 | Lista vazia e reservas do próprio aluno | GET `/meus` antes/depois da massa | 200; zero antes; depois somente ativos de A desde D, ordenados e com contador correto | ✅ PASSOU | 200: A com 0 → 1 → 3 ativos; B somente B1; histórico AP fora da lista futura. |
+| CT-HU014-API-002 | Estados e mudança de mês | GET `/calendario`; mês válido e inválido | 200 com estados/ids/flags reais e limite 22; inválido 422 | ✅ PASSOU | Novembro/dezembro válidos; estados/flags corretos; mês inválido/ausente: 422. |
+| CT-HU014-API-003 | Detalhes e proteção de propriedade | A1, A2, A3, AP, B1 e inexistente | 200 com dados reais dos próprios registros; 404 para B1 e inexistente | ✅ PASSOU | Próprios 200; outro dono/inexistente 404; GET de referência 24,354 ms. |
 
 ### Seção B — Cancelamento e limites
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU014-API-004 | Cancelar reserva futura e persistir | DELETE A1, A2 e A3, um por vez | 200; CANCELADO com data do cancelamento; contador diminui uma vez por reserva; calendário atualizado | ⏳ PENDENTE | Não executado. |
-| CT-HU014-API-005 | Cancelar hoje sem horário limite | Reserva de D antes e após o horário de saída | 200 nas duas condições; não exigir antecedência | ⏳ PENDENTE | Não executado. |
-| CT-HU014-API-006 | Bloquear cancelamento de ontem | DELETE AP e PUT AP com ambos os trechos false | 422 AGENDAMENTO_PASSADO; histórico preservado | ⏳ PENDENTE | Não executado. |
-| CT-HU014-API-007 | Repetição, outro dono e id inválido | DELETE cancelado, B1, inexistente e texto | 404 nos três primeiros; 422 em texto; nenhum efeito colateral | ⏳ PENDENTE | Não executado. |
-| CT-HU014-API-008 | Autenticação e autorização | Sem token, token inválido, administrador, aluno sem acesso regular | 401 sem token/inválido; 403 para perfis sem permissão; nenhuma alteração | ⏳ PENDENTE | Não executado. |
-| CT-HU014-API-009 | Liberar limite e reagendar | 22 ativos → cancelar um → novo POST no mesmo dia | 22 → 21 → 22; novo id ativo; antigo permanece cancelado | ⏳ PENDENTE | Não executado. |
+| CT-HU014-API-004 | Cancelar reserva futura e persistir | DELETE A1, A2 e A3, um por vez | 200; CANCELADO com data do cancelamento; contador diminui uma vez por reserva; calendário atualizado | ✅ PASSOU | Ids 2/3/4 cancelados: 200, persistência e auditoria corretas; DELETE de referência 31,269 ms. |
+| CT-HU014-API-005 | Cancelar hoje sem horário limite | Reserva de D antes e após o horário de saída | 200 nas duas condições; não exigir antecedência | ✅ PASSOU | Hoje antes da saída 23:30 e após a saída 00:00: 200 nas duas condições, sem prazo mínimo. |
+| CT-HU014-API-006 | Bloquear cancelamento de ontem | DELETE AP e PUT AP com ambos os trechos false | 422 AGENDAMENTO_PASSADO; histórico preservado | ✅ PASSOU | DELETE e PUT de AP: 422 AGENDAMENTO_PASSADO; histórico e flags preservados. |
+| CT-HU014-API-007 | Repetição, outro dono e id inválido | DELETE cancelado, B1, inexistente e texto | 404 nos três primeiros; 422 em texto; nenhum efeito colateral | ✅ PASSOU | 404 nas recusas de recurso e 422 em id textual; contador/logs e B intactos. |
+| CT-HU014-API-008 | Autenticação e autorização | Sem token, token inválido, administrador, aluno sem acesso regular | 401 sem token/inválido; 403 para perfis sem permissão; nenhuma alteração | ✅ PASSOU | 20 recusas nos quatro endpoints: 401 sem token/inválido; 403 admin, pendente e vínculo vencido. |
+| CT-HU014-API-009 | Liberar limite e reagendar | 22 ativos → cancelar um → novo POST no mesmo dia | 22 → 21 → 22; novo id ativo; antigo permanece cancelado | ✅ PASSOU | 22 → 21 → 22; id 11 cancelado e novo id 31 ativo no mesmo dia; B preservado. |
 
 ### Seção C — Integridade da alocação
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU014-API-010 | Alocação e cancelamento na mesma transação | Reserva alocada; falha antes do commit; depois sucesso | Falha não altera reserva/alocação/contador; sucesso libera só a vaga correspondente | ⏳ PENDENTE | Depende de HU-016/018 e mecanismo de falha controlada. |
+| CT-HU014-API-010 | Alocação e cancelamento na mesma transação | Reserva alocada; falha antes do commit; depois sucesso | Falha não altera reserva/alocação/contador; sucesso libera só a vaga correspondente | ⚠️ PARCIAL | Rollback de reserva/log/contador comprovado após 500 controlado; liberação da alocação bloqueada por HU-016/018. |
 
 ## Detalhamento dos casos
 
@@ -85,8 +85,10 @@ Todas as chamadas usam token de A, salvo indicação. Criar a massa conforme a o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- A (aluno id 2) recebeu HTTP 200 com lista vazia, depois um ativo e finalmente três ativos futuros ordenados. B (id 3) recebeu somente sua reserva B1 (id 1).
+- Reservas A1/A2/A3 = ids 2/3/4, com ambos os trechos/só ida/só volta; AP = id 5, de 08/11/2026. O histórico e B1 não entraram no contador de A. Nomes das referências, dono e flags conferidos contra a massa e o banco.
+- Evidência: [HTTP, verificações e persistência — CT-001](evidencias/2026-11-09/CT-HU014-API-001.json).
+- Status: ✅ Passou.
 
 ---
 
@@ -113,8 +115,11 @@ Todas as chamadas usam token de A, salvo indicação. Criar a massa conforme a o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Cenário sem rota coletado antes de criar a rota: INDISPONIVEL e pode_agendar=false. Depois, dia livre DISPONIVEL; A1 AGENDADO com id 2; AP com remoção/edição false.
+- Feriado sintético em 13/11 e recesso em 14/11 identificados e indisponíveis. Reserva temporária id 6 em 01/12 confirmou virada de mês; calendários 2026-11 e 2026-12 retornaram 200, datas únicas/válidas e total global de quatro ativos durante essa variação. A reserva temporária foi cancelada ao concluir.
+- mes=2026-1, mes=2026-13 e ausência de mes retornaram 422. A janela observada termina em 08/12/2026; dias passados sem reserva são omitidos pelo contrato atual.
+- Evidência: [HTTP, verificações e persistência — CT-002](evidencias/2026-11-09/CT-HU014-API-002.json).
+- Status: ✅ Passou.
 
 ---
 
@@ -138,8 +143,10 @@ Todas as chamadas usam token de A, salvo indicação. Criar a massa conforme a o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Detalhes de A1/A2/A3/AP retornaram 200 com trechos, dono e flags correspondentes. GET de A1 medido em 24,354 ms no ambiente local; essa medida não inclui renderização móvel.
+- A tentou ler B1 e o id inexistente 999999999: ambos retornaram 404 RESOURCE_NOT_FOUND / “Agendamento não encontrado.”. B consultou B1 com 200. Snapshots antes/depois confirmaram ausência de mutações em reservas e logs.
+- Evidência: [HTTP, verificações e persistência — CT-003](evidencias/2026-11-09/CT-HU014-API-003.json).
+- Status: ✅ Passou.
 
 ---
 
@@ -167,8 +174,11 @@ Todas as chamadas usam token de A, salvo indicação. Criar a massa conforme a o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- DELETE dos ids 2, 3 e 4 retornou 200 com “Agendamento cancelado com sucesso”, estado DISPONIVEL e contador reduzido uma única vez por reserva, inclusive na de ida e volta.
+- Em nova consulta ao banco, cada registro ficou CANCELADO, com cancelled_at preenchido, dono/data/trechos preservados e exatamente um log CANCELAR do aluno id 2. Lista/calendário atualizados e GET do id cancelado com 404. B1 preservada.
+- DELETE de referência (id 2): 31,269 ms. A liberação de alocação não é declarada aprovada por este resultado: permanece como parte bloqueada do CT-010.
+- Evidência: [HTTP, verificações e persistência — CT-004](evidencias/2026-11-09/CT-HU014-API-004.json).
+- Status: ✅ Passou.
 
 ---
 
@@ -192,8 +202,10 @@ Todas as chamadas usam token de A, salvo indicação. Criar a massa conforme a o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Em D=09/11/2026, às 22:05:31 (America/Fortaleza), rota ajustada pela API para saída 23:30/retorno 23:59: reserva de hoje id 7 criada e cancelada com 200 antes da saída.
+- Às 22:05:32, rota com saída 00:00/retorno 00:01: nova reserva de hoje id 8 cancelada com 200 após a saída. Nenhum corte por antecedência. Status, contador, calendário e um log por cancelamento conferidos. Horários da rota restaurados a 06:30/18:30; relógio do sistema não foi alterado.
+- Evidência: [HTTP, verificações e persistência — CT-005](evidencias/2026-11-09/CT-HU014-API-005.json).
+- Status: ✅ Passou.
 
 ---
 
@@ -216,8 +228,10 @@ Todas as chamadas usam token de A, salvo indicação. Criar a massa conforme a o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- DELETE e PUT de AP (id 5, 08/11/2026), este com usa_ida=false e usa_volta=false, retornaram 422 AGENDAMENTO_PASSADO / “Não é possível cancelar agendamento de data já passada.”.
+- Detalhe continuou 200 e calendário preservou o histórico com pode_remover/pode_editar=false. Snapshots de reserva e auditoria permaneceram iguais após as duas recusas; nenhum log CANCELAR para AP.
+- Evidência: [HTTP, verificações e persistência — CT-006](evidencias/2026-11-09/CT-HU014-API-006.json).
+- Status: ✅ Passou.
 
 ---
 
@@ -240,8 +254,10 @@ Todas as chamadas usam token de A, salvo indicação. Criar a massa conforme a o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- DELETE de A1 já cancelada (id 2), de B1 pertencente a B (id 1) e do id inexistente 999999999: 404 RESOURCE_NOT_FOUND. DELETE /abc: 422.
+- GETs de A/B e snapshots antes/depois comprovaram ausência de dupla redução, novo log de cancelamento ou alteração da reserva de B. Nenhum erro 500 ou sucesso falso nessas recusas.
+- Evidência: [HTTP, verificações e persistência — CT-007](evidencias/2026-11-09/CT-HU014-API-007.json).
+- Status: ✅ Passou.
 
 ---
 
@@ -264,8 +280,10 @@ Todas as chamadas usam token de A, salvo indicação. Criar a massa conforme a o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Matriz executada nos quatro endpoints GET /meus, GET /calendario, GET /{id} e DELETE /{id}: sem token e token inválido retornaram 401; administrador, aluno pendente e aluno com vínculo vencido retornaram 403 (20 recusas).
+- Perfis e estados foram confirmados pelo login real e registrados sem tokens em preparacao.json. Reserva própria id 9 permaneceu ATIVO; contador e auditoria idênticos antes/depois da matriz.
+- Evidência: [HTTP, verificações e persistência — CT-008](evidencias/2026-11-09/CT-HU014-API-008.json).
+- Status: ✅ Passou.
 
 ---
 
@@ -289,8 +307,11 @@ Todas as chamadas usam token de A, salvo indicação. Criar a massa conforme a o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Massa de A completada pela API até exatamente 22 reservas em datas válidas distintas na janela, mantendo feriado/recesso excluídos; nenhuma configuração de limite foi ampliada.
+- Cancelamento do id 11 em 10/11 reduziu 22 → 21 e liberou o dia no calendário. Novo POST para a mesma data retornou 200 e criou id 31, levando 21 → 22. O id antigo permaneceu CANCELADO, sem bloquear o novo por duplicidade.
+- B1 e seus dados de persistência permaneceram intactos, inclusive na conferência final. O cancelamento posterior do CT-010 consome essa nova reserva e deixa A com 21 ativos; isso não altera a evidência 22 → 21 → 22 coletada neste caso.
+- Evidência: [HTTP, verificações e persistência — CT-009](evidencias/2026-11-09/CT-HU014-API-009.json).
+- Status: ✅ Passou.
 
 ---
 
@@ -316,8 +337,11 @@ Todas as chamadas usam token de A, salvo indicação. Criar a massa conforme a o
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- No PostgreSQL real, trigger temporário em log_auditoria provocou exceção QA_HU014_FALHA_CONTROLADA_ANTES_COMMIT somente no log CANCELAR do id 31. DELETE retornou 500 controlado; consulta em nova conexão comprovou reserva ATIVO, contador 22, B1 e auditoria iguais ao estado anterior.
+- Trigger/função removidos em finally e ausência do trigger confirmada. Nova tentativa retornou 200, persistiu CANCELADO e um log CANCELAR, atualizou calendário e contador para 21; sem alteração de código ou mocks.
+- Parte bloqueada: não existe tabela/fluxo real de alocação HU-016/018 nesta base, e remove_allocations é um gancho sem efeito. Não foi possível comprovar liberação da vaga nem rollback conjunto reserva+alocação. Caso parcial; nenhuma aprovação integral do AC-06/08 ou RNF-012 quanto à alocação.
+- Evidência: [HTTP, verificações e persistência — CT-010](evidencias/2026-11-09/CT-HU014-API-010.json).
+- Status: ⚠️ Parcial.
 
 ## Rastreabilidade
 
@@ -339,11 +363,11 @@ Todas as chamadas usam token de A, salvo indicação. Criar a massa conforme a o
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. Riscos de leitura constam no índice do épico. | — |
+| — | Nenhum defeito reproduzido nas partes verificadas. CT-010 parcial por ausência da alocação real; dependência registrada nas evidências, sem issue de bug presumida. | — |
 
 ## Observações gerais
 
 - Referências: [HU-014, seção 7.5.2 e regras gerais](../../../../../docs/requisitos.md), [índice e versões](../../README.md) e [UI](../ui/UI-HU-014.md).
 - DELETE faz cancelamento lógico; “remover” no requisito não deve ser interpretado como apagar histórico. Não há campo `success` obrigatório no DTO de sucesso atual: conferir `mensagem`, `estado_dia`, `ativos` e `limite`.
 - Falha de rede antes do envio é coberta na UI; falha dentro da transação é CT-010. Perda apenas da resposta após commit requer reconciliação por GET, sem presumir rollback.
-- Nenhum caso executado nesta entrega. Preencher os resultados por variação; não confundir defeito reproduzido, risco de código e dependência ausente.
+- Execução de API concluída nas partes disponíveis: 130 requisições registradas (incluindo preparação HTTP), 216 verificações satisfeitas, 9 casos aprovados e CT-010 parcial. [Ambiente, limitações e manifesto](evidencias/2026-11-09/README.md). UI não executada nesta entrega; riscos visuais continuam pendentes.

@@ -1,0 +1,409 @@
+{
+  "id": "CT-HU014-API-006",
+  "http": [
+    {
+      "method": "DELETE",
+      "path": "/transporte/agendamentos/5",
+      "actor": "A",
+      "request_body": null,
+      "http": 422,
+      "elapsed_ms": 20.724,
+      "response": {
+        "success": false,
+        "error": {
+          "code": "AGENDAMENTO_PASSADO",
+          "message": "Não é possível cancelar agendamento de data já passada."
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/transporte/agendamentos/5",
+      "actor": "A",
+      "request_body": {
+        "data": "2026-11-08",
+        "usa_ida": false,
+        "usa_volta": false
+      },
+      "http": 422,
+      "elapsed_ms": 30.567,
+      "response": {
+        "success": false,
+        "error": {
+          "code": "AGENDAMENTO_PASSADO",
+          "message": "Não é possível cancelar agendamento de data já passada."
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/5",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 27.497,
+      "response": {
+        "id": 5,
+        "aluno_id": 2,
+        "data": "2026-11-08",
+        "usa_ida": true,
+        "usa_volta": false,
+        "ponto_embarque_id": 1,
+        "ies_destino_id": 1,
+        "rota_complementar_ida_id": null,
+        "ies_origem_id": null,
+        "ponto_desembarque_id": null,
+        "rota_complementar_volta_id": null,
+        "status": "ATIVO",
+        "ponto_embarque_nome": "Ponto QA HU014",
+        "ies_destino_nome": "Instituicao QA HU014",
+        "rota_complementar_ida_nome": null,
+        "ies_origem_nome": null,
+        "ponto_desembarque_nome": null,
+        "rota_complementar_volta_nome": null,
+        "pode_remover": false,
+        "pode_editar": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/transporte/agendamentos/calendario?mes=2026-11",
+      "actor": "A",
+      "request_body": null,
+      "http": 200,
+      "elapsed_ms": 24.192,
+      "response": {
+        "mes": "2026-11",
+        "dias": [
+          {
+            "data": "2026-11-08",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 5,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-09",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 10,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-10",
+            "estado": "DISPONIVEL",
+            "descricao": null,
+            "pode_agendar": true,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-11",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 12,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-12",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 13,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-13",
+            "estado": "FERIADO",
+            "descricao": "FERIADO sintetico HU014",
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-14",
+            "estado": "RECESSO",
+            "descricao": "RECESSO sintetico HU014",
+            "pode_agendar": false,
+            "agendamento_id": null,
+            "pode_remover": false,
+            "pode_editar": false
+          },
+          {
+            "data": "2026-11-15",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 14,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-16",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 15,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-17",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 16,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-18",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 9,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-19",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 17,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-20",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 18,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-21",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 19,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-22",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 20,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-23",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 21,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-24",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 22,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-25",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 23,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-26",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 24,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-27",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 25,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-28",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 26,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-29",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 27,
+            "pode_remover": true,
+            "pode_editar": true
+          },
+          {
+            "data": "2026-11-30",
+            "estado": "AGENDADO",
+            "descricao": null,
+            "pode_agendar": false,
+            "agendamento_id": 28,
+            "pode_remover": true,
+            "pode_editar": true
+          }
+        ],
+        "ativos": 21,
+        "limite": 22
+      }
+    }
+  ],
+  "checks": [
+    {
+      "description": "DELETE /transporte/agendamentos/5: HTTP 422",
+      "passed": true,
+      "actual": 422
+    },
+    {
+      "description": "DELETE: AGENDAMENTO_PASSADO com mensagem correta",
+      "passed": true,
+      "actual": {
+        "success": false,
+        "error": {
+          "code": "AGENDAMENTO_PASSADO",
+          "message": "Não é possível cancelar agendamento de data já passada."
+        }
+      }
+    },
+    {
+      "description": "PUT /transporte/agendamentos/5: HTTP 422",
+      "passed": true,
+      "actual": 422
+    },
+    {
+      "description": "PUT: AGENDAMENTO_PASSADO com mensagem correta",
+      "passed": true,
+      "actual": {
+        "success": false,
+        "error": {
+          "code": "AGENDAMENTO_PASSADO",
+          "message": "Não é possível cancelar agendamento de data já passada."
+        }
+      }
+    },
+    {
+      "description": "GET /transporte/agendamentos/5: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "Flags do histórico continuam falsas",
+      "passed": true,
+      "actual": null
+    },
+    {
+      "description": "Histórico e logs intactos nos dois caminhos",
+      "passed": true,
+      "actual": null
+    },
+    {
+      "description": "GET /transporte/agendamentos/calendario?mes=2026-11: HTTP 200",
+      "passed": true,
+      "actual": 200
+    },
+    {
+      "description": "Calendário final mantém histórico e flags protegidos",
+      "passed": true,
+      "actual": {
+        "data": "2026-11-08",
+        "estado": "AGENDADO",
+        "descricao": null,
+        "pode_agendar": false,
+        "agendamento_id": 5,
+        "pode_remover": false,
+        "pode_editar": false
+      }
+    }
+  ],
+  "database": [
+    {
+      "label": "historico_antes",
+      "bookings": [
+        {
+          "id": 5,
+          "aluno_id": 2,
+          "data": "2026-11-08",
+          "usa_ida": true,
+          "usa_volta": false,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": null,
+          "ponto_desembarque_id": null,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO",
+          "created_at": "2026-11-10 01:03:32.483779+00:00",
+          "updated_at": "2026-11-10 01:03:32.483779+00:00",
+          "cancelled_at": null
+        }
+      ],
+      "logs": []
+    },
+    {
+      "label": "historico_depois",
+      "bookings": [
+        {
+          "id": 5,
+          "aluno_id": 2,
+          "data": "2026-11-08",
+          "usa_ida": true,
+          "usa_volta": false,
+          "ponto_embarque_id": 1,
+          "ies_destino_id": 1,
+          "rota_complementar_ida_id": null,
+          "ies_origem_id": null,
+          "ponto_desembarque_id": null,
+          "rota_complementar_volta_id": null,
+          "status": "ATIVO",
+          "created_at": "2026-11-10 01:03:32.483779+00:00",
+          "updated_at": "2026-11-10 01:03:32.483779+00:00",
+          "cancelled_at": null
+        }
+      ],
+      "logs": []
+    }
+  ],
+  "blocked": [],
+  "finished_at": "2026-11-09T22:07:16.518861-03:00",
+  "status": "PASS"
+}

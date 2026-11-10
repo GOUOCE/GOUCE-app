@@ -24,11 +24,13 @@ Confirmar migrations e `Application startup complete` antes de executar. API exp
 docker compose --env-file /tmp/hu014-runtime/runtime.env -p atu-qa-hu014-oficial -f tests/manual/epico-04/HU-014/api/execucao/compose.yaml exec -T api python /qa/executar.py consulta
 docker compose --env-file /tmp/hu014-runtime/runtime.env -p atu-qa-hu014-oficial -f tests/manual/epico-04/HU-014/api/execucao/compose.yaml exec -T api python /qa/executar.py cancelamento
 docker compose --env-file /tmp/hu014-runtime/runtime.env -p atu-qa-hu014-oficial -f tests/manual/epico-04/HU-014/api/execucao/compose.yaml exec -T api python /qa/executar.py integridade
+docker compose --env-file /tmp/hu014-runtime/runtime.env -p atu-qa-hu014-oficial -f tests/manual/epico-04/HU-014/api/execucao/compose.yaml exec -T api python /qa/executar.py conferencia
 ```
 
 - `consulta`: CT-001 a CT-003; cria massa e guarda o mapa de ids. Requer banco novo e sem massa anterior da rodada. O cenário do CT-002 sem rota é coletado antes da criação da rota para não alterar reservas existentes.
 - `cancelamento`: CT-004 a CT-009; consome a massa da primeira fase, prepara reservas de hoje e completa 22 ativos pela API. Executar no mesmo dia local da primeira fase; o executor interrompe se atravessar a meia-noite.
 - `integridade`: CT-010; injeta uma falha real de PostgreSQL ao inserir o log de cancelamento, antes do commit, e verifica rollback da reserva/log/contador. Remove o trigger em `finally`, repete com sucesso e registra a ausência da alocação real como parte bloqueada. Não cria alocação fictícia nem afirma comprovar atomicidade com tabela inexistente.
+- `conferencia`: completa a leitura final do histórico no calendário (CT-006) e confirma B1 após o reagendamento (CT-009), preservando as evidências das etapas anteriores.
 
 Cadastros de bairro, ponto, IES, rota e reservas futuras passam pela API. Somente as contas/documentos sintéticos, histórico de ontem e feriado/recesso são fixtures diretas. Não se altera o relógio do sistema. Para o CT-005, muda-se pela API o horário da rota de teste: uma saída futura no dia e depois uma já passada, com registro da hora local real e restauração ao final.
 
