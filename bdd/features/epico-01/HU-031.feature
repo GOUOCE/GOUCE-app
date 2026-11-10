@@ -50,7 +50,7 @@ Funcionalidade: Consultar Pendência de Cadastro
       Dado que o aluno "Maria Souza" possui o cadastro aprovado
       Quando o aluno realiza login e acessa a tela "Status do Cadastro"
       Então o sistema exibe o status "Aprovado"
-      E informa que não há pendências
+      E exibe a mensagem "Não há pendências no seu cadastro. Todos os seus documentos foram analisados e aprovados!"
       E não oferece nenhuma opção de reenvio de documentos
 
 
@@ -60,7 +60,8 @@ Funcionalidade: Consultar Pendência de Cadastro
       Dado que o aluno "Carlos Lima" possui o cadastro pendente de aprovação
       Quando o aluno realiza login e acessa a tela "Status do Cadastro"
       Então o sistema exibe o status "Pendente de aprovação"
-      E informa que o cadastro aguarda a avaliação do administrador
+      E exibe o título "Cadastro enviado para análise"
+      E exibe a mensagem "Sua solicitação será avaliada pela coordenação. Você será notificado quando houver uma resposta."
       E não exibe documentos reprovados nem opção de reenvio de documentos
 
 
@@ -106,7 +107,7 @@ Funcionalidade: Consultar Pendência de Cadastro
     @fluxo_feliz @prioridade_alta
     Cenário: Sistema apresenta os documentos enviados, indica os reprovados e exibe o motivo de cada um
       Quando o aluno acessa a tela "Status do Cadastro"
-      Então o sistema exibe a relação dos documentos enviados
+      Então o sistema exibe a relação dos documentos enviados: "Comprovante de Matrícula", "Comprovante de Residência" e "Foto de Perfil"
       E indica que o "Comprovante de Matrícula" e o "Comprovante de Residência" foram reprovados
       E exibe, junto ao "Comprovante de Matrícula", o motivo "Comprovante de matrícula desatualizado."
       E exibe, junto ao "Comprovante de Residência", o motivo "Comprovante com mais de 3 meses."
