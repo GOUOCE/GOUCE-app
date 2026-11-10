@@ -9,16 +9,16 @@
 | Camada | UI — celular ou web |
 | Tipo de teste | Funcional manual essencial, integração e recuperação de erro — baseado em risco |
 | Tela | Aba **Agenda** e atalho **Meus Agendamentos** no Início; calendário, menu do dia, detalhes e confirmação |
-| Ambiente | A preencher — dispositivo/SO ou navegador, URL, SHA do front e da API, fuso; front analisado no PR #378 `7d5f0127`, API `develop` `3e3bb13c` |
+| Ambiente | Navegador (versão web) em `http://localhost:3014`, front do PR #378 `7d5f0127` (com contorno local de 2 linhas em `api.ts`, porque o PR fixa a web na porta 8000); API `develop` `7c302a8c` em `http://localhost:8014`, banco limpo, fuso America/Fortaleza |
 | Total de casos | 11 |
-| Última execução | Não realizada |
+| Última execução | 10/11/2026 |
 | Testador | Cauan Ricardo — execução manual; LLM — apoio de massa e conferência de API/banco |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 11 | 0 | 0 | 0 | 0 | 11 |
+| ❌ Reprovada (3 passaram, 5 falharam, 3 bloqueados) | 11 | 3 | 5 | 0 | 3 | 0 |
 
 ## Pré-condições
 
@@ -40,27 +40,27 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU014-UI-001 | Acesso e estado vazio | A sem reservas futuras; aba e atalho | Tela acessível; mensagem exata de estado vazio; nenhum dado de B/exemplo | ⏳ PENDENTE | Não executado. |
-| CT-HU014-UI-002 | Calendário mensal e contador reais | R1/R2/R3, feriado/recesso, mês atual e adjacente | Dias/legenda corretos, navegação funcional, contador igual à API | ⏳ PENDENTE | Não executado. |
-| CT-HU014-UI-003 | Menu, detalhes e entrada da edição | Dia de R1/R2/R3 | Três ações; dados do registro selecionado; edição abre a reserva existente | ⏳ PENDENTE | Não executado. |
+| CT-HU014-UI-001 | Acesso e estado vazio | A sem reservas futuras; aba e atalho | Tela acessível; mensagem exata de estado vazio; nenhum dado de B/exemplo | ✅ PASSOU | Aba e atalho abrem a mesma tela, com a mensagem exata de estado vazio. |
+| CT-HU014-UI-002 | Calendário mensal e contador reais | R1/R2/R3, feriado/recesso, mês atual e adjacente | Dias/legenda corretos, navegação funcional, contador igual à API | ❌ FALHOU | Calendário fixo em setembro/2026, sem navegação de mês e sem as reservas reais. Contador 3 de 22 correto. |
+| CT-HU014-UI-003 | Menu, detalhes e entrada da edição | Dia de R1/R2/R3 | Três ações; dados do registro selecionado; edição abre a reserva existente | ❌ FALHOU | Menu abre só nos 5 dias fixos; detalhes com texto fixo; Editar abre a tela preta do Expo. |
 
 ### Seção B — Confirmação, cancelamento e histórico
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU014-UI-004 | Modal e desistência | Remover R1 → Cancelar | Título, aviso e botões corretos; reserva e contador intactos | ⏳ PENDENTE | Não executado. |
-| CT-HU014-UI-005 | Confirmar e persistir após reabrir | Remover R1 → Confirmar | Sucesso real; dia e contador atualizados; cancelamento permanece após reabrir | ⏳ PENDENTE | Alocação conferida com apoio da LLM quando disponível. |
-| CT-HU014-UI-006 | Cancelar hoje sem prazo mínimo | Reserva de D antes e depois da saída | Opção disponível e cancelamento aceito nas duas condições | ⏳ PENDENTE | Não executado. |
-| CT-HU014-UI-007 | Proteger o histórico de ontem | RP em D−1 | Histórico consultável sem ação de remover; nenhum cancelamento | ⏳ PENDENTE | Depende de massa histórica. |
+| CT-HU014-UI-004 | Modal e desistência | Remover R1 → Cancelar | Título, aviso e botões corretos; reserva e contador intactos | ✅ PASSOU | Modal correto em um dia fixo de setembro; desistir não altera nada. |
+| CT-HU014-UI-005 | Confirmar e persistir após reabrir | Remover R1 → Confirmar | Sucesso real; dia e contador atualizados; cancelamento permanece após reabrir | 🚫 BLOQUEADO | A reserva R1 não é selecionável na grade fixa. |
+| CT-HU014-UI-006 | Cancelar hoje sem prazo mínimo | Reserva de D antes e depois da saída | Opção disponível e cancelamento aceito nas duas condições | 🚫 BLOQUEADO | O dia de hoje não existe na grade fixa. |
+| CT-HU014-UI-007 | Proteger o histórico de ontem | RP em D−1 | Histórico consultável sem ação de remover; nenhum cancelamento | ❌ FALHOU | Dias passados oferecem **Cancelar agendamento**; o histórico real não aparece. |
 
 ### Seção C — Falhas, isolamento e limite
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU014-UI-008 | Falha ao confirmar cancelamento | R2 com requisição bloqueada antes de chegar à API | Mensagem de conexão; R2 ativa e contador intacto; repetição com rede funciona | ⏳ PENDENTE | Não executado. |
-| CT-HU014-UI-009 | Falha ao carregar e recusa do servidor | Rede bloqueada no GET; reserva cancelada em outra sessão antes do DELETE | Erro explícito; nenhum vazio/sucesso falso; sincronização recupera estado real | ⏳ PENDENTE | Não executado. |
-| CT-HU014-UI-010 | Sessão e isolamento entre contas | A → sair → B; sem sessão; administrador | Cada aluno vê só suas reservas; acesso sem permissão bloqueado | ⏳ PENDENTE | Não executado. |
-| CT-HU014-UI-011 | Contador no limite e última reserva | 22 → 21 → 22; depois 1 → 0 | Cancelar libera limite; reagendamento aparece; última remoção exibe estado vazio | ⏳ PENDENTE | Massa independente. |
+| CT-HU014-UI-008 | Falha ao confirmar cancelamento | R2 com requisição bloqueada antes de chegar à API | Mensagem de conexão; R2 ativa e contador intacto; repetição com rede funciona | ❌ FALHOU | Offline, o app mostra sucesso falso em toast preto. |
+| CT-HU014-UI-009 | Falha ao carregar e recusa do servidor | Rede bloqueada no GET; reserva cancelada em outra sessão antes do DELETE | Erro explícito; nenhum vazio/sucesso falso; sincronização recupera estado real | ❌ FALHOU | Offline, a Agenda mostra o estado vazio como se não houvesse reservas. |
+| CT-HU014-UI-010 | Sessão e isolamento entre contas | A → sair → B; sem sessão; administrador | Cada aluno vê só suas reservas; acesso sem permissão bloqueado | ✅ PASSOU | B vê só a sua reserva (1 de 22); isolamento correto. |
+| CT-HU014-UI-011 | Contador no limite e última reserva | 22 → 21 → 22; depois 1 → 0 | Cancelar libera limite; reagendamento aparece; última remoção exibe estado vazio | 🚫 BLOQUEADO | Depende de cancelar e reagendar reservas reais, inacessíveis na grade. |
 
 ## Detalhamento dos casos
 
@@ -87,8 +87,10 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Entrando como A (sem reservas futuras), a aba **Agenda** e o atalho **Meus Agendamentos** do Início abriram a mesma tela **Meus agendamentos**.
+- Mensagem exata: “Você ainda não possui agendamentos futuros.”; recarregar a página manteve o resultado.
+- Conferido na API antes de criar as reservas: `GET /transporte/agendamentos/meus` da A com `ativos: 0`.
+- Status: ✅ Passou.
 
 ---
 
@@ -114,8 +116,13 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Massa: R1 (11/11, ida e volta), R2 (13/11, só ida) e R3 (02/12, só volta), ids 101 a 103; feriado em 16/11 e recesso em 17/11 (fixture no banco). API: `ativos: 3`; calendário de novembro com 11 e 13 agendados e dezembro com o 02.
+- O calendário mostra sempre **Setembro 2026**; o seletor de mês e as duas setas não respondem ao toque.
+- Nenhuma reserva real aparece destacada; feriado e recesso reais também não. O “feriado” exibido é o 07/09, escrito no código.
+- A grade tem dois dias 31: o 31/08 e o 31/09, que não existe.
+- Contador “3 de 22 agendamentos ativos”, igual à API (único dado real da tela).
+- Código: `DIAS_DO_MES` fixo em `agenda.tsx`; setas sem `onPress`.
+- Status: ❌ Falhou. Issues: ISS1 (grade fixa), ISS2 (navegação de mês).
 
 ---
 
@@ -140,8 +147,11 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- O menu só abre nos cinco dias fixos 31/08 e 01 a 04/09 (dias passados); nenhuma das reservas R1, R2 e R3 pode ser selecionada.
+- O menu tem **Ver detalhes**, **Editar agendamento** e **Cancelar agendamento**. O requisito chama a terceira ação de **Remover agendamento**; texto real registrado, sem tratar a diferença como falha por si só.
+- **Ver detalhes** do dia 01/09 mostra “Data: 2026-09-01”, “Ida (05:30) e Volta (17:00)”, “Igreja Matriz de Quixadá” e “UFC - Campus Quixadá”: textos escritos no código, sem relação com as reservas da A (Praça José de Barros, Terminal do Planalto, Praça do Campo Velho).
+- **Editar agendamento** abre a tela preta do Expo (rota `/(aluno)/agendar-transporte/configurar` inexistente neste build; ela pertence ao PR #377, da HU-013).
+- Status: ❌ Falhou. Issues: ISS1, ISS3, ISS4.
 
 ---
 
@@ -168,8 +178,10 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Em um dia fixo de setembro (01/09), o modal mostrou o título **“Cancelar agendamento?”**, o aviso **“Esta ação não poderá ser desfeita.”** e os botões **Cancelar** e **Confirmar**.
+- Ao desistir, o modal fechou sem mensagem de sucesso, e o contador continuou “3 de 22”. Banco e API sem alteração.
+- Limite do teste: executado em dia fixo, porque as reservas reais não são selecionáveis (ISS1).
+- Status: ✅ Passou.
 
 ---
 
@@ -195,8 +207,9 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Bloqueado: a reserva R1 (id 101) não é selecionável (ISS1).
+- Por leitura do código, a confirmação usaria o id fixo do dia da grade (1 a 5), nunca o id de banco da reserva. Não foi executado em dia fixo, porque os ids 1 e 2 pertencem a registros reais de outras contas.
+- Status: 🚫 Bloqueado.
 
 ---
 
@@ -220,8 +233,8 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Bloqueado: o dia de hoje (10/11) não existe na grade fixa de setembro (ISS1).
+- Status: 🚫 Bloqueado.
 
 ---
 
@@ -245,8 +258,10 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Nos dias fixos 31/08 e 01/09, que já são passados, o menu oferece **Cancelar agendamento**.
+- O histórico real (RP, 09/11) não aparece na grade, então a parte de histórico consultável ficou bloqueada.
+- Código: a flag `ehPassado` nunca é preenchida, e `pode_remover`, enviada pela API, é ignorada.
+- Status: ❌ Falhou. Issue: ISS5.
 
 ---
 
@@ -273,8 +288,10 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Com o navegador offline (DevTools, Network), ao tocar em **Confirmar** o app mostrou “Agendamento cancelado com sucesso”, em toast preto, e não a mensagem de falha de conexão.
+- API: nenhum `DELETE` recebido e banco intacto, ou seja, o sucesso é falso.
+- Código: `cancelarAgendamento` captura qualquer erro e devolve `{ success: true }`.
+- Status: ❌ Falhou. Issues: ISS6 (sucesso falso), ISS8 (mensagem fora do padrão).
 
 ---
 
@@ -298,8 +315,10 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Parte 1: com o navegador offline, ao voltar à aba **Agenda** o app mostrou “Você ainda não possui agendamentos futuros.”, embora a A tenha 3 reservas; ao religar, a lista voltou ao normal.
+- Parte 2 (reserva cancelada em outra sessão): bloqueada, porque a R3 não é selecionável (ISS1).
+- Código: `listarAgendamentosAtivos` devolve lista vazia em qualquer falha.
+- Status: ❌ Falhou. Issue: ISS7.
 
 ---
 
@@ -323,8 +342,9 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- A viu “3 de 22”; B, depois do login, viu “1 de 22”, sem reservas da A. Sem sessão e como administrador, o acesso à Agenda foi bloqueado e a A recuperou seus dados ao voltar.
+- Como o calendário é fixo, a conferência foi feita pelo contador e pelo acesso.
+- Status: ✅ Passou.
 
 ---
 
@@ -349,8 +369,8 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Bloqueado: depende de cancelar e reagendar reservas reais (ISS1) e da tela de agendamento da HU-013 (PR #377).
+- Status: 🚫 Bloqueado.
 
 ## Rastreabilidade
 
@@ -372,11 +392,19 @@ Executar na ordem, preparando novamente apenas a massa que os casos consumirem. 
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. Riscos de leitura constam no índice do épico. | — |
+| CT-002, 003, 005, 006, 007, 011 | A grade do calendário é fixa em setembro/2026 e não mostra as reservas reais, o feriado e o recesso; há um dia 31 inexistente. | ISS1 |
+| CT-002 | O seletor de mês e as setas de navegação não funcionam. | ISS2 |
+| CT-003 | **Ver detalhes** mostra data, trajeto, embarque e destino escritos no código. | ISS3 |
+| CT-003 | **Editar agendamento** abre a tela preta do Expo (rota inexistente no build). | ISS4 |
+| CT-007 | O menu oferece **Cancelar agendamento** em dias passados. | ISS5 |
+| CT-008 | Com a conexão caída, o app mostra “Agendamento cancelado com sucesso”. | ISS6 |
+| CT-009 | Falha ao carregar mostra “Você ainda não possui agendamentos futuros.”. | ISS7 |
+| CT-008 | Mensagens de sucesso e erro usam toast preto fora do padrão de popup do app. | ISS8 |
 
 ## Observações gerais
 
 - Referências: [requisitos, seção 7.5.2](../../../../../docs/requisitos.md), [PR #378](https://github.com/GOUOCE/GOUCE-app/pull/378), [índice do épico e riscos de código](../../README.md) e [suíte de API](../api/API-HU-014.md).
 - O requisito chama a ação do menu de **Remover agendamento**; o front analisado usa **Cancelar agendamento**. Registrar a divergência de texto e avaliar o comportamento separadamente, sem substituir o esperado.
-- Todos os casos estão pendentes. Não lançar como execução a leitura de `agenda.tsx`, testes com mock ou relatos do autor do PR.
+- **Execução de 10/11/2026:** stack isolada (web 3014, API 8014), front do PR #378 `7d5f0127` e API da `develop` `7c302a8c`. A web do PR fixa a API na porta 8000 (porta de outro ambiente); foi aplicado um contorno local, sem commit, para ela usar a 8014. O container da API usa o fuso America/Fortaleza. Massa pelo fluxo real: A e B aprovadas, rotas e instituições pela API; feriado, recesso e histórico de ontem por fixture no banco isolado.
+- Os CT-005, 006 e 011 ficam para **reteste**, e os demais para reexecução depois da correção das issues. O PR #379 (HU-015), cuja `agenda.tsx` liga calendário e detalhes à API, **não** foi executado nesta rodada; a decisão sobre qual PR vale cabe ao time.
 - Na execução, guardar capturas e registrar mensagens exatas, dispositivo e commits. Relatos reproduzidos ficam em `ui/issues/`; não publicar falhas presumidas pelo código.
