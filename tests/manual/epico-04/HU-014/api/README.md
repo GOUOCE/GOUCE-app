@@ -1,6 +1,6 @@
 # Como executar os testes manuais de API — HU-014
 
-Execução pela **LLM**, com revisão de **Cauan Ricardo**. Execução em 09/11/2026: **9 casos passaram e 1 ficou parcial** pela ausência da alocação real. Nenhum defeito foi reproduzido nas partes verificadas. Consulte os [resultados e evidências](evidencias/2026-11-09/README.md) e o [roteiro reproduzível](execucao/README.md). As instruções abaixo também servem para novas execuções em ambiente limpo.
+Execução pela **LLM**, com revisão de **Cauan Ricardo**. Execução em 09/11/2026: **9 casos passaram e 1 ficou parcial** pela ausência da alocação real. Nenhum defeito foi reproduzido nas partes verificadas. Consulte o [resumo da execução em JSON](EVIDENCIAS-HU-014.json) e os detalhes na [suíte](API-HU-014.md). As instruções abaixo também servem para novas execuções em ambiente limpo.
 
 ```text
 tests/manual/epico-04/
@@ -8,7 +8,8 @@ tests/manual/epico-04/
 └── HU-014/
     ├── api/
     │   ├── README.md
-    │   └── API-HU-014.md
+    │   ├── API-HU-014.md
+    │   └── EVIDENCIAS-HU-014.json
     └── ui/
         └── UI-HU-014.md
 ```
@@ -55,7 +56,7 @@ Sem rotas funcionais na HU-013, registrar a dependência que impediu a preparaç
 
 Executar os CT-001 a CT-010 na ordem. Os detalhes dizem quando criar massa adicional e quais registros preservar. A LLM pode usar cliente HTTP, Postman, Insomnia ou Swagger. Usar `Authorization: Bearer <token>`; DELETE não tem corpo.
 
-Para cada variação, registrar requisição sem credenciais, HTTP, corpo, estado antes/depois e evidência de persistência por GET/consulta ao banco. Não inferir persistência pelo toast, por mocks ou pelos testes unitários existentes. Medir uma consulta e um cancelamento sob conexão normal (RNF-001); registrar duração e condições, sem alegar teste de carga.
+Para cada variação, conferir HTTP, corpo e persistência por GET/consulta ao banco; resumir os resultados em `EVIDENCIAS-HU-014.json`, sem credenciais. Não inferir persistência pelo toast, por mocks ou pelos testes unitários existentes. Medir uma consulta e um cancelamento sob conexão normal (RNF-001); registrar duração e condições, sem alegar teste de carga.
 
 No CT-010, a falha deve ocorrer dentro da transação real, antes do commit, por mecanismo controlado do ambiente de teste. Não introduzir endpoint de falha em código de produto nem deixar alterações de instrumentação na branch. Sem essa possibilidade, registrar o impedimento e manter a conclusão limitada.
 
