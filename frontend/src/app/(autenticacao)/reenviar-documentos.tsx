@@ -13,6 +13,7 @@ import {
   DICA_ARQUIVO_DOCUMENTO,
   formatarNomeTipoDocumento,
   validarArquivoDocumento,
+  validarFotoPerfil,
 } from '@/utils/documentosCadastro';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
@@ -85,7 +86,7 @@ export default function ReenviarDocumentosScreen() {
 
   // Valida na hora (formato e 5 MB), antes de enviar, com as mesmas mensagens do cadastro.
   const selecionarArquivo = (tipo: string, arquivo: any) => {
-    const erro = validarArquivoDocumento(arquivo);
+    const erro = tipo === 'foto_perfil' ? validarFotoPerfil(arquivo) : validarArquivoDocumento(arquivo);
     if (erro) {
       showPopup({
         type: 'error',
@@ -100,13 +101,24 @@ export default function ReenviarDocumentosScreen() {
   };
 
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 0.8,
-    });
-    if (!result.canceled && result.assets[0]) {
-      selecionarArquivo('foto_perfil', result.assets[0]);
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets[0]) {
+        selecionarArquivo('foto_perfil', result.assets[0]);
+      }
+    } catch {
+      // O seletor de imagens recusa o que não é imagem (ex.: PDF) com um erro; sem isto nada aparecia.
+      showPopup({
+        type: 'error',
+        title: 'Arquivo inválido',
+        message: 'Formato de arquivo inválido. Envie uma imagem (PNG, JPG ou WEBP)',
+        confirmText: 'Entendido',
+        onConfirm: closePopup,
+      });
     }
   };
 

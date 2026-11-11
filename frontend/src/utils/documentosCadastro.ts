@@ -30,3 +30,22 @@ export const validarArquivoDocumento = (arquivo: any): string | null => {
   }
   return null;
 };
+
+const EXTENSOES_IMAGEM = ['.png', '.jpg', '.jpeg', '.webp'];
+
+/** A foto de perfil só aceita imagem (PNG, JPG ou WEBP) de até 5 MB; PDF não vale. */
+export const validarFotoPerfil = (arquivo: any): string | null => {
+  if (!arquivo) return 'Selecione uma foto.';
+  const mime = String(arquivo.mimeType || arquivo.type || '').toLowerCase();
+  const nome = String(arquivo.name || arquivo.fileName || '').toLowerCase();
+  const ehImagem = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'].includes(mime) ||
+    (!mime.startsWith('image/') && !mime && EXTENSOES_IMAGEM.some((ext) => nome.endsWith(ext)));
+  if (!ehImagem) {
+    return 'Formato de arquivo inválido. Envie uma imagem (PNG, JPG ou WEBP)';
+  }
+  const tamanho = arquivo.size ?? arquivo.fileSize;
+  if (typeof tamanho === 'number' && tamanho > LIMITE_DOCUMENTO_BYTES) {
+    return 'O arquivo excede o limite de tamanho de 5 MB';
+  }
+  return null;
+};
