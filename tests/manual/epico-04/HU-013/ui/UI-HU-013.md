@@ -47,7 +47,7 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU013-UI-003 | Perguntas de ida e volta, campos condicionais e listas ativas | Ida Sim/Não e volta Sim/Não | Campos de cada trecho só quando a resposta é Sim; listas só com pontos, IES e complementares ativos cadastrados pelo administrador | ✅ PASSOU | Reteste: campos começam vazios, os de ida e volta só aparecem com Sim, e as listas vêm da API. Observação: azul muito escuro. |
+| CT-HU013-UI-003 | Perguntas de ida e volta, campos condicionais e listas ativas | Ida Sim/Não e volta Sim/Não | Campos de cada trecho só quando a resposta é Sim; listas só com pontos, IES e complementares ativos cadastrados pelo administrador | ✅ PASSOU | Reteste: campos começam vazios, os de ida e volta só aparecem com Sim, e as listas vêm da API. Observação: botão selecionado do Sim/Não muito escuro (#449). |
 | CT-HU013-UI-004 | Criar só ida, só volta e ida e volta | Três combinações válidas | Mensagem “Agendamento realizado com sucesso”, reserva gravada com os dados escolhidos e dia marcado como agendado | ✅ PASSOU | Reteste: três reservas criadas pela tela (11/11 ida e volta, 12/11 só ida e 13/11 só volta), gravadas na API com os dados escolhidos; mensagem e resumo como no Figma. Observações: #444 e #445. |
 | CT-HU013-UI-005 | Não para ida e volta | Ida Não e volta Não | Nenhuma reserva criada e mensagem “Nenhum agendamento foi criado.”, sem erro | ✅ PASSOU | Reteste: Não para ida e volta não cria reserva e a tela informa que nenhum agendamento foi criado. |
 
@@ -153,7 +153,7 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 **Reteste em `0c0a079c`**
 
 - O formulário abre com os campos de ponto e IES vazios; os campos da ida só aparecem com Sim na ida e os da volta só com Sim na volta, de forma independente; as listas vêm da API (pontos, IES e complementares ativos).
-- Observação: o azul de um dos elementos está muito escuro (visual).
+- Observação: o botão selecionado do Sim/Não da ida e da volta está com um azul muito escuro (visual, #449).
 - Status: ✅ Passou (reteste).
 
 ---
@@ -323,6 +323,7 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 | CT-008 | A edição atualiza sempre o id 1 e o cancelamento usa a data como id, com sucesso inventado se a API recusar. | #440 |
 | CT-004 | A frase “já possui agendamento” do seletor de dias mostra só o primeiro dia agendado da semana. | #444 |
 | CT-004 | Ao alternar ou avançar entre duas ou mais datas selecionadas, o formulário mantém os valores do dia anterior. | #445 |
+| CT-003 | O botão selecionado do Sim/Não da ida e da volta usa um azul muito escuro. | #449 |
 | CT-009 | O popup de erro do agendamento encolhe por um instante quando é fechado em “Entendido”. | #446 |
 | CT-001 | O seletor de dias não tem legenda dos estados (disponível, agendado e indisponível). | #447 |
 | CT-001, 007 | A janela de 30 dias do seletor está escrita no app (`JANELA_DIAS = 30`) e não acompanha a configuração do servidor. | #448 |
