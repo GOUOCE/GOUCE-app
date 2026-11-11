@@ -355,7 +355,11 @@ export default function MeusAgendamentosScreen() {
 
             {/* Seletor de Mês */}
             <View style={styles.monthSelectorRow}>
-              <TouchableOpacity style={styles.monthDropdown}>
+              <TouchableOpacity
+                style={styles.monthDropdown}
+                // A janela de agendamento tem só dois meses (atual e próximo): o seletor alterna entre eles.
+                onPress={() => mudarMes(mes === mesAtual() ? 1 : -1)}
+              >
                 <Text style={styles.monthText}>{rotuloMes(mes)}</Text>
               </TouchableOpacity>
               <View style={styles.navArrows}>
