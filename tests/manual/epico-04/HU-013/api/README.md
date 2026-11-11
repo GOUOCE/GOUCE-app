@@ -1,8 +1,8 @@
 # Testes de API — HU-013
 
-Execução pela LLM, com revisão de Cauan Ricardo. [Suíte com 12 casos essenciais](API-HU-013.md). Resultado em 09/11/2026: **1 falhou e 11 bloqueados**. A API da feature iniciou e autenticou o aluno, mas não publicou as rotas de agendamento. [Evidência JSON](EVIDENCIAS-HU-013.json) e [relato local do bug](issues/BUG-HU013-API-001-rotas-agendamento-nao-publicadas.md). Nenhuma issue foi publicada no GitHub.
+Execução pela LLM, com revisão de Cauan Ricardo. [Suíte com 12 casos essenciais](API-HU-013.md). Resultado do reteste em 10/11/2026: **12 passaram**. Em 09/11/2026 a API da feature não publicava as rotas de agendamento (CT-001 falhou e 11 casos ficaram bloqueados, [issue #399](https://github.com/GOUOCE/GOUCE-app/issues/399)); a correção entrou na `feature/front-hu013` e os casos foram executados no commit `0c0a079c`. [Evidência JSON](EVIDENCIAS-HU-013.json) e [relato do bug corrigido](issues/BUG-HU013-API-001-rotas-agendamento-nao-publicadas.md).
 
-Os resultados são versionados na branch `feature/testes-api-hu-013`, criada da develop. O código testado é o backend de `feature/front-hu013`, commit `ee305857954fcb23f3919f3ebfe7e163fcbc167a` ([PR #377](https://github.com/GOUOCE/GOUCE-app/pull/377)), preparado em checkout separado para manter o PR de resultados restrito aos testes.
+Os resultados do reteste são versionados na branch `test/reteste-api-hu-013`, criada da develop. O código testado é o backend de `feature/front-hu013`, commit `0c0a079c87da54ac5f8cafbd4dbeffa57e84d972` ([PR #377](https://github.com/GOUOCE/GOUCE-app/pull/377)), preparado em checkout separado para manter o PR de resultados restrito aos testes.
 
 ## Execução
 
