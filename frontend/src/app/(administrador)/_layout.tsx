@@ -1,7 +1,5 @@
 import React from 'react';
-import { Tabs, Redirect } from 'expo-router';
-import { View, StyleSheet } from 'react-native';
-import { LayoutGrid, Archive, Bus, MoreHorizontal } from 'lucide-react-native';
+import { Stack, Redirect } from 'expo-router';
 import { useAuth } from '@contexts/AuthContext';
 
 export default function AdminLayout() {
@@ -21,88 +19,18 @@ export default function AdminLayout() {
   }
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: '#191C20',
-        tabBarInactiveTintColor: '#44474E',
-        tabBarStyle: {
-          height: 80,
-          paddingBottom: 12,
-          backgroundColor: '#F8F9FF',
-          borderTopWidth: 1,
-          borderTopColor: '#E0E2EC',
-        },
-      }}
-    >
-      <Tabs.Screen
-        name="home"
-        options={{
-          title: 'Painel',
-          tabBarIcon: ({ focused }) => (
-            <View style={[styles.iconContainer, focused && styles.activeIconContainer]}>
-              <LayoutGrid size={22} color={focused ? '#191C20' : '#44474E'} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="cadastros"
-        options={{
-          title: 'Cadastros',
-          tabBarIcon: ({ focused }) => (
-            <View style={[styles.iconContainer, focused && styles.activeIconContainer]}>
-              <Archive size={22} color={focused ? '#191C20' : '#44474E'} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="logistica"
-        options={{
-          title: 'Logística',
-          tabBarIcon: ({ focused }) => (
-            <View style={[styles.iconContainer, focused && styles.activeIconContainer]}>
-              <Bus size={22} color={focused ? '#191C20' : '#44474E'} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="mais"
-        options={{
-          title: 'Mais',
-          tabBarIcon: ({ focused }) => (
-            <View style={[styles.iconContainer, focused && styles.activeIconContainer]}>
-              <MoreHorizontal size={22} color={focused ? '#191C20' : '#44474E'} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen name="administradores" options={{ href: null }} />
-      <Tabs.Screen name="solicitacoes" options={{ href: null }} />
-      <Tabs.Screen name="bairros" options={{ href: null }} />
-      <Tabs.Screen name="faculdades" options={{ href: null }} />
-      <Tabs.Screen name="frota" options={{ href: null }} />
-      <Tabs.Screen name="motoristas" options={{ href: null }} />
-      <Tabs.Screen name="representantes" options={{ href: null }} />
-      <Tabs.Screen name="rotas-principais" options={{ href: null }} />
-      <Tabs.Screen name="rotas-complementares" options={{ href: null }} />
-      <Tabs.Screen name="cadastrar-administrador" options={{ href: null }} />
-    </Tabs>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="administradores" />
+      <Stack.Screen name="solicitacoes" />
+      <Stack.Screen name="bairros" />
+      <Stack.Screen name="faculdades" />
+      <Stack.Screen name="frota" />
+      <Stack.Screen name="motoristas" />
+      <Stack.Screen name="representantes" />
+      <Stack.Screen name="rotas-principais" />
+      <Stack.Screen name="rotas-complementares" />
+      <Stack.Screen name="cadastrar-administrador" />
+    </Stack>
   );
 }
-
-const styles = StyleSheet.create({
-  iconContainer: {
-    width: 64,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  activeIconContainer: {
-    backgroundColor: '#C2E7FF',
-  },
-});

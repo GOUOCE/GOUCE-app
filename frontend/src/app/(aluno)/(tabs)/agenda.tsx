@@ -139,8 +139,14 @@ export default function MeusAgendamentosScreen() {
     setModalCancelarVisible(false);
     if (!diaSelecionado) return;
 
+    if (!diaSelecionado.idAgendamento) {
+      setSnackbarMessage('Não foi possível identificar o agendamento. Atualize a tela e tente novamente.');
+      setSnackbarVisivel(true);
+      return;
+    }
+
     try {
-      await agendamentoService.cancelarAgendamento(diaSelecionado.idAgendamento || diaSelecionado.dataIso);
+      await agendamentoService.cancelarAgendamento(diaSelecionado.idAgendamento);
       setAgendamentos(agendamentos.filter(a => a.dataIso !== diaSelecionado.dataIso));
       setSnackbarMessage('Agendamento cancelado com sucesso');
       setSnackbarVisivel(true);

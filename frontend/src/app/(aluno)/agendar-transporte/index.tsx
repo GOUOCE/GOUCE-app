@@ -1,78 +1,186 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, Button } from 'react-native-paper';
-import { useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
+import { Text, Button, ActivityIndicator } from 'react-native-paper';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 
-import { agendamentoService } from '@/services/agendamentoService';
+import { agendamentoService, CalendarioDia } from '@/services/agendamentoService';
 import { AppPopup } from '@/components/ui/AppPopup';
+import { getErrorMessage } from '@/utils/errorUtils';
+
+type StatusDia = 'disponivel' | 'agendado' | 'feriado' | 'indisponivel';
 
 interface DiaSemana {
   sigla: string;
   diaNum: number;
   dataIso: string;
-  status: 'disponivel' | 'agendado' | 'feriado' | 'indisponivel';
+  status: StatusDia;
+  agendamentoId?: number;
   nomeExtenso: string;
 }
 
-const DATAS_EXEMPLO: DiaSemana[] = [
-  { sigla: 'SEG', diaNum: 31, dataIso: '2026-08-31', status: 'disponivel', nomeExtenso: 'Segunda-Feira (31)' },
-  { sigla: 'TER', diaNum: 1, dataIso: '2026-09-01', status: 'disponivel', nomeExtenso: 'Terça-Feira (01)' },
-  { sigla: 'QUA', diaNum: 2, dataIso: '2026-09-02', status: 'disponivel', nomeExtenso: 'Quarta-Feira (02)' },
-  { sigla: 'QUI', diaNum: 3, dataIso: '2026-09-03', status: 'agendado', nomeExtenso: 'Quinta-Feira (03)' },
-  { sigla: 'SEX', diaNum: 4, dataIso: '2026-09-04', status: 'disponivel', nomeExtenso: 'Sexta-Feira (04)' },
-  { sigla: 'SÁB', diaNum: 5, dataIso: '2026-09-05', status: 'indisponivel', nomeExtenso: 'Sábado (05)' },
-  { sigla: 'DOM', diaNum: 6, dataIso: '2026-09-06', status: 'feriado', nomeExtenso: 'Domingo (06)' },
+const SIGLAS = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
+const NOMES_DIAS = [
+  'Domingo',
+  'Segunda-Feira',
+  'Terça-Feira',
+  'Quarta-Feira',
+  'Quinta-Feira',
+  'Sexta-Feira',
+  'Sábado',
 ];
+
+const JANELA_DIAS = 30;
+
+const inicioDoDia = (data: Date) => new Date(data.getFullYear(), data.getMonth(), data.getDate());
+
+const adicionarDias = (data: Date, dias: number) => {
+  const resultado = inicioDoDia(data);
+  resultado.setDate(resultado.getDate() + dias);
+  return resultado;
+};
+
+const inicioDaSemana = (data: Date) => {
+  const resultado = inicioDoDia(data);
+  const diasDesdeSegunda = (resultado.getDay() + 6) % 7;
+  resultado.setDate(resultado.getDate() - diasDesdeSegunda);
+  return resultado;
+};
+
+const paraIso = (data: Date) => {
+  const ano = data.getFullYear();
+  const mes = String(data.getMonth() + 1).padStart(2, '0');
+  const dia = String(data.getDate()).padStart(2, '0');
+  return `${ano}-${mes}-${dia}`;
+};
+
+const paraMes = (data: Date) => `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+
+const formatarCurto = (data: Date) =>
+  `${String(data.getDate()).padStart(2, '0')}/${String(data.getMonth() + 1).padStart(2, '0')}`;
 
 export default function SelecaoDiasScreen() {
   const router = useRouter();
 
-  const [dias] = useState<DiaSemana[]>(DATAS_EXEMPLO);
-  const [diasSelecionados, setDiasSelecionados] = useState<string[]>(() =>
-    DATAS_EXEMPLO.filter(d => d.status === 'disponivel').map(d => d.dataIso)
-  );
-  const [diaParaEditar, setDiaParaEditar] = useState<DiaSemana | null>(null);
+  const hoje = inicioDoDia(new Date());
+  const limiteJanela = adicionarDias(hoje, JANELA_DIAS - 1);
 
-  // Popup de Agendamento Existente (FA-001)
+  const [semanaInicio, setSemanaInicio] = useState<Date>(() => inicioDaSemana(new Date()));
+  const [estados, setEstados] = useState<Record<string, CalendarioDia>>({});
+  const [diasSelecionados, setDiasSelecionados] = useState<string[]>([]);
+  const [diaParaEditar, setDiaParaEditar] = useState<DiaSemana | null>(null);
   const [popupEditarVisible, setPopupEditarVisible] = useState(false);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState('');
+  const [versaoCarga, setVersaoCarga] = useState(0);
+  const primeiraFocus = useRef(true);
 
   useEffect(() => {
-    let mounted = true;
-    agendamentoService.listarAgendamentosAtivos().catch(() => {
-      if (!mounted) return;
-    });
+    let ativo = true;
+
+    const carregarCalendario = async () => {
+      setCarregando(true);
+      setErro('');
+      try {
+        const fimSemana = adicionarDias(semanaInicio, 6);
+        const meses = Array.from(new Set([paraMes(semanaInicio), paraMes(fimSemana)]));
+        const respostas = await Promise.all(
+          meses.map(mes => agendamentoService.obterCalendario(mes))
+        );
+        if (!ativo) return;
+
+        const mapa: Record<string, CalendarioDia> = {};
+        respostas.forEach(resposta => {
+          resposta.dias.forEach(dia => {
+            mapa[dia.data] = dia;
+          });
+        });
+        setEstados(mapa);
+      } catch (error) {
+        if (!ativo) return;
+        setEstados({});
+        setErro(getErrorMessage(error, 'Não foi possível carregar o calendário. Tente novamente.'));
+      } finally {
+        if (ativo) setCarregando(false);
+      }
+    };
+
+    void carregarCalendario();
 
     return () => {
-      mounted = false;
+      ativo = false;
     };
-  }, []);
+  }, [semanaInicio, versaoCarga]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (primeiraFocus.current) {
+        primeiraFocus.current = false;
+        return;
+      }
+      setVersaoCarga(versao => versao + 1);
+    }, [])
+  );
+
+  const dias: DiaSemana[] = Array.from({ length: 7 }, (_, indice) => {
+    const data = adicionarDias(semanaInicio, indice);
+    const dataIso = paraIso(data);
+    const item = estados[dataIso];
+    const fimDeSemana = data.getDay() === 0 || data.getDay() === 6;
+    const foraDaJanela = data < hoje || data > limiteJanela;
+
+    let status: StatusDia = 'indisponivel';
+    if (item?.estado === 'AGENDADO') {
+      status = 'agendado';
+    } else if (item?.estado === 'FERIADO' || item?.estado === 'RECESSO') {
+      status = 'feriado';
+    } else if (item?.estado === 'DISPONIVEL' && !fimDeSemana && !foraDaJanela) {
+      status = 'disponivel';
+    }
+
+    return {
+      sigla: SIGLAS[data.getDay()],
+      diaNum: data.getDate(),
+      dataIso,
+      status,
+      agendamentoId: item?.agendamento_id ?? undefined,
+      nomeExtenso: `${NOMES_DIAS[data.getDay()]} (${String(data.getDate()).padStart(2, '0')})`,
+    };
+  });
+
+  const podeVoltarSemana = semanaInicio > inicioDaSemana(hoje);
+  const podeAvancarSemana = adicionarDias(semanaInicio, 7) <= limiteJanela;
 
   const handleToggleDia = (dia: DiaSemana) => {
     if (dia.status === 'indisponivel' || dia.status === 'feriado') return;
 
     if (dia.status === 'agendado') {
-      // FA-001: Alerta de Agendamento já existente
       setDiaParaEditar(dia);
       setPopupEditarVisible(true);
       return;
     }
 
-    if (diasSelecionados.includes(dia.dataIso)) {
-      setDiasSelecionados(diasSelecionados.filter(d => d !== dia.dataIso));
-    } else {
-      setDiasSelecionados([...diasSelecionados, dia.dataIso]);
-    }
+    setDiasSelecionados((selecionados) =>
+      selecionados.includes(dia.dataIso)
+        ? selecionados.filter(dataIso => dataIso !== dia.dataIso)
+        : [...selecionados, dia.dataIso]
+    );
   };
 
   const handleConfirmarEdicao = () => {
     setPopupEditarVisible(false);
-    if (diaParaEditar) {
-      router.push({
-        pathname: '/(aluno)/agendar-transporte/configurar',
-        params: { datasIso: [diaParaEditar.dataIso].join(','), modoEdicao: 'true' },
-      } as any);
-    }
+    if (!diaParaEditar) return;
+
+    router.push({
+      pathname: '/(aluno)/agendar-transporte/configurar',
+      params: {
+        datasIso: diaParaEditar.dataIso,
+        modoEdicao: 'true',
+        ...(diaParaEditar.agendamentoId
+          ? { agendamentoId: String(diaParaEditar.agendamentoId) }
+          : {}),
+      },
+    } as any);
   };
 
   const handleContinuar = () => {
@@ -83,11 +191,10 @@ export default function SelecaoDiasScreen() {
     } as any);
   };
 
-  const quimAgendada = dias.find(d => d.status === 'agendado');
+  const primeiroAgendado = dias.find(dia => dia.status === 'agendado');
 
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <ChevronLeft size={32} color="#333" />
@@ -95,7 +202,6 @@ export default function SelecaoDiasScreen() {
         <Text variant="headlineSmall" style={styles.headerTitle}>Agendar Transporte</Text>
       </View>
 
-      {/* Popup de Agendamento já Existente (FA-001) */}
       <AppPopup
         visible={popupEditarVisible}
         type="info"
@@ -112,68 +218,106 @@ export default function SelecaoDiasScreen() {
           Selecione um ou mais dias para agendar o transporte nesta semana.
         </Text>
 
-        {/* Seletor Semanal de Dias */}
-        <View style={styles.daysRow}>
-          {dias.map((d) => {
-            const isSelecionado = diasSelecionados.includes(d.dataIso);
-            const isAgendado = d.status === 'agendado';
-            const isFeriado = d.status === 'feriado' || d.status === 'indisponivel';
+        <View style={styles.weekNavigator}>
+          <TouchableOpacity
+            onPress={() => podeVoltarSemana && setSemanaInicio(adicionarDias(semanaInicio, -7))}
+            disabled={!podeVoltarSemana}
+            style={[styles.navButton, !podeVoltarSemana && styles.navButtonDisabled]}
+          >
+            <ChevronLeft size={22} color={podeVoltarSemana ? '#3E5F90' : '#B0B3BC'} />
+          </TouchableOpacity>
 
-            return (
-              <TouchableOpacity
-                key={d.dataIso}
-                onPress={() => handleToggleDia(d)}
-                activeOpacity={isFeriado ? 1 : 0.7}
-                style={[
-                  styles.dayCard,
-                  isSelecionado && styles.dayCardSelected,
-                  isAgendado && styles.dayCardAgendado,
-                  isFeriado && styles.dayCardDisabled,
-                ]}
-              >
-                <Text style={[
-                  styles.daySigla,
-                  isSelecionado && styles.textSelected,
-                  isAgendado && styles.textAgendado,
-                  isFeriado && styles.textDisabled,
-                ]}>
-                  {d.sigla}
-                </Text>
-                <Text style={[
-                  styles.dayNum,
-                  isSelecionado && styles.textSelected,
-                  isAgendado && styles.textAgendado,
-                  isFeriado && styles.textDisabled,
-                ]}>
-                  {d.diaNum}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* Contador e Avisos */}
-        <View style={styles.infoBox}>
-          <Text variant="bodyMedium" style={styles.infoTextCount}>
-            {diasSelecionados.length} {diasSelecionados.length === 1 ? 'dia selecionado' : 'dias selecionados'}
+          <Text variant="titleSmall" style={styles.weekLabel}>
+            {formatarCurto(semanaInicio)} a {formatarCurto(adicionarDias(semanaInicio, 6))}
           </Text>
-          {quimAgendada && (
-            <Text variant="bodyMedium" style={styles.infoTextAgendada}>
-              {quimAgendada.nomeExtenso} já agendada
-            </Text>
-          )}
+
+          <TouchableOpacity
+            onPress={() => podeAvancarSemana && setSemanaInicio(adicionarDias(semanaInicio, 7))}
+            disabled={!podeAvancarSemana}
+            style={[styles.navButton, !podeAvancarSemana && styles.navButtonDisabled]}
+          >
+            <ChevronRight size={22} color={podeAvancarSemana ? '#3E5F90' : '#B0B3BC'} />
+          </TouchableOpacity>
         </View>
 
-        {/* Botão Continuar */}
-        <Button
-          mode="contained"
-          onPress={handleContinuar}
-          disabled={diasSelecionados.length === 0}
-          style={styles.continueButton}
-          contentStyle={styles.btnContent}
-        >
-          Continuar
-        </Button>
+        {carregando ? (
+          <View style={styles.feedbackBox}>
+            <ActivityIndicator color="#3E5F90" />
+            <Text variant="bodyMedium" style={styles.feedbackText}>
+              Carregando calendário...
+            </Text>
+          </View>
+        ) : erro ? (
+          <View style={styles.feedbackBox}>
+            <Text variant="bodyMedium" style={styles.errorText}>{erro}</Text>
+            <Button mode="outlined" onPress={() => setVersaoCarga(versao => versao + 1)}>
+              Tentar novamente
+            </Button>
+          </View>
+        ) : (
+          <>
+            <View style={styles.daysRow}>
+              {dias.map((dia) => {
+                const isSelecionado = diasSelecionados.includes(dia.dataIso);
+                const isAgendado = dia.status === 'agendado';
+                const isIndisponivel = dia.status === 'indisponivel' || dia.status === 'feriado';
+
+                return (
+                  <TouchableOpacity
+                    key={dia.dataIso}
+                    onPress={() => handleToggleDia(dia)}
+                    activeOpacity={isIndisponivel ? 1 : 0.7}
+                    testID={`dia-${dia.dataIso}`}
+                    style={[
+                      styles.dayCard,
+                      isSelecionado && styles.dayCardSelected,
+                      isAgendado && styles.dayCardAgendado,
+                      isIndisponivel && styles.dayCardDisabled,
+                    ]}
+                  >
+                    <Text style={[
+                      styles.daySigla,
+                      isSelecionado && styles.textSelected,
+                      isAgendado && styles.textAgendado,
+                      isIndisponivel && styles.textDisabled,
+                    ]}>
+                      {dia.sigla}
+                    </Text>
+                    <Text style={[
+                      styles.dayNum,
+                      isSelecionado && styles.textSelected,
+                      isAgendado && styles.textAgendado,
+                      isIndisponivel && styles.textDisabled,
+                    ]}>
+                      {dia.diaNum}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <View style={styles.infoBox}>
+              <Text variant="bodyMedium" style={styles.infoTextCount}>
+                {diasSelecionados.length} {diasSelecionados.length === 1 ? 'dia selecionado' : 'dias selecionados'}
+              </Text>
+              {primeiroAgendado && (
+                <Text variant="bodyMedium" style={styles.infoTextAgendada}>
+                  {primeiroAgendado.nomeExtenso} já possui agendamento
+                </Text>
+              )}
+            </View>
+
+            <Button
+              mode="contained"
+              onPress={handleContinuar}
+              disabled={diasSelecionados.length === 0}
+              style={styles.continueButton}
+              contentStyle={styles.btnContent}
+            >
+              Continuar
+            </Button>
+          </>
+        )}
       </ScrollView>
     </View>
   );
@@ -203,6 +347,38 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 24,
     lineHeight: 20,
+  },
+  weekNavigator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  navButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#C2D6F0',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navButtonDisabled: {
+    borderColor: '#E0E2EC',
+    backgroundColor: '#F1F3F9',
+  },
+  weekLabel: {
+    fontWeight: 'bold',
+    color: '#3E5F90',
+  },
+  feedbackBox: {
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 40,
+  },
+  feedbackText: {
+    color: '#43474E',
   },
   daysRow: {
     flexDirection: 'row',
@@ -263,6 +439,10 @@ const styles = StyleSheet.create({
   infoTextAgendada: {
     color: '#3E5F90',
     fontWeight: '500',
+  },
+  errorText: {
+    color: '#BA1A1A',
+    textAlign: 'center',
   },
   continueButton: {
     borderRadius: 8,

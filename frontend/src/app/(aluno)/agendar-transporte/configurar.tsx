@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal } from 'react-native';
-import { Text, Button, SegmentedButtons, Snackbar, Surface } from 'react-native-paper';
+import { Text, Button, SegmentedButtons, Snackbar, Surface, ActivityIndicator } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, ChevronDown, X } from 'lucide-react-native';
 import { useForm, Controller } from 'react-hook-form';
@@ -9,22 +9,69 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { agendamentoDiaSchema, AgendamentoDiaFormData } from '@/schemas/agendamentoSchema';
 import { agendamentoService, OpcaoSelect, OpcoesAgendamentoResponse, AgendamentoDia, AgendamentoPayload } from '@/services/agendamentoService';
 import { AppPopup } from '@/components/ui/AppPopup';
+import { getErrorMessage } from '@/utils/errorUtils';
+
+const NOMES_DIAS = [
+  'Domingo',
+  'Segunda-feira',
+  'Terça-feira',
+  'Quarta-feira',
+  'Quinta-feira',
+  'Sexta-feira',
+  'Sábado',
+];
+const SIGLAS_DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+const paraDataLocal = (iso: string) => new Date(`${iso}T12:00:00`);
+
+const formatarDataCabecalho = (iso: string) => {
+  if (!iso) return 'Agendamento';
+  const data = paraDataLocal(iso);
+  if (Number.isNaN(data.getTime())) return iso;
+  const dia = String(data.getDate()).padStart(2, '0');
+  const mes = String(data.getMonth() + 1).padStart(2, '0');
+  return `${NOMES_DIAS[data.getDay()]} ${dia}/${mes}/${data.getFullYear()}`;
+};
+
+const formatarRotuloAba = (iso: string) => {
+  const data = paraDataLocal(iso);
+  if (Number.isNaN(data.getTime())) return iso;
+  const dia = String(data.getDate()).padStart(2, '0');
+  const mes = String(data.getMonth() + 1).padStart(2, '0');
+  return `${SIGLAS_DIAS[data.getDay()]}, ${dia}/${mes}`;
+};
+
+const numeroOuNulo = (valor: string | undefined) => {
+  if (!valor) return null;
+  const numero = Number(valor);
+  return Number.isFinite(numero) && numero > 0 ? numero : null;
+};
 
 export default function ConfigurarAgendamentoScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ datasIso?: string; modoEdicao?: string }>();
+  const params = useLocalSearchParams<{ datasIso?: string; modoEdicao?: string; agendamentoId?: string }>();
 
-  const datasArray = (params.datasIso || '2026-09-02').split(',');
+  const datasArray = (params.datasIso || '')
+    .split(',')
+    .map(dataIso => dataIso.trim())
+    .filter(Boolean);
   const modoEdicao = params.modoEdicao === 'true';
+  const agendamentoIdParam = params.agendamentoId ? Number(params.agendamentoId) : null;
 
   const [indiceDataAtual, setIndiceDataAtual] = useState(0);
-  const dataIsoAtual = datasArray[indiceDataAtual] || '2026-09-02';
+  const dataIsoAtual = datasArray[indiceDataAtual] || '';
 
   const [opcoes, setOpcoes] = useState<OpcoesAgendamentoResponse | null>(null);
+  const [carregandoOpcoes, setCarregandoOpcoes] = useState(true);
+  const [erroOpcoes, setErroOpcoes] = useState('');
+  const [versaoOpcoes, setVersaoOpcoes] = useState(0);
+
+  const [agendamentoId, setAgendamentoId] = useState<number | null>(
+    agendamentoIdParam && Number.isFinite(agendamentoIdParam) ? agendamentoIdParam : null
+  );
   const [agendamentosSalvos, setAgendamentosSalvos] = useState<AgendamentoDia[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Modal Dropdown generico
   const [modalPicker, setModalPicker] = useState<{
     visible: boolean;
     title: string;
@@ -37,10 +84,10 @@ export default function ConfigurarAgendamentoScreen() {
     onSelect: () => {},
   });
 
-  // Popup de Cancelamento (HU-014)
   const [popupCancelarVisible, setPopupCancelarVisible] = useState(false);
+  const [popupNenhumCriadoVisible, setPopupNenhumCriadoVisible] = useState(false);
+  const [popupErro, setPopupErro] = useState('');
 
-  // Snackbar Toast
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
@@ -49,12 +96,12 @@ export default function ConfigurarAgendamentoScreen() {
     defaultValues: {
       dataIso: dataIsoAtual,
       usaIda: true,
-      pontoEmbarqueIda: '1',
-      faculdadeDestinoIda: '1',
+      pontoEmbarqueIda: '',
+      faculdadeDestinoIda: '',
       rotaComplementarIda: '',
       usaVolta: true,
-      pontoDesembarqueVolta: '1',
-      faculdadeOrigemVolta: '1',
+      pontoDesembarqueVolta: '',
+      faculdadeOrigemVolta: '',
       rotaComplementarVolta: '',
     },
   });
@@ -63,17 +110,80 @@ export default function ConfigurarAgendamentoScreen() {
   const usaVolta = watch('usaVolta');
 
   useEffect(() => {
-    carregarOpcoes();
-  }, []);
+    let ativo = true;
+
+    const carregarOpcoes = async () => {
+      setCarregandoOpcoes(true);
+      setErroOpcoes('');
+      try {
+        const resposta = await agendamentoService.obterOpcoesAgendamento();
+        if (ativo) setOpcoes(resposta);
+      } catch (error) {
+        if (ativo) {
+          setOpcoes(null);
+          setErroOpcoes(getErrorMessage(error, 'Não foi possível carregar as opções de agendamento.'));
+        }
+      } finally {
+        if (ativo) setCarregandoOpcoes(false);
+      }
+    };
+
+    void carregarOpcoes();
+
+    return () => {
+      ativo = false;
+    };
+  }, [versaoOpcoes]);
 
   useEffect(() => {
-    setValue('dataIso', dataIsoAtual);
+    if (dataIsoAtual) setValue('dataIso', dataIsoAtual);
   }, [dataIsoAtual, setValue]);
 
-  const carregarOpcoes = async () => {
-    const opts = await agendamentoService.obterOpcoesAgendamento();
-    setOpcoes(opts);
-  };
+  useEffect(() => {
+    if (!modoEdicao || !dataIsoAtual) return;
+
+    let ativo = true;
+
+    const carregarAgendamento = async () => {
+      try {
+        let id = agendamentoId;
+        if (!id) {
+          const lista = await agendamentoService.listarAgendamentosAtivos();
+          id = lista.find(item => item.dataIso === dataIsoAtual)?.idAgendamento ?? null;
+        }
+
+        if (!id) {
+          if (ativo) {
+            setPopupErro('Agendamento não encontrado para esta data. Volte e tente novamente.');
+          }
+          return;
+        }
+
+        if (ativo) setAgendamentoId(id);
+        const detalhe = await agendamentoService.obterAgendamento(id);
+        if (!ativo) return;
+
+        setValue('usaIda', detalhe.usa_ida);
+        setValue('usaVolta', detalhe.usa_volta);
+        setValue('pontoEmbarqueIda', detalhe.ponto_embarque_id ? String(detalhe.ponto_embarque_id) : '');
+        setValue('faculdadeDestinoIda', detalhe.ies_destino_id ? String(detalhe.ies_destino_id) : '');
+        setValue('rotaComplementarIda', detalhe.rota_complementar_ida_id ? String(detalhe.rota_complementar_ida_id) : '');
+        setValue('pontoDesembarqueVolta', detalhe.ponto_desembarque_id ? String(detalhe.ponto_desembarque_id) : '');
+        setValue('faculdadeOrigemVolta', detalhe.ies_origem_id ? String(detalhe.ies_origem_id) : '');
+        setValue('rotaComplementarVolta', detalhe.rota_complementar_volta_id ? String(detalhe.rota_complementar_volta_id) : '');
+      } catch (error) {
+        if (ativo) {
+          setPopupErro(getErrorMessage(error, 'Não foi possível carregar o agendamento para edição.'));
+        }
+      }
+    };
+
+    void carregarAgendamento();
+
+    return () => {
+      ativo = false;
+    };
+  }, [modoEdicao, dataIsoAtual, agendamentoId, setValue]);
 
   const abrirPicker = (title: string, options: OpcaoSelect[], onSelect: (val: string) => void) => {
     setModalPicker({ visible: true, title, options, onSelect });
@@ -85,77 +195,147 @@ export default function ConfigurarAgendamentoScreen() {
     return achado ? achado.label : 'Selecionar';
   };
 
+  const resolverAgendamentoId = async (): Promise<number | null> => {
+    if (agendamentoId) return agendamentoId;
+
+    const lista = await agendamentoService.listarAgendamentosAtivos();
+    const encontrado = lista.find(item => item.dataIso === dataIsoAtual);
+    const id = encontrado?.idAgendamento ?? null;
+    if (id) setAgendamentoId(id);
+    return id;
+  };
+
   const handleSalvarDia = async (dados: AgendamentoDiaFormData) => {
-    const novoDia: AgendamentoDia = {
-      ...dados,
-      dataIso: dataIsoAtual,
-    };
+    if (!dataIsoAtual) return;
 
-    const novaLista = [...agendamentosSalvos.filter(a => a.dataIso !== dataIsoAtual), novoDia];
-    setAgendamentosSalvos(novaLista);
+    if (!dados.usaIda && !dados.usaVolta) {
+      if (modoEdicao) {
+        setPopupCancelarVisible(true);
+      } else {
+        setPopupNenhumCriadoVisible(true);
+      }
+      return;
+    }
 
-    // Mapear para payload da API /transporte/agendamentos (Sem horários conforme atualização da HU-013)
-    const payloadApi: AgendamentoPayload = {
+    const payload: AgendamentoPayload = {
       data: dataIsoAtual,
       usa_ida: dados.usaIda,
       usa_volta: dados.usaVolta,
-      ponto_embarque_id: dados.usaIda && dados.pontoEmbarqueIda ? Number(dados.pontoEmbarqueIda) : null,
-      ies_destino_id: dados.usaIda && dados.faculdadeDestinoIda ? Number(dados.faculdadeDestinoIda) : null,
-      rota_complementar_ida_id: dados.usaIda && dados.rotaComplementarIda ? Number(dados.rotaComplementarIda) : null,
-      ponto_desembarque_id: dados.usaVolta && dados.pontoDesembarqueVolta ? Number(dados.pontoDesembarqueVolta) : null,
-      ies_origem_id: dados.usaVolta && dados.faculdadeOrigemVolta ? Number(dados.faculdadeOrigemVolta) : null,
-      rota_complementar_volta_id: dados.usaVolta && dados.rotaComplementarVolta ? Number(dados.rotaComplementarVolta) : null,
+      ponto_embarque_id: dados.usaIda ? numeroOuNulo(dados.pontoEmbarqueIda) : null,
+      ies_destino_id: dados.usaIda ? numeroOuNulo(dados.faculdadeDestinoIda) : null,
+      rota_complementar_ida_id: dados.usaIda ? numeroOuNulo(dados.rotaComplementarIda) : null,
+      ponto_desembarque_id: dados.usaVolta ? numeroOuNulo(dados.pontoDesembarqueVolta) : null,
+      ies_origem_id: dados.usaVolta ? numeroOuNulo(dados.faculdadeOrigemVolta) : null,
+      rota_complementar_volta_id: dados.usaVolta ? numeroOuNulo(dados.rotaComplementarVolta) : null,
     };
 
     setIsLoading(true);
     try {
+      let resposta;
       if (modoEdicao) {
-        await agendamentoService.atualizarAgendamento(1, payloadApi);
+        const id = await resolverAgendamentoId();
+        if (!id) {
+          setPopupErro('Agendamento não encontrado para esta data. Volte e tente novamente.');
+          return;
+        }
+        resposta = await agendamentoService.atualizarAgendamento(id, payload);
       } else {
-        await agendamentoService.criarAgendamento(payloadApi);
+        resposta = await agendamentoService.criarAgendamento(payload);
       }
-    } catch {
-      // Fallback
+
+      const novoDia: AgendamentoDia = {
+        ...dados,
+        dataIso: dataIsoAtual,
+      };
+      const novaLista = [...agendamentosSalvos.filter(item => item.dataIso !== dataIsoAtual), novoDia];
+      setAgendamentosSalvos(novaLista);
+
+      if (indiceDataAtual < datasArray.length - 1) {
+        setIndiceDataAtual(indiceDataAtual + 1);
+        setSnackbarMessage(
+          resposta?.mensagem
+            ? `${resposta.mensagem}. Avançando para o próximo dia.`
+            : 'Agendamento salvo. Avançando para o próximo dia.'
+        );
+        setSnackbarVisivel(true);
+      } else {
+        router.push({
+          pathname: '/(aluno)/agendar-transporte/sucesso',
+          params: { agendamentosJson: JSON.stringify(novaLista) },
+        } as any);
+      }
+    } catch (error) {
+      setPopupErro(getErrorMessage(error, 'Não foi possível salvar o agendamento. Tente novamente.'));
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const finalizarSemCriarAgendamento = () => {
+    setPopupNenhumCriadoVisible(false);
 
     if (indiceDataAtual < datasArray.length - 1) {
       setIndiceDataAtual(indiceDataAtual + 1);
-      setSnackbarMessage('Agendamento salvo. Avançando para o próximo dia.');
-      setSnackbarVisivel(true);
-    } else {
+      return;
+    }
+
+    if (agendamentosSalvos.length > 0) {
       router.push({
         pathname: '/(aluno)/agendar-transporte/sucesso',
-        params: { agendamentosJson: JSON.stringify(novaLista) },
+        params: { agendamentosJson: JSON.stringify(agendamentosSalvos) },
       } as any);
+      return;
     }
+
+    router.replace('/(aluno)/(tabs)/home' as any);
   };
 
   const handleConfirmarCancelamento = async () => {
     setPopupCancelarVisible(false);
     setIsLoading(true);
-    await agendamentoService.cancelarAgendamento(dataIsoAtual);
-    setIsLoading(false);
-    setSnackbarMessage('Agendamento cancelado com sucesso');
-    setSnackbarVisivel(true);
-    setTimeout(() => {
-      router.replace('/(aluno)/home' as any);
-    }, 1500);
+    try {
+      const id = await resolverAgendamentoId();
+      if (!id) {
+        setPopupErro('Agendamento não encontrado para esta data. Volte e tente novamente.');
+        return;
+      }
+
+      const resposta = await agendamentoService.cancelarAgendamento(id);
+      setSnackbarMessage(resposta?.mensagem || 'Agendamento cancelado com sucesso');
+      setSnackbarVisivel(true);
+      setTimeout(() => {
+        router.replace('/(aluno)/(tabs)/agenda' as any);
+      }, 1200);
+    } catch (error) {
+      setPopupErro(getErrorMessage(error, 'Não foi possível cancelar o agendamento. Tente novamente.'));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const formatarDataCabecalho = (iso: string) => {
-    if (iso === '2026-08-31') return 'Segunda-feira 31/08/2026';
-    if (iso === '2026-09-01') return 'Terça-feira 01/09/2026';
-    if (iso === '2026-09-02') return 'Quarta-feira 02/09/2026';
-    if (iso === '2026-09-03') return 'Quinta-feira 03/09/2026';
-    if (iso === '2026-09-04') return 'Sexta-feira 04/09/2026';
-    return `Dia ${iso}`;
-  };
+  if (datasArray.length === 0 || !dataIsoAtual) {
+    return (
+      <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()}>
+            <ChevronLeft size={32} color="#333" />
+          </TouchableOpacity>
+          <Text variant="headlineSmall" style={styles.headerTitle}>Configurar agendamento</Text>
+        </View>
+        <View style={styles.emptyContainer}>
+          <Text variant="bodyLarge" style={styles.emptyText}>
+            Nenhuma data foi selecionada. Volte e escolha os dias desejados.
+          </Text>
+          <Button mode="contained" onPress={() => router.back()} style={styles.saveBtn}>
+            Voltar
+          </Button>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <ChevronLeft size={32} color="#333" />
@@ -165,16 +345,10 @@ export default function ConfigurarAgendamentoScreen() {
         </Text>
       </View>
 
-      {/* Tabs de Seleção de Datas */}
       <View style={styles.tabsContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabsRow}>
           {datasArray.map((dIso, idx) => {
             const isAtivo = idx === indiceDataAtual;
-            const rotulo = dIso === '2026-08-31' ? 'Seg, 31/08' :
-                           dIso === '2026-09-01' ? 'Ter, 01/09' :
-                           dIso === '2026-09-02' ? 'Qua, 02/09' :
-                           dIso === '2026-09-03' ? 'Qui, 03/09' :
-                           dIso === '2026-09-04' ? 'Sex, 04/09' : dIso;
 
             return (
               <TouchableOpacity
@@ -182,14 +356,13 @@ export default function ConfigurarAgendamentoScreen() {
                 onPress={() => setIndiceDataAtual(idx)}
                 style={[styles.tabButton, isAtivo && styles.tabButtonActive]}
               >
-                <Text style={[styles.tabText, isAtivo && styles.tabTextActive]}>{rotulo}</Text>
+                <Text style={[styles.tabText, isAtivo && styles.tabTextActive]}>{formatarRotuloAba(dIso)}</Text>
               </TouchableOpacity>
             );
           })}
         </ScrollView>
       </View>
 
-      {/* Popup de Confirmacao de Cancelamento (HU-014) */}
       <AppPopup
         visible={popupCancelarVisible}
         type="warning"
@@ -201,7 +374,25 @@ export default function ConfigurarAgendamentoScreen() {
         onDismiss={() => setPopupCancelarVisible(false)}
       />
 
-      {/* Modal Dropdown Picker */}
+      <AppPopup
+        visible={popupNenhumCriadoVisible}
+        type="info"
+        title="Nenhum agendamento criado"
+        message="Nenhum agendamento foi criado."
+        confirmText="Entendido"
+        onConfirm={finalizarSemCriarAgendamento}
+        onDismiss={() => setPopupNenhumCriadoVisible(false)}
+      />
+
+      <AppPopup
+        visible={!!popupErro}
+        type="error"
+        title="Não foi possível concluir"
+        message={popupErro}
+        confirmText="Entendido"
+        onDismiss={() => setPopupErro('')}
+      />
+
       <Modal visible={modalPicker.visible} transparent animationType="fade" onRequestClose={() => setModalPicker(prev => ({ ...prev, visible: false }))}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalPicker(prev => ({ ...prev, visible: false }))}>
           <Surface style={styles.modalContent} elevation={4}>
@@ -223,7 +414,22 @@ export default function ConfigurarAgendamentoScreen() {
       </Modal>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* SEÇÃO IDA */}
+        {carregandoOpcoes && (
+          <View style={styles.optionsFeedback}>
+            <ActivityIndicator color="#3E5F90" />
+            <Text variant="bodyMedium" style={styles.feedbackText}>Carregando opções...</Text>
+          </View>
+        )}
+
+        {!carregandoOpcoes && !!erroOpcoes && (
+          <Surface style={styles.errorBanner} elevation={0}>
+            <Text variant="bodyMedium" style={styles.errorText}>{erroOpcoes}</Text>
+            <Button mode="outlined" onPress={() => setVersaoOpcoes(versao => versao + 1)}>
+              Tentar novamente
+            </Button>
+          </Surface>
+        )}
+
         <Text variant="titleMedium" style={styles.sectionTitle}>Ida</Text>
         <Text variant="bodyMedium" style={styles.labelQuestion}>Vai usar o ônibus na ida?</Text>
 
@@ -245,7 +451,6 @@ export default function ConfigurarAgendamentoScreen() {
 
         {usaIda && (
           <View style={styles.fieldsGroup}>
-            {/* Ponto de Embarque */}
             <View style={styles.inputBox}>
               <Text variant="labelMedium" style={styles.inputLabel}>Ponto de embarque *</Text>
               <Controller
@@ -264,7 +469,6 @@ export default function ConfigurarAgendamentoScreen() {
               {errors.pontoEmbarqueIda && <Text style={styles.errorText}>{errors.pontoEmbarqueIda.message}</Text>}
             </View>
 
-            {/* Faculdade de Destino */}
             <View style={styles.inputBox}>
               <Text variant="labelMedium" style={styles.inputLabel}>Faculdade (IES) de destino *</Text>
               <Controller
@@ -283,7 +487,6 @@ export default function ConfigurarAgendamentoScreen() {
               {errors.faculdadeDestinoIda && <Text style={styles.errorText}>{errors.faculdadeDestinoIda.message}</Text>}
             </View>
 
-            {/* Rota Complementar Ida */}
             <View style={styles.inputBox}>
               <Text variant="labelMedium" style={styles.inputLabel}>Rota complementar (opcional)</Text>
               <Controller
@@ -303,7 +506,6 @@ export default function ConfigurarAgendamentoScreen() {
           </View>
         )}
 
-        {/* SEÇÃO VOLTA */}
         <Text variant="titleMedium" style={[styles.sectionTitle, { marginTop: 24 }]}>Volta</Text>
         <Text variant="bodyMedium" style={styles.labelQuestion}>Vai usar o ônibus na volta?</Text>
 
@@ -325,7 +527,6 @@ export default function ConfigurarAgendamentoScreen() {
 
         {usaVolta && (
           <View style={styles.fieldsGroup}>
-            {/* Faculdade de Origem */}
             <View style={styles.inputBox}>
               <Text variant="labelMedium" style={styles.inputLabel}>Faculdade de origem *</Text>
               <Controller
@@ -344,7 +545,6 @@ export default function ConfigurarAgendamentoScreen() {
               {errors.faculdadeOrigemVolta && <Text style={styles.errorText}>{errors.faculdadeOrigemVolta.message}</Text>}
             </View>
 
-            {/* Ponto de Desembarque */}
             <View style={styles.inputBox}>
               <Text variant="labelMedium" style={styles.inputLabel}>Ponto de desembarque *</Text>
               <Controller
@@ -363,7 +563,6 @@ export default function ConfigurarAgendamentoScreen() {
               {errors.pontoDesembarqueVolta && <Text style={styles.errorText}>{errors.pontoDesembarqueVolta.message}</Text>}
             </View>
 
-            {/* Rota Complementar Volta */}
             <View style={styles.inputBox}>
               <Text variant="labelMedium" style={styles.inputLabel}>Rota complementar de volta (opcional)</Text>
               <Controller
@@ -383,7 +582,6 @@ export default function ConfigurarAgendamentoScreen() {
           </View>
         )}
 
-        {/* BOTÕES DE AÇÃO */}
         <View style={styles.actionsContainer}>
           {modoEdicao && (
             <Button
@@ -401,7 +599,7 @@ export default function ConfigurarAgendamentoScreen() {
             mode="contained"
             onPress={() => { void handleSubmit(handleSalvarDia)(); }}
             loading={isLoading}
-            disabled={isLoading}
+            disabled={isLoading || carregandoOpcoes || !!erroOpcoes}
             style={styles.saveBtn}
             contentStyle={styles.btnContent}
           >
@@ -414,7 +612,6 @@ export default function ConfigurarAgendamentoScreen() {
         </View>
       </ScrollView>
 
-      {/* Snackbar Toast */}
       <Snackbar
         visible={snackbarVisivel}
         onDismiss={() => setSnackbarVisivel(false)}
@@ -530,6 +727,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
+  optionsFeedback: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  feedbackText: {
+    color: '#43474E',
+  },
+  errorBanner: {
+    backgroundColor: '#FFEBEE',
+    borderRadius: 8,
+    padding: 16,
+    gap: 12,
+    marginBottom: 20,
+  },
   actionsContainer: {
     marginTop: 32,
     gap: 12,
@@ -544,6 +757,17 @@ const styles = StyleSheet.create({
   },
   btnContent: {
     height: 55,
+  },
+  emptyContainer: {
+    flex: 1,
+    paddingHorizontal: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 20,
+  },
+  emptyText: {
+    textAlign: 'center',
+    color: '#43474E',
   },
   modalOverlay: {
     flex: 1,

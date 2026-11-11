@@ -60,7 +60,7 @@ def opcoes(
 
     pontos = session.query(PontoDeParadaORM).filter(PontoDeParadaORM.ativo == True).all()
     faculdades = session.query(FaculdadeORM).filter(FaculdadeORM.ativo == True).all()
-    rotas_comp = session.query(RotaComplementarORM).all()
+    rotas_comp = session.query(RotaComplementarORM).filter(RotaComplementarORM.ativo == True).all()
 
     return {
         "pontosEmbarque": [{"label": p.nome, "value": str(p.ponto_id)} for p in pontos],

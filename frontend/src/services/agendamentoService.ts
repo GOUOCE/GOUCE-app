@@ -13,6 +13,23 @@ export interface OpcoesAgendamentoResponse {
   rotasComplementaresVolta: OpcaoSelect[];
 }
 
+export interface CalendarioDia {
+  data: string; // YYYY-MM-DD
+  estado: string;
+  descricao?: string | null;
+  pode_agendar: boolean;
+  agendamento_id?: number | null;
+  pode_remover?: boolean;
+  pode_editar?: boolean;
+}
+
+export interface CalendarioResponse {
+  mes: string;
+  dias: CalendarioDia[];
+  ativos: number;
+  limite: number;
+}
+
 export interface AgendamentoDia {
   idAgendamento?: number;
   dataIso: string; // YYYY-MM-DD
@@ -37,6 +54,28 @@ export interface AgendamentoPayload {
   ies_origem_id?: number | null;
   ponto_desembarque_id?: number | null;
   rota_complementar_volta_id?: number | null;
+}
+
+export interface AgendamentoApi {
+  id: number;
+  aluno_id: number;
+  data: string;
+  usa_ida: boolean;
+  usa_volta: boolean;
+  ponto_embarque_id: number | null;
+  ies_destino_id: number | null;
+  rota_complementar_ida_id: number | null;
+  ies_origem_id: number | null;
+  ponto_desembarque_id: number | null;
+  rota_complementar_volta_id: number | null;
+  status: string;
+}
+
+export interface OperacaoAgendamentoResponse {
+  mensagem: string;
+  agendamento_criado: boolean;
+  agendamento?: AgendamentoApi | null;
+  estado_dia: string;
 }
 
 export interface DetalhesRotaComplementar {
@@ -66,78 +105,61 @@ export interface DetalhesViagemResponse {
   isOffline?: boolean;
 }
 
+const mapearAgendamento = (item: any): AgendamentoDia => ({
+  idAgendamento: item.id ?? item.idAgendamento,
+  dataIso: item.data ?? item.dataIso,
+  usaIda: Boolean(item.usa_ida ?? item.usaIda),
+  usaVolta: Boolean(item.usa_volta ?? item.usaVolta),
+  pontoEmbarqueIda: item.ponto_embarque_id ?? item.pontoEmbarqueIda,
+  faculdadeDestinoIda: item.ies_destino_id ?? item.faculdadeDestinoIda,
+  rotaComplementarIda: item.rota_complementar_ida_id ?? item.rotaComplementarIda,
+  pontoDesembarqueVolta: item.ponto_desembarque_id ?? item.pontoDesembarqueVolta,
+  faculdadeOrigemVolta: item.ies_origem_id ?? item.faculdadeOrigemVolta,
+  rotaComplementarVolta: item.rota_complementar_volta_id ?? item.rotaComplementarVolta,
+  jaAgendado: true,
+});
+
 export const agendamentoService = {
   async obterOpcoesAgendamento(): Promise<OpcoesAgendamentoResponse> {
-    try {
-      const response = await api.get('/agendamentos/opcoes');
-      return response.data;
-    } catch {
-      return {
-        pontosEmbarque: [
-          { label: 'Igreja Matriz de Quixadá', value: '1' },
-          { label: 'Praça dos Leões', value: '2' },
-          { label: 'Terminal Rodoviário de Quixadá', value: '3' },
-          { label: 'Acesso ao Campus da UFC', value: '4' },
-        ],
-        faculdades: [
-          { label: 'UFC - Campus Quixadá', value: '1' },
-          { label: 'IFCE - Campus Quixadá', value: '2' },
-          { label: 'UECE - FECLEISC Quixadá', value: '3' },
-        ],
-        rotasComplementaresIda: [
-          { label: 'Nenhuma (Rota Direta)', value: '' },
-          { label: 'Transferência Centro ➔ Rodoviária (05:00)', value: '1' },
-        ],
-        rotasComplementaresVolta: [
-          { label: 'Nenhuma (Rota Direta)', value: '' },
-          { label: 'Transferência Rodoviária ➔ Centro (17:30)', value: '1' },
-        ],
-      };
-    }
+    const response = await api.get('/transporte/agendamentos/opcoes');
+    return response.data;
+  },
+
+  async obterCalendario(mes: string): Promise<CalendarioResponse> {
+    const response = await api.get('/transporte/agendamentos/calendario', {
+      params: { mes },
+    });
+    return response.data;
   },
 
   async listarAgendamentosAtivos(): Promise<AgendamentoDia[]> {
-    try {
-      const response = await api.get('/transporte/agendamentos/meus');
-      return response.data;
-    } catch {
-      return [];
-    }
+    const response = await api.get('/transporte/agendamentos/meus');
+    const dados = response.data;
+    const lista: any[] = Array.isArray(dados) ? dados : dados?.agendamentos ?? [];
+    return lista.map(mapearAgendamento);
   },
 
-  async criarAgendamento(payload: AgendamentoPayload): Promise<any> {
-    try {
-      const response = await api.post('/transporte/agendamentos', payload);
-      return response.data;
-    } catch {
-      return {
-        mensagem: 'Agendamento realizado com sucesso',
-        agendamento_criado: true,
-        estado_dia: 'AGENDADO',
-      };
-    }
+  async obterAgendamento(agendamentoId: number): Promise<AgendamentoApi> {
+    const response = await api.get(`/transporte/agendamentos/${agendamentoId}`);
+    return response.data;
   },
 
-  async atualizarAgendamento(agendamentoId: number, payload: AgendamentoPayload): Promise<any> {
-    try {
-      const response = await api.put(`/transporte/agendamentos/${agendamentoId}`, payload);
-      return response.data;
-    } catch {
-      return {
-        mensagem: 'Agendamento atualizado com sucesso',
-        agendamento_criado: true,
-        estado_dia: 'AGENDADO',
-      };
-    }
+  async criarAgendamento(payload: AgendamentoPayload): Promise<OperacaoAgendamentoResponse> {
+    const response = await api.post('/transporte/agendamentos', payload);
+    return response.data;
   },
 
-  async cancelarAgendamento(idAgendamento: string | number): Promise<any> {
-    try {
-      const response = await api.delete(`/transporte/agendamentos/${idAgendamento}`);
-      return response.data;
-    } catch {
-      return { success: true };
-    }
+  async atualizarAgendamento(
+    agendamentoId: number,
+    payload: AgendamentoPayload
+  ): Promise<OperacaoAgendamentoResponse> {
+    const response = await api.put(`/transporte/agendamentos/${agendamentoId}`, payload);
+    return response.data;
+  },
+
+  async cancelarAgendamento(agendamentoId: number): Promise<OperacaoAgendamentoResponse> {
+    const response = await api.delete(`/transporte/agendamentos/${agendamentoId}`);
+    return response.data;
   },
 
   async obterDetalhesViagem(dataIso: string = '2026-09-01', temComplementar: boolean = true): Promise<DetalhesViagemResponse> {
