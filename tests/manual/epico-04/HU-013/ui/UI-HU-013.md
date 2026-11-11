@@ -20,7 +20,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Em reteste em `0c0a079c` (7 ✅; 2 reprovados por leitura do código na primeira análise, aguardando reteste) | 9 | 7 | 0 | 0 | 0 | 2 |
+| ⏳ Em reteste em `0c0a079c` (8 ✅; 1 reprovado por leitura do código na primeira análise, aguardando reteste) | 9 | 8 | 0 | 0 | 0 | 1 |
 
 ## Pré-condições
 
@@ -57,7 +57,7 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 | --- | --- | --- | --- | --- | --- |
 | CT-HU013-UI-006 | Duplicidade, trajeto sem rota e campos obrigatórios | Dia já agendado; ponto e IES sem rota; Sim sem ponto ou IES | Cada recusa mostra a mensagem correspondente e nada é gravado | ✅ PASSOU | Reteste: dia já agendado, trajeto sem rota e campos obrigatórios (ponto e IES da ida; IES de origem e ponto de desembarque da volta) são recusados e nada é gravado. |
 | CT-HU013-UI-007 | Limite de 22 agendamentos e janela de datas | A com 22 ativos; dia D+30 | Recusa com mensagem; nenhuma reserva a mais; só D a D+29 selecionáveis | ✅ PASSOU | Reteste: o servidor recusa o agendamento acima do limite (`LIMITE_AGENDAMENTOS`) sem gravar nada, e com o limite de 22 a 22ª reserva passa (22 de 22); o último dia da janela (10/12) estava disponível. |
-| CT-HU013-UI-008 | Editar e cancelar o dia agendado | Reserva existente; alterar trechos; Não para ida e volta | A edição atualiza a mesma reserva; Não para ida e volta é tratado como cancelamento, com confirmação | ⏳ PENDENTE | Reprovado por leitura do código em `ee305857`; reteste pendente em `0c0a079c`. |
+| CT-HU013-UI-008 | Editar e cancelar o dia agendado | Reserva existente; alterar trechos; Não para ida e volta | A edição atualiza a mesma reserva; Não para ida e volta é tratado como cancelamento, com confirmação | ✅ PASSOU | Reteste: a edição atualizou a mesma reserva (`PUT` no id 165) e o cancelamento removeu a reserva certa (`DELETE` no id 165). Observação: mensagem de cancelamento em faixa escura (#413). |
 
 ### Seção D — Mensagem de falha
 
@@ -275,7 +275,12 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 - Não foi identificado no código o tratamento de “Não para ida e volta” como cancelamento.
 - Status: ❌ Falhou (por leitura do código). Issue: #440.
 
-**Reteste em `0c0a079c`:** pendente.
+**Reteste em `0c0a079c`**
+
+- A aluna A editou a reserva do dia 12/11 (que era só ida) para ida e volta e salvou; depois a cancelou pela tela. O testador usou o 12/11 nos dois passos, em vez do 13/11 previsto para o cancelamento; o 13/11 (reserva 166) seguiu intacto.
+- Conferido na API e no banco: `PUT /transporte/agendamentos/165` → 200 (a mesma reserva passou a ter `usa_ida` e `usa_volta` verdadeiros, sem criar outra) e `DELETE /transporte/agendamentos/165` → 200 (status `CANCELADO`, com `cancelled_at`). A reserva 166 continua `ATIVO`.
+- Segundo o testador, tudo passou, exceto o padrão da mensagem: a confirmação de cancelamento aparece em faixa escura, fora do padrão de popup do app. No Figma da HU-013 essa faixa escura faz parte do desenho; o padrão a seguir fica a confirmar com o design (#413).
+- Status: ✅ Passou (reteste).
 
 ---
 
@@ -324,7 +329,7 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 
 ## Observações gerais
 
-- **Reteste de 10/11/2026 em `0c0a079c`** (a Mari corrigiu as #437 a #440 e a #442 e levou ao backend do PR o bloqueio de fim de semana e a rota de opções): CT-001 a CT-007 passaram na tela; o CT-008 e o CT-009 seguem em reteste.
+- **Reteste de 10/11/2026 em `0c0a079c`** (a Mari corrigiu as #437 a #440 e a #442 e levou ao backend do PR o bloqueio de fim de semana e a rota de opções): CT-001 a CT-008 passaram na tela; o CT-009 segue em reteste.
 - Execução de 10/11/2026: análise do código do commit `ee305857` do PR #377 (branch da HU-013) e conferência da API da `develop` em execução. No PR #378, que incorporou estas telas, o serviço já não inventa a resposta de `criarAgendamento` e a edição usa o id recebido, mas a semana fixa, as listas fixas, o `catch` vazio da tela e os toasts pretos continuam iguais. Os nove casos foram reprovados por leitura do código, a pedido do testador, para não gastar execução manual em falhas evidentes; a execução na tela será feita no reteste, quando o front deixar de usar a semana fixa e as listas fixas.
 - O back ainda tem as divergências da #390: fim de semana disponível, `Não` para ida e volta com `422`, mensagem de duplicidade antiga e ausência de rota de opções para o aluno.
 - A aba **Agenda** e o botão **Ver meus agendamentos** deste PR levam à tela de Agenda que ainda mostra o calendário fixo de setembro (a tela da HU-014 que está neste PR; ver as issues #406 e #407); não é defeito da HU-013.
