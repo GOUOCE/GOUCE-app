@@ -1,112 +1,118 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState } from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
-import { Text, Button, Surface } from 'react-native-paper';
-import { useRouter } from 'expo-router';
-import { AlertCircle, CheckCircle2 } from 'lucide-react-native';
+import { Text, Button, Surface, ActivityIndicator } from 'react-native-paper';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { AlertCircle } from 'lucide-react-native';
 
 import { userService } from '@/services/userService';
 import { useAuth } from '@contexts/AuthContext';
+import { formatarNomeTipoDocumento } from '@/utils/documentosCadastro';
+
+type DocumentoReprovado = { tipo: string; motivo: string };
 
 export default function CadastroRejeitadoScreen() {
   const router = useRouter();
-  const { user } = useAuth();
-  const [documentosReenvio, setDocumentosReenvio] = useState<{ tipo: string; motivo: string }[]>([]);
+  const { signOut } = useAuth();
+  const [documentosReenvio, setDocumentosReenvio] = useState<DocumentoReprovado[]>([]);
+  const [carregando, setCarregando] = useState(true);
   const [erroCarregamento, setErroCarregamento] = useState(false);
 
-  const isAprovado = (user?.status || '').toLowerCase() === 'ativado' || (user?.status || '').toLowerCase() === 'aprovado';
-
-  useEffect(() => {
-    async function carregarReenvio() {
-      setErroCarregamento(false);
-      try {
-        const res = await userService.getReenvioDocumento();
-        if (res && res.documentos_rejeitados && res.documentos_rejeitados.length > 0) {
-          setDocumentosReenvio(res.documentos_rejeitados);
-        } else if (res && res.documentos && res.documentos.length > 0) {
-          setDocumentosReenvio(res.documentos);
-        } else {
-          setDocumentosReenvio([]);
-        }
-      } catch (err) {
-        console.warn('Erro ao carregar reenvio de documento:', err);
-        if (!isAprovado) {
-          setErroCarregamento(true);
-        } else {
-          setDocumentosReenvio([]);
-        }
-      }
+  const buscarReenvio = useCallback(async () => {
+    try {
+      const res = await userService.getReenvioDocumento();
+      const lista = res?.documentos_rejeitados ?? res?.documentos ?? [];
+      setDocumentosReenvio(Array.isArray(lista) ? lista : []);
+    } catch (err) {
+      // Falha de leitura nunca vira "sem pendências": mostra o erro e deixa tentar de novo.
+      console.warn('Erro ao carregar reenvio de documento:', err);
+      setDocumentosReenvio([]);
+      setErroCarregamento(true);
+    } finally {
+      setCarregando(false);
     }
-    carregarReenvio();
-  }, [isAprovado]);
+  }, []);
 
-  const formatarNomeTipo = (tipo: string) => {
-    if (tipo === 'comprovante_matricula') return 'Comprovante de Matrícula';
-    if (tipo === 'comprovante_residencia') return 'Comprovante de Residência';
-    if (tipo === 'foto_perfil') return 'Foto de Perfil';
-    return tipo;
+  // Ao voltar da tela de reenvio a lista é lida de novo.
+  useFocusEffect(
+    useCallback(() => {
+      buscarReenvio();
+    }, [buscarReenvio])
+  );
+
+  const tentarNovamente = () => {
+    setCarregando(true);
+    setErroCarregamento(false);
+    buscarReenvio();
   };
 
-  const semPendencias = isAprovado || documentosReenvio.length === 0;
+  const handleSair = async () => {
+    await signOut();
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Status do Cadastro */}
-        <Surface style={[styles.statusBadge, isAprovado && styles.statusBadgeAprovado]} elevation={0}>
-          <Text style={[styles.statusText, isAprovado && styles.statusTextAprovado]}>
-            Status do Cadastro: {isAprovado ? 'Aprovado' : 'Reprovado'}
-          </Text>
+        <Surface style={styles.statusBadge} elevation={0}>
+          <Text style={styles.statusText}>Status do Cadastro: Reprovado</Text>
         </Surface>
 
-        {/* Ícone */}
-        <View style={styles.iconContainer}>
-          {semPendencias ? (
-            <CheckCircle2 size={80} color="#2E7D32" strokeWidth={1.5} />
-          ) : (
-            <AlertCircle size={80} color="#B5651D" strokeWidth={1.5} />
-          )}
-        </View>
-
-        <Text variant="headlineSmall" style={styles.title}>
-          {semPendencias
-            ? 'Tudo certo com seus documentos!'
-            : 'Opa! Precisamos que você ajuste algumas coisas.'}
-        </Text>
-        <Text variant="bodyMedium" style={styles.subtitle}>
-          {semPendencias
-            ? 'Não há pendências no seu cadastro. Todos os seus documentos foram analisados e aprovados!'
-            : 'Sua documentação inicial foi recusada. Por gentileza, reenvie a documentação abaixo atentando-se às observações feitas pelo administrador.'}
-        </Text>
-
-        {erroCarregamento ? (
-          <Surface style={styles.errorCard} elevation={1}>
-            <Text style={styles.errorText}>Não foi possível carregar os motivos da reprovação. Verifique sua conexão e tente novamente.</Text>
-          </Surface>
-        ) : !semPendencias ? (
-          <View style={styles.listSection}>
-            {documentosReenvio.map((doc, idx) => (
-              <Surface key={idx} style={styles.docCard} elevation={1}>
-                <Text variant="titleMedium" style={styles.docName}>{formatarNomeTipo(doc.tipo)}</Text>
-                <Text variant="bodyMedium" style={styles.docReason}>{doc.motivo}</Text>
-              </Surface>
-            ))}
+        {carregando ? (
+          <View style={styles.iconContainer}>
+            <ActivityIndicator animating color="#3E5F90" />
           </View>
+        ) : erroCarregamento ? (
+          <>
+            <View style={styles.iconContainer}>
+              <AlertCircle size={80} color="#B00020" strokeWidth={1.5} />
+            </View>
+            <Surface style={styles.errorCard} elevation={1}>
+              <Text style={styles.errorText}>
+                Não foi possível carregar os motivos da reprovação. Verifique sua conexão e tente novamente.
+              </Text>
+            </Surface>
+            <Button mode="contained" onPress={tentarNovamente} style={styles.button} contentStyle={styles.btnContent}>
+              Tentar novamente
+            </Button>
+          </>
         ) : (
-          <Surface style={styles.noPendingCard} elevation={1}>
-            <Text style={styles.noPendingText}>Nenhuma pendência encontrada. Todos os seus documentos foram aprovados!</Text>
-          </Surface>
+          <>
+            <View style={styles.iconContainer}>
+              <AlertCircle size={80} color="#B5651D" strokeWidth={1.5} />
+            </View>
+
+            <Text variant="headlineSmall" style={styles.title}>
+              Opa! Precisamos que você ajuste algumas coisas.
+            </Text>
+            <Text variant="bodyMedium" style={styles.subtitle}>
+              Sua documentação inicial foi recusada. Por gentileza, reenvie a documentação abaixo atentando-se às
+              observações feitas pelo administrador.
+            </Text>
+
+            <View style={styles.listSection}>
+              {documentosReenvio.map((doc, idx) => (
+                <Surface key={idx} style={styles.docCard} elevation={1}>
+                  <Text variant="titleMedium" style={styles.docName}>{formatarNomeTipoDocumento(doc.tipo)}</Text>
+                  <Text variant="bodyMedium" style={styles.docReason}>{doc.motivo}</Text>
+                </Surface>
+              ))}
+            </View>
+
+            <Button
+              mode="contained"
+              onPress={() => router.push('/(autenticacao)/reenviar-documentos' as any)}
+              style={styles.button}
+              contentStyle={styles.btnContent}
+              disabled={documentosReenvio.length === 0}
+            >
+              Corrigir documentação
+            </Button>
+          </>
         )}
 
-        {!semPendencias && !erroCarregamento && (
-          <Button
-            mode="contained"
-            onPress={() => router.push('/(autenticacao)/reenviar-documentos')}
-            style={styles.button}
-            contentStyle={styles.btnContent}
-          >
-            Corrigir documentação
-          </Button>
-        )}
+        <Button mode="text" onPress={handleSair} style={styles.sairButton}>
+          Sair
+        </Button>
       </ScrollView>
     </View>
   );
@@ -129,16 +135,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginBottom: 16,
   },
-  statusBadgeAprovado: {
-    backgroundColor: '#E1F5FE',
-  },
   statusText: {
     color: '#B00020',
     fontWeight: 'bold',
     fontSize: 14,
-  },
-  statusTextAprovado: {
-    color: '#0288D1',
   },
   iconContainer: {
     marginVertical: 24,
@@ -178,18 +178,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
-  noPendingCard: {
-    backgroundColor: '#E8F5E9',
-    borderRadius: 12,
-    padding: 20,
-    width: '100%',
-    marginBottom: 32,
-  },
-  noPendingText: {
-    color: '#2E7D32',
-    fontWeight: '600',
-    textAlign: 'center',
-  },
   errorCard: {
     backgroundColor: '#FFEBEE',
     borderRadius: 12,
@@ -209,5 +197,8 @@ const styles = StyleSheet.create({
   },
   btnContent: {
     height: 55,
+  },
+  sairButton: {
+    marginTop: 16,
   },
 });
