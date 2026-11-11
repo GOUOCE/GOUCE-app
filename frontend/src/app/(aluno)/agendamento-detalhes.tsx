@@ -74,16 +74,23 @@ function CardRotaPrincipal({ trecho }: { trecho: TrechoDetalhesViagem }) {
         </View>
       </View>
 
-      <View style={styles.gridRow}>
-        <View style={styles.col}>
-          <Text style={styles.fieldLabel}>Veículo</Text>
-          <Text style={styles.fieldVal}>{rota.veiculo ?? 'A definir'}</Text>
+      {/* Sem alocação diária, os campos de veículo/motorista não são exibidos (PO #389, item 7). */}
+      {(rota.veiculo || rota.motorista) && (
+        <View style={styles.gridRow}>
+          {rota.veiculo && (
+            <View style={styles.col}>
+              <Text style={styles.fieldLabel}>Veículo</Text>
+              <Text style={styles.fieldVal}>{rota.veiculo}</Text>
+            </View>
+          )}
+          {rota.motorista && (
+            <View style={styles.col}>
+              <Text style={styles.fieldLabel}>Motorista</Text>
+              <Text style={styles.fieldVal}>{rota.motorista}</Text>
+            </View>
+          )}
         </View>
-        <View style={styles.col}>
-          <Text style={styles.fieldLabel}>Motorista</Text>
-          <Text style={styles.fieldVal}>{rota.motorista ?? 'A definir'}</Text>
-        </View>
-      </View>
+      )}
 
       <View style={styles.gridRow}>
         <View style={styles.col}>
@@ -134,6 +141,11 @@ export default function AgendamentoDetalhesScreen() {
   const [carregando, setCarregando] = useState(true);
 
   const executarBusca = useCallback(async () => {
+    // Cada consulta começa do zero: erro/viagem anteriores não podem
+    // permanecer na tela ao trocar de reserva (HU-015 / #432).
+    setErro(null);
+    setDetalhes(null);
+    setCarregando(true);
     try {
       const dados = await agendamentoService.obterDetalhesViagem(dataIso);
       setDetalhes(dados);
@@ -148,12 +160,10 @@ export default function AgendamentoDetalhesScreen() {
     useCallback(() => {
       if (!dataIso) return;
       executarBusca();
-    }, [executarBusca])
+    }, [dataIso, executarBusca])
   );
 
   const tentarNovamente = useCallback(async () => {
-    setCarregando(true);
-    setErro(null);
     executarBusca();
   }, [executarBusca]);
 

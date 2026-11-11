@@ -50,36 +50,33 @@ function rotuloMes(mes: string): string {
 }
 
 function CardRotaComplementar({ agendamento }: { agendamento: AgendamentoDetalhe }) {
-  const linhas: string[] = [];
-  if (agendamento.rota_complementar_ida) {
-    linhas.push(
-      `Ida: saída ${agendamento.rota_complementar_ida.horario_saida}`
-    );
-  }
-  if (agendamento.rota_complementar_volta) {
-    linhas.push(
-      `Volta: retorno ${agendamento.rota_complementar_volta.horario_retorno}`
-    );
-  }
-  const conexao =
-    agendamento.rota_complementar_ida?.ponto_conexao ??
-    agendamento.rota_complementar_volta?.ponto_conexao ??
-    '';
-  const nome =
-    agendamento.rota_complementar_ida?.nome ??
-    agendamento.rota_complementar_volta?.nome ??
-    '';
+  const ida = agendamento.rota_complementar_ida;
+  const volta = agendamento.rota_complementar_volta;
 
   return (
     <View style={styles.complementarBox}>
       <Text style={styles.complementarLabel}>
         Rota complementar (obrigatória p/ transferência)
       </Text>
-      <Text style={styles.complementarNome}>{nome}</Text>
-      {linhas.length > 0 && (
-        <Text style={styles.complementarInfo}>{linhas.join('  •  ')}</Text>
+
+      {/* Cada trecho usa o nome, horário e conexão da própria rota (HU-015 / #429). */}
+      {ida && (
+        <View style={styles.complementarTrechoBox}>
+          <Text style={styles.complementarNome}>Ida: {ida.nome}</Text>
+          <Text style={styles.complementarInfo}>
+            Saída {ida.horario_saida} • Conexão: {ida.ponto_conexao}
+          </Text>
+        </View>
       )}
-      <Text style={styles.complementarInfo}>Ponto de conexão: {conexao}</Text>
+
+      {volta && (
+        <View style={styles.complementarTrechoBox}>
+          <Text style={styles.complementarNome}>Volta: {volta.nome}</Text>
+          <Text style={styles.complementarInfo}>
+            Retorno {volta.horario_retorno} • Conexão: {volta.ponto_conexao}
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -667,6 +664,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: '#001D36',
+  },
+  complementarTrechoBox: {
+    gap: 2,
   },
   complementarNome: {
     fontSize: 15,

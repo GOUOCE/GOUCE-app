@@ -369,11 +369,64 @@ export const agendamentoService = {
       }
       return mapearDetalhe(detalhe);
     } catch (erro: any) {
+      const status = erro?.response?.status;
+
+      // Recusas do servidor não são falha de rede: nunca exibir cache como se
+      // fosse uma viagem ativa (FA-004 / Critério 4).
+      if (status === 401 || status === 403) {
+        throw erro;
+      }
+
+      // Reserva inexistente ou cancelada: invalida lista, calendário e detalhe
+      // para a viagem não reaparecer ativa ao ficar offline.
+      if (status === 404) {
+        await AsyncStorage.removeItem(cacheKey).catch(() => {});
+        await AsyncStorage.removeItem(CACHE_CALENDARIO(dataIso.slice(0, 7))).catch(
+          () => {}
+        );
+        const meus = await lerCache<MeusAgendamentosResponse>(CACHE_MEUS);
+        const agendamentosCache = Array.isArray(meus?.agendamentos)
+          ? meus!.agendamentos
+          : null;
+        if (meus && agendamentosCache) {
+          const restantes = agendamentosCache.filter((item) => item.data !== dataIso);
+          if (restantes.length !== agendamentosCache.length) {
+            const removidos = agendamentosCache.length - restantes.length;
+            await AsyncStorage.setItem(
+              CACHE_MEUS,
+              JSON.stringify({
+                ...meus,
+                agendamentos: restantes,
+                ativos: Math.max(0, (meus.ativos ?? restantes.length) - removidos),
+              })
+            ).catch(() => {});
+          }
+        }
+        throw erro;
+      }
+
+      // Demais respostas HTTP (validação, servidor) também não viram offline.
+      if (erro?.response) {
+        throw erro;
+      }
+
       // Sem internet: exibe a última sincronização guardada no dispositivo.
       const emCache = await lerCache<AgendamentoDetalhe>(cacheKey);
       if (emCache) {
         return { ...mapearDetalhe(emCache), isOffline: true };
       }
+
+      // Detalhe nunca aberto online, mas a Agenda já sincronizou a reserva por
+      // /meus: usa os dados completos da lista guardada (FA-002 / Critério 4).
+      const meus = await lerCache<MeusAgendamentosResponse>(CACHE_MEUS);
+      const agendamentosCache = Array.isArray(meus?.agendamentos)
+        ? meus!.agendamentos
+        : [];
+      const detalheDaLista = agendamentosCache.find((item) => item.data === dataIso);
+      if (detalheDaLista) {
+        return { ...mapearDetalhe(detalheDaLista), isOffline: true };
+      }
+
       // Sem cache sincronizado não há dados para exibir: propaga o erro real.
       throw erro;
     }

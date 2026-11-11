@@ -169,4 +169,57 @@ describe('HU-015: Consulta de Rota Complementar e Transferência (Critérios de 
       agendamentoService.obterDetalhesViagem('2026-11-12')
     ).rejects.toThrow('Network error');
   });
+
+  it('deve usar a lista sincronizada por /meus quando o detalhe nunca foi aberto offline (#430)', async () => {
+    (api.get as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce(null);
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce(
+      JSON.stringify({
+        agendamentos: [detalheComComplementar],
+        ativos: 1,
+        limite: 22,
+      })
+    );
+
+    const resultado = await agendamentoService.obterDetalhesViagem('2026-11-12');
+
+    expect(resultado.isOffline).toBe(true);
+    expect(resultado.agendamentoId).toBe(1);
+    expect(resultado.temRotaComplementar).toBe(true);
+  });
+
+  it('não deve tratar recusa 404/401/403 como consulta offline (#431)', async () => {
+    const naoEncontrado = { response: { status: 404 } };
+    (api.get as jest.Mock).mockRejectedValueOnce(naoEncontrado);
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce(
+      JSON.stringify({
+        agendamentos: [detalheComComplementar],
+        ativos: 1,
+        limite: 22,
+      })
+    );
+
+    await expect(
+      agendamentoService.obterDetalhesViagem('2026-11-12')
+    ).rejects.toBe(naoEncontrado);
+    expect(AsyncStorage.removeItem).toHaveBeenCalledWith(
+      '@GOUOCE:detalhes_viagem_2026-11-12'
+    );
+    expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+      '@GOUOCE:meus_agendamentos',
+      JSON.stringify({ agendamentos: [], ativos: 0, limite: 22 })
+    );
+
+    jest.clearAllMocks();
+    const semPermissao = { response: { status: 403 } };
+    (api.get as jest.Mock).mockRejectedValueOnce(semPermissao);
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce(
+      JSON.stringify(detalheComComplementar)
+    );
+
+    await expect(
+      agendamentoService.obterDetalhesViagem('2026-11-13')
+    ).rejects.toBe(semPermissao);
+    expect(AsyncStorage.removeItem).not.toHaveBeenCalled();
+  });
 });
