@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect, ReactNode } from
 import { useRouter, useSegments } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService, User } from '../services/authService';
+import { limparCacheAgendamentos } from '../services/agendamentoService';
 import { calcularStatusAluno } from '../utils/statusAluno';
 
 export type UserRole = 'ALUNO' | 'MOTORISTA' | 'ADMINISTRADOR';
@@ -104,6 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, segments, isLoading]);
 
   async function setUserAndToken(userData: User, userToken: string, refreshToken?: string) {
+    await limparCacheAgendamentos();
     await AsyncStorage.setItem('@GOUOCE:token', userToken);
     if (refreshToken) {
       await AsyncStorage.setItem('@GOUOCE:refreshToken', refreshToken);
@@ -176,6 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await AsyncStorage.removeItem('@GOUOCE:token');
     await AsyncStorage.removeItem('@GOUOCE:refreshToken');
     await AsyncStorage.removeItem('@GOUOCE:user');
+    await limparCacheAgendamentos();
     setPendingCredentials(null);
     setUser(null);
     setToken(null);

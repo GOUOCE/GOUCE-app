@@ -303,6 +303,23 @@ async function removerCache(chave: string): Promise<void> {
   await Promise.resolve(AsyncStorage.removeItem(chave)).catch(() => {});
 }
 
+// O cache de agenda não é separado por usuário: é apagado no logout e no login para que
+// a conta seguinte nunca veja, offline, as reservas da anterior (CT-HU014-UI-010).
+export async function limparCacheAgendamentos(): Promise<void> {
+  try {
+    const chaves = await AsyncStorage.getAllKeys();
+    const dela = chaves.filter(
+      (chave) =>
+        chave === CACHE_MEUS ||
+        chave.startsWith('@GOUOCE:calendario_') ||
+        chave.startsWith('@GOUOCE:detalhes_viagem_'),
+    );
+    if (dela.length > 0) await AsyncStorage.multiRemove(dela);
+  } catch {
+    // Sem acesso ao armazenamento local: nada a limpar.
+  }
+}
+
 export const agendamentoService = {
   async obterOpcoesAgendamento(): Promise<OpcoesAgendamentoResponse> {
     const response = await api.get('/transporte/agendamentos/opcoes');

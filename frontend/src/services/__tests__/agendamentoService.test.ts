@@ -1,4 +1,5 @@
-import { agendamentoService } from '../agendamentoService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { agendamentoService, limparCacheAgendamentos } from '../agendamentoService';
 import { api } from '@/api/api';
 
 jest.mock('@/api/api', () => ({
@@ -14,6 +15,8 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),
   setItem: jest.fn(),
   removeItem: jest.fn(),
+  getAllKeys: jest.fn(),
+  multiRemove: jest.fn(),
 }));
 
 describe('agendamentoService - HU-013 Service Tests', () => {
@@ -145,5 +148,21 @@ describe('agendamentoService - HU-013 Service Tests', () => {
     (api.delete as jest.Mock).mockRejectedValueOnce(new Error('Not found'));
 
     await expect(agendamentoService.cancelarAgendamento(123)).rejects.toThrow('Not found');
+  });
+
+  it('limpa só o cache de agenda, sem tocar nas demais chaves', async () => {
+    (AsyncStorage.getAllKeys as jest.Mock).mockResolvedValue([
+      '@GOUOCE:token',
+      '@GOUOCE:user',
+      '@GOUOCE:meus_agendamentos',
+      '@GOUOCE:calendario_2026-11',
+      '@GOUOCE:detalhes_viagem_2026-11-13',
+    ]);
+    await limparCacheAgendamentos();
+    expect(AsyncStorage.multiRemove).toHaveBeenCalledWith([
+      '@GOUOCE:meus_agendamentos',
+      '@GOUOCE:calendario_2026-11',
+      '@GOUOCE:detalhes_viagem_2026-11-13',
+    ]);
   });
 });
