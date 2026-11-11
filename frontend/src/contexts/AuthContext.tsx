@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef, ReactNode } from 'react';
 import { useRouter, useSegments } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService, User } from '../services/authService';
@@ -36,6 +36,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const router = useRouter();
   const segments = useSegments();
+  // Marca a saída em andamento: a navegação para '/' pode ser aplicada antes de o estado `user` zerar,
+  // e o guard, vendo ainda um usuário logado numa rota pública, o mandava de volta ao painel (#452).
+  const encerrandoSessao = useRef(false);
 
   const clearPendingCredentials = () => {
     setPendingCredentials(null);
@@ -65,6 +68,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ÚNICO responsável pelo redirecionamento (login, restauração de sessão e proteção de rotas)
   useEffect(() => {
     if (isLoading) return;
+
+    if (encerrandoSessao.current) {
+      if (!user) encerrandoSessao.current = false;
+      return;
+    }
 
     const firstSegment = segments[0] as string | undefined;
     const isProtected = ['(aluno)', '(representante)', '(administrador)'].includes(firstSegment ?? '');
@@ -175,6 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signOut() {
+    encerrandoSessao.current = true;
     await AsyncStorage.removeItem('@GOUOCE:token');
     await AsyncStorage.removeItem('@GOUOCE:refreshToken');
     await AsyncStorage.removeItem('@GOUOCE:user');
