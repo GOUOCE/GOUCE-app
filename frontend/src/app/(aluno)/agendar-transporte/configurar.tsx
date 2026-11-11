@@ -169,7 +169,7 @@ export default function ConfigurarAgendamentoScreen() {
         let id = agendamentoId;
         if (!id) {
           const lista = await agendamentoService.listarAgendamentosAtivos();
-          id = lista.find(item => item.dataIso === dataIsoAtual)?.idAgendamento ?? null;
+          id = lista.agendamentos.find(item => item.data === dataIsoAtual)?.id ?? null;
         }
 
         if (!id) {
@@ -219,8 +219,8 @@ export default function ConfigurarAgendamentoScreen() {
     if (agendamentoId) return agendamentoId;
 
     const lista = await agendamentoService.listarAgendamentosAtivos();
-    const encontrado = lista.find(item => item.dataIso === dataIsoAtual);
-    const id = encontrado?.idAgendamento ?? null;
+    const encontrado = lista.agendamentos.find(item => item.data === dataIsoAtual);
+    const id = encontrado?.id ?? null;
     if (id) setAgendamentoId(id);
     return id;
   };
