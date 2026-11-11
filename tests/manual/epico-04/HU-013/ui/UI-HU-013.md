@@ -20,7 +20,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Em reteste em `0c0a079c` (3 ✅; 6 reprovados por leitura do código na primeira análise, aguardando reteste) | 9 | 3 | 0 | 0 | 0 | 6 |
+| ⏳ Em reteste em `0c0a079c` (4 ✅; 5 reprovados por leitura do código na primeira análise, aguardando reteste) | 9 | 4 | 0 | 0 | 0 | 5 |
 
 ## Pré-condições
 
@@ -48,7 +48,7 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU013-UI-003 | Perguntas de ida e volta, campos condicionais e listas ativas | Ida Sim/Não e volta Sim/Não | Campos de cada trecho só quando a resposta é Sim; listas só com pontos, IES e complementares ativos cadastrados pelo administrador | ✅ PASSOU | Reteste: campos começam vazios, os de ida e volta só aparecem com Sim, e as listas vêm da API. Observação: azul muito escuro. |
-| CT-HU013-UI-004 | Criar só ida, só volta e ida e volta | Três combinações válidas | Mensagem “Agendamento realizado com sucesso”, reserva gravada com os dados escolhidos e dia marcado como agendado | ⏳ PENDENTE | Reprovado por leitura do código em `ee305857`; reteste pendente em `0c0a079c`. |
+| CT-HU013-UI-004 | Criar só ida, só volta e ida e volta | Três combinações válidas | Mensagem “Agendamento realizado com sucesso”, reserva gravada com os dados escolhidos e dia marcado como agendado | ✅ PASSOU | Reteste: três reservas criadas pela tela (11/11 ida e volta, 12/11 só ida e 13/11 só volta), gravadas na API com os dados escolhidos; mensagem e resumo como no Figma. Observações: #444 e #445. |
 | CT-HU013-UI-005 | Não para ida e volta | Ida Não e volta Não | Nenhuma reserva criada e mensagem “Nenhum agendamento foi criado.”, sem erro | ⏳ PENDENTE | Reprovado por leitura do código em `ee305857`; reteste pendente em `0c0a079c`. |
 
 ### Seção C — Regras e recusas
@@ -177,7 +177,12 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 - `criarAgendamento`, no serviço, captura qualquer falha e **devolve uma resposta inventada** (`mensagem: 'Agendamento realizado com sucesso'`, `estado_dia: 'AGENDADO'`); além disso, `handleSalvarDia` tem um `catch` vazio (“Fallback”). Em qualquer recusa da API a tela segue para a confirmação “N agendamentos realizados com sucesso!”, sem reserva gravada. Com mais de um dia, mostra o toast preto “Agendamento salvo. Avançando para o próximo dia.”.
 - Status: ❌ Falhou (por leitura do código). Issue: #439.
 
-**Reteste em `0c0a079c`:** pendente.
+**Reteste em `0c0a079c`**
+
+- Criadas pela tela, com a aluna A: 11/11 com ida e volta, 12/11 só com ida e 13/11 só com volta. A mensagem de sucesso (“1 agendamento realizado com sucesso”, no caso da sexta 13/11 só com volta) e a tela de resumo, com os botões **Voltar à tela inicial** e **Ver meus agendamentos**, estão como no Figma; os dias aparecem como agendados.
+- Conferido na API e no banco: reservas 164 (11/11, ida e volta: Praça José de Barros → UFC; UFC → Praça José de Barros), 165 (12/11, só ida: Escola Municipal → UECE) e 166 (13/11, só volta: UFC → Igreja Matriz), todas `ATIVO` e vinculadas à aluna A, com os pontos e as IES escolhidos.
+- Observações: a frase “já possui agendamento” do seletor mostra só o primeiro dia agendado da semana (09/11, que é histórico), e não os dias 11, 12 e 13 (#444); com duas ou mais datas selecionadas (18/11 e 19/11), o que se escolhe em uma aparece na outra (#445).
+- Status: ✅ Passou (reteste).
 
 ---
 
@@ -296,13 +301,15 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 | CT-003 | O formulário usa listas fixas do app (a rota de opções não existe) e abre com Sim, ponto e IES pré-selecionados. | #438 |
 | CT-004, 005, 006, 007, 009 | Quando a API recusa, o serviço devolve uma resposta de sucesso inventada e a tela mostra sucesso; as mensagens do PO reais não aparecem. | #439 |
 | CT-008 | A edição atualiza sempre o id 1 e o cancelamento usa a data como id, com sucesso inventado se a API recusar. | #440 |
+| CT-004 | A frase “já possui agendamento” do seletor de dias mostra só o primeiro dia agendado da semana. | #444 |
+| CT-004 | Ao alternar ou avançar entre duas ou mais datas selecionadas, o formulário mantém os valores do dia anterior. | #445 |
 | Exploratório | A barra de abas do aluno mostra “(tabs)/home”, “(tabs)/agenda” e uma aba “agendar-tra…”, com ícones padrão, porque as telas foram movidas para `(tabs)` sem atualizar o layout. | #442 |
 | CT-001, 005, 006 | Sábado e domingo disponíveis, “Não” para ida e volta e mensagem de duplicidade fora do requisito (back). | #390 |
 | CT-004, 009 | Toast escuro nas mensagens do fluxo (no Figma da HU-013 é o desenho; confirmar o padrão com o design). | #413 |
 
 ## Observações gerais
 
-- **Reteste de 10/11/2026 em `0c0a079c`** (a Mari corrigiu as #437 a #440 e a #442 e levou ao backend do PR o bloqueio de fim de semana e a rota de opções): CT-001, CT-002 e CT-003 passaram na tela; os demais seguem em reteste.
+- **Reteste de 10/11/2026 em `0c0a079c`** (a Mari corrigiu as #437 a #440 e a #442 e levou ao backend do PR o bloqueio de fim de semana e a rota de opções): CT-001 a CT-004 passaram na tela; os demais seguem em reteste.
 - Execução de 10/11/2026: análise do código do commit `ee305857` do PR #377 (branch da HU-013) e conferência da API da `develop` em execução. No PR #378, que incorporou estas telas, o serviço já não inventa a resposta de `criarAgendamento` e a edição usa o id recebido, mas a semana fixa, as listas fixas, o `catch` vazio da tela e os toasts pretos continuam iguais. Os nove casos foram reprovados por leitura do código, a pedido do testador, para não gastar execução manual em falhas evidentes; a execução na tela será feita no reteste, quando o front deixar de usar a semana fixa e as listas fixas.
 - O back ainda tem as divergências da #390: fim de semana disponível, `Não` para ida e volta com `422`, mensagem de duplicidade antiga e ausência de rota de opções para o aluno.
 - **Figma da HU-013 (telas 42 a 45):** seletor semanal com seleção de vários dias e **Continuar**, formulário “Novo Agendamento” com campos que começam em “Selecionar”, tela “N agendamentos realizados com sucesso!”, “Editar Agendamento” com **Cancelar Agendamento** e **Salvar alterações**, e faixas escuras para “cancelado” e “alterado com sucesso”. O código segue esse desenho; o texto do requisito (calendário mensal, botão **Novo agendamento**) é que diverge, e a decisão cabe ao PO.
