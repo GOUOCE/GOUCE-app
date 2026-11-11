@@ -20,7 +20,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Em reteste em `0c0a079c` (8 ✅; 1 reprovado por leitura do código na primeira análise, aguardando reteste) | 9 | 8 | 0 | 0 | 0 | 1 |
+| ✅ Aprovada no reteste em `0c0a079c` (9 ✅; na primeira análise, em `ee305857`, os 9 tinham sido reprovados por leitura do código) | 9 | 9 | 0 | 0 | 0 | 0 |
 
 ## Pré-condições
 
@@ -63,7 +63,7 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU013-UI-009 | Falha do servidor ou sem conexão ao salvar | Servidor recusa; servidor indisponível | Mensagem clara no padrão de popup do app; nada é gravado; sem sucesso falso | ⏳ PENDENTE | Reprovado por leitura do código em `ee305857`; reteste pendente em `0c0a079c`. |
+| CT-HU013-UI-009 | Falha do servidor ou sem conexão ao salvar | Servidor recusa; servidor indisponível | Mensagem clara no padrão de popup do app; nada é gravado; sem sucesso falso | ✅ PASSOU | Reteste: com o servidor parado, popup de erro de conexão e nada gravado; religado o servidor, o reenvio gravou a reserva. Observação: o popup de erro encolhe por um instante ao fechar (#446). |
 
 ## Detalhamento dos casos
 
@@ -323,18 +323,28 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 | CT-008 | A edição atualiza sempre o id 1 e o cancelamento usa a data como id, com sucesso inventado se a API recusar. | #440 |
 | CT-004 | A frase “já possui agendamento” do seletor de dias mostra só o primeiro dia agendado da semana. | #444 |
 | CT-004 | Ao alternar ou avançar entre duas ou mais datas selecionadas, o formulário mantém os valores do dia anterior. | #445 |
+| CT-009 | O popup de erro do agendamento encolhe por um instante quando é fechado em “Entendido”. | #446 |
+| CT-001 | O seletor de dias não tem legenda dos estados (disponível, agendado e indisponível). | #447 |
+| CT-001, 007 | A janela de 30 dias do seletor está escrita no app (`JANELA_DIAS = 30`) e não acompanha a configuração do servidor. | #448 |
 | Exploratório | A barra de abas do aluno mostra “(tabs)/home”, “(tabs)/agenda” e uma aba “agendar-tra…”, com ícones padrão, porque as telas foram movidas para `(tabs)` sem atualizar o layout. | #442 |
 | CT-001, 005, 006 | Sábado e domingo disponíveis, “Não” para ida e volta e mensagem de duplicidade fora do requisito (back). | #390 |
 | CT-004, 009 | Toast escuro nas mensagens do fluxo (no Figma da HU-013 é o desenho; confirmar o padrão com o design). | #413 |
 
 ## Observações gerais
 
-- **Reteste de 10/11/2026 em `0c0a079c`** (a Mari corrigiu as #437 a #440 e a #442 e levou ao backend do PR o bloqueio de fim de semana e a rota de opções): CT-001 a CT-008 passaram na tela; o CT-009 segue em reteste.
+- **Reteste de 10/11/2026 em `0c0a079c`** (a Mari corrigiu as #437 a #440 e a #442 e levou ao backend do PR o bloqueio de fim de semana e a rota de opções): os 9 casos passaram na tela.
 - Execução de 10/11/2026: análise do código do commit `ee305857` do PR #377 (branch da HU-013) e conferência da API da `develop` em execução. No PR #378, que incorporou estas telas, o serviço já não inventa a resposta de `criarAgendamento` e a edição usa o id recebido, mas a semana fixa, as listas fixas, o `catch` vazio da tela e os toasts pretos continuam iguais. Os nove casos foram reprovados por leitura do código, a pedido do testador, para não gastar execução manual em falhas evidentes; a execução na tela será feita no reteste, quando o front deixar de usar a semana fixa e as listas fixas.
+- **Resumo do reteste:** os 9 casos passaram em `0c0a079c`. Issues da HU-013: #437, #438 e #440 fechadas pelo reteste; #439 fechada com o CT-009; abertas as observações #444, #445, #446, #447 e #448 e a #442 (barra de abas, ainda sem confirmação na tela). A mensagem em faixa escura segue na #413.
 - O back ainda tem as divergências da #390: fim de semana disponível, `Não` para ida e volta com `422`, mensagem de duplicidade antiga e ausência de rota de opções para o aluno.
 - A aba **Agenda** e o botão **Ver meus agendamentos** deste PR levam à tela de Agenda que ainda mostra o calendário fixo de setembro (a tela da HU-014 que está neste PR; ver as issues #406 e #407); não é defeito da HU-013.
 - **Figma da HU-013 (telas 42 a 45):** seletor semanal com seleção de vários dias e **Continuar**, formulário “Novo Agendamento” com campos que começam em “Selecionar”, tela “N agendamentos realizados com sucesso!”, “Editar Agendamento” com **Cancelar Agendamento** e **Salvar alterações**, e faixas escuras para “cancelado” e “alterado com sucesso”. O código segue esse desenho; o texto do requisito (calendário mensal, botão **Novo agendamento**) é que diverge, e a decisão cabe ao PO.
 - O índice do épico indicava a UI da HU-013 como “fora desta entrega”; esta suíte a acrescenta, com nove casos de foco funcional.
 - Registrar dispositivos, mensagens e o resultado de cada variação somente durante a execução na tela.
 
-**Reteste em `0c0a079c`:** pendente.
+**Reteste em `0c0a079c`**
+
+- Com a API parada, a aluna A tocou em **Salvar** e a tela mostrou o popup “Não foi possível concluir”, com a mensagem de erro de conexão com o servidor, sem tela de sucesso e sem resumo.
+- Conferido no banco e no log da API: nenhum `POST` chegou ao servidor durante a queda e a aluna continuou com 2 reservas ativas, sem reserva em 16/11.
+- Com a API de volta, o mesmo agendamento foi salvo: `POST` → 200 e reserva 168 criada para 16/11 (ida da Escola Municipal para a UECE), `ATIVO`.
+- Observação: ao tocar em **Entendido**, o popup de erro encolhe por um instante (parece um segundo popup menor). Causa identificada no código: a mensagem é apagada ao mesmo tempo em que o popup começa a desaparecer (#446).
+- Status: ✅ Passou (reteste).
