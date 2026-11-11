@@ -1,4 +1,5 @@
-import { agendamentoService } from '../agendamentoService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { agendamentoService, limparCacheAgendamentos } from '../agendamentoService';
 import { api } from '@/api/api';
 
 jest.mock('@/api/api', () => ({
@@ -14,6 +15,8 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),
   setItem: jest.fn(),
   removeItem: jest.fn(),
+  getAllKeys: jest.fn(),
+  multiRemove: jest.fn(),
 }));
 
 describe('agendamentoService - HU-013 Service Tests', () => {
@@ -78,15 +81,20 @@ describe('agendamentoService - HU-013 Service Tests', () => {
     const resultado = await agendamentoService.listarAgendamentosAtivos();
 
     expect(api.get).toHaveBeenCalledWith('/transporte/agendamentos/meus');
-    expect(resultado).toEqual([
+    expect(resultado).toEqual(
       expect.objectContaining({
-        idAgendamento: 7,
-        dataIso: '2026-11-12',
-        usaIda: true,
-        usaVolta: false,
-        jaAgendado: true,
-      }),
-    ]);
+        ativos: 1,
+        limite: 22,
+        agendamentos: [
+          expect.objectContaining({
+            id: 7,
+            data: '2026-11-12',
+            usa_ida: true,
+            usa_volta: false,
+          }),
+        ],
+      })
+    );
   });
 
   it('deve criar agendamentos com sucesso', async () => {
@@ -140,5 +148,21 @@ describe('agendamentoService - HU-013 Service Tests', () => {
     (api.delete as jest.Mock).mockRejectedValueOnce(new Error('Not found'));
 
     await expect(agendamentoService.cancelarAgendamento(123)).rejects.toThrow('Not found');
+  });
+
+  it('limpa só o cache de agenda, sem tocar nas demais chaves', async () => {
+    (AsyncStorage.getAllKeys as jest.Mock).mockResolvedValue([
+      '@GOUOCE:token',
+      '@GOUOCE:user',
+      '@GOUOCE:meus_agendamentos',
+      '@GOUOCE:calendario_2026-11',
+      '@GOUOCE:detalhes_viagem_2026-11-13',
+    ]);
+    await limparCacheAgendamentos();
+    expect(AsyncStorage.multiRemove).toHaveBeenCalledWith([
+      '@GOUOCE:meus_agendamentos',
+      '@GOUOCE:calendario_2026-11',
+      '@GOUOCE:detalhes_viagem_2026-11-13',
+    ]);
   });
 });

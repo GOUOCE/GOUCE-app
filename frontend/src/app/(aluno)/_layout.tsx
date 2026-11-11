@@ -29,6 +29,7 @@ export default function StudentLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="agendamento-detalhes" />
       <Stack.Screen name="agendar-transporte" />
       <Stack.Screen name="editar-perfil" />
       <Stack.Screen name="alterar-email" />
