@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal } from 'react-native';
-import { Text, Surface, ActivityIndicator } from 'react-native-paper';
+import { Text, Surface, ActivityIndicator, Button } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { ChevronLeft, ChevronRight, Trash2, WifiOff } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Pencil, Trash2, WifiOff } from 'lucide-react-native';
 
 import {
   agendamentoService,
@@ -138,6 +138,7 @@ export default function MeusAgendamentosScreen() {
   const [ativos, setAtivos] = useState(0);
   const [limite, setLimite] = useState(22);
   const [semConexao, setSemConexao] = useState(false);
+  const [erroCarga, setErroCarga] = useState(false);
   const [carregando, setCarregando] = useState(true);
   const [jaCarregou, setJaCarregou] = useState(false);
   const [diaSelecionado, setDiaSelecionado] = useState<CalendarioDia | null>(null);
@@ -152,6 +153,8 @@ export default function MeusAgendamentosScreen() {
     titulo: string;
     mensagem: string;
   } | null>(null);
+  // O conteúdo fica guardado enquanto o popup some (fade), para ele não encolher/piscar vazio ao fechar.
+  const [resultadoVisivel, setResultadoVisivel] = useState(false);
 
   const carregarDados = useCallback(async (mesAlvo: string) => {
     setCarregando(true);
@@ -165,6 +168,7 @@ export default function MeusAgendamentosScreen() {
       setLimite(meus.limite);
       setDiasCalendario(calendario.dias);
       setSemConexao(false);
+      setErroCarga(false);
     } catch {
       // Sem internet: usa a última sincronização guardada no dispositivo (RNF-015)
       const meusCache = await agendamentoService.listarAgendamentosCache();
@@ -179,7 +183,13 @@ export default function MeusAgendamentosScreen() {
         setDiasCalendario(calendarioCache.dias);
       }
       if (!meusCache && !calendarioCache) {
-        setSemConexao(true);
+        // Nada guardado para mostrar: erro explícito, nunca "sem agendamentos" nem faixa de dados salvos (AC-08).
+        setAgendamentos([]);
+        setDiasCalendario([]);
+        setSemConexao(false);
+        setErroCarga(true);
+      } else {
+        setErroCarga(false);
       }
     } finally {
       setCarregando(false);
@@ -241,26 +251,52 @@ export default function MeusAgendamentosScreen() {
     }
   };
 
+  // HU-014 / AC-03: abre a edição da HU-013 com a reserva existente (sem criar outra).
+  const handleEditar = () => {
+    if (!diaSelecionado?.agendamento_id) return;
+    setMenuOpcoesVisible(false);
+    router.push({
+      pathname: '/(aluno)/agendar-transporte/configurar',
+      params: {
+        datasIso: diaSelecionado.data,
+        modoEdicao: 'true',
+        agendamentoId: String(diaSelecionado.agendamento_id),
+      },
+    } as any);
+  };
+
   const handleIniciarRemocao = () => {
     setMenuOpcoesVisible(false);
     setModalCancelarVisible(true);
   };
 
+  // Mostra o resultado só depois de o popup de confirmação terminar de sumir: sem conexão a falha
+  // volta em milissegundos e os dois popups apareciam sobrepostos por um instante.
+  const mostrarResultado = async (
+    resultado: { tipo: 'success' | 'error'; titulo: string; mensagem: string },
+    inicio: number
+  ) => {
+    const restante = 350 - (Date.now() - inicio);
+    if (restante > 0) await new Promise((resolve) => setTimeout(resolve, restante));
+    setResultadoCancelamento(resultado);
+    setResultadoVisivel(true);
+  };
+
   const handleConfirmarCancelamento = async () => {
     setModalCancelarVisible(false);
     if (!diaSelecionado?.agendamento_id) return;
+    const inicio = Date.now();
 
     try {
       await agendamentoService.cancelarAgendamento(
         diaSelecionado.agendamento_id,
         diaSelecionado.data
       );
-      setResultadoCancelamento({
-        tipo: 'success',
-        titulo: 'Agendamento cancelado',
-        mensagem: 'Agendamento cancelado com sucesso',
-      });
       carregarDados(mes);
+      await mostrarResultado(
+        { tipo: 'success', titulo: 'Agendamento cancelado', mensagem: 'Agendamento cancelado com sucesso' },
+        inicio
+      );
     } catch (erro: any) {
       const status = erro?.response?.status;
       let mensagem: string;
@@ -275,11 +311,11 @@ export default function MeusAgendamentosScreen() {
         // FA-004: Falha de comunicação mantém o agendamento ativo
         mensagem = 'Não foi possível processar o cancelamento. Verifique sua conexão e tente novamente';
       }
-      setResultadoCancelamento({ tipo: 'error', titulo: 'Não foi possível cancelar', mensagem });
+      await mostrarResultado({ tipo: 'error', titulo: 'Não foi possível cancelar', mensagem }, inicio);
     }
   };
 
-  const semAgendamentosFuturos = jaCarregou && agendamentos.length === 0;
+  const semAgendamentosFuturos = jaCarregou && !erroCarga && agendamentos.length === 0;
   const carregandoInicial = carregando && !jaCarregou;
 
   return (
@@ -303,6 +339,15 @@ export default function MeusAgendamentosScreen() {
           <View style={styles.emptyContainer}>
             <ActivityIndicator animating color="#00639A" />
           </View>
+        ) : erroCarga ? (
+          <View style={styles.emptyContainer}>
+            <Text variant="bodyLarge" style={styles.emptyText}>
+              Não foi possível carregar seus agendamentos. Verifique sua conexão e tente novamente.
+            </Text>
+            <Button mode="contained" style={styles.retryButton} onPress={() => carregarDados(mes)}>
+              Tentar novamente
+            </Button>
+          </View>
         ) : semAgendamentosFuturos ? (
           /* FA-001: Estado Vazio */
           <View style={styles.emptyContainer}>
@@ -324,7 +369,11 @@ export default function MeusAgendamentosScreen() {
 
             {/* Seletor de Mês */}
             <View style={styles.monthSelectorRow}>
-              <TouchableOpacity style={styles.monthDropdown}>
+              <TouchableOpacity
+                style={styles.monthDropdown}
+                // A janela de agendamento tem só dois meses (atual e próximo): o seletor alterna entre eles.
+                onPress={() => mudarMes(mes === mesAtual() ? 1 : -1)}
+              >
                 <Text style={styles.monthText}>{rotuloMes(mes)}</Text>
               </TouchableOpacity>
               <View style={styles.navArrows}>
@@ -434,6 +483,13 @@ export default function MeusAgendamentosScreen() {
               <Text style={styles.menuText}>Ver detalhes</Text>
             </TouchableOpacity>
 
+            {(diaSelecionado?.pode_editar ?? false) && (
+              <TouchableOpacity style={styles.menuRow} onPress={handleEditar}>
+                <Text style={styles.menuText}>Editar agendamento</Text>
+                <Pencil size={18} color="#191C20" />
+              </TouchableOpacity>
+            )}
+
             {/* Regra de Negócio: Não exibir remoção para datas passadas (FA-003 / Critério 7) */}
             {(diaSelecionado?.pode_remover ?? false) && (
               <TouchableOpacity style={styles.menuRow} onPress={handleIniciarRemocao}>
@@ -459,13 +515,13 @@ export default function MeusAgendamentosScreen() {
 
       {/* Resultado do cancelamento (sucesso/falha) */}
       <AppPopup
-        visible={resultadoCancelamento !== null}
+        visible={resultadoVisivel}
         type={resultadoCancelamento?.tipo ?? 'info'}
         title={resultadoCancelamento?.titulo ?? ''}
         message={resultadoCancelamento?.mensagem ?? ''}
         confirmText="OK"
-        onConfirm={() => setResultadoCancelamento(null)}
-        onDismiss={() => setResultadoCancelamento(null)}
+        onConfirm={() => setResultadoVisivel(false)}
+        onDismiss={() => setResultadoVisivel(false)}
       />
     </View>
   );
@@ -506,6 +562,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
+  },
+  retryButton: {
+    marginTop: 20,
   },
   emptyText: {
     textAlign: 'center',
