@@ -41,7 +41,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const encerrandoSessao = useRef(false);
   // Usuário atual para quem responde depois (ex.: perfil carregado após o logout não pode "ressuscitar" a sessão).
   const userRef = useRef<User | null>(null);
-  userRef.current = user;
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   const clearPendingCredentials = () => {
     setPendingCredentials(null);
@@ -122,6 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await AsyncStorage.setItem('@GOUOCE:refreshToken', refreshToken);
     }
     await AsyncStorage.setItem('@GOUOCE:user', JSON.stringify(userData));
+    userRef.current = userData;
     setUser(userData);
     setToken(userToken);
   }
