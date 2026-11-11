@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { Text, Button, SegmentedButtons, Snackbar, Surface, ActivityIndicator } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -99,6 +99,13 @@ export default function ConfigurarAgendamentoScreen() {
   const [popupCancelarVisible, setPopupCancelarVisible] = useState(false);
   const [popupNenhumCriadoVisible, setPopupNenhumCriadoVisible] = useState(false);
   const [popupErro, setPopupErro] = useState('');
+  const [popupErroVisivel, setPopupErroVisivel] = useState(false);
+
+  // A mensagem fica guardada enquanto o popup some, para o cartão não encolher durante a animação de fechamento.
+  const exibirErro = useCallback((mensagem: string) => {
+    setPopupErro(mensagem);
+    setPopupErroVisivel(true);
+  }, []);
 
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarVisivel, setSnackbarVisivel] = useState(false);
@@ -167,7 +174,7 @@ export default function ConfigurarAgendamentoScreen() {
 
         if (!id) {
           if (ativo) {
-            setPopupErro('Agendamento não encontrado para esta data. Volte e tente novamente.');
+            exibirErro('Agendamento não encontrado para esta data. Volte e tente novamente.');
           }
           return;
         }
@@ -186,7 +193,7 @@ export default function ConfigurarAgendamentoScreen() {
         setValue('rotaComplementarVolta', detalhe.rota_complementar_volta_id ? String(detalhe.rota_complementar_volta_id) : '');
       } catch (error) {
         if (ativo) {
-          setPopupErro(getErrorMessage(error, 'Não foi possível carregar o agendamento para edição.'));
+          exibirErro(getErrorMessage(error, 'Não foi possível carregar o agendamento para edição.'));
         }
       }
     };
@@ -196,7 +203,7 @@ export default function ConfigurarAgendamentoScreen() {
     return () => {
       ativo = false;
     };
-  }, [modoEdicao, dataIsoAtual, agendamentoId, setValue]);
+  }, [modoEdicao, dataIsoAtual, agendamentoId, setValue, exibirErro]);
 
   const abrirPicker = (title: string, options: OpcaoSelect[], onSelect: (val: string) => void) => {
     setModalPicker({ visible: true, title, options, onSelect });
@@ -248,7 +255,7 @@ export default function ConfigurarAgendamentoScreen() {
       if (modoEdicao) {
         const id = await resolverAgendamentoId();
         if (!id) {
-          setPopupErro('Agendamento não encontrado para esta data. Volte e tente novamente.');
+          exibirErro('Agendamento não encontrado para esta data. Volte e tente novamente.');
           return;
         }
         resposta = await agendamentoService.atualizarAgendamento(id, payload);
@@ -278,7 +285,7 @@ export default function ConfigurarAgendamentoScreen() {
         } as any);
       }
     } catch (error) {
-      setPopupErro(getErrorMessage(error, 'Não foi possível salvar o agendamento. Tente novamente.'));
+      exibirErro(getErrorMessage(error, 'Não foi possível salvar o agendamento. Tente novamente.'));
     } finally {
       setIsLoading(false);
     }
@@ -309,7 +316,7 @@ export default function ConfigurarAgendamentoScreen() {
     try {
       const id = await resolverAgendamentoId();
       if (!id) {
-        setPopupErro('Agendamento não encontrado para esta data. Volte e tente novamente.');
+        exibirErro('Agendamento não encontrado para esta data. Volte e tente novamente.');
         return;
       }
 
@@ -320,7 +327,7 @@ export default function ConfigurarAgendamentoScreen() {
         router.replace('/(aluno)/(tabs)/agenda' as any);
       }, 1200);
     } catch (error) {
-      setPopupErro(getErrorMessage(error, 'Não foi possível cancelar o agendamento. Tente novamente.'));
+      exibirErro(getErrorMessage(error, 'Não foi possível cancelar o agendamento. Tente novamente.'));
     } finally {
       setIsLoading(false);
     }
@@ -398,12 +405,12 @@ export default function ConfigurarAgendamentoScreen() {
       />
 
       <AppPopup
-        visible={!!popupErro}
+        visible={popupErroVisivel}
         type="error"
         title="Não foi possível concluir"
         message={popupErro}
         confirmText="Entendido"
-        onDismiss={() => setPopupErro('')}
+        onDismiss={() => setPopupErroVisivel(false)}
       />
 
       <Modal visible={modalPicker.visible} transparent animationType="fade" onRequestClose={() => setModalPicker(prev => ({ ...prev, visible: false }))}>
