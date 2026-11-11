@@ -30,7 +30,9 @@ const NOMES_DIAS = [
   'Sábado',
 ];
 
-const JANELA_DIAS = 30;
+// Janela usada só até o app descobrir a janela real pelo calendário da API (padrão do servidor: 30 dias).
+const JANELA_PADRAO_DIAS = 30;
+const MESES_PARA_DESCOBRIR_JANELA = 4;
 
 const inicioDoDia = (data: Date) => new Date(data.getFullYear(), data.getMonth(), data.getDate());
 
@@ -66,7 +68,8 @@ export default function SelecaoDiasScreen() {
   const router = useRouter();
 
   const hoje = inicioDoDia(new Date());
-  const limiteJanela = adicionarDias(hoje, JANELA_DIAS - 1);
+  const [diasJanela, setDiasJanela] = useState(JANELA_PADRAO_DIAS);
+  const limiteJanela = adicionarDias(hoje, diasJanela - 1);
 
   const [semanaInicio, setSemanaInicio] = useState<Date>(() => inicioDaSemana(new Date()));
   const [estados, setEstados] = useState<Record<string, CalendarioDia>>({});
@@ -77,6 +80,39 @@ export default function SelecaoDiasScreen() {
   const [erro, setErro] = useState('');
   const [versaoCarga, setVersaoCarga] = useState(0);
   const primeiraFocus = useRef(true);
+
+  // Descobre o fim da janela pelos dias que a API devolve (o servidor lê a janela de AGENDAMENTO_JANELA_DIAS).
+  useEffect(() => {
+    let ativo = true;
+
+    const descobrirJanela = async () => {
+      const base = inicioDoDia(new Date());
+      const meses = Array.from({ length: MESES_PARA_DESCOBRIR_JANELA }, (_, indice) =>
+        paraMes(new Date(base.getFullYear(), base.getMonth() + indice, 1))
+      );
+      const respostas = await Promise.allSettled(
+        meses.map(mes => agendamentoService.obterCalendario(mes))
+      );
+      const datas: string[] = [];
+      respostas.forEach(resposta => {
+        if (resposta.status === 'fulfilled') {
+          resposta.value.dias.forEach(dia => datas.push(dia.data));
+        }
+      });
+      const ultima = datas.sort().pop();
+      if (!ativo || !ultima) return;
+
+      const [ano, mes, dia] = ultima.split('-').map(Number);
+      const diferenca = Math.round((new Date(ano, mes - 1, dia).getTime() - base.getTime()) / 86400000) + 1;
+      if (diferenca > 0) setDiasJanela(diferenca);
+    };
+
+    void descobrirJanela();
+
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
   useEffect(() => {
     let ativo = true;
