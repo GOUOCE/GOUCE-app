@@ -11,6 +11,15 @@ import {
   extrairMensagemErro,
 } from '@/services/agendamentoService';
 
+// Sem histórico (página aberta direto pela URL ou recarregada), volta para a Agenda em vez de não fazer nada.
+const voltar = (router: ReturnType<typeof useRouter>) => {
+  if (router.canGoBack()) {
+    router.back();
+  } else {
+    router.replace('/(aluno)/(tabs)/agenda' as any);
+  }
+};
+
 function CardRotaComplementar({ trecho }: { trecho: TrechoDetalhesViagem }) {
   const rota = trecho.rotaComplementar!;
   return (
@@ -112,7 +121,7 @@ function TelaErro({
   const router = useRouter();
   return (
     <View style={[styles.container, styles.center]}>
-      <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+      <TouchableOpacity style={styles.backBtn} onPress={() => voltar(router)}>
         <ChevronLeft size={32} color="#333" />
       </TouchableOpacity>
       <Text variant="titleMedium" style={styles.erroTitulo}>
@@ -192,7 +201,7 @@ export default function AgendamentoDetalhesScreen() {
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => voltar(router)}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <View>
