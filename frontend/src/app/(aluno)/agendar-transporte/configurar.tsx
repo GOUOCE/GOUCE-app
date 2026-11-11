@@ -251,16 +251,15 @@ export default function ConfigurarAgendamentoScreen() {
 
     setIsLoading(true);
     try {
-      let resposta;
       if (modoEdicao) {
         const id = await resolverAgendamentoId();
         if (!id) {
           exibirErro('Agendamento não encontrado para esta data. Volte e tente novamente.');
           return;
         }
-        resposta = await agendamentoService.atualizarAgendamento(id, payload);
+        await agendamentoService.atualizarAgendamento(id, payload);
       } else {
-        resposta = await agendamentoService.criarAgendamento(payload);
+        await agendamentoService.criarAgendamento(payload);
       }
 
       const novoDia: AgendamentoDia = {
@@ -271,13 +270,8 @@ export default function ConfigurarAgendamentoScreen() {
       setAgendamentosSalvos(novaLista);
 
       if (indiceDataAtual < datasArray.length - 1) {
+        // Sem faixa preta no meio do fluxo: a aba da data salva ganha uma marca e o resumo final vem no último dia.
         setIndiceDataAtual(indiceDataAtual + 1);
-        setSnackbarMessage(
-          resposta?.mensagem
-            ? `${resposta.mensagem}. Avançando para o próximo dia.`
-            : 'Agendamento salvo. Avançando para o próximo dia.'
-        );
-        setSnackbarVisivel(true);
       } else {
         router.push({
           pathname: '/(aluno)/agendar-transporte/sucesso',
@@ -376,7 +370,10 @@ export default function ConfigurarAgendamentoScreen() {
                 onPress={() => setIndiceDataAtual(idx)}
                 style={[styles.tabButton, isAtivo && styles.tabButtonActive]}
               >
-                <Text style={[styles.tabText, isAtivo && styles.tabTextActive]}>{formatarRotuloAba(dIso)}</Text>
+                <Text style={[styles.tabText, isAtivo && styles.tabTextActive]}>
+                  {agendamentosSalvos.some(item => item.dataIso === dIso) ? '✓ ' : ''}
+                  {formatarRotuloAba(dIso)}
+                </Text>
               </TouchableOpacity>
             );
           })}
