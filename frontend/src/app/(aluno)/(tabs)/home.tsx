@@ -31,7 +31,7 @@ export default function StudentHomeScreen() {
           </View>
           <Button
             mode="contained"
-            onPress={() => router.push('/(aluno)/agendamento-detalhes' as any)}
+            onPress={() => router.push('/(aluno)/agenda' as any)}
             style={styles.detailsBtn}
             buttonColor="#3e5f90"
           >

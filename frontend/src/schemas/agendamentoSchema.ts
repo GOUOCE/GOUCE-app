@@ -13,7 +13,7 @@ export const agendamentoDiaSchema = z
     rotaComplementarVolta: z.string().optional(),
   })
   .superRefine((dados, ctx) => {
-    // FA-003: Se 'Sim' para Ida, exige ponto de embarque e faculdade (IES) de destino
+    // FA-003 (Requisitos Atualizados): Se 'Sim' para Ida, exige ponto de embarque e faculdade (IES) de destino
     if (dados.usaIda) {
       if (!dados.pontoEmbarqueIda || dados.pontoEmbarqueIda.trim() === '') {
         ctx.addIssue({
@@ -31,7 +31,7 @@ export const agendamentoDiaSchema = z
       }
     }
 
-    // FA-003: Se 'Sim' para Volta, exige ponto de desembarque e faculdade (IES) de origem
+    // FA-003 (Requisitos Atualizados): Se 'Sim' para Volta, exige ponto de desembarque e faculdade (IES) de origem
     if (dados.usaVolta) {
       if (!dados.pontoDesembarqueVolta || dados.pontoDesembarqueVolta.trim() === '') {
         ctx.addIssue({

@@ -79,10 +79,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (user) {
       const status = (user.status || '').toLowerCase();
       const isAtPendingScreen = segments.includes('cadastro-pendente' as never);
+      const isAtRejeitadoScreen = segments.includes('cadastro-rejeitado' as never);
+      const isAtReenviarScreen = segments.includes('reenviar-documentos' as never);
 
       if (status === 'pendente') {
         if (!isAtPendingScreen) {
           router.replace('/(autenticacao)/cadastro-pendente');
+        }
+        return;
+      }
+
+      if (status === 'rejeitado') {
+        if (!isAtRejeitadoScreen && !isAtReenviarScreen) {
+          router.replace('/(autenticacao)/cadastro-rejeitado');
         }
         return;
       }
@@ -149,10 +158,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       foto_perfil: response.usuario.foto_perfil,
     };
 
-    // Ao atualizar o user, o useEffect acima faz o redirecionamento (home ou cadastro pendente)
+    // Ao atualizar o user, redireciona imediatamente com base no status para evitar flash de tela
     await setUserAndToken(userData, response.token_acesso, response.token_atualizacao);
     setPendingCredentials(null);
-    console.log('[AUTH] Sessão salva. Redirecionamento delegado ao guard.');
+
+    const st = (userData.status || '').toLowerCase();
+    if (st === 'pendente') {
+      router.replace('/(autenticacao)/cadastro-pendente');
+    } else if (st === 'rejeitado') {
+      router.replace('/(autenticacao)/cadastro-rejeitado');
+    } else {
+      router.replace(getHomeByRole(userData.role) as any);
+    }
   }
 
   async function signOut() {

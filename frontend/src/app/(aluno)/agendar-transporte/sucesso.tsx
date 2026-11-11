@@ -6,6 +6,8 @@ import { CheckCircle2 } from 'lucide-react-native';
 
 import { AgendamentoDia } from '@/services/agendamentoService';
 
+const SIGLAS_DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
 export default function AgendamentoSucessoScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ agendamentosJson?: string }>();
@@ -13,27 +15,25 @@ export default function AgendamentoSucessoScreen() {
   let agendamentos: AgendamentoDia[] = [];
   try {
     if (params.agendamentosJson) {
-      agendamentos = JSON.parse(params.agendamentosJson);
+      const parsed = JSON.parse(params.agendamentosJson);
+      if (Array.isArray(parsed)) {
+        agendamentos = parsed;
+      }
     }
   } catch {
     agendamentos = [];
   }
 
-  if (agendamentos.length === 0) {
-    agendamentos = [
-      { dataIso: '2026-08-31', usaIda: true, usaVolta: true },
-      { dataIso: '2026-09-02', usaIda: true, usaVolta: false },
-      { dataIso: '2026-09-03', usaIda: false, usaVolta: true },
-      { dataIso: '2026-09-04', usaIda: true, usaVolta: true },
-    ];
-  }
+  const formatarRotuloData = (dataIso: string) => {
+    const data = new Date(`${dataIso}T12:00:00`);
+    if (Number.isNaN(data.getTime())) return dataIso;
+    const dia = String(data.getDate()).padStart(2, '0');
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    return `${SIGLAS_DIAS[data.getDay()]}, ${dia}/${mes}`;
+  };
 
   const formatarResumoDia = (item: AgendamentoDia) => {
-    const rotuloData = item.dataIso === '2026-08-31' ? 'Seg, 31/08' :
-                       item.dataIso === '2026-09-01' ? 'Ter, 01/09' :
-                       item.dataIso === '2026-09-02' ? 'Qua, 02/09' :
-                       item.dataIso === '2026-09-03' ? 'Qui, 03/09' :
-                       item.dataIso === '2026-09-04' ? 'Sex, 04/09' : item.dataIso;
+    const rotuloData = formatarRotuloData(item.dataIso);
 
     if (item.usaIda && item.usaVolta) {
       return { titulo: rotuloData, descricao: 'Ida e Volta confirmadas' };
@@ -56,9 +56,13 @@ export default function AgendamentoSucessoScreen() {
         </View>
 
         {/* Título */}
-        <Text variant="headlineSmall" style={styles.title}>
-          {agendamentos.length} {agendamentos.length === 1 ? 'agendamento realizado' : 'agendamentos realizados'} com sucesso!
-        </Text>
+        {agendamentos.length > 0 ? (
+          <Text variant="headlineSmall" style={styles.title}>
+            {agendamentos.length} {agendamentos.length === 1 ? 'agendamento realizado' : 'agendamentos realizados'} com sucesso!
+          </Text>
+        ) : (
+          <Text variant="headlineSmall" style={styles.title}>Nenhum agendamento foi criado.</Text>
+        )}
 
         {/* Lista Resumo */}
         <View style={styles.summaryList}>
@@ -77,7 +81,7 @@ export default function AgendamentoSucessoScreen() {
         <View style={styles.buttonGroup}>
           <Button
             mode="outlined"
-            onPress={() => router.replace('/(aluno)/home' as any)}
+            onPress={() => router.replace('/(aluno)/(tabs)/home' as any)}
             style={styles.btnHome}
             contentStyle={styles.btnContent}
             textColor="#00639A"
@@ -87,7 +91,7 @@ export default function AgendamentoSucessoScreen() {
 
           <Button
             mode="contained"
-            onPress={() => router.replace('/(aluno)/agenda' as any)}
+            onPress={() => router.replace('/(aluno)/(tabs)/agenda' as any)}
             style={styles.btnAgenda}
             contentStyle={styles.btnContent}
             buttonColor="#3E5F90"

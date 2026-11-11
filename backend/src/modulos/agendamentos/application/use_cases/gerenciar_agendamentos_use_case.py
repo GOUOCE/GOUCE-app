@@ -32,6 +32,12 @@ class GerenciarAgendamentosUseCase:
             raise AgendamentoError(
                 "DATA_FORA_DA_JANELA", "A data está fora da janela de agendamento.", 422
             )
+        if target.weekday() >= 5:
+            raise AgendamentoError(
+                "DATA_INDISPONIVEL",
+                "Sábados e domingos não estão disponíveis para agendamento.",
+                422,
+            )
         holiday = self.repository.holiday(target)
         if holiday:
             raise AgendamentoError(
@@ -389,18 +395,20 @@ class GerenciarAgendamentosUseCase:
                 # Dias passados só aparecem se tiveram agendamento (histórico).
                 current += timedelta(days=1)
                 continue
-            holiday = None if past else self.repository.holiday(current)
+            weekend = current.weekday() >= 5
+            holiday = None if past or weekend else self.repository.holiday(current)
             booking = bookings.get(current)
             state = (
-                holiday.tipo if holiday else
                 "AGENDADO" if booking else
+                holiday.tipo if holiday else
+                "INDISPONIVEL" if weekend else
                 "DISPONIVEL" if has_route else "INDISPONIVEL"
             )
             result.append({
                 "data": current,
                 "estado": state,
-                "descricao": holiday.descricao if holiday else None,
-                "pode_agendar": not past and not holiday and not booking and has_route,
+                "descricao": holiday.descricao if holiday else ("Fim de semana" if weekend and not booking else None),
+                "pode_agendar": not past and not weekend and not holiday and not booking and has_route,
                 "agendamento_id": booking.id if booking else None,
                 "pode_remover": bool(booking) and not past,
                 "pode_editar": bool(booking) and not past,

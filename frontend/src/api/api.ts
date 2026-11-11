@@ -12,16 +12,11 @@ const isPrivateHost = (host: string) =>
   /^172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}$/.test(host);
 
 const getBaseUrl = () => {
-  if (Platform.OS === 'web') {
-    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
-      return `http://${window.location.hostname}:8000`;
-    }
-    return 'http://localhost:8000';
-  }
-
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
   const hostUri = Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost;
 
+  // Só usa o host do Metro quando ele é um IP de rede local. Em modo túnel
+  // (exp.direct/ngrok) esse host não expõe a porta 8000, então caímos no env.
   if (hostUri) {
     const hostIp = hostUri.split(':')[0];
     if (isPrivateHost(hostIp) && hostIp !== '10.0.2.2') {
@@ -60,7 +55,8 @@ api.interceptors.request.use(async (config) => {
 let isRefreshing = false;
 let failedQueue: any[] = [];
 
-// Rotas públicas de autenticação
+// Rotas públicas de autenticação: um 401 aqui é resposta de negócio
+// (senha errada, conta pendente, token inválido), não sessão expirada.
 const ROTAS_SEM_REFRESH = [
   '/auth/login',
   '/auth/refresh',
@@ -72,6 +68,7 @@ const ROTAS_SEM_REFRESH = [
 const deveTentarRefresh = (config: any) => {
   if (!config || config._retry) return false;
   if (ROTAS_SEM_REFRESH.some(rota => config.url?.startsWith(rota))) return false;
+  // Requisição sem token não tem sessão para renovar
   return Boolean(config.headers?.Authorization);
 };
 
@@ -141,6 +138,7 @@ api.interceptors.response.use(
           await AsyncStorage.removeItem('@GOUOCE:user');
         }
 
+        // Devolve o erro original para a tela mostrar a mensagem da API
         return Promise.reject(error);
       }
     }

@@ -86,6 +86,13 @@ class GerenciarAgendamentosUseCaseTest(unittest.TestCase):
             self.assertEqual(context.exception.code, "DATA_FORA_DA_JANELA")
             self.assertEqual(context.exception.status_code, 422)
 
+    def test_fim_de_semana_e_rejeitado(self):
+        for target in (date(2026, 11, 7), date(2026, 11, 8)):
+            with self.subTest(target=target), self.assertRaises(AgendamentoError) as context:
+                self.service.validate_date(target)
+            self.assertEqual(context.exception.code, "DATA_INDISPONIVEL")
+            self.assertEqual(context.exception.status_code, 422)
+
     def test_feriado_e_rejeitado_com_descricao(self):
         holiday = SimpleNamespace(descricao="Feriado municipal")
         self.session.query.return_value = FakeQuery(first_value=holiday)
@@ -371,11 +378,12 @@ class GerenciarAgendamentosUseCaseTest(unittest.TestCase):
             [
                 ("FERIADO", False),
                 ("AGENDADO", False),
-                ("DISPONIVEL", True),
+                ("INDISPONIVEL", False),
                 ("DISPONIVEL", True),
             ],
         )
         self.assertEqual(result[0]["descricao"], "Municipal")
+        self.assertEqual(result[2]["descricao"], "Fim de semana")
 
     def test_calendario_marca_dia_com_agendamento_sem_rota_como_indisponivel(self):
         self.service._bounds = MagicMock(return_value=(self.today, self.today))

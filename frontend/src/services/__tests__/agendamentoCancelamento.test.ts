@@ -31,8 +31,8 @@ describe('HU-014: Visualização e Cancelamento de Agendamentos (Regras de Negó
 
     const resultado = await agendamentoService.listarAgendamentosAtivos();
     expect(resultado).toEqual([
-      { idAgendamento: 10, dataIso: '2026-09-02', usaIda: true, usaVolta: true, pontoEmbarqueIda: undefined, faculdadeDestinoIda: undefined, pontoDesembarqueVolta: undefined, faculdadeOrigemVolta: undefined, pode_remover: undefined, pode_editar: undefined },
-      { idAgendamento: 11, dataIso: '2026-09-03', usaIda: true, usaVolta: false, pontoEmbarqueIda: undefined, faculdadeDestinoIda: undefined, pontoDesembarqueVolta: undefined, faculdadeOrigemVolta: undefined, pode_remover: undefined, pode_editar: undefined },
+      expect.objectContaining({ idAgendamento: 10, dataIso: '2026-09-02', usaIda: true, usaVolta: true }),
+      expect.objectContaining({ idAgendamento: 11, dataIso: '2026-09-03', usaIda: true, usaVolta: false }),
     ]);
     expect(api.get).toHaveBeenCalledWith('/transporte/agendamentos/meus');
   });

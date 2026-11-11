@@ -280,7 +280,7 @@ export const userService = {
   },
 
   async reenviarDocumentos(data: FormData): Promise<any> {
-    const response = await api.patch('/usuarios/me/reenviar', data, {
+    const response = await api.patch('/usuarios/reenvio_documento', data, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;

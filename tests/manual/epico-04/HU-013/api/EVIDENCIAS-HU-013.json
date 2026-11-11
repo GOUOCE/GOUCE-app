@@ -1,246 +1,147 @@
 {
   "historia": "HU-013",
-  "executado_em": "2026-11-09T22:40:38.279441-03:00",
-  "branch_resultados": "feature/testes-api-hu-013",
-  "base_resultados": "4e44913d8df632666b3433d32358bb49fc91c6a8",
+  "executado_em": "2026-11-10T22:31:00-03:00",
+  "branch_resultados": "test/reteste-api-hu-013",
+  "base_resultados": "52f9433a",
   "branch_testada": "feature/front-hu013",
-  "commit_testado": "ee305857954fcb23f3919f3ebfe7e163fcbc167a",
+  "commit_testado": "0c0a079c87da54ac5f8cafbd4dbeffa57e84d972",
+  "execucao_anterior": {
+    "data": "2026-11-09",
+    "commit_testado": "ee305857954fcb23f3919f3ebfe7e163fcbc167a",
+    "resultado": "CT-001 falhou; CT-002 a CT-012 bloqueados (issue #399)"
+  },
   "ambiente": {
     "url": "http://127.0.0.1:8013",
-    "projeto_docker": "atu-qa-hu013",
-    "banco": "PostgreSQL 15.17 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
-    "migration": "80_remove_horarios_agendamento",
+    "url_configuracao_alternativa": "http://127.0.0.1:8113 (AGENDAMENTO_LIMITE_ATIVOS=5, AGENDAMENTO_JANELA_DIAS=15, mesmo banco)",
+    "projeto_docker": "atu-qa-hu013-reteste",
+    "banco": "PostgreSQL 15 (alpine)",
+    "migration": "82_updated_at_faculdade_ponto",
     "fuso": "America/Fortaleza",
     "health": {
       "http": 200,
       "resposta": {
         "status": "ok"
       }
-    },
-    "openapi": {
-      "http": 200,
-      "rotas_de_agendamento": []
     }
   },
   "resultado": {
     "total": 12,
-    "passaram": 0,
-    "falharam": 1,
+    "passaram": 12,
+    "falharam": 0,
     "parciais": 0,
-    "bloqueados": 11,
-    "pendentes": 0,
-    "requisicoes_reais_incluindo_preparacao": 14
+    "bloqueados": 0,
+    "pendentes": 0
   },
   "precondicoes_confirmadas": {
-    "administrador": {
-      "http": 200,
-      "id": 1,
-      "perfil": "administrador",
-      "status": null,
-      "vinculo_vencido": null
-    },
-    "aluno_A": {
-      "http": 200,
-      "id": 2,
-      "perfil": "aluno",
-      "status": "ativado",
-      "vinculo_vencido": false
-    },
-    "bairro_id": 2,
-    "ponto_id": 1,
-    "ies_id": 1,
-    "rota_id": 1,
-    "preparacao_referencias": "Bairro/ponto/IES/rota criados por HTTP 201; conta sintética com vínculo válido por fixture e login HTTP 200."
+    "administrador": "login 200",
+    "aluno_A_B_C_D": "aprovados, ativados, vínculo válido, login 200",
+    "aluno_pendente": "login 200, status pendente",
+    "aluno_reprovado": "login 200, status rejeitado",
+    "aluno_vencido": "login 200, acesso_expirado=true (fixture em validade_acesso)",
+    "referencias": "IES 1 e 2, bairro 2 com pontos 1 e 2, principais 1 e 2, complementares 1 e 2, criadas por HTTP 201",
+    "massa_negativa": "IES sem rota, IES inativa, bairro sem rota e ponto inativo"
   },
   "casos": [
     {
       "id": "CT-HU013-API-001",
       "cenario": "API publicada na aplicação real",
-      "status": "FALHOU",
-      "resultado_obtido": "Health/login 200; sete caminhos do módulo com 404 genérico; nenhuma rota de agendamento no OpenAPI."
+      "status": "PASSOU",
+      "resultado_obtido": "Health, login e OpenAPI 200; as sete chamadas do diagnóstico anterior agora respondem 200 (meus, calendário, opções nos dois caminhos, POST) ou 404 de recurso (id inexistente em GET e PUT). POST criou a reserva id 1."
     },
     {
       "id": "CT-HU013-API-002",
       "cenario": "Calendário, opções e dias úteis",
-      "status": "BLOQUEADO",
-      "resultado_obtido": "BUG-HU013-API-001: módulo de agendamentos não publicado no main:app do commit testado."
+      "status": "PASSOU",
+      "resultado_obtido": "Calendário de 11 e 12/2026 sem divergências (janela D a D+29, fins de semana INDISPONIVEL). Opções só com cadastros ativos. Sem rota ativa: dias úteis INDISPONIVEL e POST 422 FA-002; reativadas, voltam a DISPONIVEL."
     },
     {
       "id": "CT-HU013-API-003",
       "cenario": "Criar ida, volta e ambos",
-      "status": "BLOQUEADO",
-      "resultado_obtido": "BUG-HU013-API-001: módulo de agendamentos não publicado no main:app do commit testado."
+      "status": "PASSOU",
+      "resultado_obtido": "Três POST (ids 2, 3 e 4) com 200, estado AGENDADO e persistência conferida no banco; B lista 0 reservas. Mensagem “criado” em vez de “realizado”: mesmo sentido."
     },
     {
       "id": "CT-HU013-API-004",
       "cenario": "Novo cadastro sem nenhum trecho",
-      "status": "BLOQUEADO",
-      "resultado_obtido": "BUG-HU013-API-001: módulo de agendamentos não publicado no main:app do commit testado."
+      "status": "PASSOU",
+      "resultado_obtido": "422 FA-003; sem reserva nem auditoria (ativos 4 e 4). A tela mostra “Nenhum agendamento foi criado.” sem chamar a API: resultado equivalente para o aluno."
     },
     {
       "id": "CT-HU013-API-005",
       "cenario": "Obrigatórios condicionais",
-      "status": "BLOQUEADO",
-      "resultado_obtido": "BUG-HU013-API-001: módulo de agendamentos não publicado no main:app do commit testado."
+      "status": "PASSOU",
+      "resultado_obtido": "Quatro campos omitidos: 422 FA-003 com o campo indicado; ida Sim e volta Não sem campos da volta: 200."
     },
     {
       "id": "CT-HU013-API-006",
       "cenario": "Referências e itinerário",
-      "status": "BLOQUEADO",
-      "resultado_obtido": "BUG-HU013-API-001: módulo de agendamentos não publicado no main:app do commit testado."
+      "status": "PASSOU",
+      "resultado_obtido": "Onze variações com 422 e nenhuma reserva criada (ITEM_INATIVO_OU_INEXISTENTE, FA-002 e validação de id)."
     },
     {
       "id": "CT-HU013-API-007",
       "cenario": "Duplicidade e concorrência",
-      "status": "BLOQUEADO",
-      "resultado_obtido": "BUG-HU013-API-001: módulo de agendamentos não publicado no main:app do commit testado."
+      "status": "PASSOU",
+      "resultado_obtido": "Duplicidade 409 FA-001; B na mesma data 200; concorrência com um 200 e um 409; reagendamento após cancelar com novo id. Texto do 409 mais curto que o da #389."
     },
     {
       "id": "CT-HU013-API-008",
       "cenario": "Limites da janela",
-      "status": "BLOQUEADO",
-      "resultado_obtido": "BUG-HU013-API-001: módulo de agendamentos não publicado no main:app do commit testado."
+      "status": "PASSOU",
+      "resultado_obtido": "D−1 e D+30: 422 DATA_FORA_DA_JANELA; D e D+29: 200; data inválida e fim de semana: 422."
     },
     {
       "id": "CT-HU013-API-009",
       "cenario": "Limite de ativos e configuração",
-      "status": "BLOQUEADO",
-      "resultado_obtido": "BUG-HU013-API-001: módulo de agendamentos não publicado no main:app do commit testado."
+      "status": "PASSOU",
+      "resultado_obtido": "21→22 aceitos, 23ª recusada com LIMITE_AGENDAMENTOS (fixture de sábado documentada); limite 5 e janela de 15 dias respeitados (D+14 aceito, D+15 recusado)."
     },
     {
       "id": "CT-HU013-API-010",
       "cenario": "Editar e cancelar sem trechos",
-      "status": "BLOQUEADO",
-      "resultado_obtido": "BUG-HU013-API-001: módulo de agendamentos não publicado no main:app do commit testado."
+      "status": "PASSOU",
+      "resultado_obtido": "Edição mantém o id; dia ocupado 409 sem alterar; PUT Não/Não cancela e persiste CANCELADO (ativos 9→8)."
     },
     {
       "id": "CT-HU013-API-011",
       "cenario": "Autorização e propriedade",
-      "status": "BLOQUEADO",
-      "resultado_obtido": "BUG-HU013-API-001: módulo de agendamentos não publicado no main:app do commit testado."
+      "status": "PASSOU",
+      "resultado_obtido": "401 sem token ou inválido; 403 para pendente, reprovado, vencido e administrador; outro dono 404 sem mutação; aluno_id extra 422."
     },
     {
       "id": "CT-HU013-API-012",
       "cenario": "Persistência, rollback e tempo",
-      "status": "BLOQUEADO",
-      "resultado_obtido": "BUG-HU013-API-001: módulo de agendamentos não publicado no main:app do commit testado."
+      "status": "PASSOU",
+      "resultado_obtido": "Persistência e auditoria corretas; recusa sem efeito; falha controlada no commit dá 500 sem gravação parcial; 23 a 31 ms por POST."
     }
   ],
-  "respostas_diagnostico": [
-    {
-      "metodo": "GET",
-      "caminho": "/transporte/agendamentos/meus",
-      "ator": "A",
-      "corpo_enviado": null,
-      "http": 404,
-      "resposta": {
-        "detail": "Not Found"
-      },
-      "duracao_ms": 1.076
-    },
-    {
-      "metodo": "GET",
-      "caminho": "/transporte/agendamentos/calendario?mes=2026-11",
-      "ator": "A",
-      "corpo_enviado": null,
-      "http": 404,
-      "resposta": {
-        "detail": "Not Found"
-      },
-      "duracao_ms": 0.8
-    },
-    {
-      "metodo": "GET",
-      "caminho": "/transporte/agendamentos/999999999",
-      "ator": "A",
-      "corpo_enviado": null,
-      "http": 404,
-      "resposta": {
-        "detail": "Not Found"
-      },
-      "duracao_ms": 0.716
-    },
-    {
-      "metodo": "POST",
-      "caminho": "/transporte/agendamentos",
-      "ator": "A",
-      "corpo_enviado": {
-        "data": "2026-11-10",
-        "usa_ida": true,
-        "usa_volta": true,
-        "ponto_embarque_id": 1,
-        "ies_destino_id": 1,
-        "ies_origem_id": 1,
-        "ponto_desembarque_id": 1
-      },
-      "http": 404,
-      "resposta": {
-        "detail": "Not Found"
-      },
-      "duracao_ms": 0.863
-    },
-    {
-      "metodo": "PUT",
-      "caminho": "/transporte/agendamentos/999999999",
-      "ator": "A",
-      "corpo_enviado": {
-        "data": "2026-11-10",
-        "usa_ida": true,
-        "usa_volta": true,
-        "ponto_embarque_id": 1,
-        "ies_destino_id": 1,
-        "ies_origem_id": 1,
-        "ponto_desembarque_id": 1
-      },
-      "http": 404,
-      "resposta": {
-        "detail": "Not Found"
-      },
-      "duracao_ms": 0.69
-    },
-    {
-      "metodo": "GET",
-      "caminho": "/agendamentos/opcoes",
-      "ator": "A",
-      "corpo_enviado": null,
-      "http": 404,
-      "resposta": {
-        "detail": "Not Found"
-      },
-      "duracao_ms": 0.796
-    },
-    {
-      "metodo": "GET",
-      "caminho": "/transporte/agendamentos/opcoes",
-      "ator": "A",
-      "corpo_enviado": null,
-      "http": 404,
-      "resposta": {
-        "detail": "Not Found"
-      },
-      "duracao_ms": 0.717
-    }
+  "observacoes_de_texto_ou_tratamento": [
+    "Mensagem de sucesso do POST: “Agendamento criado com sucesso” (BDD: “realizado”); mesmo sentido.",
+    "Não/Não: a API recusa com 422 FA-003; a tela mostra “Nenhum agendamento foi criado.” sozinha.",
+    "409 de duplicidade: “Já existe agendamento ativo para este dia.” (#389 acrescenta “Edite ou cancele o agendamento existente.”).",
+    "Ids e datas malformados no corpo saem no formato padrão do FastAPI, em inglês.",
+    "PUT e cancelamento retornam agendamento_criado=true."
+  ],
+  "fixtures_de_banco": [
+    "aluno.validade_acesso vencida para o aluno F (CT-011)",
+    "uma reserva ATIVA do aluno C movida para o sábado 14/11 para liberar um dia útil (CT-009)",
+    "CONSTRAINT TRIGGER deferido temporário para forçar falha no commit (CT-012), removido em seguida"
   ],
   "persistencia": {
-    "antes": {
-      "agendamentos": 0,
-      "auditoria_agendamento": 0
-    },
-    "depois": {
-      "agendamentos": 0,
-      "auditoria_agendamento": 0
-    }
+    "observacao": "Antes/depois conferidos por caso nas consultas ao banco isolado; auditoria de agendamento registra CRIAR, EDITAR e CANCELAR."
   },
-  "bug_reproduzido": {
+  "bug_corrigido": {
     "id": "BUG-HU013-API-001",
-    "severidade": "Alta — bloqueia os testes funcionais",
+    "issue": "https://github.com/GOUOCE/GOUCE-app/issues/399",
+    "correcao": "commit 305ca252 (agendamento_router e router_legacy registrados no main.py)",
     "relato": "issues/BUG-HU013-API-001-rotas-agendamento-nao-publicadas.md"
   },
-  "issues_publicadas_no_github": [],
+  "issues_publicadas_no_github": [
+    "#399"
+  ],
   "observacoes": [
-    "Nenhuma alteração no backend do commit testado, sem mock ou router inserido por instrumentação.",
-    "Os 11 casos bloqueados não tiveram suas regras de negócio executadas.",
-    "A API da develop é outra versão; seus resultados anteriores não aprovam a feature/front-hu013.",
+    "Backend do commit 0c0a079c sem alterações, sem mock nem router inserido por instrumentação.",
+    "Credenciais sintéticas fora do versionamento.",
     "Regras do PO #389 consultadas; feriado/recesso não cobrado. UI não executada."
   ]
 }

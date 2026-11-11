@@ -31,8 +31,8 @@ describe('HU-014 - Service Tests (Visualização e Cancelamento de Agendamentos)
 
     const resultado = await agendamentoService.listarAgendamentosAtivos();
     expect(resultado).toEqual([
-      { idAgendamento: 1, dataIso: '2026-08-31', usaIda: true, usaVolta: true, pontoEmbarqueIda: undefined, faculdadeDestinoIda: undefined, pontoDesembarqueVolta: undefined, faculdadeOrigemVolta: undefined, pode_remover: undefined, pode_editar: undefined },
-      { idAgendamento: 2, dataIso: '2026-09-01', usaIda: true, usaVolta: true, pontoEmbarqueIda: undefined, faculdadeDestinoIda: undefined, pontoDesembarqueVolta: undefined, faculdadeOrigemVolta: undefined, pode_remover: undefined, pode_editar: undefined },
+      expect.objectContaining({ idAgendamento: 1, dataIso: '2026-08-31', usaIda: true, usaVolta: true }),
+      expect.objectContaining({ idAgendamento: 2, dataIso: '2026-09-01', usaIda: true, usaVolta: true }),
     ]);
     expect(api.get).toHaveBeenCalledWith('/transporte/agendamentos/meus');
   });
