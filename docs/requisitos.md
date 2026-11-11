@@ -1452,9 +1452,9 @@ https\://docs.google.com/forms/d/e/1FAIpQLSfONfUZbgCZ4WRnP_77biJ1ES7p9mSsiu8-vOv
 Como aluno, quero acessar um formulário inteligente no aplicativo para agendar meus dias de utilização do transporte, informando a faculdade de destino, a faculdade de origem no retorno e os pontos de embarque e desembarque através de opções padronizadas, para garantir minha vaga de forma rápida e sem erros de digitação.  
 **Critérios de Aceite:**
 
-1.  O aluno acessa "Agendamento de Transporte" e visualiza um calendário mensal interativo, com indicação visual clara dos dias agendados, disponíveis e indisponíveis. Sábados e domingos (o transporte opera em dias úteis) e dias em que não existe nenhuma rota principal ativa são indisponíveis para agendamento.
-2.  O sistema deve limitar a seleção de datas futuras a uma janela máxima configurável via variáveis de ambiente (com valor padrão de 30 dias corridos a partir da data atual, contando o dia atual como o 1º dia; o último dia agendável é a data atual + 29 dias) e permitir um limite máximo configurável de agendamentos ativos por aluno (com valor padrão de 22 agendamentos ativos). O aluno não poderá visualizar ou selecionar dias disponíveis que ultrapassem essa janela no calendário.
-3.  Ao selecionar um dia disponível no calendário, o sistema deve exibir na área inferior apenas a data selecionada e o botão de ação “Novo agendamento”.
+1.  O aluno acessa "Agendar Transporte" e visualiza um seletor semanal de dias (segunda a domingo), com navegação entre as semanas da janela e indicação visual clara dos dias agendados, disponíveis e indisponíveis. Sábados e domingos (o transporte opera em dias úteis), dias passados, dias fora da janela e dias em que não existe nenhuma rota principal ativa são indisponíveis para agendamento.
+2.  O sistema deve limitar a seleção de datas futuras a uma janela máxima configurável via variáveis de ambiente (com valor padrão de 30 dias corridos a partir da data atual, contando o dia atual como o 1º dia; o último dia agendável é a data atual + 29 dias) e permitir um limite máximo configurável de agendamentos ativos por aluno (com valor padrão de 22 agendamentos ativos). O aluno não poderá selecionar dias disponíveis que ultrapassem essa janela no seletor de dias.
+3.  O aluno pode selecionar um ou mais dias disponíveis no seletor; o sistema exibe o total de dias selecionados e habilita o botão "Continuar", que abre o formulário de agendamento de cada dia selecionado (uma aba por data).
 4.  Na tela de “Novo Agendamento”, o sistema pergunta se o aluno utilizará o ônibus na ida (Sim/Não).
 5.  Se 'Sim' para ida, o sistema exibe os campos (em lista suspensa, puxando apenas dados ativos cadastrados pelo admin): ponto de embarque, faculdade (IES) de destino e rota complementar de ida (se aplicável).
 6.  Se "Não" para ida, o sistema não exige preenchimento dos campos de ida.
@@ -1465,10 +1465,10 @@ Como aluno, quero acessar um formulário inteligente no aplicativo para agendar 
 11. Tentativa de agendar um dia que já possui uma solicitação ativa é bloqueada, com a mensagem "Já existe um agendamento ativo para este dia. Edite ou cancele o agendamento existente." (FA-001).
 12. Selecionar uma combinação de ponto de embarque e faculdade de destino (na ida) ou faculdade de origem e ponto de desembarque (na volta) que não esteja contemplada em nenhuma rota ativa correspondente bloqueia a seleção ou exibe mensagem de indisponibilidade (FA-002).
 13. Responder "Sim" para ida ou volta e tentar salvar sem preencher a IES ou o ponto de embarque correspondente bloqueia o salvamento e destaca os campos pendentes (FA-003).
-14. Confirmação bem-sucedida exibe mensagem de sucesso ("Agendamento realizado com sucesso") e atualiza visualmente o status do dia selecionado na tela.
+14. Confirmação bem-sucedida exibe a tela de confirmação com a mensagem "N agendamento(s) realizado(s) com sucesso!", o resumo de cada dia e os botões "Voltar à tela inicial" e "Ver meus agendamentos", e atualiza visualmente o status dos dias agendados.
 15. Tempo de resposta do agendamento deve ser de até 3 segundos em condições normais de conexão (RNF-001)
 16. Se o aluno editar um agendamento existente e alterar as respostas de ida e volta para 'Não' em ambas, o sistema deve tratar essa ação como um cancelamento (equivalente à HU-014), exibindo o mesmo alerta de confirmação antes de remover a alocação vinculada.
-17. O sistema deve apresentar as datas num formato de calendário mensal interativo ou numa lista contínua estritamente limitada à janela de dias permitidos, eliminando a necessidade de paginação.  
+17. O sistema deve apresentar as datas num seletor semanal navegável, estritamente limitado à janela de dias permitidos, eliminando a necessidade de paginação.  
     **Fluxo Principal:**
 18. O aluno acessa o menu de "Agendamento de Transporte" no aplicativo.
 19. O sistema exibe os dias disponíveis para reserva.
@@ -1484,7 +1484,7 @@ Como aluno, quero acessar um formulário inteligente no aplicativo para agendar 
     **Fluxos Alternativos:**
 26. **FA-001 \- Sobreposição de agendamento.**
     1. O aluno tenta registrar um agendamento para um dia onde já possui uma solicitação ativa.
-    2. O sistema bloqueia a ação e exibe o alerta "Já existe um agendamento ativo para este dia. Edite ou cancele o agendamento existente.", informando que já existe um agendamento para este período e orientando-o a editar ou cancelar o existente.
+    2. O sistema exibe o aviso "Agendamento já existente — Deseja editar o agendamento existente?", oferecendo a edição; na API, a criação duplicada é bloqueada com a mensagem "Já existe um agendamento ativo para este dia. Edite ou cancele o agendamento existente.".
 27. **FA-002 \- Opções não disponíveis para o dia.**
     1. O aluno seleciona uma faculdade ou bairro que não possui rotas ativas cadastradas para aquele trecho.
     2. O sistema bloqueia a seleção ou exibe uma mensagem informando que não há rotas disponíveis para o trajeto selecionado.

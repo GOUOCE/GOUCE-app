@@ -1,7 +1,8 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef, useCallback, ReactNode } from 'react';
 import { useRouter, useSegments } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService, User } from '../services/authService';
+import { limparCacheAgendamentos } from '../services/agendamentoService';
 import { calcularStatusAluno } from '../utils/statusAluno';
 
 export type UserRole = 'ALUNO' | 'MOTORISTA' | 'ADMINISTRADOR';
@@ -35,6 +36,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const router = useRouter();
   const segments = useSegments();
+  // Marca a saída em andamento: a navegação para '/' pode ser aplicada antes de o estado `user` zerar,
+  // e o guard, vendo ainda um usuário logado numa rota pública, o mandava de volta ao painel (#452).
+  const encerrandoSessao = useRef(false);
+  // Usuário atual para quem responde depois (ex.: perfil carregado após o logout não pode "ressuscitar" a sessão).
+  const userRef = useRef<User | null>(null);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   const clearPendingCredentials = () => {
     setPendingCredentials(null);
@@ -65,6 +74,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isLoading) return;
 
+    if (encerrandoSessao.current) {
+      if (!user) encerrandoSessao.current = false;
+      return;
+    }
+
     const firstSegment = segments[0] as string | undefined;
     const isProtected = ['(aluno)', '(representante)', '(administrador)'].includes(firstSegment ?? '');
     const isRootOrAuth = !firstSegment || firstSegment === '(autenticacao)' || firstSegment === 'index';
@@ -79,10 +93,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (user) {
       const status = (user.status || '').toLowerCase();
       const isAtPendingScreen = segments.includes('cadastro-pendente' as never);
+      const isAtRejeitadoScreen = segments.includes('cadastro-rejeitado' as never);
+      const isAtReenviarScreen = segments.includes('reenviar-documentos' as never);
 
       if (status === 'pendente') {
         if (!isAtPendingScreen) {
           router.replace('/(autenticacao)/cadastro-pendente');
+        }
+        return;
+      }
+
+      if (status === 'rejeitado') {
+        if (!isAtRejeitadoScreen && !isAtReenviarScreen) {
+          router.replace('/(autenticacao)/cadastro-rejeitado');
         }
         return;
       }
@@ -95,11 +118,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, segments, isLoading]);
 
   async function setUserAndToken(userData: User, userToken: string, refreshToken?: string) {
+    await limparCacheAgendamentos();
     await AsyncStorage.setItem('@GOUOCE:token', userToken);
     if (refreshToken) {
       await AsyncStorage.setItem('@GOUOCE:refreshToken', refreshToken);
     }
     await AsyncStorage.setItem('@GOUOCE:user', JSON.stringify(userData));
+    userRef.current = userData;
     setUser(userData);
     setToken(userToken);
   }
@@ -149,29 +174,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       foto_perfil: response.usuario.foto_perfil,
     };
 
-    // Ao atualizar o user, o useEffect acima faz o redirecionamento (home ou cadastro pendente)
+    // Ao atualizar o user, redireciona imediatamente com base no status para evitar flash de tela
     await setUserAndToken(userData, response.token_acesso, response.token_atualizacao);
     setPendingCredentials(null);
-    console.log('[AUTH] Sessão salva. Redirecionamento delegado ao guard.');
+
+    const st = (userData.status || '').toLowerCase();
+    if (st === 'pendente') {
+      router.replace('/(autenticacao)/cadastro-pendente');
+    } else if (st === 'rejeitado') {
+      router.replace('/(autenticacao)/cadastro-rejeitado');
+    } else {
+      router.replace(getHomeByRole(userData.role) as any);
+    }
   }
 
   async function signOut() {
+    encerrandoSessao.current = true;
     await AsyncStorage.removeItem('@GOUOCE:token');
     await AsyncStorage.removeItem('@GOUOCE:refreshToken');
     await AsyncStorage.removeItem('@GOUOCE:user');
+    await limparCacheAgendamentos();
+    userRef.current = null;
     setPendingCredentials(null);
     setUser(null);
     setToken(null);
     router.replace('/');
   }
 
-  async function updateUser(data: Partial<User>) {
-    if (user) {
-      const updatedUser = { ...user, ...data };
-      await AsyncStorage.setItem('@GOUOCE:user', JSON.stringify(updatedUser));
-      setUser(updatedUser);
+  // Estável (só usa refs): quem o põe em dependência de efeito não dispara a cada render.
+  const updateUser = useCallback(async (data: Partial<User>) => {
+    const atual = userRef.current;
+    if (!atual) return;
+    const updatedUser = { ...atual, ...data };
+    await AsyncStorage.setItem('@GOUOCE:user', JSON.stringify(updatedUser));
+    // Se saiu da conta enquanto gravava, não restaura a sessão.
+    if (!userRef.current) {
+      await AsyncStorage.removeItem('@GOUOCE:user');
+      return;
     }
-  }
+    setUser(updatedUser);
+  }, []);
 
   return (
     <AuthContext.Provider value={{
