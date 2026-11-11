@@ -35,6 +35,7 @@ export default function StudentLayout() {
       <Stack.Screen name="alterar-email" />
       <Stack.Screen name="carteirinha-digital" />
       <Stack.Screen name="renovar-vinculo" />
+      <Stack.Screen name="status-cadastro" />
     </Stack>
   );
 }

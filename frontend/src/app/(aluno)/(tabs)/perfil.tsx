@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, Avatar, Surface, useTheme, Divider } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import { LogOut, CreditCard, RefreshCw, ChevronRight, Pencil, Mail, AlertCircle } from 'lucide-react-native';
+import { LogOut, CreditCard, RefreshCw, ChevronRight, Pencil, Mail, AlertCircle, ClipboardCheck } from 'lucide-react-native';
 
 import { useAuth } from '@contexts/AuthContext';
 import { userService } from '@services/userService';
@@ -201,6 +201,14 @@ export default function PerfilScreen() {
           <TouchableOpacity style={styles.actionItem} onPress={() => router.push('/(aluno)/carteirinha-digital')}>
             <CreditCard size={24} color="#333" />
             <Text variant="bodyLarge" style={styles.actionText}>Ver carteirinha digital</Text>
+            <ChevronRight size={20} color="#999" />
+          </TouchableOpacity>
+
+          <Divider style={styles.divider} />
+
+          <TouchableOpacity style={styles.actionItem} onPress={() => router.push('/(aluno)/status-cadastro' as any)}>
+            <ClipboardCheck size={24} color="#333" />
+            <Text variant="bodyLarge" style={styles.actionText}>Status do cadastro</Text>
             <ChevronRight size={20} color="#999" />
           </TouchableOpacity>
 
