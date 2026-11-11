@@ -37,11 +37,6 @@ export default function StudentTabsLayout() {
               <ClipboardList size={24} color={focused ? '#000' : '#666'} />
             </View>
           ),
-          tabBarButton: ({ children, style }) => (
-            <View style={style} pointerEvents="none">
-              {children}
-            </View>
-          ),
         }}
       />
       <Tabs.Screen
