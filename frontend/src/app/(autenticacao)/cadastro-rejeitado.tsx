@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
 import { Text, Button, Surface, ActivityIndicator } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { AlertCircle } from 'lucide-react-native';
+import { AlertCircle, LogOut } from 'lucide-react-native';
 
 import { userService } from '@/services/userService';
 import { useAuth } from '@contexts/AuthContext';
@@ -110,8 +110,15 @@ export default function CadastroRejeitadoScreen() {
           </>
         )}
 
-        <Button mode="text" onPress={handleSair} style={styles.sairButton}>
-          Sair
+        {/* Esta tela não tem seta de voltar e o guard prende o reprovado nela: sem isto ele não sairia da conta. */}
+        <Button
+          mode="outlined"
+          onPress={handleSair}
+          icon={() => <LogOut size={18} color="#8B261D" />}
+          textColor="#8B261D"
+          style={styles.sairButton}
+        >
+          Sair da conta
         </Button>
       </ScrollView>
     </View>
@@ -200,5 +207,8 @@ const styles = StyleSheet.create({
   },
   sairButton: {
     marginTop: 16,
+    width: '100%',
+    borderRadius: 8,
+    borderColor: '#8B261D',
   },
 });

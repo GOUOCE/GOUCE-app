@@ -9,7 +9,11 @@ import * as ImagePicker from 'expo-image-picker';
 import { userService } from '@/services/userService';
 import { useAuth } from '@contexts/AuthContext';
 import { getErrorMessage } from '@/utils/errorUtils';
-import { formatarNomeTipoDocumento } from '@/utils/documentosCadastro';
+import {
+  DICA_ARQUIVO_DOCUMENTO,
+  formatarNomeTipoDocumento,
+  validarArquivoDocumento,
+} from '@/utils/documentosCadastro';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
 type DocumentoReprovado = { tipo: string; motivo: string };
@@ -79,6 +83,22 @@ export default function ReenviarDocumentosScreen() {
     }
   };
 
+  // Valida na hora (formato e 5 MB), antes de enviar, com as mesmas mensagens do cadastro.
+  const selecionarArquivo = (tipo: string, arquivo: any) => {
+    const erro = validarArquivoDocumento(arquivo);
+    if (erro) {
+      showPopup({
+        type: 'error',
+        title: 'Arquivo inválido',
+        message: erro,
+        confirmText: 'Entendido',
+        onConfirm: closePopup,
+      });
+      return;
+    }
+    setArquivos((prev) => ({ ...prev, [tipo]: arquivo }));
+  };
+
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -86,7 +106,7 @@ export default function ReenviarDocumentosScreen() {
       quality: 0.8,
     });
     if (!result.canceled && result.assets[0]) {
-      setArquivos((prev) => ({ ...prev, foto_perfil: result.assets[0] }));
+      selecionarArquivo('foto_perfil', result.assets[0]);
     }
   };
 
@@ -95,7 +115,7 @@ export default function ReenviarDocumentosScreen() {
       type: ['application/pdf', 'image/*'],
     });
     if (!result.canceled && result.assets[0]) {
-      setArquivos((prev) => ({ ...prev, [tipo]: result.assets[0] }));
+      selecionarArquivo(tipo, result.assets[0]);
     }
   };
 
@@ -165,6 +185,8 @@ export default function ReenviarDocumentosScreen() {
               </View>
             )}
           </TouchableOpacity>
+          <Text style={styles.acaoFoto}>{arquivo ? 'Toque na foto para trocar' : 'Toque no círculo para escolher a foto'}</Text>
+          <Text style={styles.dica}>{DICA_ARQUIVO_DOCUMENTO}</Text>
         </View>
       );
     }
@@ -189,6 +211,7 @@ export default function ReenviarDocumentosScreen() {
             )}
           </TouchableOpacity>
         </Surface>
+        <Text style={styles.dica}>{DICA_ARQUIVO_DOCUMENTO}</Text>
       </View>
     );
   };
@@ -324,6 +347,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 10,
+  },
+  acaoFoto: {
+    textAlign: 'center',
+    color: '#3E5F90',
+    fontWeight: '600',
+  },
+  dica: {
+    marginTop: 6,
+    color: '#666',
+    fontSize: 12,
+    textAlign: 'center',
   },
   loading: {
     marginTop: 40,
