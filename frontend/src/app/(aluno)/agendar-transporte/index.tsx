@@ -80,6 +80,8 @@ export default function SelecaoDiasScreen() {
   const [erro, setErro] = useState('');
   const [versaoCarga, setVersaoCarga] = useState(0);
   const primeiraFocus = useRef(true);
+  const mesesCarregados = useRef<Set<string>>(new Set());
+  const versaoAplicada = useRef(0);
 
   // Descobre o fim da janela pelos dias que a API devolve (o servidor lê a janela de AGENDAMENTO_JANELA_DIAS).
   useEffect(() => {
@@ -94,13 +96,22 @@ export default function SelecaoDiasScreen() {
         meses.map(mes => agendamentoService.obterCalendario(mes))
       );
       const datas: string[] = [];
-      respostas.forEach(resposta => {
+      const mapa: Record<string, CalendarioDia> = {};
+      respostas.forEach((resposta, indice) => {
         if (resposta.status === 'fulfilled') {
-          resposta.value.dias.forEach(dia => datas.push(dia.data));
+          resposta.value.dias.forEach(dia => {
+            datas.push(dia.data);
+            mapa[dia.data] = dia;
+          });
+          mesesCarregados.current.add(meses[indice]);
         }
       });
+      if (!ativo) return;
+
+      // Já que os meses da janela foram buscados, guarda os dias para navegar entre as semanas sem novo pedido.
+      setEstados(anterior => ({ ...anterior, ...mapa }));
       const ultima = datas.sort().pop();
-      if (!ativo || !ultima) return;
+      if (!ultima) return;
 
       const [ano, mes, dia] = ultima.split('-').map(Number);
       const diferenca = Math.round((new Date(ano, mes - 1, dia).getTime() - base.getTime()) / 86400000) + 1;
@@ -117,14 +128,29 @@ export default function SelecaoDiasScreen() {
   useEffect(() => {
     let ativo = true;
 
+    // Ao voltar para a tela (versão nova), os meses guardados podem estar velhos e são buscados de novo.
+    if (versaoAplicada.current !== versaoCarga) {
+      mesesCarregados.current.clear();
+      versaoAplicada.current = versaoCarga;
+    }
+
     const carregarCalendario = async () => {
+      const fimSemana = adicionarDias(semanaInicio, 6);
+      const meses = Array.from(new Set([paraMes(semanaInicio), paraMes(fimSemana)]));
+      const faltantes = meses.filter(mes => !mesesCarregados.current.has(mes));
+
+      // Meses já guardados: troca de semana na hora, sem pedido e sem indicador de carregamento.
+      if (faltantes.length === 0) {
+        setErro('');
+        setCarregando(false);
+        return;
+      }
+
       setCarregando(true);
       setErro('');
       try {
-        const fimSemana = adicionarDias(semanaInicio, 6);
-        const meses = Array.from(new Set([paraMes(semanaInicio), paraMes(fimSemana)]));
         const respostas = await Promise.all(
-          meses.map(mes => agendamentoService.obterCalendario(mes))
+          faltantes.map(mes => agendamentoService.obterCalendario(mes))
         );
         if (!ativo) return;
 
@@ -134,10 +160,12 @@ export default function SelecaoDiasScreen() {
             mapa[dia.data] = dia;
           });
         });
-        setEstados(mapa);
+        faltantes.forEach(mes => mesesCarregados.current.add(mes));
+        setEstados(anterior => ({ ...anterior, ...mapa }));
       } catch (error) {
         if (!ativo) return;
         setEstados({});
+        mesesCarregados.current.clear();
         setErro(getErrorMessage(error, 'Não foi possível carregar o calendário. Tente novamente.'));
       } finally {
         if (ativo) setCarregando(false);
@@ -284,7 +312,7 @@ export default function SelecaoDiasScreen() {
           </TouchableOpacity>
         </View>
 
-        {carregando ? (
+        {carregando && Object.keys(estados).length === 0 ? (
           <View style={styles.feedbackBox}>
             <ActivityIndicator color="#3E5F90" />
             <Text variant="bodyMedium" style={styles.feedbackText}>
