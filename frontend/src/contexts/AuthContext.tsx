@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, useRef, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef, useCallback, ReactNode } from 'react';
 import { useRouter, useSegments } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService, User } from '../services/authService';
@@ -39,6 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Marca a saída em andamento: a navegação para '/' pode ser aplicada antes de o estado `user` zerar,
   // e o guard, vendo ainda um usuário logado numa rota pública, o mandava de volta ao painel (#452).
   const encerrandoSessao = useRef(false);
+  // Usuário atual para quem responde depois (ex.: perfil carregado após o logout não pode "ressuscitar" a sessão).
+  const userRef = useRef<User | null>(null);
+  userRef.current = user;
 
   const clearPendingCredentials = () => {
     setPendingCredentials(null);
@@ -188,19 +191,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await AsyncStorage.removeItem('@GOUOCE:refreshToken');
     await AsyncStorage.removeItem('@GOUOCE:user');
     await limparCacheAgendamentos();
+    userRef.current = null;
     setPendingCredentials(null);
     setUser(null);
     setToken(null);
     router.replace('/');
   }
 
-  async function updateUser(data: Partial<User>) {
-    if (user) {
-      const updatedUser = { ...user, ...data };
-      await AsyncStorage.setItem('@GOUOCE:user', JSON.stringify(updatedUser));
-      setUser(updatedUser);
+  // Estável (só usa refs): quem o põe em dependência de efeito não dispara a cada render.
+  const updateUser = useCallback(async (data: Partial<User>) => {
+    const atual = userRef.current;
+    if (!atual) return;
+    const updatedUser = { ...atual, ...data };
+    await AsyncStorage.setItem('@GOUOCE:user', JSON.stringify(updatedUser));
+    // Se saiu da conta enquanto gravava, não restaura a sessão.
+    if (!userRef.current) {
+      await AsyncStorage.removeItem('@GOUOCE:user');
+      return;
     }
-  }
+    setUser(updatedUser);
+  }, []);
 
   return (
     <AuthContext.Provider value={{
