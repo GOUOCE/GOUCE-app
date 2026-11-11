@@ -77,7 +77,7 @@ function CardRotaPrincipal({ trecho }: { trecho: TrechoDetalhesViagem }) {
         </View>
         <View style={styles.col}>
           <Text style={styles.fieldLabel}>
-            {trecho.sentido === 'ida' ? 'Seu Desembarque (IES)' : 'Origem (IES)'}
+            {trecho.sentido === 'ida' ? 'Seu Desembarque (IES)' : 'Seu Desembarque'}
           </Text>
           <Text style={styles.fieldVal}>{rota.pontoDesembarque}</Text>
         </View>
