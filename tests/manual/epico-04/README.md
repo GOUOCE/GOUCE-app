@@ -6,7 +6,7 @@ Suítes essenciais das **HU-013 — Agendamento de Transporte**, **HU-014 — Vi
 
 | HU | Funcionalidade | API | UI | Dependências principais |
 | --- | --- | --- | --- | --- |
-| HU-013 | Agendamento de transporte | [12 casos](HU-013/api/API-HU-013.md) | — (fora desta entrega) | Backend exato de `feature/front-hu013`, [PR #377](https://github.com/GOUOCE/GOUCE-app/pull/377); rotas/cadastros e regras da #389 |
+| HU-013 | Agendamento de transporte | [12 casos](HU-013/api/API-HU-013.md) | [9 casos](HU-013/ui/UI-HU-013.md) | Backend exato de `feature/front-hu013`, [PR #377](https://github.com/GOUOCE/GOUCE-app/pull/377); rotas/cadastros e regras da #389 |
 | HU-014 | Meus agendamentos e cancelamento | [10 casos](HU-014/api/API-HU-014.md) | [11 casos](HU-014/ui/UI-HU-014.md) | HU-013 para massa; HU-011/012 para rotas; HU-016/018 para alocação real; [PR #378](https://github.com/GOUOCE/GOUCE-app/pull/378) para UI |
 | HU-015 | Rota complementar e transferência | [8 casos](HU-015/api/API-HU-015.md) | [10 casos](HU-015/ui/UI-HU-015.md) | Back/front integrados em `feature/front-hu015` `4ac87b46` ([PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379)); BDD e #389; alocação futura somente nos casos indicados |
 | **Total** | **3 HUs** | **30** | **21** | **14 passaram; 3 falharam; 1 parcial; 12 bloqueados; 21 pendentes** |
