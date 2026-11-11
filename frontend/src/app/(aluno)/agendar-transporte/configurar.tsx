@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { Text, Button, SegmentedButtons, Snackbar, Surface, ActivityIndicator } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -40,6 +40,18 @@ const formatarRotuloAba = (iso: string) => {
   const mes = String(data.getMonth() + 1).padStart(2, '0');
   return `${SIGLAS_DIAS[data.getDay()]}, ${dia}/${mes}`;
 };
+
+const formularioVazio = (dataIso: string): AgendamentoDiaFormData => ({
+  dataIso,
+  usaIda: true,
+  pontoEmbarqueIda: '',
+  faculdadeDestinoIda: '',
+  rotaComplementarIda: '',
+  usaVolta: true,
+  pontoDesembarqueVolta: '',
+  faculdadeOrigemVolta: '',
+  rotaComplementarVolta: '',
+});
 
 const numeroOuNulo = (valor: string | undefined) => {
   if (!valor) return null;
@@ -91,20 +103,14 @@ export default function ConfigurarAgendamentoScreen() {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarVisivel, setSnackbarVisivel] = useState(false);
 
-  const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm<AgendamentoDiaFormData>({
+  const { control, handleSubmit, setValue, getValues, reset, watch, formState: { errors } } = useForm<AgendamentoDiaFormData>({
     resolver: zodResolver(agendamentoDiaSchema),
-    defaultValues: {
-      dataIso: dataIsoAtual,
-      usaIda: true,
-      pontoEmbarqueIda: '',
-      faculdadeDestinoIda: '',
-      rotaComplementarIda: '',
-      usaVolta: true,
-      pontoDesembarqueVolta: '',
-      faculdadeOrigemVolta: '',
-      rotaComplementarVolta: '',
-    },
+    defaultValues: formularioVazio(dataIsoAtual),
   });
+
+  // Cada data tem o seu próprio formulário: ao trocar de data, guarda o que foi preenchido e carrega o da nova data.
+  const valoresPorData = useRef<Record<string, AgendamentoDiaFormData>>({});
+  const dataAnterior = useRef(dataIsoAtual);
 
   const usaIda = watch('usaIda');
   const usaVolta = watch('usaVolta');
@@ -136,8 +142,15 @@ export default function ConfigurarAgendamentoScreen() {
   }, [versaoOpcoes]);
 
   useEffect(() => {
-    if (dataIsoAtual) setValue('dataIso', dataIsoAtual);
-  }, [dataIsoAtual, setValue]);
+    if (!dataIsoAtual) return;
+
+    if (dataAnterior.current && dataAnterior.current !== dataIsoAtual) {
+      valoresPorData.current[dataAnterior.current] = getValues();
+      reset(valoresPorData.current[dataIsoAtual] ?? formularioVazio(dataIsoAtual));
+    }
+    dataAnterior.current = dataIsoAtual;
+    setValue('dataIso', dataIsoAtual);
+  }, [dataIsoAtual, getValues, reset, setValue]);
 
   useEffect(() => {
     if (!modoEdicao || !dataIsoAtual) return;
