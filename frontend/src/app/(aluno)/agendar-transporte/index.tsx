@@ -56,6 +56,9 @@ const paraIso = (data: Date) => {
 
 const paraMes = (data: Date) => `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
 
+const juntarComE = (itens: string[]) =>
+  itens.length <= 1 ? (itens[0] ?? '') : `${itens.slice(0, -1).join(', ')} e ${itens[itens.length - 1]}`;
+
 const formatarCurto = (data: Date) =>
   `${String(data.getDate()).padStart(2, '0')}/${String(data.getMonth() + 1).padStart(2, '0')}`;
 
@@ -191,7 +194,12 @@ export default function SelecaoDiasScreen() {
     } as any);
   };
 
-  const primeiroAgendado = dias.find(dia => dia.status === 'agendado');
+  const hojeIso = paraIso(hoje);
+  const diasAgendados = dias.filter(dia => dia.status === 'agendado' && dia.dataIso >= hojeIso);
+  const textoAgendados =
+    diasAgendados.length === 1
+      ? `${diasAgendados[0].nomeExtenso} já possui agendamento`
+      : `${juntarComE(diasAgendados.map(dia => dia.nomeExtenso))} já possuem agendamento`;
 
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
@@ -300,9 +308,9 @@ export default function SelecaoDiasScreen() {
               <Text variant="bodyMedium" style={styles.infoTextCount}>
                 {diasSelecionados.length} {diasSelecionados.length === 1 ? 'dia selecionado' : 'dias selecionados'}
               </Text>
-              {primeiroAgendado && (
+              {diasAgendados.length > 0 && (
                 <Text variant="bodyMedium" style={styles.infoTextAgendada}>
-                  {primeiroAgendado.nomeExtenso} já possui agendamento
+                  {textoAgendados}
                 </Text>
               )}
             </View>
