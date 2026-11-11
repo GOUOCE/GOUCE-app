@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal } from 'react-native';
-import { Text, Button, SegmentedButtons, Snackbar, Surface, ActivityIndicator } from 'react-native-paper';
+import { Text, Button, SegmentedButtons, Surface, ActivityIndicator } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, ChevronDown, X } from 'lucide-react-native';
+import { ChevronLeft, ChevronDown } from 'lucide-react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -107,8 +107,8 @@ export default function ConfigurarAgendamentoScreen() {
     setPopupErroVisivel(true);
   }, []);
 
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
+  const [popupCanceladoVisivel, setPopupCanceladoVisivel] = useState(false);
+  const [mensagemCancelado, setMensagemCancelado] = useState('Agendamento cancelado com sucesso');
 
   const { control, handleSubmit, setValue, getValues, reset, watch, formState: { errors } } = useForm<AgendamentoDiaFormData>({
     resolver: zodResolver(agendamentoDiaSchema),
@@ -315,16 +315,18 @@ export default function ConfigurarAgendamentoScreen() {
       }
 
       const resposta = await agendamentoService.cancelarAgendamento(id);
-      setSnackbarMessage(resposta?.mensagem || 'Agendamento cancelado com sucesso');
-      setSnackbarVisivel(true);
-      setTimeout(() => {
-        router.replace('/(aluno)/(tabs)/agenda' as any);
-      }, 1200);
+      setMensagemCancelado(resposta?.mensagem || 'Agendamento cancelado com sucesso');
+      setPopupCanceladoVisivel(true);
     } catch (error) {
       exibirErro(getErrorMessage(error, 'Não foi possível cancelar o agendamento. Tente novamente.'));
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const concluirCancelamento = () => {
+    setPopupCanceladoVisivel(false);
+    router.replace('/(aluno)/(tabs)/agenda' as any);
   };
 
   if (datasArray.length === 0 || !dataIsoAtual) {
@@ -629,18 +631,15 @@ export default function ConfigurarAgendamentoScreen() {
         </View>
       </ScrollView>
 
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
+      <AppPopup
+        visible={popupCanceladoVisivel}
+        type="success"
+        title="Agendamento cancelado"
+        message={mensagemCancelado}
+        confirmText="OK"
+        onConfirm={concluirCancelamento}
+        onDismiss={concluirCancelamento}
+      />
     </View>
   );
 }
@@ -810,8 +809,5 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: 16,
     color: '#191C20',
-  },
-  snackbar: {
-    backgroundColor: '#322F35',
   },
 });
