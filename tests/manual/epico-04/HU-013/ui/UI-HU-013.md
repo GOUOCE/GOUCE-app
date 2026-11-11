@@ -20,7 +20,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Em reteste em `0c0a079c` (4 ✅; 5 reprovados por leitura do código na primeira análise, aguardando reteste) | 9 | 4 | 0 | 0 | 0 | 5 |
+| ⏳ Em reteste em `0c0a079c` (6 ✅; 3 reprovados por leitura do código na primeira análise, aguardando reteste) | 9 | 6 | 0 | 0 | 0 | 3 |
 
 ## Pré-condições
 
@@ -49,13 +49,13 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 | --- | --- | --- | --- | --- | --- |
 | CT-HU013-UI-003 | Perguntas de ida e volta, campos condicionais e listas ativas | Ida Sim/Não e volta Sim/Não | Campos de cada trecho só quando a resposta é Sim; listas só com pontos, IES e complementares ativos cadastrados pelo administrador | ✅ PASSOU | Reteste: campos começam vazios, os de ida e volta só aparecem com Sim, e as listas vêm da API. Observação: azul muito escuro. |
 | CT-HU013-UI-004 | Criar só ida, só volta e ida e volta | Três combinações válidas | Mensagem “Agendamento realizado com sucesso”, reserva gravada com os dados escolhidos e dia marcado como agendado | ✅ PASSOU | Reteste: três reservas criadas pela tela (11/11 ida e volta, 12/11 só ida e 13/11 só volta), gravadas na API com os dados escolhidos; mensagem e resumo como no Figma. Observações: #444 e #445. |
-| CT-HU013-UI-005 | Não para ida e volta | Ida Não e volta Não | Nenhuma reserva criada e mensagem “Nenhum agendamento foi criado.”, sem erro | ⏳ PENDENTE | Reprovado por leitura do código em `ee305857`; reteste pendente em `0c0a079c`. |
+| CT-HU013-UI-005 | Não para ida e volta | Ida Não e volta Não | Nenhuma reserva criada e mensagem “Nenhum agendamento foi criado.”, sem erro | ✅ PASSOU | Reteste: Não para ida e volta não cria reserva e a tela informa que nenhum agendamento foi criado. |
 
 ### Seção C — Regras e recusas
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU013-UI-006 | Duplicidade, trajeto sem rota e campos obrigatórios | Dia já agendado; ponto e IES sem rota; Sim sem ponto ou IES | Cada recusa mostra a mensagem correspondente e nada é gravado | ⏳ PENDENTE | Reprovado por leitura do código em `ee305857`; reteste pendente em `0c0a079c`. |
+| CT-HU013-UI-006 | Duplicidade, trajeto sem rota e campos obrigatórios | Dia já agendado; ponto e IES sem rota; Sim sem ponto ou IES | Cada recusa mostra a mensagem correspondente e nada é gravado | ✅ PASSOU | Reteste: dia já agendado, trajeto sem rota e campos obrigatórios (ponto e IES da ida; IES de origem e ponto de desembarque da volta) são recusados e nada é gravado. |
 | CT-HU013-UI-007 | Limite de 22 agendamentos e janela de datas | A com 22 ativos; dia D+30 | Recusa com mensagem; nenhuma reserva a mais; só D a D+29 selecionáveis | ⏳ PENDENTE | Reprovado por leitura do código em `ee305857`; reteste pendente em `0c0a079c`. |
 | CT-HU013-UI-008 | Editar e cancelar o dia agendado | Reserva existente; alterar trechos; Não para ida e volta | A edição atualiza a mesma reserva; Não para ida e volta é tratado como cancelamento, com confirmação | ⏳ PENDENTE | Reprovado por leitura do código em `ee305857`; reteste pendente em `0c0a079c`. |
 
@@ -204,7 +204,11 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 - Reprovado por leitura do código: o texto “Nenhum agendamento foi criado.” não existe no app. A tela envia o `POST` com os dois trechos falsos; a API (conferida em 10/11/2026) responde `422 FA-003` (“Selecione pelo menos um trecho: ida ou volta.”) em vez de `200` com a mensagem (#390, item 5), e a tela engole o erro e mostra a confirmação de sucesso.
 - Status: ❌ Falhou (por leitura do código). Issue: #439.
 
-**Reteste em `0c0a079c`:** pendente.
+**Reteste em `0c0a079c`**
+
+- A aluna A escolheu um dia, respondeu Não para ida e volta e salvou: a tela informou que nenhum agendamento foi criado, sem erro.
+- Conferido no banco: nenhuma reserva nova da aluna A além das três do CT-004 (164, 165 e 166), e nenhum `POST` com os dois trechos falsos chegou ao servidor (o app trata a resposta sozinho).
+- Status: ✅ Passou (reteste).
 
 ---
 
@@ -224,7 +228,12 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 - Os avisos de campo obrigatório existem no esquema de validação (“Selecione o ponto de embarque”, “Selecione a faculdade (IES) de destino” e equivalentes da volta), mas o formulário abre pré-preenchido; essa parte fica para confirmar na tela.
 - Status: ❌ Falhou (por leitura do código). Issue: #439.
 
-**Reteste em `0c0a079c`:** pendente.
+**Reteste em `0c0a079c`**
+
+- Dia já agendado (11/11), trajeto sem rota e campos obrigatórios ausentes foram recusados na tela: ponto de embarque e IES de destino na ida, e IES de origem e ponto de desembarque na volta.
+- Conferido no banco e no log da API: a aluna A continua com exatamente 3 reservas ativas (164, 165 e 166), sem duplicidade por data; do total de 4 `POST` do período, 3 foram `200` (os do CT-004) e 1 foi recusado pelo servidor (`422`); as demais recusas foram feitas pela própria tela, antes de enviar.
+- O texto exato da mensagem de dia já agendado não foi anotado.
+- Status: ✅ Passou (reteste).
 
 ---
 
@@ -309,7 +318,7 @@ Os casos foram reduzidos aos que validam a funcionalidade. Cenários de rede lig
 
 ## Observações gerais
 
-- **Reteste de 10/11/2026 em `0c0a079c`** (a Mari corrigiu as #437 a #440 e a #442 e levou ao backend do PR o bloqueio de fim de semana e a rota de opções): CT-001 a CT-004 passaram na tela; os demais seguem em reteste.
+- **Reteste de 10/11/2026 em `0c0a079c`** (a Mari corrigiu as #437 a #440 e a #442 e levou ao backend do PR o bloqueio de fim de semana e a rota de opções): CT-001 a CT-006 passaram na tela; os demais seguem em reteste.
 - Execução de 10/11/2026: análise do código do commit `ee305857` do PR #377 (branch da HU-013) e conferência da API da `develop` em execução. No PR #378, que incorporou estas telas, o serviço já não inventa a resposta de `criarAgendamento` e a edição usa o id recebido, mas a semana fixa, as listas fixas, o `catch` vazio da tela e os toasts pretos continuam iguais. Os nove casos foram reprovados por leitura do código, a pedido do testador, para não gastar execução manual em falhas evidentes; a execução na tela será feita no reteste, quando o front deixar de usar a semana fixa e as listas fixas.
 - O back ainda tem as divergências da #390: fim de semana disponível, `Não` para ida e volta com `422`, mensagem de duplicidade antiga e ausência de rota de opções para o aluno.
 - **Figma da HU-013 (telas 42 a 45):** seletor semanal com seleção de vários dias e **Continuar**, formulário “Novo Agendamento” com campos que começam em “Selecionar”, tela “N agendamentos realizados com sucesso!”, “Editar Agendamento” com **Cancelar Agendamento** e **Salvar alterações**, e faixas escuras para “cancelado” e “alterado com sucesso”. O código segue esse desenho; o texto do requisito (calendário mensal, botão **Novo agendamento**) é que diverge, e a decisão cabe ao PO.
