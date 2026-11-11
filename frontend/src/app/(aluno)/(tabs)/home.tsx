@@ -3,6 +3,7 @@ import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, Surface, Button } from 'react-native-paper';
 import { CalendarPlus, ClipboardList, Megaphone, Contact } from 'lucide-react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
+
 import { useAuth } from '@contexts/AuthContext';
 import { QuickAction } from '@/components/dashboard/QuickAction';
 import {
@@ -52,8 +53,6 @@ export default function StudentHomeScreen() {
       let ativo = true;
       const hoje = dataLocalIso();
 
-      // /meus já traz os dados completos por trecho e é a mesma fonte do cache
-      // offline da Agenda (FA-002); evita uma consulta extra só para o resumo.
       agendamentoService
         .listarAgendamentosAtivos()
         .then((dados) => {
@@ -62,16 +61,13 @@ export default function StudentHomeScreen() {
           setViagemHoje(agendamento ? mapearDetalhe(agendamento) : null);
         })
         .catch(async (erro: any) => {
-          // Recusa do servidor não deve reutilizar dados locais como se fossem atuais.
           if (erro?.response) {
             if (ativo) setViagemHoje(null);
             return;
           }
           const cache = await agendamentoService.listarAgendamentosCache();
           if (!ativo) return;
-          const agendamentos = Array.isArray(cache?.agendamentos)
-            ? cache!.agendamentos
-            : [];
+          const agendamentos = Array.isArray(cache?.agendamentos) ? cache!.agendamentos : [];
           const agendamento = agendamentos.find((item) => item.data === hoje);
           setViagemHoje(
             agendamento ? { ...mapearDetalhe(agendamento), isOffline: true } : null
@@ -86,14 +82,12 @@ export default function StudentHomeScreen() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
-      {/* Saudação */}
       <View style={styles.header}>
         <Text variant="displaySmall" style={styles.greeting}>
           Olá, {user?.name?.split(' ')[0] || 'Aluno'}!
         </Text>
       </View>
 
-      {/* Sua viagem hoje: exibida apenas quando há reserva real para a data local */}
       {viagemHoje && viagemHoje.trechos.length > 0 && (
         <View style={styles.section}>
           <Text variant="titleMedium" style={styles.sectionTitle}>Sua viagem hoje</Text>
@@ -120,29 +114,28 @@ export default function StudentHomeScreen() {
         </View>
       )}
 
-      {/* Acesso Rápido */}
       <View style={styles.section}>
         <Text variant="titleMedium" style={styles.sectionTitle}>Acesso Rápido</Text>
         <View style={styles.actionGrid}>
           <QuickAction
             title="Agendar Transporte"
             Icone={CalendarPlus}
-            onPress={() => router.push('/(aluno)/agenda')}
+            onPress={() => router.push('/(aluno)/agendar-transporte' as any)}
           />
           <QuickAction
             title="Meus Agendamentos"
             Icone={ClipboardList}
-            onPress={() => router.push('/(aluno)/agenda')}
+            onPress={() => router.push('/(aluno)/(tabs)/agenda' as any)}
           />
           <QuickAction
             title="Mural de Avisos"
             Icone={Megaphone}
-            onPress={() => router.push('/(aluno)/avisos')}
+            onPress={() => router.push('/(aluno)/avisos' as any)}
           />
           <QuickAction
             title="Carteirinha Digital"
             Icone={Contact}
-            onPress={() => router.push('/(aluno)/carteirinha-digital')}
+            onPress={() => router.push('/(aluno)/carteirinha-digital' as any)}
           />
         </View>
       </View>

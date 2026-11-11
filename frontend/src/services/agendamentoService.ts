@@ -31,6 +31,18 @@ export interface AgendamentoDia {
   idAgendamento?: string | number;
 }
 
+export interface AgendamentoPayload {
+  data: string;
+  usa_ida: boolean;
+  usa_volta: boolean;
+  ponto_embarque_id?: number | null;
+  ies_destino_id?: number | null;
+  rota_complementar_ida_id?: number | null;
+  ies_origem_id?: number | null;
+  ponto_desembarque_id?: number | null;
+  rota_complementar_volta_id?: number | null;
+}
+
 // ===== HU-015: Consulta de Rota Complementar e Transferência =====
 // Contrato do backend: /transporte/agendamentos (AgendamentoDetalheDTO)
 
@@ -81,11 +93,33 @@ export interface AgendamentoDetalhe {
   pode_editar: boolean;
 }
 
+export interface AgendamentoApi {
+  id: number;
+  aluno_id: number;
+  data: string;
+  usa_ida: boolean;
+  usa_volta: boolean;
+  ponto_embarque_id: number | null;
+  ies_destino_id: number | null;
+  rota_complementar_ida_id: number | null;
+  ies_origem_id: number | null;
+  ponto_desembarque_id: number | null;
+  rota_complementar_volta_id: number | null;
+  status: string;
+}
+
 export interface MeusAgendamentosResponse {
   agendamentos: AgendamentoDetalhe[];
   ativos: number;
   limite: number;
   isOffline?: boolean;
+}
+
+export interface OperacaoAgendamentoResponse {
+  mensagem: string;
+  agendamento_criado: boolean;
+  agendamento?: AgendamentoApi | null;
+  estado_dia: string;
 }
 
 export interface CalendarioDia {
@@ -261,51 +295,24 @@ async function lerCache<T>(chave: string): Promise<T | null> {
   }
 }
 
+async function salvarCache(chave: string, valor: string): Promise<void> {
+  await Promise.resolve(AsyncStorage.setItem(chave, valor)).catch(() => {});
+}
+
+async function removerCache(chave: string): Promise<void> {
+  await Promise.resolve(AsyncStorage.removeItem(chave)).catch(() => {});
+}
+
 export const agendamentoService = {
   async obterOpcoesAgendamento(): Promise<OpcoesAgendamentoResponse> {
-    try {
-      const response = await api.get('/agendamentos/opcoes');
-      return response.data;
-    } catch {
-      return {
-        horariosIda: [
-          { label: '05:30 (Manhã)', value: '05:30:00' },
-          { label: '06:00 (Manhã)', value: '06:00:00' },
-          { label: '06:40 (Manhã)', value: '06:40:00' },
-        ],
-        horariosVolta: [
-          { label: '17:00 (Tarde)', value: '17:00:00' },
-          { label: '17:30 (Tarde)', value: '17:30:00' },
-          { label: '18:00 (Noite)', value: '18:00:00' },
-        ],
-        pontosEmbarque: [
-          { label: 'Igreja Matriz de Quixadá', value: '1' },
-          { label: 'Praça dos Leões', value: '2' },
-          { label: 'Terminal Rodoviário de Quixadá', value: '3' },
-          { label: 'Acesso ao Campus da UFC', value: '4' },
-        ],
-        faculdades: [
-          { label: 'UFC - Campus Quixadá', value: '1' },
-          { label: 'IFCE - Campus Quixadá', value: '2' },
-          { label: 'UECE - FECLEISC Quixadá', value: '3' },
-        ],
-        rotasComplementaresIda: [
-          { label: 'Nenhuma (Rota Direta)', value: '' },
-          { label: 'Transferência Centro ➔ Rodoviária (05:00)', value: '1' },
-        ],
-        rotasComplementaresVolta: [
-          { label: 'Nenhuma (Rota Direta)', value: '' },
-          { label: 'Transferência Rodoviária ➔ Centro (17:30)', value: '1' },
-        ],
-      };
-    }
+    const response = await api.get('/transporte/agendamentos/opcoes');
+    return response.data;
   },
 
   async listarAgendamentosAtivos(): Promise<MeusAgendamentosResponse> {
     const response = await api.get('/transporte/agendamentos/meus');
     const dados: MeusAgendamentosResponse = response.data;
-    // Guarda para consulta offline das rotas complementares (FA-002 / RNF-015).
-    await AsyncStorage.setItem(CACHE_MEUS, JSON.stringify(dados)).catch(() => {});
+    await salvarCache(CACHE_MEUS, JSON.stringify(dados));
     return dados;
   },
 
@@ -313,14 +320,32 @@ export const agendamentoService = {
     return lerCache<MeusAgendamentosResponse>(CACHE_MEUS);
   },
 
+  async obterAgendamento(agendamentoId: number): Promise<AgendamentoApi> {
+    const response = await api.get(`/transporte/agendamentos/${agendamentoId}`);
+    return response.data;
+  },
+
+  async criarAgendamento(
+    payload: AgendamentoPayload
+  ): Promise<OperacaoAgendamentoResponse> {
+    const response = await api.post('/transporte/agendamentos', payload);
+    return response.data;
+  },
+
+  async atualizarAgendamento(
+    agendamentoId: number,
+    payload: AgendamentoPayload
+  ): Promise<OperacaoAgendamentoResponse> {
+    const response = await api.put(`/transporte/agendamentos/${agendamentoId}`, payload);
+    return response.data;
+  },
+
   async obterCalendario(mes: string): Promise<CalendarioResponse> {
     const response = await api.get(`/transporte/agendamentos/calendario`, {
       params: { mes },
     });
     const dados: CalendarioResponse = response.data;
-    await AsyncStorage.setItem(CACHE_CALENDARIO(mes), JSON.stringify(dados)).catch(
-      () => {}
-    );
+    await salvarCache(CACHE_CALENDARIO(mes), JSON.stringify(dados));
     return dados;
   },
 
@@ -340,15 +365,13 @@ export const agendamentoService = {
   async cancelarAgendamento(
     idAgendamento: string | number,
     dataIso?: string
-  ): Promise<any> {
+  ): Promise<OperacaoAgendamentoResponse> {
     // FA-004: falhas devem propagar para a tela avisar o aluno, sem sucesso falso.
     const response = await api.delete(`/transporte/agendamentos/${idAgendamento}`);
-    await AsyncStorage.removeItem(CACHE_MEUS).catch(() => {});
+    await removerCache(CACHE_MEUS);
     if (dataIso) {
-      await AsyncStorage.removeItem(CACHE_DETALHES(dataIso)).catch(() => {});
-      await AsyncStorage.removeItem(CACHE_CALENDARIO(dataIso.slice(0, 7))).catch(
-        () => {}
-      );
+      await removerCache(CACHE_DETALHES(dataIso));
+      await removerCache(CACHE_CALENDARIO(dataIso.slice(0, 7)));
     }
     return response.data;
   },
@@ -365,7 +388,7 @@ export const agendamentoService = {
       // Revalidação do cache pelo atualizado_em: só regrava quando muda.
       const emCache = await lerCache<AgendamentoDetalhe>(cacheKey);
       if (!emCache || emCache.atualizado_em !== detalhe.atualizado_em) {
-        await AsyncStorage.setItem(cacheKey, JSON.stringify(detalhe)).catch(() => {});
+        await salvarCache(cacheKey, JSON.stringify(detalhe));
       }
       return mapearDetalhe(detalhe);
     } catch (erro: any) {
@@ -380,10 +403,8 @@ export const agendamentoService = {
       // Reserva inexistente ou cancelada: invalida lista, calendário e detalhe
       // para a viagem não reaparecer ativa ao ficar offline.
       if (status === 404) {
-        await AsyncStorage.removeItem(cacheKey).catch(() => {});
-        await AsyncStorage.removeItem(CACHE_CALENDARIO(dataIso.slice(0, 7))).catch(
-          () => {}
-        );
+        await removerCache(cacheKey);
+        await removerCache(CACHE_CALENDARIO(dataIso.slice(0, 7)));
         const meus = await lerCache<MeusAgendamentosResponse>(CACHE_MEUS);
         const agendamentosCache = Array.isArray(meus?.agendamentos)
           ? meus!.agendamentos
@@ -392,14 +413,14 @@ export const agendamentoService = {
           const restantes = agendamentosCache.filter((item) => item.data !== dataIso);
           if (restantes.length !== agendamentosCache.length) {
             const removidos = agendamentosCache.length - restantes.length;
-            await AsyncStorage.setItem(
+            await salvarCache(
               CACHE_MEUS,
               JSON.stringify({
                 ...meus,
                 agendamentos: restantes,
                 ativos: Math.max(0, (meus.ativos ?? restantes.length) - removidos),
               })
-            ).catch(() => {});
+            );
           }
         }
         throw erro;
