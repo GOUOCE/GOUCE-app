@@ -8,6 +8,7 @@ import {
   agendamentoService,
   AgendamentoDetalhe,
   CalendarioDia,
+  extrairMensagemErro,
   formatarData,
 } from '@/services/agendamentoService';
 import { AppPopup } from '@/components/ui/AppPopup';
@@ -254,11 +255,21 @@ export default function MeusAgendamentosScreen() {
       setSnackbarMessage('Agendamento cancelado com sucesso');
       setSnackbarVisivel(true);
       carregarDados(mes);
-    } catch {
-      // FA-004: Falha de comunicação mantém o agendamento ativo
-      setSnackbarMessage(
-        'Não foi possível processar o cancelamento. Verifique sua conexão e tente novamente'
-      );
+    } catch (erro: any) {
+      const status = erro?.response?.status;
+      if (status === 404) {
+        // O servidor recusou porque a reserva já não está ativa (cancelada em outra sessão): não é falha de rede.
+        setSnackbarMessage('Este agendamento já não está ativo. A agenda foi atualizada.');
+        carregarDados(mes);
+      } else if (status) {
+        // Recusa do servidor com outro motivo: mostra a mensagem dele e mantém o agendamento ativo.
+        setSnackbarMessage(extrairMensagemErro(erro));
+      } else {
+        // FA-004: Falha de comunicação mantém o agendamento ativo
+        setSnackbarMessage(
+          'Não foi possível processar o cancelamento. Verifique sua conexão e tente novamente'
+        );
+      }
       setSnackbarVisivel(true);
     }
   };
