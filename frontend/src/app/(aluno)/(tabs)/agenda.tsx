@@ -153,6 +153,8 @@ export default function MeusAgendamentosScreen() {
     titulo: string;
     mensagem: string;
   } | null>(null);
+  // O conteúdo fica guardado enquanto o popup some (fade), para ele não encolher/piscar vazio ao fechar.
+  const [resultadoVisivel, setResultadoVisivel] = useState(false);
 
   const carregarDados = useCallback(async (mesAlvo: string) => {
     setCarregando(true);
@@ -268,21 +270,33 @@ export default function MeusAgendamentosScreen() {
     setModalCancelarVisible(true);
   };
 
+  // Mostra o resultado só depois de o popup de confirmação terminar de sumir: sem conexão a falha
+  // volta em milissegundos e os dois popups apareciam sobrepostos por um instante.
+  const mostrarResultado = async (
+    resultado: { tipo: 'success' | 'error'; titulo: string; mensagem: string },
+    inicio: number
+  ) => {
+    const restante = 350 - (Date.now() - inicio);
+    if (restante > 0) await new Promise((resolve) => setTimeout(resolve, restante));
+    setResultadoCancelamento(resultado);
+    setResultadoVisivel(true);
+  };
+
   const handleConfirmarCancelamento = async () => {
     setModalCancelarVisible(false);
     if (!diaSelecionado?.agendamento_id) return;
+    const inicio = Date.now();
 
     try {
       await agendamentoService.cancelarAgendamento(
         diaSelecionado.agendamento_id,
         diaSelecionado.data
       );
-      setResultadoCancelamento({
-        tipo: 'success',
-        titulo: 'Agendamento cancelado',
-        mensagem: 'Agendamento cancelado com sucesso',
-      });
       carregarDados(mes);
+      await mostrarResultado(
+        { tipo: 'success', titulo: 'Agendamento cancelado', mensagem: 'Agendamento cancelado com sucesso' },
+        inicio
+      );
     } catch (erro: any) {
       const status = erro?.response?.status;
       let mensagem: string;
@@ -297,7 +311,7 @@ export default function MeusAgendamentosScreen() {
         // FA-004: Falha de comunicação mantém o agendamento ativo
         mensagem = 'Não foi possível processar o cancelamento. Verifique sua conexão e tente novamente';
       }
-      setResultadoCancelamento({ tipo: 'error', titulo: 'Não foi possível cancelar', mensagem });
+      await mostrarResultado({ tipo: 'error', titulo: 'Não foi possível cancelar', mensagem }, inicio);
     }
   };
 
@@ -501,13 +515,13 @@ export default function MeusAgendamentosScreen() {
 
       {/* Resultado do cancelamento (sucesso/falha) */}
       <AppPopup
-        visible={resultadoCancelamento !== null}
+        visible={resultadoVisivel}
         type={resultadoCancelamento?.tipo ?? 'info'}
         title={resultadoCancelamento?.titulo ?? ''}
         message={resultadoCancelamento?.mensagem ?? ''}
         confirmText="OK"
-        onConfirm={() => setResultadoCancelamento(null)}
-        onDismiss={() => setResultadoCancelamento(null)}
+        onConfirm={() => setResultadoVisivel(false)}
+        onDismiss={() => setResultadoVisivel(false)}
       />
     </View>
   );
