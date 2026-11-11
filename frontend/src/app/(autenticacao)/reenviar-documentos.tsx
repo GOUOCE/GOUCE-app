@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, Button, Surface, Avatar } from 'react-native-paper';
-import { useRouter } from 'expo-router';
+import { Text, Button, Surface, Avatar, ActivityIndicator } from 'react-native-paper';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, Upload, CheckCircle2, User } from 'lucide-react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
@@ -9,15 +9,20 @@ import * as ImagePicker from 'expo-image-picker';
 import { userService } from '@/services/userService';
 import { useAuth } from '@contexts/AuthContext';
 import { getErrorMessage } from '@/utils/errorUtils';
+import { formatarNomeTipoDocumento } from '@/utils/documentosCadastro';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
+
+type DocumentoReprovado = { tipo: string; motivo: string };
 
 export default function ReenviarDocumentosScreen() {
   const router = useRouter();
   const { updateUser } = useAuth();
 
-  const [fotoPerfil, setFotoPerfil] = useState<any>(null);
-  const [comprovanteMatricula, setComprovanteMatricula] = useState<any>(null);
-  const [comprovanteResidencia, setComprovanteResidencia] = useState<any>(null);
+  // Só os documentos reprovados podem ser reenviados; os aprovados não aparecem (AC-05 e AC-07).
+  const [documentosReprovados, setDocumentosReprovados] = useState<DocumentoReprovado[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erroCarregamento, setErroCarregamento] = useState(false);
+  const [arquivos, setArquivos] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(false);
 
   const [popup, setPopup] = useState<{
@@ -41,6 +46,39 @@ export default function ReenviarDocumentosScreen() {
     setPopup((prev) => ({ ...prev, visible: false }));
   };
 
+  const buscarReprovados = useCallback(async () => {
+    try {
+      const res = await userService.getReenvioDocumento();
+      const lista = res?.documentos_rejeitados ?? res?.documentos ?? [];
+      setDocumentosReprovados(Array.isArray(lista) ? lista : []);
+    } catch (err) {
+      console.warn('Erro ao carregar os documentos reprovados:', err);
+      setErroCarregamento(true);
+    } finally {
+      setCarregando(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      buscarReprovados();
+    }, [buscarReprovados])
+  );
+
+  const tentarNovamente = () => {
+    setCarregando(true);
+    setErroCarregamento(false);
+    buscarReprovados();
+  };
+
+  const voltar = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(autenticacao)/cadastro-rejeitado' as any);
+    }
+  };
+
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -48,53 +86,42 @@ export default function ReenviarDocumentosScreen() {
       quality: 0.8,
     });
     if (!result.canceled && result.assets[0]) {
-      setFotoPerfil(result.assets[0]);
+      setArquivos((prev) => ({ ...prev, foto_perfil: result.assets[0] }));
     }
   };
 
-  const pickDocument = async (tipo: 'matricula' | 'residencia') => {
+  const pickDocument = async (tipo: 'comprovante_matricula' | 'comprovante_residencia') => {
     const result = await DocumentPicker.getDocumentAsync({
       type: ['application/pdf', 'image/*'],
     });
     if (!result.canceled && result.assets[0]) {
-      if (tipo === 'matricula') setComprovanteMatricula(result.assets[0]);
-      if (tipo === 'residencia') setComprovanteResidencia(result.assets[0]);
+      setArquivos((prev) => ({ ...prev, [tipo]: result.assets[0] }));
     }
   };
 
   const handleReenviar = async () => {
+    const faltando = documentosReprovados.filter((doc) => !arquivos[doc.tipo]);
+    if (faltando.length > 0) {
+      showPopup({
+        type: 'warning',
+        title: 'Documentos pendentes',
+        message: `Selecione o novo arquivo de: ${faltando.map((doc) => formatarNomeTipoDocumento(doc.tipo)).join(', ')}.`,
+        confirmText: 'Entendido',
+        onConfirm: closePopup,
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const formData = new FormData();
-      if (fotoPerfil) {
-        formData.append('foto_perfil', {
-          uri: fotoPerfil.uri,
-          name: fotoPerfil.fileName || 'perfil.jpg',
-          type: 'image/jpeg',
-        } as any);
-      }
-      if (comprovanteMatricula) {
-        formData.append('comprovante_matricula', {
-          uri: comprovanteMatricula.uri,
-          name: comprovanteMatricula.name || 'matricula.pdf',
-          type: comprovanteMatricula.mimeType || 'application/pdf',
-        } as any);
-      }
-      if (comprovanteResidencia) {
-        formData.append('comprovante_residencia', {
-          uri: comprovanteResidencia.uri,
-          name: comprovanteResidencia.name || 'residencia.pdf',
-          type: comprovanteResidencia.mimeType || 'application/pdf',
-        } as any);
-      }
+      // Sem simulação: se a API recusar ou a rede falhar, o erro aparece e o status continua Reprovado (FA-003).
+      const enviados: Record<string, any> = {};
+      documentosReprovados.forEach((doc) => {
+        enviados[doc.tipo] = arquivos[doc.tipo];
+      });
+      await userService.reenviarDocumentos(enviados);
 
-      try {
-        await userService.reenviarDocumentos(formData);
-      } catch (backendErr) {
-        console.warn('Backend endpoint não disponível para reenvio, simulando sucesso no frontend:', backendErr);
-      }
-
-      // Atualiza o status do aluno para Pendente de Aprovação (Critério de Aceite 6)
+      // O status só muda depois da resposta do servidor (Critério de Aceite 6).
       await updateUser({ status: 'pendente' });
 
       showPopup({
@@ -108,23 +135,69 @@ export default function ReenviarDocumentosScreen() {
         },
       });
     } catch (error: any) {
-      const msg = getErrorMessage(error, 'Erro ao reenviar documentos. Tente novamente.');
+      const msg = getErrorMessage(error, 'Não foi possível reenviar os documentos. Tente novamente.');
       showPopup({
         type: 'error',
         title: 'Erro ao Reenviar',
         message: msg,
         confirmText: 'Entendido',
+        onConfirm: closePopup,
       });
     } finally {
       setIsLoading(false);
     }
   };
 
+  const renderCampo = (doc: DocumentoReprovado) => {
+    const arquivo = arquivos[doc.tipo];
+
+    if (doc.tipo === 'foto_perfil') {
+      return (
+        <View key={doc.tipo} style={styles.inputBox}>
+          <Text variant="labelLarge" style={styles.label}>Imagem de Perfil *</Text>
+          <Text style={styles.motivo}>{doc.motivo}</Text>
+          <TouchableOpacity style={styles.avatarContainer} onPress={pickImage}>
+            {arquivo ? (
+              <Avatar.Image size={100} source={{ uri: arquivo.uri }} />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <User size={48} color="#3E5F90" />
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    const tipo = doc.tipo as 'comprovante_matricula' | 'comprovante_residencia';
+    return (
+      <View key={doc.tipo} style={styles.inputBox}>
+        <Text variant="labelMedium" style={styles.labelInput}>{formatarNomeTipoDocumento(doc.tipo)} *</Text>
+        <Text style={styles.motivo}>{doc.motivo}</Text>
+        <Surface style={styles.uploadCard} elevation={1}>
+          <TouchableOpacity onPress={() => pickDocument(tipo)} style={styles.uploadInner}>
+            {arquivo ? (
+              <>
+                <CheckCircle2 size={24} color="#2E7D32" />
+                <Text style={styles.uploadTextSuccess} numberOfLines={1}>{arquivo.name}</Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.uploadText}>Adicionar</Text>
+                <Upload size={20} color="#333" />
+              </>
+            )}
+          </TouchableOpacity>
+        </Surface>
+      </View>
+    );
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={voltar}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
         <Text variant="headlineSmall" style={styles.headerTitle}>Reenviar solicitação</Text>
@@ -142,70 +215,35 @@ export default function ReenviarDocumentosScreen() {
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Imagem de Perfil */}
-        <Text variant="labelLarge" style={styles.label}>Imagem de Perfil *</Text>
-        <TouchableOpacity style={styles.avatarContainer} onPress={pickImage}>
-          {fotoPerfil ? (
-            <Avatar.Image size={100} source={{ uri: fotoPerfil.uri }} />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <User size={48} color="#3E5F90" />
-            </View>
-          )}
-        </TouchableOpacity>
+        {carregando ? (
+          <ActivityIndicator animating color="#3E5F90" style={styles.loading} />
+        ) : erroCarregamento ? (
+          <>
+            <Text style={styles.erroTexto}>
+              Não foi possível carregar os documentos a reenviar. Verifique sua conexão e tente novamente.
+            </Text>
+            <Button mode="contained" onPress={tentarNovamente} style={styles.button} contentStyle={styles.btnContent}>
+              Tentar novamente
+            </Button>
+          </>
+        ) : (
+          <>
+            <Text variant="titleMedium" style={styles.sectionTitle}>Documentos a reenviar</Text>
 
-        <Text variant="titleMedium" style={styles.sectionTitle}>Documentação</Text>
+            {documentosReprovados.map(renderCampo)}
 
-        {/* Comprovante de Matrícula */}
-        <View style={styles.inputBox}>
-          <Text variant="labelMedium" style={styles.labelInput}>Comprovante de Matrícula *</Text>
-          <Surface style={styles.uploadCard} elevation={1}>
-            <TouchableOpacity onPress={() => pickDocument('matricula')} style={styles.uploadInner}>
-              {comprovanteMatricula ? (
-                <>
-                  <CheckCircle2 size={24} color="#2E7D32" />
-                  <Text style={styles.uploadTextSuccess} numberOfLines={1}>{comprovanteMatricula.name}</Text>
-                </>
-              ) : (
-                <>
-                  <Text style={styles.uploadText}>Adicionar</Text>
-                  <Upload size={20} color="#333" />
-                </>
-              )}
-            </TouchableOpacity>
-          </Surface>
-        </View>
-
-        {/* Comprovante de Residência */}
-        <View style={styles.inputBox}>
-          <Text variant="labelMedium" style={styles.labelInput}>Comprovante de Residência *</Text>
-          <Surface style={styles.uploadCard} elevation={1}>
-            <TouchableOpacity onPress={() => pickDocument('residencia')} style={styles.uploadInner}>
-              {comprovanteResidencia ? (
-                <>
-                  <CheckCircle2 size={24} color="#2E7D32" />
-                  <Text style={styles.uploadTextSuccess} numberOfLines={1}>{comprovanteResidencia.name}</Text>
-                </>
-              ) : (
-                <>
-                  <Text style={styles.uploadText}>Adicionar</Text>
-                  <Upload size={20} color="#333" />
-                </>
-              )}
-            </TouchableOpacity>
-          </Surface>
-        </View>
-
-        <Button
-          mode="contained"
-          onPress={handleReenviar}
-          loading={isLoading}
-          disabled={isLoading}
-          style={styles.button}
-          contentStyle={styles.btnContent}
-        >
-          Reenviar
-        </Button>
+            <Button
+              mode="contained"
+              onPress={handleReenviar}
+              loading={isLoading}
+              disabled={isLoading || documentosReprovados.length === 0}
+              style={styles.button}
+              contentStyle={styles.btnContent}
+            >
+              Reenviar
+            </Button>
+          </>
+        )}
       </ScrollView>
     </View>
   );
@@ -280,6 +318,21 @@ const styles = StyleSheet.create({
   uploadTextSuccess: {
     color: '#2E7D32',
     fontWeight: '600',
+  },
+  motivo: {
+    color: '#8A5200',
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 10,
+  },
+  loading: {
+    marginTop: 40,
+  },
+  erroTexto: {
+    color: '#B00020',
+    fontWeight: '600',
+    textAlign: 'center',
+    marginVertical: 24,
   },
   button: {
     borderRadius: 8,
