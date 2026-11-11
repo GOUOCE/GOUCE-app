@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal } from 'react-native';
-import { Text, Surface, Snackbar, ActivityIndicator } from 'react-native-paper';
+import { Text, Surface, ActivityIndicator } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { ChevronLeft, ChevronRight, Trash2, X, WifiOff } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Trash2, WifiOff } from 'lucide-react-native';
 
 import {
   agendamentoService,
@@ -146,9 +146,12 @@ export default function MeusAgendamentosScreen() {
   const [menuOpcoesVisible, setMenuOpcoesVisible] = useState(false);
   const [modalCancelarVisible, setModalCancelarVisible] = useState(false);
 
-  // Snackbar Toast
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarVisivel, setSnackbarVisivel] = useState(false);
+  // Resultado do cancelamento: popup padrão do app (mesmo da HU-013), sem toast.
+  const [resultadoCancelamento, setResultadoCancelamento] = useState<{
+    tipo: 'success' | 'error';
+    titulo: string;
+    mensagem: string;
+  } | null>(null);
 
   const carregarDados = useCallback(async (mesAlvo: string) => {
     setCarregando(true);
@@ -252,25 +255,27 @@ export default function MeusAgendamentosScreen() {
         diaSelecionado.agendamento_id,
         diaSelecionado.data
       );
-      setSnackbarMessage('Agendamento cancelado com sucesso');
-      setSnackbarVisivel(true);
+      setResultadoCancelamento({
+        tipo: 'success',
+        titulo: 'Agendamento cancelado',
+        mensagem: 'Agendamento cancelado com sucesso',
+      });
       carregarDados(mes);
     } catch (erro: any) {
       const status = erro?.response?.status;
+      let mensagem: string;
       if (status === 404) {
         // O servidor recusou porque a reserva já não está ativa (cancelada em outra sessão): não é falha de rede.
-        setSnackbarMessage('Este agendamento já não está ativo. A agenda foi atualizada.');
+        mensagem = 'Este agendamento já não está ativo. A agenda foi atualizada.';
         carregarDados(mes);
       } else if (status) {
         // Recusa do servidor com outro motivo: mostra a mensagem dele e mantém o agendamento ativo.
-        setSnackbarMessage(extrairMensagemErro(erro));
+        mensagem = extrairMensagemErro(erro);
       } else {
         // FA-004: Falha de comunicação mantém o agendamento ativo
-        setSnackbarMessage(
-          'Não foi possível processar o cancelamento. Verifique sua conexão e tente novamente'
-        );
+        mensagem = 'Não foi possível processar o cancelamento. Verifique sua conexão e tente novamente';
       }
-      setSnackbarVisivel(true);
+      setResultadoCancelamento({ tipo: 'error', titulo: 'Não foi possível cancelar', mensagem });
     }
   };
 
@@ -452,19 +457,16 @@ export default function MeusAgendamentosScreen() {
         onDismiss={() => setModalCancelarVisible(false)}
       />
 
-      {/* Snackbar Toast */}
-      <Snackbar
-        visible={snackbarVisivel}
-        onDismiss={() => setSnackbarVisivel(false)}
-        action={{
-          label: '',
-          icon: () => <X size={20} color="#fff" />,
-          onPress: () => setSnackbarVisivel(false),
-        }}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
+      {/* Resultado do cancelamento (sucesso/falha) */}
+      <AppPopup
+        visible={resultadoCancelamento !== null}
+        type={resultadoCancelamento?.tipo ?? 'info'}
+        title={resultadoCancelamento?.titulo ?? ''}
+        message={resultadoCancelamento?.mensagem ?? ''}
+        confirmText="OK"
+        onConfirm={() => setResultadoCancelamento(null)}
+        onDismiss={() => setResultadoCancelamento(null)}
+      />
     </View>
   );
 }
@@ -711,8 +713,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#191C20',
-  },
-  snackbar: {
-    backgroundColor: '#322F35',
   },
 });
