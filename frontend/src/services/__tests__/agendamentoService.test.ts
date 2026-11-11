@@ -78,15 +78,20 @@ describe('agendamentoService - HU-013 Service Tests', () => {
     const resultado = await agendamentoService.listarAgendamentosAtivos();
 
     expect(api.get).toHaveBeenCalledWith('/transporte/agendamentos/meus');
-    expect(resultado).toEqual([
+    expect(resultado).toEqual(
       expect.objectContaining({
-        idAgendamento: 7,
-        dataIso: '2026-11-12',
-        usaIda: true,
-        usaVolta: false,
-        jaAgendado: true,
-      }),
-    ]);
+        ativos: 1,
+        limite: 22,
+        agendamentos: [
+          expect.objectContaining({
+            id: 7,
+            data: '2026-11-12',
+            usa_ida: true,
+            usa_volta: false,
+          }),
+        ],
+      })
+    );
   });
 
   it('deve criar agendamentos com sucesso', async () => {
