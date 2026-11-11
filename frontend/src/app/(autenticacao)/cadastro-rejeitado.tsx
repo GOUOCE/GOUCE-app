@@ -7,14 +7,12 @@ import { AlertCircle, CheckCircle2 } from 'lucide-react-native';
 import { userService } from '@/services/userService';
 
 const OBSERVACOES_PADRAO = [
-  { tipo: 'foto_perfil', motivo: 'A foto enviada possui baixa resolução.' },
-  { tipo: 'comprovante_matricula', motivo: 'Documento estava ilegível, cortado ou com baixa resolução' },
   { tipo: 'comprovante_residencia', motivo: 'O comprovante enviado é muito antigo. Enviar um comprovante de no máximo 3 meses atrás.' },
 ];
 
 export default function CadastroRejeitadoScreen() {
   const router = useRouter();
-  const [documentosReenvio, setDocumentosReenvio] = useState<{ tipo: string; motivo: string }[]>([]);
+  const [documentosReenvio, setDocumentosReenvio] = useState<{ tipo: string; motivo: string }[]>(OBSERVACOES_PADRAO);
 
   useEffect(() => {
     async function carregarPerfil() {
@@ -22,12 +20,9 @@ export default function CadastroRejeitadoScreen() {
         const perfil = await userService.getProfile();
         if (perfil && perfil.documentos_reenvio && perfil.documentos_reenvio.length > 0) {
           setDocumentosReenvio(perfil.documentos_reenvio);
-        } else {
-          setDocumentosReenvio(OBSERVACOES_PADRAO);
         }
       } catch (err) {
         console.warn('Erro ao carregar documentos de reenvio, utilizando observações padrão:', err);
-        setDocumentosReenvio(OBSERVACOES_PADRAO);
       }
     }
     carregarPerfil();
@@ -40,7 +35,9 @@ export default function CadastroRejeitadoScreen() {
     return tipo;
   };
 
-  const semPendencias = documentosReenvio.length === 0;
+  const handleCorrigir = () => {
+    router.replace('/(autenticacao)/reenviar-documentos' as any);
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
@@ -52,49 +49,33 @@ export default function CadastroRejeitadoScreen() {
 
         {/* Ícone de Alerta */}
         <View style={styles.iconContainer}>
-          {semPendencias ? (
-            <CheckCircle2 size={80} color="#2E7D32" strokeWidth={1.5} />
-          ) : (
-            <AlertCircle size={80} color="#B5651D" strokeWidth={1.5} />
-          )}
+          <AlertCircle size={80} color="#B5651D" strokeWidth={1.5} />
         </View>
 
         <Text variant="headlineSmall" style={styles.title}>
-          {semPendencias
-            ? 'Tudo certo com seus documentos!'
-            : 'Opa! Precisamos que você ajuste algumas coisas.'}
+          Opa! Precisamos que você ajuste algumas coisas.
         </Text>
         <Text variant="bodyMedium" style={styles.subtitle}>
-          {semPendencias
-            ? 'Não há pendências no seu cadastro. Todos os seus documentos foram analisados e aprovados!'
-            : 'Sua documentação inicial foi recusada. Por gentileza, reenvie a documentação abaixo atentando-se às observações feitas pelo administrador.'}
+          Sua documentação inicial foi recusada. Por gentileza, reenvie a documentação abaixo atentando-se às observações feitas pelo administrador.
         </Text>
 
-        {!semPendencias ? (
-          <View style={styles.listSection}>
-            {documentosReenvio.map((doc, idx) => (
-              <Surface key={idx} style={styles.docCard} elevation={1}>
-                <Text variant="titleMedium" style={styles.docName}>{formatarNomeTipo(doc.tipo)}</Text>
-                <Text variant="bodyMedium" style={styles.docReason}>{doc.motivo}</Text>
-              </Surface>
-            ))}
-          </View>
-        ) : (
-          <Surface style={styles.noPendingCard} elevation={1}>
-            <Text style={styles.noPendingText}>Nenhuma pendência encontrada. Todos os seus documentos foram aprovados!</Text>
-          </Surface>
-        )}
+        <View style={styles.listSection}>
+          {documentosReenvio.map((doc, idx) => (
+            <Surface key={idx} style={styles.docCard} elevation={1}>
+              <Text variant="titleMedium" style={styles.docName}>{formatarNomeTipo(doc.tipo)}</Text>
+              <Text variant="bodyMedium" style={styles.docReason}>{doc.motivo}</Text>
+            </Surface>
+          ))}
+        </View>
 
-        {!semPendencias && (
-          <Button
-            mode="contained"
-            onPress={() => router.push('/(autenticacao)/reenviar-documentos')}
-            style={styles.button}
-            contentStyle={styles.btnContent}
-          >
-            Corrigir documentação
-          </Button>
-        )}
+        <Button
+          mode="contained"
+          onPress={handleCorrigir}
+          style={styles.button}
+          contentStyle={styles.btnContent}
+        >
+          Corrigir documentação
+        </Button>
       </ScrollView>
     </View>
   );
@@ -159,18 +140,6 @@ const styles = StyleSheet.create({
     color: '#8A5200',
     fontSize: 14,
     lineHeight: 20,
-  },
-  noPendingCard: {
-    backgroundColor: '#E8F5E9',
-    borderRadius: 12,
-    padding: 20,
-    width: '100%',
-    marginBottom: 32,
-  },
-  noPendingText: {
-    color: '#2E7D32',
-    fontWeight: '600',
-    textAlign: 'center',
   },
   button: {
     width: '100%',

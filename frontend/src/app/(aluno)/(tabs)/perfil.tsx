@@ -1,21 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, Button, Avatar, Surface, useTheme, Portal, Modal, Divider } from 'react-native-paper';
+import { Text, Avatar, Surface, useTheme, Divider } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import { LogOut, UserCircle, CreditCard, RefreshCw, ChevronRight, Pencil, Mail, AlertCircle } from 'lucide-react-native';
+import { LogOut, CreditCard, RefreshCw, ChevronRight, Pencil, Mail, AlertCircle } from 'lucide-react-native';
+
 import { useAuth } from '@contexts/AuthContext';
 import { userService } from '@services/userService';
-import { api } from '../../api/api';
-import { AppPopup, PopupType } from '@/components/ui/AppPopup';
-import { formatarCelular } from '../../utils/formatarTelefone';
-import { calcularStatusAluno } from '../../utils/statusAluno';
-import { formatarInstituicao } from '../../utils/formatarInstituicao';
+import { api } from '@/api/api';
+import { AppPopup } from '@/components/ui/AppPopup';
+import { formatarCelular } from '@/utils/formatarTelefone';
+import { calcularStatusAluno } from '@/utils/statusAluno';
+import { formatarInstituicao } from '@/utils/formatarInstituicao';
 
 export default function PerfilScreen() {
-  const theme = useTheme();
+  const _theme = useTheme();
   const router = useRouter();
   const { user, token, signOut, updateUser } = useAuth();
   const [modalSairVisivel, setModalSairVisivel] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     async function carregarPerfil() {
@@ -40,7 +42,7 @@ export default function PerfilScreen() {
       }
     }
     carregarPerfil();
-  }, []);
+  }, [updateUser]);
 
   const handleSignOut = async () => {
     setModalSairVisivel(false);
@@ -64,7 +66,9 @@ export default function PerfilScreen() {
       }
     : null;
 
-  // Sem foto cadastrada, mostra as iniciais (antes exibia uma foto de banco de imagens)
+  const showAvatarImage = imageSource && !imageError;
+
+  // Sem foto cadastrada, mostra as iniciais
   const getIniciais = (nome?: string) => {
     if (!nome) return 'AL';
     const partes = nome.trim().split(/\s+/);
@@ -80,7 +84,7 @@ export default function PerfilScreen() {
       return (
         <Surface style={[styles.statusBadge, { backgroundColor: '#FFEBEE' }]} elevation={0}>
           <Text style={[styles.statusText, { color: '#B00020' }]}>
-            Vinculo expirado - renovação necessária
+            Vínculo expirado - renovação necessária
           </Text>
         </Surface>
       );
@@ -119,8 +123,8 @@ export default function PerfilScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Foto e Nome */}
         <View style={styles.profileSection}>
-          {imageSource ? (
-            <Avatar.Image size={120} source={imageSource} />
+          {showAvatarImage ? (
+            <Avatar.Image size={120} source={imageSource} onError={() => setImageError(true)} />
           ) : (
             <Avatar.Text
               size={120}
