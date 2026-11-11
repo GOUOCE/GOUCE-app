@@ -461,8 +461,8 @@ export default function ConfigurarAgendamentoScreen() {
               value={value ? 'sim' : 'nao'}
               onValueChange={(val) => onChange(val === 'sim')}
               buttons={[
-                { value: 'sim', label: 'Sim', style: value ? styles.segActive : styles.segInactive },
-                { value: 'nao', label: 'Não', style: !value ? styles.segActive : styles.segInactive },
+                { value: 'sim', label: 'Sim', style: value ? styles.segActive : styles.segInactive, checkedColor: '#244777', uncheckedColor: '#43474E' },
+                { value: 'nao', label: 'Não', style: !value ? styles.segActive : styles.segInactive, checkedColor: '#244777', uncheckedColor: '#43474E' },
               ]}
               style={styles.segmentedBtn}
             />
@@ -537,8 +537,8 @@ export default function ConfigurarAgendamentoScreen() {
               value={value ? 'sim' : 'nao'}
               onValueChange={(val) => onChange(val === 'sim')}
               buttons={[
-                { value: 'sim', label: 'Sim', style: value ? styles.segActive : styles.segInactive },
-                { value: 'nao', label: 'Não', style: !value ? styles.segActive : styles.segInactive },
+                { value: 'sim', label: 'Sim', style: value ? styles.segActive : styles.segInactive, checkedColor: '#244777', uncheckedColor: '#43474E' },
+                { value: 'nao', label: 'Não', style: !value ? styles.segActive : styles.segInactive, checkedColor: '#244777', uncheckedColor: '#43474E' },
               ]}
               style={styles.segmentedBtn}
             />
@@ -708,7 +708,7 @@ const styles = StyleSheet.create({
     width: 160,
   },
   segActive: {
-    backgroundColor: '#00639A',
+    backgroundColor: '#d5e3ff',
   },
   segInactive: {
     backgroundColor: '#FFF',
