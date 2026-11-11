@@ -7,319 +7,382 @@
 | Módulo | Agendamento de Transporte — Aluno (EP-004) |
 | Funcionalidade | HU-015 — Consulta de Rota Complementar e Transferência |
 | Camada | UI — celular ou web |
-| Tipo de teste | Funcional manual essencial, integração, consulta offline e isolamento de cache — baseado em risco |
-| Tela | Agenda → dia agendado → Ver detalhes → `agendamento-detalhes`; entrada pelo Início quando disponível |
-| Ambiente | A preencher — aparelho/SO ou navegador, URL, SHAs do front/API, fuso; front analisado no PR #379 `b2111a9c`, backend `develop` `99bbf2c6` |
-| Total de casos | 9 |
-| Última execução | Não realizada |
-| Testador | Cauan Ricardo — execução manual; LLM — massa e conferência de API/banco |
+| Tipo de teste | Funcional manual essencial, integração, consulta offline e isolamento de sessão — baseado em risco |
+| Telas | Agenda → reserva → Ver detalhes; resumo do dia no Início; cache local e recuperação de erros. |
+| Base do planejamento | `feature/front-hu015` `4ac87b4623b493af2d56012d60b8c3b875c3af7e` ([PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379)) |
+| Branch de planejamento | `test/planejamento-api-ui-hu-015-integrado`, com entrega para `develop`; código de referência na feature acima |
+| Revisão do planejamento | 10/11/2026 — contrato integrado, BDD e decisões do PO |
+| Ambiente | Navegador (versão web) em `http://localhost:3114`, front do PR #379 `4ac87b46`; API da `develop` em `http://localhost:8014` (`735bfdee`; atualizada para `36f3cb52`, com o PR #433, antes do CT-007), banco limpo, fuso America/Fortaleza |
+| Total de casos | 10 |
+| Última execução | 10/11/2026 (parcial: análise do código; execução na tela em andamento) |
+| Testador | Cauan Ricardo — execução manual; LLM — apoio de massa e conferência de API/banco |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 9 | 0 | 0 | 0 | 0 | 9 |
+| ❌ Reprovada (7 ❌: 5 por leitura do código e 2 na tela; 2 ✅; 1 ⚠️) | 10 | 2 | 7 | 1 | 0 | 0 |
 
 ## Pré-condições
 
 | ID | Descrição |
 | --- | --- |
-| PC-01 | Build do [PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379), branch `feature/front-hu015`, com os SHAs anotados. A branch de planejamento só contém documentação. |
-| PC-02 | Alunos A e B aprovados com vínculo válido; contas e reservas diferentes. A LLM confirma respostas reais da API e dados de origem; não usar o protótipo como massa sincronizada. |
-| PC-03 | Reservas de A: AI (só ida com C1), AV (só volta com C2), AIV (ida com C1 e volta com C2), AD (direta); B tem BI em uma das mesmas datas de A. Datas válidas e atuais, pontos/horários/linhas distintos entre si e do fallback do PR. Mapa da massa no [guia API](../api/README.md). |
-| PC-04 | Consulta integrada com dados reais de horário, linha, conexão e programação do dia para comprovação dos AC-01/02/03. Na análise, o caminho `/agendamentos/detalhes?data=...` chamado pelo PR não existe no backend, que expõe ids/nomes em `/transporte/agendamentos/{id}`. Não aprovar UI com fallback após 404. |
-| PC-05 | Para RN-010, alocação real em D1/D2 com veículos distintos quando implementada; LLM prepara e registra. Sem alocação, verificar os demais dados e registrar separadamente o impedimento. |
-| PC-06 | Controle da rede do cliente e acesso online independente da LLM para conferir o servidor. Após sincronizar de verdade, manter sessão local ao testar offline; não limpar dados do app no cenário que exige preservar cache. |
-| PC-07 | Para primeiro acesso sem cache, usar perfil de navegador/app de teste separado ou remover somente os dados de teste pertinentes. Para cache inválido, a LLM pode preparar valor malformado na chave de teste via ferramenta de desenvolvimento, documentando a intervenção; nunca alterar código de produto nem dados compartilhados. |
+| PC-01 | Build completo de `feature/front-hu015` no commit `4ac87b46`, com API do mesmo checkout e migrations até 81. Registrar dispositivo/SO ou navegador, URL e SHAs. Os testes anteriores de HU-013/HU-014 em outros commits não comprovam este build. |
+| PC-02 | Usuário A e B aprovados com vínculo válido. Cauan executa a UI; a LLM prepara massa e confere API/banco. Usar o mapa AI/AV/AIV/AM1/AM2/AD/BI e C1/C2 da [suíte API](../api/API-HU-015.md), com datas/ids reais. |
+| PC-03 | API confirma resumos completos por trecho e `onibus`/`motorista` nulos. Para Início, preparar **AH** em D (dia útil) com complementar, depois direto e sem viagem hoje; não conflitar com outra reserva de A em D. |
+| PC-04 | Para offline, sincronizar dados reais e guardar captura antes de desligar a rede. Manter sessão/cache no cenário de reinício; usar perfil de teste separado para ausência de cache. A LLM conserva acesso independente ao servidor. |
+| PC-05 | Para erro de cache, a LLM pode preparar JSON inválido somente na chave do ambiente de teste, documentando a intervenção. Se a ferramenta não permitir, bloquear apenas essa variação; não mudar código de produto. |
+| PC-06 | Alocação diária futura exige dados reais de veículo/motorista. Até ela existir, validar ocultação correta; as variantes dependentes do épico 5 não são aprovadas por objetos simulados. |
+| PC-07 | Esperados seguem requisitos/BDD/PO; riscos de leitura não são bugs reproduzidos. Toda a suíte está pendente: nenhuma tela, API ou teste unitário foi executado nesta revisão do planejamento. |
 
 ## Resumo da execução
 
-Executar na ordem, restaurando rede e massa entre cenários. O banner offline sozinho não prova que dados reais foram sincronizados. Registrar cada parte que falhar ou depender de integração ainda ausente.
+Executar na ordem e registrar cada variação. Os casos dependentes da alocação futura trazem a dependência no próprio detalhe. Todos permanecem pendentes nesta entrega.
 
 ### Seção A — Consulta e apresentação
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU015-UI-001 | Abrir a viagem selecionada | Agenda → AI/AV; Início quando disponível | Data e reserva corretas; navegação funcional, sem data fixa | ⏳ PENDENTE | Não executado. |
-| CT-HU015-UI-002 | Dados claros da transferência por trecho | AI, AV e AIV com C1/C2 distintas | Linha, horário, conexão e principal legíveis e coerentes com cada trecho | ⏳ PENDENTE | Depende de detalhe completo real. |
-| CT-HU015-UI-003 | Trajeto direto | AD sem complementar | Nenhuma seção de complementar; somente principal/veículo/motorista reais | ⏳ PENDENTE | Não executado. |
+| CT-HU015-UI-001 | Abrir os detalhes da reserva selecionada | AI e AV em datas distintas, usuário A; link de detalhes sem `dataIso` e com parâmetro inválido, quando o ambiente permitir. | Agenda abre o dia correto; parâmetros ausentes/inválidos não geram viagem fictícia. | ❌ FALHOU | O erro de uma consulta anterior continua na tela ao abrir uma reserva válida; a seta de voltar leva ao painel. #432, #417 |
+| CT-HU015-UI-002 | Transferência clara e correta em cada trecho | AI, AV, AIV, AM1 e AM2; C1 05:45/18:15, C2 06:05/19:10; nome da complementar e ponto de conexão com 150 caracteres em uma variação. | Linha/horário/conexão corretos por trecho, incluindo resumo da Agenda e trajetos mistos. | ❌ FALHOU | Reprovado por leitura do código: resumo da Agenda reaproveita nome e conexão da ida na volta; cartões e rótulos da volta invertidos nos detalhes. #429, #418 |
+| CT-HU015-UI-003 | Trajeto direto e ocultação sem alocação | AD direta e AI/AIV com complementar; API confirma `onibus`/`motorista` nulos. | Direto sem complementar; campos de veículo/motorista ocultos quando nulos. | ❌ FALHOU | Reprovado: Veículo e Motorista aparecem como “A definir” (visto na tela na HU-014); a decisão do PO é ocultar. #428 |
+| CT-HU015-UI-004 | Resumo da viagem do dia no Início | AH em D com complementar; depois reserva de hoje direta; cenário sem reserva de hoje. Usar dia útil e data real do servidor/aparelho. | Resumo/atalho do dia correspondem à reserva real, com e sem complementar. | ❌ FALHOU | Reprovado por leitura do código: o resumo “Sua viagem hoje” é texto fixo e o botão não faz nada. #427 |
 
-### Seção B — Consulta offline e atualização
-
-| ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
-| --- | --- | --- | --- | --- | --- |
-| CT-HU015-UI-004 | Offline após sincronização e reinício | AI sincronizada; rede desligada; reabrir app | Mesmos dados persistidos, aviso de cache e sem dependência de servidor | ⏳ PENDENTE | Não executado. |
-| CT-HU015-UI-005 | Offline sem cache ou com cache inválido | Data nunca sincronizada; conteúdo inválido em cache de teste | Indisponibilidade clara, sem exemplos/viagem de outra data nem travamento | ⏳ PENDENTE | Não executado. |
-| CT-HU015-UI-006 | Atualizar informação e invalidar viagem indisponível | Atualização online, complementar → direto e cancelamento conhecido | Tela/cache passam a refletir os dados confirmados; cancelada não reaparece como ativa | ⏳ PENDENTE | Não executado. |
-| CT-HU015-UI-007 | Cache separado por data e operação | D1/D2 com veículos/horários diferentes; alternar online/offline | Cada data/trecho mantém a programação correspondente | ⏳ PENDENTE | Veículo diário depende de alocação. |
-
-### Seção C — Conta e erros do servidor
+### Seção B — Consulta offline e sincronização
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU015-UI-008 | Isolamento após troca de conta | A sincroniza → sair → B na mesma data, offline/online | Nenhum dado de A visível a B ou sem sessão | ⏳ PENDENTE | Não executado. |
-| CT-HU015-UI-009 | Recusa HTTP sem falso offline | Sessão recusada ou viagem ausente; cache anterior | Trata autenticação/ausência; não apresenta recusa como sincronização válida | ⏳ PENDENTE | Cache após falha de rede continua coberto pelo CT-004. |
+| CT-HU015-UI-005 | Consulta offline após sincronizar e reabrir | Duas variações no mesmo usuário: detalhe de AI aberto online; depois uma nova reserva AO preparada pela LLM, cuja informação completa foi sincronizada somente na Agenda por `/meus`, sem abrir seu detalhe antes do offline. | Informações previamente sincronizadas continuam acessíveis após perda de rede e reinício. | ❌ FALHOU | Variação 2 reprovada por leitura do código (#430); variação 1 não executada por decisão do testador. |
+| CT-HU015-UI-006 | Offline sem dados próprios válidos | Reserva nunca sincronizada neste dispositivo; depois chave de teste com JSON inválido/estrutura incompleta. Preparação isolada com apoio da LLM, quando possível. | Indisponibilidade clara sem cache válido; recuperação online sem dados inventados. | ✅ PASSOU | Offline sem dados próprios, a tela informou a indisponibilidade e permitiu recuperar; cache inválido não travou. |
+| CT-HU015-UI-007 | Reconectar e atualizar o cache com a versão atual | AI previamente sincronizada; C1 saída alterada de 05:45 para 05:50; depois principal/ponto/IES alterados separadamente por API administrativa. | Reconexão exibe e preserva a última informação real, limpando o estado de erro/offline. | ⚠️ PARCIAL | Horário da C1 atualizado após reconectar (passou); variações de ponto, IES e principal não executadas na tela. |
+| CT-HU015-UI-008 | Separação por data e programação diária | AIV e outra reserva de A com linhas/horários distintos; quando alocação existir, V1 em D1 e V2 em D2 e alteração de D1. | Datas e trechos isolados; veículo diário coberto quando a alocação existir. | ✅ PASSOU | Cada reserva abriu com os dados da própria data, sem misturar com a anterior; parte offline e alocação não executadas. |
+
+### Seção C — Conta e recusas do servidor
+
+| ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
+| --- | --- | --- | --- | --- | --- |
+| CT-HU015-UI-009 | Isolamento de conta e sessão no cache | AIV de A e BI de B na mesma data, com nomes/pontos distintos; A já sincronizou, B ainda não. | Troca de conta/logout não expõe informações sincronizadas por outro aluno. | ❌ FALHOU | Reprovado: cache de agenda e de detalhes sem dono, logout não limpa (reproduzido na HU-014). #423 |
+| CT-HU015-UI-010 | Recusa HTTP e cancelamento conhecido sem falso offline | Detalhe em cache; reserva cancelada em outra sessão; acesso realmente recusado pela API; controle de rede para distinguir HTTP de erro sem resposta. | Recusas reais não viram consulta offline indevida; cancelamento conhecido invalida a viagem. | ❌ FALHOU | Reprovado por leitura do código: recusa HTTP é tratada como offline e mostra a viagem guardada. #431 |
 
 ## Detalhamento dos casos
 
 ### Seção A — Consulta e apresentação
 
-#### CT-HU015-UI-001 — Abrir a viagem selecionada
+#### CT-HU015-UI-001 — Abrir os detalhes da reserva selecionada
 
-**Técnica/tipo:** partição por entrada/data e navegação funcional.
+**Técnica/tipo:** Partição por data/entrada e navegação funcional.
 
-**Dados de entrada:** AI e AV em datas atuais diferentes; viagem do dia no Início, se existir no build.
+**Dados de entrada:** AI e AV em datas distintas, usuário A; link de detalhes sem `dataIso` e com parâmetro inválido, quando o ambiente permitir.
 
 **Passos**
 
-1. Entrar como A e ir à Agenda; selecionar AI e tocar em **Ver detalhes**.
-2. Conferir data/dia da semana, voltar e abrir AV; comparar com os ids/datas confirmados pela LLM.
-3. Abrir a viagem pelo Início se o build oferecer o atalho; conferir que corresponde à viagem do dia e não a uma data padrão.
+1. Abrir Agenda, localizar AI e tocar no card ou em Ver detalhes; conferir data/dia da semana.
+2. Voltar e abrir AV; comparar com a reserva confirmada pela LLM na API.
+3. Na web, conferir uma entrada sem data e uma data inválida. Voltar pelo controle da tela/aparelho.
 
 **Resultado esperado**
 
-- A Agenda abre os detalhes da reserva selecionada, com data real; voltar permite selecionar outra reserva sem repetir os detalhes anteriores (AC-01, RF-029).
-- Sem data fixa `2026-09-01` ou datas impossíveis, sem rota inexistente e sem usar viagem de demonstração para completar a tela.
-- O requisito permite entrada por Meus Agendamentos **ou** Início: um caminho funcional satisfaz a entrada. Registrar separadamente atalho oferecido que não funcione; não exigir duas entradas como novo critério obrigatório.
-- Se a grade fixa impedir alcançar uma reserva atual, registrar o impedimento. Link direto pode ajudar a investigar, mas não substitui aprovação da navegação normal.
+- A tela abre a reserva selecionada, com data local correta, sem diferença de um dia por conversão UTC nem dados de outra viagem.
+- Mudar a reserva troca os detalhes; indicador de carregamento termina e a tela permite voltar.
+- Sem data, exibir erro claro, sem escolher data fixa por padrão. Data inválida não apresenta viagem inventada; registrar mensagem e recuperação.
+- Os acessos partem do build completo da feature; link direto auxilia o diagnóstico, mas não substitui o fluxo normal pela Agenda.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Sem data (`/agendamento-detalhes`): a tela mostra “Não foi possível carregar a viagem — Data da viagem não informada.”, sem escolher data fixa e com a seta de voltar.
+- Data inválida (`?dataIso=abc`): “Data deve estar no formato YYYY-MM-DD.”, com **Tentar novamente** e sem viagem inventada.
+- Depois desses erros, ao abrir uma reserva válida pela Agenda, a tela continuou mostrando o erro anterior (#432).
+- A seta de voltar da tela de detalhes e da tela de erro leva ao painel, não à Agenda (#417).
+- Status: ❌ Falhou. Issues: #432, #417.
 
 ---
 
-#### CT-HU015-UI-002 — Dados claros da transferência por trecho
+#### CT-HU015-UI-002 — Transferência clara e correta em cada trecho
 
-**Técnica/tipo:** tabela de decisão ida/volta × complementar; funcional, integração e legibilidade.
+**Técnica/tipo:** Tabela trecho × complementar e limite cadastral de texto; funcional e integração.
 
-**Dados de entrada:** AI/AV/AIV, C1/C2 com nomes, conexões e horários distintos. Preparar nome e ponto de conexão com 150 caracteres (limite cadastral válido) em uma variação para conferir leitura completa no aparelho, sem modificar dados compartilhados.
+**Dados de entrada:** AI, AV, AIV, AM1 e AM2; C1 05:45/18:15, C2 06:05/19:10; nome da complementar e ponto de conexão com 150 caracteres em uma variação.
 
 **Passos**
 
-1. Abrir cada reserva por **Ver detalhes** e capturar o que a tela apresenta.
-2. Comparar com a LLM nome da linha, horário do trecho, ponto exato de conexão e dados da principal/programação diária.
-3. Em AIV, localizar as informações de ida e volta e distinguir as duas complementares. Rolar a tela e conferir leitura completa do ponto e horário.
+1. Conferir o resumo da complementar nos cards da Agenda e abrir os detalhes de cada reserva.
+2. Comparar linha, horário, conexão, principal, pontos e IES com o JSON da API; em AIV conferir C1 e C2 separadamente.
+3. Rolar a tela para ler nomes/pontos longos; verificar a descrição da sequência de transferência na ida e na volta.
 
 **Resultado esperado**
 
-- A complementar aparece destacada, com nome da linha, horário correto da Van/Micro-ônibus e ponto exato de conexão; embarque inicial e conexão são distinguíveis (AC-01/02).
-- Ida não usa horário de retorno; volta não repete automaticamente a saída da ida. AIV preserva a informação de cada trecho, sem apresentar somente Ida para uma viagem com duas transferências diferentes.
-- Dados da principal ajudam a identificar o ônibus de conexão; veículo corresponde à operação diária quando a alocação estiver disponível (RN-010).
-- Texto longo pode quebrar linha/rolar, mas não deixa conexão, linha ou horário ilegíveis. Não exigir mapa, instrução textual extra ou padrão visual ausente do requisito.
-- Comparação precisa ser com dados reais do servidor; um card com “Van 2 - Bairro Novo” após falha HTTP não comprova a consulta. Sem detalhe completo/alocação, registrar as partes afetadas.
+- Somente trechos utilizados aparecem. AI mostra Ida e AV Volta; nas viagens mistas, o card de complementar existe apenas no trecho que a utiliza.
+- Na ida, C1 mostra saída 05:45; na volta, C2 mostra retorno 19:10. AIV não reutiliza nome/conexão de C1 para C2 no resumo da Agenda nem nos detalhes.
+- Linha e ponto exato de conexão são destacados e legíveis. Na ida: ponto de embarque → complementar → conexão → principal → IES. Na volta: IES → principal → conexão → complementar → ponto de desembarque, sem rótulos que invertam origem/destino.
+- Nome/ponto com 150 caracteres continuam compreensíveis com quebra de linha/rolagem; não exigir mapa ou regra de antecedência não definidos nos requisitos.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Reprovado por leitura do código do commit `4ac87b46`, sem executar a tela.
+- O resumo de rota complementar da Agenda usa um nome e uma conexão só (`ida?.nome ?? volta?.nome`): no AIV mostraria “Van 2 - Bairro Novo” e “Trevo do Bairro Novo” também para a volta (C2, Conexão Planalto) (#429).
+- Na tela de detalhes, na volta, o cartão da complementar vem antes do da principal e os rótulos estão invertidos: “Ponto de Embarque” da complementar mostra o ponto de desembarque, e “Origem (IES)” da principal mostra o ponto do bairro. A segunda parte foi vista na tela na execução da HU-014 (#418).
+- Status: ❌ Falhou (por leitura do código). Issues: #429, #418.
 
 ---
 
-#### CT-HU015-UI-003 — Trajeto direto
+#### CT-HU015-UI-003 — Trajeto direto e ocultação sem alocação
 
-**Técnica/tipo:** partição com/sem complementar; funcional positivo.
+**Técnica/tipo:** Partições direto/complementar e alocação ausente; funcional positivo.
 
-**Dados de entrada:** AD confirmada na API com complementares nulas, sem alterar parâmetros de URL para forçar a regra.
+**Dados de entrada:** AD direta e AI/AIV com complementar; API confirma `onibus`/`motorista` nulos.
 
 **Passos**
 
-1. Abrir AD pelo fluxo normal da Agenda; conferir toda a tela.
-2. Pedir à LLM para confirmar a classificação direta e os dados da operação principal.
-3. Repetir depois de consultar uma reserva com complementar, verificando que o card anterior não permanece.
+1. Abrir AD após consultar uma viagem com complementar e conferir toda a tela.
+2. Abrir AI/AIV e comparar os campos da principal com a resposta real.
+3. Retornar à Agenda e conferir que os cards também distinguem os trajetos diretos.
 
 **Resultado esperado**
 
-- Ocultar completamente a seção de complementar e instrução de transferência; mostrar somente informações reais do ônibus/motorista da principal quando alocados (AC-03, FA-001).
-- A regra decorre da reserva, não de `semComplementar=true` nem do valor padrão `temComplementar=true` do serviço. Não mostrar dados antigos de C1/C2.
-- Falta da alocação limita a conferência de ônibus/motorista; ainda é possível avaliar separadamente se a seção de complementar foi ocultada corretamente.
+- AD não mostra seção, nome ou instrução de complementar, preservando os dados reais da principal.
+- Com `onibus`/`motorista` nulos, ocultar esses campos em qualquer trajeto. Exibir “A definir” nos campos em vez de ocultá-los diverge da decisão do PO (#389 item 7).
+- Os dados essenciais da transferência e da principal continuam visíveis sem esperar o épico 5. A ausência de alocação não é bloqueio deste caso.
+- Nenhum card antigo permanece quando a reserva seguinte é direta.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Os campos **Veículo** e **Motorista** aparecem como “A definir” sem alocação; foi visto na tela (detalhes de 11/11, na execução da HU-014) e confere com o código. A decisão do PO (#389, item 7) é ocultá-los.
+- A reserva direta (AD) não mostra seção de complementar, conforme o código.
+- Status: ❌ Falhou. Issue: #428.
 
 ---
 
-### Seção B — Consulta offline e atualização
+#### CT-HU015-UI-004 — Resumo da viagem do dia no Início
 
-#### CT-HU015-UI-004 — Offline após sincronização e reinício
+**Técnica/tipo:** Partição complementar/direto e presença/ausência de viagem do dia; funcional.
 
-**Técnica/tipo:** transição online → offline; persistência do cache e recuperação.
-
-**Dados de entrada:** AI carregada por resposta HTTP bem-sucedida, com informação real distinta do protótipo; sessão local válida.
+**Dados de entrada:** AH em D com complementar; depois reserva de hoje direta; cenário sem reserva de hoje. Usar dia útil e data real do servidor/aparelho.
 
 **Passos**
 
-1. Online, abrir AI e guardar captura/valores. A LLM confirma resposta HTTP e dados de origem; se necessário, confere a existência do cache de teste sem expor credenciais.
-2. Desligar a rede do cliente e consultar AI novamente.
-3. Fechar o app completamente e reabrir ainda offline; na web, recarregar a página se a aplicação já puder ser carregada offline.
-4. Voltar à mesma viagem e comparar todos os dados; depois restaurar a rede.
+1. Como A, abrir Início e conferir a seção Sua viagem hoje com a massa confirmada pela LLM.
+2. Usar Ver detalhes/atalho oferecido pelo build e comparar a data com a viagem de hoje.
+3. Repetir com trajeto direto e sem reserva de hoje, atualizando a tela após cada preparação.
 
 **Resultado esperado**
 
-- Nome, horário, conexão e informação principal previamente sincronizados continuam disponíveis sem internet e após reinício, sem substituição por exemplos (AC-04, FA-002, RNF-015).
-- O PR prevê aviso **“Visualização Offline (Dados salvos no dispositivo)”**; conferir indicação de cache. O texto exato do banner é referência da implementação, não frase obrigatória do requisito.
-- Não é necessário que a API responda enquanto offline. Se o navegador não puder nem carregar o app offline, registrar a limitação do ambiente e executar a persistência no celular; não tratar teste só em memória como prova de persistência local.
-- Sem uma sincronização real anterior, registrar o bloqueio deste caso e executar CT-005; fallback guardado após erro não conta como sincronização.
+- Quando o Início oferecer resumo da viagem, ele corresponde à reserva real de D; com complementar, mostra linha, horário e conexão; direto não mostra transferência.
+- Sem alocação, não exibir ônibus/motorista fixos. Sem viagem hoje, não apresentar a reserva de amanhã como se fosse de hoje.
+- Atalhos oferecidos funcionam e preservam a data. Registrar o cenário do BDD se o resumo continuar estático ou o botão não executar ação.
+- AC-01 permite acesso por Agenda ou Início; o BDD inclui explicitamente o resumo no Início. Diferenciar essa cobertura do BDD da aprovação do caminho da Agenda.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Reprovado por leitura do código: em `home.tsx`, “Sua viagem hoje” é um cartão fixo (“Ônibus 04 - Placa OCR-1234”, “Rota Centro → UFC | Saída 06:40”) que aparece com ou sem reserva; o botão **Ver detalhes** tem `onPress` vazio e os atalhos do Acesso Rápido não têm ação.
+- Status: ❌ Falhou (por leitura do código). Issue: #427.
 
 ---
 
-#### CT-HU015-UI-005 — Offline sem cache ou com cache inválido
+### Seção B — Consulta offline e sincronização
 
-**Técnica/tipo:** partições cache válido/ausente/inválido e limite de primeira consulta; integração negativa.
+#### CT-HU015-UI-005 — Consulta offline após sincronizar e reabrir
 
-**Dados de entrada:** perfil/app de teste sem cache de AI; depois chave de cache de teste com JSON malformado ou estrutura sem campos obrigatórios, preparada pela LLM em ambiente isolado.
+**Técnica/tipo:** Transição online → offline e partição cache de detalhe/cache somente da Agenda.
+
+**Dados de entrada:** Duas variações no mesmo usuário: detalhe de AI aberto online; depois uma nova reserva AO preparada pela LLM, cuja informação completa foi sincronizada somente na Agenda por `/meus`, sem abrir seu detalhe antes do offline.
 
 **Passos**
 
-1. Sem sincronizar AI, desligar a rede e tentar consultar seus detalhes no app já aberto.
-2. Conferir se aparece indisponibilidade ou alguma viagem inventada; reabrir para verificar se exemplos foram persistidos.
-3. Repetir com conteúdo inválido na chave de teste; anotar como a massa foi preparada. Se o ambiente não permitir intervir no cache, registrar essa variação bloqueada.
+1. Online, confirmar resposta HTTP real e guardar captura de linha/horário/conexão. A LLM confere que os dados completos vieram do servidor.
+2. Desligar a rede do cliente, sair/voltar à Agenda e abrir a mesma reserva.
+3. Fechar completamente e reabrir o app ainda offline, mantendo a sessão/cache; repetir para a reserva sincronizada somente pela Agenda.
 
 **Resultado esperado**
 
-- Sem dados previamente sincronizados, informar que as informações não estão disponíveis offline; não exibir viagem de exemplo, outra data ou outro aluno como alocação real (limite de AC-04/RNF-015).
-- Cache inválido não derruba a tela nem vira prova de viagem válida; permitir recuperar a consulta quando a rede voltar.
-- Não persistir o fallback do protótipo como se viesse do servidor. A mensagem exata de indisponibilidade não foi definida nos requisitos; registrar a utilizada sem inventar texto obrigatório.
+- Dados já sincronizados ficam disponíveis offline, iguais à última resposta real, inclusive após reinício, com indicação de dados salvos no dispositivo.
+- A navegação offline pela Agenda e seu calendário chega aos detalhes. Quando `/meus` já sincronizou os dados completos, verificar que o detalhe offline não exige uma consulta online adicional apenas para preencher outra chave de cache.
+- Sem alteração do servidor durante o offline, linha/horário/conexão permanecem iguais. O banner sozinho não comprova sincronização; dados de exemplo não são aceitos.
+- Na web, se o navegador não carregar o próprio app offline, registrar a limitação do ambiente e testar a persistência no celular; cache em memória não comprova reinício.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Variação 2 (reserva sincronizada só pela Agenda): reprovada por leitura do código; `obterDetalhesViagem` consulta apenas a chave de detalhes e propaga o erro, sem usar a lista guardada de `/meus` (#430).
+- Variação 1 (detalhe aberto online): pendente de execução na tela. Na web, o reinício offline depende de o navegador carregar o app sem rede; se não carregar, registrar a limitação do ambiente.
+- Status: ⏳ Pendente (variação 2 ❌).
 
 ---
 
-#### CT-HU015-UI-006 — Atualizar informação e invalidar viagem indisponível
+#### CT-HU015-UI-006 — Offline sem dados próprios válidos
 
-**Técnica/tipo:** transição de estado e atualização de cache; integração com HU-013/014.
+**Técnica/tipo:** Partições cache ausente/malformado/incompleto e limite de primeira consulta.
 
-**Dados de entrada:** AI previamente sincronizada; alteração de ponto/horário/programação por fluxo permitido, depois reserva do mesmo dia alterada para direta e por fim cancelada.
+**Dados de entrada:** Reserva nunca sincronizada neste dispositivo; depois chave de teste com JSON inválido/estrutura incompleta. Preparação isolada com apoio da LLM, quando possível.
 
 **Passos**
 
-1. Com apoio da LLM, alterar os dados efetivos da viagem em ambiente de teste por operação real e documentar a origem. Online, sair e abrir novamente o detalhe; comparar com a API.
-2. Offline, reabrir e conferir que o último conjunto sincronizado substituiu o anterior.
-3. Online, a LLM altera a reserva para direta pela HU-013; abrir novamente e depois consultar offline.
-4. Online, cancelar pela HU-014 e fazer o app consultar/receber a confirmação de ausência; voltar a ficar offline e tentar reabrir a viagem.
+1. Com o app já carregado e sem cache da reserva, desligar a rede e tentar abrir a viagem.
+2. Conferir aviso e tentativa de recuperação; repetir com cache de teste inválido, registrando a preparação.
+3. Restaurar a conexão e usar Tentar novamente; reabrir a viagem.
 
 **Resultado esperado**
 
-- Após nova resposta online válida, tela e cache refletem o novo ponto/horário/dados; trajeto que virou direto deixa de mostrar complementar, inclusive na consulta offline seguinte (AC-03/04, RN-010).
-- Cancelamento conhecido pelo app não reaparece como viagem ativa por reutilização do cache. Mostrar ausência/indisponibilidade coerente, sem recuperar um roteiro que o servidor já recusou.
-- Enquanto totalmente offline, não se exige descobrir alterações ainda desconhecidas do servidor: pode exibir o último dado sincronizado, identificado como tal. A conclusão deste teste depende de reconexão e consulta efetiva antes de avaliar a invalidação.
-- Sem fluxo real para alterar programação, registrar esse trecho bloqueado e verificar as transições de reserva disponíveis; não simular atualização apenas editando o cache.
+- Sem dados próprios sincronizados, informar indisponibilidade offline e permitir recuperar a consulta ao reconectar.
+- Não usar a viagem de outra data/conta nem exemplo fixo para completar a tela, nem persistir isso como sincronização válida.
+- Cache inválido não trava a tela. Se o ambiente não permitir preparar essa variação, registrar apenas ela como bloqueada.
+- Após retorno real da API, mostrar os dados atuais e encerrar o erro/carregamento. Nenhum texto exato de indisponibilidade é imposto pelos requisitos.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Variação 1 (reserva nunca sincronizada neste navegador, com o navegador offline): o app informou que não foi possível carregar a viagem, com opção de recuperar, sem usar dados de outra data, de outra conta nem de exemplo.
+- Variação 2 (chaves de teste com JSON quebrado e com JSON incompleto no `localStorage`): sem falha relatada pelo testador; a tela não travou.
+- Recuperação: com a rede de volta, os dados atuais apareceram e o erro saiu.
+- Status: ✅ Passou.
 
 ---
 
-#### CT-HU015-UI-007 — Cache separado por data e operação
+#### CT-HU015-UI-007 — Reconectar e atualizar o cache com a versão atual
 
-**Técnica/tipo:** partição por data/trecho e tabela de decisão por programação; integração e cache.
+**Técnica/tipo:** Transição online/offline/reconectado e alteração de referência; integração.
 
-**Dados de entrada:** D1 e D2 com horários/pontos diferentes; mesma linha complementar operada por V1 em D1 e V2 em D2 quando a alocação existir; AIV tem complementares diferentes por trecho.
+**Dados de entrada:** AI previamente sincronizada; C1 saída alterada de 05:45 para 05:50; depois principal/ponto/IES alterados separadamente por API administrativa.
 
 **Passos**
 
-1. Online, abrir D1 e D2 e guardar os detalhes confirmados pela LLM.
-2. Desligar a rede e alternar a consulta entre as datas; reabrir AIV para conferir ida e volta.
-3. Comparar data exibida, programação, principal e transferências com cada captura online.
+1. Com AI em cache, ficar offline; a LLM muda a referência real no banco por operação administrativa suportada.
+2. Voltar à rede e abrir novamente os detalhes; comparar payload e `atualizado_em` com apoio da LLM.
+3. Ficar offline de novo e reabrir: conferir se a última informação online foi persistida. Repetir ponto/IES e principal.
+4. No cenário sem cache que gerou erro, reconectar e retornar à tela/usando Tentar novamente para conferir limpeza do estado de erro.
 
 **Resultado esperado**
 
-- Cada data mantém seu próprio último conjunto sincronizado, sem reutilizar a última viagem consultada para todas as datas (AC-04, RNF-015).
-- O veículo acompanha a programação do respectivo dia; mesma linha não significa mesmo veículo permanente (RN-010).
-- Ida e volta distintas não se fundem em um único horário/ponto. Se a alocação faltar, verificar separação por data/trechos e registrar apenas a parte de veículo diário bloqueada.
+- Após resposta online válida, mostrar 05:50 e a versão atual; remover indicação offline. A nova consulta offline mantém 05:50, não a versão antiga.
+- Mesmo resultado para os demais dados visíveis alterados; payload novo com versão antiga não deve deixar informação antiga no próximo offline (API-007).
+- Erro transitório anterior não permanece sobre dados recuperados e a tela não fica vazia/carregando indefinidamente.
+- Enquanto ainda offline, pode mostrar o último dado conhecido com aviso; não se exige descobrir atualização do servidor sem comunicação.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Horário da C1: com o detalhe da AI (11/11) guardado em 05:45, o navegador foi colocado offline e a C1 foi alterada para 05:50 pelo cadastro administrativo (a API renovou o `atualizado_em`). Ao reconectar, o detalhe mostrou 05:50 e a faixa offline saiu; offline de novo, continuou em 05:50. Passou, segundo o testador.
+- Ponto, IES e principal: não executados na tela, por decisão do testador. Na API, a correção do PR #433 (issue #404) passou a renovar `atualizado_em` nesses casos: verificado renomeando a IES (a versão mudou) e revertendo depois. Como a tela regrava o cache quando a versão muda, esperava-se que passassem, mas isso não foi confirmado na tela.
+- Status: ⚠️ Parcial.
 
 ---
 
-### Seção C — Conta e erros do servidor
+#### CT-HU015-UI-008 — Separação por data e programação diária
 
-#### CT-HU015-UI-008 — Isolamento após troca de conta
+**Técnica/tipo:** Partição por data/trecho e tabela data × programação.
 
-**Técnica/tipo:** transição de sessão e partição por dono; isolamento de dados locais.
-
-**Dados de entrada:** A e B com viagens diferentes na mesma data; cache de A previamente sincronizado no mesmo aparelho/perfil de navegador.
+**Dados de entrada:** AIV e outra reserva de A com linhas/horários distintos; quando alocação existir, V1 em D1 e V2 em D2 e alteração de D1.
 
 **Passos**
 
-1. Como A, sincronizar sua viagem; sair da conta e entrar como B ainda online, sem abrir os detalhes de B.
-2. Ficar offline e abrir a viagem da mesma data; verificar o que aparece antes de B ter sincronizado.
-3. Online, sincronizar a viagem de B e repetir offline; depois sair e tentar reabrir os detalhes pelo histórico/link direto sem sessão.
+1. Online, consultar as duas datas e guardar os valores confirmados pela LLM.
+2. Offline, alternar entre as reservas, conferir data, trechos e principal/complementar de cada uma.
+3. Quando a alocação real existir, comparar ônibus por data e depois da alteração de D1, com apoio de API-008.
 
 **Resultado esperado**
 
-- Antes de sincronizar B, nunca mostrar dados de A. Depois de sincronizar B, exibir apenas os de B (consulta pessoal prevista na HU-015; integração com controle de acesso).
-- Sem sessão, bloquear o acesso aos detalhes protegidos. O cache precisa preservar o isolamento por conta, qualquer que seja a estratégia adotada, sem impor implementação específica.
-- A chave de cache do PR usa somente a data: registrar a exposição se reproduzida; uma chave compartilhada por leitura de código é risco, não evidência de execução.
+- Cache e tela mantêm os dados de cada data/trecho, sem reutilizar a última viagem aberta como se fosse de todas as datas.
+- Com alocação real, V1/D1 e V2/D2 permanecem separados; realocação de D1 aparece após sincronizar e não muda D2.
+- Sem alocação, conferir separação dos dados já disponíveis e registrar a parte de veículo como dependência futura; não exigir veículo inventado nem reprovar a ocultação correta.
+- A data da tela corresponde ao cache consultado; alternar reservas não mistura conexões/horários.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Versão online, com a rede ligada: AIV (13/11), AM1 (18/11), AM2 (19/11) e AD (20/11), abertas em sequência e AIV de novo no fim. Cada tela mostrou os dados da própria reserva e da própria data, com o quadro de rota complementar só nos trechos que a usam; a AD (ida e volta diretas) não tem o quadro. Sem mistura com a reserva aberta antes.
+- A variação offline não foi executada, por decisão do testador, e a parte de veículo por data segue dependendo da alocação (épico 5).
+- Observação do testador: as mensagens de resposta do servidor (por exemplo, o resultado do cancelamento) seguem em toast preto, fora do padrão de popup do app; já registrado na #413.
+- Status: ✅ Passou (versão online).
 
 ---
 
-#### CT-HU015-UI-009 — Recusa HTTP sem falso offline
+### Seção C — Conta e recusas do servidor
 
-**Técnica/tipo:** partição falha de rede/recusa HTTP e recuperação; integração negativa.
+#### CT-HU015-UI-009 — Isolamento de conta e sessão no cache
 
-**Dados de entrada:** cache válido de uma viagem; rede disponível; sessão realmente recusada pela API ou reserva cancelada em outra sessão. Usar respostas reais, com a LLM anotando HTTP/estado.
+**Técnica/tipo:** Transição de sessão e partição por dono; segurança de dados locais.
+
+**Dados de entrada:** AIV de A e BI de B na mesma data, com nomes/pontos distintos; A já sincronizou, B ainda não.
 
 **Passos**
 
-1. Preparar sessão sem acesso regular ou encerrada pelo fluxo real disponível; tentar abrir os detalhes com o cliente conectado. Se o refresh renovar a sessão com sucesso, essa tentativa não conta como recusa de autenticação.
-2. Com sessão válida novamente, sincronizar outra reserva; a LLM a cancela em outra sessão. Reabrir os detalhes online e conferir a resposta de ausência.
-3. Restaurar acesso/massa válida quando necessário e abrir novamente; comparar com o servidor.
+1. Sincronizar como A, sair e entrar como B com rede, sem abrir os detalhes de B.
+2. Ficar offline e abrir a mesma data; conferir também a Agenda carregada do cache.
+3. Online, sincronizar B e repetir offline; sair e tentar reabrir detalhes por histórico/link direto sem sessão.
 
 **Resultado esperado**
 
-- Recusa de acesso pede autenticação/informa bloqueio conforme o estado; ausência confirmada da viagem é tratada como ausência, sem detalhes inventados.
-- Não classificar qualquer HTTP 401/403/404 como “sem internet” nem apresentar dados protegidos/viagem cancelada como informação ativa e atualizada. Falha real de rede com dados sincronizados continua coberta pelo CT-004.
-- Cache só deve sustentar a consulta permitida de informações previamente disponibilizadas; o banner offline não mascara erro de contrato nem comprova sucesso da API (AC-04/RNF-015 e controle de acesso).
-- Na base analisada, o caminho ausente pode resultar em erro de integração; registrar esse resultado separadamente de ausência de reserva. Não usar 404 de rota inexistente para aprovar o tratamento de viagem cancelada.
+- B nunca recebe dados de A, nem na Agenda nem nos detalhes. Antes de sincronizar B, informar indisponibilidade do cache próprio; depois mostrar só os dados de B.
+- Sem sessão, o app protege o acesso às informações locais da viagem. Não exigir estratégia de implementação específica para garantir o isolamento.
+- Retornar a A não mistura os dados de B. A revisão de chaves de cache por leitura não substitui a reprodução visual.
+- Se a sessão for renovada com sucesso, ela continua válida; distinguir renovação efetiva de acesso indevido.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Reprovado: o cache da Agenda sem dono e o logout sem limpeza foram reproduzidos na tela na execução da HU-014 (CT-HU014-UI-010, #423).
+- Por leitura do código, a chave dos detalhes (`@GOUOCE:detalhes_viagem_<data>`) também não tem o id do usuário, então B, offline e sem cache próprio, abriria o detalhe guardado por A na mesma data.
+- Status: ❌ Falhou. Issue: #423.
+
+---
+
+#### CT-HU015-UI-010 — Recusa HTTP e cancelamento conhecido sem falso offline
+
+**Técnica/tipo:** Partição erro de rede/401/403/404 e transição ATIVO → CANCELADO.
+
+**Dados de entrada:** Detalhe em cache; reserva cancelada em outra sessão; acesso realmente recusado pela API; controle de rede para distinguir HTTP de erro sem resposta.
+
+**Passos**
+
+1. Com a viagem sincronizada, a LLM cancela a reserva em outra sessão; reabrir os detalhes online e confirmar o HTTP real.
+2. Repetir com sessão/perfil sem acesso regular, registrando a recusa efetiva, inclusive após tentativa de refresh.
+3. Cancelar pelo app quando possível e tentar reabrir a data offline; conferir invalidação de lista, calendário e detalhe.
+4. Restaurar conta/massa válida e verificar que é possível recuperar a consulta.
+
+**Resultado esperado**
+
+- 404 de ausência/cancelamento e 401/403 de acesso recusado são tratados de forma coerente; não apresentar dados antigos como viagem ativa sob simples banner offline.
+- Cancelamento confirmado pelo próprio app invalida a informação correspondente; a viagem não reaparece ativa ao ficar offline. Não se exige conhecer um cancelamento remoto enquanto não houve nova comunicação.
+- Falha real de rede com cache próprio válido continua permitindo a consulta prevista no AC-04; não confundir essa condição com recusa HTTP do servidor.
+- Sem cache, mostrar erro/ausência e permitir recuperar; nenhuma resposta recusada produz sucesso fictício.
+
+**Resultado obtido**
+
+- Reprovado por leitura do código: o `catch` de `obterDetalhesViagem` usa o cache em qualquer erro, inclusive 404, 401 e 403, e devolve `isOffline: true`; uma reserva cancelada em outra sessão reapareceria como viagem salva (#431).
+- Status: ❌ Falhou (por leitura do código). Issue: #431.
+
+---
 
 ## Rastreabilidade
 
-| Critério/regra | Casos UI | Complemento API |
-| --- | --- | --- |
-| AC-01 — informação destacada da complementar | 001, 002 | API-001, API-002, API-004 |
-| AC-02 — clareza para a transferência | 002 | API-004, API-005 |
-| AC-03 / FA-001 — somente principal no trajeto direto | 003, 006 | API-003 |
-| AC-04 / FA-002 — consulta offline sincronizada | 004 a 009 | API fornece origem; persistência local verificada aqui |
-| RN-010 — veículo/programação da operação | 002, 006, 007 | API-004, API-005 |
-| RF-029 — consulta da própria viagem | 001 a 003, 008, 009 | API-002, API-003, API-006, API-007 |
-| RNF-015 — informação previamente disponibilizada offline | 004, 005, 006, 007 | Não comprovado somente por GET ou mock |
+| Critério/regra | Cenários BDD de referência | Casos UI | Complemento API |
+| --- | --- | --- | --- |
+| AC-01 — destaque e entrada | Dados destacados em Meus Agendamentos; resumo da viagem do dia no Início | 001, 002, 004 | 001, 002 |
+| AC-02 — transferência clara | Principal de destino junto à complementar | 002 | 002 |
+| AC-01 / #389 item 6 — volta | Horário de retorno no trecho da volta; complementar por trecho | 002 | 002 |
+| AC-02 / #389 item 7 — sem alocação | Ônibus/motorista ocultos sem alocação diária | 003 | 003 |
+| AC-03 / FA-001 — direto | Seção ocultada no detalhe e no resumo do Início | 003, 004 | 003 |
+| AC-04 / FA-002 / RNF-015 — cache | Offline sincronizado; mesmos dados da última consulta; sem sincronização | 005, 006 | Fonte real validada em 001 a 003 |
+| AC-04 — reconexão | Atualiza dados quando a conexão é restabelecida | 007 | 007 |
+| RN-010 — programação | Veículo por dia e alteração de veículo | 008, parte futura | 008, dependente do épico 5 |
+| RF-029 — dados próprios | Recurso de outro aluno; lista restrita | 009 | 005, 006 |
+| RF-029 — recurso recusado | Data sem ativo/cancelado; perfis sem acesso; sem token | 001, 010 | 004 a 006 |
+| Robustez de integração | Cache da Agenda sem detalhe, cache inválido, troca de conta e distinção rede/HTTP | 005, 006, 009, 010 | Cobertura adicional orientada pelo código |
 
 ## Defeitos encontrados
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. Riscos de leitura estão no índice do épico. | — |
+| CT-001 | Depois de um erro na tela de detalhes, abrir uma reserva válida continua mostrando o erro anterior; a seta de voltar leva ao painel. | #432, #417 |
+| CT-002 | O resumo da Agenda reaproveita nome e conexão da ida na volta; na volta, os rótulos e a ordem dos cartões estão invertidos. | #429, #418 |
+| CT-003 | Veículo e Motorista aparecem como “A definir” sem alocação; o PO decidiu ocultar. | #428 |
+| CT-004 | O resumo “Sua viagem hoje” do Início é texto fixo e o botão não faz nada. | #427 |
+| CT-005 | Offline, o detalhe de uma reserva sincronizada só pela Agenda dá erro. | #430 |
+| CT-009 | O cache de agenda e de detalhes não tem dono, e o logout não o apaga. | #423 |
+| CT-010 | Recusa do servidor (404, 401, 403) é tratada como offline e mostra a viagem guardada. | #431 |
 
-## Observações gerais
+## Fontes e observações
 
-- Referências: [requisitos, seção 7.5.3](../../../../../docs/requisitos.md), [PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379), [suíte API](../api/API-HU-015.md) e [índice com fontes/riscos](../../README.md).
-- Sem BDD da HU-015 na base analisada; revisar a rastreabilidade quando ele for adicionado. O planejamento atual segue os quatro critérios de aceite e as duas alternativas dos requisitos.
-- Cache, datas e credenciais devem pertencer ao ambiente de teste. Relatos reproduzidos serão registrados em `ui/issues/` durante a execução, sem dados pessoais/tokens.
-- Não confundir visual de protótipo, teste unitário com mock ou leitura do código com aprovação manual. Todos os nove casos permanecem pendentes nesta entrega.
+- [Requisitos, seção 7.5.3](../../../../../docs/requisitos.md): AC-01 a AC-04, FA-001/002, RN-010, RF-029 e RNF-015.
+- [BDD HU-015](../../../../../bdd/features/epico-04/HU-015.feature) e [README do BDD](../../../../../bdd/features/epico-04/README.md), presentes neste checkout; os títulos na rastreabilidade correspondem aos cenários reais. Não foram modificados nesta entrega.
+- [Resposta do PO na #389](https://github.com/GOUOCE/GOUCE-app/issues/389#issuecomment-6756236002), itens 6 e 7: saída na ida, retorno na volta e campos de ônibus/motorista ocultos sem alocação.
+- [PR #379](https://github.com/GOUOCE/GOUCE-app/pull/379), branch `feature/front-hu015`, commit **`4ac87b4623b493af2d56012d60b8c3b875c3af7e`**, com backend e front no mesmo checkout.
+- [Suíte de API](../api/API-HU-015.md). Preparação e conferência pela LLM não substituem a observação manual da UI por Cauan.
+- Os cenários do BDD para Início são explicitamente cobertos, mesmo que o caminho básico do AC-01 possa ser atendido pela Agenda.
+- Alocação ausente implica ocultar campos atualmente, conforme o PO; exibição de veículo por data é dependência futura, não motivo para bloquear os demais cenários.
+- **Execução de 10/11/2026 (parcial):** os CT-002, 003, 004, 009 e 010 foram reprovados por leitura do código do commit `4ac87b46`, a pedido do testador, para não gastar execução manual em falhas já evidentes; a evidência de cada um está no detalhamento, e a execução na tela será refeita no reteste. O CT-001 foi reprovado e o CT-006 passou na tela; o CT-007 foi executado só na variação do horário da C1 (passou). Por decisão do testador, de priorizar a funcionalidade em vez de repetir cenários de rede ligada e desligada, o CT-008 foi executado só na versão online (passou), e as demais variações offline (CT-005 variação 1 e CT-007 ponto, IES e principal) não foram executadas. A decisão sobre qual front vale (PR #378 ou #379) cabe ao time.
+- Registrar dispositivos, mensagens e resultado de cada variação somente durante a execução. Evidências futuras em JSON simples, sem pastas de executor/evidências. Nenhuma execução ou issue faz parte desta revisão do planejamento.

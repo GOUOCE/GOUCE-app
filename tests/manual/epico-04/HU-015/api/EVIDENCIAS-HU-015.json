@@ -1,0 +1,434 @@
+{
+  "historia": "HU-015",
+  "inicio": "2026-11-10T00:51:47.097186-03:00",
+  "fim": "2026-11-10T00:51:53.189082-03:00",
+  "branch_resultados": "feature/testes-api-hu-015",
+  "base_resultados": "e177426e49aa798103fe969fac85db4aa3749801",
+  "branch_testada": "feature/front-hu015",
+  "commit_testado": "4ac87b4623b493af2d56012d60b8c3b875c3af7e",
+  "ambiente": {
+    "url": "http://127.0.0.1:8015",
+    "banco": "PostgreSQL 15.17 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+    "migration": "81_add_updated_at_rotas",
+    "fuso": "America/Fortaleza",
+    "docker": "atu-qa-hu015",
+    "health_http": 200,
+    "openapi_http": 200,
+    "integracao": "main:app real; banco vazio migrado; sem mocks, create_all ou overrides"
+  },
+  "resultado": {
+    "total": 8,
+    "passaram": 5,
+    "falharam": 2,
+    "parciais": 0,
+    "bloqueados": 1,
+    "pendentes": 0,
+    "chamadas_http_incluindo_preparacao_e_login": 205,
+    "chamadas_http_registradas_sem_login": 199,
+    "verificacoes": 447,
+    "verificacoes_satisfeitas": 440,
+    "divergencias": 7
+  },
+  "preparacao": {
+    "contas_sinteticas": {
+      "admin": {
+        "http": 200,
+        "id": 1,
+        "perfil": "administrador",
+        "status": null,
+        "vinculo_vencido": null
+      },
+      "A": {
+        "http": 200,
+        "id": 2,
+        "perfil": "aluno",
+        "status": "ativado",
+        "vinculo_vencido": false
+      },
+      "B": {
+        "http": 200,
+        "id": 3,
+        "perfil": "aluno",
+        "status": "ativado",
+        "vinculo_vencido": false
+      },
+      "pendente": {
+        "http": 200,
+        "id": 4,
+        "perfil": "aluno",
+        "status": "pendente",
+        "vinculo_vencido": false
+      },
+      "reprovado": {
+        "http": 200,
+        "id": 5,
+        "perfil": "aluno",
+        "status": "rejeitado",
+        "vinculo_vencido": false
+      },
+      "vencido": {
+        "http": 200,
+        "id": 6,
+        "perfil": "aluno",
+        "status": "ativado",
+        "vinculo_vencido": true
+      }
+    },
+    "origem_contas": "Fixture ORM de usuários/alunos/documentos sintéticos; seis logins HTTP reais, sem persistir credenciais. Todas as referências de negócio e reservas preparadas por HTTP; alterações do API-007 e restauração por PATCH administrativo.",
+    "referencias": {
+      "b1": 2,
+      "p1": 1,
+      "b2": 3,
+      "p2": 2,
+      "f1": 1,
+      "f2": 2,
+      "f3": 3,
+      "r1": 1,
+      "r2": 2,
+      "c1": 1,
+      "c2": 2
+    },
+    "reservas": {
+      "AI": {
+        "id": 1,
+        "data": "2026-11-11",
+        "aluno_id": 2,
+        "cancelada_na_preparacao": false
+      },
+      "AV": {
+        "id": 2,
+        "data": "2026-11-12",
+        "aluno_id": 2,
+        "cancelada_na_preparacao": false
+      },
+      "AIV": {
+        "id": 3,
+        "data": "2026-11-13",
+        "aluno_id": 2,
+        "cancelada_na_preparacao": false
+      },
+      "AM1": {
+        "id": 4,
+        "data": "2026-11-16",
+        "aluno_id": 2,
+        "cancelada_na_preparacao": false
+      },
+      "AM2": {
+        "id": 5,
+        "data": "2026-11-17",
+        "aluno_id": 2,
+        "cancelada_na_preparacao": false
+      },
+      "AD": {
+        "id": 6,
+        "data": "2026-11-18",
+        "aluno_id": 2,
+        "cancelada_na_preparacao": false
+      },
+      "AC": {
+        "id": 7,
+        "data": "2026-11-19",
+        "aluno_id": 2,
+        "cancelada_na_preparacao": true
+      },
+      "BI": {
+        "id": 8,
+        "data": "2026-11-13",
+        "aluno_id": 3,
+        "cancelada_na_preparacao": false
+      },
+      "BEX": {
+        "id": 9,
+        "data": "2026-11-20",
+        "aluno_id": 3,
+        "cancelada_na_preparacao": false
+      }
+    }
+  },
+  "casos": [
+    {
+      "id": "CT-HU015-API-001",
+      "status": "PASSOU",
+      "resultado_obtido": "Health/OpenAPI 200; migration 81 aplicada em banco vazio. AIV id 3, 13/11/2026: data/id/lista retornaram 200 com corpos iguais e campos conferidos contra o PostgreSQL em nova conexão. Flags e contador corretos; GETs preservaram reservas/auditoria."
+    },
+    {
+      "id": "CT-HU015-API-002",
+      "status": "PASSOU",
+      "resultado_obtido": "AI id 1 (11/11), AV id 2 (12/11), AIV id 3 (13/11), AM1 id 4 (16/11) e AM2 id 5 (17/11), todos de 2026: data/id/lista 200 e equivalentes. C1/P1 na ida e C2/P2 na volta, horários/conexões/IES corretos. Trecho não usado sem objetos; trecho direto sem complementar e com principal."
+    },
+    {
+      "id": "CT-HU015-API-003",
+      "status": "PASSOU",
+      "resultado_obtido": "AD id 6, 18/11/2026: data/id/lista 200; ids/nomes/objetos das complementares nulos e principais preservadas. AD, AI e AIV retornaram onibus/motorista nulos em cada principal utilizada, conforme o estado sem alocação."
+    },
+    {
+      "id": "CT-HU015-API-004",
+      "status": "FALHOU",
+      "resultado_obtido": "Oito variações: AC id 7 cancelada (19/11/2026), id inexistente e datas sem reserva retornaram 404 RESOURCE_NOT_FOUND com as mensagens previstas; abc, query ausente, formato inválido e data impossível retornaram 422. Em data=10-11-2026, a mensagem veio técnica em inglês, divergindo do BDD. A data civil impossível retornou a mensagem correta em português. Reservas/auditoria preservadas. Falha de mensagem: BUG-HU015-API-001."
+    },
+    {
+      "id": "CT-HU015-API-005",
+      "status": "PASSOU",
+      "resultado_obtido": "A (aluno 2) e B (aluno 3) consultaram reservas distintas na mesma data 13/11/2026: AIV id 3 com C1 na ida e BI id 8 com C2. Id alheio retornou 404 para ambos; listas restritas ao dono. Data 20/11/2026 só de B retornou 404 para A e 200 para B. Sem mutação."
+    },
+    {
+      "id": "CT-HU015-API-006",
+      "status": "PASSOU",
+      "resultado_obtido": "18 recusas nos três GETs: sem token e token inválido 401; administrador, pendente, rejeitado e vínculo vencido 403. Contas sintéticas confirmadas por login HTTP 200; A aprovado manteve consultas 200. Sem exposição dos detalhes e sem escrita em reservas/auditoria."
+    },
+    {
+      "id": "CT-HU015-API-007",
+      "status": "FALHOU",
+      "resultado_obtido": "Leituras estáveis e timestamp ISO8601 com fuso confirmados. PATCHs reais de horário/conexão da complementar e nome da principal atualizaram payload e versão em AI/AIV. Adição isolada de faculdade na principal, mudança de capitalização do mesmo ponto e renomeação da IES mudaram os dados nos três GETs sem mudar atualizado_em: seis divergências (três alterações × duas reservas). Massa restaurada por PATCH após cada variação; reservas preservadas e GETs sem escrita. BUG-HU015-API-002. Cache no dispositivo não executado."
+    },
+    {
+      "id": "CT-HU015-API-008",
+      "status": "BLOQUEADO",
+      "resultado_obtido": "Bloqueado: o build não integra alocação diária real de ônibus/motorista HU-016/017/018. Campos nulos foram confirmados em API-003; não houve simulação de programação para aprovar este caso."
+    }
+  ],
+  "consulta_positiva": {
+    "metodo": "GET",
+    "caminho": "/transporte/agendamentos/detalhes?data=2026-11-13",
+    "http": 200,
+    "resposta": {
+      "id": 3,
+      "aluno_id": 2,
+      "data": "2026-11-13",
+      "usa_ida": true,
+      "usa_volta": true,
+      "ponto_embarque_id": 1,
+      "ies_destino_id": 1,
+      "rota_complementar_ida_id": 1,
+      "ies_origem_id": 2,
+      "ponto_desembarque_id": 2,
+      "rota_complementar_volta_id": 2,
+      "status": "ATIVO",
+      "ponto_embarque_nome": "Ponto 1 HU015",
+      "ies_destino_nome": "UFC QA HU015",
+      "rota_complementar_ida_nome": "Van 2 - Bairro Novo",
+      "ies_origem_nome": "IFCE QA HU015",
+      "ponto_desembarque_nome": "Ponto 2 HU015",
+      "rota_complementar_volta_nome": "Van 5 - Planalto",
+      "rota_complementar_ida": {
+        "id": 1,
+        "nome": "Van 2 - Bairro Novo",
+        "horario_saida": "05:45",
+        "horario_retorno": "18:15",
+        "ponto_conexao": "Trevo do Bairro Novo"
+      },
+      "rota_complementar_volta": {
+        "id": 2,
+        "nome": "Van 5 - Planalto",
+        "horario_saida": "06:05",
+        "horario_retorno": "19:10",
+        "ponto_conexao": "Conexão Planalto"
+      },
+      "rota_principal_ida": {
+        "id": 1,
+        "nome": "Rota Centro - UFC",
+        "horario_saida": "06:30",
+        "horario_retorno": "17:30",
+        "faculdades": [
+          {
+            "id": 1,
+            "nome": "UFC QA HU015"
+          }
+        ],
+        "onibus": null,
+        "motorista": null
+      },
+      "rota_principal_volta": {
+        "id": 2,
+        "nome": "Rota Campo - IFCE",
+        "horario_saida": "06:40",
+        "horario_retorno": "18:40",
+        "faculdades": [
+          {
+            "id": 2,
+            "nome": "IFCE QA HU015"
+          }
+        ],
+        "onibus": null,
+        "motorista": null
+      },
+      "atualizado_em": "2026-11-10T03:51:48.327985Z",
+      "pode_remover": true,
+      "pode_editar": true
+    }
+  },
+  "bugs_reproduzidos": 2,
+  "issues_abertas": [
+    "https://github.com/GOUOCE/GOUCE-app/issues/403",
+    "https://github.com/GOUOCE/GOUCE-app/issues/404"
+  ],
+  "defeitos": [
+    {
+      "id": "BUG-HU015-API-001",
+      "relato": "issues/BUG-HU015-API-001-mensagem-data-invalida.md",
+      "caso": "CT-HU015-API-004",
+      "metodo": "GET",
+      "caminho": "/transporte/agendamentos/detalhes?data=10-11-2026",
+      "http": 422,
+      "mensagem_esperada": "Data deve estar no formato YYYY-MM-DD.",
+      "resposta": {
+        "detail": [
+          {
+            "type": "string_pattern_mismatch",
+            "loc": [
+              "query",
+              "data"
+            ],
+            "msg": "String should match pattern '^\\d{4}-\\d{2}-\\d{2}$'",
+            "input": "10-11-2026",
+            "ctx": {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          }
+        ]
+      },
+      "issue": "https://github.com/GOUOCE/GOUCE-app/issues/403"
+    },
+    {
+      "id": "BUG-HU015-API-002",
+      "relato": "issues/BUG-HU015-API-002-versao-desatualizada-detalhe.md",
+      "caso": "CT-HU015-API-007",
+      "esperado": "Informação visível alterada deve renovar atualizado_em para revalidar o cache.",
+      "reproducoes": [
+        {
+          "variacao": "faculdades_principal",
+          "patch": {
+            "caminho": "/rotas-principais/1",
+            "corpo": {
+              "faculdades_ida_ids": [
+                1,
+                3
+              ]
+            },
+            "http": 200
+          },
+          "agendamento_id": 1,
+          "confirmado_tambem_em": "AIV id 3; GETs por data, id e lista com corpos equivalentes",
+          "atualizado_em_antes": "2026-11-10T03:51:51.633825Z",
+          "atualizado_em_depois": "2026-11-10T03:51:51.633825Z",
+          "campos_alterados": {
+            "rota_principal_ida": {
+              "antes": {
+                "id": 1,
+                "nome": "Rota Centro - UFC",
+                "horario_saida": "06:30",
+                "horario_retorno": "17:30",
+                "faculdades": [
+                  {
+                    "id": 1,
+                    "nome": "UFC QA HU015"
+                  }
+                ],
+                "onibus": null,
+                "motorista": null
+              },
+              "depois": {
+                "id": 1,
+                "nome": "Rota Centro - UFC",
+                "horario_saida": "06:30",
+                "horario_retorno": "17:30",
+                "faculdades": [
+                  {
+                    "id": 3,
+                    "nome": "IES Extra QA HU015"
+                  },
+                  {
+                    "id": 1,
+                    "nome": "UFC QA HU015"
+                  }
+                ],
+                "onibus": null,
+                "motorista": null
+              }
+            }
+          }
+        },
+        {
+          "variacao": "nome_ponto",
+          "patch": {
+            "caminho": "/bairros/2",
+            "corpo": {
+              "pontos_de_parada": [
+                "PONTO 1 HU015"
+              ]
+            },
+            "http": 200
+          },
+          "agendamento_id": 1,
+          "confirmado_tambem_em": "AIV id 3; GETs por data, id e lista com corpos equivalentes",
+          "atualizado_em_antes": "2026-11-10T03:51:51.633825Z",
+          "atualizado_em_depois": "2026-11-10T03:51:51.633825Z",
+          "campos_alterados": {
+            "ponto_embarque_nome": {
+              "antes": "Ponto 1 HU015",
+              "depois": "PONTO 1 HU015"
+            }
+          }
+        },
+        {
+          "variacao": "nome_ies",
+          "patch": {
+            "caminho": "/faculdades/1",
+            "corpo": {
+              "nome": "UFC Atualizada QA HU015"
+            },
+            "http": 200
+          },
+          "agendamento_id": 1,
+          "confirmado_tambem_em": "AIV id 3; GETs por data, id e lista com corpos equivalentes",
+          "atualizado_em_antes": "2026-11-10T03:51:51.633825Z",
+          "atualizado_em_depois": "2026-11-10T03:51:51.633825Z",
+          "campos_alterados": {
+            "ies_destino_nome": {
+              "antes": "UFC QA HU015",
+              "depois": "UFC Atualizada QA HU015"
+            },
+            "rota_principal_ida": {
+              "antes": {
+                "id": 1,
+                "nome": "Rota Centro - UFC",
+                "horario_saida": "06:30",
+                "horario_retorno": "17:30",
+                "faculdades": [
+                  {
+                    "id": 1,
+                    "nome": "UFC QA HU015"
+                  }
+                ],
+                "onibus": null,
+                "motorista": null
+              },
+              "depois": {
+                "id": 1,
+                "nome": "Rota Centro - UFC",
+                "horario_saida": "06:30",
+                "horario_retorno": "17:30",
+                "faculdades": [
+                  {
+                    "id": 1,
+                    "nome": "UFC Atualizada QA HU015"
+                  }
+                ],
+                "onibus": null,
+                "motorista": null
+              }
+            }
+          }
+        }
+      ],
+      "issue": "https://github.com/GOUOCE/GOUCE-app/issues/404"
+    }
+  ],
+  "persistencia": "Snapshots completos de agendamento e log_auditoria em conexões novas permaneceram iguais durante GETs/recusas. No API-007, mudanças administrativas produziram apenas as escritas esperadas; leituras posteriores preservaram os snapshots e nenhuma reserva foi alterada.",
+  "dependencia_pendente": "API-008: integração de alocação diária HU-016/017/018 ausente no alvo.",
+  "observacoes": [
+    "Esperados preservados. Falha apenas de mensagem continua sendo falha do caso, apesar do HTTP correto.",
+    "Código de produto e testes de UI não alterados; UI não executada.",
+    "Issues #403 e #404 publicadas em 10/11/2026 após autorização de Cauan; os resultados da execução foram preservados."
+  ]
+}

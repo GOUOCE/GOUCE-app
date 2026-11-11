@@ -890,12 +890,12 @@ Como aluno, quero visualizar o resultado da avaliação do meu cadastro e identi
 
 1. O aluno deve conseguir acessar a tela de 'Status do Cadastro' após realizar login.
 2. O sistema deve exibir o status atual da solicitação do cadastro (Pendente de aprovação, Aprovado, Reprovado).
-3. Quando reprovado, apresentar a relação dos documentos enviados e indicar quais foram reprovados.
+3. Quando reprovado, apresentar a relação dos documentos enviados (comprovante de matrícula, comprovante de residência e foto de perfil) e indicar quais foram reprovados.
 4. Para cada documento reprovado, exibir o motivo informado pelo administrador.
 5. O aluno deve conseguir selecionar um documento reprovado para reenvio.
-6. Após o reenvio, o status deve ser atualizado para Pendente de Aprovação.
+6. Após o reenvio, o status deve ser atualizado para Pendente de Aprovação, com a mensagem "Sua documentação foi reenviada com sucesso. Seu status foi atualizado para Pendente de Aprovação.".
 7. O sistema deve impedir que o aluno altere documentos já aprovados.
-8. Informar quando não houver pendências.
+8. Informar quando não houver pendências, com a mensagem "Não há pendências no seu cadastro. Todos os seus documentos foram analisados e aprovados!".
    **Fluxo Principal:**
 9. O aluno realiza login.
 10. Acessa 'Status do Cadastro'.
@@ -909,8 +909,8 @@ Como aluno, quero visualizar o resultado da avaliação do meu cadastro e identi
 
     **Fluxos Alternativos:**
 
-18. FA-001 \- Cadastro aprovado.
-19. FA-002 \- Cadastro ainda pendente.
+18. FA-001 \- Cadastro aprovado: o sistema exibe o status "Aprovado" e informa que não há pendências (AC-08), sem opção de reenvio.
+19. FA-002 \- Cadastro ainda pendente: o sistema exibe o status "Pendente de aprovação" com o título "Cadastro enviado para análise" e a mensagem "Sua solicitação será avaliada pela coordenação. Você será notificado quando houver uma resposta.", sem opção de reenvio.
 20. FA-003 \- Falha no envio.  
     **Regras de Negócio Relacionadas:**
 21. RN-011

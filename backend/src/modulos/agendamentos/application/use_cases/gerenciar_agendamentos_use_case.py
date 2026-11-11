@@ -1,4 +1,5 @@
 import os
+import re
 from datetime import date, datetime, timedelta
 
 from sqlalchemy.exc import IntegrityError
@@ -10,6 +11,9 @@ from src.modulos.agendamentos.infrastructure.repositories.agendamento_repository
 from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
 from src.modulos.crud_basicos.domain.entities.ponto_de_parada import PontoDeParadaORM
 from src.modulos.rotas.model.entities.rota_complementar import RotaComplementarORM
+
+
+_DATA_PATTERN = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 
 
 class GerenciarAgendamentosUseCase:
@@ -188,6 +192,10 @@ class GerenciarAgendamentosUseCase:
         return self._detail(item)
 
     def detail_by_date(self, aluno_id: int, data: str):
+        if not _DATA_PATTERN.fullmatch(data):
+            raise AgendamentoError(
+                "VALIDATION_ERROR", "Data deve estar no formato YYYY-MM-DD.", 422
+            )
         try:
             target = date.fromisoformat(data)
         except ValueError:
@@ -269,10 +277,14 @@ class GerenciarAgendamentosUseCase:
         }
 
     @staticmethod
-    def _version(item, *rotas):
-        """Maior updated_at entre o agendamento e as rotas resolvidas (ETag do cache offline)."""
+    def _version(item, *entidades):
+        """Maior updated_at entre o agendamento e as entidades visíveis no
+        detalhe (rotas, ponto de embarque/desembarque, IES, faculdades da
+        rota principal) — ETag do cache offline."""
         candidatos = [item.updated_at] + [
-            rota.updated_at for rota in rotas if rota is not None
+            entidade.updated_at
+            for entidade in entidades
+            if entidade is not None and entidade.updated_at is not None
         ]
         return max(candidatos)
 
@@ -292,6 +304,12 @@ class GerenciarAgendamentosUseCase:
         principal_volta = self._principal_for(
             ponto_desembarque, ies_origem, "volta", complementar_volta
         )
+        # Calculados antes do dict para alimentar tanto as chaves
+        # rota_principal_ida/volta quanto _version com os mesmos objetos:
+        # assim a ordem das chaves no retorno não decide se _version
+        # dispara um lazy-load novo em faculdades_ida/volta.
+        resumo_principal_ida = self._principal_summary(principal_ida, "ida")
+        resumo_principal_volta = self._principal_summary(principal_volta, "volta")
 
         return {
             "id": item.id,
@@ -318,10 +336,20 @@ class GerenciarAgendamentosUseCase:
             ),
             "rota_complementar_ida": self._complementary_summary(complementar_ida),
             "rota_complementar_volta": self._complementary_summary(complementar_volta),
-            "rota_principal_ida": self._principal_summary(principal_ida, "ida"),
-            "rota_principal_volta": self._principal_summary(principal_volta, "volta"),
+            "rota_principal_ida": resumo_principal_ida,
+            "rota_principal_volta": resumo_principal_volta,
             "atualizado_em": self._version(
-                item, complementar_ida, complementar_volta, principal_ida, principal_volta
+                item,
+                complementar_ida,
+                complementar_volta,
+                principal_ida,
+                principal_volta,
+                ponto_embarque,
+                ponto_desembarque,
+                ies_destino,
+                ies_origem,
+                *(principal_ida.faculdades_ida if principal_ida else []),
+                *(principal_volta.faculdades_volta if principal_volta else []),
             ),
             "pode_remover": future,
             "pode_editar": future,
