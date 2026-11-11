@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal } from 'react-native';
-import { Text, Surface, ActivityIndicator } from 'react-native-paper';
+import { Text, Surface, ActivityIndicator, Button } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, ChevronRight, Pencil, Trash2, WifiOff } from 'lucide-react-native';
 
@@ -138,6 +138,7 @@ export default function MeusAgendamentosScreen() {
   const [ativos, setAtivos] = useState(0);
   const [limite, setLimite] = useState(22);
   const [semConexao, setSemConexao] = useState(false);
+  const [erroCarga, setErroCarga] = useState(false);
   const [carregando, setCarregando] = useState(true);
   const [jaCarregou, setJaCarregou] = useState(false);
   const [diaSelecionado, setDiaSelecionado] = useState<CalendarioDia | null>(null);
@@ -165,6 +166,7 @@ export default function MeusAgendamentosScreen() {
       setLimite(meus.limite);
       setDiasCalendario(calendario.dias);
       setSemConexao(false);
+      setErroCarga(false);
     } catch {
       // Sem internet: usa a última sincronização guardada no dispositivo (RNF-015)
       const meusCache = await agendamentoService.listarAgendamentosCache();
@@ -179,7 +181,13 @@ export default function MeusAgendamentosScreen() {
         setDiasCalendario(calendarioCache.dias);
       }
       if (!meusCache && !calendarioCache) {
-        setSemConexao(true);
+        // Nada guardado para mostrar: erro explícito, nunca "sem agendamentos" nem faixa de dados salvos (AC-08).
+        setAgendamentos([]);
+        setDiasCalendario([]);
+        setSemConexao(false);
+        setErroCarga(true);
+      } else {
+        setErroCarga(false);
       }
     } finally {
       setCarregando(false);
@@ -293,7 +301,7 @@ export default function MeusAgendamentosScreen() {
     }
   };
 
-  const semAgendamentosFuturos = jaCarregou && agendamentos.length === 0;
+  const semAgendamentosFuturos = jaCarregou && !erroCarga && agendamentos.length === 0;
   const carregandoInicial = carregando && !jaCarregou;
 
   return (
@@ -316,6 +324,15 @@ export default function MeusAgendamentosScreen() {
           /* Primeira carga: evita exibir o calendário vazio antes dos dados */
           <View style={styles.emptyContainer}>
             <ActivityIndicator animating color="#00639A" />
+          </View>
+        ) : erroCarga ? (
+          <View style={styles.emptyContainer}>
+            <Text variant="bodyLarge" style={styles.emptyText}>
+              Não foi possível carregar seus agendamentos. Verifique sua conexão e tente novamente.
+            </Text>
+            <Button mode="contained" style={styles.retryButton} onPress={() => carregarDados(mes)}>
+              Tentar novamente
+            </Button>
           </View>
         ) : semAgendamentosFuturos ? (
           /* FA-001: Estado Vazio */
@@ -527,6 +544,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
+  },
+  retryButton: {
+    marginTop: 20,
   },
   emptyText: {
     textAlign: 'center',
