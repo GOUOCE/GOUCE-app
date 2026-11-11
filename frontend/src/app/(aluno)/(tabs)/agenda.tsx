@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { Text, Surface, ActivityIndicator } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { ChevronLeft, ChevronRight, Trash2, WifiOff } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Pencil, Trash2, WifiOff } from 'lucide-react-native';
 
 import {
   agendamentoService,
@@ -241,6 +241,20 @@ export default function MeusAgendamentosScreen() {
     }
   };
 
+  // HU-014 / AC-03: abre a edição da HU-013 com a reserva existente (sem criar outra).
+  const handleEditar = () => {
+    if (!diaSelecionado?.agendamento_id) return;
+    setMenuOpcoesVisible(false);
+    router.push({
+      pathname: '/(aluno)/agendar-transporte/configurar',
+      params: {
+        datasIso: diaSelecionado.data,
+        modoEdicao: 'true',
+        agendamentoId: String(diaSelecionado.agendamento_id),
+      },
+    } as any);
+  };
+
   const handleIniciarRemocao = () => {
     setMenuOpcoesVisible(false);
     setModalCancelarVisible(true);
@@ -433,6 +447,13 @@ export default function MeusAgendamentosScreen() {
             <TouchableOpacity style={styles.menuRow} onPress={handleVerDetalhes}>
               <Text style={styles.menuText}>Ver detalhes</Text>
             </TouchableOpacity>
+
+            {(diaSelecionado?.pode_editar ?? false) && (
+              <TouchableOpacity style={styles.menuRow} onPress={handleEditar}>
+                <Text style={styles.menuText}>Editar agendamento</Text>
+                <Pencil size={18} color="#191C20" />
+              </TouchableOpacity>
+            )}
 
             {/* Regra de Negócio: Não exibir remoção para datas passadas (FA-003 / Critério 7) */}
             {(diaSelecionado?.pode_remover ?? false) && (
