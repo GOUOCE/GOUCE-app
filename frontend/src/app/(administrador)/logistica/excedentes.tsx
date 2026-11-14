@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { Text, Button, Surface, Checkbox, Avatar } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -37,17 +37,21 @@ export default function RealocarExcedentesScreen() {
     message: '',
   });
 
-  const carregarExcedentes = useCallback(async () => {
-    const list = await logisticaService.listarAlunosExcedentes(linhaId, dataIso);
-    setAlunos(list);
-
-    const opts = await logisticaService.obterOpcoesAlocacao(linhaId, dataIso);
-    setOnibusOptions(opts.onibusOptions || []);
-  }, [linhaId, dataIso]);
-
   useEffect(() => {
-    carregarExcedentes();
-  }, [carregarExcedentes]);
+    let ativo = true;
+    async function carregar() {
+      const list = await logisticaService.listarAlunosExcedentes(linhaId, dataIso);
+      const opts = await logisticaService.obterOpcoesAlocacao(linhaId, dataIso);
+      if (ativo) {
+        setAlunos(list);
+        setOnibusOptions(opts.onibusOptions || []);
+      }
+    }
+    carregar();
+    return () => {
+      ativo = false;
+    };
+  }, [linhaId, dataIso]);
 
   const toggleAluno = (id: number | string) => {
     setAlunos(prev => prev.map(a => a.id === id ? { ...a, selecionado: !a.selecionado } : a));
