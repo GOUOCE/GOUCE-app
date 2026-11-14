@@ -1,5 +1,4 @@
 import { api } from '@/api/api';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface LinhaDistribuicao {
   id: number | string;

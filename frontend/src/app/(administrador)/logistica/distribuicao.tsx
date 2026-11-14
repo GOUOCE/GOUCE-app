@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Text, Surface } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ChevronLeft, ChevronRight, Pencil, ClipboardList, Users, User, Bus } from 'lucide-react-native';
@@ -33,7 +33,6 @@ export default function DistribicaoLogisticaScreen() {
   );
 
   const handleNavegarSemana = (delta: number) => {
-    // Alterna semana demo
     if (delta > 0) {
       setDataIsoSelecionada('2026-09-08');
     } else {
@@ -155,77 +154,83 @@ export default function DistribicaoLogisticaScreen() {
         </Text>
 
         {/* Lista de Linhas */}
-        <View style={styles.linhasList}>
-          {linhas.map((linha) => (
-            <Surface key={linha.id} style={styles.linhaCard} elevation={1}>
-              <View style={styles.cardHeaderRow}>
-                <View style={styles.linhaInfoCol}>
-                  <Text variant="titleMedium" style={styles.linhaTitle}>{linha.nomeLinha}</Text>
-                  <Text variant="bodySmall" style={styles.linhaFaculdades}>
-                    {linha.faculdades.join(', ')}
-                  </Text>
-                </View>
-
-                <View style={styles.headerRightCol}>
-                  <Text style={styles.horariosText}>{linha.horarioSaida}</Text>
-                  <Text style={styles.horariosText}>{linha.horarioVolta}</Text>
-                  {renderBadgeStatus(linha.status)}
-                </View>
-              </View>
-
-              <View style={styles.cardBodyRow}>
-                <View style={styles.detailsCol}>
-                  {/* Qtd Alunos */}
-                  <View style={styles.detailRow}>
-                    <Users size={18} color="#191C20" />
-                    <Text style={styles.detailText}>{linha.alunosAgendados} alunos agendados</Text>
-                  </View>
-
-                  {/* Motorista */}
-                  <View style={styles.detailRow}>
-                    <User size={18} color={linha.motoristaNome ? '#191C20' : '#BA1A1A'} />
-                    <Text style={[styles.detailText, !linha.motoristaNome && styles.alertText]}>
-                      {linha.motoristaNome || 'Sem motorista alocado'}
+        {loading ? (
+          <View style={styles.loadingBox}>
+            <ActivityIndicator size="large" color="#3E5F90" />
+          </View>
+        ) : (
+          <View style={styles.linhasList}>
+            {linhas.map((linha) => (
+              <Surface key={linha.id} style={styles.linhaCard} elevation={1}>
+                <View style={styles.cardHeaderRow}>
+                  <View style={styles.linhaInfoCol}>
+                    <Text variant="titleMedium" style={styles.linhaTitle}>{linha.nomeLinha}</Text>
+                    <Text variant="bodySmall" style={styles.linhaFaculdades}>
+                      {linha.faculdades.join(', ')}
                     </Text>
                   </View>
 
-                  {/* Ônibus */}
-                  <View style={styles.detailRow}>
-                    <Bus size={18} color={linha.onibusApelido ? '#191C20' : '#BA1A1A'} />
-                    <Text style={[styles.detailText, !linha.onibusApelido && styles.alertText]}>
-                      {linha.onibusApelido || 'Sem ônibus alocado'}
-                    </Text>
+                  <View style={styles.headerRightCol}>
+                    <Text style={styles.horariosText}>{linha.horarioSaida}</Text>
+                    <Text style={styles.horariosText}>{linha.horarioVolta}</Text>
+                    {renderBadgeStatus(linha.status)}
                   </View>
                 </View>
 
-                {/* Ações da Linha */}
-                <View style={styles.actionsCol}>
-                  <TouchableOpacity
-                    style={styles.actionIconBtn}
-                    onPress={() => router.push({
-                      pathname: '/(administrador)/logistica/alocar',
-                      params: { linhaId: String(linha.id), dataIso: dataIsoSelecionada },
-                    } as any)}
-                  >
-                    <Pencil size={20} color="#191C20" />
-                  </TouchableOpacity>
+                <View style={styles.cardBodyRow}>
+                  <View style={styles.detailsCol}>
+                    {/* Qtd Alunos */}
+                    <View style={styles.detailRow}>
+                      <Users size={18} color="#191C20" />
+                      <Text style={styles.detailText}>{linha.alunosAgendados} alunos agendados</Text>
+                    </View>
 
-                  {linha.status === 'superlotada' && (
+                    {/* Motorista */}
+                    <View style={styles.detailRow}>
+                      <User size={18} color={linha.motoristaNome ? '#191C20' : '#BA1A1A'} />
+                      <Text style={[styles.detailText, !linha.motoristaNome && styles.alertText]}>
+                        {linha.motoristaNome || 'Sem motorista alocado'}
+                      </Text>
+                    </View>
+
+                    {/* Ônibus */}
+                    <View style={styles.detailRow}>
+                      <Bus size={18} color={linha.onibusApelido ? '#191C20' : '#BA1A1A'} />
+                      <Text style={[styles.detailText, !linha.onibusApelido && styles.alertText]}>
+                        {linha.onibusApelido || 'Sem ônibus alocado'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Ações da Linha */}
+                  <View style={styles.actionsCol}>
                     <TouchableOpacity
                       style={styles.actionIconBtn}
                       onPress={() => router.push({
-                        pathname: '/(administrador)/logistica/excedentes',
+                        pathname: '/(administrador)/logistica/alocar',
                         params: { linhaId: String(linha.id), dataIso: dataIsoSelecionada },
                       } as any)}
                     >
-                      <ClipboardList size={20} color="#B00020" />
+                      <Pencil size={20} color="#191C20" />
                     </TouchableOpacity>
-                  )}
+
+                    {linha.status === 'superlotada' && (
+                      <TouchableOpacity
+                        style={styles.actionIconBtn}
+                        onPress={() => router.push({
+                          pathname: '/(administrador)/logistica/excedentes',
+                          params: { linhaId: String(linha.id), dataIso: dataIsoSelecionada },
+                        } as any)}
+                      >
+                        <ClipboardList size={20} color="#B00020" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
-              </View>
-            </Surface>
-          ))}
-        </View>
+              </Surface>
+            ))}
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -358,6 +363,10 @@ const styles = StyleSheet.create({
     color: '#191C20',
     marginBottom: 20,
     fontSize: 18,
+  },
+  loadingBox: {
+    paddingVertical: 40,
+    alignItems: 'center',
   },
   linhasList: {
     gap: 16,

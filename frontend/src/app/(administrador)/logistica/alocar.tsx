@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { Text, Button, Surface } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -52,14 +52,14 @@ export default function AlocarRotaScreen() {
     message: '',
   });
 
-  useEffect(() => {
-    carregarOpcoes();
-  }, [linhaId, dataIso]);
-
-  const carregarOpcoes = async () => {
+  const carregarOpcoes = useCallback(async () => {
     const res = await logisticaService.obterOpcoesAlocacao(linhaId, dataIso);
     setOpcoes(res);
-  };
+  }, [linhaId, dataIso]);
+
+  useEffect(() => {
+    carregarOpcoes();
+  }, [carregarOpcoes]);
 
   const abrirPicker = (title: string, options: OpcaoSelect[], onSelect: (val: string) => void) => {
     setModalPicker({ visible: true, title, options, onSelect });
