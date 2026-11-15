@@ -32,6 +32,7 @@ describe('impressaoListaEmbarque (HU-018)', () => {
       get: () => osOriginal,
     });
     delete (globalThis as { window?: unknown }).window;
+    delete (globalThis as { document?: unknown }).document;
   });
 
   it('pagina 38 alunos reais da Linha 01 em 2 folhas A4 de até 30 registros sem linhas em branco', async () => {
@@ -163,6 +164,7 @@ describe('impressaoListaEmbarque (HU-018)', () => {
 
     expect(html).not.toContain('Modelo');
     expect(html).not.toContain('Campos em branco');
+    expect(html).toContain('M118.24 4H77.76C63.5331 4');
     expect(html).toContain('Lista de Embarque');
     expect(html).toContain(SUBTITULO_IMPRESSAO_A4);
     expect(html).toContain('Emitido por: <strong>Administrador Padrão (Administrador)</strong>');
@@ -202,7 +204,7 @@ describe('impressaoListaEmbarque (HU-018)', () => {
     expect(htmlEscapado).toContain('Admin &lt;Script&gt; (Administrador)');
   });
 
-  it('aciona Share.share no ambiente nativo e window.open/print no ambiente web', async () => {
+  it('aciona Share.share no mobile e imprime na web via iframe oculto (ou fallback window.open) fechando apos afterprint', async () => {
     const lista = await listaEmbarqueService.obterListaEmbarque({ rotaId: 3 });
 
     Object.defineProperty(Platform, 'OS', {
@@ -227,23 +229,98 @@ describe('impressaoListaEmbarque (HU-018)', () => {
       }),
     });
 
-    const docMock = {
+    // 1. Fluxo principal na Web via iframe oculto (sem abrir janela residual)
+    const iframeDocMock = {
       open: jest.fn(),
       write: jest.fn(),
       close: jest.fn(),
     };
-    const popupMock = {
-      document: docMock,
+    const removeChildMock = jest.fn();
+    const iframeWindowMock: {
+      document: typeof iframeDocMock;
+      focus: jest.Mock;
+      print: jest.Mock;
+      onafterprint: (() => void) | null;
+      addEventListener: jest.Mock;
+      removeEventListener: jest.Mock;
+    } = {
+      document: iframeDocMock,
       focus: jest.fn(),
       print: jest.fn(),
+      onafterprint: null,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
     };
-    const openMock = jest.fn().mockReturnValue(popupMock);
-    const windowPrintFallbackMock = jest.fn();
+    const iframeElementMock = {
+      id: '',
+      style: {} as Record<string, string>,
+      setAttribute: jest.fn(),
+      contentWindow: iframeWindowMock,
+      contentDocument: iframeDocMock,
+      parentNode: { removeChild: removeChildMock },
+    };
+    const appendChildMock = jest.fn();
+    const openMockNaoChamado = jest.fn();
 
     Object.defineProperty(Platform, 'OS', {
       configurable: true,
       get: () => 'web',
     });
+    (globalThis as { window?: unknown }).window = {
+      open: openMockNaoChamado,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+    };
+    (globalThis as { document?: unknown }).document = {
+      body: { appendChild: appendChildMock },
+      getElementById: jest.fn().mockReturnValue(null),
+      createElement: jest.fn().mockReturnValue(iframeElementMock),
+    };
+
+    const resultadoIframe = await imprimirListaEmbarque(lista, {
+      perfil: 'MOTORISTA',
+      nomeEmissor: 'Juliana Mendes',
+    });
+
+    expect(resultadoIframe.metodo).toBe('web-print');
+    expect(openMockNaoChamado).not.toHaveBeenCalled();
+    expect(appendChildMock).toHaveBeenCalledWith(iframeElementMock);
+    expect(iframeDocMock.open).toHaveBeenCalledTimes(1);
+    expect(iframeDocMock.write).toHaveBeenCalledWith(
+      expect.stringContaining('Emitido por: <strong>Juliana Mendes (Representante)</strong>')
+    );
+    expect(iframeDocMock.close).toHaveBeenCalledTimes(1);
+    expect(iframeWindowMock.focus).toHaveBeenCalledTimes(1);
+    expect(iframeWindowMock.print).toHaveBeenCalledTimes(1);
+
+    iframeWindowMock.onafterprint?.();
+    expect(removeChildMock).toHaveBeenCalledWith(iframeElementMock);
+
+    // 2. Fallback via window.open quando document.body não estiver disponível
+    delete (globalThis as { document?: unknown }).document;
+    const docMock = {
+      open: jest.fn(),
+      write: jest.fn(),
+      close: jest.fn(),
+    };
+    const popupMock: {
+      document: typeof docMock;
+      focus: jest.Mock;
+      print: jest.Mock;
+      close: jest.Mock;
+      onafterprint: (() => void) | null;
+      addEventListener: jest.Mock;
+    } = {
+      document: docMock,
+      focus: jest.fn(),
+      print: jest.fn(),
+      close: jest.fn(),
+      onafterprint: null,
+      addEventListener: jest.fn(),
+    };
+    const openMock = jest.fn().mockReturnValue(popupMock);
+    const windowPrintFallbackMock = jest.fn();
+
     (globalThis as { window?: unknown }).window = {
       open: openMock,
       print: windowPrintFallbackMock,
@@ -262,9 +339,11 @@ describe('impressaoListaEmbarque (HU-018)', () => {
     expect(docMock.close).toHaveBeenCalledTimes(1);
     expect(popupMock.focus).toHaveBeenCalledTimes(1);
     expect(popupMock.print).toHaveBeenCalledTimes(1);
+    popupMock.onafterprint?.();
+    expect(popupMock.close).toHaveBeenCalledTimes(1);
     expect(windowPrintFallbackMock).not.toHaveBeenCalled();
 
-    // Testa fallback caso o navegador bloqueie o popup
+    // 3. Fallback caso o navegador bloqueie o popup
     openMock.mockReturnValueOnce(null);
     await imprimirListaEmbarque(lista);
     expect(windowPrintFallbackMock).toHaveBeenCalledTimes(1);

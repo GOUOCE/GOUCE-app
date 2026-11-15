@@ -133,15 +133,15 @@ export function gerarPaginasImpressaoA4(
 function renderizarLogoSvg(): string {
   return `
     <div class="logo-box" aria-hidden="true">
-      <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="42" height="42" rx="10" fill="#1F4E8C" />
-        <circle cx="34" cy="8" r="3.5" fill="#F97316" />
-        <rect x="11" y="11" width="20" height="17" rx="3.5" fill="#FFFFFF" />
-        <rect x="13.5" y="13.5" width="15" height="6.5" rx="1.5" fill="#1F4E8C" />
-        <circle cx="15" cy="24" r="1.6" fill="#1F4E8C" />
-        <circle cx="27" cy="24" r="1.6" fill="#1F4E8C" />
-        <rect x="13" y="28" width="3" height="2.5" rx="1" fill="#FFFFFF" />
-        <rect x="26" y="28" width="3" height="2.5" rx="1" fill="#FFFFFF" />
+      <svg width="44" height="44" viewBox="52 4 92 91.3569" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M118.24 4H77.76C63.5331 4 52 15.4525 52 29.5799V69.777C52 83.9044 63.5331 95.3569 77.76 95.3569H118.24C132.467 95.3569 144 83.9044 144 69.777V29.5799C144 15.4525 132.467 4 118.24 4Z" fill="#1D4E89"/>
+        <path d="M111.558 34.8164H84.4458C79.2631 34.8164 75.0618 38.9885 75.0618 44.1349V53.4532C75.0618 58.5997 79.2631 62.7716 84.4458 62.7716H111.558C116.741 62.7716 120.942 58.5997 120.942 53.4532V44.1349C120.942 38.9885 116.741 34.8164 111.558 34.8164Z" fill="#F3F5F7"/>
+        <path d="M86.6299 39.9937H82.7751C81.3931 39.9937 80.2727 41.1062 80.2727 42.4785V46.8271C80.2727 48.1995 81.3931 49.312 82.7751 49.312H86.6299C88.0119 49.312 89.1323 48.1995 89.1323 46.8271V42.4785C89.1323 41.1062 88.0119 39.9937 86.6299 39.9937Z" fill="#1D4E89"/>
+        <path d="M99.354 39.9937H95.4992C94.1172 39.9937 92.9968 41.1062 92.9968 42.4785V46.8271C92.9968 48.1995 94.1172 49.312 95.4992 49.312H99.354C100.736 49.312 101.856 48.1995 101.856 46.8271V42.4785C101.856 41.1062 100.736 39.9937 99.354 39.9937Z" fill="#1D4E89"/>
+        <path d="M112.078 39.9937H108.223C106.841 39.9937 105.721 41.1062 105.721 42.4785V46.8271C105.721 48.1995 106.841 49.312 108.223 49.312H112.078C113.46 49.312 114.581 48.1995 114.581 46.8271V42.4785C114.581 41.1062 113.46 39.9937 112.078 39.9937Z" fill="#1D4E89"/>
+        <path d="M85.4894 68.1515C88.4821 68.1515 90.9081 65.7424 90.9081 62.7706C90.9081 59.7988 88.4821 57.3896 85.4894 57.3896C82.4966 57.3896 80.0706 59.7988 80.0706 62.7706C80.0706 65.7424 82.4966 68.1515 85.4894 68.1515Z" fill="#1D4E89"/>
+        <path d="M110.511 68.1515C113.504 68.1515 115.93 65.7424 115.93 62.7706C115.93 59.7988 113.504 57.3896 110.511 57.3896C107.518 57.3896 105.092 59.7988 105.092 62.7706C105.092 65.7424 107.518 68.1515 110.511 68.1515Z" fill="#1D4E89"/>
+        <path d="M129.741 27.7514C134.06 27.7514 137.561 24.2747 137.561 19.986C137.561 15.6974 134.06 12.2207 129.741 12.2207C125.422 12.2207 121.921 15.6974 121.921 19.986C121.921 24.2747 125.422 27.7514 129.741 27.7514Z" fill="#E8912D"/>
       </svg>
     </div>
   `;
@@ -433,6 +433,66 @@ export function gerarResumoTextoImpressao(
   ].join('\n');
 }
 
+const IFRAME_IMPRESSAO_ID = 'gouoce-print-frame';
+
+function imprimirViaIframeOculto(html: string): boolean {
+  if (
+    typeof document === 'undefined' ||
+    !document.body ||
+    typeof document.createElement !== 'function'
+  ) {
+    return false;
+  }
+
+  const iframeAnterior =
+    typeof document.getElementById === 'function'
+      ? document.getElementById(IFRAME_IMPRESSAO_ID)
+      : null;
+  iframeAnterior?.parentNode?.removeChild(iframeAnterior);
+
+  const iframe = document.createElement('iframe');
+  iframe.id = IFRAME_IMPRESSAO_ID;
+  iframe.setAttribute?.('aria-hidden', 'true');
+  iframe.style.position = 'fixed';
+  iframe.style.right = '0';
+  iframe.style.bottom = '0';
+  iframe.style.width = '0';
+  iframe.style.height = '0';
+  iframe.style.border = '0';
+  iframe.style.visibility = 'hidden';
+
+  document.body.appendChild(iframe);
+
+  const iframeWindow = iframe.contentWindow;
+  const iframeDoc = iframeWindow?.document ?? iframe.contentDocument;
+
+  if (!iframeWindow || !iframeDoc) {
+    iframe.parentNode?.removeChild(iframe);
+    return false;
+  }
+
+  let removido = false;
+  const removerIframe = () => {
+    if (removido) return;
+    removido = true;
+    window.removeEventListener?.('afterprint', removerIframe);
+    iframeWindow.removeEventListener?.('afterprint', removerIframe);
+    iframe.parentNode?.removeChild(iframe);
+  };
+
+  iframeWindow.onafterprint = removerIframe;
+  iframeWindow.addEventListener?.('afterprint', removerIframe);
+  window.addEventListener?.('afterprint', removerIframe);
+
+  iframeDoc.open();
+  iframeDoc.write(html);
+  iframeDoc.close();
+  iframeWindow.focus?.();
+  iframeWindow.print?.();
+
+  return true;
+}
+
 /**
  * Aciona a impressão em formato A4 (na Web) ou o compartilhamento da relação (no Mobile).
  */
@@ -444,19 +504,26 @@ export async function imprimirListaEmbarque(
   const html = gerarHtmlImpressaoA4(lista, opcoes);
 
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
-    const janela =
-      typeof window.open === 'function'
-        ? window.open('', '_blank', 'width=900,height=1100')
-        : null;
+    const imprimiuViaIframe = imprimirViaIframeOculto(html);
 
-    if (janela?.document) {
-      janela.document.open();
-      janela.document.write(html);
-      janela.document.close();
-      janela.focus?.();
-      janela.print?.();
-    } else if (typeof window.print === 'function') {
-      window.print();
+    if (!imprimiuViaIframe) {
+      const janela =
+        typeof window.open === 'function'
+          ? window.open('', '_blank', 'width=900,height=1100')
+          : null;
+
+      if (janela?.document) {
+        const fecharJanela = () => janela.close?.();
+        janela.onafterprint = fecharJanela;
+        janela.addEventListener?.('afterprint', fecharJanela);
+        janela.document.open();
+        janela.document.write(html);
+        janela.document.close();
+        janela.focus?.();
+        janela.print?.();
+      } else if (typeof window.print === 'function') {
+        window.print();
+      }
     }
 
     return {
