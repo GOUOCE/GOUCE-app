@@ -38,37 +38,31 @@ function criarDetalheBase(override: Partial<AgendamentoDetalhe> = {}): Agendamen
     ponto_desembarque_id: 1,
     rota_complementar_volta_id: 1,
     status: 'ATIVO',
-    ponto_embarque_nome: 'Posto de Saúde do Campo Novo',
+    ponto_embarque_nome: 'Bairro Novo',
     ies_destino_nome: 'UFC',
-    rota_complementar_ida_nome: 'Van 01 - Campo Novo',
+    rota_complementar_ida_nome: 'Van 2 - Bairro Novo',
     ies_origem_nome: 'UFC',
-    ponto_desembarque_nome: 'Posto de Saúde do Campo Novo',
-    rota_complementar_volta_nome: 'Van 01 - Campo Novo',
+    ponto_desembarque_nome: 'Bairro Novo',
+    rota_complementar_volta_nome: 'Van 2 - Bairro Novo',
     rota_complementar_ida: {
       id: 1,
-      nome: 'Van 01 - Campo Novo',
-      horario_saida: '05:50',
-      horario_retorno: '12:30',
-      ponto_conexao: 'Pça. Matriz',
-      onibus: { apelido_onibus: 'Van 01', placa_onibus: 'VNC-4510' },
-      motorista: { nome: 'Carlos Mendes' },
-      status_alocacao: 'CONFIRMADA',
+      nome: 'Van 2 - Bairro Novo',
+      horario_saida: '06:10',
+      horario_retorno: '17:30',
+      ponto_conexao: 'Trevo do Bairro Novo',
     },
     rota_complementar_volta: {
       id: 1,
-      nome: 'Van 01 - Campo Novo',
-      horario_saida: '05:50',
-      horario_retorno: '12:30',
-      ponto_conexao: 'Pça. Matriz',
-      onibus: { apelido_onibus: 'Van 01', placa_onibus: 'VNC-4510' },
-      motorista: { nome: 'Carlos Mendes' },
-      status_alocacao: 'CONFIRMADA',
+      nome: 'Van 2 - Bairro Novo',
+      horario_saida: '06:10',
+      horario_retorno: '17:30',
+      ponto_conexao: 'Trevo do Bairro Novo',
     },
     rota_principal_ida: {
       id: 1,
       nome: 'Linha 01 - Centro',
       horario_saida: '06:40',
-      horario_retorno: '06:40',
+      horario_retorno: '17:00',
       faculdades,
       onibus: { apelido_onibus: 'Ônibus 04', placa_onibus: 'OCR-1234' },
       motorista: { nome: 'Ana Souza' },
@@ -78,7 +72,7 @@ function criarDetalheBase(override: Partial<AgendamentoDetalhe> = {}): Agendamen
       id: 1,
       nome: 'Linha 01 - Centro',
       horario_saida: '06:40',
-      horario_retorno: '06:40',
+      horario_retorno: '17:00',
       faculdades,
       onibus: { apelido_onibus: 'Ônibus 04', placa_onibus: 'OCR-1234' },
       motorista: { nome: 'Ana Souza' },
@@ -108,20 +102,27 @@ describe('HU-019: Consulta de Alocação Diária (Rotas Principais e Complementa
     expect(ida?.rotaPrincipal.realocado).toBe(false);
     expect(ida?.rotaPrincipal.mensagemRealocacao).toBeNull();
 
-    expect(ida?.rotaComplementar?.veiculo).toBe('Van 01 - Placa VNC-4510');
-    expect(ida?.rotaComplementar?.motorista).toBe('Carlos Mendes');
-    expect(ida?.rotaComplementar?.statusAlocacao).toBe('CONFIRMADA');
-    expect(ida?.rotaComplementar?.statusAlocacaoLabel).toBe('Alocação confirmada');
-    expect(ida?.rotaComplementar?.realocado).toBe(false);
+    expect(ida?.rotaComplementar).toEqual({
+      nomeLinha: 'Van 2 - Bairro Novo',
+      pontoEmbarque: 'Bairro Novo',
+      pontoConexao: 'Trevo do Bairro Novo',
+      horarioSaida: '06:10',
+    });
 
     const volta = detalhes.trechos.find((t) => t.sentido === 'volta');
     expect(volta?.rotaPrincipal.veiculo).toBe('Ônibus 04 - Placa OCR-1234');
+    expect(volta?.rotaPrincipal.horarioSaida).toBe('17:00');
     expect(volta?.rotaPrincipal.pontoEmbarque).toBe('UFC');
-    expect(volta?.rotaPrincipal.pontoDesembarque).toBe('Pça. Matriz');
-    expect(volta?.rotaComplementar?.veiculo).toBe('Van 01 - Placa VNC-4510');
+    expect(volta?.rotaPrincipal.pontoDesembarque).toBe('Trevo do Bairro Novo');
+    expect(volta?.rotaComplementar).toEqual({
+      nomeLinha: 'Van 2 - Bairro Novo',
+      pontoEmbarque: 'Bairro Novo',
+      pontoConexao: 'Trevo do Bairro Novo',
+      horarioSaida: '17:30',
+    });
   });
 
-  it('FA-001: oculta dados de frota e sinaliza "Aguardando alocação do veículo" quando distribuição não foi concluída', () => {
+  it('FA-001: oculta dados de frota e sinaliza "Aguardando alocação do veículo" mantendo a rota complementar para transferência', () => {
     const base = criarDetalheBase();
     const detalheAguardando = criarDetalheBase({
       rota_principal_ida: {
@@ -134,12 +135,6 @@ describe('HU-019: Consulta de Alocação Diária (Rotas Principais e Complementa
         ...base.rota_principal_volta!,
         onibus: { apelido_onibus: 'Ônibus 04', placa_onibus: 'OCR-1234' },
         motorista: { nome: 'Ana Souza' },
-        status_alocacao: 'AGUARDANDO_ALOCACAO',
-      },
-      rota_complementar_ida: {
-        ...base.rota_complementar_ida!,
-        onibus: null,
-        motorista: null,
         status_alocacao: 'AGUARDANDO_ALOCACAO',
       },
     });
@@ -157,13 +152,15 @@ describe('HU-019: Consulta de Alocação Diária (Rotas Principais e Complementa
     expect(volta?.rotaPrincipal.veiculo).toBeNull();
     expect(volta?.rotaPrincipal.motorista).toBeNull();
 
-    expect(ida?.rotaComplementar?.statusAlocacao).toBe('AGUARDANDO_ALOCACAO');
-    expect(ida?.rotaComplementar?.statusAlocacaoLabel).toBe('Aguardando alocação do veículo');
-    expect(ida?.rotaComplementar?.veiculo).toBeNull();
-    expect(ida?.rotaComplementar?.motorista).toBeNull();
+    expect(ida?.rotaComplementar).toEqual({
+      nomeLinha: 'Van 2 - Bairro Novo',
+      pontoEmbarque: 'Bairro Novo',
+      pontoConexao: 'Trevo do Bairro Novo',
+      horarioSaida: '06:10',
+    });
   });
 
-  it('FA-002: sinaliza realocação com aviso destacado na rota principal e na rota complementar', () => {
+  it('FA-002: sinaliza realocação com aviso destacado na rota principal preservando a transferência', () => {
     const base = criarDetalheBase();
     const detalheRealocado = criarDetalheBase({
       rota_principal_ida: {
@@ -171,13 +168,6 @@ describe('HU-019: Consulta de Alocação Diária (Rotas Principais e Complementa
         realocado: true,
         status_alocacao: 'REALOCADO',
         rota_original_nome: 'Linha 02 - Bairro Novo',
-      },
-      rota_complementar_volta: {
-        ...base.rota_complementar_volta!,
-        onibus: { apelido_onibus: 'Van 02', placa_onibus: 'VNC-8890' },
-        realocado: true,
-        status_alocacao: 'REALOCADO',
-        rota_original_nome: 'Van 01 - Campo Novo',
       },
     });
 
@@ -191,12 +181,10 @@ describe('HU-019: Consulta de Alocação Diária (Rotas Principais e Complementa
       'Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Ônibus 04 - Placa OCR-1234'
     );
     expect(ida?.rotaPrincipal.rotaOriginalNome).toBe('Linha 02 - Bairro Novo');
+    expect(ida?.rotaComplementar?.nomeLinha).toBe('Van 2 - Bairro Novo');
 
-    expect(volta?.rotaComplementar?.statusAlocacao).toBe('REALOCADO');
-    expect(volta?.rotaComplementar?.realocado).toBe(true);
-    expect(volta?.rotaComplementar?.mensagemRealocacao).toBe(
-      'Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Van 02 - Placa VNC-8890'
-    );
+    expect(volta?.rotaPrincipal.realocado).toBe(false);
+    expect(volta?.rotaComplementar?.horarioSaida).toBe('17:30');
   });
 
   it('alterna corretamente os cenários de simulação mock para trajeto direto e com rota complementar', () => {
@@ -205,6 +193,7 @@ describe('HU-019: Consulta de Alocação Diária (Rotas Principais e Complementa
     });
     expect(diretoConfirmado.temRotaComplementar).toBe(false);
     expect(diretoConfirmado.trechos[0].rotaPrincipal.veiculo).toBe('Ônibus 04 - Placa OCR-1234');
+    expect(diretoConfirmado.trechos[0].rotaPrincipal.pontoEmbarque).toBe('Pça. Matriz');
     expect(diretoConfirmado.trechos[0].rotaComplementar).toBeUndefined();
 
     const comTransferenciaAguardando = aplicarCenarioAlocacaoMock(
@@ -214,10 +203,18 @@ describe('HU-019: Consulta de Alocação Diária (Rotas Principais e Complementa
     );
     expect(comTransferenciaAguardando.temRotaComplementar).toBe(true);
     expect(comTransferenciaAguardando.trechos[0].rotaPrincipal.veiculo).toBeNull();
-    expect(comTransferenciaAguardando.trechos[0].rotaComplementar?.statusAlocacao).toBe(
-      'AGUARDANDO_ALOCACAO'
+    expect(comTransferenciaAguardando.trechos[0].rotaPrincipal.pontoEmbarque).toBe(
+      'Trevo do Bairro Novo'
     );
-    expect(comTransferenciaAguardando.trechos[0].rotaComplementar?.veiculo).toBeNull();
+    expect(comTransferenciaAguardando.trechos[1].rotaPrincipal.pontoDesembarque).toBe(
+      'Trevo do Bairro Novo'
+    );
+    expect(comTransferenciaAguardando.trechos[0].rotaComplementar).toEqual({
+      nomeLinha: 'Van 2 - Bairro Novo',
+      pontoEmbarque: 'Bairro Novo',
+      pontoConexao: 'Trevo do Bairro Novo',
+      horarioSaida: '06:10',
+    });
 
     const comTransferenciaRealocado = aplicarCenarioAlocacaoMock(
       comTransferenciaAguardando,
@@ -228,10 +225,17 @@ describe('HU-019: Consulta de Alocação Diária (Rotas Principais e Complementa
     expect(comTransferenciaRealocado.trechos[0].rotaPrincipal.mensagemRealocacao).toContain(
       'Ônibus 04 - Placa OCR-1234'
     );
-    expect(comTransferenciaRealocado.trechos[0].rotaComplementar?.realocado).toBe(true);
-    expect(comTransferenciaRealocado.trechos[0].rotaComplementar?.mensagemRealocacao).toContain(
-      'Van 02 - Placa VNC-8890'
+    expect(comTransferenciaRealocado.trechos[0].rotaComplementar?.nomeLinha).toBe(
+      'Van 2 - Bairro Novo'
     );
+
+    const voltouParaDireto = aplicarCenarioAlocacaoMock(comTransferenciaRealocado, 'CONFIRMADA', {
+      exibirRotaComplementar: false,
+    });
+    expect(voltouParaDireto.temRotaComplementar).toBe(false);
+    expect(voltouParaDireto.trechos[0].rotaComplementar).toBeUndefined();
+    expect(voltouParaDireto.trechos[0].rotaPrincipal.pontoEmbarque).toBe('Pça. Matriz');
+    expect(voltouParaDireto.trechos[1].rotaPrincipal.pontoDesembarque).toBe('Pça. Matriz');
   });
 
   it('formata subtítulo da rota principal sem parênteses quando não há faculdades', () => {
