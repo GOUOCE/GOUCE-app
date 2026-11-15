@@ -1,7 +1,5 @@
 import React from 'react';
-import { Tabs, Redirect } from 'expo-router';
-import { View, StyleSheet } from 'react-native';
-import { Home, ClipboardList, Megaphone, UserCircle } from 'lucide-react-native';
+import { Stack, Redirect } from 'expo-router';
 import { useAuth } from '@contexts/AuthContext';
 
 export default function StudentLayout() {
@@ -20,115 +18,24 @@ export default function StudentLayout() {
     return <Redirect href="/acesso-negado" />;
   }
 
-  if ((user.status || '').toLowerCase() === 'pendente') {
+  const statusAluno = (user.status || '').toLowerCase();
+  if (statusAluno === 'pendente') {
     return <Redirect href="/(autenticacao)/cadastro-pendente" />;
+  }
+  if (statusAluno === 'rejeitado') {
+    return <Redirect href="/(autenticacao)/cadastro-rejeitado" />;
   }
 
   return (
-    <Tabs screenOptions={{
-      headerShown: false,
-      tabBarActiveTintColor: '#000',
-      tabBarInactiveTintColor: '#666',
-      tabBarStyle: {
-        height: 80,
-        paddingBottom: 12,
-        backgroundColor: '#F8F9FF',
-        borderTopWidth: 1,
-        borderTopColor: '#E0E2EC',
-      }
-    }}>
-      <Tabs.Screen
-        name="home"
-        options={{
-          title: 'Início',
-          tabBarIcon: ({ focused }) => (
-            <View style={[styles.iconContainer, focused && styles.activeIconContainer]}>
-              <Home size={24} color={focused ? '#000' : '#666'} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="agenda"
-        options={{
-          title: 'Agenda',
-          tabBarIcon: ({ focused }) => (
-            <View style={[styles.iconContainer, focused && styles.activeIconContainer]}>
-              <ClipboardList size={24} color={focused ? '#000' : '#666'} />
-            </View>
-          ),
-          tabBarButton: ({ children, style }) => (
-            <View style={style} pointerEvents="none">
-              {children}
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="avisos"
-        options={{
-          title: 'Avisos',
-          tabBarIcon: ({ focused }) => (
-            <View style={[styles.iconContainer, focused && styles.activeIconContainer]}>
-              <Megaphone size={24} color={focused ? '#000' : '#666'} />
-            </View>
-          ),
-          tabBarButton: ({ children, style }) => (
-            <View style={style} pointerEvents="none">
-              {children}
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="perfil"
-        options={{
-          title: 'Perfil',
-          tabBarIcon: ({ focused }) => (
-            <View style={[styles.iconContainer, focused && styles.activeIconContainer]}>
-              <UserCircle size={24} color={focused ? '#000' : '#666'} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="editar-perfil"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="alterar-email"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="carteirinha-digital"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="renovar-vinculo"
-        options={{
-          href: null,
-        }}
-      />
-    </Tabs>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="agendamento-detalhes" />
+      <Stack.Screen name="agendar-transporte" />
+      <Stack.Screen name="editar-perfil" />
+      <Stack.Screen name="alterar-email" />
+      <Stack.Screen name="carteirinha-digital" />
+      <Stack.Screen name="renovar-vinculo" />
+      <Stack.Screen name="status-cadastro" />
+    </Stack>
   );
 }
-
-const styles = StyleSheet.create({
-  iconContainer: {
-    width: 64,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  activeIconContainer: {
-    backgroundColor: '#C2E7FF',
-  },
-});

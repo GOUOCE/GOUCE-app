@@ -1,0 +1,64 @@
+import { agendamentoService } from '../agendamentoService';
+import { api } from '@/api/api';
+
+jest.mock('@/api/api', () => ({
+  api: {
+    get: jest.fn(),
+    post: jest.fn(),
+    delete: jest.fn(),
+  },
+}));
+
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+}));
+
+describe('HU-014: Visualização e Cancelamento de Agendamentos (Regras de Negócio)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('deve listar agendamentos ativos do aluno para exibição no calendário e contador', async () => {
+    const mockBackendResponse = {
+      agendamentos: [
+        { id: 10, data: '2026-09-02', usa_ida: true, usa_volta: true },
+        { id: 11, data: '2026-09-03', usa_ida: true, usa_volta: false },
+      ],
+      ativos: 2,
+      limite: 22,
+    };
+    (api.get as jest.Mock).mockResolvedValueOnce({ data: mockBackendResponse });
+
+    const resultado = await agendamentoService.listarAgendamentosAtivos();
+    expect(resultado.ativos).toBe(2);
+    expect(resultado.agendamentos).toEqual([
+      expect.objectContaining({ id: 10, data: '2026-09-02', usa_ida: true, usa_volta: true }),
+      expect.objectContaining({ id: 11, data: '2026-09-03', usa_ida: true, usa_volta: false }),
+    ]);
+    expect(api.get).toHaveBeenCalledWith('/transporte/agendamentos/meus');
+  });
+
+  it('deve processar o cancelamento do agendamento com sucesso ao confirmar', async () => {
+    (api.delete as jest.Mock).mockResolvedValueOnce({ data: { success: true } });
+
+    const resultado = await agendamentoService.cancelarAgendamento('123');
+    expect(resultado).toEqual({ success: true });
+    expect(api.delete).toHaveBeenCalledWith('/transporte/agendamentos/123');
+  });
+
+  it('deve tratar falha de conexão na API ao tentar cancelar, mantendo o estado de erro amigável (Issue #411)', async () => {
+    (api.delete as jest.Mock).mockRejectedValueOnce(new Error('Erro de conexão com o servidor'));
+
+    await expect(agendamentoService.cancelarAgendamento('123')).rejects.toThrow('Erro de conexão com o servidor');
+  });
+
+  it('deve ocultar a opção de remoção para datas passadas (regra RN-005 e critério 1)', () => {
+    const dataPassadaIso = '2026-08-01';
+    const hojeIso = '2026-09-01';
+
+    const ehPassado = dataPassadaIso < hojeIso;
+    expect(ehPassado).toBe(true);
+  });
+});

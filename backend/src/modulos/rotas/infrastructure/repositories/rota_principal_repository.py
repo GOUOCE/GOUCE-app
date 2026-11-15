@@ -9,7 +9,7 @@ linha, então as duas operações se serializam.
 """
 
 import json
-from datetime import time
+from datetime import datetime, time, timezone
 from typing import Callable, Optional
 
 from sqlalchemy import func
@@ -191,22 +191,32 @@ class RotaPrincipalRepository:
                     raise RotaPrincipalNomeEmUsoError(MENSAGEM_NOME_ROTA_EM_USO)
 
             novos_bairros = novas_ida = novas_volta = None
+            vinculo_mudou = False
             if "bairros_ids" in campos:
+                bairros_atuais = {b.bairro_id for b in rota.bairros}
                 novos_bairros = self._carregar_bairros(
-                    campos["bairros_ids"], {b.bairro_id for b in rota.bairros}
+                    campos["bairros_ids"], bairros_atuais
                 )
+                if {b.bairro_id for b in novos_bairros} != bairros_atuais:
+                    vinculo_mudou = True
             if "faculdades_ida_ids" in campos:
+                ida_atuais = {f.id_faculdade for f in rota.faculdades_ida}
                 novas_ida = self._carregar_faculdades(
                     "faculdades_ida_ids",
                     campos["faculdades_ida_ids"],
-                    {f.id_faculdade for f in rota.faculdades_ida},
+                    ida_atuais,
                 )
+                if {f.id_faculdade for f in novas_ida} != ida_atuais:
+                    vinculo_mudou = True
             if "faculdades_volta_ids" in campos:
+                volta_atuais = {f.id_faculdade for f in rota.faculdades_volta}
                 novas_volta = self._carregar_faculdades(
                     "faculdades_volta_ids",
                     campos["faculdades_volta_ids"],
-                    {f.id_faculdade for f in rota.faculdades_volta},
+                    volta_atuais,
                 )
+                if {f.id_faculdade for f in novas_volta} != volta_atuais:
+                    vinculo_mudou = True
 
             if "nome" in campos:
                 rota.nome = nome.strip()
@@ -220,6 +230,11 @@ class RotaPrincipalRepository:
                 rota.faculdades_ida = novas_ida
             if novas_volta is not None:
                 rota.faculdades_volta = novas_volta
+            if vinculo_mudou:
+                # Reassign de relationship M2M (secondary=) não marca a linha de
+                # rota_principal como dirty: sem este bump explícito, o onupdate
+                # de updated_at nunca dispara ao trocar só bairros/faculdades.
+                rota.updated_at = datetime.now(timezone.utc)
 
             depois = self._snapshot(rota)
             if depois != antes:

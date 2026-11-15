@@ -279,8 +279,34 @@ export const userService = {
     return response.data;
   },
 
-  async reenviarDocumentos(data: FormData): Promise<any> {
-    const response = await api.patch('/usuarios/me/reenviar', data, {
+  async getReenvioDocumento(): Promise<any> {
+    const response = await api.get('/usuarios/reenvio_documento');
+    return response.data;
+  },
+
+  // HU-031: reenvia só os documentos reprovados. Na web o arquivo vai como Blob (o objeto { uri } viraria texto).
+  async reenviarDocumentos(arquivos: {
+    comprovante_matricula?: any;
+    comprovante_residencia?: any;
+    foto_perfil?: any;
+  }): Promise<any> {
+    const formData = new FormData();
+    await anexarArquivo(
+      formData,
+      'comprovante_matricula',
+      buildFilePart(arquivos.comprovante_matricula, 'matricula.pdf', 'application/pdf'),
+    );
+    await anexarArquivo(
+      formData,
+      'comprovante_residencia',
+      buildFilePart(arquivos.comprovante_residencia, 'residencia.pdf', 'application/pdf'),
+    );
+    await anexarArquivo(
+      formData,
+      'foto_perfil',
+      buildFilePart(arquivos.foto_perfil, 'perfil.jpg', 'image/jpeg'),
+    );
+    const response = await api.put('/usuarios/reenvio_documento', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;

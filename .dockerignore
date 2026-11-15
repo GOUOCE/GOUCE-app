@@ -1,0 +1,25 @@
+# Virtual environments
+.venv/
+backend/.venv/
+venv/
+env/
+
+# Node modules
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Git and OS files
+.git/
+.github/
+.vscode/
+*.log
+.DS_Store
+Thumbs.db
+
+# Test and coverage caches
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/

@@ -64,6 +64,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: gouce_frontend
+    command: ["npx", "expo", "start", "--lan"]
     volumes:
       - .:/app
       - /app/node_modules
@@ -74,7 +75,7 @@ services:
       - "19002:19002"
     environment:
       - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
-      - REACT_NATIVE_PACKAGER_HOSTNAME=${REACT_NATIVE_PACKAGER_HOSTNAME:-192.168.100.29}
+      - REACT_NATIVE_PACKAGER_HOSTNAME=${REACT_NATIVE_PACKAGER_HOSTNAME:-192.168.0.3}
       - EXPO_PUBLIC_API_URL=${EXPO_PUBLIC_API_URL:-http://localhost:8000}
     stdin_open: true
     tty: true

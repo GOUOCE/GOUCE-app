@@ -2,6 +2,7 @@
 
 | Campo | Valor |
 | --- | --- |
+| Status | ✅ Corrigido — publicado como [#399](https://github.com/GOUOCE/GOUCE-app/issues/399); correção no commit `305ca252` da `feature/front-hu013`; CT-001 reexecutado e aprovado em 10/11/2026 no commit `0c0a079c` |
 | Tipo | Bug de integração funcional |
 | Severidade | 🟠 Alta — bloqueia a execução funcional da HU-013 |
 | Ambiente | Backend `feature/front-hu013`, commit `ee305857954fcb23f3919f3ebfe7e163fcbc167a`; Docker isolado `atu-qa-hu013`, `http://127.0.0.1:8013` |

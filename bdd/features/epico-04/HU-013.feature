@@ -15,19 +15,19 @@ Funcionalidade: Agendamento de Transporte
   Para garantir minha vaga de forma rápida e sem erros de digitação
 
 
-  Regra: O aluno escolhe, no calendário, um dia disponível dentro da janela de agendamento
+  Regra: O aluno escolhe, no seletor semanal, um ou mais dias disponíveis dentro da janela de agendamento
 
     Contexto:
       Dado que o aluno "Maria Souza" está autenticado no sistema com cadastro aprovado e vínculo válido
-      E acessa o menu "Agendamento de Transporte"
+      E acessa a tela "Agendar Transporte"
       E o aplicativo possui conexão ativa com a API
 
 
-    # AC-01, AC-17 - Calendário mensal com o estado de cada dia
+    # AC-01, AC-17 - Seletor semanal com o estado de cada dia
     @fluxo_feliz @smoke @prioridade_alta
-    Esquema do Cenário: Sistema identifica visualmente o estado de cada dia no calendário mensal
-      Dado que, no calendário mensal, existe um dia no estado "<estado>"
-      Quando o aluno visualiza o calendário de agendamento
+    Esquema do Cenário: Sistema identifica visualmente o estado de cada dia no seletor semanal
+      Dado que, no seletor semanal, existe um dia no estado "<estado>"
+      Quando o aluno visualiza o seletor de dias
       Então o sistema exibe esse dia com a indicação visual própria do estado "<estado>"
 
       Exemplos:
@@ -41,7 +41,7 @@ Funcionalidade: Agendamento de Transporte
     @fluxo_infeliz @validacao_campos @prioridade_alta
     Esquema do Cenário: Sistema bloqueia o novo agendamento em <dia_semana>
       Dado que o dia "<dia>" é <dia_semana>
-      Quando o aluno visualiza o calendário de agendamento
+      Quando o aluno visualiza o seletor de dias
       Então o sistema exibe o dia "<dia>" como "Indisponível"
       E o dia "<dia>" não pode ser selecionado para um novo agendamento
 
@@ -55,9 +55,9 @@ Funcionalidade: Agendamento de Transporte
     @fluxo_infeliz @validacao_campos @prioridade_media
     Cenário: Sistema exibe como indisponível o dia em que não existe nenhuma rota principal ativa
       Dado que não existe nenhuma rota principal ativa
-      Quando o aluno visualiza o calendário de agendamento
+      Quando o aluno visualiza o seletor de dias
       Então o sistema exibe os dias úteis da janela de agendamento como "Indisponível"
-      E o botão "Novo agendamento" não é exibido para esses dias
+      E nenhum desses dias pode ser selecionado e o botão "Continuar" permanece desabilitado
 
 
     # AC-01 - API recusa o agendamento em sábado ou domingo
@@ -74,14 +74,16 @@ Funcionalidade: Agendamento de Transporte
         | domingo    | 15/11/2026 |
 
 
-    # AC-03 - Dia disponível exibe apenas a data e o botão de ação
+    # AC-03 - Dias selecionados habilitam o botão "Continuar"
     @fluxo_feliz @prioridade_alta
-    Cenário: Aluno seleciona um dia disponível e visualiza apenas a data e o botão "Novo agendamento"
-      Dado que o dia "10/11/2026" está disponível para agendamento
-      Quando o aluno seleciona o dia "10/11/2026" no calendário
-      Então o sistema exibe na área inferior a data "10/11/2026"
-      E exibe o botão "Novo agendamento"
-      E não exibe nenhum outro detalhe de agendamento
+    Cenário: Aluno seleciona dias disponíveis e o botão "Continuar" é habilitado
+      Dado que os dias "11/11/2026" e "12/11/2026" estão disponíveis para agendamento
+      E nenhum dia vem selecionado ao abrir a tela
+      Quando o aluno seleciona o dia "11/11/2026" no seletor de dias
+      E seleciona o dia "12/11/2026" no seletor de dias
+      Então o sistema marca os dois dias como selecionados
+      E exibe o total "2 dias selecionados"
+      E habilita o botão "Continuar"
 
 
     # AC-02 - Janela máxima de 30 dias corridos (valor-limite)
@@ -89,7 +91,7 @@ Funcionalidade: Agendamento de Transporte
     Esquema do Cenário: Sistema limita a seleção de datas à janela máxima de 30 dias corridos
       Dado que a janela de agendamento está na configuração padrão de 30 dias
       E hoje é o dia "09/11/2026"
-      Quando o aluno visualiza o calendário de agendamento
+      Quando o aluno visualiza o seletor de dias
       Então o dia "<dia>" <resultado>
 
       Exemplos:
@@ -132,14 +134,15 @@ Funcionalidade: Agendamento de Transporte
         | AGENDAMENTO_LIMITE_ATIVOS | 5     | com o aluno já possuindo 5 agendamentos ativos         | 422 Unprocessable Entity |
 
 
-    # AC-17 - Calendário mensal sem paginação
+    # AC-17 - Seletor semanal navegável sem paginação
     @fluxo_feliz @prioridade_media
-    Cenário: Aluno navega entre os meses da janela de agendamento sem paginação
-      Dado que a janela de agendamento abrange os meses de novembro e dezembro de 2026
-      Quando o aluno visualiza o calendário de agendamento
-      Então o sistema exibe os dias de novembro de 2026 em um calendário mensal
-      Quando o aluno avança para o mês seguinte
-      Então o sistema exibe os dias de dezembro de 2026 permitidos pela janela
+    Cenário: Aluno navega entre as semanas da janela de agendamento sem paginação
+      Dado que a janela de agendamento vai de "09/11/2026" a "08/12/2026"
+      Quando o aluno visualiza o seletor de dias
+      Então o sistema exibe a semana atual, de segunda a domingo
+      Quando o aluno avança para a semana seguinte
+      Então o sistema exibe os dias da semana seguinte
+      E os dias que ficam fora da janela aparecem desabilitados
       E não há paginação de resultados
 
 
@@ -147,7 +150,7 @@ Funcionalidade: Agendamento de Transporte
 
     Contexto:
       Dado que o aluno "Maria Souza" está autenticado no sistema com cadastro aprovado e vínculo válido
-      E acessa o menu "Agendamento de Transporte"
+      E acessa a tela "Agendar Transporte"
       E o aplicativo possui conexão ativa com a API
       E existe a rota principal ativa "Rota Centro - UFC" com saída às "06:30" e retorno às "17:30", atendendo o bairro "Centro" e a faculdade "UFC" na ida e na volta
       E o dia "10/11/2026" está disponível para agendamento
@@ -156,8 +159,8 @@ Funcionalidade: Agendamento de Transporte
     # FLUXO PRINCIPAL (CAMINHO FELIZ) - AC-04, AC-05, AC-07, AC-08, AC-09, AC-14
     @fluxo_feliz @smoke @prioridade_alta
     Cenário: Aluno agenda o transporte com ida e volta
-      Quando o aluno seleciona o dia "10/11/2026" no calendário
-      E seleciona "Novo agendamento"
+      Quando o aluno seleciona o dia "10/11/2026" no seletor de dias
+      E toca em "Continuar"
       E responde "Sim" para a utilização do ônibus na ida
       E informa os dados da ida:
         | campo                | valor           |
@@ -169,15 +172,15 @@ Funcionalidade: Agendamento de Transporte
         | Faculdade de origem  | UFC             |
         | Ponto de desembarque | Praça da Matriz |
       E confirma o agendamento
-      Então o sistema exibe a mensagem "Agendamento realizado com sucesso"
-      E o dia "10/11/2026" passa a ser exibido no calendário com o estado "Agendado"
+      Então o sistema exibe a tela de confirmação com a mensagem "1 agendamento realizado com sucesso!"
+      E o dia "10/11/2026" passa a ser exibido no seletor de dias com o estado "Agendado"
 
 
     # AC-04, AC-05 - Resposta "Sim" para a ida exibe os campos da ida
     @fluxo_feliz @prioridade_alta
     Cenário: Sistema exibe os campos da ida quando o aluno responde "Sim"
-      Quando o aluno seleciona o dia "10/11/2026" no calendário
-      E seleciona "Novo agendamento"
+      Quando o aluno seleciona o dia "10/11/2026" no seletor de dias
+      E toca em "Continuar"
       E responde "Sim" para a utilização do ônibus na ida
       Então o sistema exibe, em lista suspensa, os campos "Ponto de embarque", "Faculdade de destino" e "Rota complementar de ida"
       E o sistema pergunta se o aluno utilizará o ônibus na volta
@@ -186,8 +189,8 @@ Funcionalidade: Agendamento de Transporte
     # AC-06 - Resposta "Não" para a ida dispensa os campos da ida
     @fluxo_feliz @prioridade_alta
     Cenário: Sistema não exige os campos da ida quando o aluno responde "Não"
-      Quando o aluno seleciona o dia "10/11/2026" no calendário
-      E seleciona "Novo agendamento"
+      Quando o aluno seleciona o dia "10/11/2026" no seletor de dias
+      E toca em "Continuar"
       E responde "Não" para a utilização do ônibus na ida
       Então o sistema não exibe nem exige o preenchimento dos campos da ida
       E o sistema pergunta se o aluno utilizará o ônibus na volta
@@ -196,8 +199,8 @@ Funcionalidade: Agendamento de Transporte
     # AC-07, AC-08 - Resposta "Sim" para a volta exibe os campos da volta
     @fluxo_feliz @prioridade_alta
     Cenário: Sistema exibe os campos da volta quando o aluno responde "Sim", independentemente da resposta da ida
-      Quando o aluno seleciona o dia "10/11/2026" no calendário
-      E seleciona "Novo agendamento"
+      Quando o aluno seleciona o dia "10/11/2026" no seletor de dias
+      E toca em "Continuar"
       E responde "Não" para a utilização do ônibus na ida
       E responde "Sim" para a utilização do ônibus na volta
       Então o sistema exibe, em lista suspensa, os campos "Faculdade de origem", "Ponto de desembarque" e "Rota complementar de volta"
@@ -206,14 +209,14 @@ Funcionalidade: Agendamento de Transporte
     # AC-09 - Combinações válidas de ida e volta
     @fluxo_feliz @prioridade_alta
     Esquema do Cenário: Aluno confirma o agendamento com a combinação "<combinacao>"
-      Quando o aluno seleciona o dia "10/11/2026" no calendário
-      E seleciona "Novo agendamento"
+      Quando o aluno seleciona o dia "10/11/2026" no seletor de dias
+      E toca em "Continuar"
       E responde "<ida>" para a utilização do ônibus na ida
       E responde "<volta>" para a utilização do ônibus na volta
       E preenche os campos obrigatórios dos trechos escolhidos
       E confirma o agendamento
-      Então o sistema exibe a mensagem "Agendamento realizado com sucesso"
-      E o dia "10/11/2026" passa a ser exibido no calendário com o estado "Agendado"
+      Então o sistema exibe a tela de confirmação com a mensagem "1 agendamento realizado com sucesso!"
+      E o dia "10/11/2026" passa a ser exibido no seletor de dias com o estado "Agendado"
       E o agendamento registra <trechos>
 
       Exemplos:
@@ -227,12 +230,12 @@ Funcionalidade: Agendamento de Transporte
     @fluxo_feliz @prioridade_media
     Cenário: Aluno agenda a volta partindo de uma faculdade diferente da faculdade de destino da ida
       Dado que a rota principal "Rota Centro - UFC" também atende a faculdade "IFCE" na volta
-      Quando o aluno seleciona o dia "10/11/2026" no calendário
-      E seleciona "Novo agendamento"
+      Quando o aluno seleciona o dia "10/11/2026" no seletor de dias
+      E toca em "Continuar"
       E informa a ida com a faculdade de destino "UFC"
       E informa a volta com a faculdade de origem "IFCE"
       E confirma o agendamento
-      Então o sistema exibe a mensagem "Agendamento realizado com sucesso"
+      Então o sistema exibe a tela de confirmação com a mensagem "1 agendamento realizado com sucesso!"
       E o agendamento registra a faculdade de destino "UFC" na ida e a faculdade de origem "IFCE" na volta
 
 
@@ -241,12 +244,12 @@ Funcionalidade: Agendamento de Transporte
     Cenário: Aluno agenda a volta com ponto de desembarque de um bairro e de uma rota diferentes dos da ida
       Dado que existe a rota principal ativa "Rota Campo Velho - UFC" atendendo o bairro "Campo Velho" e a faculdade "UFC" na volta
       E o ponto "Praça do Campo Velho" pertence ao bairro "Campo Velho"
-      Quando o aluno seleciona o dia "10/11/2026" no calendário
-      E seleciona "Novo agendamento"
+      Quando o aluno seleciona o dia "10/11/2026" no seletor de dias
+      E toca em "Continuar"
       E informa a ida com o ponto de embarque "Praça da Matriz" e a faculdade de destino "UFC"
       E informa a volta com a faculdade de origem "UFC" e o ponto de desembarque "Praça do Campo Velho"
       E confirma o agendamento
-      Então o sistema exibe a mensagem "Agendamento realizado com sucesso"
+      Então o sistema exibe a tela de confirmação com a mensagem "1 agendamento realizado com sucesso!"
       E o agendamento registra o ponto de embarque "Praça da Matriz" na ida e o ponto de desembarque "Praça do Campo Velho" na volta
 
 
@@ -254,25 +257,25 @@ Funcionalidade: Agendamento de Transporte
     @fluxo_feliz @RN010 @prioridade_media
     Cenário: Aluno agenda a ida e a volta utilizando rota complementar
       Dado que existe a rota complementar ativa "Van 2 - Bairro Novo" vinculada à rota principal "Rota Centro - UFC"
-      Quando o aluno seleciona o dia "10/11/2026" no calendário
-      E seleciona "Novo agendamento"
+      Quando o aluno seleciona o dia "10/11/2026" no seletor de dias
+      E toca em "Continuar"
       E informa a ida e a volta escolhendo a rota complementar "Van 2 - Bairro Novo" nos dois trechos
       E confirma o agendamento
-      Então o sistema exibe a mensagem "Agendamento realizado com sucesso"
+      Então o sistema exibe a tela de confirmação com a mensagem "1 agendamento realizado com sucesso!"
       E o agendamento registra a rota complementar "Van 2 - Bairro Novo" na ida e na volta
 
 
     # AC-10 - Ida "Não" e volta "Não" não cria agendamento
     @fluxo_feliz @prioridade_alta
     Cenário: Sistema não cria agendamento quando o aluno responde "Não" para a ida e para a volta
-      Quando o aluno seleciona o dia "10/11/2026" no calendário
-      E seleciona "Novo agendamento"
+      Quando o aluno seleciona o dia "10/11/2026" no seletor de dias
+      E toca em "Continuar"
       E responde "Não" para a utilização do ônibus na ida
       E responde "Não" para a utilização do ônibus na volta
       E confirma o agendamento
       Então o sistema exibe a mensagem "Nenhum agendamento foi criado."
       E o sistema não exibe nenhuma mensagem de erro
-      E o dia "10/11/2026" permanece no calendário com o estado "Disponível"
+      E o dia "10/11/2026" permanece no seletor de dias com o estado "Disponível"
 
 
     # AC-05 - Listas suspensas exibem apenas cadastros ativos
@@ -280,8 +283,8 @@ Funcionalidade: Agendamento de Transporte
     Esquema do Cenário: Sistema não oferece cadastros inativos de <cadastro> nas listas do agendamento
       Dado que o cadastro de <cadastro> "<ativo>" está ativo
       E o cadastro de <cadastro> "<inativo>" está inativo
-      Quando o aluno seleciona o dia "10/11/2026" no calendário
-      E seleciona "Novo agendamento"
+      Quando o aluno seleciona o dia "10/11/2026" no seletor de dias
+      E toca em "Continuar"
       E abre a lista "<lista>"
       Então o sistema exibe "<ativo>" como opção
       E "<inativo>" não é exibido como opção
@@ -297,8 +300,8 @@ Funcionalidade: Agendamento de Transporte
     @regra_negocio @RN010 @prioridade_media
     Esquema do Cenário: Sistema não oferece no agendamento o trajeto de uma <tipo_rota> inativa
       Dado que existe a <tipo_rota> inativa "<rota_inativa>"
-      Quando o aluno seleciona o dia "10/11/2026" no calendário
-      E seleciona "Novo agendamento"
+      Quando o aluno seleciona o dia "10/11/2026" no seletor de dias
+      E toca em "Continuar"
       Então nenhuma opção de agendamento é gerada a partir da <tipo_rota> "<rota_inativa>"
 
       Exemplos:
@@ -319,7 +322,7 @@ Funcionalidade: Agendamento de Transporte
 
     Contexto:
       Dado que o aluno "Maria Souza" está autenticado no sistema com cadastro aprovado e vínculo válido
-      E acessa o menu "Agendamento de Transporte"
+      E acessa a tela "Agendar Transporte"
       E o aplicativo possui conexão ativa com a API
       E existe a rota principal ativa "Rota Centro - UFC" com saída às "06:30" e retorno às "17:30", atendendo o bairro "Centro" e a faculdade "UFC" na ida e na volta
       E o dia "10/11/2026" está disponível para agendamento
@@ -327,11 +330,10 @@ Funcionalidade: Agendamento de Transporte
 
     # FA-001 - Sobreposição de agendamento (AC-11)
     @fluxo_infeliz @FA001 @prioridade_alta
-    Cenário: Sistema bloqueia o agendamento de um dia que já possui solicitação ativa
+    Cenário: Sistema oferece a edição quando o aluno seleciona um dia que já possui solicitação ativa
       Dado que o aluno já possui um agendamento ativo para o dia "10/11/2026"
-      Quando o aluno tenta registrar um novo agendamento para o dia "10/11/2026"
-      Então o sistema bloqueia a ação
-      E exibe o alerta "Já existe um agendamento ativo para este dia. Edite ou cancele o agendamento existente."
+      Quando o aluno seleciona o dia "10/11/2026" no seletor de dias
+      Então o sistema exibe o aviso "Agendamento já existente" com a pergunta "Deseja editar o agendamento existente?"
       E o aluno continua com apenas um agendamento ativo no dia "10/11/2026"
 
 
@@ -368,8 +370,8 @@ Funcionalidade: Agendamento de Transporte
     @fluxo_infeliz @FA002 @validacao_campos @prioridade_alta
     Esquema do Cenário: Sistema informa a indisponibilidade quando não há rota ativa para o trajeto da <trecho>
       Dado que nenhuma rota principal ativa atende o ponto "<ponto>" e a faculdade "<faculdade>" no trecho da <trecho>
-      Quando o aluno seleciona o dia "10/11/2026" no calendário
-      E seleciona "Novo agendamento"
+      Quando o aluno seleciona o dia "10/11/2026" no seletor de dias
+      E toca em "Continuar"
       E informa no trecho da <trecho> o ponto "<ponto>" e a faculdade "<faculdade>"
       E confirma o agendamento
       Então o sistema exibe a mensagem "Não foi possível criar o agendamento: não há rota principal ativa para o ponto '<ponto>' e a faculdade '<faculdade>'."
@@ -402,8 +404,8 @@ Funcionalidade: Agendamento de Transporte
     # FA-003 - Campos condicionais obrigatórios ausentes (AC-13)
     @fluxo_infeliz @FA003 @validacao_campos @prioridade_alta
     Esquema do Cenário: Sistema bloqueia o salvamento quando o campo "<campo_obrigatorio>" da <trecho> não é preenchido
-      Quando o aluno seleciona o dia "10/11/2026" no calendário
-      E seleciona "Novo agendamento"
+      Quando o aluno seleciona o dia "10/11/2026" no seletor de dias
+      E toca em "Continuar"
       E responde "Sim" para a utilização do ônibus na <trecho>
       E deixa o campo "<campo_obrigatorio>" vazio
       E preenche os demais campos obrigatórios corretamente
@@ -461,7 +463,7 @@ Funcionalidade: Agendamento de Transporte
 
       Exemplos:
         | ativos | resultado                                                            |
-        | 21     | o sistema exibe a mensagem "Agendamento realizado com sucesso"       |
+        | 21     | o sistema exibe a tela de confirmação "1 agendamento realizado com sucesso!"|
         | 22     | o sistema exibe a mensagem "Limite de agendamentos ativos atingido." |
 
 
@@ -479,7 +481,7 @@ Funcionalidade: Agendamento de Transporte
 
     Contexto:
       Dado que o aluno "Maria Souza" está autenticado no sistema com cadastro aprovado e vínculo válido
-      E acessa o menu "Agendamento de Transporte"
+      E acessa a tela "Agendar Transporte"
       E o aplicativo possui conexão ativa com a API
       E o aluno possui um agendamento ativo para o dia "10/11/2026" com ida e volta
 
@@ -487,33 +489,33 @@ Funcionalidade: Agendamento de Transporte
     # FA-001 - Edição de agendamento existente
     @fluxo_feliz @FA001 @prioridade_media
     Cenário: Aluno edita um agendamento existente e remove o trecho da volta
-      Quando o aluno seleciona o dia "10/11/2026" no calendário
-      E seleciona a opção "Editar agendamento"
+      Quando o aluno seleciona o dia "10/11/2026" no seletor de dias
+      E confirma o aviso "Deseja editar o agendamento existente?"
       E altera a resposta da volta para "Não"
       E confirma o agendamento
-      Então o sistema exibe a mensagem "Agendamento atualizado com sucesso"
+      Então o sistema exibe a tela de confirmação com o resumo do dia "10/11/2026"
       E o agendamento do dia "10/11/2026" passa a registrar somente o trecho da ida
 
 
     # AC-16 - Edição com "Não" para ida e volta é tratada como cancelamento (HU-014)
     @fluxo_feliz @prioridade_alta
     Cenário: Sistema trata a edição com "Não" para ida e volta como cancelamento e pede confirmação
-      Quando o aluno seleciona o dia "10/11/2026" no calendário
-      E seleciona a opção "Editar agendamento"
+      Quando o aluno seleciona o dia "10/11/2026" no seletor de dias
+      E confirma o aviso "Deseja editar o agendamento existente?"
       E altera a resposta da ida para "Não"
       E altera a resposta da volta para "Não"
       E confirma o agendamento
       Então o sistema exibe o alerta de confirmação "Cancelar agendamento?" com o aviso "Esta ação não poderá ser desfeita."
       Quando o aluno aciona o botão "Confirmar"
       Então o sistema exibe a mensagem "Agendamento cancelado com sucesso"
-      E o dia "10/11/2026" passa a ser exibido no calendário com o estado "Disponível"
+      E o dia "10/11/2026" passa a ser exibido no seletor de dias com o estado "Disponível"
 
 
     # AC-16, HU-014 FA-002 - Desistência do cancelamento por edição
     @fluxo_infeliz @prioridade_media
     Cenário: Aluno desiste do cancelamento por edição ao acionar "Cancelar" no alerta de confirmação
-      Quando o aluno seleciona o dia "10/11/2026" no calendário
-      E seleciona a opção "Editar agendamento"
+      Quando o aluno seleciona o dia "10/11/2026" no seletor de dias
+      E confirma o aviso "Deseja editar o agendamento existente?"
       E altera a resposta da ida para "Não"
       E altera a resposta da volta para "Não"
       E confirma o agendamento

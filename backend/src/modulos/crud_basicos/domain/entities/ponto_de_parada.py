@@ -1,13 +1,16 @@
+from datetime import datetime, timezone
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import (
     Column,
+    DateTime,
     Integer,
     String,
     ForeignKey,
     Boolean,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.orm import relationship
 
@@ -49,6 +52,13 @@ class PontoDeParadaORM(Base):
     )
 
     ativo = Column(Boolean, default=True, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
 
     @property
     def id(self) -> int:

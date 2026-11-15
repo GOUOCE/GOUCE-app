@@ -128,7 +128,19 @@ class AgendamentoRoutesHu014Test(unittest.IsolatedAsyncioTestCase):
         self.service.detail.assert_not_called()
 
     async def test_detalhes_por_data_exige_data_no_formato_esperado(self):
-        status, _ = await self.call("GET", f"{BASE}/detalhes?data=10-11-2026")
+        self.service.detail_by_date.side_effect = AgendamentoError(
+            "VALIDATION_ERROR", "Data deve estar no formato YYYY-MM-DD.", 422
+        )
+        status, body = await self.call("GET", f"{BASE}/detalhes?data=10-11-2026")
+        self.assertEqual(status, 422)
+        self.assertEqual(body["error"]["code"], "VALIDATION_ERROR")
+        self.assertEqual(
+            body["error"]["message"], "Data deve estar no formato YYYY-MM-DD."
+        )
+        self.service.detail_by_date.assert_called_once_with(7, "10-11-2026")
+
+    async def test_detalhes_por_data_ausente_retorna_422(self):
+        status, _ = await self.call("GET", f"{BASE}/detalhes")
         self.assertEqual(status, 422)
         self.service.detail_by_date.assert_not_called()
 

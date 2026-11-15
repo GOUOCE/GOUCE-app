@@ -1,7 +1,16 @@
+from datetime import datetime, timezone
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import Boolean, Column, Integer, String, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Integer,
+    String,
+    UniqueConstraint,
+    text,
+)
 
 from src.shared.infrastructure.db import Base
 
@@ -26,6 +35,13 @@ class FaculdadeORM(Base):
     sigla = Column(String(50), nullable=True)
     campus_faculdade = Column(String(255), nullable=False)
     ativo = Column(Boolean, default=True, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
 
     @property
     def id(self) -> int:

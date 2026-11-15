@@ -15,6 +15,7 @@ from src.modulos.rotas.interface.http.rota_principal_routes import router as rot
 from src.modulos.rotas.interface.http.rota_complementar_routes import router as rota_complementar_router
 from src.modulos.agendamentos.interface.http.agendamento_routes import router as agendamento_router
 from src.modulos.alocacao_diaria.interface.http.alocacao_routes import router as alocacao_router
+from src.modulos.agendamentos.interface.http.agendamento_routes import router as agendamento_router, router_legacy
 
 app = FastAPI(
     title="API GOUCE",
@@ -46,6 +47,7 @@ app.include_router(rota_principal_router)
 app.include_router(rota_complementar_router)
 app.include_router(agendamento_router)
 app.include_router(alocacao_router)
+app.include_router(router_legacy)
 
 
 @app.get("/health", include_in_schema=False)
