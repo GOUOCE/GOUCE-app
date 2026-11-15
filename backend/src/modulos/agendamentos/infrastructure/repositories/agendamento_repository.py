@@ -14,6 +14,7 @@ from src.modulos.rotas.model.entities.rota_principal import (
     rota_principal_faculdade_ida,
     rota_principal_faculdade_volta,
 )
+from src.modulos.alocacao_diaria.model.entities.alocacao import AlocacaoAlunoORM
 from src.shared.infrastructure.audit_model import LogAuditoriaORM
 
 
@@ -169,13 +170,10 @@ class AgendamentoRepository:
         return getattr(item, attr, None) if item is not None else None
 
     def remove_allocations(self, agendamento) -> None:
-        """Gancho para remover a alocação veículo/dia do agendamento.
-
-        No-op até a tabela de alocação (HU-016/HU-018) existir. Quando existir,
-        deve apagar/atualizar a alocação vinculada usando a mesma sessão, sem
-        commit próprio, para que o cancelamento permaneça atômico (RNF-012).
-        """
-        return None
+        """Remove os vínculos do aluno sem abrir uma segunda transação."""
+        self.session.query(AlocacaoAlunoORM).filter(
+            AlocacaoAlunoORM.agendamento_id == agendamento.id
+        ).delete(synchronize_session=False)
 
     def cancel(self, aluno_id: int, item):
         """Cancelamento lógico em transação única (sem cancelamento parcial)."""
