@@ -86,6 +86,12 @@ class AlocacaoService:
             .all()
         )
         routes = self.session.query(RotaPrincipalORM).filter(RotaPrincipalORM.ativo.is_(True)).all()
+        complementary = {
+            item.id: item.rota_principal_id
+            for item in self.session.query(RotaComplementarORM).filter(
+                RotaComplementarORM.ativo.is_(True)
+            )
+        }
         demand: dict[tuple[int, str], list[Passageiro]] = {}
         for booking in bookings:
             for turno, enabled in (("ida", booking.usa_ida), ("volta", booking.usa_volta)):
