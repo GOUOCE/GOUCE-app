@@ -62,11 +62,6 @@ export interface RotaComplementarResumo {
   horario_saida: string;
   horario_retorno: string;
   ponto_conexao: string;
-  onibus?: Record<string, any> | null;
-  motorista?: Record<string, any> | null;
-  status_alocacao?: StatusAlocacaoVeiculo | string | null;
-  realocado?: boolean;
-  rota_original_nome?: string | null;
 }
 
 export interface RotaPrincipalResumo {
@@ -167,7 +162,7 @@ export interface AlocacaoRotaResolvida {
   rotaOriginalNome?: string | null;
 }
 
-export interface DetalhesRotaComplementar extends AlocacaoRotaResolvida {
+export interface DetalhesRotaComplementar {
   nomeLinha: string;
   pontoEmbarque: string;
   pontoConexao: string;
@@ -347,7 +342,6 @@ function mapearTrecho(
   const iesDoTrecho =
     sentido === 'ida' ? detalhe.ies_destino_nome : detalhe.ies_origem_nome;
 
-  const alocacaoComplementar = resolverAlocacaoRota(complementar);
   const alocacaoPrincipal = resolverAlocacaoRota(principal);
   const nomePrincipal = principal?.nome ?? 'A definir';
   const faculdadesPrincipal = principal?.faculdades ?? [];
@@ -363,7 +357,6 @@ function mapearTrecho(
           // Ida: a van sai do bairro; volta: a van sai do ponto de conexão.
           horarioSaida:
             sentido === 'ida' ? complementar.horario_saida : complementar.horario_retorno,
-          ...alocacaoComplementar,
         }
       : undefined,
     rotaPrincipal: {
@@ -440,34 +433,10 @@ const MOCK_ALOCACAO_PRINCIPAL: Record<CenarioAlocacaoMock, AlocacaoRotaResolvida
   },
 };
 
-const MOCK_ALOCACAO_COMPLEMENTAR: Record<CenarioAlocacaoMock, AlocacaoRotaResolvida> = {
-  CONFIRMADA: {
-    veiculo: 'Van 01 - Placa VNC-4510',
-    motorista: 'Carlos Mendes',
-    statusAlocacao: 'CONFIRMADA',
-    statusAlocacaoLabel: 'Alocação confirmada',
-    realocado: false,
-    mensagemRealocacao: null,
-    rotaOriginalNome: null,
-  },
-  AGUARDANDO_ALOCACAO: {
-    veiculo: null,
-    motorista: null,
-    statusAlocacao: 'AGUARDANDO_ALOCACAO',
-    statusAlocacaoLabel: 'Aguardando alocação do veículo',
-    realocado: false,
-    mensagemRealocacao: null,
-    rotaOriginalNome: null,
-  },
-  REALOCADO: {
-    veiculo: 'Van 02 - Placa VNC-8890',
-    motorista: 'Carlos Mendes',
-    statusAlocacao: 'REALOCADO',
-    statusAlocacaoLabel: 'Alocação confirmada',
-    realocado: true,
-    mensagemRealocacao: formatarAvisoRealocacao('Van 02 - Placa VNC-8890'),
-    rotaOriginalNome: 'Van 01 - Campo Novo',
-  },
+const MOCK_ROTA_COMPLEMENTAR_PADRAO = {
+  nomeLinha: 'Van 2 - Bairro Novo',
+  pontoEmbarque: 'Bairro Novo',
+  pontoConexao: 'Trevo do Bairro Novo',
 };
 
 /**
@@ -480,26 +449,36 @@ export function aplicarCenarioAlocacaoMock(
   opcoes?: { exibirRotaComplementar?: boolean },
 ): DetalhesViagemResponse {
   const alocacaoPrincipal = MOCK_ALOCACAO_PRINCIPAL[cenario];
-  const alocacaoComplementar = MOCK_ALOCACAO_COMPLEMENTAR[cenario];
 
   const trechosAtualizados: TrechoDetalhesViagem[] = detalhes.trechos.map((trecho) => {
-    let rotaComplementar: DetalhesRotaComplementar | undefined;
+    let rotaComplementar = trecho.rotaComplementar;
+    let pontoEmbarquePrincipal = trecho.rotaPrincipal.pontoEmbarque;
+    let pontoDesembarquePrincipal = trecho.rotaPrincipal.pontoDesembarque;
 
     if (opcoes?.exibirRotaComplementar === false) {
+      if (trecho.rotaComplementar) {
+        const pontoDirecto =
+          trecho.rotaComplementar.pontoEmbarque === MOCK_ROTA_COMPLEMENTAR_PADRAO.pontoEmbarque
+            ? 'Pça. Matriz'
+            : trecho.rotaComplementar.pontoEmbarque;
+        if (trecho.sentido === 'ida') {
+          pontoEmbarquePrincipal = pontoDirecto;
+        } else {
+          pontoDesembarquePrincipal = pontoDirecto;
+        }
+      }
       rotaComplementar = undefined;
-    } else if (trecho.rotaComplementar) {
-      rotaComplementar = {
-        ...trecho.rotaComplementar,
-        ...alocacaoComplementar,
-      };
     } else if (opcoes?.exibirRotaComplementar === true) {
-      rotaComplementar = {
-        nomeLinha: 'Van 01 - Campo Novo',
-        pontoEmbarque: 'Posto de Saúde do Campo Novo',
-        pontoConexao: 'Terminal Rodoviário de Quixadá',
-        horarioSaida: trecho.sentido === 'ida' ? '05:10' : '17:30',
-        ...alocacaoComplementar,
+      const complementarAtiva: DetalhesRotaComplementar = trecho.rotaComplementar ?? {
+        ...MOCK_ROTA_COMPLEMENTAR_PADRAO,
+        horarioSaida: trecho.sentido === 'ida' ? '06:10' : '17:30',
       };
+      rotaComplementar = complementarAtiva;
+      if (trecho.sentido === 'ida') {
+        pontoEmbarquePrincipal = complementarAtiva.pontoConexao;
+      } else {
+        pontoDesembarquePrincipal = complementarAtiva.pontoConexao;
+      }
     }
 
     return {
@@ -507,6 +486,8 @@ export function aplicarCenarioAlocacaoMock(
       rotaComplementar,
       rotaPrincipal: {
         ...trecho.rotaPrincipal,
+        pontoEmbarque: pontoEmbarquePrincipal,
+        pontoDesembarque: pontoDesembarquePrincipal,
         ...alocacaoPrincipal,
       },
     };
@@ -534,6 +515,20 @@ export function criarDetalhesViagemMock(
     { id: 3, nome: 'Universidade Estadual do Ceará', sigla: 'UECE' },
   ];
 
+  const rotaComplementarMock = opcoes?.exibirRotaComplementar
+    ? {
+        id: 1,
+        nome: MOCK_ROTA_COMPLEMENTAR_PADRAO.nomeLinha,
+        horario_saida: '06:10',
+        horario_retorno: '17:30',
+        ponto_conexao: MOCK_ROTA_COMPLEMENTAR_PADRAO.pontoConexao,
+      }
+    : null;
+
+  const pontoAlunoMock = opcoes?.exibirRotaComplementar
+    ? MOCK_ROTA_COMPLEMENTAR_PADRAO.pontoEmbarque
+    : 'Pça. Matriz';
+
   const detalheBase: AgendamentoDetalhe = {
     id: 901,
     aluno_id: 1,
@@ -547,39 +542,23 @@ export function criarDetalhesViagemMock(
     ponto_desembarque_id: 1,
     rota_complementar_volta_id: opcoes?.exibirRotaComplementar ? 1 : null,
     status: 'ATIVO',
-    ponto_embarque_nome: opcoes?.exibirRotaComplementar
-      ? 'Posto de Saúde do Campo Novo'
-      : 'Pça. Matriz',
+    ponto_embarque_nome: pontoAlunoMock,
     ies_destino_nome: 'UFC',
-    rota_complementar_ida_nome: opcoes?.exibirRotaComplementar ? 'Van 01 - Campo Novo' : null,
+    rota_complementar_ida_nome: opcoes?.exibirRotaComplementar
+      ? MOCK_ROTA_COMPLEMENTAR_PADRAO.nomeLinha
+      : null,
     ies_origem_nome: 'UFC',
-    ponto_desembarque_nome: opcoes?.exibirRotaComplementar
-      ? 'Posto de Saúde do Campo Novo'
-      : 'Pça. Matriz',
-    rota_complementar_volta_nome: opcoes?.exibirRotaComplementar ? 'Van 01 - Campo Novo' : null,
-    rota_complementar_ida: opcoes?.exibirRotaComplementar
-      ? {
-          id: 1,
-          nome: 'Van 01 - Campo Novo',
-          horario_saida: '05:10',
-          horario_retorno: '17:30',
-          ponto_conexao: 'Terminal Rodoviário de Quixadá',
-        }
+    ponto_desembarque_nome: pontoAlunoMock,
+    rota_complementar_volta_nome: opcoes?.exibirRotaComplementar
+      ? MOCK_ROTA_COMPLEMENTAR_PADRAO.nomeLinha
       : null,
-    rota_complementar_volta: opcoes?.exibirRotaComplementar
-      ? {
-          id: 1,
-          nome: 'Van 01 - Campo Novo',
-          horario_saida: '05:10',
-          horario_retorno: '17:30',
-          ponto_conexao: 'Terminal Rodoviário de Quixadá',
-        }
-      : null,
+    rota_complementar_ida: rotaComplementarMock,
+    rota_complementar_volta: rotaComplementarMock,
     rota_principal_ida: {
       id: 1,
       nome: 'Linha 01 - Centro',
       horario_saida: '06:40',
-      horario_retorno: '06:40',
+      horario_retorno: '17:00',
       faculdades: faculdadesMock,
       onibus: null,
       motorista: null,
@@ -588,7 +567,7 @@ export function criarDetalhesViagemMock(
       id: 1,
       nome: 'Linha 01 - Centro',
       horario_saida: '06:40',
-      horario_retorno: '06:40',
+      horario_retorno: '17:00',
       faculdades: faculdadesMock,
       onibus: null,
       motorista: null,
