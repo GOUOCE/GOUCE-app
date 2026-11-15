@@ -195,7 +195,7 @@ describe('listaEmbarqueService (HU-018)', () => {
     });
 
     it('mantém filtro de IES nas notificações em tempo real para o Representante', async () => {
-      const listenerRepresentante = jest.fn<(lista: { alunos: Array<{ iesIda?: string; iesVolta?: string }> }) => void>();
+      const listenerRepresentante = jest.fn<(lista: { alunos: { iesIda?: string; iesVolta?: string }[] }) => void>();
       const inicialUfc = await listaEmbarqueService.obterListaEmbarque({
         rotaId: 1,
         perfil: 'MOTORISTA',
