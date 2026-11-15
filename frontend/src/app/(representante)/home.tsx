@@ -1,85 +1,92 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Surface, useTheme, Avatar, List, Checkbox } from 'react-native-paper';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ListaEmbarqueConteudo } from '@/components/embarque/ListaEmbarqueConteudo';
 import { useAuth } from '@contexts/AuthContext';
+import { listaEmbarqueService } from '@/services/listaEmbarqueService';
+
+function normalizarIesRepresentante(faculdade?: string, fallback: string = 'UFC'): string {
+  const texto = faculdade?.trim();
+  if (!texto) return fallback;
+
+  const siglaOuNome = texto.split(' - ')[0].trim();
+  if (/universidade federal do cear[aá]|\bufc\b/i.test(siglaOuNome)) {
+    return 'UFC';
+  }
+  if (/estadual do cear[aá]|\buece\b/i.test(siglaOuNome)) {
+    return 'UECE';
+  }
+  if (/instituto federal|\bifce\b/i.test(siglaOuNome)) {
+    return 'IFCE';
+  }
+  if (/cat[oó]lica|unicat[oó]lica/i.test(siglaOuNome)) {
+    return 'Católica';
+  }
+  return siglaOuNome;
+}
 
 export default function RepresentativeHomeScreen() {
-  const theme = useTheme();
   const { user } = useAuth();
+  const [rotaPadrao, setRotaPadrao] = useState<{
+    rotaId: number;
+    rotaNome: string;
+    iesResponsavel: string;
+  } | null>(null);
 
-  const passageirosMock = [
-    { id: '1', nome: 'João Silva', embarcou: true, local: 'Bairro Novo' },
-    { id: '2', nome: 'Maria Oliveira', embarcou: false, local: 'Centro' },
-    { id: '3', nome: 'Pedro Santos', embarcou: false, local: 'Serra' },
-  ];
+  useEffect(() => {
+    let ativo = true;
+
+    listaEmbarqueService
+      .obterRotaPadraoRepresentante()
+      .then((dados) => {
+        if (ativo) {
+          setRotaPadrao(dados);
+        }
+      })
+      .catch(() => {
+        if (ativo) {
+          setRotaPadrao({
+            rotaId: 1,
+            rotaNome: 'Linha 01 - Centro',
+            iesResponsavel: 'UFC',
+          });
+        }
+      });
+
+    return () => {
+      ativo = false;
+    };
+  }, []);
+
+  if (!rotaPadrao) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#3E5F90" testID="loading-representante-embarque" />
+      </View>
+    );
+  }
+
+  const iesResponsavel = normalizarIesRepresentante(
+    user?.faculdade,
+    rotaPadrao.iesResponsavel
+  );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.header}>
-        <Text variant="headlineMedium" style={styles.title}>Lista de Embarque</Text>
-        <Text variant="bodyMedium" style={styles.subtitle}>Ônibus 04 | Rota: Quixadá</Text>
-      </View>
-
-      <Surface style={styles.statsCard} elevation={1}>
-        <View style={styles.statItem}>
-          <Text variant="displaySmall" style={styles.statValue}>1/3</Text>
-          <Text variant="bodySmall">Embarcados</Text>
-        </View>
-      </Surface>
-
-      <ScrollView style={styles.listContainer}>
-        {passageirosMock.map((p) => (
-          <List.Item
-            key={p.id}
-            title={p.nome}
-            description={`Embarque: ${p.local}`}
-            left={props => <Avatar.Text {...props} size={40} label={p.nome.substring(0,2)} />}
-            right={props => <Checkbox status={p.embarcou ? 'checked' : 'unchecked'} color={theme.colors.primary} />}
-            style={styles.listItem}
-          />
-        ))}
-      </ScrollView>
-    </View>
+    <ListaEmbarqueConteudo
+      perfil="MOTORISTA"
+      nomeEmissor={user?.name}
+      iesResponsavel={iesResponsavel}
+      rotaFixaId={rotaPadrao.rotaId}
+      modoFixoInicial
+      exibirBotaoVoltar={false}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  loadingContainer: {
     flex: 1,
-    paddingTop: 60,
-  },
-  header: {
-    paddingHorizontal: 24,
-    marginBottom: 24,
-  },
-  title: {
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  subtitle: {
-    color: '#666',
-  },
-  statsCard: {
-    marginHorizontal: 24,
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  statItem: {
+    backgroundColor: '#F8F9FF',
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  statValue: {
-    fontWeight: 'bold',
-    color: '#3e5f90',
-  },
-  listContainer: {
-    flex: 1,
-  },
-  listItem: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    paddingVertical: 8,
-  }
 });
