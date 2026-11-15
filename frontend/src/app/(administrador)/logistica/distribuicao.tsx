@@ -1,26 +1,135 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Text, Surface } from 'react-native-paper';
+import { Text, Surface, Button } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { ChevronLeft, ChevronRight, Pencil, ClipboardList, Users, User, Bus } from 'lucide-react-native';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Pencil,
+  ClipboardList,
+  Users,
+  User,
+  Bus,
+  CheckCircle2,
+} from 'lucide-react-native';
 
 import { logisticaService, LinhaDistribuicao } from '@/services/logisticaService';
+import { AppPopup, PopupType } from '@/components/ui/AppPopup';
+import { getErrorMessage } from '@/utils/errorUtils';
+
+const SIGLAS = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
+const NOMES_DIAS = [
+  'Domingo',
+  'Segunda-feira',
+  'Terça-feira',
+  'Quarta-feira',
+  'Quinta-feira',
+  'Sexta-feira',
+  'Sábado',
+];
+const MESES = [
+  'Janeiro',
+  'Fevereiro',
+  'Março',
+  'Abril',
+  'Maio',
+  'Junho',
+  'Julho',
+  'Agosto',
+  'Setembro',
+  'Outubro',
+  'Novembro',
+  'Dezembro',
+];
+
+const inicioDoDia = (data: Date) => new Date(data.getFullYear(), data.getMonth(), data.getDate());
+
+const adicionarDias = (data: Date, dias: number) => {
+  const resultado = inicioDoDia(data);
+  resultado.setDate(resultado.getDate() + dias);
+  return resultado;
+};
+
+const inicioDaSemana = (data: Date) => {
+  const resultado = inicioDoDia(data);
+  const diasDesdeSegunda = (resultado.getDay() + 6) % 7;
+  resultado.setDate(resultado.getDate() - diasDesdeSegunda);
+  return resultado;
+};
+
+const paraIso = (data: Date) => {
+  const ano = data.getFullYear();
+  const mes = String(data.getMonth() + 1).padStart(2, '0');
+  const dia = String(data.getDate()).padStart(2, '0');
+  return `${ano}-${mes}-${dia}`;
+};
+
+const paraDataLocal = (iso: string) => new Date(`${iso}T12:00:00`);
+
+const formatarIntervaloSemana = (inicio: Date, fim: Date) => {
+  const mesmoMes = inicio.getMonth() === fim.getMonth() && inicio.getFullYear() === fim.getFullYear();
+  if (mesmoMes) {
+    return `${inicio.getDate()} - ${fim.getDate()} de ${MESES[inicio.getMonth()]} de ${inicio.getFullYear()}`;
+  }
+  return `${inicio.getDate()} de ${MESES[inicio.getMonth()]} - ${fim.getDate()} de ${MESES[fim.getMonth()]} de ${fim.getFullYear()}`;
+};
+
+const formatarDataLonga = (iso: string) => {
+  const data = paraDataLocal(iso);
+  return `${NOMES_DIAS[data.getDay()]}, ${data.getDate()} de ${MESES[data.getMonth()]} de ${data.getFullYear()}`;
+};
 
 export default function DistribicaoLogisticaScreen() {
   const router = useRouter();
 
+  const hoje = useMemo(() => inicioDoDia(new Date()), []);
   const [tipoTab, setTipoTab] = useState<'proximos' | 'historico'>('proximos');
-  const [dataIsoSelecionada, setDataIsoSelecionada] = useState<string>('2026-09-01');
+  const [offsetSemanas, setOffsetSemanas] = useState(0);
+  const [dataIsoSelecionada, setDataIsoSelecionada] = useState<string>(() => paraIso(hoje));
   const [linhas, setLinhas] = useState<LinhaDistribuicao[]>([]);
   const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState('');
+  const [confirmando, setConfirmando] = useState(false);
+  const [popupConfirmarVisible, setPopupConfirmarVisible] = useState(false);
+  const [popupResultado, setPopupResultado] = useState<{
+    visible: boolean;
+    type?: PopupType;
+    title: string;
+    message: string;
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+  });
+  const [statusLogistico, setStatusLogistico] = useState('');
 
-  const carregarLinhas = useCallback(async (data: string, tab: 'proximos' | 'historico') => {
+  const semanaInicio = useMemo(
+    () => adicionarDias(inicioDaSemana(hoje), offsetSemanas * 7),
+    [hoje, offsetSemanas],
+  );
+  const semanaFim = useMemo(() => adicionarDias(semanaInicio, 6), [semanaInicio]);
+  const diasSemana = useMemo(
+    () =>
+      Array.from({ length: 7 }, (_, indice) => {
+        const data = adicionarDias(semanaInicio, indice);
+        return {
+          sigla: SIGLAS[data.getDay()],
+          diaNum: data.getDate(),
+          dataIso: paraIso(data),
+        };
+      }),
+    [semanaInicio],
+  );
+
+  const carregarLinhas = useCallback(async (dataIso: string) => {
     setLoading(true);
+    setErro('');
     try {
-      const res = await logisticaService.listarDistribuicaoLogistica(data, tab);
+      const res = await logisticaService.listarDistribuicaoLogistica(dataIso);
       setLinhas(res);
-    } catch {
+    } catch (error) {
       setLinhas([]);
+      setErro(getErrorMessage(error, 'Não foi possível carregar a distribuição logística.'));
     } finally {
       setLoading(false);
     }
@@ -28,27 +137,70 @@ export default function DistribicaoLogisticaScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      carregarLinhas(dataIsoSelecionada, tipoTab);
-    }, [carregarLinhas, dataIsoSelecionada, tipoTab])
+      void carregarLinhas(dataIsoSelecionada);
+    }, [carregarLinhas, dataIsoSelecionada]),
   );
 
-  const handleNavegarSemana = (delta: number) => {
-    if (delta > 0) {
-      setDataIsoSelecionada('2026-09-08');
-    } else {
-      setDataIsoSelecionada('2026-09-01');
-    }
+  const selecionarTab = (tab: 'proximos' | 'historico') => {
+    setTipoTab(tab);
+    setOffsetSemanas(tab === 'historico' ? -1 : 0);
+    setDataIsoSelecionada(paraIso(tab === 'historico' ? adicionarDias(hoje, -7) : hoje));
   };
 
-  const DIAS_SEMANA = [
-    { sigla: 'SEG', diaNum: 31, dataIso: '2026-08-31', badge: 0 },
-    { sigla: 'TER', diaNum: 1, dataIso: '2026-09-01', badge: 3 },
-    { sigla: 'QUA', diaNum: 2, dataIso: '2026-09-02', badge: 0 },
-    { sigla: 'QUI', diaNum: 3, dataIso: '2026-09-03', badge: 0 },
-    { sigla: 'SEX', diaNum: 4, dataIso: '2026-09-04', badge: 0 },
-    { sigla: 'SÁB', diaNum: 5, dataIso: '2026-09-05', badge: 0, disabled: true },
-    { sigla: 'DOM', diaNum: 6, dataIso: '2026-09-06', badge: 0, disabled: true },
-  ];
+  const handleNavegarSemana = (delta: number) => {
+    const novaData = adicionarDias(paraDataLocal(dataIsoSelecionada), delta * 7);
+    const novoOffset = offsetSemanas + delta;
+    setOffsetSemanas(novoOffset);
+    setDataIsoSelecionada(paraIso(novaData));
+    setTipoTab(novoOffset < 0 ? 'historico' : 'proximos');
+  };
+
+  const totalAlunos = useMemo(
+    () => linhas.reduce((total, linha) => total + linha.alunosAgendados, 0),
+    [linhas],
+  );
+
+  const abrirConfirmacao = () => {
+    if (linhas.length === 0) {
+      setPopupResultado({
+        visible: true,
+        type: 'warning',
+        title: 'Sem demanda',
+        message: 'Não há alunos agendados para este dia.',
+      });
+      return;
+    }
+    setPopupConfirmarVisible(true);
+  };
+
+  const confirmarDistribuicao = async () => {
+    setPopupConfirmarVisible(false);
+    setConfirmando(true);
+    try {
+      const resposta = await logisticaService.confirmarDistribuicao({
+        data: dataIsoSelecionada,
+        modo: 'automatico',
+        alocacoes: [],
+      });
+      setStatusLogistico(resposta.status_logistico);
+      setPopupResultado({
+        visible: true,
+        type: 'success',
+        title: 'Distribuição confirmada',
+        message: resposta.mensagem || 'Distribuição realizada com sucesso',
+      });
+      await carregarLinhas(dataIsoSelecionada);
+    } catch (error) {
+      setPopupResultado({
+        visible: true,
+        type: 'error',
+        title: 'Erro na distribuição',
+        message: getErrorMessage(error, 'Não foi possível confirmar a distribuição.'),
+      });
+    } finally {
+      setConfirmando(false);
+    }
+  };
 
   const renderBadgeStatus = (status: LinhaDistribuicao['status']) => {
     if (status === 'alocada') {
@@ -74,34 +226,60 @@ export default function DistribicaoLogisticaScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
-      {/* Header */}
+      <AppPopup
+        visible={popupConfirmarVisible}
+        type="warning"
+        title="Confirmar distribuição?"
+        message={`A distribuição automática de ${totalAlunos} aluno(s) será salva para ${formatarDataLonga(dataIsoSelecionada)}.`}
+        confirmText="Confirmar"
+        cancelText="Cancelar"
+        onConfirm={confirmarDistribuicao}
+        onDismiss={() => setPopupConfirmarVisible(false)}
+      />
+
+      <AppPopup
+        visible={popupResultado.visible}
+        type={popupResultado.type}
+        title={popupResultado.title}
+        message={popupResultado.message}
+        confirmText="Entendido"
+        onConfirm={() => setPopupResultado((prev) => ({ ...prev, visible: false }))}
+        onDismiss={() => setPopupResultado((prev) => ({ ...prev, visible: false }))}
+      />
+
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <ChevronLeft size={32} color="#333" />
         </TouchableOpacity>
-        <Text variant="headlineSmall" style={styles.headerTitle}>Distribuição Logística</Text>
+        <Text variant="headlineSmall" style={styles.headerTitle}>
+          Distribuição Logística
+        </Text>
       </View>
 
-      {/* Tabs Superiores (Próximos / Histórico) */}
       <View style={styles.topTabsContainer}>
         <TouchableOpacity
           style={[styles.topTabBtn, tipoTab === 'proximos' && styles.topTabBtnActive]}
-          onPress={() => setTipoTab('proximos')}
+          onPress={() => selecionarTab('proximos')}
         >
-          <Text style={[styles.topTabText, tipoTab === 'proximos' && styles.topTabTextActive]}>Próximos</Text>
+          <Text style={[styles.topTabText, tipoTab === 'proximos' && styles.topTabTextActive]}>
+            Próximos
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.topTabBtn, tipoTab === 'historico' && styles.topTabBtnActive]}
-          onPress={() => setTipoTab('historico')}
+          onPress={() => selecionarTab('historico')}
         >
-          <Text style={[styles.topTabText, tipoTab === 'historico' && styles.topTabTextActive]}>Histórico</Text>
+          <Text style={[styles.topTabText, tipoTab === 'historico' && styles.topTabTextActive]}>
+            Histórico
+          </Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Faixa da Semana */}
         <View style={styles.weekHeaderRow}>
-          <Text style={styles.weekRangeText}>31 de Agosto - 06 de Setembro de 2026</Text>
+          <Text style={styles.weekRangeText}>
+            {formatarIntervaloSemana(semanaInicio, semanaFim)}
+          </Text>
           <View style={styles.arrowsRow}>
             <TouchableOpacity onPress={() => handleNavegarSemana(-1)} style={styles.arrowPad}>
               <ChevronLeft size={20} color="#666" />
@@ -112,51 +290,51 @@ export default function DistribicaoLogisticaScreen() {
           </View>
         </View>
 
-        {/* Pílulas dos Dias */}
         <View style={styles.daysPillRow}>
-          {DIAS_SEMANA.map((dia) => {
+          {diasSemana.map((dia) => {
             const isSelected = dia.dataIso === dataIsoSelecionada;
-
             return (
               <TouchableOpacity
                 key={dia.dataIso}
-                onPress={() => !dia.disabled && setDataIsoSelecionada(dia.dataIso)}
-                disabled={dia.disabled}
-                style={[
-                  styles.dayPill,
-                  isSelected && styles.dayPillSelected,
-                  dia.disabled && styles.dayPillDisabled,
-                ]}
+                onPress={() => setDataIsoSelecionada(dia.dataIso)}
+                style={[styles.dayPill, isSelected && styles.dayPillSelected]}
               >
-                {dia.badge > 0 && (
-                  <View style={styles.pillNotificationBadge}>
-                    <Text style={styles.badgeCountText}>{dia.badge}</Text>
-                  </View>
-                )}
-                <Text style={[
-                  styles.pillSigla,
-                  isSelected && styles.pillTextSelected,
-                  dia.disabled && styles.pillTextDisabled,
-                ]}>{dia.sigla}</Text>
-                <Text style={[
-                  styles.pillNum,
-                  isSelected && styles.pillTextSelected,
-                  dia.disabled && styles.pillTextDisabled,
-                ]}>{dia.diaNum}</Text>
+                <Text style={[styles.pillSigla, isSelected && styles.pillTextSelected]}>
+                  {dia.sigla}
+                </Text>
+                <Text style={[styles.pillNum, isSelected && styles.pillTextSelected]}>
+                  {dia.diaNum}
+                </Text>
               </TouchableOpacity>
             );
           })}
         </View>
 
-        {/* Subtítulo da Data Selecionada */}
         <Text variant="titleMedium" style={styles.dateSubTitle}>
-          Terça-feira, 01 de Setembro de 2026
+          {formatarDataLonga(dataIsoSelecionada)}
         </Text>
 
-        {/* Lista de Linhas */}
+        {statusLogistico ? (
+          <View style={styles.statusLogisticoBox}>
+            <CheckCircle2 size={18} color="#00639A" />
+            <Text style={styles.statusLogisticoText}>Status logístico: {statusLogistico}</Text>
+          </View>
+        ) : null}
+
         {loading ? (
           <View style={styles.loadingBox}>
             <ActivityIndicator size="large" color="#3E5F90" />
+          </View>
+        ) : erro ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>{erro}</Text>
+            <Button mode="outlined" onPress={() => carregarLinhas(dataIsoSelecionada)}>
+              Tentar novamente
+            </Button>
+          </View>
+        ) : linhas.length === 0 ? (
+          <View style={styles.emptyBox}>
+            <Text style={styles.emptyText}>Nenhum aluno agendado para este dia.</Text>
           </View>
         ) : (
           <View style={styles.linhasList}>
@@ -164,9 +342,11 @@ export default function DistribicaoLogisticaScreen() {
               <Surface key={linha.id} style={styles.linhaCard} elevation={1}>
                 <View style={styles.cardHeaderRow}>
                   <View style={styles.linhaInfoCol}>
-                    <Text variant="titleMedium" style={styles.linhaTitle}>{linha.nomeLinha}</Text>
+                    <Text variant="titleMedium" style={styles.linhaTitle}>
+                      {linha.nomeLinha}
+                    </Text>
                     <Text variant="bodySmall" style={styles.linhaFaculdades}>
-                      {linha.faculdades.join(', ')}
+                      {linha.faculdades.join(', ') || 'Sem faculdades vinculadas'}
                     </Text>
                   </View>
 
@@ -179,13 +359,13 @@ export default function DistribicaoLogisticaScreen() {
 
                 <View style={styles.cardBodyRow}>
                   <View style={styles.detailsCol}>
-                    {/* Qtd Alunos */}
                     <View style={styles.detailRow}>
                       <Users size={18} color="#191C20" />
-                      <Text style={styles.detailText}>{linha.alunosAgendados} alunos agendados</Text>
+                      <Text style={styles.detailText}>
+                        {linha.alunosAgendados} alunos agendados
+                      </Text>
                     </View>
 
-                    {/* Motorista */}
                     <View style={styles.detailRow}>
                       <User size={18} color={linha.motoristaNome ? '#191C20' : '#BA1A1A'} />
                       <Text style={[styles.detailText, !linha.motoristaNome && styles.alertText]}>
@@ -193,44 +373,66 @@ export default function DistribicaoLogisticaScreen() {
                       </Text>
                     </View>
 
-                    {/* Ônibus */}
                     <View style={styles.detailRow}>
                       <Bus size={18} color={linha.onibusApelido ? '#191C20' : '#BA1A1A'} />
                       <Text style={[styles.detailText, !linha.onibusApelido && styles.alertText]}>
                         {linha.onibusApelido || 'Sem ônibus alocado'}
                       </Text>
                     </View>
+
+                    {linha.excedentes > 0 ? (
+                      <Text style={styles.excedentesText}>
+                        {linha.excedentes} aluno(s) excedente(s)
+                      </Text>
+                    ) : null}
                   </View>
 
-                  {/* Ações da Linha */}
                   <View style={styles.actionsCol}>
                     <TouchableOpacity
                       style={styles.actionIconBtn}
-                      onPress={() => router.push({
-                        pathname: '/(administrador)/logistica/alocar',
-                        params: { linhaId: String(linha.id), dataIso: dataIsoSelecionada },
-                      } as any)}
+                      onPress={() =>
+                        router.push({
+                          pathname: '/(administrador)/logistica/alocar',
+                          params: { linhaId: String(linha.id), dataIso: dataIsoSelecionada },
+                        } as any)
+                      }
                     >
                       <Pencil size={20} color="#191C20" />
                     </TouchableOpacity>
 
-                    {linha.status === 'superlotada' && (
+                    {linha.excedentes > 0 ? (
                       <TouchableOpacity
                         style={styles.actionIconBtn}
-                        onPress={() => router.push({
-                          pathname: '/(administrador)/logistica/excedentes',
-                          params: { linhaId: String(linha.id), dataIso: dataIsoSelecionada },
-                        } as any)}
+                        onPress={() =>
+                          router.push({
+                            pathname: '/(administrador)/logistica/excedentes',
+                            params: { linhaId: String(linha.id), dataIso: dataIsoSelecionada },
+                          } as any)
+                        }
                       >
                         <ClipboardList size={20} color="#B00020" />
                       </TouchableOpacity>
-                    )}
+                    ) : null}
                   </View>
                 </View>
               </Surface>
             ))}
           </View>
         )}
+
+        {!loading && !erro && linhas.length > 0 ? (
+          <Button
+            mode="contained"
+            onPress={abrirConfirmacao}
+            loading={confirmando}
+            disabled={confirmando}
+            style={styles.confirmarButton}
+            contentStyle={styles.confirmarButtonContent}
+            buttonColor="#3E5F90"
+          >
+            Confirmar distribuição
+          </Button>
+        ) : null}
       </ScrollView>
     </View>
   );
@@ -312,35 +514,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#E0E2EC',
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'relative',
     gap: 4,
   },
   dayPillSelected: {
     backgroundColor: '#C2E7FF',
     borderWidth: 1.5,
     borderColor: '#00639A',
-  },
-  dayPillDisabled: {
-    backgroundColor: '#F1F3F9',
-    borderWidth: 1,
-    borderColor: '#C4C6CF',
-    borderStyle: 'dashed',
-  },
-  pillNotificationBadge: {
-    position: 'absolute',
-    top: -6,
-    right: -4,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: '#B00020',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  badgeCountText: {
-    color: '#FFF',
-    fontSize: 10,
-    fontWeight: 'bold',
   },
   pillSigla: {
     fontSize: 12,
@@ -355,18 +534,41 @@ const styles = StyleSheet.create({
   pillTextSelected: {
     color: '#001D36',
   },
-  pillTextDisabled: {
-    color: '#C4C6CF',
-  },
   dateSubTitle: {
     fontWeight: 'bold',
     color: '#191C20',
     marginBottom: 20,
     fontSize: 18,
   },
+  statusLogisticoBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  statusLogisticoText: {
+    color: '#00639A',
+    fontWeight: '600',
+  },
   loadingBox: {
     paddingVertical: 40,
     alignItems: 'center',
+  },
+  errorBox: {
+    paddingVertical: 24,
+    gap: 12,
+  },
+  errorText: {
+    color: '#BA1A1A',
+    textAlign: 'center',
+  },
+  emptyBox: {
+    paddingVertical: 32,
+    alignItems: 'center',
+  },
+  emptyText: {
+    color: '#74777F',
+    textAlign: 'center',
   },
   linhasList: {
     gap: 16,
@@ -420,6 +622,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   detailsCol: {
+    flex: 1,
     gap: 10,
   },
   detailRow: {
@@ -434,11 +637,23 @@ const styles = StyleSheet.create({
   alertText: {
     color: '#BA1A1A',
   },
+  excedentesText: {
+    color: '#B00020',
+    fontSize: 13,
+    fontWeight: '600',
+  },
   actionsCol: {
     gap: 16,
     alignItems: 'center',
   },
   actionIconBtn: {
     padding: 8,
+  },
+  confirmarButton: {
+    marginTop: 28,
+    borderRadius: 24,
+  },
+  confirmarButtonContent: {
+    height: 52,
   },
 });

@@ -1,7 +1,77 @@
 import { api } from '@/api/api';
+import { rotaPrincipalService, type RotaPrincipalItem } from '@/services/rotaPrincipalService';
+import { formatarTituloOnibus } from '@/utils/formatarOnibus';
+
+export type Turno = 'ida' | 'volta';
+export type TipoLugar = 'sentado' | 'em_pe';
+export type ModoDistribuicao = 'automatico' | 'manual';
+
+export interface AlunoAlocacao {
+  agendamento_id: number;
+  tipo_lugar: TipoLugar;
+}
+
+export interface AlocacaoDistribuicao {
+  rota_id: number;
+  onibus_id: string;
+  motorista_id: number;
+  turno: Turno;
+  capacidade: {
+    assentos: number;
+    em_pe: number;
+  };
+  sentados: number;
+  em_pe: number;
+  alunos: AlunoAlocacao[];
+  excedentes: { agendamento_id: number; turno: Turno }[];
+}
+
+export interface DemandaRota {
+  rota_id: number;
+  total_alunos: number;
+}
+
+export interface ExcedenteGlobal {
+  agendamento_id: number;
+  turno: Turno;
+}
+
+export interface AlertaDistribuicao {
+  tipo: string;
+  mensagem: string;
+}
+
+export interface PreviaDistribuicao {
+  data: string;
+  demanda_por_rota: DemandaRota[];
+  alocacoes: AlocacaoDistribuicao[];
+  excedentes_globais: ExcedenteGlobal[];
+  alertas: AlertaDistribuicao[];
+}
+
+export interface AlocacaoRequest {
+  rota_id: number;
+  onibus_id: string;
+  motorista_id: number;
+  turno: Turno;
+  alunos: AlunoAlocacao[];
+}
+
+export interface DistribuicaoRequest {
+  data: string;
+  modo: ModoDistribuicao;
+  alocacoes: AlocacaoRequest[];
+}
+
+export interface DistribuicaoResponse {
+  mensagem: string;
+  data: string;
+  status_logistico: string;
+  alocacoes: AlocacaoRequest[];
+}
 
 export interface LinhaDistribuicao {
-  id: number | string;
+  id: number;
   nomeLinha: string;
   horarioSaida: string;
   horarioVolta: string;
@@ -12,14 +82,16 @@ export interface LinhaDistribuicao {
   alunosEmPe: number;
   capacidadeSentados: number;
   capacidadeEmPe: number;
+  excedentes: number;
   motoristaId?: number | null;
   motoristaNome?: string | null;
-  onibusId?: number | null;
+  onibusId?: string | null;
   onibusApelido?: string | null;
 }
 
 export interface AlunoExcedente {
-  id: number | string;
+  id: number;
+  turno: Turno;
   nome: string;
   iniciais: string;
   trajetoText: string;
@@ -31,146 +103,254 @@ export interface OpcaoSelect {
   value: string;
 }
 
+export interface OnibusOpcao extends OpcaoSelect {
+  placa: string;
+  identificacao: string;
+  assentos: number;
+  capacidadeEmPe: number;
+}
+
+export interface MotoristaOpcao extends OpcaoSelect {
+  id: number;
+  nome: string;
+}
+
+export interface OpcoesAlocacao {
+  rota: RotaPrincipalItem;
+  preview: PreviaDistribuicao;
+  onibus: OnibusOpcao[];
+  motoristas: MotoristaOpcao[];
+  onibusOptions: OnibusOpcao[];
+  motoristaOptions: MotoristaOpcao[];
+}
+
+const cacheAlocacoesConfirmadas = new Map<string, AlocacaoDistribuicao[]>();
+
+function normalizarPlaca(placa: string) {
+  return placa.trim().toUpperCase();
+}
+
+function unicos<T>(itens: T[]): T[] {
+  return Array.from(new Set(itens));
+}
+
+function mapearOnibus(item: any): OnibusOpcao | null {
+  const placa = String(item?.placa_onibus ?? item?.placa ?? '').trim();
+  if (!placa) return null;
+
+  const apelido = String(item?.apelido_onibus ?? item?.apelido ?? '').trim();
+  const assentos = Number(item?.qtd_assentos ?? item?.assentos ?? 0);
+  const capacidadeEmPe = Number(item?.capacidade_maxima ?? item?.capacidade_em_pe ?? 0);
+  const identificacao = apelido || `Ônibus ${placa}`;
+
+  return {
+    label: `${formatarTituloOnibus(apelido, placa)} (${assentos} sentados + ${capacidadeEmPe} em pé)`,
+    value: placa,
+    placa,
+    identificacao,
+    assentos,
+    capacidadeEmPe,
+  };
+}
+
+async function listarOnibusAtivos(): Promise<OnibusOpcao[]> {
+  const response = await api.get<any[]>('/onibus', { params: { ativo: true } });
+  const lista = Array.isArray(response.data) ? response.data : [];
+  return lista
+    .map(mapearOnibus)
+    .filter((item): item is OnibusOpcao => item !== null);
+}
+
+async function listarMotoristasAtivos(): Promise<MotoristaOpcao[]> {
+  const response = await api.get<any[]>('/motoristas', { params: { incluir_inativos: false } });
+  const lista = Array.isArray(response.data) ? response.data : [];
+  return lista
+    .filter((item) => item?.ativo !== false)
+    .map((item) => ({
+      label: String(item.nome ?? ''),
+      value: String(item.id),
+      id: Number(item.id),
+      nome: String(item.nome ?? ''),
+    }));
+}
+
+function nomesFaculdades(rota: any): string[] {
+  const faculdades = [...(rota?.faculdades_ida ?? []), ...(rota?.faculdades_volta ?? [])];
+  const vistos = new Set<string>();
+  const nomes: string[] = [];
+
+  for (const faculdade of faculdades) {
+    const nome = String(faculdade?.sigla || faculdade?.nome || '').trim();
+    if (nome && !vistos.has(nome)) {
+      vistos.add(nome);
+      nomes.push(nome);
+    }
+  }
+
+  return nomes;
+}
+
+async function obterPreviewComCache(dataIso: string): Promise<PreviaDistribuicao> {
+  const response = await api.get<PreviaDistribuicao>('/alocacao-diaria/distribuicao-automatica', {
+    params: { data: dataIso },
+  });
+  const preview = response.data;
+  const confirmadas = cacheAlocacoesConfirmadas.get(dataIso);
+
+  return confirmadas ? { ...preview, alocacoes: confirmadas } : preview;
+}
+
+async function obterReferencias() {
+  const [rotasResponse, onibus, motoristas] = await Promise.all([
+    api.get<any[]>('/rotas-principais', { params: { incluir_inativos: false } }),
+    listarOnibusAtivos(),
+    listarMotoristasAtivos(),
+  ]);
+  const rotas = Array.isArray(rotasResponse.data) ? rotasResponse.data : [];
+
+  return {
+    rotas,
+    onibus,
+    motoristas,
+    onibusPorPlaca: new Map(onibus.map((item) => [normalizarPlaca(item.placa), item])),
+    motoristaPorId: new Map(motoristas.map((item) => [item.id, item])),
+  };
+}
+
+function montarLinha(
+  demanda: DemandaRota,
+  rota: any | undefined,
+  alocacoes: AlocacaoDistribuicao[],
+  referencias: Awaited<ReturnType<typeof obterReferencias>>,
+): LinhaDistribuicao {
+  const rotaId = Number(demanda.rota_id);
+  const alocacoesRota = alocacoes.filter((item) => Number(item.rota_id) === rotaId);
+  const totalAlocado = alocacoesRota.reduce((total, item) => total + item.alunos.length, 0);
+  const excedentes = Math.max(0, Number(demanda.total_alunos) - totalAlocado);
+  const onibusIds = unicos(alocacoesRota.map((item) => item.onibus_id).filter(Boolean));
+  const motoristaIds = unicos(
+    alocacoesRota.map((item) => Number(item.motorista_id)).filter((id) => id > 0),
+  );
+  const nomesOnibus = onibusIds.map(
+    (placa) => referencias.onibusPorPlaca.get(normalizarPlaca(placa))?.identificacao ?? placa,
+  );
+  const nomesMotoristas = motoristaIds.map(
+    (id) => referencias.motoristaPorId.get(id)?.nome ?? `Motorista #${id}`,
+  );
+
+  return {
+    id: rotaId,
+    nomeLinha: rota?.nome ?? `Rota ${rotaId}`,
+    horarioSaida: rota?.horario_saida ?? '',
+    horarioVolta: rota?.horario_retorno ?? '',
+    faculdades: nomesFaculdades(rota),
+    status:
+      alocacoesRota.length === 0
+        ? 'pendente'
+        : excedentes > 0
+          ? 'superlotada'
+          : 'alocada',
+    alunosAgendados: Number(demanda.total_alunos),
+    alunosSentados: alocacoesRota.reduce((total, item) => total + Number(item.sentados ?? 0), 0),
+    alunosEmPe: alocacoesRota.reduce((total, item) => total + Number(item.em_pe ?? 0), 0),
+    capacidadeSentados: alocacoesRota.reduce(
+      (total, item) => total + Number(item.capacidade?.assentos ?? 0),
+      0,
+    ),
+    capacidadeEmPe: alocacoesRota.reduce(
+      (total, item) => total + Number(item.capacidade?.em_pe ?? 0),
+      0,
+    ),
+    excedentes,
+    motoristaId: motoristaIds[0] ?? null,
+    motoristaNome: nomesMotoristas.length > 0 ? nomesMotoristas.join(', ') : null,
+    onibusId: onibusIds[0] ?? null,
+    onibusApelido: nomesOnibus.length > 0 ? nomesOnibus.join(', ') : null,
+  };
+}
+
+async function obterDadosDistribuicao(
+  dataIso: string,
+): Promise<{ preview: PreviaDistribuicao; linhas: LinhaDistribuicao[] }> {
+  const [preview, referencias] = await Promise.all([
+    obterPreviewComCache(dataIso),
+    obterReferencias(),
+  ]);
+  const rotasPorId = new Map(referencias.rotas.map((rota) => [Number(rota.id), rota]));
+  const linhas = preview.demanda_por_rota.map((demanda) =>
+    montarLinha(demanda, rotasPorId.get(Number(demanda.rota_id)), preview.alocacoes, referencias),
+  );
+
+  return { preview, linhas };
+}
+
 export const logisticaService = {
-  async listarDistribuicaoLogistica(dataIso: string = '2026-09-01', tipoTab: 'proximos' | 'historico' = 'proximos'): Promise<LinhaDistribuicao[]> {
-    try {
-      const response = await api.get(`/transporte/logistica/distribuicao?data=${dataIso}&tab=${tipoTab}`);
-      return response.data.linhas || response.data;
-    } catch {
-      // Fallback estático com dados reais do protótipo HU-016 / HU-017
-      return [
-        {
-          id: 1,
-          nomeLinha: 'Linha 01 - Centro',
-          horarioSaida: '06:40',
-          horarioVolta: '17:40',
-          faculdades: ['UFC', 'Unicatólica', 'UECE'],
-          status: 'pendente',
-          alunosAgendados: 38,
-          alunosSentados: 32,
-          alunosEmPe: 6,
-          capacidadeSentados: 42,
-          capacidadeEmPe: 8,
-          motoristaId: null,
-          motoristaNome: null,
-          onibusId: null,
-          onibusApelido: null,
-        },
-        {
-          id: 2,
-          nomeLinha: 'Linha 02 - Bairro Novo',
-          horarioSaida: '06:40',
-          horarioVolta: '17:40',
-          faculdades: ['UFC', 'IFCE', 'Unopar'],
-          status: 'alocada',
-          alunosAgendados: 22,
-          alunosSentados: 22,
-          alunosEmPe: 0,
-          capacidadeSentados: 28,
-          capacidadeEmPe: 6,
-          motoristaId: 101,
-          motoristaNome: 'Ana Souza',
-          onibusId: 201,
-          onibusApelido: 'Ônibus 07',
-        },
-        {
-          id: 3,
-          nomeLinha: 'Linha 03 - Vila Antiga',
-          horarioSaida: '06:40',
-          horarioVolta: '17:40',
-          faculdades: ['UFC', 'IFCE', 'UECE', 'Unopar'],
-          status: 'superlotada',
-          alunosAgendados: 53,
-          alunosSentados: 42,
-          alunosEmPe: 11,
-          capacidadeSentados: 42,
-          capacidadeEmPe: 8,
-          motoristaId: 102,
-          motoristaNome: 'José Almeida',
-          onibusId: 202,
-          onibusApelido: 'Ônibus 12',
-        },
-      ];
-    }
+  async obterPreviaDistribuicao(dataIso: string): Promise<PreviaDistribuicao> {
+    return obterPreviewComCache(dataIso);
   },
 
-  async obterOpcoesAlocacao(linhaId: number | string, dataIso: string) {
-    try {
-      const response = await api.get(`/transporte/logistica/opcoes?linha_id=${linhaId}&data=${dataIso}`);
-      return response.data;
-    } catch {
-      return {
-        onibusOptions: [
-          { label: 'Ônibus 07 (28 sentados + 6 em pé)', value: '201' },
-          { label: 'Ônibus 12 (42 sentados + 8 em pé)', value: '202' },
-          { label: 'Ônibus 03 (36 sentados + 8 em pé)', value: '203' },
-        ],
-        motoristaOptions: [
-          { label: 'Ana Souza', value: '101' },
-          { label: 'José Almeida', value: '102' },
-          { label: 'Carlos Alberto Silva', value: '103' },
-          { label: 'Raimundo Nonato', value: '104' },
-        ],
-      };
-    }
+  async listarDistribuicaoLogistica(dataIso: string): Promise<LinhaDistribuicao[]> {
+    const { linhas } = await obterDadosDistribuicao(dataIso);
+    return linhas;
   },
 
-  async confirmarAlocacao(payload: {
-    linhaId: number | string;
-    dataIso: string;
-    onibusId: number | string;
-    motoristaId: number | string;
-  }): Promise<any> {
-    try {
-      const response = await api.post('/transporte/logistica/alocar', payload);
-      return response.data;
-    } catch {
-      return { success: true, mensagem: 'Alocação confirmada com sucesso' };
-    }
+  async obterOpcoesAlocacao(
+    linhaId: number | string,
+    dataIso: string,
+  ): Promise<OpcoesAlocacao> {
+    const [preview, rota, onibus, motoristas] = await Promise.all([
+      obterPreviewComCache(dataIso),
+      rotaPrincipalService.obterRotaPrincipalPorId(Number(linhaId)),
+      listarOnibusAtivos(),
+      listarMotoristasAtivos(),
+    ]);
+
+    return {
+      rota,
+      preview,
+      onibus,
+      motoristas,
+      onibusOptions: onibus,
+      motoristaOptions: motoristas,
+    };
   },
 
-  async listarAlunosExcedentes(linhaId: number | string, dataIso: string): Promise<AlunoExcedente[]> {
-    try {
-      const response = await api.get(`/transporte/logistica/excedentes?linha_id=${linhaId}&data=${dataIso}`);
-      return response.data.alunos || response.data;
-    } catch {
-      return [
-        {
-          id: 301,
-          nome: 'Felipe Maia',
-          iniciais: 'FM',
-          trajetoText: 'Pça. Matriz ↔ UFC',
-          selecionado: true,
-        },
-        {
-          id: 302,
-          nome: 'João Vitor',
-          iniciais: 'JV',
-          trajetoText: 'Pça. Matriz ➔ Unicatólica',
-          selecionado: true,
-        },
-        {
-          id: 303,
-          nome: 'Radlei Eugenio Doroth',
-          iniciais: 'RD',
-          trajetoText: 'Ida: Pça. Matriz ➔ UFC | Volta: ↵ Unicatólica',
-          selecionado: true,
-        },
-      ];
+  async confirmarDistribuicao(
+    payload: DistribuicaoRequest,
+    alocacoesConfirmadas?: AlocacaoDistribuicao[],
+  ): Promise<DistribuicaoResponse> {
+    const response = await api.post<DistribuicaoResponse>(
+      '/alocacao-diaria/distribuicao',
+      payload,
+    );
+
+    if (alocacoesConfirmadas) {
+      cacheAlocacoesConfirmadas.set(payload.data, alocacoesConfirmadas);
+    } else if (payload.modo === 'automatico') {
+      cacheAlocacoesConfirmadas.delete(payload.data);
     }
+
+    return response.data;
   },
 
-  async confirmarRealocacao(payload: {
-    linhaOrigemId: number | string;
-    dataIso: string;
-    onibusDestinoId: number | string;
-    alunosIds: (number | string)[];
-  }): Promise<any> {
-    try {
-      const response = await api.post('/transporte/logistica/realocar', payload);
-      return response.data;
-    } catch {
-      return { success: true, mensagem: 'Realocação confirmada com sucesso' };
-    }
+  async obterExcedentes(
+    dataIso: string,
+    linhaId?: number | string,
+  ): Promise<{ rota: LinhaDistribuicao | null; alunos: AlunoExcedente[] }> {
+    const { preview, linhas } = await obterDadosDistribuicao(dataIso);
+    const rota =
+      linhaId === undefined
+        ? null
+        : linhas.find((item) => String(item.id) === String(linhaId)) ?? null;
+    const alunos: AlunoExcedente[] = preview.excedentes_globais.map((item) => ({
+      id: item.agendamento_id,
+      turno: item.turno,
+      nome: `Agendamento #${item.agendamento_id}`,
+      iniciais: 'ID',
+      trajetoText: item.turno === 'ida' ? 'Turno de ida' : 'Turno de volta',
+      selecionado: false,
+    }));
+
+    return { rota, alunos };
   },
 };
