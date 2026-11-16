@@ -191,16 +191,6 @@ function todosTextosTela(root: any): string {
     .join(' ');
 }
 
-function clicarPorTestId(root: any, testID: string) {
-  const botao = root.root
-    .findAllByType(TouchableOpacity)
-    .find((node: any) => node.props?.testID === testID);
-  expect(botao).toBeDefined();
-  return renderer.act(async () => {
-    botao.props.onPress();
-  });
-}
-
 describe('Telas da HU-019 — Consulta de Alocação Diária pelo Aluno', () => {
   beforeEach(() => {
     jest.restoreAllMocks();
@@ -227,6 +217,7 @@ describe('Telas da HU-019 — Consulta de Alocação Diária pelo Aluno', () => 
     expect(textoPorTestId(root, 'status-alocacao-principal-ida')).toBe('Alocação confirmada');
     expect(textoPorTestId(root, 'rota-complementar-nome-ida')).toBe('Van 2 - Bairro Novo');
     expect(textoPorTestId(root, 'rota-complementar-nome-volta')).toBe('Van 2 - Bairro Novo');
+    expect(existeTestId(root, 'painel-simulacao-hu019')).toBe(false);
 
     const textos = todosTextosTela(root);
     expect(textos).toContain('Ponto de Embarque (IES)');
@@ -309,42 +300,36 @@ describe('Telas da HU-019 — Consulta de Alocação Diária pelo Aluno', () => 
     });
   });
 
-  it('permite carregar a simulação da HU-019 na falha da API e alternar cenários e rota complementar', async () => {
+  it('exibe mensagem de erro sem painel de simulação quando a busca falha e permite tentar novamente', async () => {
+    const detalhes = mapearDetalhe(criarDetalheFixture());
     jest
       .spyOn(agendamentoService, 'obterDetalhesViagem')
-      .mockRejectedValueOnce(new Error('Nenhum agendamento encontrado.'));
+      .mockRejectedValueOnce({
+        response: { status: 404, data: { detail: 'Nenhum agendamento encontrado.' } },
+      })
+      .mockResolvedValueOnce(detalhes);
 
     let root: any;
     await renderer.act(async () => {
       root = renderer.create(<AgendamentoDetalhesScreen />);
     });
 
-    expect(existeTestId(root, 'btn-carregar-mock-hu019')).toBe(true);
-    await clicarPorTestId(root, 'btn-carregar-mock-hu019');
+    expect(existeTestId(root, 'btn-carregar-mock-hu019')).toBe(false);
+    expect(existeTestId(root, 'painel-simulacao-hu019')).toBe(false);
+    expect(todosTextosTela(root)).toContain('Não foi possível carregar a viagem');
+    expect(todosTextosTela(root)).toContain('Nenhum agendamento encontrado.');
 
-    expect(existeTestId(root, 'painel-simulacao-hu019')).toBe(true);
+    const botaoTentarNovamente = root.root
+      .findAllByType(TouchableOpacity)
+      .find((node: any) => extrairTextos(node) === 'Tentar novamente');
+    expect(botaoTentarNovamente).toBeDefined();
+
+    await renderer.act(async () => {
+      botaoTentarNovamente.props.onPress();
+    });
+
     expect(textoPorTestId(root, 'veiculo-principal-ida')).toBe('Ônibus 04 - Placa OCR-1234');
-    expect(existeTestId(root, 'rota-complementar-nome-ida')).toBe(false);
-
-    await clicarPorTestId(root, 'btn-alternar-rota-complementar');
-    expect(textoPorTestId(root, 'rota-complementar-nome-ida')).toBe('Van 2 - Bairro Novo');
-    expect(todosTextosTela(root)).toContain('Trevo do Bairro Novo');
-
-    await clicarPorTestId(root, 'btn-cenario-aguardando');
-    expect(textoPorTestId(root, 'status-alocacao-principal-ida')).toBe(
-      'Aguardando alocação do veículo',
-    );
-    expect(existeTestId(root, 'veiculo-principal-ida')).toBe(false);
-    expect(existeTestId(root, 'motorista-principal-ida')).toBe(false);
-
-    await clicarPorTestId(root, 'btn-cenario-realocado');
-    expect(textoPorTestId(root, 'alerta-realocacao-principal-ida')).toContain(
-      'Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Ônibus 04 - Placa OCR-1234',
-    );
-
-    await clicarPorTestId(root, 'btn-cenario-confirmada');
-    expect(textoPorTestId(root, 'status-alocacao-principal-ida')).toBe('Alocação confirmada');
-    expect(existeTestId(root, 'alerta-realocacao-principal-ida')).toBe(false);
+    expect(existeTestId(root, 'painel-simulacao-hu019')).toBe(false);
 
     await renderer.act(async () => {
       root.unmount();
