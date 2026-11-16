@@ -1,7 +1,8 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { Platform, Share } from 'react-native';
 import {
-  listaEmbarqueService,
+  formatarTrajetoEmbarque,
+  type AlunoEmbarqueItem,
   type ListaEmbarqueRota,
 } from '../../services/listaEmbarqueService';
 import {
@@ -14,11 +15,100 @@ import {
   imprimirListaEmbarque,
 } from '../impressaoListaEmbarque';
 
+jest.mock('@/api/api', () => ({
+  api: {
+    get: jest.fn(),
+  },
+}));
+
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  getItem: jest.fn(() => Promise.resolve(null)),
+  setItem: jest.fn(() => Promise.resolve()),
+  removeItem: jest.fn(() => Promise.resolve()),
+}));
+
+function criarAlunoFixture(
+  id: number,
+  nome: string,
+  pontoEmbarque: string,
+  iesIda?: string,
+  iesVolta?: string,
+): AlunoEmbarqueItem {
+  const sentidoViagem =
+    iesIda && iesVolta
+      ? iesIda === iesVolta
+        ? 'IDA_E_VOLTA_MESMA_IES'
+        : 'IES_DISTINTAS'
+      : iesIda
+        ? 'SOMENTE_IDA'
+        : 'SOMENTE_VOLTA';
+
+  return {
+    id,
+    nome,
+    pontoEmbarque,
+    iesIda,
+    iesVolta,
+    sentidoViagem,
+    trajetoFormatado: formatarTrajetoEmbarque({ pontoEmbarque, iesIda, iesVolta }),
+  };
+}
+
+function criarListaLinha01Com38Alunos(): ListaEmbarqueRota {
+  const base: AlunoEmbarqueItem[] = [
+    criarAlunoFixture(1, 'Ana Paula Lima', 'Pça. Matriz', 'UFC', 'UFC'),
+    criarAlunoFixture(2, 'Bruno Costa', 'Pça. Matriz', 'Católica'),
+    criarAlunoFixture(3, 'Carla Dias', 'Trevo Bairro Novo', undefined, 'UECE'),
+  ];
+
+  for (let i = 4; i <= 37; i += 1) {
+    base.push(
+      criarAlunoFixture(
+        i,
+        `Estudante ${String(i).padStart(2, '0')}`,
+        'Pça. Matriz',
+        i % 2 === 0 ? 'UFC' : 'Católica',
+        i % 2 === 0 ? 'UFC' : 'Católica',
+      ),
+    );
+  }
+
+  base.push(criarAlunoFixture(38, 'Wesley Pontes', 'Pça. Matriz', 'UFC', 'Católica'));
+
+  return {
+    rotaId: 1,
+    rotaNome: 'Linha 01 - Centro',
+    dataOperacao: '20/11/2026',
+    totalAlunos: 38,
+    ultimaSincronizacaoISO: '2026-11-20T09:29:00.000Z',
+    alunos: base,
+  };
+}
+
+function criarListaLinha03Com6Alunos(): ListaEmbarqueRota {
+  const alunos: AlunoEmbarqueItem[] = [
+    criarAlunoFixture(101, 'Beatriz Sampaio', 'Rotatória da Serrinha', 'UFC', 'UFC'),
+    criarAlunoFixture(102, 'Caio Albuquerque', 'Posto São José', 'UECE'),
+    criarAlunoFixture(103, 'Débora Vasconcelos', 'Igreja Matriz', undefined, 'IFCE'),
+    criarAlunoFixture(104, 'Eduardo Bezerra', 'Rotatória da Serrinha', 'UFC', 'Católica'),
+    criarAlunoFixture(105, 'Flávia Queiroz', 'Posto São José', 'Católica', 'Católica'),
+    criarAlunoFixture(106, 'Gustavo Farias', 'Igreja Matriz', 'UFC', 'UFC'),
+  ];
+
+  return {
+    rotaId: 3,
+    rotaNome: 'Linha 03 - Serrinha',
+    dataOperacao: '20/11/2026',
+    totalAlunos: 6,
+    ultimaSincronizacaoISO: '2026-11-20T09:29:00.000Z',
+    alunos,
+  };
+}
+
 describe('impressaoListaEmbarque (HU-018)', () => {
   const osOriginal = Platform.OS;
 
   beforeEach(() => {
-    listaEmbarqueService.resetarMocks();
     Object.defineProperty(Platform, 'OS', {
       configurable: true,
       get: () => osOriginal,
@@ -35,11 +125,8 @@ describe('impressaoListaEmbarque (HU-018)', () => {
     delete (globalThis as { document?: unknown }).document;
   });
 
-  it('pagina 38 alunos reais da Linha 01 em 2 folhas A4 de até 30 registros sem linhas em branco', async () => {
-    const lista = await listaEmbarqueService.obterListaEmbarque({
-      rotaId: 1,
-      perfil: 'ADMINISTRADOR',
-    });
+  it('pagina 38 alunos da Linha 01 em 2 folhas A4 de até 30 registros sem linhas em branco', () => {
+    const lista = criarListaLinha01Com38Alunos();
 
     const documento = gerarPaginasImpressaoA4(lista, {
       perfil: 'ADMINISTRADOR',
@@ -97,8 +184,8 @@ describe('impressaoListaEmbarque (HU-018)', () => {
     });
   });
 
-  it('pagina 6 alunos da Linha 03 em 1 página apenas com os 6 registros reais', async () => {
-    const lista = await listaEmbarqueService.obterListaEmbarque({ rotaId: 3 });
+  it('pagina 6 alunos da Linha 03 em 1 página apenas com os 6 registros reais', () => {
+    const lista = criarListaLinha03Com6Alunos();
     const documento = gerarPaginasImpressaoA4(lista);
 
     expect(documento.paginas).toHaveLength(1);
@@ -110,25 +197,28 @@ describe('impressaoListaEmbarque (HU-018)', () => {
   });
 
   it('impede geração e impressão para rota sem alunos alocados (FA-002)', async () => {
-    const listaVazia = await listaEmbarqueService.obterListaEmbarque({ rotaId: 2 });
+    const listaVazia: ListaEmbarqueRota = {
+      rotaId: 2,
+      rotaNome: 'Linha 02 - Bairro Novo',
+      dataOperacao: '20/11/2026',
+      totalAlunos: 0,
+      ultimaSincronizacaoISO: '2026-11-20T09:29:00.000Z',
+      alunos: [],
+    };
 
     expect(() => gerarPaginasImpressaoA4(listaVazia)).toThrow(
-      'Não é possível imprimir uma lista de embarque sem alunos alocados.'
+      'Não é possível imprimir uma lista de embarque sem alunos alocados.',
     );
     expect(() => gerarHtmlImpressaoA4(listaVazia)).toThrow(
-      'Não é possível imprimir uma lista de embarque sem alunos alocados.'
+      'Não é possível imprimir uma lista de embarque sem alunos alocados.',
     );
     await expect(imprimirListaEmbarque(listaVazia)).rejects.toThrow(
-      'Não é possível imprimir uma lista de embarque sem alunos alocados.'
+      'Não é possível imprimir uma lista de embarque sem alunos alocados.',
     );
   });
 
-  it('exibe nome e perfil de acesso do emissor em Administrador e Representante', async () => {
-    const lista = await listaEmbarqueService.obterListaEmbarque({
-      rotaId: 1,
-      perfil: 'MOTORISTA',
-      iesResponsavel: 'UFC',
-    });
+  it('exibe nome e perfil de acesso do emissor em Administrador e Representante', () => {
+    const lista = criarListaLinha03Com6Alunos();
 
     const docAdminNome = gerarPaginasImpressaoA4(lista, {
       perfil: 'ADMINISTRADOR',
@@ -155,8 +245,8 @@ describe('impressaoListaEmbarque (HU-018)', () => {
     expect(docCustom.emitidoPorLabel).toBe('Juliana Mendes (Representante UFC)');
   });
 
-  it('gera HTML A4 de documento oficial sem referências a modelo e escapa caracteres perigosos', async () => {
-    const lista = await listaEmbarqueService.obterListaEmbarque({ rotaId: 1 });
+  it('gera HTML A4 de documento oficial sem referências a modelo e escapa caracteres perigosos', () => {
+    const lista = criarListaLinha01Com38Alunos();
     const html = gerarHtmlImpressaoA4(lista, {
       perfil: 'ADMINISTRADOR',
       nomeEmissor: 'Administrador Padrão',
@@ -205,7 +295,7 @@ describe('impressaoListaEmbarque (HU-018)', () => {
   });
 
   it('aciona Share.share no mobile e imprime na web via iframe oculto (ou fallback window.open) fechando apos afterprint', async () => {
-    const lista = await listaEmbarqueService.obterListaEmbarque({ rotaId: 3 });
+    const lista = criarListaLinha03Com6Alunos();
 
     Object.defineProperty(Platform, 'OS', {
       configurable: true,
@@ -287,7 +377,7 @@ describe('impressaoListaEmbarque (HU-018)', () => {
     expect(appendChildMock).toHaveBeenCalledWith(iframeElementMock);
     expect(iframeDocMock.open).toHaveBeenCalledTimes(1);
     expect(iframeDocMock.write).toHaveBeenCalledWith(
-      expect.stringContaining('Emitido por: <strong>Juliana Mendes (Representante)</strong>')
+      expect.stringContaining('Emitido por: <strong>Juliana Mendes (Representante)</strong>'),
     );
     expect(iframeDocMock.close).toHaveBeenCalledTimes(1);
     expect(iframeWindowMock.focus).toHaveBeenCalledTimes(1);
@@ -334,7 +424,7 @@ describe('impressaoListaEmbarque (HU-018)', () => {
     expect(openMock).toHaveBeenCalledWith('', '_blank', 'width=900,height=1100');
     expect(docMock.open).toHaveBeenCalledTimes(1);
     expect(docMock.write).toHaveBeenCalledWith(
-      expect.stringContaining('Emitido por: <strong>Juliana Mendes (Representante)</strong>')
+      expect.stringContaining('Emitido por: <strong>Juliana Mendes (Representante)</strong>'),
     );
     expect(docMock.close).toHaveBeenCalledTimes(1);
     expect(popupMock.focus).toHaveBeenCalledTimes(1);
