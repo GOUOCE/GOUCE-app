@@ -1,9 +1,12 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { api } from '@/api/api';
 import {
+  agendamentoService,
   AgendamentoDetalhe,
-  aplicarCenarioAlocacaoMock,
-  criarDetalhesViagemMock,
+  enriquecerDetalheComMinhaViagem,
   formatarSubtituloRotaPrincipal,
   mapearDetalhe,
+  MinhaViagemApiResponse,
 } from '../agendamentoService';
 
 jest.mock('@/api/api', () => ({
@@ -85,7 +88,59 @@ function criarDetalheBase(override: Partial<AgendamentoDetalhe> = {}): Agendamen
   };
 }
 
+function criarMinhaViagemFixture(
+  override: Partial<MinhaViagemApiResponse> = {},
+): MinhaViagemApiResponse {
+  return {
+    data: '2026-08-31',
+    possui_agendamento: true,
+    agendamento_id: 10,
+    status_geral: 'ALOCADO',
+    mensagem: null,
+    foi_realocado: false,
+    aviso_realocacao: null,
+    ida: {
+      turno: 'ida',
+      status_alocacao: 'ALOCADO',
+      mensagem_status: 'Alocado',
+      rota_id: 1,
+      nome_rota: 'Linha 01 - Centro',
+      horario: '06:40',
+      onibus_id: 'OCR-1234',
+      placa: 'OCR-1234',
+      apelido_onibus: 'Ônibus 04',
+      motorista_id: 7,
+      nome_motorista: 'Ana Souza',
+      tipo_lugar: 'sentado',
+      foi_realocado: false,
+      aviso_realocacao: null,
+    },
+    volta: {
+      turno: 'volta',
+      status_alocacao: 'ALOCADO',
+      mensagem_status: 'Alocado',
+      rota_id: 1,
+      nome_rota: 'Linha 01 - Centro',
+      horario: '17:00',
+      onibus_id: 'OCR-1234',
+      placa: 'OCR-1234',
+      apelido_onibus: 'Ônibus 04',
+      motorista_id: 7,
+      nome_motorista: 'Ana Souza',
+      tipo_lugar: 'sentado',
+      foi_realocado: false,
+      aviso_realocacao: null,
+    },
+    consultado_em: '2026-08-31T06:00:00Z',
+    ...override,
+  };
+}
+
 describe('HU-019: Consulta de Alocação Diária (Rotas Principais e Complementares)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
+  });
   it('Fluxo Principal: mapeia veículo, motorista, status confirmado e subtítulo com siglas das IES', () => {
     const detalhes = mapearDetalhe(criarDetalheBase());
 
@@ -187,55 +242,161 @@ describe('HU-019: Consulta de Alocação Diária (Rotas Principais e Complementa
     expect(volta?.rotaComplementar?.horarioSaida).toBe('17:30');
   });
 
-  it('alterna corretamente os cenários de simulação mock para trajeto direto e com rota complementar', () => {
-    const diretoConfirmado = criarDetalhesViagemMock('2026-08-31', 'CONFIRMADA', {
-      exibirRotaComplementar: false,
-    });
-    expect(diretoConfirmado.temRotaComplementar).toBe(false);
-    expect(diretoConfirmado.trechos[0].rotaPrincipal.veiculo).toBe('Ônibus 04 - Placa OCR-1234');
-    expect(diretoConfirmado.trechos[0].rotaPrincipal.pontoEmbarque).toBe('Pça. Matriz');
-    expect(diretoConfirmado.trechos[0].rotaComplementar).toBeUndefined();
-
-    const comTransferenciaAguardando = aplicarCenarioAlocacaoMock(
-      diretoConfirmado,
-      'AGUARDANDO_ALOCACAO',
-      { exibirRotaComplementar: true }
-    );
-    expect(comTransferenciaAguardando.temRotaComplementar).toBe(true);
-    expect(comTransferenciaAguardando.trechos[0].rotaPrincipal.veiculo).toBeNull();
-    expect(comTransferenciaAguardando.trechos[0].rotaPrincipal.pontoEmbarque).toBe(
-      'Trevo do Bairro Novo'
-    );
-    expect(comTransferenciaAguardando.trechos[1].rotaPrincipal.pontoDesembarque).toBe(
-      'Trevo do Bairro Novo'
-    );
-    expect(comTransferenciaAguardando.trechos[0].rotaComplementar).toEqual({
-      nomeLinha: 'Van 2 - Bairro Novo',
-      pontoEmbarque: 'Bairro Novo',
-      pontoConexao: 'Trevo do Bairro Novo',
-      horarioSaida: '06:10',
+  it('enriquecerDetalheComMinhaViagem preserva o detalhe original quando não há alocação ou possui_agendamento é false', () => {
+    const detalheSemFrota = criarDetalheBase({
+      rota_principal_ida: {
+        ...criarDetalheBase().rota_principal_ida!,
+        onibus: null,
+        motorista: null,
+        status_alocacao: null,
+      },
     });
 
-    const comTransferenciaRealocado = aplicarCenarioAlocacaoMock(
-      comTransferenciaAguardando,
-      'REALOCADO',
-      { exibirRotaComplementar: true }
-    );
-    expect(comTransferenciaRealocado.trechos[0].rotaPrincipal.realocado).toBe(true);
-    expect(comTransferenciaRealocado.trechos[0].rotaPrincipal.mensagemRealocacao).toContain(
-      'Ônibus 04 - Placa OCR-1234'
-    );
-    expect(comTransferenciaRealocado.trechos[0].rotaComplementar?.nomeLinha).toBe(
-      'Van 2 - Bairro Novo'
-    );
+    expect(enriquecerDetalheComMinhaViagem(detalheSemFrota, null)).toBe(detalheSemFrota);
+    expect(
+      enriquecerDetalheComMinhaViagem(
+        detalheSemFrota,
+        criarMinhaViagemFixture({ possui_agendamento: false, ida: null, volta: null }),
+      ),
+    ).toBe(detalheSemFrota);
+  });
 
-    const voltouParaDireto = aplicarCenarioAlocacaoMock(comTransferenciaRealocado, 'CONFIRMADA', {
-      exibirRotaComplementar: false,
+  it('obterDetalhesViagem integra /transporte/agendamentos/detalhes com GET /alocacao-diaria/minha-viagem (Fluxo Principal)', async () => {
+    const base = criarDetalheBase();
+    const detalheBackendSemFrota = criarDetalheBase({
+      rota_principal_ida: { ...base.rota_principal_ida!, onibus: null, motorista: null, status_alocacao: null },
+      rota_principal_volta: { ...base.rota_principal_volta!, onibus: null, motorista: null, status_alocacao: null },
     });
-    expect(voltouParaDireto.temRotaComplementar).toBe(false);
-    expect(voltouParaDireto.trechos[0].rotaComplementar).toBeUndefined();
-    expect(voltouParaDireto.trechos[0].rotaPrincipal.pontoEmbarque).toBe('Pça. Matriz');
-    expect(voltouParaDireto.trechos[1].rotaPrincipal.pontoDesembarque).toBe('Pça. Matriz');
+
+    (api.get as jest.Mock).mockImplementation((url: string) => {
+      if (url === '/transporte/agendamentos/detalhes') {
+        return Promise.resolve({ data: detalheBackendSemFrota });
+      }
+      if (url === '/alocacao-diaria/minha-viagem') {
+        return Promise.resolve({ data: criarMinhaViagemFixture() });
+      }
+      return Promise.reject(new Error(`URL inesperada: ${url}`));
+    });
+
+    const detalhes = await agendamentoService.obterDetalhesViagem('2026-08-31');
+
+    expect(api.get).toHaveBeenCalledWith('/transporte/agendamentos/detalhes', {
+      params: { data: '2026-08-31' },
+    });
+    expect(api.get).toHaveBeenCalledWith('/alocacao-diaria/minha-viagem', {
+      params: { data: '2026-08-31' },
+    });
+
+    const ida = detalhes.trechos.find((t) => t.sentido === 'ida');
+    expect(ida?.rotaPrincipal.veiculo).toBe('Ônibus 04 - Placa OCR-1234');
+    expect(ida?.rotaPrincipal.motorista).toBe('Ana Souza');
+    expect(ida?.rotaPrincipal.statusAlocacao).toBe('CONFIRMADA');
+    expect(ida?.rotaComplementar?.nomeLinha).toBe('Van 2 - Bairro Novo');
+
+    const volta = detalhes.trechos.find((t) => t.sentido === 'volta');
+    expect(volta?.rotaPrincipal.veiculo).toBe('Ônibus 04 - Placa OCR-1234');
+    expect(volta?.rotaPrincipal.horarioSaida).toBe('17:00');
+  });
+
+  it('obterDetalhesViagem integra cenários FA-001 (AGUARDANDO_ALOCACAO) e FA-002 (realocado) de /alocacao-diaria/minha-viagem', async () => {
+    const base = criarDetalheBase();
+    const detalheBackendSemFrota = criarDetalheBase({
+      rota_principal_ida: { ...base.rota_principal_ida!, onibus: null, motorista: null, status_alocacao: null },
+      rota_principal_volta: { ...base.rota_principal_volta!, onibus: null, motorista: null, status_alocacao: null },
+    });
+
+    const minhaViagemMista = criarMinhaViagemFixture({
+      status_geral: 'PARCIALMENTE_ALOCADO',
+      foi_realocado: true,
+      ida: {
+        ...criarMinhaViagemFixture().ida!,
+        rota_id: 2,
+        nome_rota: 'Linha 02 - Bairro Novo',
+        horario: '06:30',
+        foi_realocado: true,
+        aviso_realocacao: 'Atenção: Você foi realocado. Seu ônibus para hoje é o veículo OCR-1234',
+      },
+      volta: {
+        turno: 'volta',
+        status_alocacao: 'AGUARDANDO_ALOCACAO',
+        mensagem_status: 'Aguardando alocação do veículo',
+        rota_id: null,
+        nome_rota: null,
+        horario: null,
+        onibus_id: null,
+        placa: null,
+        apelido_onibus: null,
+        motorista_id: null,
+        nome_motorista: null,
+        tipo_lugar: null,
+        foi_realocado: false,
+        aviso_realocacao: null,
+      },
+    });
+
+    (api.get as jest.Mock).mockImplementation((url: string) => {
+      if (url === '/transporte/agendamentos/detalhes') {
+        return Promise.resolve({ data: detalheBackendSemFrota });
+      }
+      if (url === '/alocacao-diaria/minha-viagem') {
+        return Promise.resolve({ data: minhaViagemMista });
+      }
+      return Promise.reject(new Error(`URL inesperada: ${url}`));
+    });
+
+    const detalhes = await agendamentoService.obterDetalhesViagem('2026-08-31');
+    const ida = detalhes.trechos.find((t) => t.sentido === 'ida');
+    const volta = detalhes.trechos.find((t) => t.sentido === 'volta');
+
+    expect(ida?.rotaPrincipal.statusAlocacao).toBe('REALOCADO');
+    expect(ida?.rotaPrincipal.realocado).toBe(true);
+    expect(ida?.rotaPrincipal.nomeLinha).toBe('Linha 02 - Bairro Novo');
+    expect(ida?.rotaPrincipal.horarioSaida).toBe('06:30');
+    expect(ida?.rotaPrincipal.rotaOriginalNome).toBe('Linha 01 - Centro');
+    expect(ida?.rotaPrincipal.mensagemRealocacao).toBe(
+      'Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Ônibus 04 - Placa OCR-1234',
+    );
+    expect(ida?.rotaComplementar?.nomeLinha).toBe('Van 2 - Bairro Novo');
+
+    expect(volta?.rotaPrincipal.statusAlocacao).toBe('AGUARDANDO_ALOCACAO');
+    expect(volta?.rotaPrincipal.statusAlocacaoLabel).toBe('Aguardando alocação do veículo');
+    expect(volta?.rotaPrincipal.veiculo).toBeNull();
+    expect(volta?.rotaPrincipal.motorista).toBeNull();
+  });
+
+  it('listarAgendamentosAtivos enriquece agendamentos retornados por /meus com GET /alocacao-diaria/minha-viagem', async () => {
+    const base = criarDetalheBase();
+    const itemSemFrota = criarDetalheBase({
+      rota_principal_ida: { ...base.rota_principal_ida!, onibus: null, motorista: null, status_alocacao: null },
+      rota_principal_volta: { ...base.rota_principal_volta!, onibus: null, motorista: null, status_alocacao: null },
+    });
+
+    (api.get as jest.Mock).mockImplementation((url: string) => {
+      if (url === '/transporte/agendamentos/meus') {
+        return Promise.resolve({
+          data: {
+            agendamentos: [itemSemFrota],
+            ativos: 1,
+            limite: 22,
+          },
+        });
+      }
+      if (url === '/alocacao-diaria/minha-viagem') {
+        return Promise.resolve({ data: criarMinhaViagemFixture() });
+      }
+      return Promise.reject(new Error(`URL inesperada: ${url}`));
+    });
+
+    const resposta = await agendamentoService.listarAgendamentosAtivos();
+    const mapeado = mapearDetalhe(resposta.agendamentos[0]);
+
+    expect(api.get).toHaveBeenCalledWith('/transporte/agendamentos/meus');
+    expect(api.get).toHaveBeenCalledWith('/alocacao-diaria/minha-viagem', {
+      params: { data: '2026-08-31' },
+    });
+    expect(mapeado.trechos[0].rotaPrincipal.veiculo).toBe('Ônibus 04 - Placa OCR-1234');
+    expect(mapeado.trechos[0].rotaPrincipal.motorista).toBe('Ana Souza');
+    expect(mapeado.trechos[0].rotaPrincipal.statusAlocacao).toBe('CONFIRMADA');
   });
 
   it('formata subtítulo da rota principal sem parênteses quando não há faculdades', () => {
