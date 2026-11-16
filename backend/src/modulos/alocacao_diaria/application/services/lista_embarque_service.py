@@ -13,6 +13,7 @@ from __future__ import annotations
 from datetime import date, datetime, timezone
 from typing import Optional
 
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from src.modulos.alocacao_diaria.model.entities.alocacao import (
@@ -124,22 +125,30 @@ class ListaEmbarqueService:
         target: date,
         faculdade_id: Optional[int] = None,
     ) -> list[dict]:
-        """Lista rotas com alocação para a data, opcionalmente filtradas pela IES.
+        """Lista rotas disponíveis para a data, opcionalmente filtradas pela IES.
 
-        Para representante (``faculdade_id`` não nulo): retorna apenas as rotas
-        que possuem ao menos um aluno ALOCADO vinculado à IES responsável.
-        Para administrador: todas as rotas com alocação na data.
+        Para representante (``faculdade_id`` não nulo): retorna as rotas com alunos
+        ALOCADOS vinculados à IES responsável ou, caso ainda não haja alocação no
+        dia, as rotas principais ativas vinculadas àquela IES.
+        Para administrador: todas as rotas com alocação na data e as rotas
+        principais ativas (permitindo consultar rotas sem alunos no FA-002).
         """
         if faculdade_id is None:
-            # Admin: retorna todas as rotas que têm alocacao_diaria na data
             alocacoes = (
-                self.session.query(AlocacaoDiariaORM)
+                self.session.query(AlocacaoDiariaORM.rota_id)
                 .filter(AlocacaoDiariaORM.data == target)
                 .all()
             )
-            rota_ids = {a.rota_id for a in alocacoes}
+            rotas_ativas = (
+                self.session.query(RotaPrincipalORM.id)
+                .filter(RotaPrincipalORM.ativo.is_(True))
+                .all()
+            )
+            rota_ids = {rota_id for (rota_id,) in alocacoes} | {
+                rota_id for (rota_id,) in rotas_ativas
+            }
         else:
-            # Representante: apenas rotas onde a IES tem alunos alocados
+            # Representante: rotas onde a IES tem alunos alocados; fallback para rotas ativas da IES
             rows = (
                 self.session.query(AlocacaoDiariaORM.rota_id, AlocacaoAlunoORM.turno, AgendamentoORM)
                 .join(AlocacaoAlunoORM, AlocacaoAlunoORM.alocacao_diaria_id == AlocacaoDiariaORM.id)
@@ -160,6 +169,24 @@ class ListaEmbarqueService:
                 )
                 if ies_id == faculdade_id:
                     rota_ids.add(rota_id)
+
+            if not rota_ids:
+                rotas_ies = (
+                    self.session.query(RotaPrincipalORM.id)
+                    .filter(
+                        RotaPrincipalORM.ativo.is_(True),
+                        or_(
+                            RotaPrincipalORM.faculdades_ida.any(
+                                FaculdadeORM.id_faculdade == faculdade_id
+                            ),
+                            RotaPrincipalORM.faculdades_volta.any(
+                                FaculdadeORM.id_faculdade == faculdade_id
+                            ),
+                        ),
+                    )
+                    .all()
+                )
+                rota_ids = {rota_id for (rota_id,) in rotas_ies}
 
         if not rota_ids:
             return []

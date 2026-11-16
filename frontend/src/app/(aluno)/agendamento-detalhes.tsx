@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, Surface, ActivityIndicator } from 'react-native-paper';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
@@ -6,9 +6,6 @@ import { AlertTriangle, ChevronLeft, WifiOff } from 'lucide-react-native';
 
 import {
   agendamentoService,
-  aplicarCenarioAlocacaoMock,
-  CenarioAlocacaoMock,
-  criarDetalhesViagemMock,
   DetalhesViagemResponse,
   extrairMensagemErro,
   StatusAlocacaoVeiculo,
@@ -190,11 +187,9 @@ function CardRotaPrincipal({ trecho }: { trecho: TrechoDetalhesViagem }) {
 function TelaErro({
   mensagem,
   onTentarNovamente,
-  onSimularMock,
 }: {
   mensagem: string;
   onTentarNovamente?: () => void;
-  onSimularMock?: () => void;
 }) {
   const router = useRouter();
   return (
@@ -208,22 +203,11 @@ function TelaErro({
       <Text variant="bodyMedium" style={styles.erroTexto}>
         {mensagem}
       </Text>
-      <View style={styles.erroAcoes}>
-        {onTentarNovamente && (
-          <TouchableOpacity style={styles.tentarNovamente} onPress={onTentarNovamente}>
-            <Text style={styles.tentarNovamenteTexto}>Tentar novamente</Text>
-          </TouchableOpacity>
-        )}
-        {onSimularMock && (
-          <TouchableOpacity
-            style={styles.simularMockBtn}
-            onPress={onSimularMock}
-            testID="btn-carregar-mock-hu019"
-          >
-            <Text style={styles.simularMockBtnTexto}>Simular Minha Viagem (HU-019)</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      {onTentarNovamente && (
+        <TouchableOpacity style={styles.tentarNovamente} onPress={onTentarNovamente}>
+          <Text style={styles.tentarNovamenteTexto}>Tentar novamente</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -237,8 +221,6 @@ export default function AgendamentoDetalhesScreen() {
   const [detalhes, setDetalhes] = useState<DetalhesViagemResponse | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(() => Boolean(dataIso));
-  const [cenarioSimulacao, setCenarioSimulacao] = useState<CenarioAlocacaoMock | null>(null);
-  const [simularComplementar, setSimularComplementar] = useState<boolean | undefined>(undefined);
 
   const executarBusca = useCallback(async () => {
     // Cada consulta começa do zero: erro/viagem anteriores não podem
@@ -267,39 +249,8 @@ export default function AgendamentoDetalhesScreen() {
     executarBusca();
   }, [executarBusca]);
 
-  const handleCarregarMockSemDados = useCallback(() => {
-    setErro(null);
-    setCarregando(false);
-    setDetalhes(criarDetalhesViagemMock(dataIso || '2026-08-31', 'CONFIRMADA'));
-    setCenarioSimulacao('CONFIRMADA');
-    setSimularComplementar(false);
-  }, [dataIso]);
-
-  const detalhesExibidos = useMemo(() => {
-    if (!detalhes) return null;
-    if (cenarioSimulacao === null && simularComplementar === undefined) {
-      return detalhes;
-    }
-    return aplicarCenarioAlocacaoMock(detalhes, cenarioSimulacao ?? 'CONFIRMADA', {
-      exibirRotaComplementar: simularComplementar,
-    });
-  }, [detalhes, cenarioSimulacao, simularComplementar]);
-
-  const exibirComplementarAtual =
-    simularComplementar ?? Boolean(detalhesExibidos?.temRotaComplementar);
-
-  const handleAlternarRotaComplementar = () => {
-    setCenarioSimulacao((prev) => prev ?? 'CONFIRMADA');
-    setSimularComplementar(!exibirComplementarAtual);
-  };
-
-  if (!dataIso && !detalhesExibidos) {
-    return (
-      <TelaErro
-        mensagem="Data da viagem não informada."
-        onSimularMock={handleCarregarMockSemDados}
-      />
-    );
+  if (!dataIso) {
+    return <TelaErro mensagem="Data da viagem não informada." />;
   }
 
   if (carregando) {
@@ -310,12 +261,11 @@ export default function AgendamentoDetalhesScreen() {
     );
   }
 
-  if (erro || !detalhesExibidos) {
+  if (erro || !detalhes) {
     return (
       <TelaErro
         mensagem={erro || 'Nenhum agendamento ativo para esta data.'}
         onTentarNovamente={tentarNovamente}
-        onSimularMock={handleCarregarMockSemDados}
       />
     );
   }
@@ -329,16 +279,16 @@ export default function AgendamentoDetalhesScreen() {
         </TouchableOpacity>
         <View>
           <Text variant="headlineSmall" style={styles.headerTitle}>
-            {detalhesExibidos.diaSemana}
+            {detalhes.diaSemana}
           </Text>
           <Text variant="bodySmall" style={styles.headerSubtitle}>
-            {detalhesExibidos.dataFormatada}
+            {detalhes.dataFormatada}
           </Text>
         </View>
       </View>
 
       {/* Aviso de Cache Offline (FA-002 / Critério 4 HU-015) */}
-      {detalhesExibidos.isOffline && (
+      {detalhes.isOffline && (
         <Surface style={styles.offlineBanner} elevation={0}>
           <WifiOff size={16} color="#00639A" />
           <Text style={styles.offlineText}>
@@ -348,7 +298,7 @@ export default function AgendamentoDetalhesScreen() {
       )}
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {detalhesExibidos.trechos.map((trecho) => (
+        {detalhes.trechos.map((trecho) => (
           <View key={trecho.sentido} style={styles.trechoSection}>
             <Text variant="titleLarge" style={styles.sectionTitle}>
               {trecho.sentido === 'ida' ? 'Ida' : 'Volta'}
@@ -361,81 +311,6 @@ export default function AgendamentoDetalhesScreen() {
             <CardRotaPrincipal trecho={trecho} />
           </View>
         ))}
-
-        {/* Painel discreto para simular os estados de alocação (HU-019 com mocks) */}
-        <View style={styles.simulacaoPainel} testID="painel-simulacao-hu019">
-          <Text style={styles.simulacaoTitulo}>Simulação de alocação (HU-019)</Text>
-          <View style={styles.simulacaoBotoesRow}>
-            <TouchableOpacity
-              style={[
-                styles.simulacaoBotao,
-                cenarioSimulacao === 'CONFIRMADA' && styles.simulacaoBotaoAtivo,
-              ]}
-              onPress={() => setCenarioSimulacao('CONFIRMADA')}
-              testID="btn-cenario-confirmada"
-            >
-              <Text
-                style={[
-                  styles.simulacaoBotaoTexto,
-                  cenarioSimulacao === 'CONFIRMADA' && styles.simulacaoBotaoTextoAtivo,
-                ]}
-              >
-                Confirmada
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.simulacaoBotao,
-                cenarioSimulacao === 'AGUARDANDO_ALOCACAO' && styles.simulacaoBotaoAtivo,
-              ]}
-              onPress={() => setCenarioSimulacao('AGUARDANDO_ALOCACAO')}
-              testID="btn-cenario-aguardando"
-            >
-              <Text
-                style={[
-                  styles.simulacaoBotaoTexto,
-                  cenarioSimulacao === 'AGUARDANDO_ALOCACAO' && styles.simulacaoBotaoTextoAtivo,
-                ]}
-              >
-                Aguardando (FA-001)
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.simulacaoBotao,
-                cenarioSimulacao === 'REALOCADO' && styles.simulacaoBotaoAtivo,
-              ]}
-              onPress={() => setCenarioSimulacao('REALOCADO')}
-              testID="btn-cenario-realocado"
-            >
-              <Text
-                style={[
-                  styles.simulacaoBotaoTexto,
-                  cenarioSimulacao === 'REALOCADO' && styles.simulacaoBotaoTextoAtivo,
-                ]}
-              >
-                Realocado (FA-002)
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity
-            style={[
-              styles.simulacaoBotaoSecundario,
-              exibirComplementarAtual && styles.simulacaoBotaoAtivo,
-            ]}
-            onPress={handleAlternarRotaComplementar}
-            testID="btn-alternar-rota-complementar"
-          >
-            <Text
-              style={[
-                styles.simulacaoBotaoTexto,
-                exibirComplementarAtual && styles.simulacaoBotaoTextoAtivo,
-              ]}
-            >
-              Alternar rota complementar ({exibirComplementarAtual ? 'ativa' : 'inativa'})
-            </Text>
-          </TouchableOpacity>
-        </View>
       </ScrollView>
     </View>
   );
@@ -466,10 +341,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 24,
   },
-  erroAcoes: {
-    gap: 12,
-    alignItems: 'center',
-  },
   tentarNovamente: {
     backgroundColor: '#3E5F90',
     borderRadius: 20,
@@ -478,17 +349,6 @@ const styles = StyleSheet.create({
   },
   tentarNovamenteTexto: {
     color: '#FFF',
-    fontWeight: '600',
-  },
-  simularMockBtn: {
-    borderWidth: 1,
-    borderColor: '#3E5F90',
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  simularMockBtnTexto: {
-    color: '#3E5F90',
     fontWeight: '600',
   },
   header: {
@@ -632,53 +492,5 @@ const styles = StyleSheet.create({
   },
   statusPillTextoAguardando: {
     color: '#92400E',
-  },
-  simulacaoPainel: {
-    marginTop: 8,
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: '#EEF2FA',
-    borderWidth: 1,
-    borderColor: '#D4DCEB',
-    gap: 8,
-  },
-  simulacaoTitulo: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#3E5F90',
-  },
-  simulacaoBotoesRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  simulacaoBotao: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#C4C6D0',
-  },
-  simulacaoBotaoSecundario: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#C4C6D0',
-  },
-  simulacaoBotaoAtivo: {
-    backgroundColor: '#3E5F90',
-    borderColor: '#3E5F90',
-  },
-  simulacaoBotaoTexto: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#191C20',
-  },
-  simulacaoBotaoTextoAtivo: {
-    color: '#FFFFFF',
   },
 });

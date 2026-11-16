@@ -481,7 +481,13 @@ class TestListaEmbarqueCancelamento(unittest.TestCase):
         from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
         from src.modulos.crud_basicos.domain.entities.onibus import OnibusORM
         from src.modulos.motoristas.model.entities.motorista import MotoristaORM
-        from src.modulos.rotas.model.entities.rota_principal import RotaPrincipalORM
+        from src.modulos.rotas.model.entities.rota_principal import (
+            RotaPrincipalORM,
+            rota_principal_faculdade_ida,
+            rota_principal_faculdade_volta,
+        )
+        from src.modulos.crud_basicos.domain.entities.bairro import BairroORM
+        from src.modulos.rotas.model.entities.rota_principal import rota_principal_bairro
         from src.modulos.usuarios.model.entities.usuario import UsuarioORM
         from src.modulos.usuarios.model.entities.aluno import AlunoORM
         from src.shared.infrastructure.audit_model import LogAuditoriaORM
@@ -496,10 +502,14 @@ class TestListaEmbarqueCancelamento(unittest.TestCase):
             ArquivoORM.__table__,
             UsuarioORM.__table__,
             AlunoORM.__table__,
+            BairroORM.__table__,
             FaculdadeORM.__table__,
             MotoristaORM.__table__,
             OnibusORM.__table__,
             RotaPrincipalORM.__table__,
+            rota_principal_bairro,
+            rota_principal_faculdade_ida,
+            rota_principal_faculdade_volta,
             AgendamentoORM.__table__,
             AlocacaoDiariaORM.__table__,
             AlocacaoAlunoORM.__table__,
@@ -652,6 +662,51 @@ class TestListaEmbarqueCancelamento(unittest.TestCase):
         with self.assertRaises(ListaEmbarqueError) as ctx:
             service.listar(date(2026, 11, 20), rota_id=999)
         self.assertEqual(ctx.exception.status_code, 404)
+
+    def test_rotas_do_dia_inclui_rotas_ativas_sem_alocacao_para_admin_e_fallback_ies(self):
+        """CA-01 / FA-002: admin enxerga rotas ativas sem alocação e representante recebe fallback por IES."""
+        from datetime import time
+        from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
+        from src.modulos.rotas.model.entities.rota_principal import RotaPrincipalORM
+
+        ufc = self.session.get(FaculdadeORM, 1)
+        ifce = FaculdadeORM(id_faculdade=2, nome_faculdade="IFCE", campus_faculdade="Quixadá", ativo=True)
+        self.session.add(ifce)
+
+        rota_vazia_ufc = RotaPrincipalORM(
+            id=2,
+            nome="Rota Vazia UFC",
+            horario_saida=time(7, 0),
+            horario_retorno=time(18, 0),
+            ativo=True,
+            faculdades_ida=[ufc],
+            faculdades_volta=[ufc],
+        )
+        rota_inativa = RotaPrincipalORM(
+            id=3,
+            nome="Rota Inativa",
+            horario_saida=time(8, 0),
+            horario_retorno=time(19, 0),
+            ativo=False,
+            faculdades_ida=[ufc],
+            faculdades_volta=[ufc],
+        )
+        self.session.add_all([rota_vazia_ufc, rota_inativa])
+        self.session.commit()
+
+        service = ListaEmbarqueService(self.session)
+
+        # Data sem alocação: admin vê rotas ativas (ids 1 e 2)
+        rotas_admin = service.rotas_do_dia(date(2026, 11, 25), faculdade_id=None)
+        self.assertEqual([r["rota_id"] for r in rotas_admin], [1, 2])
+
+        # Data sem alocação: representante da UFC vê apenas rota ativa vinculada à UFC (id 2)
+        rotas_rep_ufc = service.rotas_do_dia(date(2026, 11, 25), faculdade_id=1)
+        self.assertEqual([r["rota_id"] for r in rotas_rep_ufc], [2])
+
+        # Data sem alocação: representante do IFCE não recebe rota da UFC
+        rotas_rep_ifce = service.rotas_do_dia(date(2026, 11, 25), faculdade_id=2)
+        self.assertEqual(rotas_rep_ifce, [])
 
 
 if __name__ == "__main__":

@@ -1,14 +1,102 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { api } from '@/api/api';
 import {
+  INTERVALO_POLLING_LISTA_MS,
   determinarSentidoViagem,
+  extrairMensagemErroListaEmbarque,
   formatarTempoSincronizacao,
   formatarTrajetoEmbarque,
   listaEmbarqueService,
+  mapearRespostaListaEmbarque,
+  type ListaEmbarqueApiResponse,
 } from '../listaEmbarqueService';
+
+jest.mock('@/api/api', () => ({
+  api: {
+    get: jest.fn(),
+  },
+}));
+
+const mockApiGet = api.get as jest.MockedFunction<typeof api.get>;
+
+function criarRespostaApiFixture(
+  override: Partial<ListaEmbarqueApiResponse> = {},
+): ListaEmbarqueApiResponse {
+  return {
+    data: '2026-11-20',
+    rota_id: 1,
+    nome_rota: 'Linha 01 - Centro',
+    horario_saida: '06:40',
+    horario_retorno: '17:00',
+    veiculos_escalados: [
+      {
+        alocacao_id: 10,
+        turno: 'ida',
+        onibus_placa: 'OCR-1234',
+        motorista_nome: 'Ana Souza',
+        total_sentados: 3,
+        total_em_pe: 1,
+      },
+    ],
+    total_alunos_alocados: 4,
+    texto_contador: '4 alunos alocados',
+    permite_imprimir: true,
+    mensagem: null,
+    ultima_sincronizacao: '2026-11-20T09:29:00.000Z',
+    indicador_sincronizacao: 'Atualizado agora',
+    alunos: [
+      {
+        aluno_id: 1,
+        agendamento_id: 101,
+        nome_aluno: 'Ana Paula Lima',
+        ponto_embarque: { ponto_id: 1, nome: 'Pça. Matriz', bairro: 'Centro' },
+        ponto_desembarque: { ponto_id: 1, nome: 'Pça. Matriz', bairro: 'Centro' },
+        ies_ida: { id: 1, nome: 'Universidade Federal do Ceará', sigla: 'UFC', campus: 'Quixadá' },
+        ies_volta: { id: 1, nome: 'Universidade Federal do Ceará', sigla: 'UFC', campus: 'Quixadá' },
+        indicacao_turno: 'IDA_E_VOLTA_MESMA_IES',
+      },
+      {
+        aluno_id: 2,
+        agendamento_id: 102,
+        nome_aluno: 'Bruno Costa',
+        ponto_embarque: { ponto_id: 1, nome: 'Pça. Matriz', bairro: 'Centro' },
+        ponto_desembarque: null,
+        ies_ida: { id: 2, nome: 'Centro Universitário Católica de Quixadá', sigla: null, campus: 'Quixadá' },
+        ies_volta: null,
+        indicacao_turno: 'APENAS_IDA',
+      },
+      {
+        aluno_id: 3,
+        agendamento_id: 103,
+        nome_aluno: 'Carla Dias',
+        ponto_embarque: null,
+        ponto_desembarque: { ponto_id: 2, nome: 'Trevo Bairro Novo', bairro: 'Bairro Novo' },
+        ies_ida: null,
+        ies_volta: { id: 3, nome: 'Universidade Estadual do Ceará', sigla: 'UECE', campus: 'Quixadá' },
+        indicacao_turno: 'APENAS_VOLTA',
+      },
+      {
+        aluno_id: 4,
+        agendamento_id: 104,
+        nome_aluno: 'Wesley Pontes',
+        ponto_embarque: { ponto_id: 1, nome: 'Pça. Matriz', bairro: 'Centro' },
+        ponto_desembarque: { ponto_id: 1, nome: 'Pça. Matriz', bairro: 'Centro' },
+        ies_ida: { id: 1, nome: 'Universidade Federal do Ceará', sigla: 'UFC', campus: 'Quixadá' },
+        ies_volta: { id: 2, nome: 'Centro Universitário Católica de Quixadá', sigla: 'Católica', campus: 'Quixadá' },
+        indicacao_turno: 'IDA_E_VOLTA_IES_DISTINTAS',
+      },
+    ],
+    ...override,
+  };
+}
 
 describe('listaEmbarqueService (HU-018)', () => {
   beforeEach(() => {
-    listaEmbarqueService.resetarMocks();
+    jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   describe('determinarSentidoViagem e formatarTrajetoEmbarque', () => {
@@ -20,7 +108,7 @@ describe('listaEmbarqueService (HU-018)', () => {
           pontoEmbarque: 'Pça. Matriz',
           iesIda: 'UFC',
           iesVolta: 'UFC',
-        })
+        }),
       ).toBe('Pça. Matriz ↔ UFC');
     });
 
@@ -30,7 +118,7 @@ describe('listaEmbarqueService (HU-018)', () => {
         formatarTrajetoEmbarque({
           pontoEmbarque: 'Pça. Matriz',
           iesIda: 'Católica',
-        })
+        }),
       ).toBe('Pça. Matriz → Católica');
     });
 
@@ -40,7 +128,7 @@ describe('listaEmbarqueService (HU-018)', () => {
         formatarTrajetoEmbarque({
           pontoEmbarque: 'Trevo Bairro Novo',
           iesVolta: 'UECE',
-        })
+        }),
       ).toBe('Trevo Bairro Novo ← UECE');
     });
 
@@ -51,18 +139,18 @@ describe('listaEmbarqueService (HU-018)', () => {
           pontoEmbarque: 'Pça. Matriz',
           iesIda: 'UFC',
           iesVolta: 'Católica',
-        })
+        }),
       ).toBe('Ida: Pça. Matriz → UFC | Volta: ← Católica');
     });
 
     it('lança erro quando nenhuma IES é informada para determinar sentido', () => {
       expect(() => determinarSentidoViagem(undefined, '   ')).toThrow(
-        'Informe ao menos uma IES de ida ou de volta para o aluno.'
+        'Informe ao menos uma IES de ida ou de volta para o aluno.',
       );
     });
   });
 
-  describe('formatarTempoSincronizacao', () => {
+  describe('formatarTempoSincronizacao e extrairMensagemErroListaEmbarque', () => {
     it('retorna "Atualizado agora" para intervalos menores que 1 minuto ou inválidos', () => {
       const agora = new Date('2026-09-01T09:30:30.000Z');
       expect(formatarTempoSincronizacao('2026-09-01T09:30:00.000Z', agora)).toBe('Atualizado agora');
@@ -72,151 +160,187 @@ describe('listaEmbarqueService (HU-018)', () => {
     it('retorna "Atualizado há 1 min" e "Atualizado há 5 min" conforme o tempo decorrido', () => {
       const base = '2026-09-01T09:30:00.000Z';
       expect(formatarTempoSincronizacao(base, new Date('2026-09-01T09:31:00.000Z'))).toBe(
-        'Atualizado há 1 min'
+        'Atualizado há 1 min',
       );
       expect(formatarTempoSincronizacao(base, new Date('2026-09-01T09:35:20.000Z'))).toBe(
-        'Atualizado há 5 min'
+        'Atualizado há 5 min',
+      );
+    });
+
+    it('extrai mensagens de detail objeto, error.message e erro de rede', () => {
+      expect(
+        extrairMensagemErroListaEmbarque({
+          response: {
+            data: {
+              detail: {
+                code: 'SEM_ROTA_NO_DIA',
+                message: 'Nenhuma rota encontrada para esta data e faculdade.',
+              },
+            },
+          },
+        }),
+      ).toBe('Nenhuma rota encontrada para esta data e faculdade.');
+
+      expect(
+        extrairMensagemErroListaEmbarque({
+          response: {
+            data: {
+              error: { message: 'Rota não encontrada.' },
+            },
+          },
+        }),
+      ).toBe('Rota não encontrada.');
+
+      expect(extrairMensagemErroListaEmbarque(new Error('Network Error'))).toContain(
+        'Erro de conexão com o servidor',
       );
     });
   });
 
-  describe('consultas e filtros por perfil', () => {
-    it('lista todas as rotas disponíveis com quantidades iniciais corretas', async () => {
-      const rotas = await listaEmbarqueService.listarRotasDisponiveis();
+  describe('integração HTTP com endpoints de alocação diária', () => {
+    it('lista rotas do dia consultando GET /alocacao-diaria/rotas-do-dia', async () => {
+      mockApiGet.mockResolvedValueOnce({
+        data: {
+          data: '2026-11-20',
+          rotas: [
+            { rota_id: 1, nome_rota: 'Linha 01 - Centro', horario_saida: '06:40' },
+            { rota_id: 2, nome_rota: 'Linha 02 - Bairro Novo', horario_saida: '07:00' },
+          ],
+        },
+      } as any);
 
+      const rotas = await listaEmbarqueService.listarRotasDisponiveis('2026-11-20');
+
+      expect(mockApiGet).toHaveBeenCalledWith('/alocacao-diaria/rotas-do-dia', {
+        params: { data: '2026-11-20' },
+      });
       expect(rotas).toEqual([
-        { id: 1, nome: 'Linha 01 - Centro', quantidadeAlunos: 38 },
-        { id: 2, nome: 'Linha 02 - Bairro Novo', quantidadeAlunos: 0 },
-        { id: 3, nome: 'Linha 03 - Serrinha', quantidadeAlunos: 6 },
+        { id: 1, nome: 'Linha 01 - Centro', horarioSaida: '06:40' },
+        { id: 2, nome: 'Linha 02 - Bairro Novo', horarioSaida: '07:00' },
       ]);
     });
 
-    it('retorna os 38 alunos ordenados alfabeticamente para o Administrador na Linha 01', async () => {
+    it('mapeia resposta de GET /alocacao-diaria/lista-embarque com os quatro sentidos de viagem', async () => {
+      mockApiGet.mockResolvedValueOnce({ data: criarRespostaApiFixture() } as any);
+
       const lista = await listaEmbarqueService.obterListaEmbarque({
         rotaId: 1,
-        perfil: 'ADMINISTRADOR',
+        data: '2026-11-20',
+        turno: 'ida',
       });
 
+      expect(mockApiGet).toHaveBeenCalledWith('/alocacao-diaria/lista-embarque', {
+        params: { data: '2026-11-20', rota_id: 1, turno: 'ida' },
+      });
+      expect(lista.rotaId).toBe(1);
       expect(lista.rotaNome).toBe('Linha 01 - Centro');
-      expect(lista.dataOperacao).toMatch(/^\d{2}\/\d{2}\/\d{4}$/);
-      expect(lista.totalAlunos).toBe(38);
-      expect(lista.alunos).toHaveLength(38);
+      expect(lista.dataOperacao).toBe('20/11/2026');
+      expect(lista.totalAlunos).toBe(4);
 
-      expect(lista.alunos[0].nome).toBe('Ana Paula Lima');
       expect(lista.alunos[0].trajetoFormatado).toBe('Pça. Matriz ↔ UFC');
-      expect(lista.alunos[1].nome).toBe('Bruno Costa');
-      expect(lista.alunos[1].trajetoFormatado).toBe('Pça. Matriz → Católica');
-      expect(lista.alunos[2].nome).toBe('Carla Dias');
-      expect(lista.alunos[2].trajetoFormatado).toBe('Trevo Bairro Novo ← UECE');
-      expect(lista.alunos[37].nome).toBe('Wesley Pontes');
-      expect(lista.alunos[37].trajetoFormatado).toBe('Ida: Pça. Matriz → UFC | Volta: ← Católica');
+      expect(lista.alunos[0].sentidoViagem).toBe('IDA_E_VOLTA_MESMA_IES');
 
-      expect(formatarTempoSincronizacao(lista.ultimaSincronizacaoISO)).toBe('Atualizado há 1 min');
+      expect(lista.alunos[1].trajetoFormatado).toBe(
+        'Pça. Matriz → Centro Universitário Católica de Quixadá',
+      );
+      expect(lista.alunos[1].sentidoViagem).toBe('SOMENTE_IDA');
+
+      expect(lista.alunos[2].trajetoFormatado).toBe('Trevo Bairro Novo ← UECE');
+      expect(lista.alunos[2].sentidoViagem).toBe('SOMENTE_VOLTA');
+
+      expect(lista.alunos[3].trajetoFormatado).toBe('Ida: Pça. Matriz → UFC | Volta: ← Católica');
+      expect(lista.alunos[3].sentidoViagem).toBe('IES_DISTINTAS');
     });
 
-    it('retorna lista vazia para rota sem alunos alocados (FA-002)', async () => {
-      const lista = await listaEmbarqueService.obterListaEmbarque({ rotaId: 2 });
+    it('permite autodescoberta do representante sem enviar rota_id', async () => {
+      mockApiGet.mockResolvedValueOnce({
+        data: criarRespostaApiFixture({ total_alunos_alocados: 1, alunos: [criarRespostaApiFixture().alunos[0]] }),
+      } as any);
+
+      const lista = await listaEmbarqueService.obterListaEmbarque({
+        data: '2026-11-20',
+        perfil: 'MOTORISTA',
+      });
+
+      expect(mockApiGet).toHaveBeenCalledWith('/alocacao-diaria/lista-embarque', {
+        params: { data: '2026-11-20' },
+      });
+      expect(lista.totalAlunos).toBe(1);
+    });
+
+    it('retorna lista vazia com mensagem do backend para rota sem alunos alocados (FA-002)', () => {
+      const lista = mapearRespostaListaEmbarque(
+        criarRespostaApiFixture({
+          rota_id: 2,
+          nome_rota: 'Linha 02 - Bairro Novo',
+          total_alunos_alocados: 0,
+          texto_contador: '0 alunos alocados',
+          permite_imprimir: false,
+          mensagem: 'Essa rota não possui nenhum aluno alocado para este dia.',
+          alunos: [],
+        }),
+      );
 
       expect(lista.rotaNome).toBe('Linha 02 - Bairro Novo');
       expect(lista.totalAlunos).toBe(0);
+      expect(lista.permiteImprimir).toBe(false);
+      expect(lista.mensagem).toBe('Essa rota não possui nenhum aluno alocado para este dia.');
       expect(lista.alunos).toEqual([]);
     });
 
-    it('restringe alunos à IES de responsabilidade quando o perfil for Representante (FA-001 / RNF-010)', async () => {
-      const padrao = await listaEmbarqueService.obterRotaPadraoRepresentante();
-      expect(padrao).toEqual({
-        rotaId: 1,
-        rotaNome: 'Linha 01 - Centro',
-        iesResponsavel: 'UFC',
+    it('consulta rota padrão do representante via /rotas-do-dia', async () => {
+      mockApiGet
+        .mockResolvedValueOnce({
+          data: {
+            data: '2026-11-20',
+            rotas: [{ rota_id: 7, nome_rota: 'Linha 07 - Campus', horario_saida: '06:15' }],
+          },
+        } as any)
+        .mockResolvedValueOnce({
+          data: { data: '2026-11-20', rotas: [] },
+        } as any);
+
+      const encontrada = await listaEmbarqueService.obterRotaPadraoRepresentante('2026-11-20');
+      expect(encontrada).toEqual({
+        rotaId: 7,
+        rotaNome: 'Linha 07 - Campus',
+        horarioSaida: '06:15',
       });
 
-      const listaUfc = await listaEmbarqueService.obterListaEmbarque({
-        rotaId: padrao.rotaId,
-        perfil: 'MOTORISTA',
-        iesResponsavel: padrao.iesResponsavel,
-      });
-
-      expect(listaUfc.totalAlunos).toBe(listaUfc.alunos.length);
-      expect(listaUfc.totalAlunos).toBeGreaterThan(0);
-      expect(listaUfc.totalAlunos).toBeLessThan(38);
-
-      for (const aluno of listaUfc.alunos) {
-        expect(aluno.iesIda === 'UFC' || aluno.iesVolta === 'UFC').toBe(true);
-      }
-
-      const nomesUfc = listaUfc.alunos.map((a) => a.nome);
-      expect(nomesUfc).toContain('Ana Paula Lima');
-      expect(nomesUfc).toContain('Wesley Pontes');
-      expect(nomesUfc).not.toContain('Bruno Costa');
-      expect(nomesUfc).not.toContain('Carla Dias');
-
-      const listaUece = await listaEmbarqueService.obterListaEmbarque({
-        rotaId: 1,
-        perfil: 'MOTORISTA',
-        iesResponsavel: 'UECE',
-      });
-      const nomesUece = listaUece.alunos.map((a) => a.nome);
-      expect(nomesUece).toContain('Carla Dias');
-      expect(nomesUece).not.toContain('Ana Paula Lima');
-    });
-
-    it('lança erro ao consultar rota inexistente', async () => {
-      await expect(listaEmbarqueService.obterListaEmbarque({ rotaId: 999 })).rejects.toThrow(
-        'Rota 999 não encontrada.'
-      );
+      const nenhuma = await listaEmbarqueService.obterRotaPadraoRepresentante('2026-11-20');
+      expect(nenhuma).toBeNull();
     });
   });
 
-  describe('atualização em tempo real (FA-003)', () => {
-    it('notifica listeners ao simular cancelamento e realocação e respeita cancelamento da inscrição', async () => {
-      const listener = jest.fn();
-      const cancelarInscricao = listaEmbarqueService.inscreverAtualizacaoRota(1, listener);
+  describe('atualização em tempo real via polling (FA-003)', () => {
+    it('consulta periodicamente o endpoint e para após cancelar inscrição', async () => {
+      jest.useFakeTimers();
 
-      const aposCancelamento = await listaEmbarqueService.simularAlteracaoTempoReal(
-        1,
-        'cancelamento'
-      );
-      expect(aposCancelamento.totalAlunos).toBe(37);
+      const fixture = criarRespostaApiFixture();
+      mockApiGet.mockResolvedValue({ data: fixture } as any);
+
+      const listener = jest.fn();
+      const cancelar = listaEmbarqueService.inscreverAtualizacaoRota(1, listener, {
+        data: '2026-11-20',
+      });
+
+      expect(mockApiGet).not.toHaveBeenCalled();
+
+      await jest.advanceTimersByTimeAsync(INTERVALO_POLLING_LISTA_MS);
+
+      expect(mockApiGet).toHaveBeenCalledTimes(1);
+      expect(mockApiGet).toHaveBeenCalledWith('/alocacao-diaria/lista-embarque', {
+        params: { data: '2026-11-20', rota_id: 1 },
+      });
       expect(listener).toHaveBeenCalledTimes(1);
       expect(listener).toHaveBeenLastCalledWith(
-        expect.objectContaining({ rotaId: 1, totalAlunos: 37 })
+        expect.objectContaining({ rotaId: 1, totalAlunos: 4 }),
       );
-
-      const aposRealocacao = await listaEmbarqueService.simularAlteracaoTempoReal(1, 'realocacao');
-      expect(aposRealocacao.totalAlunos).toBe(38);
-      expect(listener).toHaveBeenCalledTimes(2);
-      expect(listener).toHaveBeenLastCalledWith(
-        expect.objectContaining({ rotaId: 1, totalAlunos: 38 })
-      );
-
-      cancelarInscricao();
-      await listaEmbarqueService.simularAlteracaoTempoReal(1, 'cancelamento');
-      expect(listener).toHaveBeenCalledTimes(2);
-    });
-
-    it('mantém filtro de IES nas notificações em tempo real para o Representante', async () => {
-      const listenerRepresentante = jest.fn<(lista: { alunos: { iesIda?: string; iesVolta?: string }[] }) => void>();
-      const inicialUfc = await listaEmbarqueService.obterListaEmbarque({
-        rotaId: 1,
-        perfil: 'MOTORISTA',
-        iesResponsavel: 'UFC',
-      });
-
-      const cancelar = listaEmbarqueService.inscreverAtualizacaoRota(1, listenerRepresentante, {
-        perfil: 'MOTORISTA',
-        iesResponsavel: 'UFC',
-      });
-
-      await listaEmbarqueService.simularAlteracaoTempoReal(1, 'realocacao');
-
-      expect(listenerRepresentante).toHaveBeenCalledTimes(1);
-      const payload = listenerRepresentante.mock.calls[0][0];
-      expect(payload.alunos).toHaveLength(inicialUfc.totalAlunos + 1);
-      for (const aluno of payload.alunos) {
-        expect(aluno.iesIda === 'UFC' || aluno.iesVolta === 'UFC').toBe(true);
-      }
 
       cancelar();
+      await jest.advanceTimersByTimeAsync(INTERVALO_POLLING_LISTA_MS * 2);
+      expect(mockApiGet).toHaveBeenCalledTimes(1);
+      expect(listener).toHaveBeenCalledTimes(1);
     });
   });
 });
