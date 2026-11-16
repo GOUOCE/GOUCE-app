@@ -9,15 +9,16 @@ Cobertura:
   Controle de acesso e isolamento.
 """
 
+import asyncio
 import unittest
 from datetime import date, time
 from unittest.mock import MagicMock, patch
 
 from fastapi import FastAPI
-from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from tests.rota_principal_support import asgi_request
 from src.modulos.alocacao_diaria.interface.http import alocacao_routes as routes
 from src.modulos.alocacao_diaria.application.services.minha_viagem_service import (
     MinhaViagemService,
@@ -29,6 +30,7 @@ from src.shared.infrastructure.db import Base
 # ---------------------------------------------------------------------------
 # Helpers — cliente HTTP com override de auth
 # ---------------------------------------------------------------------------
+
 
 def _build_app(session_override=None, user_override=None):
     """Monta uma instância de FastAPI com as dependências mockadas."""
@@ -61,8 +63,12 @@ def _admin_user() -> dict:
 # Testes unitários (mock do service)
 # ---------------------------------------------------------------------------
 
+
 class TestMinhaViagemUnit(unittest.TestCase):
     """Testes do endpoint /minha-viagem com service mockado."""
+
+    def _request(self, app, path: str, method: str = "GET"):
+        return asyncio.run(asgi_request(app, method, path))
 
     def _client_with_service(self, service_mock, aluno_id: int = 1):
         from src.shared.infrastructure.db import get_session
@@ -83,7 +89,7 @@ class TestMinhaViagemUnit(unittest.TestCase):
         # Bloqueia leitura por outros perfis
         app.dependency_overrides[routes._leitura_required] = lambda: _admin_user()
 
-        return TestClient(app, raise_server_exceptions=True)
+        return app
 
     # --- CA-01: sem agendamento ---
     def test_sem_agendamento_200(self):
@@ -100,10 +106,9 @@ class TestMinhaViagemUnit(unittest.TestCase):
             "volta": None,
             "consultado_em": "2026-11-15T22:00:00+00:00",
         }
-        client = self._client_with_service(svc, aluno_id=5)
-        r = client.get("/alocacao-diaria/minha-viagem?data=2026-11-25")
-        self.assertEqual(r.status_code, 200)
-        body = r.json()
+        app = self._client_with_service(svc, aluno_id=5)
+        status, body = self._request(app, "/alocacao-diaria/minha-viagem?data=2026-11-25")
+        self.assertEqual(status, 200)
         self.assertFalse(body["possui_agendamento"])
         self.assertEqual(body["status_geral"], "SEM_AGENDAMENTO")
         self.assertIsNone(body["ida"])
@@ -147,10 +152,9 @@ class TestMinhaViagemUnit(unittest.TestCase):
             "volta": TURNO_VOLTA,
             "consultado_em": "2026-11-15T22:00:00+00:00",
         }
-        client = self._client_with_service(svc, aluno_id=1)
-        r = client.get("/alocacao-diaria/minha-viagem?data=2026-11-25")
-        self.assertEqual(r.status_code, 200)
-        body = r.json()
+        app = self._client_with_service(svc, aluno_id=1)
+        status, body = self._request(app, "/alocacao-diaria/minha-viagem?data=2026-11-25")
+        self.assertEqual(status, 200)
         self.assertTrue(body["possui_agendamento"])
         self.assertEqual(body["status_geral"], "ALOCADO")
         self.assertEqual(body["ida"]["status_alocacao"], "ALOCADO")
@@ -178,10 +182,9 @@ class TestMinhaViagemUnit(unittest.TestCase):
             "ida": TURNO_IDA, "volta": None,
             "consultado_em": "2026-11-15T22:00:00+00:00",
         }
-        client = self._client_with_service(svc)
-        r = client.get("/alocacao-diaria/minha-viagem?data=2026-11-25")
-        self.assertEqual(r.status_code, 200)
-        body = r.json()
+        app = self._client_with_service(svc)
+        status, body = self._request(app, "/alocacao-diaria/minha-viagem?data=2026-11-25")
+        self.assertEqual(status, 200)
         self.assertIsNotNone(body["ida"])
         self.assertIsNone(body["volta"])
 
@@ -206,10 +209,9 @@ class TestMinhaViagemUnit(unittest.TestCase):
             "ida": TURNO_IDA, "volta": None,
             "consultado_em": "2026-11-15T22:00:00+00:00",
         }
-        client = self._client_with_service(svc)
-        r = client.get("/alocacao-diaria/minha-viagem?data=2026-11-25")
-        self.assertEqual(r.status_code, 200)
-        body = r.json()
+        app = self._client_with_service(svc)
+        status, body = self._request(app, "/alocacao-diaria/minha-viagem?data=2026-11-25")
+        self.assertEqual(status, 200)
         self.assertEqual(body["status_geral"], "AGUARDANDO_ALOCACAO")
         self.assertEqual(body["ida"]["status_alocacao"], "AGUARDANDO_ALOCACAO")
         self.assertEqual(body["ida"]["mensagem_status"], "Aguardando alocação do veículo")
@@ -237,10 +239,9 @@ class TestMinhaViagemUnit(unittest.TestCase):
             "volta": None,
             "consultado_em": "2026-11-15T22:00:00+00:00",
         }
-        client = self._client_with_service(svc)
-        r = client.get("/alocacao-diaria/minha-viagem?data=2026-11-25")
-        self.assertEqual(r.status_code, 200)
-        body = r.json()
+        app = self._client_with_service(svc)
+        status, body = self._request(app, "/alocacao-diaria/minha-viagem?data=2026-11-25")
+        self.assertEqual(status, 200)
         self.assertTrue(body["foi_realocado"])
         self.assertIn(PLACA, body["aviso_realocacao"])
         self.assertTrue(body["ida"]["foi_realocado"])
@@ -259,8 +260,8 @@ class TestMinhaViagemUnit(unittest.TestCase):
             "consultado_em": "2026-11-15T22:00:00+00:00",
         }
         # Token do aluno 42
-        client = self._client_with_service(svc, aluno_id=42)
-        client.get("/alocacao-diaria/minha-viagem?data=2026-11-25")
+        app = self._client_with_service(svc, aluno_id=42)
+        self._request(app, "/alocacao-diaria/minha-viagem?data=2026-11-25")
         args, _ = svc.consultar.call_args
         self.assertEqual(args[0], 42, "aluno_id deve vir do token, não de query param")
 
@@ -275,10 +276,9 @@ class TestMinhaViagemUnit(unittest.TestCase):
             "ida": None, "volta": None,
             "consultado_em": "2026-11-15T22:00:00+00:00",
         }
-        client = self._client_with_service(svc, aluno_id=1)
-        r = client.get("/alocacao-diaria/minha-viagem")
-        self.assertEqual(r.status_code, 200)
-        _, kwargs = svc.consultar.call_args
+        app = self._client_with_service(svc, aluno_id=1)
+        status, body = self._request(app, "/alocacao-diaria/minha-viagem")
+        self.assertEqual(status, 200)
         args, _ = svc.consultar.call_args
         # segundo argumento é a data
         self.assertEqual(args[1], date.today())
@@ -291,10 +291,8 @@ class TestMinhaViagemUnit(unittest.TestCase):
         app.dependency_overrides[get_session] = lambda: MagicMock()
         app.dependency_overrides[routes._minha_viagem_service] = lambda: MagicMock()
         # Não sobrescreve _aluno_required — mantém o guard original
-        client = TestClient(app, raise_server_exceptions=False)
-        # Sem token → 401 ou 403
-        r = client.get("/alocacao-diaria/minha-viagem?data=2026-11-25")
-        self.assertIn(r.status_code, (401, 403, 422))
+        status, body = self._request(app, "/alocacao-diaria/minha-viagem?data=2026-11-25")
+        self.assertIn(status, (401, 403, 422))
 
 
 # ---------------------------------------------------------------------------
