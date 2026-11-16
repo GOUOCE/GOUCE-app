@@ -84,8 +84,8 @@ Funcionalidade: Alocação de Motoristas às Rotas
     Cenário: Sistema registra no log de auditoria a confirmação da escala de motoristas
       Dado que o administrador "admin.qa@gouce.com" está autenticado no sistema
       Quando ele confirma a escala de um motorista pela API
-      Então o log de auditoria contém o registro da operação
-      E o registro informa o usuário "admin.qa@gouce.com" e o timestamp da operação
+      Então o log de auditoria contém o registro da operação de escala
+      E o registro informa o usuário "admin.qa@gouce.com", a ação, os dados da escala e a data e a hora da operação
 
 
   Regra: O sistema impede conflitos de escala e motoristas indisponíveis
@@ -98,7 +98,7 @@ Funcionalidade: Alocação de Motoristas às Rotas
 
     # FA-001, AC-05, RN-002 - Motorista já escalado em outra rota no mesmo turno
     @fluxo_infeliz @FA001 @RN002 @prioridade_alta
-    Cenário: Sistema bloqueia a escala de um motorista já designado para outra rota no mesmo horário
+    Cenário: Sistema bloqueia a escala de um motorista já designado para outra rota no mesmo turno
       Quando o administrador tenta escalar "Carlos Silva" na rota "Rota Campo Velho - UFC" no turno da ida
       Então o sistema bloqueia a seleção ou exibe o alerta "Este motorista já está escalado para outra rota neste horário"
       E a escala da rota "Rota Campo Velho - UFC" não é confirmada
@@ -109,7 +109,7 @@ Funcionalidade: Alocação de Motoristas às Rotas
     Cenário: API recusa a confirmação com o mesmo motorista em dois ônibus no mesmo turno
       Quando o administrador envia a escala com o motorista "Carlos Silva" em dois ônibus diferentes no turno da ida
       Então a API responde com o status "409 Conflict"
-      E a resposta informa a mensagem "alocação 1: motorista" seguida do identificador do motorista e de "conflitante no turno ida."
+      E a resposta informa a mensagem "Este motorista já está escalado para outra rota neste horário"
       E nenhuma escala é gravada
 
 

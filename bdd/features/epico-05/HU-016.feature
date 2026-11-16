@@ -140,6 +140,36 @@ Funcionalidade: Distribuição de Alunos nos Ônibus
       E cada aluno agendado fica vinculado a um ônibus, a um motorista e ao tipo de lugar "sentado" ou "em_pe"
 
 
+    # AC-13 - Confirmação com alunos excedentes (decisão do PO na #465, item 2)
+    @fluxo_infeliz @FA001 @RN001 @prioridade_alta
+    Cenário: Sistema permite confirmar a distribuição com alunos excedentes e exibe o aviso com a lista deles
+      Dado que a prévia da distribuição do dia "17/11/2026" possui o aluno "Maria Souza" como excedente
+      Quando o administrador aciona o botão "Confirmar Distribuição"
+      Então o sistema exibe a mensagem "Distribuição realizada com sucesso"
+      E exibe um aviso com a lista dos alunos excedentes, incluindo "Maria Souza"
+      E "Maria Souza" fica sem ônibus alocado até ser realocada
+
+
+    # AC-13 - API confirma e mantém o excedente sem alocação (decisão do PO na #465, item 2)
+    @regra_negocio @RN001 @RNF012 @teste_api @nao_automatizavel_via_appium @prioridade_alta
+    Cenário: API confirma a distribuição automática e informa os alunos excedentes sem alocação
+      Dado que a prévia da distribuição do dia "17/11/2026" possui um aluno excedente
+      Quando o administrador confirma a distribuição automática do dia "17/11/2026" pela API
+      Então a API responde com o status "201 Created"
+      E a resposta lista o aluno excedente
+      E o aluno excedente não possui alocação gravada
+
+
+    # AC-02 - Troca do ônibus e do motorista sugeridos (decisão do PO na #465, item 5)
+    @fluxo_feliz @prioridade_alta
+    Cenário: Administrador troca o ônibus e o motorista sugeridos antes de confirmar a distribuição automática
+      Dado que a prévia sugere o ônibus "ABC1D23" e o motorista "Carlos Silva" para a rota "Rota Centro - UFC"
+      Quando o administrador troca o ônibus para "XYZ9K87" e o motorista para "Pedro Alves"
+      E aciona o botão "Confirmar Distribuição"
+      Então o sistema exibe a mensagem "Distribuição realizada com sucesso"
+      E a rota "Rota Centro - UFC" fica com o ônibus "XYZ9K87" e o motorista "Pedro Alves"
+
+
     # RNF-012 - Nova confirmação substitui a anterior
     @regra_negocio @RNF012 @teste_api @nao_automatizavel_via_appium @prioridade_media
     Cenário: Nova confirmação do mesmo dia substitui a distribuição anterior sem duplicar alocações
@@ -254,21 +284,6 @@ Funcionalidade: Distribuição de Alunos nos Ônibus
       Quando o administrador envia uma distribuição manual inválida para o dia "17/11/2026"
       Então a API recusa a distribuição
       E a distribuição confirmada anteriormente permanece inalterada
-
-
-  Regra: O sistema alerta quando o ônibus escolhido difere do previsto no rodízio de frotas
-
-    Contexto:
-      Dado que o administrador está autenticado no sistema
-      E acessa a tela "Alocação Diária"
-
-
-    # AC-15, HU-020 - Alerta de rodízio
-    @fluxo_infeliz @prioridade_media @depende_de_HU020
-    Cenário: Sistema exibe o alerta quando o administrador vincula um ônibus diferente do rodízio de frotas
-      Dado que o rodízio de frotas prevê o ônibus "ABC1D23" para a rota "Rota Centro - UFC" no dia "17/11/2026"
-      Quando o administrador vincula o ônibus "XYZ9K87" à rota "Rota Centro - UFC"
-      Então o sistema exibe o alerta "Caso o ônibus mude de rota mesmo sendo associado à outra no rodízio de frotas, ele será alterado apenas para esse dia em específico e voltará para a rota designada no rodízio no dia seguinte."
 
 
   Regra: Somente o administrador distribui os alunos (RN-006)

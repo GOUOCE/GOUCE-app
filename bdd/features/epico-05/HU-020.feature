@@ -4,15 +4,25 @@
 # REQUISITOS RELACIONADOS: RF-023 (Rotatividade Inteligente)
 # REQ. NÃO FUNCIONAIS: RNF-012 (Integridade dos Dados)
 # REGRA DE NEGÓCIO: RN-003 (Prevenção de Conflito de Veículo), RN-006 (Exclusividade Administrativa), RN-008 (Rodízio de Ônibus)
-# OBSERVAÇÃO: na `develop` analisada ainda não há API nem tela do rodízio; os cenários seguem apenas os requisitos.
+# OBSERVAÇÃO: implementação adiada por decisão do PO na issue #465; ainda não há API nem tela do rodízio e os cenários seguem apenas os requisitos.
 # language: pt
 # =================================================================================
 
-@EP005 @HU020 @rodizio_frota
+@EP005 @HU020 @rodizio_frota @adiada
 Funcionalidade: Rotatividade Inteligente / Rodízio Semanal
   Como administrador
   Quero configurar e aplicar um rodízio semanal dos ônibus entre as diferentes rotas cadastradas
   Para equilibrar a quilometragem percorrida e o desgaste mecânico da frota, garantindo uma vida útil mais homogênea para os veículos
+
+
+  Regra: Enquanto o rodízio estiver adiado, o painel logístico não o exibe
+
+    # Decisão do PO na #465, item 6
+    @fluxo_feliz @prioridade_media
+    Cenário: Painel logístico não exibe o cartão "Rodízio de frota" enquanto a HU-020 está adiada
+      Dado que o administrador está autenticado no sistema
+      Quando o administrador acessa o painel logístico
+      Então o sistema não exibe o cartão "Rodízio de frota"
 
 
   Regra: O administrador configura o rodízio, confere a prévia e confirma

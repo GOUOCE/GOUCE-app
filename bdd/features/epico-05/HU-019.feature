@@ -85,6 +85,15 @@ Funcionalidade: Consulta de Alocação Diária
       E não exibe nenhum dado de ônibus ou de motorista
 
 
+    # AC-02, HU-016 AC-13 - Aluno excedente da distribuição
+    @fluxo_infeliz @FA001 @prioridade_alta
+    Cenário: Sistema exibe "Aguardando alocação do veículo" para o aluno que ficou como excedente
+      Dado que o administrador confirmou a distribuição do dia "17/11/2026" e o aluno ficou como excedente
+      Quando o aluno acessa a área "Meus Agendamentos"
+      Então o sistema exibe o agendamento com o status "Aguardando alocação do veículo"
+      E não exibe nenhum dado de ônibus ou de motorista
+
+
     # AC-02 - Alocação parcial
     @fluxo_infeliz @FA001 @prioridade_media
     Cenário: Sistema exibe a alocação do turno concluído e aguarda o outro turno
