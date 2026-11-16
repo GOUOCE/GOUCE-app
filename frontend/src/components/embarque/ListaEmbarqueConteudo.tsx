@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -9,8 +9,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { ArrowLeft, ChevronDown, ChevronUp, Printer, RefreshCw, Route } from 'lucide-react-native';
+import { ArrowLeft, ChevronDown, ChevronUp, Printer, Route } from 'lucide-react-native';
 import {
+  extrairMensagemErroListaEmbarque,
   formatarTempoSincronizacao,
   listaEmbarqueService,
   type AlunoEmbarqueItem,
@@ -59,8 +60,9 @@ export function ListaEmbarqueConteudo({
   const [rotasDisponiveis, setRotasDisponiveis] = useState<RotaEmbarqueOpcao[]>([]);
   const [rotaManualId, setRotaManualId] = useState<number | null>(null);
   const [lista, setLista] = useState<ListaEmbarqueRota | null>(null);
-  const [carregando, setCarregando] = useState<boolean>(() => rotaFixaId !== undefined);
-  const [simulando, setSimulando] = useState<boolean>(false);
+  const [carregando, setCarregando] = useState<boolean>(
+    () => rotaFixaId !== undefined || (perfil === 'MOTORISTA' && modoFixoInicial)
+  );
   const [imprimindo, setImprimindo] = useState<boolean>(false);
   const [modalRotasVisivel, setModalRotasVisivel] = useState<boolean>(false);
   const [erroMensagem, setErroMensagem] = useState<string>('');
@@ -68,17 +70,15 @@ export function ListaEmbarqueConteudo({
 
   const modoFixo = modoFixoManual ?? modoFixoInicial;
   const rotaSelecionadaId = rotaManualId ?? rotaFixaId ?? null;
-
-  const carregarRotasDisponiveis = useCallback(async () => {
-    try {
-      const opcoes = await listaEmbarqueService.listarRotasDisponiveis();
-      setRotasDisponiveis(opcoes);
-    } catch {
-      setErroMensagem('Não foi possível carregar as rotas disponíveis.');
-    }
-  }, []);
+  const autodescobertaRepresentante =
+    perfil === 'MOTORISTA' && modoFixo && rotaSelecionadaId === null;
+  const deveConsultarLista = rotaSelecionadaId !== null || autodescobertaRepresentante;
 
   useEffect(() => {
+    if (modoFixo) {
+      return;
+    }
+
     let ativo = true;
 
     listaEmbarqueService
@@ -87,15 +87,20 @@ export function ListaEmbarqueConteudo({
         if (!ativo) return;
         setRotasDisponiveis(opcoes);
       })
-      .catch(() => {
+      .catch((erro: unknown) => {
         if (!ativo) return;
-        setErroMensagem('Não foi possível carregar as rotas disponíveis.');
+        setErroMensagem(
+          extrairMensagemErroListaEmbarque(
+            erro,
+            'Não foi possível carregar as rotas disponíveis.'
+          )
+        );
       });
 
     return () => {
       ativo = false;
     };
-  }, []);
+  }, [modoFixo]);
 
   useEffect(() => {
     const intervalo = setInterval(() => {
@@ -106,7 +111,7 @@ export function ListaEmbarqueConteudo({
   }, []);
 
   useEffect(() => {
-    if (rotaSelecionadaId === null) {
+    if (!deveConsultarLista) {
       return;
     }
 
@@ -114,21 +119,39 @@ export function ListaEmbarqueConteudo({
 
     listaEmbarqueService
       .obterListaEmbarque({
-        rotaId: rotaSelecionadaId,
+        rotaId: rotaSelecionadaId ?? undefined,
         perfil,
         iesResponsavel,
       })
       .then((dados) => {
         if (!ativo) return;
         setLista(dados);
+        setErroMensagem('');
         setAgora(new Date());
       })
-      .catch((erro: unknown) => {
+      .catch((erro: any) => {
         if (!ativo) return;
+        const detail = erro?.response?.data?.detail;
+        if (
+          erro?.response?.status === 422 &&
+          detail?.code === 'MULTIPLAS_ROTAS' &&
+          Array.isArray(detail.rotas_disponiveis)
+        ) {
+          setRotasDisponiveis(
+            detail.rotas_disponiveis.map((r: any) => ({
+              id: r.rota_id,
+              nome: r.nome_rota,
+              horarioSaida: r.horario_saida,
+            }))
+          );
+          setModoFixoManual(false);
+          setErroMensagem('');
+          setLista(null);
+          return;
+        }
+
         setErroMensagem(
-          erro instanceof Error
-            ? erro.message
-            : 'Erro ao carregar a lista de embarque.'
+          extrairMensagemErroListaEmbarque(erro, 'Erro ao carregar a lista de embarque.')
         );
         setLista(null);
       })
@@ -138,8 +161,30 @@ export function ListaEmbarqueConteudo({
         }
       });
 
+    return () => {
+      ativo = false;
+    };
+  }, [deveConsultarLista, rotaSelecionadaId, perfil, iesResponsavel]);
+
+  const listaAtiva =
+    rotaSelecionadaId !== null
+      ? lista?.rotaId === rotaSelecionadaId
+        ? lista
+        : null
+      : autodescobertaRepresentante
+        ? lista
+        : null;
+
+  const rotaAtivaId = rotaSelecionadaId ?? listaAtiva?.rotaId ?? null;
+
+  useEffect(() => {
+    if (rotaAtivaId === null) {
+      return;
+    }
+
+    let ativo = true;
     const cancelarInscricao = listaEmbarqueService.inscreverAtualizacaoRota(
-      rotaSelecionadaId,
+      rotaAtivaId,
       (listaAtualizada) => {
         if (!ativo) return;
         setLista(listaAtualizada);
@@ -152,21 +197,24 @@ export function ListaEmbarqueConteudo({
       ativo = false;
       cancelarInscricao();
     };
-  }, [rotaSelecionadaId, perfil, iesResponsavel]);
+  }, [rotaAtivaId, perfil, iesResponsavel]);
 
   const rotaSelecionadaOpcao = useMemo(
     () => rotasDisponiveis.find((item) => item.id === rotaSelecionadaId) ?? null,
     [rotasDisponiveis, rotaSelecionadaId]
   );
 
-  const listaAtiva =
-    rotaSelecionadaId !== null && lista?.rotaId === rotaSelecionadaId ? lista : null;
-
   const dataExibida = listaAtiva?.dataOperacao ?? formatarDataHojeCabecalho();
   const subtituloData = modoFixo ? dataExibida : `Hoje - ${dataExibida}`;
   const nomeRotaFixa = listaAtiva?.rotaNome ?? rotaSelecionadaOpcao?.nome ?? '';
   const totalAlunos = listaAtiva?.totalAlunos ?? 0;
-  const podeImprimir = Boolean(listaAtiva && totalAlunos > 0 && !imprimindo && !carregando);
+  const podeImprimir = Boolean(
+    listaAtiva &&
+      totalAlunos > 0 &&
+      listaAtiva.permiteImprimir !== false &&
+      !imprimindo &&
+      !carregando
+  );
 
   const handleSelecionarRota = (rotaId: number) => {
     if (rotaId !== rotaSelecionadaId) {
@@ -175,41 +223,6 @@ export function ListaEmbarqueConteudo({
     }
     setRotaManualId(rotaId);
     setModalRotasVisivel(false);
-  };
-
-  const handleAlternarModoVisualizacaoAdmin = () => {
-    if (!modoFixo) {
-      if (rotaSelecionadaId === null) {
-        const primeiraRotaComAlunos =
-          rotasDisponiveis.find((r) => r.quantidadeAlunos > 0) ?? rotasDisponiveis[0];
-        if (primeiraRotaComAlunos) {
-          setRotaManualId(primeiraRotaComAlunos.id);
-          setCarregando(true);
-          setErroMensagem('');
-        }
-      }
-      setModoFixoManual(true);
-    } else {
-      setModoFixoManual(false);
-    }
-  };
-
-  const handleSimularTempoReal = async (acao: 'cancelamento' | 'realocacao') => {
-    if (!listaAtiva || simulando) return;
-    setSimulando(true);
-    setErroMensagem('');
-    try {
-      await listaEmbarqueService.simularAlteracaoTempoReal(listaAtiva.rotaId, acao);
-      await carregarRotasDisponiveis();
-    } catch (erro: unknown) {
-      setErroMensagem(
-        erro instanceof Error
-          ? erro.message
-          : 'Erro ao simular atualização em tempo real.'
-      );
-    } finally {
-      setSimulando(false);
-    }
   };
 
   const handleImprimir = async () => {
@@ -248,7 +261,11 @@ export function ListaEmbarqueConteudo({
       );
     }
 
-    if (rotaSelecionadaId === null) {
+    if (erroMensagem && !listaAtiva) {
+      return null;
+    }
+
+    if (rotaSelecionadaId === null && !autodescobertaRepresentante) {
       return (
         <View style={styles.estadoCentral}>
           <Text style={styles.mensagemVazia} testID="mensagem-selecione-rota">
@@ -262,7 +279,7 @@ export function ListaEmbarqueConteudo({
       return (
         <View style={styles.estadoCentral}>
           <Text style={styles.mensagemVazia} testID="mensagem-lista-vazia">
-            Essa rota não possui nenhum aluno alocado para este dia.
+            {listaAtiva.mensagem || 'Essa rota não possui nenhum aluno alocado para este dia.'}
           </Text>
         </View>
       );
@@ -354,23 +371,6 @@ export function ListaEmbarqueConteudo({
         </View>
       )}
 
-      {/* Atalho discreto para Administrador testar o fluxo direto FA-001 (52.3) */}
-      {perfil === 'ADMINISTRADOR' && !modoFixoInicial && (
-        <View style={styles.atalhoModoContainer}>
-          <TouchableOpacity
-            onPress={handleAlternarModoVisualizacaoAdmin}
-            style={styles.atalhoModoBotao}
-            testID="alternar-modo-rota-fixa"
-          >
-            <Text style={styles.atalhoModoTexto}>
-              {modoFixo
-                ? 'Voltar ao seletor de rotas (52.1)'
-                : 'Simular acesso direto por rota (FA-001)'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
       {!!erroMensagem && (
         <Text style={styles.erroTexto} testID="mensagem-erro-embarque">
           {erroMensagem}
@@ -379,37 +379,6 @@ export function ListaEmbarqueConteudo({
 
       {/* Conteúdo principal */}
       <View style={styles.conteudoPrincipal}>{renderCorpoLista()}</View>
-
-      {/* Simulação de atualização em tempo real (FA-003 com mocks) */}
-      {listaAtiva !== null && (
-        <View style={styles.simulacaoPainel} testID="painel-simulacao-tempo-real">
-          <View style={styles.simulacaoCabecalho}>
-            <RefreshCw size={13} color="#3E5F90" />
-            <Text style={styles.simulacaoTitulo}>Simulação em tempo real (FA-003)</Text>
-          </View>
-          <View style={styles.simulacaoAcoes}>
-            <TouchableOpacity
-              style={[
-                styles.simulacaoBotao,
-                (listaAtiva.totalAlunos === 0 || simulando) && styles.simulacaoBotaoDesabilitado,
-              ]}
-              disabled={listaAtiva.totalAlunos === 0 || simulando}
-              onPress={() => handleSimularTempoReal('cancelamento')}
-              testID="btn-simular-cancelamento"
-            >
-              <Text style={styles.simulacaoBotaoTexto}>Simular cancelamento</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.simulacaoBotao, simulando && styles.simulacaoBotaoDesabilitado]}
-              disabled={simulando}
-              onPress={() => handleSimularTempoReal('realocacao')}
-              testID="btn-simular-realocacao"
-            >
-              <Text style={styles.simulacaoBotaoTexto}>Simular realocação</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
 
       {/* Rodapé com ação de impressão e indicador de sincronização */}
       <View style={styles.rodapeAcao}>
@@ -464,31 +433,39 @@ export function ListaEmbarqueConteudo({
               nestedScrollEnabled
               testID="lista-rotas-scroll"
             >
-              {rotasDisponiveis.map((rota) => {
-                const selecionada = rota.id === rotaSelecionadaId;
-                return (
-                  <TouchableOpacity
-                    key={rota.id}
-                    style={[styles.modalOpcao, selecionada && styles.modalOpcaoSelecionada]}
-                    onPress={() => handleSelecionarRota(rota.id)}
-                    testID={`opcao-rota-${rota.id}`}
-                  >
-                    <Text
-                      style={[
-                        styles.modalOpcaoNome,
-                        selecionada && styles.modalOpcaoNomeSelecionada,
-                      ]}
+              {rotasDisponiveis.length === 0 ? (
+                <Text style={styles.modalVazioTexto}>Nenhuma rota disponível para hoje.</Text>
+              ) : (
+                rotasDisponiveis.map((rota) => {
+                  const selecionada = rota.id === rotaSelecionadaId;
+                  return (
+                    <TouchableOpacity
+                      key={rota.id}
+                      style={[styles.modalOpcao, selecionada && styles.modalOpcaoSelecionada]}
+                      onPress={() => handleSelecionarRota(rota.id)}
+                      testID={`opcao-rota-${rota.id}`}
                     >
-                      {rota.nome}
-                    </Text>
-                    <Text style={styles.modalOpcaoSubtitulo}>
-                      {rota.quantidadeAlunos === 0
-                        ? 'Sem alunos alocados'
-                        : formatarContadorAlunos(rota.quantidadeAlunos)}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+                      <Text
+                        style={[
+                          styles.modalOpcaoNome,
+                          selecionada && styles.modalOpcaoNomeSelecionada,
+                        ]}
+                      >
+                        {rota.nome}
+                      </Text>
+                      <Text style={styles.modalOpcaoSubtitulo}>
+                        {rota.quantidadeAlunos !== undefined
+                          ? rota.quantidadeAlunos === 0
+                            ? 'Sem alunos alocados'
+                            : formatarContadorAlunos(rota.quantidadeAlunos)
+                          : rota.horarioSaida
+                            ? `Horário de saída: ${rota.horarioSaida}`
+                            : 'Rota programada'}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })
+              )}
             </ScrollView>
           </View>
         </TouchableOpacity>
@@ -576,18 +553,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#191C20',
   },
-  atalhoModoContainer: {
-    alignItems: 'flex-start',
-    marginBottom: 10,
-  },
-  atalhoModoBotao: {
-    paddingVertical: 4,
-  },
-  atalhoModoTexto: {
-    fontSize: 12,
-    color: '#3E5F90',
-    textDecorationLine: 'underline',
-  },
   erroTexto: {
     color: '#B3261E',
     fontSize: 13,
@@ -636,47 +601,6 @@ const styles = StyleSheet.create({
   divisorItem: {
     height: 1,
     backgroundColor: '#D8DCE6',
-  },
-  simulacaoPainel: {
-    backgroundColor: '#EEF2FA',
-    borderRadius: 10,
-    padding: 10,
-    marginTop: 8,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#D6DFEE',
-  },
-  simulacaoCabecalho: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 8,
-  },
-  simulacaoTitulo: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#3E5F90',
-  },
-  simulacaoAcoes: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  simulacaoBotao: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#3E5F90',
-    borderRadius: 6,
-    paddingVertical: 7,
-    alignItems: 'center',
-  },
-  simulacaoBotaoDesabilitado: {
-    opacity: 0.45,
-  },
-  simulacaoBotaoTexto: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#3E5F90',
   },
   rodapeAcao: {
     paddingTop: 6,
@@ -756,5 +680,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#64748B',
     marginTop: 2,
+  },
+  modalVazioTexto: {
+    fontSize: 13,
+    color: '#64748B',
+    textAlign: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 16,
   },
 });
