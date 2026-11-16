@@ -1,3 +1,6 @@
+import { api } from '@/api/api';
+import { getErrorMessage } from '@/utils/errorUtils';
+
 export type SentidoViagem =
   | 'IDA_E_VOLTA_MESMA_IES'
   | 'SOMENTE_IDA'
@@ -17,12 +20,30 @@ export interface AlunoEmbarqueInput {
 export interface AlunoEmbarqueItem extends AlunoEmbarqueInput {
   sentidoViagem: SentidoViagem;
   trajetoFormatado: string;
+  agendamentoId?: number;
+  alunoId?: number;
+  tipoLugarIda?: 'sentado' | 'em_pe' | null;
+  tipoLugarVolta?: 'sentado' | 'em_pe' | null;
+  onibusIda?: string | null;
+  onibusVolta?: string | null;
+  motoristaIda?: string | null;
+  motoristaVolta?: string | null;
 }
 
 export interface RotaEmbarqueOpcao {
   id: number;
   nome: string;
-  quantidadeAlunos: number;
+  horarioSaida?: string;
+  quantidadeAlunos?: number;
+}
+
+export interface VeiculoEscaladoItem {
+  alocacaoId: number;
+  turno: 'ida' | 'volta';
+  onibusPlaca: string;
+  motoristaNome: string;
+  totalSentados: number;
+  totalEmPe: number;
 }
 
 export interface ListaEmbarqueRota {
@@ -32,131 +53,137 @@ export interface ListaEmbarqueRota {
   totalAlunos: number;
   alunos: AlunoEmbarqueItem[];
   ultimaSincronizacaoISO: string;
-}
-
-interface RotaEmbarqueState {
-  rotaId: number;
-  rotaNome: string;
-  alunos: AlunoEmbarqueInput[];
-  ultimaSincronizacaoISO: string;
+  mensagem?: string | null;
+  permiteImprimir?: boolean;
+  textoContador?: string;
+  veiculosEscalados?: VeiculoEscaladoItem[];
 }
 
 export interface OpcoesFiltroListaEmbarque {
   perfil?: PerfilListaEmbarque;
   iesResponsavel?: string;
+  data?: string;
+  turno?: 'ida' | 'volta';
+  intervaloMs?: number;
 }
 
-interface InscricaoListener {
-  listener: (lista: ListaEmbarqueRota) => void;
-  opcoes?: OpcoesFiltroListaEmbarque;
+// ===== Contratos do backend (/alocacao-diaria/rotas-do-dia e /lista-embarque) =====
+
+export interface RotaDoDiaApiDTO {
+  rota_id: number;
+  nome_rota: string;
+  horario_saida: string;
 }
 
-const MOCK_REPRESENTANTE_PADRAO = {
-  rotaId: 1,
-  rotaNome: 'Linha 01 - Centro',
-  iesResponsavel: 'UFC',
-};
-
-const ALUNOS_LINHA_01_INICIAIS: AlunoEmbarqueInput[] = [
-  { id: 1, nome: 'Ana Paula Lima', pontoEmbarque: 'Pça. Matriz', iesIda: 'UFC', iesVolta: 'UFC' },
-  { id: 2, nome: 'Bruno Costa', pontoEmbarque: 'Pça. Matriz', iesIda: 'Católica' },
-  { id: 3, nome: 'Carla Dias', pontoEmbarque: 'Trevo Bairro Novo', iesVolta: 'UECE' },
-  { id: 4, nome: 'Daniel Oliveira', pontoEmbarque: 'Pça. Matriz', iesIda: 'UFC', iesVolta: 'UFC' },
-  { id: 5, nome: 'Davi Mendes', pontoEmbarque: 'Av. Central', iesIda: 'IFCE' },
-  { id: 6, nome: 'Eduarda Fernandes', pontoEmbarque: 'Trevo Bairro Novo', iesIda: 'UFC', iesVolta: 'Católica' },
-  { id: 7, nome: 'Emanuel Barbosa', pontoEmbarque: 'Terminal Rodoviário', iesVolta: 'UFC' },
-  { id: 8, nome: 'Fabiana Carvalho', pontoEmbarque: 'Pça. Matriz', iesIda: 'UECE', iesVolta: 'UECE' },
-  { id: 9, nome: 'Felipe Rocha', pontoEmbarque: 'Av. Central', iesIda: 'UFC', iesVolta: 'UFC' },
-  { id: 10, nome: 'Fernanda Alves', pontoEmbarque: 'Trevo Bairro Novo', iesIda: 'Católica', iesVolta: 'Católica' },
-  { id: 11, nome: 'Gabriel Martins', pontoEmbarque: 'Pça. Matriz', iesIda: 'IFCE', iesVolta: 'IFCE' },
-  { id: 12, nome: 'Giovanna Lima', pontoEmbarque: 'Av. Central', iesIda: 'UFC' },
-  { id: 13, nome: 'Guilherme Araújo', pontoEmbarque: 'Terminal Rodoviário', iesIda: 'UECE', iesVolta: 'UFC' },
-  { id: 14, nome: 'Helena Cardoso', pontoEmbarque: 'Pça. Matriz', iesVolta: 'Católica' },
-  { id: 15, nome: 'Henrique Gomes', pontoEmbarque: 'Trevo Bairro Novo', iesIda: 'UVA', iesVolta: 'UVA' },
-  { id: 16, nome: 'Igor Teixeira', pontoEmbarque: 'Av. Central', iesIda: 'UFC', iesVolta: 'UFC' },
-  { id: 17, nome: 'Isabela Ferreira', pontoEmbarque: 'Pça. Matriz', iesIda: 'Católica' },
-  { id: 18, nome: 'João Pedro Castro', pontoEmbarque: 'Terminal Rodoviário', iesIda: 'UFC', iesVolta: 'UFC' },
-  { id: 19, nome: 'Júlia Nascimento', pontoEmbarque: 'Trevo Bairro Novo', iesVolta: 'IFCE' },
-  { id: 20, nome: 'Kaio Pereira', pontoEmbarque: 'Av. Central', iesIda: 'UECE', iesVolta: 'UECE' },
-  { id: 21, nome: 'Larissa Cunha', pontoEmbarque: 'Pça. Matriz', iesIda: 'UFC', iesVolta: 'IFCE' },
-  { id: 22, nome: 'Leonardo Ribeiro', pontoEmbarque: 'Terminal Rodoviário', iesIda: 'Católica', iesVolta: 'Católica' },
-  { id: 23, nome: 'Letícia Monteiro', pontoEmbarque: 'Av. Central', iesVolta: 'UECE' },
-  { id: 24, nome: 'Lucas Correia', pontoEmbarque: 'Pça. Matriz', iesIda: 'UFC', iesVolta: 'UFC' },
-  { id: 25, nome: 'Mariana Azevedo', pontoEmbarque: 'Trevo Bairro Novo', iesIda: 'IFCE', iesVolta: 'IFCE' },
-  { id: 26, nome: 'Mateus Vieira', pontoEmbarque: 'Av. Central', iesIda: 'UVA' },
-  { id: 27, nome: 'Natália Borges', pontoEmbarque: 'Terminal Rodoviário', iesIda: 'UFC', iesVolta: 'UFC' },
-  { id: 28, nome: 'Nicolas Freitas', pontoEmbarque: 'Pça. Matriz', iesVolta: 'Católica' },
-  { id: 29, nome: 'Patrícia Ramos', pontoEmbarque: 'Trevo Bairro Novo', iesIda: 'UECE', iesVolta: 'UECE' },
-  { id: 30, nome: 'Pedro Henrique Lopes', pontoEmbarque: 'Av. Central', iesIda: 'UFC', iesVolta: 'UFC' },
-  { id: 31, nome: 'Rafael Nogueira', pontoEmbarque: 'Pça. Matriz', iesIda: 'Católica', iesVolta: 'UFC' },
-  { id: 32, nome: 'Raquel Soares', pontoEmbarque: 'Terminal Rodoviário', iesIda: 'IFCE' },
-  { id: 33, nome: 'Rodrigo Santana', pontoEmbarque: 'Av. Central', iesIda: 'UFC', iesVolta: 'UFC' },
-  { id: 34, nome: 'Sabrina Melo', pontoEmbarque: 'Trevo Bairro Novo', iesVolta: 'UVA' },
-  { id: 35, nome: 'Thiago Moreira', pontoEmbarque: 'Pça. Matriz', iesIda: 'UECE', iesVolta: 'UECE' },
-  { id: 36, nome: 'Vanessa Duarte', pontoEmbarque: 'Terminal Rodoviário', iesIda: 'UFC', iesVolta: 'UFC' },
-  { id: 37, nome: 'Vinícius Barros', pontoEmbarque: 'Av. Central', iesIda: 'Católica' },
-  { id: 38, nome: 'Wesley Pontes', pontoEmbarque: 'Pça. Matriz', iesIda: 'UFC', iesVolta: 'Católica' },
-];
-
-const ALUNOS_LINHA_03_INICIAIS: AlunoEmbarqueInput[] = [
-  { id: 101, nome: 'Beatriz Sampaio', pontoEmbarque: 'Rotatória da Serrinha', iesIda: 'UFC', iesVolta: 'UFC' },
-  { id: 102, nome: 'Caio Albuquerque', pontoEmbarque: 'Posto São José', iesIda: 'UECE' },
-  { id: 103, nome: 'Débora Vasconcelos', pontoEmbarque: 'Igreja Matriz', iesVolta: 'IFCE' },
-  { id: 104, nome: 'Eduardo Bezerra', pontoEmbarque: 'Rotatória da Serrinha', iesIda: 'UFC', iesVolta: 'Católica' },
-  { id: 105, nome: 'Flávia Queiroz', pontoEmbarque: 'Posto São José', iesIda: 'Católica', iesVolta: 'Católica' },
-  { id: 106, nome: 'Gustavo Farias', pontoEmbarque: 'Igreja Matriz', iesIda: 'UFC', iesVolta: 'UFC' },
-];
-
-function criarTimestampUmMinutoAtras(): string {
-  return new Date(Date.now() - 60_000).toISOString();
+export interface RotasDoDiaApiResponse {
+  data: string;
+  rotas: RotaDoDiaApiDTO[];
 }
 
-function criarEstadoInicialMocks(): RotaEmbarqueState[] {
-  const sincronizadoPadrao = criarTimestampUmMinutoAtras();
-
-  return [
-    {
-      rotaId: 1,
-      rotaNome: 'Linha 01 - Centro',
-      alunos: ALUNOS_LINHA_01_INICIAIS.map((aluno) => ({ ...aluno })),
-      ultimaSincronizacaoISO: sincronizadoPadrao,
-    },
-    {
-      rotaId: 2,
-      rotaNome: 'Linha 02 - Bairro Novo',
-      alunos: [],
-      ultimaSincronizacaoISO: sincronizadoPadrao,
-    },
-    {
-      rotaId: 3,
-      rotaNome: 'Linha 03 - Serrinha',
-      alunos: ALUNOS_LINHA_03_INICIAIS.map((aluno) => ({ ...aluno })),
-      ultimaSincronizacaoISO: sincronizadoPadrao,
-    },
-  ];
+export interface PontoResumoApiDTO {
+  ponto_id: number;
+  nome: string;
+  bairro?: string | null;
 }
 
-const NOMES_REALOCACAO_MOCK = [
-  'Amanda Bezerra',
-  'Caio Viana',
-  'Lívia Tavares',
-  'Yasmim Farias',
-];
+export interface FaculdadeResumoApiDTO {
+  id: number;
+  nome: string;
+  sigla?: string | null;
+  campus: string;
+}
 
-let rotasMock: RotaEmbarqueState[] = criarEstadoInicialMocks();
-let indiceRealocacao = 0;
-let proximoIdRealocacao = 1000;
-const listenersPorRota = new Map<number, Set<InscricaoListener>>();
+export interface VeiculoEscaladoApiDTO {
+  alocacao_id: number;
+  turno: 'ida' | 'volta';
+  onibus_placa: string;
+  motorista_nome: string;
+  total_sentados: number;
+  total_em_pe: number;
+}
+
+export type IndicacaoTurnoApi =
+  | 'APENAS_IDA'
+  | 'APENAS_VOLTA'
+  | 'IDA_E_VOLTA_MESMA_IES'
+  | 'IDA_E_VOLTA_IES_DISTINTAS';
+
+export interface AlunoListaEmbarqueApiDTO {
+  aluno_id: number;
+  agendamento_id: number;
+  nome_aluno: string;
+  ponto_embarque: PontoResumoApiDTO | null;
+  ponto_desembarque: PontoResumoApiDTO | null;
+  ies_ida: FaculdadeResumoApiDTO | null;
+  ies_volta: FaculdadeResumoApiDTO | null;
+  indicacao_turno: IndicacaoTurnoApi;
+  tipo_lugar_ida?: 'sentado' | 'em_pe' | null;
+  tipo_lugar_volta?: 'sentado' | 'em_pe' | null;
+  onibus_ida?: string | null;
+  onibus_volta?: string | null;
+  motorista_ida?: string | null;
+  motorista_volta?: string | null;
+}
+
+export interface ListaEmbarqueApiResponse {
+  data: string;
+  rota_id: number;
+  nome_rota: string;
+  horario_saida?: string | null;
+  horario_retorno?: string | null;
+  veiculos_escalados?: VeiculoEscaladoApiDTO[];
+  total_alunos_alocados: number;
+  texto_contador: string;
+  permite_imprimir: boolean;
+  mensagem?: string | null;
+  ultima_sincronizacao: string;
+  indicador_sincronizacao?: string;
+  alunos: AlunoListaEmbarqueApiDTO[];
+}
+
+export const INTERVALO_POLLING_LISTA_MS = 30_000;
 
 function normalizarTextoComparacao(valor?: string): string {
   return (valor ?? '').trim().toLocaleLowerCase('pt-BR');
 }
 
-function formatarDataOperacaoDDMMYYYY(data: Date = new Date()): string {
-  const dia = String(data.getDate()).padStart(2, '0');
-  const mes = String(data.getMonth() + 1).padStart(2, '0');
+function dataLocalIso(data: Date = new Date()): string {
   const ano = data.getFullYear();
+  const mes = String(data.getMonth() + 1).padStart(2, '0');
+  const dia = String(data.getDate()).padStart(2, '0');
+  return `${ano}-${mes}-${dia}`;
+}
+
+function formatarDataIsoParaBR(dataIso: string): string {
+  const limpa = (dataIso ?? '').trim();
+  const match = limpa.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    return limpa;
+  }
+  const [, ano, mes, dia] = match;
   return `${dia}/${mes}/${ano}`;
+}
+
+function rotuloFaculdade(faculdade?: FaculdadeResumoApiDTO | null): string | undefined {
+  if (!faculdade) return undefined;
+  const sigla = faculdade.sigla?.trim();
+  if (sigla) return sigla;
+  const nome = faculdade.nome?.trim();
+  return nome || undefined;
+}
+
+function mapearIndicacaoTurnoApi(indicacao: IndicacaoTurnoApi): SentidoViagem {
+  switch (indicacao) {
+    case 'APENAS_IDA':
+      return 'SOMENTE_IDA';
+    case 'APENAS_VOLTA':
+      return 'SOMENTE_VOLTA';
+    case 'IDA_E_VOLTA_IES_DISTINTAS':
+      return 'IES_DISTINTAS';
+    case 'IDA_E_VOLTA_MESMA_IES':
+    default:
+      return 'IDA_E_VOLTA_MESMA_IES';
+  }
 }
 
 /**
@@ -233,166 +260,171 @@ export function formatarTempoSincronizacao(ultimaSincronizacaoISO: string, agora
   return `Atualizado há ${minutos} min`;
 }
 
-function ordenarAlunosPorNome(alunos: AlunoEmbarqueInput[]): AlunoEmbarqueInput[] {
-  return [...alunos].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
-}
-
-function alunoVinculadoAIes(aluno: AlunoEmbarqueInput, iesAlvo: string): boolean {
-  const alvoNormalizado = normalizarTextoComparacao(iesAlvo);
-  return (
-    normalizarTextoComparacao(aluno.iesIda) === alvoNormalizado ||
-    normalizarTextoComparacao(aluno.iesVolta) === alvoNormalizado
-  );
-}
-
-function mapearItemEmbarque(aluno: AlunoEmbarqueInput): AlunoEmbarqueItem {
-  const sentidoViagem = determinarSentidoViagem(aluno.iesIda, aluno.iesVolta);
-  const trajetoFormatado = formatarTrajetoEmbarque(aluno);
-
-  return {
-    ...aluno,
-    sentidoViagem,
-    trajetoFormatado,
-  };
-}
-
-function filtrarEMontarLista(
-  rota: RotaEmbarqueState,
-  opcoes?: OpcoesFiltroListaEmbarque
-): ListaEmbarqueRota {
-  const perfil = opcoes?.perfil ?? 'ADMINISTRADOR';
-  const iesAlvo =
-    perfil === 'MOTORISTA'
-      ? opcoes?.iesResponsavel?.trim() || MOCK_REPRESENTANTE_PADRAO.iesResponsavel
-      : undefined;
-
-  const alunosElegiveis = iesAlvo
-    ? rota.alunos.filter((aluno) => alunoVinculadoAIes(aluno, iesAlvo))
-    : rota.alunos;
-
-  const alunosOrdenados = ordenarAlunosPorNome(alunosElegiveis).map(mapearItemEmbarque);
-
-  return {
-    rotaId: rota.rotaId,
-    rotaNome: rota.rotaNome,
-    dataOperacao: formatarDataOperacaoDDMMYYYY(),
-    totalAlunos: alunosOrdenados.length,
-    alunos: alunosOrdenados,
-    ultimaSincronizacaoISO: rota.ultimaSincronizacaoISO,
-  };
-}
-
-function buscarRotaStateOuFalhar(rotaId: number): RotaEmbarqueState {
-  const rota = rotasMock.find((item) => item.rotaId === rotaId);
-  if (!rota) {
-    throw new Error(`Rota ${rotaId} não encontrada.`);
+/**
+ * Extrai mensagem de erro amigável para os formatos retornados pelos endpoints de alocação diária.
+ */
+export function extrairMensagemErroListaEmbarque(
+  erro: unknown,
+  fallback: string = 'Erro ao carregar a lista de embarque.',
+): string {
+  const err = erro as any;
+  const detail = err?.response?.data?.detail;
+  if (detail && typeof detail === 'object' && typeof detail.message === 'string') {
+    return detail.message;
   }
-  return rota;
-}
-
-function notificarListenersRota(rota: RotaEmbarqueState): void {
-  const inscritos = listenersPorRota.get(rota.rotaId);
-  if (!inscritos) return;
-
-  for (const inscricao of Array.from(inscritos)) {
-    inscricao.listener(filtrarEMontarLista(rota, inscricao.opcoes));
-  }
+  return getErrorMessage(err, fallback);
 }
 
 /**
- * Camada de serviço mockada para a Lista de Embarque (HU-018).
- * Mantém o contrato desacoplado da UI para futura substituição pela API do backend.
+ * Converte a resposta da API `GET /alocacao-diaria/lista-embarque` para o modelo da UI.
+ */
+export function mapearRespostaListaEmbarque(dto: ListaEmbarqueApiResponse): ListaEmbarqueRota {
+  const alunos = (dto.alunos ?? []).map((aluno): AlunoEmbarqueItem => {
+    const pontoNome =
+      aluno.indicacao_turno === 'APENAS_VOLTA'
+        ? aluno.ponto_desembarque?.nome ?? aluno.ponto_embarque?.nome ?? 'Ponto não informado'
+        : aluno.ponto_embarque?.nome ?? aluno.ponto_desembarque?.nome ?? 'Ponto não informado';
+
+    const iesIda =
+      aluno.indicacao_turno === 'APENAS_VOLTA' ? undefined : rotuloFaculdade(aluno.ies_ida);
+    const iesVolta =
+      aluno.indicacao_turno === 'APENAS_IDA' ? undefined : rotuloFaculdade(aluno.ies_volta);
+
+    const sentidoViagem =
+      iesIda || iesVolta
+        ? determinarSentidoViagem(iesIda, iesVolta)
+        : mapearIndicacaoTurnoApi(aluno.indicacao_turno);
+
+    const trajetoFormatado = formatarTrajetoEmbarque({
+      pontoEmbarque: pontoNome,
+      iesIda,
+      iesVolta,
+    });
+
+    return {
+      id: aluno.agendamento_id || aluno.aluno_id,
+      alunoId: aluno.aluno_id,
+      agendamentoId: aluno.agendamento_id,
+      nome: aluno.nome_aluno,
+      pontoEmbarque: pontoNome,
+      iesIda,
+      iesVolta,
+      sentidoViagem,
+      trajetoFormatado,
+      tipoLugarIda: aluno.tipo_lugar_ida ?? null,
+      tipoLugarVolta: aluno.tipo_lugar_volta ?? null,
+      onibusIda: aluno.onibus_ida ?? null,
+      onibusVolta: aluno.onibus_volta ?? null,
+      motoristaIda: aluno.motorista_ida ?? null,
+      motoristaVolta: aluno.motorista_volta ?? null,
+    };
+  });
+
+  return {
+    rotaId: dto.rota_id,
+    rotaNome: dto.nome_rota,
+    dataOperacao: formatarDataIsoParaBR(dto.data),
+    totalAlunos: dto.total_alunos_alocados ?? alunos.length,
+    alunos,
+    ultimaSincronizacaoISO: dto.ultima_sincronizacao || new Date().toISOString(),
+    mensagem: dto.mensagem ?? null,
+    permiteImprimir: dto.permite_imprimir,
+    textoContador: dto.texto_contador,
+    veiculosEscalados: (dto.veiculos_escalados ?? []).map((v) => ({
+      alocacaoId: v.alocacao_id,
+      turno: v.turno,
+      onibusPlaca: v.onibus_placa,
+      motoristaNome: v.motorista_nome,
+      totalSentados: v.total_sentados,
+      totalEmPe: v.total_em_pe,
+    })),
+  };
+}
+
+/**
+ * Camada de serviço integrada à API real da Lista de Embarque (HU-018).
  */
 export const listaEmbarqueService = {
-  async listarRotasDisponiveis(): Promise<RotaEmbarqueOpcao[]> {
-    return rotasMock.map((rota) => ({
-      id: rota.rotaId,
-      nome: rota.rotaNome,
-      quantidadeAlunos: rota.alunos.length,
+  async listarRotasDisponiveis(dataIso?: string): Promise<RotaEmbarqueOpcao[]> {
+    const data = dataIso || dataLocalIso();
+    const response = await api.get<RotasDoDiaApiResponse>('/alocacao-diaria/rotas-do-dia', {
+      params: { data },
+    });
+    const rotas = Array.isArray(response.data?.rotas) ? response.data.rotas : [];
+    return rotas.map((rota) => ({
+      id: rota.rota_id,
+      nome: rota.nome_rota,
+      horarioSaida: rota.horario_saida,
     }));
   },
 
   async obterListaEmbarque(params: {
-    rotaId: number;
+    rotaId?: number;
+    data?: string;
+    turno?: 'ida' | 'volta';
     perfil?: PerfilListaEmbarque;
     iesResponsavel?: string;
   }): Promise<ListaEmbarqueRota> {
-    const rota = buscarRotaStateOuFalhar(params.rotaId);
-    return filtrarEMontarLista(rota, {
-      perfil: params.perfil,
-      iesResponsavel: params.iesResponsavel,
+    const query: Record<string, string | number> = {
+      data: params.data || dataLocalIso(),
+    };
+    if (params.rotaId !== undefined && params.rotaId !== null) {
+      query.rota_id = params.rotaId;
+    }
+    if (params.turno) {
+      query.turno = params.turno;
+    }
+
+    const response = await api.get<ListaEmbarqueApiResponse>('/alocacao-diaria/lista-embarque', {
+      params: query,
     });
+    return mapearRespostaListaEmbarque(response.data);
   },
 
-  async obterRotaPadraoRepresentante(): Promise<{
+  async obterRotaPadraoRepresentante(dataIso?: string): Promise<{
     rotaId: number;
     rotaNome: string;
-    iesResponsavel: string;
-  }> {
-    return { ...MOCK_REPRESENTANTE_PADRAO };
+    horarioSaida?: string;
+  } | null> {
+    const rotas = await listaEmbarqueService.listarRotasDisponiveis(dataIso);
+    if (rotas.length === 0) {
+      return null;
+    }
+    return {
+      rotaId: rotas[0].id,
+      rotaNome: rotas[0].nome,
+      horarioSaida: rotas[0].horarioSaida,
+    };
   },
 
   inscreverAtualizacaoRota(
     rotaId: number,
     listener: (lista: ListaEmbarqueRota) => void,
-    opcoes?: OpcoesFiltroListaEmbarque
+    opcoes?: OpcoesFiltroListaEmbarque,
   ): () => void {
-    const conjunto = listenersPorRota.get(rotaId) ?? new Set<InscricaoListener>();
-    const registro: InscricaoListener = { listener, opcoes };
-    conjunto.add(registro);
-    listenersPorRota.set(rotaId, conjunto);
+    let cancelado = false;
+    const intervalo = setInterval(() => {
+      listaEmbarqueService
+        .obterListaEmbarque({
+          rotaId,
+          data: opcoes?.data,
+          turno: opcoes?.turno,
+          perfil: opcoes?.perfil,
+          iesResponsavel: opcoes?.iesResponsavel,
+        })
+        .then((listaAtualizada) => {
+          if (!cancelado) {
+            listener(listaAtualizada);
+          }
+        })
+        .catch(() => {
+          // Mantém a lista atualmente visível caso uma atualização em segundo plano falhe.
+        });
+    }, opcoes?.intervaloMs ?? INTERVALO_POLLING_LISTA_MS);
 
     return () => {
-      const atual = listenersPorRota.get(rotaId);
-      if (!atual) return;
-      atual.delete(registro);
-      if (atual.size === 0) {
-        listenersPorRota.delete(rotaId);
-      }
+      cancelado = true;
+      clearInterval(intervalo);
     };
-  },
-
-  async simularAlteracaoTempoReal(
-    rotaId: number,
-    acao?: 'cancelamento' | 'realocacao'
-  ): Promise<ListaEmbarqueRota> {
-    const rota = buscarRotaStateOuFalhar(rotaId);
-    const acaoEfetiva = acao ?? (rota.alunos.length > 0 ? 'cancelamento' : 'realocacao');
-
-    if (acaoEfetiva === 'cancelamento') {
-      if (rota.alunos.length > 0) {
-        const alunosOrdenados = ordenarAlunosPorNome(rota.alunos);
-        // Preserva os exemplos principais quando há mais de 4 alunos na lista
-        const indiceRemover =
-          alunosOrdenados.length > 4 ? alunosOrdenados.length - 2 : alunosOrdenados.length - 1;
-        const alunoRemovido = alunosOrdenados[indiceRemover];
-        rota.alunos = rota.alunos.filter((aluno) => aluno.id !== alunoRemovido.id);
-      }
-    } else {
-      const novoId = proximoIdRealocacao++;
-      const nomeBase = NOMES_REALOCACAO_MOCK[indiceRealocacao % NOMES_REALOCACAO_MOCK.length];
-      const repeticao = Math.floor(indiceRealocacao / NOMES_REALOCACAO_MOCK.length);
-      indiceRealocacao += 1;
-
-      rota.alunos.push({
-        id: novoId,
-        nome: repeticao === 0 ? nomeBase : `${nomeBase} (${repeticao + 1})`,
-        pontoEmbarque: 'Pça. Matriz',
-        iesIda: 'UFC',
-        iesVolta: 'UFC',
-      });
-    }
-
-    rota.ultimaSincronizacaoISO = new Date().toISOString();
-    notificarListenersRota(rota);
-
-    return filtrarEMontarLista(rota);
-  },
-
-  resetarMocks(): void {
-    rotasMock = criarEstadoInicialMocks();
-    indiceRealocacao = 0;
-    proximoIdRealocacao = 1000;
-    listenersPorRota.clear();
   },
 };
