@@ -1624,20 +1624,20 @@ Como administrador, quero distribuir os alunos agendados entre os ônibus dispon
 **Critérios de Aceite:**
 
 1. Administrador acessa a tela de "Alocação Diária"/"Distribuição Logística", seleciona um dia e visualiza a demanda total de alunos agendados por rota.
-2. Administrador consegue vincular os ônibus disponíveis às suas rotas originais para aquele dia.
+2. Administrador consegue vincular os ônibus disponíveis às suas rotas originais para aquele dia e pode trocar o ônibus e o motorista sugeridos pela distribuição automática antes de confirmar.
 3. Sistema distribui automaticamente os alunos confirmados nos veículos correspondentes, respeitando rigorosamente o limite de capacidade cadastrado para cada ônibus (nunca ultrapassa a capacidade).
 4. O sistema deve calcular e apresentar a quantidade de alunos sentados e em pé em cada ônibus.
 5. Quando houver mais alunos do que assentos disponíveis e houver capacidade de passageiros em pé, o sistema deve permitir a permanência desses alunos no veículo como passageiros em pé, respeitando a capacidade máxima configurada.
-6. Quando outro ônibus possuir capacidade disponível, o sistema deve priorizar a realocação dos alunos para equilibrar a ocupação e reduzir a quantidade de alunos em pé.
+6. Quando outro ônibus possuir assento disponível, o sistema deve utilizar esse ônibus primeiro e só permitir alunos em pé quando nenhum outro ônibus tiver vaga, para equilibrar a ocupação e reduzir a quantidade de alunos em pé.
 7. Quando não houver outro ônibus disponível, o sistema deve sinalizar a quantidade de alunos em pé e permitir a continuidade da alocação enquanto o limite de passageiros em pé não for ultrapassado.
-8. Se a demanda de uma rota ultrapassar a capacidade do ônibus designado, o sistema aloca os alunos até o limite exato de assentos e sinaliza os alunos excedentes.
+8. Se a demanda de uma rota ultrapassar a capacidade total (assentos e alunos em pé) dos ônibus disponíveis, o sistema aloca os alunos até o limite dessa capacidade e sinaliza os alunos excedentes.
 9. Administrador consegue selecionar os alunos excedentes e realocá-los manualmente para outro ônibus (de rota diferente) que ainda possua vagas disponíveis.
 10. Após realocação, o status do aluno é atualizado informando em qual ônibus alternativo ele deve embarcar.
 11. Tentativa de alocar um ônibus que já atingiu sua capacidade máxima, ou escalá-lo em horário conflitante com outra rota, é bloqueada, o veículo não aparece disponível na seleção ou o sistema exibe alerta de indisponibilidade.
 12. Administrador consegue revisar uma prévia da distribuição antes de confirmar (sem persistir no banco ainda).
-13. Ao confirmar a distribuição, o sistema salva a alocação de todos os alunos aos veículos e exibe mensagem de sucesso ("Distribuição realizada com sucesso"), atualizando o status logístico do dia.
-14. Um mesmo ônibus não pode ser alocado para mais de uma rota no mesmo dia/horário (RN-003).
-15. Quando o administrador vincular manualmente um ônibus diferente daquele que estava previsto pelo rodízio de frotas (HU-020) para a rota, o sistema deve exibir um alerta visual informando: _'Caso o ônibus mude de rota mesmo sendo associado à outra no rodízio de frotas, ele será alterado apenas para esse dia em específico e voltará para a rota designada no rodízio no dia seguinte’._
+13. Ao confirmar a distribuição, o sistema salva a alocação de todos os alunos aos veículos e exibe mensagem de sucesso ("Distribuição realizada com sucesso"), atualizando o status logístico do dia. Se houver alunos excedentes, a confirmação é permitida, mas o sistema exibe um aviso com a lista desses alunos, que aparecem como "Aguardando alocação do veículo" para o aluno (HU-019) até serem realocados.
+14. Um mesmo ônibus não pode ser alocado para mais de uma rota no mesmo dia e turno (ida ou volta), considerando que cada rota tem uma saída e um retorno por dia (RN-003); o mesmo ônibus pode atender a ida e a volta.
+15. (Adiado junto com a HU-020, por decisão do PO.) Quando o administrador vincular manualmente um ônibus diferente daquele que estava previsto pelo rodízio de frotas (HU-020) para a rota, o sistema deve exibir um alerta visual informando: _'Caso o ônibus mude de rota mesmo sendo associado à outra no rodízio de frotas, ele será alterado apenas para esse dia em específico e voltará para a rota designada no rodízio no dia seguinte’._
 16. Na distribuição diária de uma rota que atende múltiplas faculdades, caso não haja nenhum aluno agendado para embarcar em uma das faculdades no turno de volta (ou desembarcar na ida), o sistema deve permitir a alocação normalmente, desconsiderando a parada na instituição sem demanda para aquela viagem específica.  
     **Fluxo Principal:**
 17. O administrador acessa a tela de "Alocação Diária" ou "Distribuição Logística" no painel.
@@ -1687,13 +1687,13 @@ Como administrador, quero alocar os motoristas aos ônibus que farão as rotas d
 **Critérios de Aceite:**
 
 1. No momento da 'Distribuição Logística' diária, dentro do painel de detalhes da rota, o Administrador seleciona o ônibus e, no mesmo formulário, o sistema exibe o campo para vincular o motorista correspondente.
-2. Ao selecionar um ônibus, o sistema exibe a lista de motoristas disponíveis para aquele horário.
+2. Ao selecionar um ônibus, o sistema exibe a lista de motoristas disponíveis para aquele turno.
 3. Lista de motoristas disponíveis exibe apenas motoristas ativos; motoristas inativados (soft delete) não aparecem como opção.
 4. Administrador consegue selecionar um motorista e confirmar a escala, vinculando-o àquele ônibus e rota para a data específica.
-5. Tentativa de alocar um motorista que já está escalado para outra rota no mesmo dia, cujos horários de saída e retorno se sobreponham (conforme RN-002), é bloqueada: o motorista não aparece disponível na lista, ou o sistema exibe alerta ('Este motorista possui alocação com horário conflitante').
+5. Tentativa de alocar um motorista que já está escalado para outra rota no mesmo dia e turno (ida ou volta), conforme RN-002, é bloqueada: o motorista não aparece disponível na lista, ou o sistema exibe o alerta "Este motorista já está escalado para outra rota neste horário", na tela e na API.
 6. Sistema valida a disponibilidade do motorista antes de salvar a escala (não confia apenas na exibição prévia da lista, revalida no momento da confirmação).
-7. Confirmação bem-sucedida exibe mensagem de sucesso ("Escala de motoristas confirmada com sucesso") e persiste o vínculo motorista-ônibus-rota-data no banco.
-8. Um mesmo motorista não pode ser alocado para mais de uma rota ou veículo no mesmo dia e horário (RN-002).  
+7. Confirmação bem-sucedida exibe mensagem de sucesso ("Escala de motoristas confirmada com sucesso"), persiste o vínculo motorista-ônibus-rota-data no banco e registra a confirmação no log de auditoria (usuário, ação, dados e data/hora, conforme RNF-013).
+8. Um mesmo motorista não pode ser alocado para mais de uma rota ou veículo no mesmo dia e turno (ida ou volta), considerando que cada rota tem uma saída e um retorno por dia (RN-002); o mesmo motorista pode atender a ida e a volta.  
    **Fluxo Principal:**
 9. O administrador acessa a tela de "Alocação Diária", na etapa de definição de escala de condutores.
 10. O sistema exibe as rotas ativas do dia e os respectivos ônibus que já foram alocados para a viagem.
@@ -1706,7 +1706,7 @@ Como administrador, quero alocar os motoristas aos ônibus que farão as rotas d
     **Fluxos Alternativos:**
 17. **FA-001 \- Conflito de escala do motorista.**
     1. O administrador tenta alocar um motorista que já foi designado para outra rota no mesmo dia e no mesmo turno de horário.
-    2. O sistema bloqueia a seleção, ocultando o motorista da lista de disponíveis para aquele horário ou exibindo um alerta ("Este motorista já está escalado para outra rota neste horário").
+    2. O sistema bloqueia a seleção, ocultando o motorista da lista de disponíveis para aquele horário ou exibindo o alerta "Este motorista já está escalado para outra rota neste horário".
 18. **FA-002 \- Motorista indisponível/inativo.**
     1. O administrador tenta buscar um motorista que foi inativado no cadastro base.
     2. O sistema não exibe motoristas inativos na lista de seleção, impedindo alocações inválidas.
@@ -1792,7 +1792,7 @@ Como aluno com agendamento confirmado, quero consultar em qual ônibus fui aloca
 **Critérios de Aceite:**
 
 1. Aluno com agendamento confirmado acessa a tela inicial ou 'Meus Agendamentos' e visualiza os dados da sua alocação separados por turno (Ida e/ou Volta): identificação do ônibus (número e placa), nome da rota associada, nome do motorista, horário de saída, o ponto de embarque selecionado pelo aluno e a sua respectiva faculdade de destino/origem.
-2. Se a distribuição logística do dia ainda não foi concluída pelo administrador, o sistema exibe o agendamento com status "Aguardando alocação do veículo" (ou similar), sem exibir dados de frota.
+2. Se a distribuição logística do dia ainda não foi concluída pelo administrador, o sistema exibe o agendamento com status "Aguardando alocação do veículo" (ou similar), sem exibir dados de frota. O mesmo vale para o aluno que ficou como excedente da distribuição, até ser realocado (HU-016).
 3. Se o aluno foi realocado para um ônibus diferente da sua rota original (por excedente de assentos ou redistribuição da ocupação dos veículos. , HU-016), o sistema exibe aviso visual destacado ("Atenção: Você foi realocado. Seu ônibus para hoje é o veículo X").
 4. Dados de alocação exibidos ao aluno são sempre os mais atuais no momento da consulta (refletindo qualquer realocação feita pelo administrador antes da visualização).
 5. Tempo de resposta da consulta de alocação deve ser de até 3 segundos em condições normais de conexão (RNF-001).  
@@ -1829,9 +1829,11 @@ Como aluno com agendamento confirmado, quero consultar em qual ônibus fui aloca
 
 | ID     | Épico  | Prioridade | Complexidade | Story Points | Sprint | Status |
 | :----- | :----- | :--------- | :----------- | :----------- | :----- | :----- |
-| HU-020 | EP-005 |            |              |              |        |        |
+| HU-020 | EP-005 |            |              |              |        | Adiada |
 
 Fonte: Elaborado pelo Clidenor(2026).
+
+**Observação:** implementação adiada por decisão do PO na issue #465; enquanto isso, o cartão "Rodízio de frota" fica oculto no painel logístico e a HU-016 segue sem o alerta de rodízio (AC-15).
 
 **História de Usuário:**  
 Como administrador, quero configurar e aplicar um rodízio semanal dos ônibus entre as diferentes rotas cadastradas, para equilibrar a quilometragem percorrida e o desgaste mecânico da frota, garantindo uma vida útil mais homogênea para os veículos.  
