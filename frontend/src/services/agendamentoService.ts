@@ -51,10 +51,53 @@ export type StatusAlocacaoVeiculo =
   | 'CONFIRMADA'
   | 'REALOCADO';
 
-export type CenarioAlocacaoMock =
-  | 'CONFIRMADA'
-  | 'AGUARDANDO_ALOCACAO'
-  | 'REALOCADO';
+export interface TurnoViagemApiDTO {
+  turno: 'ida' | 'volta';
+  status_alocacao: 'ALOCADO' | 'AGUARDANDO_ALOCACAO' | string;
+  mensagem_status?: string | null;
+  ponto?: {
+    ponto_id: number;
+    nome: string;
+    bairro?: string | null;
+  } | null;
+  faculdade?: {
+    id: number;
+    nome: string;
+    sigla?: string | null;
+    campus?: string | null;
+  } | null;
+  rota_complementar?: {
+    id: number;
+    nome: string;
+    ponto_conexao: string;
+    horario_saida: string;
+    horario_retorno: string;
+  } | null;
+  rota_id?: number | null;
+  nome_rota?: string | null;
+  horario?: string | null;
+  onibus_id?: string | null;
+  placa?: string | null;
+  apelido_onibus?: string | null;
+  motorista_id?: number | null;
+  nome_motorista?: string | null;
+  tipo_lugar?: string | null;
+  foi_realocado?: boolean;
+  aviso_realocacao?: string | null;
+}
+
+export interface MinhaViagemApiResponse {
+  data: string;
+  possui_agendamento: boolean;
+  agendamento_id: number | null;
+  status_geral: 'ALOCADO' | 'AGUARDANDO_ALOCACAO' | 'PARCIALMENTE_ALOCADO' | 'SEM_AGENDAMENTO' | string;
+  mensagem?: string | null;
+  foi_realocado: boolean;
+  aviso_realocacao?: string | null;
+  ida: TurnoViagemApiDTO | null;
+  volta: TurnoViagemApiDTO | null;
+  consultado_em?: string;
+}
 
 export interface RotaComplementarResumo {
   id: number;
@@ -403,181 +446,88 @@ export function mapearDetalhe(detalhe: AgendamentoDetalhe): DetalhesViagemRespon
   };
 }
 
-const MOCK_ALOCACAO_PRINCIPAL: Record<CenarioAlocacaoMock, AlocacaoRotaResolvida> = {
-  CONFIRMADA: {
-    veiculo: 'Ônibus 04 - Placa OCR-1234',
-    motorista: 'Ana Souza',
-    statusAlocacao: 'CONFIRMADA',
-    statusAlocacaoLabel: 'Alocação confirmada',
-    realocado: false,
-    mensagemRealocacao: null,
-    rotaOriginalNome: null,
-  },
-  AGUARDANDO_ALOCACAO: {
-    veiculo: null,
-    motorista: null,
-    statusAlocacao: 'AGUARDANDO_ALOCACAO',
-    statusAlocacaoLabel: 'Aguardando alocação do veículo',
-    realocado: false,
-    mensagemRealocacao: null,
-    rotaOriginalNome: null,
-  },
-  REALOCADO: {
-    veiculo: 'Ônibus 04 - Placa OCR-1234',
-    motorista: 'Ana Souza',
-    statusAlocacao: 'REALOCADO',
-    statusAlocacaoLabel: 'Alocação confirmada',
-    realocado: true,
-    mensagemRealocacao: formatarAvisoRealocacao('Ônibus 04 - Placa OCR-1234'),
-    rotaOriginalNome: 'Linha 02 - Bairro Novo',
-  },
-};
+function enriquecerRotaPrincipalComTurno(
+  rotaOriginal: RotaPrincipalResumo | null,
+  turnoDto: TurnoViagemApiDTO | null | undefined,
+  sentido: 'ida' | 'volta',
+): RotaPrincipalResumo | null {
+  if (!turnoDto) return rotaOriginal;
 
-const MOCK_ROTA_COMPLEMENTAR_PADRAO = {
-  nomeLinha: 'Van 2 - Bairro Novo',
-  pontoEmbarque: 'Bairro Novo',
-  pontoConexao: 'Trevo do Bairro Novo',
-};
-
-/**
- * Aplica um cenário de simulação da HU-019 sobre os detalhes já carregados da viagem,
- * permitindo testar os fluxos Principal, FA-001 e FA-002 antes da integração com o backend.
- */
-export function aplicarCenarioAlocacaoMock(
-  detalhes: DetalhesViagemResponse,
-  cenario: CenarioAlocacaoMock,
-  opcoes?: { exibirRotaComplementar?: boolean },
-): DetalhesViagemResponse {
-  const alocacaoPrincipal = MOCK_ALOCACAO_PRINCIPAL[cenario];
-
-  const trechosAtualizados: TrechoDetalhesViagem[] = detalhes.trechos.map((trecho) => {
-    let rotaComplementar = trecho.rotaComplementar;
-    let pontoEmbarquePrincipal = trecho.rotaPrincipal.pontoEmbarque;
-    let pontoDesembarquePrincipal = trecho.rotaPrincipal.pontoDesembarque;
-
-    if (opcoes?.exibirRotaComplementar === false) {
-      if (trecho.rotaComplementar) {
-        const pontoDirecto =
-          trecho.rotaComplementar.pontoEmbarque === MOCK_ROTA_COMPLEMENTAR_PADRAO.pontoEmbarque
-            ? 'Pça. Matriz'
-            : trecho.rotaComplementar.pontoEmbarque;
-        if (trecho.sentido === 'ida') {
-          pontoEmbarquePrincipal = pontoDirecto;
-        } else {
-          pontoDesembarquePrincipal = pontoDirecto;
-        }
-      }
-      rotaComplementar = undefined;
-    } else if (opcoes?.exibirRotaComplementar === true) {
-      const complementarAtiva: DetalhesRotaComplementar = trecho.rotaComplementar ?? {
-        ...MOCK_ROTA_COMPLEMENTAR_PADRAO,
-        horarioSaida: trecho.sentido === 'ida' ? '06:10' : '17:30',
-      };
-      rotaComplementar = complementarAtiva;
-      if (trecho.sentido === 'ida') {
-        pontoEmbarquePrincipal = complementarAtiva.pontoConexao;
-      } else {
-        pontoDesembarquePrincipal = complementarAtiva.pontoConexao;
-      }
-    }
+  if (turnoDto.status_alocacao === 'ALOCADO') {
+    const placa = turnoDto.placa ?? turnoDto.onibus_id ?? null;
+    const onibus =
+      placa || turnoDto.apelido_onibus
+        ? { placa_onibus: placa, apelido_onibus: turnoDto.apelido_onibus ?? null }
+        : (rotaOriginal?.onibus ?? null);
+    const motorista = turnoDto.nome_motorista
+      ? { nome: turnoDto.nome_motorista }
+      : (rotaOriginal?.motorista ?? null);
+    const realocado = Boolean(turnoDto.foi_realocado);
+    const faculdades = rotaOriginal?.faculdades?.length
+      ? rotaOriginal.faculdades
+      : turnoDto.faculdade
+        ? [{
+            id: turnoDto.faculdade.id,
+            nome: turnoDto.faculdade.nome,
+            sigla: turnoDto.faculdade.sigla ?? undefined,
+          }]
+        : [];
 
     return {
-      ...trecho,
-      rotaComplementar,
-      rotaPrincipal: {
-        ...trecho.rotaPrincipal,
-        pontoEmbarque: pontoEmbarquePrincipal,
-        pontoDesembarque: pontoDesembarquePrincipal,
-        ...alocacaoPrincipal,
-      },
+      id: turnoDto.rota_id ?? rotaOriginal?.id ?? 0,
+      nome: turnoDto.nome_rota || rotaOriginal?.nome || 'A definir',
+      horario_saida:
+        sentido === 'ida'
+          ? (turnoDto.horario || rotaOriginal?.horario_saida || 'A definir')
+          : (rotaOriginal?.horario_saida || 'A definir'),
+      horario_retorno:
+        sentido === 'volta'
+          ? (turnoDto.horario || rotaOriginal?.horario_retorno || 'A definir')
+          : (rotaOriginal?.horario_retorno || 'A definir'),
+      faculdades,
+      onibus,
+      motorista,
+      status_alocacao: realocado ? 'REALOCADO' : 'CONFIRMADA',
+      realocado,
+      rota_original_nome: realocado ? (rotaOriginal?.nome ?? null) : null,
     };
-  });
+  }
 
-  return {
-    ...detalhes,
-    trechos: trechosAtualizados,
-    temRotaComplementar: trechosAtualizados.some((t) => t.rotaComplementar !== undefined),
-  };
+  if (turnoDto.status_alocacao === 'AGUARDANDO_ALOCACAO' && rotaOriginal) {
+    return {
+      ...rotaOriginal,
+      onibus: null,
+      motorista: null,
+      status_alocacao: 'AGUARDANDO_ALOCACAO',
+      realocado: false,
+      rota_original_nome: null,
+    };
+  }
+
+  return rotaOriginal;
 }
 
 /**
- * Gera uma viagem mockada completa da HU-019 (com suporte a trajeto direto ou com rota complementar)
- * para testes visuais ou de componente quando o backend ainda não retorna alocações.
+ * Mescla os detalhes da reserva (/transporte/agendamentos/detalhes ou /meus) com a
+ * alocação diária real retornada por GET /alocacao-diaria/minha-viagem (HU-019).
  */
-export function criarDetalhesViagemMock(
-  dataIso: string = '2026-08-31',
-  cenario: CenarioAlocacaoMock = 'CONFIRMADA',
-  opcoes?: { exibirRotaComplementar?: boolean },
-): DetalhesViagemResponse {
-  const faculdadesMock = [
-    { id: 1, nome: 'Universidade Federal do Ceará', sigla: 'UFC' },
-    { id: 2, nome: 'Centro Universitário Católica de Quixadá', sigla: 'Católica' },
-    { id: 3, nome: 'Universidade Estadual do Ceará', sigla: 'UECE' },
-  ];
+export function enriquecerDetalheComMinhaViagem(
+  detalhe: AgendamentoDetalhe,
+  minhaViagem?: MinhaViagemApiResponse | null,
+): AgendamentoDetalhe {
+  if (!minhaViagem || !minhaViagem.possui_agendamento) {
+    return detalhe;
+  }
 
-  const rotaComplementarMock = opcoes?.exibirRotaComplementar
-    ? {
-        id: 1,
-        nome: MOCK_ROTA_COMPLEMENTAR_PADRAO.nomeLinha,
-        horario_saida: '06:10',
-        horario_retorno: '17:30',
-        ponto_conexao: MOCK_ROTA_COMPLEMENTAR_PADRAO.pontoConexao,
-      }
-    : null;
-
-  const pontoAlunoMock = opcoes?.exibirRotaComplementar
-    ? MOCK_ROTA_COMPLEMENTAR_PADRAO.pontoEmbarque
-    : 'Pça. Matriz';
-
-  const detalheBase: AgendamentoDetalhe = {
-    id: 901,
-    aluno_id: 1,
-    data: dataIso,
-    usa_ida: true,
-    usa_volta: true,
-    ponto_embarque_id: 1,
-    ies_destino_id: 1,
-    rota_complementar_ida_id: opcoes?.exibirRotaComplementar ? 1 : null,
-    ies_origem_id: 1,
-    ponto_desembarque_id: 1,
-    rota_complementar_volta_id: opcoes?.exibirRotaComplementar ? 1 : null,
-    status: 'ATIVO',
-    ponto_embarque_nome: pontoAlunoMock,
-    ies_destino_nome: 'UFC',
-    rota_complementar_ida_nome: opcoes?.exibirRotaComplementar
-      ? MOCK_ROTA_COMPLEMENTAR_PADRAO.nomeLinha
-      : null,
-    ies_origem_nome: 'UFC',
-    ponto_desembarque_nome: pontoAlunoMock,
-    rota_complementar_volta_nome: opcoes?.exibirRotaComplementar
-      ? MOCK_ROTA_COMPLEMENTAR_PADRAO.nomeLinha
-      : null,
-    rota_complementar_ida: rotaComplementarMock,
-    rota_complementar_volta: rotaComplementarMock,
-    rota_principal_ida: {
-      id: 1,
-      nome: 'Linha 01 - Centro',
-      horario_saida: '06:40',
-      horario_retorno: '17:00',
-      faculdades: faculdadesMock,
-      onibus: null,
-      motorista: null,
-    },
-    rota_principal_volta: {
-      id: 1,
-      nome: 'Linha 01 - Centro',
-      horario_saida: '06:40',
-      horario_retorno: '17:00',
-      faculdades: faculdadesMock,
-      onibus: null,
-      motorista: null,
-    },
-    atualizado_em: new Date().toISOString(),
-    pode_remover: true,
-    pode_editar: true,
+  return {
+    ...detalhe,
+    rota_principal_ida: detalhe.usa_ida
+      ? enriquecerRotaPrincipalComTurno(detalhe.rota_principal_ida, minhaViagem.ida, 'ida')
+      : detalhe.rota_principal_ida,
+    rota_principal_volta: detalhe.usa_volta
+      ? enriquecerRotaPrincipalComTurno(detalhe.rota_principal_volta, minhaViagem.volta, 'volta')
+      : detalhe.rota_principal_volta,
   };
-
-  return aplicarCenarioAlocacaoMock(mapearDetalhe(detalheBase), cenario, opcoes);
 }
 
 async function lerCache<T>(chave: string): Promise<T | null> {
@@ -623,8 +573,41 @@ export const agendamentoService = {
   async listarAgendamentosAtivos(): Promise<MeusAgendamentosResponse> {
     const response = await api.get('/transporte/agendamentos/meus');
     const dados: MeusAgendamentosResponse = response.data;
-    await salvarCache(CACHE_MEUS, JSON.stringify(dados));
-    return dados;
+    const agendamentosEnriquecidos = Array.isArray(dados?.agendamentos)
+      ? await Promise.all(
+          dados.agendamentos.map(async (item) => {
+            const possuiEstruturaDetalhe =
+              item != null &&
+              typeof item === 'object' &&
+              ('rota_principal_ida' in item || 'rota_principal_volta' in item);
+            if (!possuiEstruturaDetalhe || !item.data) {
+              return item;
+            }
+            const minhaViagem = await agendamentoService.obterMinhaViagem(item.data);
+            return enriquecerDetalheComMinhaViagem(item, minhaViagem);
+          }),
+        )
+      : dados?.agendamentos;
+    const respostaFinal: MeusAgendamentosResponse = {
+      ...dados,
+      agendamentos: agendamentosEnriquecidos,
+    };
+    await salvarCache(CACHE_MEUS, JSON.stringify(respostaFinal));
+    return respostaFinal;
+  },
+
+  async obterMinhaViagem(dataIso: string): Promise<MinhaViagemApiResponse | null> {
+    try {
+      const response = await api.get('/alocacao-diaria/minha-viagem', {
+        params: { data: dataIso },
+      });
+      if (response?.data && typeof response.data.possui_agendamento === 'boolean') {
+        return response.data as MinhaViagemApiResponse;
+      }
+      return null;
+    } catch {
+      return null;
+    }
   },
 
   async listarAgendamentosCache(): Promise<MeusAgendamentosResponse | null> {
@@ -687,7 +670,7 @@ export const agendamentoService = {
     return response.data;
   },
 
-  // HU-015: detalhes da viagem por data, com rota complementar e cache offline (FA-002)
+  // HU-015 / HU-019: detalhes da viagem por data, com alocação diária e cache offline (FA-002)
   async obterDetalhesViagem(dataIso: string): Promise<DetalhesViagemResponse> {
     const cacheKey = CACHE_DETALHES(dataIso);
 
@@ -695,10 +678,11 @@ export const agendamentoService = {
       const response = await api.get('/transporte/agendamentos/detalhes', {
         params: { data: dataIso },
       });
-      const detalhe: AgendamentoDetalhe = response.data;
-      // Revalidação do cache pelo atualizado_em: só regrava quando muda.
+      const minhaViagem = await agendamentoService.obterMinhaViagem(dataIso);
+      const detalhe = enriquecerDetalheComMinhaViagem(response.data, minhaViagem);
+      // Revalidação do cache pelo atualizado_em ou pela nova alocação diária recebida.
       const emCache = await lerCache<AgendamentoDetalhe>(cacheKey);
-      if (!emCache || emCache.atualizado_em !== detalhe.atualizado_em) {
+      if (!emCache || emCache.atualizado_em !== detalhe.atualizado_em || minhaViagem !== null) {
         await salvarCache(cacheKey, JSON.stringify(detalhe));
       }
       return mapearDetalhe(detalhe);
