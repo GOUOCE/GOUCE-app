@@ -103,9 +103,7 @@ Os cenários seguem os requisitos. Os pontos abaixo mostram o que a `develop` (`
 - **Conflito de motorista (AC-05, AC-08 e FA-001):** a API recusa por turno e com a mensagem "alocação N: motorista X conflitante no turno ida." em vez do alerta do requisito ("Este motorista já está escalado para outra rota neste horário"). A lista da tela traz todos os motoristas ativos, sem filtrar pelo horário (AC-02).
 - **Auditoria (RNF-013):** a confirmação da escala não grava log de auditoria.
 
-**HU-018**
-
-- **Perfil supervisor:** a API também libera a lista de embarque para o perfil `supervisor`, que o requisito não cita (só administrador e representante).
+**HU-018:** sem divergências relevantes; o perfil `supervisor` aceito pela API é apenas um apelido de compatibilidade do representante.
 
 **HU-020**
 
