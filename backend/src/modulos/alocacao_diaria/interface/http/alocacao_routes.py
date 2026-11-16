@@ -14,6 +14,9 @@ from src.modulos.alocacao_diaria.application.services.lista_embarque_service imp
     ListaEmbarqueError,
     ListaEmbarqueService,
 )
+from src.modulos.alocacao_diaria.application.services.minha_viagem_service import (
+    MinhaViagemService,
+)
 from src.shared.auth.dependencies import require_roles
 from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.infrastructure.db import get_session
@@ -35,6 +38,13 @@ def _service(session: Annotated[Session, Depends(get_session)]) -> AlocacaoServi
 
 def _lista_service(session: Annotated[Session, Depends(get_session)]) -> ListaEmbarqueService:
     return ListaEmbarqueService(session)
+
+
+def _minha_viagem_service(session: Annotated[Session, Depends(get_session)]) -> MinhaViagemService:
+    return MinhaViagemService(session)
+
+
+_aluno_required = require_roles(CargoEnum.ALUNO.value)
 
 
 def _error(error: DistribuicaoError):
@@ -223,3 +233,26 @@ def lista_embarque(
         return service.listar(target, rota_id, turno, faculdade_id=faculdade_id)
     except ListaEmbarqueError as exc:
         return _lista_error(exc)
+
+
+# ---------------------------------------------------------------------------
+# Endpoint HU-019 — Minha Viagem (apenas Aluno autenticado)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/minha-viagem")
+def minha_viagem(
+    service: Annotated[MinhaViagemService, Depends(_minha_viagem_service)],
+    current_user: Annotated[dict, Depends(_aluno_required)],
+    data: Annotated[Optional[date], Query()] = None,
+):
+    """Retorna a situação da viagem do aluno autenticado para a data informada.
+
+    - **data** (opcional): data no formato ``YYYY-MM-DD``. Padrão: hoje.
+    - Restrito ao perfil ``aluno``. Retorna ``403`` para outros perfis.
+
+    Critérios de aceite cobertos: CA-01, CA-02, CA-03, CA-04, FA-001, FA-002.
+    """
+    aluno_id = int(current_user["current_user_id"])
+    target = data or date.today()
+    return service.consultar(aluno_id, target)

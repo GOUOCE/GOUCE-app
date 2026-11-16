@@ -121,3 +121,53 @@ class RotasDoDiaResponseDTO(BaseModel):
 
     data: str
     rotas: list[RotaDoDiaDTO] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# DTOs de resposta — HU-019 (Consulta de Alocação Diária / Minha Viagem)
+# ---------------------------------------------------------------------------
+
+
+class RotaComplementarResumoDTO(BaseModel):
+    id: int
+    nome: str
+    horario_saida: str | None = None
+    horario_retorno: str | None = None
+    ponto_conexao: str | None = None
+
+
+class TurnoViagemDTO(BaseModel):
+    """Dados de um turno (ida ou volta) da viagem do aluno."""
+
+    turno: Literal["ida", "volta"]
+    status_alocacao: Literal["ALOCADO", "AGUARDANDO_ALOCACAO"]
+    mensagem_status: str
+    ponto: PontoResumoDTO | None = None
+    faculdade: FaculdadeResumoDTO | None = None
+    rota_complementar: RotaComplementarResumoDTO | None = None
+    rota_id: int | None = None
+    nome_rota: str | None = None
+    horario: str | None = None
+    onibus_id: str | None = None
+    placa: str | None = None
+    apelido_onibus: str | None = None
+    motorista_id: int | None = None
+    nome_motorista: str | None = None
+    tipo_lugar: Literal["sentado", "em_pe"] | None = None
+    foi_realocado: bool = False
+    aviso_realocacao: str | None = None
+
+
+class MinhaViagemResponseDTO(BaseModel):
+    """Resposta do endpoint GET /alocacao-diaria/minha-viagem."""
+
+    data: str
+    possui_agendamento: bool
+    agendamento_id: int | None = None
+    status_geral: Literal["SEM_AGENDAMENTO", "AGUARDANDO_ALOCACAO", "PARCIALMENTE_ALOCADO", "ALOCADO"]
+    mensagem: str | None = None
+    foi_realocado: bool = False
+    aviso_realocacao: str | None = None
+    ida: TurnoViagemDTO | None = None
+    volta: TurnoViagemDTO | None = None
+    consultado_em: str
