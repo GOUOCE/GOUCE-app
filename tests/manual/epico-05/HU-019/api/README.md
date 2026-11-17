@@ -34,7 +34,7 @@ Commits seguem o [CONTRIBUTING](../../../../../docs/CONTRIBUTING.md), com autori
 
 ## Riscos mapeados no código
 
-Os riscos abaixo vêm da leitura do código e orientam a execução. **Não são defeitos reproduzidos**: cada um só vira defeito depois de confirmado por HTTP ou na tela, com relato e issue.
+Os riscos foram levantados no planejamento. A execução de API de 17/11/2026 confirmou as mensagens técnicas de data (#486) e a diferença de acesso regular (#487, regra inferida a confirmar com o PO). A realocação entre rotas continua dependente da HU-016 (#478). Os riscos de UI não foram executados nesta rodada.
 
 | Risco | Evidência de leitura | Cobertura |
 | --- | --- | --- |
@@ -52,3 +52,13 @@ Os riscos abaixo vêm da leitura do código e orientam a execução. **Não são
 - **Realocação:** depende de a distribuição permitir ônibus de outra rota ou de fixture documentada; não aprovar o fluxo por fixture.
 - **Perfis:** administrador e representante apenas para os casos de acesso negado.
 - Registrar cada parte verificada, falha ou impedimento; não aprovar caso inteiro quando houver impedimento.
+
+## Resultado de 17/11/2026
+
+**6 casos passaram, 2 falharam e 1 ficou parcial**, sem bloqueados ou pendentes na API. Branch `test/execucao-api-hu-019` criada da develop atualizada `7372b8d67165344545c1264ac936cd4c060ca245`; API real na porta 8119 e PostgreSQL 15.17 inicialmente vazio, migrado até `82_create_alocacao_diaria`. Foram 128 chamadas HTTP e 371 verificações, 365 satisfeitas. GETs não alteraram reservas, alocações ou auditoria.
+
+Issues [#486](https://github.com/GOUOCE/GOUCE-app/issues/486) e [#487](https://github.com/GOUOCE/GOUCE-app/issues/487), ambas atribuídas a ClidenorFilho, com label HU-019 e sem o prefixo no título. O JSON das falhas está no corpo de cada issue. A política de acesso regular da #487 depende de confirmação do PO, conforme o esperado inferido do planejamento; a leitura indevida de dados de outro aluno não foi reproduzida.
+
+A leitura do aviso de realocação foi confirmada por fixture SQL isolada e restaurada. O fluxo completo não foi aprovado, pois a HU-016 recusa a troca de rota (#478); SQL e parâmetros estão no API-005 da suíte. Estados pendente/rejeitado/vencido foram preparados como fixtures após criação real de reservas/alocações e restaurados após comparação com a recusa 403 de `/meus`. Administrador e representante de perfil exclusivo foram recusados com 403.
+
+Desempenho: 10 consultas com alocação e 10 sem distribuição, todas em menos de 41 ms. As medianas/máximos e cada amostra estão no API-009; a medição é local e não substitui carga ou teste de UI. Os scripts temporários ficaram fora do Git.

@@ -14,7 +14,7 @@
 | Revisão do planejamento | 16/11/2026 — requisitos 7.6 com as decisões do PO (#465), BDD do épico 05 e leitura do código |
 | Ambiente | HTTP real `http://127.0.0.1:8119`; Docker `atu-qa-hu019`; PostgreSQL 15.17 em banco novo; Alembic `82_create_alocacao_diaria`; `America/Fortaleza` |
 | Total de casos | 9 |
-| Última execução | 17/11/2026 — 5/9 casos concluídos; início `2026-11-17T14:24:47.865270-03:00` |
+| Última execução | 17/11/2026 — 9/9 casos concluídos; início `2026-11-17T14:24:47.865270-03:00` |
 | Branch de execução | `test/execucao-api-hu-019`, criada da develop atualizada `7372b8d67165344545c1264ac936cd4c060ca245` |
 | Código executado | Backend exato `7372b8d67165344545c1264ac936cd4c060ca245`, sem alterações de produto |
 | Testador | LLM — execução de API; Cauan Ricardo — revisão |
@@ -23,7 +23,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Em execução | 9 | 4 | 0 | 1 | 0 | 4 |
+| Concluída com falhas e dependência | 9 | 6 | 2 | 1 | 0 | 0 |
 
 ## Pré-condições
 
@@ -67,10 +67,10 @@ Todas as chamadas usam o token de A, salvo indicação. As distribuições são 
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU019-API-006 | Dado mais atual depois de nova distribuição | A alocado em V1/M1; nova distribuição manual do mesmo dia trocando A para V3/M2; consulta antes e depois. | A segunda consulta devolve o ônibus e o motorista novos. | ⏳ PENDENTE | BDD: alocação mais atual depois de nova distribuição; AC-04. |
-| CT-HU019-API-007 | Sem agendamento, reserva cancelada e parâmetro de data | Data sem reserva de A; reserva de A cancelada após a distribuição; `data` omitida; `data` `2026-02-30`, `16-11-2026` e `abc`. | 200 sem agendamento com a mensagem do requisito; data padrão hoje; datas inválidas recusadas. | ⏳ PENDENTE | Risco de leitura: o 422 de data inválida usa texto técnico do framework. BDD: sem viagem; aluno sem agendamento. |
-| CT-HU019-API-008 | Isolamento entre alunos e perfis sem acesso | A e B com reservas na mesma data em ônibus diferentes; token de A, de B, de administrador, de representante, de aluno pendente, reprovado e com vínculo vencido, sem token e inválido. | Cada aluno vê só a própria alocação; 403 para administrador, representante e aluno sem acesso regular; 401 sem credencial. | ⏳ PENDENTE | Risco de leitura: a rota só exige o perfil aluno, sem a checagem de acesso regular das demais rotas do aluno. BDD: aluno visualiza somente a própria alocação; API nega o perfil e sem token. |
-| CT-HU019-API-009 | Tempo de resposta da consulta (RNF-001) | Dez consultas seguidas de `minha-viagem` de A em dia alocado e em dia sem distribuição, com rede local. | Respostas dentro de 3 segundos em condições normais. | ⏳ PENDENTE | BDD: tempo de resposta não ultrapassa 3 segundos; AC-05. |
+| CT-HU019-API-006 | Dado mais atual depois de nova distribuição | A alocado em V1/M1; nova distribuição manual do mesmo dia trocando A para V3/M2; consulta antes e depois. | A segunda consulta devolve o ônibus e o motorista novos. | ✅ PASSOU | BDD: alocação mais atual depois de nova distribuição; AC-04. |
+| CT-HU019-API-007 | Sem agendamento, reserva cancelada e parâmetro de data | Data sem reserva de A; reserva de A cancelada após a distribuição; `data` omitida; `data` `2026-02-30`, `16-11-2026` e `abc`. | 200 sem agendamento com a mensagem do requisito; data padrão hoje; datas inválidas recusadas. | ❌ FALHOU | Risco de leitura: o 422 de data inválida usa texto técnico do framework. BDD: sem viagem; aluno sem agendamento. |
+| CT-HU019-API-008 | Isolamento entre alunos e perfis sem acesso | A e B com reservas na mesma data em ônibus diferentes; token de A, de B, de administrador, de representante, de aluno pendente, reprovado e com vínculo vencido, sem token e inválido. | Cada aluno vê só a própria alocação; 403 para administrador, representante e aluno sem acesso regular; 401 sem credencial. | ❌ FALHOU | Risco de leitura: a rota só exige o perfil aluno, sem a checagem de acesso regular das demais rotas do aluno. BDD: aluno visualiza somente a própria alocação; API nega o perfil e sem token. |
+| CT-HU019-API-009 | Tempo de resposta da consulta (RNF-001) | Dez consultas seguidas de `minha-viagem` de A em dia alocado e em dia sem distribuição, com rede local. | Respostas dentro de 3 segundos em condições normais. | ✅ PASSOU | BDD: tempo de resposta não ultrapassa 3 segundos; AC-05. |
 
 ## Detalhamento dos casos
 
@@ -230,8 +230,8 @@ Parâmetros usados: `{'id': 8, 'rota': 2, 'onibus': 'DEF4G56', 'motorista': 2}`.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Nova distribuição manual trocou V1/M1/em_pe por V3/M2/sentado na mesma rota. Consulta seguinte refletiu as três alterações, de acordo com o banco, e consultado_em avançou.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -255,8 +255,8 @@ Parâmetros usados: `{'id': 8, 'rota': 2, 'onibus': 'DEF4G56', 'motorista': 2}`.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Data vazia e reserva cancelada retornaram 200 SEM_AGENDAMENTO com a mensagem prevista; vínculos CANCELADO e ausência de dados antigos confirmados. Data omitida usou o dia local do servidor. Três datas inválidas retornaram 422 com mensagem técnica em inglês, divergindo do esperado. Defeitos: [#486](https://github.com/GOUOCE/GOUCE-app/issues/486).
+- Status: ❌ FALHOU.
 
 ---
 
@@ -280,8 +280,8 @@ Parâmetros usados: `{'id': 8, 'rota': 2, 'onibus': 'DEF4G56', 'motorista': 2}`.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- A/B viram só suas reservas/frotas; parâmetros extras não trocaram o dono. Admin/representante exclusivo 403; sem token/inválido 401. Pendentes, rejeitados e vencidos receberam 200 com a própria alocação, enquanto /meus recusou os mesmos tokens com 403. Estados restaurados; política inferida deve ser confirmada com o PO. Defeitos: [#487](https://github.com/GOUOCE/GOUCE-app/issues/487).
+- Status: ❌ FALHOU.
 
 ---
 
@@ -303,8 +303,16 @@ Parâmetros usados: `{'id': 8, 'rota': 2, 'onibus': 'DEF4G56', 'motorista': 2}`.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Dez consultas no dia alocado e dez no dia sem distribuição, todas 200 e abaixo de 3 segundos. Mediana, máximo, cada amostra e tamanho da massa registrados; medição local sem simular teste de carga ou tela.
+- Status: ✅ PASSOU.
+
+| Situação | 10 amostras HTTP (ms) | Mediana (ms) | Máximo (ms) |
+| --- | --- | ---: | ---: |
+| completa | 26.501, 31.382, 40.797, 38.433, 34.133, 28.26, 22.711, 22.188, 23.563, 28.606 | 28.433 | 40.797 |
+| espera | 25.273, 21.096, 21.046, 20.568, 23.975, 22.679, 20.569, 22.084, 23.333, 29.953 | 22.381 | 29.953 |
+
+Massa no momento: `{'agendamento': 18, 'alocacao_diaria': 13, 'alocacao_aluno': 19}`. Medição local HTTP contra o servidor real; sem simular rede móvel, carga concorrente ou tela.
+
 
 ---
 
@@ -326,6 +334,8 @@ Parâmetros usados: `{'id': 8, 'rota': 2, 'onibus': 'DEF4G56', 'motorista': 2}`.
 | Caso | Defeito ou dependência | Issue |
 | --- | --- | --- |
 | CT-HU019-API-005 | Leitura com fixture confirmada; fluxo de realocação entre rotas ainda recusado pela HU-016. | [#478](https://github.com/GOUOCE/GOUCE-app/issues/478), dependência existente; sem nova issue duplicada |
+| CT-HU019-API-007 | Datas inválidas retornam mensagem técnica em inglês. | [#486](https://github.com/GOUOCE/GOUCE-app/issues/486) — JSON de falha no corpo |
+| CT-HU019-API-008 | Alunos sem acesso regular recebem 200 com a própria alocação; esperado 403 é inferido do padrão do aluno, sujeito à confirmação do PO. | [#487](https://github.com/GOUOCE/GOUCE-app/issues/487) — JSON de falha no corpo |
 
 ## Observações gerais
 
@@ -335,6 +345,8 @@ Parâmetros usados: `{'id': 8, 'rota': 2, 'onibus': 'DEF4G56', 'motorista': 2}`.
 
 ## Registro desta execução
 
-**5/9 casos concluídos: 4 passaram, 0 falharam e 1 parcial; 4 pendentes.** 79 chamadas HTTP incluindo preparação/logins; 195 verificações registradas, 195 satisfeitas. GETs e recusas conferidos com snapshots completos em conexões novas: reservas, alocações e auditoria preservadas.
+**9/9 casos concluídos: 6 passaram, 2 falharam e 1 parcial; 0 pendentes.** 128 chamadas HTTP incluindo preparação/logins; 371 verificações registradas, 365 satisfeitas. GETs e recusas conferidos com snapshots completos em conexões novas: reservas, alocações e auditoria preservadas.
 
 Somente falhas têm JSON de evidência, no corpo das issues. Sem pasta ou arquivo de evidência no repositório. Os 9 casos de UI permanecem pendentes.
+
+Aluno/representante exclusivo por fixtures ORM e login real; representante não tem perfil aluno, isolando o papel. Estados pendente/rejeitado/vencido por fixtures SQL após reservar/alocar por HTTP como aprovados. Estados restaurados depois. Esperado 403 de acesso regular é inferido do padrão HU-014/HU-015 e está sujeito à confirmação do PO, conforme o planejamento.
