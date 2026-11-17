@@ -15,14 +15,14 @@
 | Revisão do planejamento | 16/11/2026 — requisitos 7.6 com as decisões do PO (#465), BDD do épico 05 e leitura do código |
 | Ambiente | Docker isolado `atu-api016` (API `http://localhost:8116`, PostgreSQL 15 em banco novo); `develop` `7372b8d6` (já com o front do PR #457); Alembic head `82_create_alocacao_diaria`; `America/Fortaleza` (`TZ=BRT3`); data de execução 17/11/2026. [Resumo JSON](EVIDENCIAS-HU-016.json) |
 | Total de casos | 11 |
-| Última execução | 17/11/2026 — 6 passaram, 2 falharam e 3 parciais |
+| Última execução | 17/11/2026 — 6 passaram e 5 falharam |
 | Testador | LLM — execução de API; Cauan Ricardo — revisão |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Executada em 17/11/2026 | 11 | 6 | 2 | 3 | 0 | 0 |
+| Executada em 17/11/2026 | 11 | 6 | 5 | 0 | 0 | 0 |
 
 ## Pré-condições
 
@@ -73,14 +73,14 @@ Todas as chamadas usam o token do administrador, salvo indicação. Executar na 
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU016-API-008 | Distribuição manual: trocar ônibus/motorista e realocar excedente | Distribuição do CT-007 confirmada; POST `modo: manual` trocando o ônibus (V1→V3) e o motorista (M1→M2) de P1; mover o excedente para um ônibus com vaga do mesmo grupo e, depois, para V2, que atende P2. | Troca aceita e persistida; excedente realocado com vaga; realocação para outra rota conforme AC-09. | ⚠️ PARCIAL | Troca e realocação na mesma rota funcionam; realocação para a rota P2 é recusada (confirmar com o PO). Risco de leitura: a validação exige que a alocação seja da rota da reserva e o ônibus não repete no turno. BDD: realocação; distribuição manual. |
+| CT-HU016-API-008 | Distribuição manual: trocar ônibus/motorista e realocar excedente | Distribuição do CT-007 confirmada; POST `modo: manual` trocando o ônibus (V1→V3) e o motorista (M1→M2) de P1; mover o excedente para um ônibus com vaga do mesmo grupo e, depois, para V2, que atende P2. | Troca aceita e persistida; excedente realocado com vaga; realocação para outra rota conforme AC-09. | ❌ FALHOU | Falhou na variação de realocar para a rota P2 (recusada); a regra será confirmada com o PO, mas o caso segue ❌ até lá. Risco de leitura: a validação exige que a alocação seja da rota da reserva e o ônibus não repete no turno. BDD: realocação; distribuição manual. |
 
 ### Seção E — Conflitos, recursos e acesso
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU016-API-009 | Capacidade e conflito de ônibus na distribuição manual | V1 (3 assentos e 2 em pé); POST manual com 6 alunos (3 sentados e 3 em pé), com 4 sentados e 0 em pé, com V1 em duas rotas no mesmo turno e com V1 na ida e na volta; prévia automática com um só ônibus e demanda de ida e de volta. | 422/409 com as mensagens do código, nada gravado; ida e volta com o mesmo ônibus aceitas. | ⚠️ PARCIAL | Capacidade e conflito corretos; a prévia com um ônibus não atende a volta. Risco de leitura: na prévia automática o ônibus usado na ida não volta a ser candidato na volta. BDD: capacidade; ônibus em duas rotas; mesmo ônibus na ida e na volta. |
-| CT-HU016-API-010 | Recursos e alunos inválidos e atomicidade | Ônibus, rota e motorista inexistentes ou inativos; agendamento cancelado ou de outro dia, sem o turno informado, de outra rota e repetido; lista de alocações vazia em modo manual, com uma distribuição já confirmada. | 422 com a mensagem de cada causa; qualquer recusa preserva a distribuição anterior. | ⚠️ PARCIAL | Validações e atomicidade corretas; lista vazia no modo manual apaga o dia. Risco de leitura: com `alocacoes: []` o modo manual apaga as alocações da data e responde sucesso. BDD: recursos inativos; alunos inválidos; atomicidade. |
+| CT-HU016-API-009 | Capacidade e conflito de ônibus na distribuição manual | V1 (3 assentos e 2 em pé); POST manual com 6 alunos (3 sentados e 3 em pé), com 4 sentados e 0 em pé, com V1 em duas rotas no mesmo turno e com V1 na ida e na volta; prévia automática com um só ônibus e demanda de ida e de volta. | 422/409 com as mensagens do código, nada gravado; ida e volta com o mesmo ônibus aceitas. | ❌ FALHOU | Falhou na prévia com um só ônibus, que não atende a volta. Risco de leitura: na prévia automática o ônibus usado na ida não volta a ser candidato na volta. BDD: capacidade; ônibus em duas rotas; mesmo ônibus na ida e na volta. |
+| CT-HU016-API-010 | Recursos e alunos inválidos e atomicidade | Ônibus, rota e motorista inexistentes ou inativos; agendamento cancelado ou de outro dia, sem o turno informado, de outra rota e repetido; lista de alocações vazia em modo manual, com uma distribuição já confirmada. | 422 com a mensagem de cada causa; qualquer recusa preserva a distribuição anterior. | ❌ FALHOU | Falhou na lista vazia no modo manual, que apaga o dia. Risco de leitura: com `alocacoes: []` o modo manual apaga as alocações da data e responde sucesso. BDD: recursos inativos; alunos inválidos; atomicidade. |
 | CT-HU016-API-011 | Autenticação e perfis sem acesso | GET prévia e POST confirmação sem token, com token inválido, aluno, representante e administrador (controle). | 401 sem credencial válida; 403 para aluno e representante; administrador com acesso; nada gravado. | ✅ PASSOU | 401 e 403 corretos; nada gravado. BDD: API nega a distribuição sem perfil administrativo e sem token; RN-006. |
 
 ## Detalhamento dos casos
@@ -321,7 +321,7 @@ Todas as chamadas usam o token do administrador, salvo indicação. Executar na 
   - Excedente de P1 (64) enviado para V2 na alocação da rota 2 (P2): 422 `DISTRIBUICAO_INVALIDA` “alocação 2: agendamento 64 não pertence à rota 2.”, nada gravado. Esperado pelo AC-09/AC-10: admin realoca para ônibus de outra rota com vaga. ⚠️
   - Variação: os mesmos alunos em P1 usando o ônibus V2 (que era de P2) é aceita com 201, pois o ônibus não é preso a uma rota; porém o Hugo precisou trocar para V1. A realocação “para o ônibus de outra rota mantendo as duas rotas” só vale se o aluno entrar numa alocação de **outra** rota, o que a validação proíbe.
 - Conforme o próprio caso, não abri defeito: registrar a regra para o PO (BUG-HU016-API-004, a confirmar).
-- Status: ⚠️ Parcial.
+- Status: ❌ Falhou (variação de realocar para outra rota; confirmar a regra com o PO).
 
 ---
 
@@ -355,7 +355,7 @@ Todas as chamadas usam o token do administrador, salvo indicação. Executar na 
   - V1 em duas rotas no mesmo turno: 409 “alocação 1: ônibus ABC1D23 conflitante no turno ida.”; mesma regra com V3 na terceira alocação: 409 “alocação 2: ...”. ✅
   - V1 na ida e na volta (aluno B): 201 e as duas linhas gravadas com o mesmo ônibus. ✅
 - Prévia automática com um só ônibus (V1/M1) e demanda de ida (A, C, B) e de volta (B): 200 com V1 só na ida (3 alunos) e **a volta inteira em `excedentes_globais`** (agendamento 75, turno volta). Esperado: V1 atende também a volta. ❌ O risco de leitura (`usados` único para ida e volta) se confirmou. Relato BUG-HU016-API-003.
-- Status: ⚠️ Parcial (4 de 5 variações).
+- Status: ❌ Falhou (1 de 5 variações: a prévia com um só ônibus).
 
 ---
 
@@ -386,7 +386,7 @@ Todas as chamadas usam o token do administrador, salvo indicação. Executar na 
   - agendamento cancelado e de outro dia: “alocação 0: agendamento N não está ativo nessa data.”; sem o turno volta: “não usa o turno volta.”; de outra rota: “não pertence à rota 2.”; repetido em duas alocações: “alocação 1: agendamento 76 alocado mais de uma vez.” (e na mesma alocação: “alocação 0: ...”); inexistente: “não está ativo nessa data.” ✅
   - `tipo_lugar` e `turno` inválidos: 422 de validação do FastAPI, banco intacto. ✅
 - `modo: manual` com `alocacoes: []` (e sem o campo): **201 “Distribuição realizada com sucesso” e a distribuição do dia foi apagada** (0 linhas). Esperado (inferido de RNF-012): não apagar. ❌ Relato BUG-HU016-API-004.
-- Status: ⚠️ Parcial (a variação da lista vazia diverge de um esperado inferido, sujeito à confirmação do PO).
+- Status: ❌ Falhou (variação da lista vazia; o esperado é inferido e deve ser confirmado com o PO, mas o caso segue ❌ até lá).
 
 ---
 

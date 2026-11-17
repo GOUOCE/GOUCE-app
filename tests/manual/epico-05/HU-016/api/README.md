@@ -1,6 +1,6 @@
 # Como executar os testes manuais de API — HU-016
 
-Execução pela **LLM**, com revisão de **Cauan Ricardo**. [Suíte de API: 11 casos](API-HU-016.md). A [UI tem 9 casos](../ui/UI-HU-016.md) para execução manual por Cauan. **Execução de 17/11/2026:** 6 passaram, 2 falharam e 3 parciais; defeitos em [`issues/`](issues/) e resumo em [EVIDENCIAS-HU-016.json](EVIDENCIAS-HU-016.json).
+Execução pela **LLM**, com revisão de **Cauan Ricardo**. [Suíte de API: 11 casos](API-HU-016.md). A [UI tem 9 casos](../ui/UI-HU-016.md) para execução manual por Cauan. **Execução de 17/11/2026:** 6 passaram e 5 falharam; defeitos em [`issues/`](issues/) e resumo em [EVIDENCIAS-HU-016.json](EVIDENCIAS-HU-016.json).
 
 ## Base e fontes
 

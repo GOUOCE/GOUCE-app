@@ -1,6 +1,6 @@
 # Testes manuais — Épico 05 — Alocação e Distribuição Logística
 
-Suítes essenciais da **HU-016 — Distribuição de Alunos nos Ônibus**, **HU-017 — Alocação de Motoristas às Rotas**, **HU-018 — Visualização da Lista de Embarque** e **HU-019 — Consulta de Alocação Diária**: **76 casos, sendo 39 de API e 37 de UI**. A **HU-020 — Rodízio Semanal** foi adiada pelo PO na [issue #465](https://github.com/GOUOCE/GOUCE-app/issues/465) e não tem suíte nesta entrega. **Execução da API da HU-016 em 17/11/2026**: 6 passaram, 2 falharam e 3 parciais (ver [resultado](HU-016/api/API-HU-016.md)); os demais casos estão pendentes.
+Suítes essenciais da **HU-016 — Distribuição de Alunos nos Ônibus**, **HU-017 — Alocação de Motoristas às Rotas**, **HU-018 — Visualização da Lista de Embarque** e **HU-019 — Consulta de Alocação Diária**: **76 casos, sendo 39 de API e 37 de UI**. A **HU-020 — Rodízio Semanal** foi adiada pelo PO na [issue #465](https://github.com/GOUOCE/GOUCE-app/issues/465) e não tem suíte nesta entrega. **Execução da API da HU-016 em 17/11/2026**: 6 passaram e 5 falharam (ver [resultado](HU-016/api/API-HU-016.md)); os demais casos estão pendentes.
 
 ## Índice das suítes
 

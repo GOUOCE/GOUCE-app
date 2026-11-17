@@ -14,8 +14,8 @@
   "resultado": {
     "total": 11,
     "passaram": 6,
-    "falharam": 2,
-    "parciais": 3,
+    "falharam": 5,
+    "parciais": 0,
     "bloqueados": 0,
     "pendentes": 0
   },
@@ -58,17 +58,17 @@
     },
     {
       "id": "CT-HU016-API-008",
-      "status": "PARCIAL",
+      "status": "FALHOU",
       "resumo": "troca V1→V3/M1→M2 201; excedente para V1 201 e visível em minha-viagem e lista de embarque; realocação para rota P2 422 'agendamento 64 não pertence à rota 2.'"
     },
     {
       "id": "CT-HU016-API-009",
-      "status": "PARCIAL",
+      "status": "FALHOU",
       "resumo": "422 capacidade total; 422 assentos/em pé; 409 ônibus conflitante; ida e volta mesmo ônibus 201; prévia com um ônibus deixa a volta como excedente"
     },
     {
       "id": "CT-HU016-API-010",
-      "status": "PARCIAL",
+      "status": "FALHOU",
       "resumo": "13 recusas 422 com banco inalterado; lista vazia e sem o campo alocacoes: 201 e dia apagado (0 linhas)"
     },
     {
