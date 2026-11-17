@@ -14,7 +14,7 @@
 | Revisão do planejamento | 16/11/2026 — requisitos 7.6 com as decisões do PO (#465), BDD do épico 05 e leitura do código |
 | Ambiente | HTTP real `http://127.0.0.1:8118`; Docker `atu-qa-hu018`; PostgreSQL 15.17 em banco novo; Alembic `82_create_alocacao_diaria` (inclui `82_updated_at_faculdade_ponto`); `America/Fortaleza` |
 | Total de casos | 9 |
-| Última execução | 17/11/2026 — 5/9 casos concluídos; início `2026-11-17T13:30:52.368725-03:00` |
+| Última execução | 17/11/2026 — 9/9 casos concluídos; início `2026-11-17T13:30:52.368725-03:00` |
 | Branch de execução | `test/execucao-api-hu-018`, criada da `develop` atualizada `7372b8d67165344545c1264ac936cd4c060ca245` |
 | Código executado | Backend exato do commit `7372b8d67165344545c1264ac936cd4c060ca245`, sem alterações de produto |
 | Testador | LLM — execução de API; Cauan Ricardo — revisão |
@@ -23,7 +23,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Em execução | 9 | 2 | 3 | 0 | 0 | 4 |
+| ❌ Concluída com falhas | 9 | 5 | 4 | 0 | 0 | 0 |
 
 ## Pré-condições
 
@@ -62,15 +62,15 @@ Usar o token do administrador, salvo indicação. A lista depende da distribuiç
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
 | CT-HU018-API-005 | Parâmetros do administrador: rota obrigatória, inexistente e data inválida | Administrador sem `rota_id`; `rota_id` 999999, 0, -1 e `abc`; `data` `2026-02-30`, `16-11-2026` e ausente. | 422 sem rota; 404 rota inexistente; 422 para entradas inválidas; nenhuma resposta 500. | ❌ FALHOU | Risco de leitura: a data inexistente passa pelo padrão da consulta e falha ao converter. BDD: rota obrigatória; rota inexistente. |
-| CT-HU018-API-006 | Representante: apenas alunos da sua faculdade e descoberta automática da rota | R1 (UFC) e R2 (IFCE); P1 com alunos da UFC e da IFCE; GET lista sem `rota_id` com 1 rota, com 2 rotas e sem rota; com `rota_id` de rota sem alunos da IES; representante sem vínculo ativo e sem IES. | Só alunos da própria IES; rota descoberta; 422 com várias rotas; 404 sem rota; 403 sem vínculo. | ⏳ PENDENTE | BDD: representante vê só os alunos da faculdade; descoberta da rota; várias rotas; sem rota; sem vínculo. |
+| CT-HU018-API-006 | Representante: apenas alunos da sua faculdade e descoberta automática da rota | R1 (UFC) e R2 (IFCE); P1 com alunos da UFC e da IFCE; GET lista sem `rota_id` com 1 rota, com 2 rotas e sem rota; com `rota_id` de rota sem alunos da IES; representante sem vínculo ativo e sem IES. | Só alunos da própria IES; rota descoberta; 422 com várias rotas; 404 sem rota; 403 sem vínculo. | ❌ FALHOU | BDD: representante vê só os alunos da faculdade; descoberta da rota; várias rotas; sem rota; sem vínculo. |
 
 ### Seção C — Atualização e acesso
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU018-API-007 | Cancelamento e realocação refletidos na lista | P1 com 5 alunos alocados; cancelar a reserva de um aluno pela HU-014; depois nova distribuição manual que muda o ônibus de dois alunos. | Aluno cancelado some e o contador cai; realocação aparece com o novo ônibus. | ⏳ PENDENTE | BDD: atualização por cancelamento e realocação; AC-06 e FA-003. |
-| CT-HU018-API-008 | Somente alunos alocados e ativos; indicador de sincronização | Alunos com reserva ativa e alocados, excedentes sem alocação e vínculos CANCELADOS; duas consultas separadas por alguns minutos. | Só ALOCADO com reserva ATIVA; `ultima_sincronizacao` e `indicador_sincronizacao` coerentes. | ⏳ PENDENTE | BDD: lista apenas alunos alocados com agendamento ativo; indicador de sincronização. |
-| CT-HU018-API-009 | Autenticação e perfis sem acesso (RNF-010) | GET `/rotas-do-dia` e `/lista-embarque` sem token, com token inválido, aluno, representante com vínculo e administrador (controle). | 401 sem credencial válida; 403 para aluno; representante e administrador com acesso restrito ao perfil. | ⏳ PENDENTE | BDD: API nega a lista ao usuário sem perfil; sem token. O perfil `supervisor` é apelido do representante. |
+| CT-HU018-API-007 | Cancelamento e realocação refletidos na lista | P1 com 5 alunos alocados; cancelar a reserva de um aluno pela HU-014; depois nova distribuição manual que muda o ônibus de dois alunos. | Aluno cancelado some e o contador cai; realocação aparece com o novo ônibus. | ✅ PASSOU | BDD: atualização por cancelamento e realocação; AC-06 e FA-003. |
+| CT-HU018-API-008 | Somente alunos alocados e ativos; indicador de sincronização | Alunos com reserva ativa e alocados, excedentes sem alocação e vínculos CANCELADOS; duas consultas separadas por alguns minutos. | Só ALOCADO com reserva ATIVA; `ultima_sincronizacao` e `indicador_sincronizacao` coerentes. | ✅ PASSOU | BDD: lista apenas alunos alocados com agendamento ativo; indicador de sincronização. |
+| CT-HU018-API-009 | Autenticação e perfis sem acesso (RNF-010) | GET `/rotas-do-dia` e `/lista-embarque` sem token, com token inválido, aluno, representante com vínculo e administrador (controle). | 401 sem credencial válida; 403 para aluno; representante e administrador com acesso restrito ao perfil. | ✅ PASSOU | BDD: API nega a lista ao usuário sem perfil; sem token. O perfil `supervisor` é apelido do representante. |
 
 ## Detalhamento dos casos
 
@@ -122,7 +122,7 @@ Usar o token do administrador, salvo indicação. A lista depende da distribuiç
 
 **Resultado obtido**
 
-- Listas com cinco e um aluno, contador, pontos/IES e ônibus/motoristas conferidos no PostgreSQL. Ordem obtida desloca Ágata para depois de Zuleica; divergência registrada. Defeitos: ordenacao_acentos.
+- Listas com cinco e um aluno, contador, pontos/IES e ônibus/motoristas conferidos no PostgreSQL. Ordem obtida desloca Ágata para depois de Zuleica; divergência registrada. Defeitos: [483](https://github.com/GOUOCE/GOUCE-app/issues/483).
 - Status: ❌ FALHOU.
 
 ---
@@ -147,7 +147,7 @@ Usar o token do administrador, salvo indicação. A lista depende da distribuiç
 
 **Resultado obtido**
 
-- As quatro indicações e o filtro de alunos/veículos funcionam; turno=noite retorna 422. Contudo, filtro ida/volta preserva ponto e IES do turno excluído. Defeitos: filtro_turno.
+- As quatro indicações e o filtro de alunos/veículos funcionam; turno=noite retorna 422. Contudo, filtro ida/volta preserva ponto e IES do turno excluído. Defeitos: [482](https://github.com/GOUOCE/GOUCE-app/issues/482).
 - Status: ❌ FALHOU.
 
 ---
@@ -196,7 +196,7 @@ Usar o token do administrador, salvo indicação. A lista depende da distribuiç
 
 **Resultado obtido**
 
-- Rota obrigatória/inexistente e ids/formato/query inválidos recusados corretamente. Data 2026-02-30 provocou HTTP 500 em lista-embarque e rotas-do-dia, com reservas/alocações/auditoria preservadas. Defeitos: data_inexistente.
+- Rota obrigatória/inexistente e ids/formato/query inválidos recusados corretamente. Data 2026-02-30 provocou HTTP 500 em lista-embarque e rotas-do-dia, com reservas/alocações/auditoria preservadas. Defeitos: [480](https://github.com/GOUOCE/GOUCE-app/issues/480).
 - Status: ❌ FALHOU.
 
 ---
@@ -221,8 +221,8 @@ Usar o token do administrador, salvo indicação. A lista depende da distribuiç
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Descoberta de uma rota, múltiplas rotas, ausência de rota e recusas 403 exercitadas. R1/R2 recebem IES e ponto do trecho de outra faculdade em reserva mista. Representante sem IES recebe 403 com mensagem genérica de vínculo ausente, diferente do BDD. Fixture sem IES restaurada. Defeitos: [481](https://github.com/GOUOCE/GOUCE-app/issues/481), [484](https://github.com/GOUOCE/GOUCE-app/issues/484).
+- Status: ❌ FALHOU.
 
 ---
 
@@ -248,8 +248,8 @@ Usar o token do administrador, salvo indicação. A lista depende da distribuiç
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Cancelamento removeu A e reduziu contador de 5 para 4, vínculo CANCELADO e ocupação coerente. Nova distribuição manual moveu C/D para V3/M3 na ida/volta; lista refletiu a mudança e P2 permaneceu íntegra.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -272,8 +272,8 @@ Usar o token do administrador, salvo indicação. A lista depende da distribuiç
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Lista trouxe apenas A/C com vínculo ALOCADO e reserva ATIVA; B cancelado e D sem alocação ficaram fora. Timestamp UTC recente avançou após mais de dois minutos reais, com lista estável; indicador Atualizado agora coerente com cada consulta.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -296,8 +296,8 @@ Usar o token do administrador, salvo indicação. A lista depende da distribuiç
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Sem token/inválido: 401; aluno aprovado, pendente, rejeitado e representante revogado: 403, sem dados pessoais. Administrador e R2 com rota da própria IES: 200. Consultas não alteraram dados.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -318,9 +318,11 @@ Usar o token do administrador, salvo indicação. A lista depende da distribuiç
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| CT-HU018-API-002 | Nomes acentuados aparecem depois de Z na lista. | Reproduzido; publicação ao concluir a execução |
-| CT-HU018-API-003 | Filtro por turno mantém ponto/IES do trecho excluído. | Reproduzido; publicação ao concluir a execução |
-| CT-HU018-API-005 | Data civil impossível causa HTTP 500 nas duas consultas. | Reproduzido; publicação ao concluir a execução |
+| CT-HU018-API-002 | Nomes acentuados aparecem depois de Z na lista. | [#483](https://github.com/GOUOCE/GOUCE-app/issues/483) — JSON de erro no corpo da issue |
+| CT-HU018-API-003 | Filtro por turno mantém ponto/IES do trecho excluído. | [#482](https://github.com/GOUOCE/GOUCE-app/issues/482) — JSON de erro no corpo da issue |
+| CT-HU018-API-005 | Data civil impossível causa HTTP 500 nas duas consultas. | [#480](https://github.com/GOUOCE/GOUCE-app/issues/480) — JSON de erro no corpo da issue |
+| CT-HU018-API-006 | Representante recebe ponto/IES do trecho de outra faculdade. | [#481](https://github.com/GOUOCE/GOUCE-app/issues/481) — JSON de erro no corpo da issue |
+| CT-HU018-API-006 | Representante sem IES recebe mensagem de vínculo ausente. | [#484](https://github.com/GOUOCE/GOUCE-app/issues/484) — JSON de erro no corpo da issue |
 
 ## Observações gerais
 
@@ -330,6 +332,12 @@ Usar o token do administrador, salvo indicação. A lista depende da distribuiç
 
 ## Registro desta execução
 
-**5/9 casos concluídos: 2 passaram e 3 falharam; 4 pendentes.** 76 chamadas HTTP no total, incluindo preparação/logins; 146 verificações, 141 satisfeitas. Reservas, alocações e auditoria conferidas em conexões novas; GETs sem escrita: confirmado.
+**9/9 casos concluídos: 5 passaram e 4 falharam; 0 pendentes.** 131 chamadas HTTP no total, incluindo preparação/logins; 268 verificações consolidadas, 259 satisfeitas. Reservas, alocações e auditoria conferidas em conexões novas; GETs sem escrita: confirmado.
 
 Conforme solicitado por Cauan, somente as falhas têm JSON de evidência, inserido no corpo das issues. Sem arquivo JSON de evidência no repositório e sem pasta de evidências. Os 10 casos de UI seguem pendentes.
+
+API-008: sincronização de `2026-11-17T16:42:40.570019+00:00` para `2026-11-17T16:44:45.603216+00:00`, em 125.033 s reais; lista e contador estáveis. O cálculo visual “Atualizado há X min” pertence à UI.
+
+A preparação do API-007 foi repetida após a resolução implícita de rota pela HU-016 mudar quando P1 foi reativada no API-006. Foram vinculadas complementares explícitas à P1 por PUT real, A foi reagendado e a distribuição de cinco alunos foi restabelecida. O API-007 então foi reexecutado integralmente. As 131 chamadas incluem cinco da primeira tentativa de preparação; ela não foi usada para aprovar o caso.
+
+Massa principal de 18/11/2026: B id 2, C id 3, D id 4, E id 5 e F id 6; A começou no id 1 e foi reagendado no id 8 para a reexecução do cancelamento. No API-004, reserva única F id 7 em 20/11/2026. No API-008, data 23/11/2026: A/C ids 9/11 alocados, B id 10 cancelado e D id 12 ativo sem alocação. Dados exclusivamente sintéticos.

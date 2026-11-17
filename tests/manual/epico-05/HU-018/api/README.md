@@ -34,7 +34,7 @@ Commits seguem o [CONTRIBUTING](../../../../../docs/CONTRIBUTING.md), com autori
 
 ## Riscos mapeados no código
 
-Os riscos abaixo vêm da leitura do código e orientam a execução. **Não são defeitos reproduzidos**: cada um só vira defeito depois de confirmado por HTTP ou na tela, com relato e issue.
+Os riscos abaixo foram levantados no planejamento. A execução de 17/11/2026 confirmou por HTTP o erro 500 de data civil impossível, a exposição de dados do outro trecho por IES/turno e as demais falhas registradas na [suíte](API-HU-018.md#defeitos-encontrados). Os riscos de UI permanecem sem execução nesta rodada.
 
 | Risco | Evidência de leitura | Cobertura |
 | --- | --- | --- |
@@ -53,3 +53,11 @@ Os riscos abaixo vêm da leitura do código e orientam a execução. **Não são
 - **CT-006 de UI:** depende de existir atalho para a lista a partir da rota (PR #457).
 - **Representantes:** R1 e R2 dependem da promoção de aluno a representante da HU-030 com IES responsável.
 - Registrar cada parte verificada, falha ou impedimento; não aprovar caso inteiro quando houver impedimento.
+
+## Resultado de 17/11/2026
+
+**5 casos passaram, 4 falharam, nenhum bloqueado ou pendente na API.** Backend da develop `7372b8d67165344545c1264ac936cd4c060ca245`, API real na porta 8118 e PostgreSQL 15.17 inicialmente vazio, migrado até `82_create_alocacao_diaria`. Foram 131 chamadas HTTP; GETs e recusas preservaram reservas, alocações e auditoria. A sincronização foi comparada após 125,033 segundos reais.
+
+Defeitos com JSON de falha no próprio corpo: [#480](https://github.com/GOUOCE/GOUCE-app/issues/480) (data impossível), [#481](https://github.com/GOUOCE/GOUCE-app/issues/481) (privacidade do representante), [#482](https://github.com/GOUOCE/GOUCE-app/issues/482) (filtro por turno), [#483](https://github.com/GOUOCE/GOUCE-app/issues/483) (ordenação) e [#484](https://github.com/GOUOCE/GOUCE-app/issues/484) (mensagem para representante sem IES).
+
+As contas e os documentos são fixtures sintéticas com login real. Promoção/revogação, cadastros de negócio, reservas, distribuição, cancelamento e realocação foram exercitados pela API. Somente o estado legado de representante sem IES foi preparado por fixture SQL, pois o DTO de promoção atual não permite omitir a faculdade; o estado foi restaurado. Os scripts temporários ficaram fora do Git; nenhum código de produto ou teste de UI foi alterado.
