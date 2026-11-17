@@ -12,22 +12,24 @@
 | Base do planejamento | `develop` `1eb2818d` (módulo `backend/src/modulos/alocacao_diaria/`, `minha_viagem_service.py`) |
 | Branch de planejamento | `test/planejamento-api-ui-hu-019`, com entrega para `develop` |
 | Revisão do planejamento | 16/11/2026 — requisitos 7.6 com as decisões do PO (#465), BDD do épico 05 e leitura do código |
-| Ambiente | A preencher — URL, SHA testado, banco e fuso; base analisada `develop` `1eb2818d`, PostgreSQL 15, Alembic `82_updated_at_faculdade_ponto`, `America/Fortaleza` |
+| Ambiente | HTTP real `http://127.0.0.1:8119`; Docker `atu-qa-hu019`; PostgreSQL 15.17 em banco novo; Alembic `82_create_alocacao_diaria`; `America/Fortaleza` |
 | Total de casos | 9 |
-| Última execução | Não realizada |
+| Última execução | 17/11/2026 — 5/9 casos concluídos; início `2026-11-17T14:24:47.865270-03:00` |
+| Branch de execução | `test/execucao-api-hu-019`, criada da develop atualizada `7372b8d67165344545c1264ac936cd4c060ca245` |
+| Código executado | Backend exato `7372b8d67165344545c1264ac936cd4c060ca245`, sem alterações de produto |
 | Testador | LLM — execução de API; Cauan Ricardo — revisão |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 9 | 0 | 0 | 0 | 0 | 9 |
+| Em execução | 9 | 4 | 0 | 1 | 0 | 4 |
 
 ## Pré-condições
 
 | ID | Descrição |
 | --- | --- |
-| PC-01 | API e PostgreSQL reais em stack isolada, com as migrations da `develop` até `82_updated_at_faculdade_ponto` (head única). Registrar URL, SHA, data/fuso e acesso de leitura às tabelas `alocacao_diaria`, `alocacao_aluno`, `agendamento` e `log_auditoria`. Não usar `create_all` nem mock no lugar da integração HTTP. [Guia](README.md). |
+| PC-01 | API e PostgreSQL reais em stack isolada, com as migrations da `develop` até `82_create_alocacao_diaria` (head única do código executado; inclui `82_updated_at_faculdade_ponto`). Registrar URL, SHA, data/fuso e acesso de leitura às tabelas `alocacao_diaria`, `alocacao_aluno`, `agendamento` e `log_auditoria`. Não usar `create_all` nem mock no lugar da integração HTTP. [Guia](README.md). |
 | PC-02 | Tokens reais: administrador (seed `admin@gouce.app`); alunos A a F aprovados e com vínculo válido; representante R1 da UFC e R2 da IFCE; aluno pendente ou reprovado e representante inativo para os casos de acesso. Credenciais fora do Git. |
 | PC-03 | Cadastros pela API administrativa: IES UFC e IFCE; bairros/pontos; **P1 Rota Centro - UFC** (06:30/17:30, atende UFC na ida e na volta) e **P2 Rota Campo - IFCE** (06:40/18:40, atende IFCE). Frota e escala: ônibus **V1 `ABC1D23`** (3 assentos e 2 em pé), **V2 `DEF4G56`** (2 assentos e 1 em pé), **V3 `HIJ7K89`** (4 assentos e 0 em pé) e **V4** inativo; motoristas **M1, M2, M3** ativos e **M4** inativo. |
 | PC-04 | D = data local do servidor; anotar hora e fuso. Usar dias úteis válidos dentro da janela de agendamento (D+1 em diante) e registrar ids/datas reais; as datas fixas do BDD são exemplos. Sem alterar o relógio do host. |
@@ -50,16 +52,16 @@ Todas as chamadas usam o token de A, salvo indicação. As distribuições são 
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU019-API-001 | Alocação por turno com os dados do ônibus, rota, motorista e embarque | Aluno A com reserva em D+1 (ida e volta, P1) e distribuição confirmada (V1 e M1 na ida; V3 e M2 na volta); GET `/alocacao-diaria/minha-viagem?data=<D+1>` com A. | 200 ALOCADO com ônibus (placa e apelido), rota, motorista, horário, ponto e faculdade em cada turno. | ⏳ PENDENTE | BDD: dados da alocação separados por turno; AC-01. |
-| CT-HU019-API-002 | Horário de saída na ida, retorno na volta e só um turno | Reservas de A: só ida, só volta e ida e volta em P1 (06:30/17:30), todas distribuídas. | Ida usa o horário de saída, volta o de retorno; turno não agendado não aparece. | ⏳ PENDENTE | BDD: horário de saída na ida e retorno na volta; somente o turno agendado. |
+| CT-HU019-API-001 | Alocação por turno com os dados do ônibus, rota, motorista e embarque | Aluno A com reserva em D+1 (ida e volta, P1) e distribuição confirmada (V1 e M1 na ida; V3 e M2 na volta); GET `/alocacao-diaria/minha-viagem?data=<D+1>` com A. | 200 ALOCADO com ônibus (placa e apelido), rota, motorista, horário, ponto e faculdade em cada turno. | ✅ PASSOU | BDD: dados da alocação separados por turno; AC-01. |
+| CT-HU019-API-002 | Horário de saída na ida, retorno na volta e só um turno | Reservas de A: só ida, só volta e ida e volta em P1 (06:30/17:30), todas distribuídas. | Ida usa o horário de saída, volta o de retorno; turno não agendado não aparece. | ✅ PASSOU | BDD: horário de saída na ida e retorno na volta; somente o turno agendado. |
 
 ### Seção B — Situações sem alocação definitiva
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU019-API-003 | Distribuição ainda não concluída: aguardando alocação | A com reserva em D+2 sem distribuição do dia; GET `minha-viagem` de D+2. | AGUARDANDO_ALOCACAO sem dados de frota. | ⏳ PENDENTE | BDD: aguardando alocação do veículo; FA-001. |
-| CT-HU019-API-004 | Excedente e alocação parcial | Aluno excedente da HU-016 (6 alunos em V1); aluno com ida alocada e volta sem alocação; aluno totalmente alocado. | Excedente aguarda; parcial mostra cada turno com a sua situação; status geral coerente. | ⏳ PENDENTE | BDD: excedente aguardando; alocação parcial; status geral. |
-| CT-HU019-API-005 | Aluno realocado: aviso destacado | Aluno cuja reserva pertence a P1 alocado em ônibus de outra rota (P2) na mesma data, preparado pela distribuição ou por fixture isolada documentada. | `foi_realocado` verdadeiro e aviso com o texto do requisito. | ⏳ PENDENTE | Risco de leitura: a distribuição pela API recusa aluno em rota diferente da sua. BDD: realocado; AC-03 e FA-002. |
+| CT-HU019-API-003 | Distribuição ainda não concluída: aguardando alocação | A com reserva em D+2 sem distribuição do dia; GET `minha-viagem` de D+2. | AGUARDANDO_ALOCACAO sem dados de frota. | ✅ PASSOU | BDD: aguardando alocação do veículo; FA-001. |
+| CT-HU019-API-004 | Excedente e alocação parcial | Aluno excedente da HU-016 (6 alunos em V1); aluno com ida alocada e volta sem alocação; aluno totalmente alocado. | Excedente aguarda; parcial mostra cada turno com a sua situação; status geral coerente. | ✅ PASSOU | BDD: excedente aguardando; alocação parcial; status geral. |
+| CT-HU019-API-005 | Aluno realocado: aviso destacado | Aluno cuja reserva pertence a P1 alocado em ônibus de outra rota (P2) na mesma data, preparado pela distribuição ou por fixture isolada documentada. | `foi_realocado` verdadeiro e aviso com o texto do requisito. | ⚠️ PARCIAL | Risco de leitura: a distribuição pela API recusa aluno em rota diferente da sua. BDD: realocado; AC-03 e FA-002. |
 
 ### Seção C — Atualidade, isolamento e desempenho
 
@@ -94,8 +96,8 @@ Todas as chamadas usam o token de A, salvo indicação. As distribuições são 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- 200 ALOCADO; ida em V1/M1 e volta em V3/M2. Placa/apelido, rota, horários, ponto/IES, complementar e lugar conferidos em conexões novas do PostgreSQL; GET sem escrita.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -118,8 +120,8 @@ Todas as chamadas usam o token de A, salvo indicação. As distribuições são 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Ida informa 06:30 e volta 17:30 da principal, mesmo com complementar 05:45/18:15. Só ida mantém volta nula e só volta mantém ida nula; ambas as combinações alocadas foram conferidas no banco.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -143,8 +145,8 @@ Todas as chamadas usam o token de A, salvo indicação. As distribuições são 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Reserva de ida/volta sem distribuição retornou AGUARDANDO_ALOCACAO, mensagem prevista e campos de frota nulos; pontos/IES e complementar da reserva preservados.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -168,8 +170,8 @@ Todas as chamadas usam o token de A, salvo indicação. As distribuições são 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Distribuição automática real de 6 alunos em V1 (capacidade 5) deixou um excedente sem vínculo/frota, em espera. Alocação só da ida retornou PARCIALMENTE_ALOCADO; controle ida/volta retornou ALOCADO. Frota e motoristas restaurados ao estado base.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -193,8 +195,17 @@ Todas as chamadas usam o token de A, salvo indicação. As distribuições são 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Consulta HU-019 detectou a rota P2 e exibiu o aviso exato geral/ida após fixture SQL documentada, depois restaurada; controle sem realocação correto. Fluxo completo não aprovado: POST de distribuição recusou a troca de rota com 422, dependência já registrada na #478 e discutida na #473.
+- Status: ⚠️ PARCIAL.
+
+Fixture somente no banco isolado, após a recusa 422 da distribuição; a consulta permaneceu HTTP real:
+
+```sql
+UPDATE alocacao_diaria SET rota_id=:rota,onibus_id=:onibus,motorista_id=:motorista WHERE id=:id;
+```
+
+Parâmetros usados: `{'id': 8, 'rota': 2, 'onibus': 'DEF4G56', 'motorista': 2}`. Restauração com `{'id': 8, 'rota': 1, 'onibus': 'ABC1D23', 'motorista': 1}`; snapshot completo restabelecido. Dependência: [#478](https://github.com/GOUOCE/GOUCE-app/issues/478), discutida na [#473](https://github.com/GOUOCE/GOUCE-app/issues/473). Esta fixture aprova somente a leitura do estado preparado; o caso segue parcial.
+
 
 ---
 
@@ -312,12 +323,18 @@ Todas as chamadas usam o token de A, salvo indicação. As distribuições são 
 
 ## Defeitos encontrados
 
-| Caso | Defeito | Issue |
+| Caso | Defeito ou dependência | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. Os riscos de leitura estão no [guia de execução da API](README.md). | — |
+| CT-HU019-API-005 | Leitura com fixture confirmada; fluxo de realocação entre rotas ainda recusado pela HU-016. | [#478](https://github.com/GOUOCE/GOUCE-app/issues/478), dependência existente; sem nova issue duplicada |
 
 ## Observações gerais
 
 - Referências: [requisitos, seção 7.6](../../../../../docs/requisitos.md), [BDD do épico 05](../../../../../bdd/features/epico-05/README.md) e as [decisões do PO na #465](https://github.com/GOUOCE/GOUCE-app/issues/465). O README do BDD não aponta divergências relevantes para a HU-019; os riscos abaixo vêm de integração com a HU-016.
 - A HU-019 existe na `develop` e é consumida pelas telas do aluno; a leitura do código não aprova caso.
-- Nenhum caso foi executado nesta entrega. Não confundir defeito reproduzido, risco de leitura e dependência ausente.
+- Execução real em 17/11/2026: cadastros, reservas, distribuição automática/manual, nova distribuição e cancelamento por HTTP; contas e documentos sintéticos por fixture ORM. Sem mocks ou substituição de dependências. A fixture de realocação e os estados de acesso foram preparados somente no banco isolado e restaurados.
+
+## Registro desta execução
+
+**5/9 casos concluídos: 4 passaram, 0 falharam e 1 parcial; 4 pendentes.** 79 chamadas HTTP incluindo preparação/logins; 195 verificações registradas, 195 satisfeitas. GETs e recusas conferidos com snapshots completos em conexões novas: reservas, alocações e auditoria preservadas.
+
+Somente falhas têm JSON de evidência, no corpo das issues. Sem pasta ou arquivo de evidência no repositório. Os 9 casos de UI permanecem pendentes.
