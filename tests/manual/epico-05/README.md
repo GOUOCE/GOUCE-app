@@ -1,12 +1,12 @@
 # Testes manuais — Épico 05 — Alocação e Distribuição Logística
 
-Suítes essenciais da **HU-016 — Distribuição de Alunos nos Ônibus**, **HU-017 — Alocação de Motoristas às Rotas**, **HU-018 — Visualização da Lista de Embarque** e **HU-019 — Consulta de Alocação Diária**: **76 casos, sendo 39 de API e 37 de UI**. A **HU-020 — Rodízio Semanal** foi adiada pelo PO na [issue #465](https://github.com/GOUOCE/GOUCE-app/issues/465) e não tem suíte nesta entrega. As execuções de API incorporadas nesta base registram **HU-017: 5 passaram, 4 falharam e 1 parcial**; **HU-018: 5 passaram e 4 falharam**; **HU-019: 6 passaram, 2 falharam e 1 parcial**. Total: **16 passaram, 10 falharam, 2 parciais e 48 sem resultado incorporado nesta base**. Execuções em outras branches mantêm seu histórico separado.
+Suítes essenciais da **HU-016 — Distribuição de Alunos nos Ônibus**, **HU-017 — Alocação de Motoristas às Rotas**, **HU-018 — Visualização da Lista de Embarque** e **HU-019 — Consulta de Alocação Diária**: **76 casos, sendo 39 de API e 37 de UI**. A **HU-020 — Rodízio Semanal** foi adiada pelo PO na [issue #465](https://github.com/GOUOCE/GOUCE-app/issues/465) e não tem suíte nesta entrega. As execuções de API incorporadas nesta base registram **HU-016: 6 passaram e 5 falharam**; **HU-017: 5 passaram, 4 falharam e 1 parcial**; **HU-018: 5 passaram e 4 falharam**; **HU-019: 6 passaram, 2 falharam e 1 parcial**. Total: **22 passaram, 15 falharam, 2 parciais e 37 sem resultado incorporado nesta base**. Execuções em outras branches mantêm seu histórico separado.
 
 ## Índice das suítes
 
 | HU | Funcionalidade | API | UI |
 | --- | --- | --- | --- |
-| HU-016 | Distribuição de Alunos nos Ônibus | [11 casos](HU-016/api/API-HU-016.md) | [9 casos](HU-016/ui/UI-HU-016.md) |
+| HU-016 | Distribuição de Alunos nos Ônibus | [11 casos: 6 passaram, 5 falharam](HU-016/api/API-HU-016.md) | [9 casos](HU-016/ui/UI-HU-016.md) |
 | HU-017 | Alocação de Motoristas às Rotas | [10 casos: 5 passaram, 4 falharam, 1 parcial](HU-017/api/API-HU-017.md) | [9 casos pendentes](HU-017/ui/UI-HU-017.md) |
 | HU-018 | Visualização da Lista de Embarque | [9 casos: 5 passaram, 4 falharam](HU-018/api/API-HU-018.md) | [10 casos pendentes](HU-018/ui/UI-HU-018.md) |
 | HU-019 | Consulta de Alocação Diária | [9 casos: 6 passaram, 2 falharam, 1 parcial](HU-019/api/API-HU-019.md) | [9 casos pendentes](HU-019/ui/UI-HU-019.md) |
