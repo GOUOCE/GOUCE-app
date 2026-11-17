@@ -10,18 +10,19 @@
 | Tipo de teste | Funcional manual essencial, integração, regras de capacidade, integridade e autorização — baseado em risco |
 | Endpoints | `GET /alocacao-diaria/distribuicao-automatica?data=YYYY-MM-DD` e `POST /alocacao-diaria/distribuicao` (`modo` automático ou manual). Apoio: `GET /alocacao-diaria/lista-embarque`, `GET /alocacao-diaria/minha-viagem`, HU-013/014 para a massa e cadastros de frota/motoristas/rotas. |
 | Base do planejamento | `develop` `1eb2818d` (módulo `backend/src/modulos/alocacao_diaria/`) |
-| Branch de planejamento | `test/planejamento-api-ui-hu-016`, com entrega para `develop` |
+| Branch de planejamento | `test/planejamento-api-ui-hu-016`, entregue em `develop` (PR #468) |
+| Branch de execução | `test/execucao-api-hu-016`, criada da `develop` `7372b8d6` |
 | Revisão do planejamento | 16/11/2026 — requisitos 7.6 com as decisões do PO (#465), BDD do épico 05 e leitura do código |
-| Ambiente | A preencher — URL, SHA testado, banco e fuso; base analisada `develop` `1eb2818d`, PostgreSQL 15, Alembic `82_updated_at_faculdade_ponto`, `America/Fortaleza` |
+| Ambiente | Docker isolado `atu-api016` (API `http://localhost:8116`, PostgreSQL 15 em banco novo); `develop` `7372b8d6` (já com o front do PR #457); Alembic head `82_create_alocacao_diaria`; `America/Fortaleza` (`TZ=BRT3`); data de execução 17/11/2026. [Resumo JSON](EVIDENCIAS-HU-016.json) |
 | Total de casos | 11 |
-| Última execução | Não realizada |
+| Última execução | 17/11/2026 — 6 passaram, 2 falharam e 3 parciais |
 | Testador | LLM — execução de API; Cauan Ricardo — revisão |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 11 | 0 | 0 | 0 | 0 | 11 |
+| Executada em 17/11/2026 | 11 | 6 | 2 | 3 | 0 | 0 |
 
 ## Pré-condições
 
@@ -50,37 +51,37 @@ Todas as chamadas usam o token do administrador, salvo indicação. Executar na 
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU016-API-001 | Prévia: demanda por rota, contrato e ausência de gravação | D+1 com reservas ativas de A (ida, P1), B (ida e volta, P1), C (volta, P1) e D (ida, P2), mais uma reserva cancelada e outra de outro dia; V1, V2, V3 e M1, M2, M3 ativos; GET `/alocacao-diaria/distribuicao-automatica?data=<D+1>` com administrador. | 200 com demanda real por rota e alocações sugeridas; nada gravado no banco. | ⏳ PENDENTE | BDD: demanda por rota; prévia não grava. |
-| CT-HU016-API-002 | Dia sem demanda, sem motoristas e data inválida | Data sem reservas ativas; stack com todos os motoristas inativos e ao menos um ônibus ativo; datas `2026-02-30` e `16-11-2026`; parâmetro `data` ausente. | 200 vazio sem demanda; 422 sem motoristas ativos; 422 para data inválida, sem erro 500. | ⏳ PENDENTE | BDD: sem alunos; API recusa a prévia sem motoristas ativos. |
+| CT-HU016-API-001 | Prévia: demanda por rota, contrato e ausência de gravação | D+1 com reservas ativas de A (ida, P1), B (ida e volta, P1), C (volta, P1) e D (ida, P2), mais uma reserva cancelada e outra de outro dia; V1, V2, V3 e M1, M2, M3 ativos; GET `/alocacao-diaria/distribuicao-automatica?data=<D+1>` com administrador. | 200 com demanda real por rota e alocações sugeridas; nada gravado no banco. | ✅ PASSOU | Prévia coerente com o banco; nada gravado. BDD: demanda por rota; prévia não grava. |
+| CT-HU016-API-002 | Dia sem demanda, sem motoristas e data inválida | Data sem reservas ativas; stack com todos os motoristas inativos e ao menos um ônibus ativo; datas `2026-02-30` e `16-11-2026`; parâmetro `data` ausente. | 200 vazio sem demanda; 422 sem motoristas ativos; 422 para data inválida, sem erro 500. | ✅ PASSOU | Passou; mensagem de data inexistente em inglês (observação). BDD: sem alunos; API recusa a prévia sem motoristas ativos. |
 
 ### Seção B — Capacidade e excedentes
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU016-API-003 | Sentados e em pé no limite da capacidade | Somente V1 ativo (3 assentos e 2 em pé) e um motorista; P1 na ida com 2, 3, 5 e 6 alunos, uma rodada por quantidade. | 2→2/0, 3→3/0, 5→3 sentados e 2 em pé; 6→5 alocados e 1 excedente; nunca acima da capacidade. | ⏳ PENDENTE | BDD: sentados e em pé (2, 3 e 5); excedentes; RN-001. |
-| CT-HU016-API-004 | Outro ônibus com assento livre antes de aluno em pé | V1 (3 assentos e 2 em pé) e V3 (4 assentos e 0 em pé) com dois motoristas e P1 na ida com 5 alunos; depois com 8 alunos; depois só V1 com 5 alunos; por fim 10 alunos para 9 lugares. | Nenhum aluno em pé enquanto outro ônibus tiver assento; em pé só sem vaga; excedentes sinalizados. | ⏳ PENDENTE | Risco de leitura: o algoritmo enche assentos e vagas em pé do primeiro ônibus antes de usar o outro. |
-| CT-HU016-API-005 | Rota com faculdade sem demanda no turno | P3 Rota Multi - UECE/Católica (atende as duas IES na ida e na volta, sem IES em comum com P1/P2) com reservas só de alunos da UECE na volta; V1 e M1. | Prévia e confirmação normais, sem exigir parada na IES sem alunos. | ⏳ PENDENTE | BDD: faculdade sem aluno no turno; AC-16. |
+| CT-HU016-API-003 | Sentados e em pé no limite da capacidade | Somente V1 ativo (3 assentos e 2 em pé) e um motorista; P1 na ida com 2, 3, 5 e 6 alunos, uma rodada por quantidade. | 2→2/0, 3→3/0, 5→3 sentados e 2 em pé; 6→5 alocados e 1 excedente; nunca acima da capacidade. | ✅ PASSOU | Limites de capacidade respeitados. BDD: sentados e em pé (2, 3 e 5); excedentes; RN-001. |
+| CT-HU016-API-004 | Outro ônibus com assento livre antes de aluno em pé | V1 (3 assentos e 2 em pé) e V3 (4 assentos e 0 em pé) com dois motoristas e P1 na ida com 5 alunos; depois com 8 alunos; depois só V1 com 5 alunos; por fim 10 alunos para 9 lugares. | Nenhum aluno em pé enquanto outro ônibus tiver assento; em pé só sem vaga; excedentes sinalizados. | ❌ FALHOU | Aluno em pé com assento livre em outro ônibus (5 e 8 alunos). Risco de leitura: o algoritmo enche assentos e vagas em pé do primeiro ônibus antes de usar o outro. |
+| CT-HU016-API-005 | Rota com faculdade sem demanda no turno | P3 Rota Multi - UECE/Católica (atende as duas IES na ida e na volta, sem IES em comum com P1/P2) com reservas só de alunos da UECE na volta; V1 e M1. | Prévia e confirmação normais, sem exigir parada na IES sem alunos. | ✅ PASSOU | P3 com demanda só da UECE na volta funciona. BDD: faculdade sem aluno no turno; AC-16. |
 
 ### Seção C — Confirmação e persistência
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU016-API-006 | Confirmar a distribuição automática e persistir | POST `/alocacao-diaria/distribuicao` com `{"data": "<D+1>", "modo": "automatico"}` para a massa do CT-001; depois nova confirmação do mesmo dia. | 201 “Distribuição realizada com sucesso”, status DISTRIBUIDO e linhas corretas; reconfirmar substitui sem duplicar. | ⏳ PENDENTE | BDD: confirmar; API persiste; nova confirmação substitui. |
-| CT-HU016-API-007 | Confirmar com excedentes informa a lista | V1 e M1 ativos; P1 na ida com 6 alunos (5 cabem e 1 excede); POST `modo: automatico`; depois `GET /alocacao-diaria/minha-viagem` do aluno excedente. | 201; 5 gravados; resposta informa o excedente; o aluno excedente aguarda alocação. | ⏳ PENDENTE | Risco de leitura: `persist` devolve só mensagem, data, status e alocações, sem os excedentes. BDD: excedentes na confirmação. |
+| CT-HU016-API-006 | Confirmar a distribuição automática e persistir | POST `/alocacao-diaria/distribuicao` com `{"data": "<D+1>", "modo": "automatico"}` para a massa do CT-001; depois nova confirmação do mesmo dia. | 201 “Distribuição realizada com sucesso”, status DISTRIBUIDO e linhas corretas; reconfirmar substitui sem duplicar. | ✅ PASSOU | Confirmação automática persiste e reconfirmar substitui. BDD: confirmar; API persiste; nova confirmação substitui. |
+| CT-HU016-API-007 | Confirmar com excedentes informa a lista | V1 e M1 ativos; P1 na ida com 6 alunos (5 cabem e 1 excede); POST `modo: automatico`; depois `GET /alocacao-diaria/minha-viagem` do aluno excedente. | 201; 5 gravados; resposta informa o excedente; o aluno excedente aguarda alocação. | ❌ FALHOU | A resposta da confirmação não informa os excedentes. Risco de leitura: `persist` devolve só mensagem, data, status e alocações, sem os excedentes. BDD: excedentes na confirmação. |
 
 ### Seção D — Ajuste manual e realocação
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU016-API-008 | Distribuição manual: trocar ônibus/motorista e realocar excedente | Distribuição do CT-007 confirmada; POST `modo: manual` trocando o ônibus (V1→V3) e o motorista (M1→M2) de P1; mover o excedente para um ônibus com vaga do mesmo grupo e, depois, para V2, que atende P2. | Troca aceita e persistida; excedente realocado com vaga; realocação para outra rota conforme AC-09. | ⏳ PENDENTE | Risco de leitura: a validação exige que a alocação seja da rota da reserva e o ônibus não repete no turno. BDD: realocação; distribuição manual. |
+| CT-HU016-API-008 | Distribuição manual: trocar ônibus/motorista e realocar excedente | Distribuição do CT-007 confirmada; POST `modo: manual` trocando o ônibus (V1→V3) e o motorista (M1→M2) de P1; mover o excedente para um ônibus com vaga do mesmo grupo e, depois, para V2, que atende P2. | Troca aceita e persistida; excedente realocado com vaga; realocação para outra rota conforme AC-09. | ⚠️ PARCIAL | Troca e realocação na mesma rota funcionam; realocação para a rota P2 é recusada (confirmar com o PO). Risco de leitura: a validação exige que a alocação seja da rota da reserva e o ônibus não repete no turno. BDD: realocação; distribuição manual. |
 
 ### Seção E — Conflitos, recursos e acesso
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU016-API-009 | Capacidade e conflito de ônibus na distribuição manual | V1 (3 assentos e 2 em pé); POST manual com 6 alunos (3 sentados e 3 em pé), com 4 sentados e 0 em pé, com V1 em duas rotas no mesmo turno e com V1 na ida e na volta; prévia automática com um só ônibus e demanda de ida e de volta. | 422/409 com as mensagens do código, nada gravado; ida e volta com o mesmo ônibus aceitas. | ⏳ PENDENTE | Risco de leitura: na prévia automática o ônibus usado na ida não volta a ser candidato na volta. BDD: capacidade; ônibus em duas rotas; mesmo ônibus na ida e na volta. |
-| CT-HU016-API-010 | Recursos e alunos inválidos e atomicidade | Ônibus, rota e motorista inexistentes ou inativos; agendamento cancelado ou de outro dia, sem o turno informado, de outra rota e repetido; lista de alocações vazia em modo manual, com uma distribuição já confirmada. | 422 com a mensagem de cada causa; qualquer recusa preserva a distribuição anterior. | ⏳ PENDENTE | Risco de leitura: com `alocacoes: []` o modo manual apaga as alocações da data e responde sucesso. BDD: recursos inativos; alunos inválidos; atomicidade. |
-| CT-HU016-API-011 | Autenticação e perfis sem acesso | GET prévia e POST confirmação sem token, com token inválido, aluno, representante e administrador (controle). | 401 sem credencial válida; 403 para aluno e representante; administrador com acesso; nada gravado. | ⏳ PENDENTE | BDD: API nega a distribuição sem perfil administrativo e sem token; RN-006. |
+| CT-HU016-API-009 | Capacidade e conflito de ônibus na distribuição manual | V1 (3 assentos e 2 em pé); POST manual com 6 alunos (3 sentados e 3 em pé), com 4 sentados e 0 em pé, com V1 em duas rotas no mesmo turno e com V1 na ida e na volta; prévia automática com um só ônibus e demanda de ida e de volta. | 422/409 com as mensagens do código, nada gravado; ida e volta com o mesmo ônibus aceitas. | ⚠️ PARCIAL | Capacidade e conflito corretos; a prévia com um ônibus não atende a volta. Risco de leitura: na prévia automática o ônibus usado na ida não volta a ser candidato na volta. BDD: capacidade; ônibus em duas rotas; mesmo ônibus na ida e na volta. |
+| CT-HU016-API-010 | Recursos e alunos inválidos e atomicidade | Ônibus, rota e motorista inexistentes ou inativos; agendamento cancelado ou de outro dia, sem o turno informado, de outra rota e repetido; lista de alocações vazia em modo manual, com uma distribuição já confirmada. | 422 com a mensagem de cada causa; qualquer recusa preserva a distribuição anterior. | ⚠️ PARCIAL | Validações e atomicidade corretas; lista vazia no modo manual apaga o dia. Risco de leitura: com `alocacoes: []` o modo manual apaga as alocações da data e responde sucesso. BDD: recursos inativos; alunos inválidos; atomicidade. |
+| CT-HU016-API-011 | Autenticação e perfis sem acesso | GET prévia e POST confirmação sem token, com token inválido, aluno, representante e administrador (controle). | 401 sem credencial válida; 403 para aluno e representante; administrador com acesso; nada gravado. | ✅ PASSOU | 401 e 403 corretos; nada gravado. BDD: API nega a distribuição sem perfil administrativo e sem token; RN-006. |
 
 ## Detalhamento dos casos
 
@@ -108,8 +109,10 @@ Todas as chamadas usam o token do administrador, salvo indicação. Executar na 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- D=18/11 (dia útil seguinte), V1, V2, V3 e M1, M2, M3 ativos. Reservas ativas: A (ida, P1, id 7), B (ida e volta, P1, id 8), C (volta, P1, id 9) e Hugo (ida, P2, id 10); a reserva da Iara foi cancelada pela API da HU-014 (id 11) e a do aluno D é de 19/11 (id 12).
+- GET da prévia com o administrador: 200, com `data`, `demanda_por_rota` P1=4 e P2=1 (ida e volta somadas; a cancelada e a de outro dia ficaram de fora), `alocacoes` com `rota_id`, `onibus_id`, `motorista_id`, `turno`, `capacidade`, `sentados`, `em_pe` e `alunos` com `tipo_lugar`, `excedentes_globais` e `alertas` vazios.
+- Sugestão: P1 ida em V1 (A e B sentados), P1 volta em V3 (B e C) e P2 ida em V2 (Hugo). Observação: a volta de P1 usou V3 embora V1 estivesse livre; é a regra do conjunto `usados` (relato BUG-HU016-API-003).
+- `alocacao_diaria` e `alocacao_aluno` com 0 linhas antes e depois. Status: ✅ Passou.
 
 ---
 
@@ -135,8 +138,11 @@ Todas as chamadas usam o token do administrador, salvo indicação. Executar na 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Data sem reservas (25/11): 200 com `demanda_por_rota`, `alocacoes`, `excedentes_globais` e `alertas` vazios.
+- Com M1, M2, M3 (e M4) inativos e ônibus ativos: 422 `DISTRIBUICAO_INVALIDA` “Não há motoristas ativos disponíveis.”, tanto na data com demanda (18/11) quanto na sem demanda. Motoristas reativados em seguida.
+- `2026-02-30`: 422 `DISTRIBUICAO_INVALIDA` com a mensagem “day is out of range for month” (texto técnico em inglês vindo da exceção do Python; sem erro 500). `16-11-2026` e parâmetro ausente: 422 de validação do FastAPI (`string_pattern_mismatch` e `missing`).
+- Nada gravado. Observação para a UI/produto: a mensagem da data inexistente não é amigável nem está em português (relato BUG-HU016-API-005, baixa).
+- Status: ✅ Passou.
 
 ---
 
@@ -162,8 +168,9 @@ Todas as chamadas usam o token do administrador, salvo indicação. Executar na 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Somente V1 e M1 ativos; P1 na ida em 20/11 (reservas refeitas a cada rodada). Prévia: 2 alunos → 2 sentados e 0 em pé; 3 → 3 e 0; 5 → 3 sentados e 2 em pé; 6 → 5 alocados (3 sentados e 2 em pé) e 1 em `excedentes_globais` (turno ida).
+- `capacidade` sempre 3 assentos e 2 em pé; os `tipo_lugar` somam `sentados` e `em_pe`; o ônibus nunca passa de 5. Frota devolvida ao estado base.
+- Status: ✅ Passou.
 
 ---
 
@@ -189,8 +196,13 @@ Todas as chamadas usam o token do administrador, salvo indicação. Executar na 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- V1 (3+2) e V3 (4+0), M1 e M2 ativos, P1 na ida em 20/11 (uma rodada por quantidade):
+  - 5 alunos: só V1 é usado, com **3 sentados e 2 em pé**, enquanto V3 fica vazio com 4 assentos livres. Esperado: ninguém em pé (RN-007). ❌
+  - 8 alunos: V1 com 3 sentados e 2 em pé e V3 com 3 sentados; sobra 1 assento em V3 e 2 alunos vão em pé. Esperado: 7 sentados e 1 em pé. ❌
+  - 10 alunos (9 lugares): V1 3+2 e V3 4+0, 9 alocados e 1 excedente em `excedentes_globais`. ✅ (coincide com o esperado porque tudo está cheio).
+  - Só V1 com 5 alunos: 3 sentados e 2 em pé; a quantidade em pé aparece em `em_pe`, `alertas` vem vazio. ✅
+- Em nenhuma rodada a capacidade foi ultrapassada. O risco de leitura se confirmou: o algoritmo enche assentos e vagas em pé do primeiro ônibus antes de usar o seguinte. Relato BUG-HU016-API-001.
+- Status: ❌ Falhou (2 das 4 variações).
 
 ---
 
@@ -213,8 +225,10 @@ Todas as chamadas usam o token do administrador, salvo indicação. Executar na 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- P3 Rota Multi - UECE/Católica (UECE e Católica ida e volta) com reservas só de alunos da UECE na volta (23/11), V1 e M1 ativos.
+- Prévia 200: demanda P3=2 e alocação de P3 na **volta** em V1 com os 2 alunos sentados, sem alocação de ida. Confirmação `modo: automatico` 201 “Distribuição realizada com sucesso”; banco com 1 linha em `alocacao_diaria` e 2 em `alocacao_aluno` (ALOCADO).
+- Nenhuma exigência de aluno na Católica nem recusa por parada sem demanda.
+- Status: ✅ Passou.
 
 ---
 
@@ -242,8 +256,10 @@ Todas as chamadas usam o token do administrador, salvo indicação. Executar na 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Massa do CT-001 (18/11), 3 ônibus e 3 motoristas ativos. POST `modo: automatico`: 201 “Distribuição realizada com sucesso”, `status_logistico` DISTRIBUIDO, 3 alocações.
+- Banco em nova conexão: 3 linhas em `alocacao_diaria` e 5 em `alocacao_aluno` (todas ALOCADO, `sentado`), idênticas à prévia (rota, ônibus, motorista, turno, agendamento e `tipo_lugar`); sem ônibus ou motorista repetido no dia/turno.
+- Segunda confirmação do mesmo dia: 201, mesmas 3 e 5 linhas, conteúdo idêntico. Os 4 agendamentos continuam ATIVO.
+- Status: ✅ Passou.
 
 ---
 
@@ -267,8 +283,11 @@ Todas as chamadas usam o token do administrador, salvo indicação. Executar na 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- V1 e M1 ativos, P1 na ida com 6 alunos (24/11, ids 59 a 64). POST `modo: automatico`: 201 com 5 alunos alocados (3 sentados e 2 em pé), gravados no banco.
+- A resposta só traz `mensagem`, `data`, `status_logistico` e `alocacoes` (cada uma com `excedentes: []`); **não há lista de alunos excedentes** (o aluno 64 ficou de fora). Esperado: informar os excedentes (decisão do PO na #465, AC-13). ❌
+- O excedente não tem linha em `alocacao_aluno`, a reserva 64 segue ATIVO e `minha-viagem` mostra `AGUARDANDO_ALOCACAO` e “Aguardando alocação do veículo”. ✅
+- Relato BUG-HU016-API-002.
+- Status: ❌ Falhou (1 de 3 verificações).
 
 ---
 
@@ -296,8 +315,13 @@ Todas as chamadas usam o token do administrador, salvo indicação. Executar na 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Partindo da distribuição do CT-007 (24/11, mais a reserva do Hugo em P2, id 65):
+  - Troca V1→V3 e M1→M2 em P1 (4 alunos sentados) com Hugo em V2/M3: 201, banco com a troca só na data enviada (18/11 continua com 3 e 5 linhas). ✅
+  - Excedente (id 64) e o aluno 63 movidos para V1/M1 com vaga, em P1: 201; `minha-viagem` do aluno mostra ALOCADO, V1, sentado, Marcos Alfa; a lista de embarque da rota 1 passa a mostrar 6 alunos em 2 veículos. `foi_realocado` fica `false` (é a mesma rota). ✅
+  - Excedente de P1 (64) enviado para V2 na alocação da rota 2 (P2): 422 `DISTRIBUICAO_INVALIDA` “alocação 2: agendamento 64 não pertence à rota 2.”, nada gravado. Esperado pelo AC-09/AC-10: admin realoca para ônibus de outra rota com vaga. ⚠️
+  - Variação: os mesmos alunos em P1 usando o ônibus V2 (que era de P2) é aceita com 201, pois o ônibus não é preso a uma rota; porém o Hugo precisou trocar para V1. A realocação “para o ônibus de outra rota mantendo as duas rotas” só vale se o aluno entrar numa alocação de **outra** rota, o que a validação proíbe.
+- Conforme o próprio caso, não abri defeito: registrar a regra para o PO (BUG-HU016-API-004, a confirmar).
+- Status: ⚠️ Parcial.
 
 ---
 
@@ -325,8 +349,13 @@ Todas as chamadas usam o token do administrador, salvo indicação. Executar na 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Distribuição base confirmada em 25/11 (V3 com 4 alunos e V2 com Hugo). Cada recusa deixou o banco idêntico à base:
+  - 6 alunos em V1 (3 sentados + 3 em pé): 422 “alocação 0: capacidade total do ônibus excedida.” ✅
+  - 4 sentados e 0 em pé em V1: 422 “alocação 0: capacidade de assentos ou em pé excedida.” ✅
+  - V1 em duas rotas no mesmo turno: 409 “alocação 1: ônibus ABC1D23 conflitante no turno ida.”; mesma regra com V3 na terceira alocação: 409 “alocação 2: ...”. ✅
+  - V1 na ida e na volta (aluno B): 201 e as duas linhas gravadas com o mesmo ônibus. ✅
+- Prévia automática com um só ônibus (V1/M1) e demanda de ida (A, C, B) e de volta (B): 200 com V1 só na ida (3 alunos) e **a volta inteira em `excedentes_globais`** (agendamento 75, turno volta). Esperado: V1 atende também a volta. ❌ O risco de leitura (`usados` único para ida e volta) se confirmou. Relato BUG-HU016-API-003.
+- Status: ⚠️ Parcial (4 de 5 variações).
 
 ---
 
@@ -352,8 +381,12 @@ Todas as chamadas usam o token do administrador, salvo indicação. Executar na 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Distribuição base em 26/11. Cada recusa abaixo respondeu 422 com a mensagem do código e deixou o banco idêntico à base:
+  - ônibus inexistente e inativo (V4): “alocação 0: ônibus … inexistente ou inativo.”; rota inexistente e rota inativa (P3 inativada pela API): “alocação 0: rota inexistente ou inativa.”; motorista inexistente e inativo (M4): “alocação 0: motorista inexistente ou inativo.” ✅
+  - agendamento cancelado e de outro dia: “alocação 0: agendamento N não está ativo nessa data.”; sem o turno volta: “não usa o turno volta.”; de outra rota: “não pertence à rota 2.”; repetido em duas alocações: “alocação 1: agendamento 76 alocado mais de uma vez.” (e na mesma alocação: “alocação 0: ...”); inexistente: “não está ativo nessa data.” ✅
+  - `tipo_lugar` e `turno` inválidos: 422 de validação do FastAPI, banco intacto. ✅
+- `modo: manual` com `alocacoes: []` (e sem o campo): **201 “Distribuição realizada com sucesso” e a distribuição do dia foi apagada** (0 linhas). Esperado (inferido de RNF-012): não apagar. ❌ Relato BUG-HU016-API-004.
+- Status: ⚠️ Parcial (a variação da lista vazia diverge de um esperado inferido, sujeito à confirmação do PO).
 
 ---
 
@@ -376,8 +409,9 @@ Todas as chamadas usam o token do administrador, salvo indicação. Executar na 
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- GET e POST sem token: 401 “Não autenticado”; token inválido: 401 “Sessão inválida ou expirada”; aluno e representante (UFC): 403 “Acesso negado”, sem dados de alocação; o aluno pendente (que consegue logar, HU-003) também recebe 403.
+- Contagem das alocações de 18/11 e total igual antes e depois dos negados (3 e 5 linhas). Administrador: GET 200 e POST 201.
+- Status: ✅ Passou.
 
 ---
 
@@ -399,12 +433,21 @@ Todas as chamadas usam o token do administrador, salvo indicação. Executar na 
 
 ## Defeitos encontrados
 
-| Caso | Defeito | Issue |
+Relatos em [`issues/`](issues/). Ainda não publicados como issues no GitHub; vincular o número quando forem.
+
+| Caso | Defeito | Relato / issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. Os riscos de leitura estão no [guia de execução da API](README.md). | — |
+| CT-HU016-API-004 | A prévia coloca aluno em pé enquanto outro ônibus tem assento livre (5 e 8 alunos) | [BUG-HU016-API-001](issues/BUG-HU016-API-001-aluno-em-pe-com-assento-livre.md) |
+| CT-HU016-API-007 | A confirmação com excedentes não informa a lista de excedentes | [BUG-HU016-API-002](issues/BUG-HU016-API-002-confirmacao-nao-informa-excedentes.md) |
+| CT-HU016-API-009 | A prévia com um só ônibus não atende a volta (vira excedente) | [BUG-HU016-API-003](issues/BUG-HU016-API-003-previa-nao-reaproveita-onibus-na-volta.md) |
+| CT-HU016-API-010 | Distribuição manual com lista vazia apaga a distribuição do dia | [BUG-HU016-API-004](issues/BUG-HU016-API-004-lista-vazia-apaga-distribuicao.md) |
+| CT-HU016-API-008 | Realocar excedente para a rota de outro ônibus é recusado (a confirmar com o PO) | [BUG-HU016-API-005](issues/BUG-HU016-API-005-realocacao-entre-rotas-recusada.md) |
+| CT-HU016-API-002 | Data inexistente (`2026-02-30`) responde com mensagem técnica em inglês | [BUG-HU016-API-006](issues/BUG-HU016-API-006-mensagem-data-inexistente-em-ingles.md) |
 
 ## Observações gerais
 
 - Referências: [requisitos, seção 7.6](../../../../../docs/requisitos.md), [BDD do épico 05](../../../../../bdd/features/epico-05/README.md) e as [decisões do PO na #465](https://github.com/GOUOCE/GOUCE-app/issues/465). Mensagens de API vêm do código; as de interface vêm dos requisitos ou das telas.
 - A confirmação substitui todas as alocações da data; cada caso deve montar o payload completo do dia.
-- Nenhum caso foi executado nesta entrega. Preencher os resultados por variação, sem confundir defeito reproduzido, risco de leitura e dependência ausente.
+- Execução de 17/11/2026 pela LLM, por HTTP e com conferência no banco em nova conexão, em stack isolada. A massa foi montada pela API (IES, rotas P1/P2/P3, frota, motoristas, alunos aprovados e representantes) e as reservas pela API da HU-013; entre as rodadas de um mesmo caso, as linhas de reserva e de alocação da data foram limpas direto no banco e a frota devolvida ao estado base.
+- Os riscos de leitura de capacidade (CT-004), excedentes (CT-007), realocação (CT-008), um só ônibus (CT-009) e lista vazia (CT-010) foram reproduzidos por HTTP; os demais riscos não se confirmaram nos casos da API.
+- Aluno com cadastro pendente consegue autenticar (comportamento da HU-003, fora do escopo) e recebe 403 nesta API.
