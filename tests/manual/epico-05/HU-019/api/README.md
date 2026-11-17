@@ -1,6 +1,6 @@
 # Como executar os testes manuais de API — HU-019
 
-Execução pela **LLM**, com revisão de **Cauan Ricardo**. [Suíte de API: 9 casos](API-HU-019.md). A [UI tem 9 casos](../ui/UI-HU-019.md) para execução manual por Cauan. Nenhum caso foi executado nesta entrega.
+Execução pela **LLM**, com revisão de **Cauan Ricardo**. [Suíte de API: 9 casos](API-HU-019.md). A [UI tem 9 casos](../ui/UI-HU-019.md) para execução manual por Cauan. Execução iniciada em 17/11/2026 na branch `test/execucao-api-hu-019`, criada da develop atualizada `7372b8d6`. [Resultados e issues](API-HU-019.md).
 
 ## Base e fontes
 
@@ -9,7 +9,7 @@ Planejamento na branch `test/planejamento-api-ui-hu-019`, com entrega para `deve
 ## 1. Preparar a execução
 
 1. Quando a execução for solicitada, criar a branch própria de testes e registrar o commit exato do build.
-2. Usar API e PostgreSQL reais em stack isolada com as migrations da `develop` (head `82_updated_at_faculdade_ponto`).
+2. Usar API e PostgreSQL reais em stack isolada com as migrations da `develop` (head `82_create_alocacao_diaria`, incluindo `82_updated_at_faculdade_ponto`).
 3. Confirmar no OpenAPI `GET /alocacao-diaria/minha-viagem`, por HTTP.
 4. Obter os tokens de A, B, administrador e representante em `POST /auth/login` e manter fora do Git.
 
@@ -28,13 +28,13 @@ Cadastrar IES, rotas, frota e motoristas como na HU-016 e criar as reservas de A
 
 Preencher ambiente/commit, última execução, resultado obtido por variação, status, resumo, totais e defeitos. Usar ✅ passou, ❌ falhou, ⚠️ parcial, 🚫 bloqueado e ⏳ pendente; registrar a dependência específica quando impedir uma parte.
 
-Guardar a evidência da execução em **um JSON simples**, quando houver resultados reais. Não criar pastas de executor/evidências nem incluir credenciais, tokens ou dados pessoais. Preparar relatos reproduzidos em `api/issues/` pelo [modelo de API](../../../modelos/ISSUE-BUG-API.md), vinculando a issue quando publicada. Os esperados não devem ser ajustados para fazer um caso passar.
+Nesta execução, registrar **somente o JSON das falhas no corpo das issues do GitHub**, pelo [modelo de API](../../../modelos/ISSUE-BUG-API.md), conforme solicitado por Cauan. Sem arquivo JSON de evidência, pasta de evidências ou coleção de respostas aprovadas no repositório. Vincular as issues na suíte; omitir credenciais, tokens e dados pessoais reais. Os esperados não devem ser ajustados para fazer um caso passar.
 
 Commits seguem o [CONTRIBUTING](../../../../../docs/CONTRIBUTING.md), com autoria de Cauan e sem coautoria. Depois da revisão e integração do planejamento em `develop`, criar a branch própria de execução da HU; não registrar aprovação de caso por leitura do código.
 
 ## Riscos mapeados no código
 
-Os riscos abaixo vêm da leitura do código e orientam a execução. **Não são defeitos reproduzidos**: cada um só vira defeito depois de confirmado por HTTP ou na tela, com relato e issue.
+Os riscos foram levantados no planejamento. A execução de API de 17/11/2026 confirmou as mensagens técnicas de data (#486) e a diferença de acesso regular (#487, regra inferida a confirmar com o PO). A realocação entre rotas continua dependente da HU-016 (#478). Os riscos de UI não foram executados nesta rodada.
 
 | Risco | Evidência de leitura | Cobertura |
 | --- | --- | --- |
@@ -52,3 +52,13 @@ Os riscos abaixo vêm da leitura do código e orientam a execução. **Não são
 - **Realocação:** depende de a distribuição permitir ônibus de outra rota ou de fixture documentada; não aprovar o fluxo por fixture.
 - **Perfis:** administrador e representante apenas para os casos de acesso negado.
 - Registrar cada parte verificada, falha ou impedimento; não aprovar caso inteiro quando houver impedimento.
+
+## Resultado de 17/11/2026
+
+**6 casos passaram, 2 falharam e 1 ficou parcial**, sem bloqueados ou pendentes na API. Branch `test/execucao-api-hu-019` criada da develop atualizada `7372b8d67165344545c1264ac936cd4c060ca245`; API real na porta 8119 e PostgreSQL 15.17 inicialmente vazio, migrado até `82_create_alocacao_diaria`. Foram 128 chamadas HTTP e 371 verificações, 365 satisfeitas. GETs não alteraram reservas, alocações ou auditoria.
+
+Issues [#486](https://github.com/GOUOCE/GOUCE-app/issues/486) e [#487](https://github.com/GOUOCE/GOUCE-app/issues/487), ambas atribuídas a ClidenorFilho, com label HU-019 e sem o prefixo no título. O JSON das falhas está no corpo de cada issue. A política de acesso regular da #487 depende de confirmação do PO, conforme o esperado inferido do planejamento; a leitura indevida de dados de outro aluno não foi reproduzida.
+
+A leitura do aviso de realocação foi confirmada por fixture SQL isolada e restaurada. O fluxo completo não foi aprovado, pois a HU-016 recusa a troca de rota (#478); SQL e parâmetros estão no API-005 da suíte. Estados pendente/rejeitado/vencido foram preparados como fixtures após criação real de reservas/alocações e restaurados após comparação com a recusa 403 de `/meus`. Administrador e representante de perfil exclusivo foram recusados com 403.
+
+Desempenho: 10 consultas com alocação e 10 sem distribuição, todas em menos de 41 ms. As medianas/máximos e cada amostra estão no API-009; a medição é local e não substitui carga ou teste de UI. Os scripts temporários ficaram fora do Git.
