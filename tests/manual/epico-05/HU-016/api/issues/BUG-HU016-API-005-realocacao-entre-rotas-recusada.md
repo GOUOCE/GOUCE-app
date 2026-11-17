@@ -5,10 +5,13 @@
 | **Tipo** | Divergência de requisito (AC-09/AC-10); confirmar com o PO antes de tratar como defeito |
 | **Severidade** | 🟡 Média |
 | **Ambiente** | Branch `test/execucao-api-hu-016` — Docker isolado `atu-api016`, `http://localhost:8116`, `develop` `7372b8d6` |
+| **Issue relacionada** | [#478](https://github.com/GOUOCE/GOUCE-app/issues/478) |
 | **Caso relacionado** | `CT-HU016-API-008` |
 | **Documentação** | [HU-016 — Testes manuais de API](../API-HU-016.md#ct-hu016-api-008--distribuição-manual-trocar-ônibusmotorista-e-realocar-excedente) |
 
 ---
+
+**Decisão do PO:** pendente na [#473](https://github.com/GOUOCE/GOUCE-app/issues/473); seguimos a recomendação (esperado deste relato) como regra provisória.
 
 ### Pré-condição
 

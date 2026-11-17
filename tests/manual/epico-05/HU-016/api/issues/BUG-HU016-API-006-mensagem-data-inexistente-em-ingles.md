@@ -5,6 +5,7 @@
 | **Tipo** | Bug de validação (mensagem) |
 | **Severidade** | 🟢 Baixa |
 | **Ambiente** | Branch `test/execucao-api-hu-016` — Docker isolado `atu-api016`, `http://localhost:8116`, `develop` `7372b8d6` |
+| **Issue relacionada** | [#479](https://github.com/GOUOCE/GOUCE-app/issues/479) |
 | **Caso relacionado** | `CT-HU016-API-002` |
 | **Documentação** | [HU-016 — Testes manuais de API](../API-HU-016.md#ct-hu016-api-002--dia-sem-demanda-sem-motoristas-e-data-inválida) |
 

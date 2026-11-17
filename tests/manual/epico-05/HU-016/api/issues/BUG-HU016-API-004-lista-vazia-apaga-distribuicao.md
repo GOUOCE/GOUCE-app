@@ -5,10 +5,13 @@
 | **Tipo** | Bug de integridade (RNF-012); esperado inferido, confirmar com o PO |
 | **Severidade** | 🟠 Alta |
 | **Ambiente** | Branch `test/execucao-api-hu-016` — Docker isolado `atu-api016`, `http://localhost:8116`, `develop` `7372b8d6` |
+| **Issue relacionada** | [#477](https://github.com/GOUOCE/GOUCE-app/issues/477) |
 | **Caso relacionado** | `CT-HU016-API-010` |
 | **Documentação** | [HU-016 — Testes manuais de API](../API-HU-016.md#ct-hu016-api-010--recursos-e-alunos-inválidos-e-atomicidade) |
 
 ---
+
+**Decisão do PO:** pendente na [#473](https://github.com/GOUOCE/GOUCE-app/issues/473); seguimos a recomendação (esperado deste relato) como regra provisória.
 
 ### Pré-condição
 

@@ -433,16 +433,16 @@ Todas as chamadas usam o token do administrador, salvo indicação. Executar na 
 
 ## Defeitos encontrados
 
-Relatos em [`issues/`](issues/). Ainda não publicados como issues no GitHub; vincular o número quando forem.
+Relatos em [`issues/`](issues/). Publicados como issues no GitHub. As decisões do PO dos relatos 004 e 005 estão pendentes na [#473](https://github.com/GOUOCE/GOUCE-app/issues/473); seguimos a recomendação como regra provisória.
 
 | Caso | Defeito | Relato / issue |
 | --- | --- | --- |
-| CT-HU016-API-004 | A prévia coloca aluno em pé enquanto outro ônibus tem assento livre (5 e 8 alunos) | [BUG-HU016-API-001](issues/BUG-HU016-API-001-aluno-em-pe-com-assento-livre.md) |
-| CT-HU016-API-007 | A confirmação com excedentes não informa a lista de excedentes | [BUG-HU016-API-002](issues/BUG-HU016-API-002-confirmacao-nao-informa-excedentes.md) |
-| CT-HU016-API-009 | A prévia com um só ônibus não atende a volta (vira excedente) | [BUG-HU016-API-003](issues/BUG-HU016-API-003-previa-nao-reaproveita-onibus-na-volta.md) |
-| CT-HU016-API-010 | Distribuição manual com lista vazia apaga a distribuição do dia | [BUG-HU016-API-004](issues/BUG-HU016-API-004-lista-vazia-apaga-distribuicao.md) |
-| CT-HU016-API-008 | Realocar excedente para a rota de outro ônibus é recusado (a confirmar com o PO) | [BUG-HU016-API-005](issues/BUG-HU016-API-005-realocacao-entre-rotas-recusada.md) |
-| CT-HU016-API-002 | Data inexistente (`2026-02-30`) responde com mensagem técnica em inglês | [BUG-HU016-API-006](issues/BUG-HU016-API-006-mensagem-data-inexistente-em-ingles.md) |
+| CT-HU016-API-004 | A prévia coloca aluno em pé enquanto outro ônibus tem assento livre (5 e 8 alunos) | [BUG-HU016-API-001](issues/BUG-HU016-API-001-aluno-em-pe-com-assento-livre.md) — [#474](https://github.com/GOUOCE/GOUCE-app/issues/474) |
+| CT-HU016-API-007 | A confirmação com excedentes não informa a lista de excedentes | [BUG-HU016-API-002](issues/BUG-HU016-API-002-confirmacao-nao-informa-excedentes.md) — [#475](https://github.com/GOUOCE/GOUCE-app/issues/475) |
+| CT-HU016-API-009 | A prévia com um só ônibus não atende a volta (vira excedente) | [BUG-HU016-API-003](issues/BUG-HU016-API-003-previa-nao-reaproveita-onibus-na-volta.md) — [#476](https://github.com/GOUOCE/GOUCE-app/issues/476) |
+| CT-HU016-API-010 | Distribuição manual com lista vazia apaga a distribuição do dia | [BUG-HU016-API-004](issues/BUG-HU016-API-004-lista-vazia-apaga-distribuicao.md) — [#477](https://github.com/GOUOCE/GOUCE-app/issues/477) |
+| CT-HU016-API-008 | Realocar excedente para a rota de outro ônibus é recusado (decisão pendente do PO, #473) | [BUG-HU016-API-005](issues/BUG-HU016-API-005-realocacao-entre-rotas-recusada.md) — [#478](https://github.com/GOUOCE/GOUCE-app/issues/478) |
+| CT-HU016-API-002 | Data inexistente (`2026-02-30`) responde com mensagem técnica em inglês | [BUG-HU016-API-006](issues/BUG-HU016-API-006-mensagem-data-inexistente-em-ingles.md) — [#479](https://github.com/GOUOCE/GOUCE-app/issues/479) |
 
 ## Observações gerais
 

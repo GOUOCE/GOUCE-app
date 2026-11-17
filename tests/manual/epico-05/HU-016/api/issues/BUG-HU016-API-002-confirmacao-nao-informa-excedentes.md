@@ -5,6 +5,7 @@
 | **Tipo** | Bug funcional / divergência de requisito (AC-13, decisão do PO na #465) |
 | **Severidade** | 🟠 Alta |
 | **Ambiente** | Branch `test/execucao-api-hu-016` — Docker isolado `atu-api016`, `http://localhost:8116`, `develop` `7372b8d6` |
+| **Issue relacionada** | [#475](https://github.com/GOUOCE/GOUCE-app/issues/475) |
 | **Caso relacionado** | `CT-HU016-API-007` |
 | **Documentação** | [HU-016 — Testes manuais de API](../API-HU-016.md#ct-hu016-api-007--confirmar-com-excedentes-informa-a-lista) |
 
