@@ -14,7 +14,7 @@
 | Revisão do planejamento | 16/11/2026 — requisitos 7.6 com as decisões do PO (#465), BDD do épico 05 e leitura do código |
 | Ambiente | HTTP real `http://127.0.0.1:8117`; Docker `atu-qa-hu017`; PostgreSQL 15.17 em banco novo; Alembic `82_create_alocacao_diaria`; `America/Fortaleza` |
 | Total de casos | 10 |
-| Última execução | 17/11/2026 — 6/10 casos concluídos; início `2026-11-17T17:16:37.149542-03:00` |
+| Última execução | 17/11/2026 — 10/10 casos concluídos; início `2026-11-17T17:16:37.149542-03:00` |
 | Branch de execução | `test/execucao-api-hu-017`, criada da develop atualizada `a2bd96f757f0bbccf1fd2ecec3260c557bda166a` |
 | Código executado | Backend exato `a2bd96f757f0bbccf1fd2ecec3260c557bda166a`, sem alterações de produto |
 | Testador | LLM — execução de API; Cauan Ricardo — revisão |
@@ -23,7 +23,7 @@
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Em execução | 10 | 3 | 2 | 1 | 0 | 4 |
+| Concluída com falhas e divergência de roteiro | 10 | 5 | 4 | 1 | 0 | 0 |
 
 ## Pré-condições
 
@@ -68,10 +68,10 @@ Todas as chamadas usam o token do administrador, salvo indicação. A escala só
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU017-API-007 | Auditoria da confirmação da escala | Confirmar uma escala (CT-001) e consultar `log_auditoria` por usuário, ação, entidade e data/hora; repetir a confirmação do mesmo dia. | Registro de auditoria com usuário, ação, dados e data/hora para cada confirmação. | ⏳ PENDENTE | Risco de leitura: o módulo de alocação não grava `log_auditoria`. BDD: auditoria da escala. |
-| CT-HU017-API-008 | Inativar motorista com escala futura é bloqueado | M1 escalado em D+1 (CT-001); `PATCH /motoristas/{id}/inativar` para M1; para M3 sem escala; para um motorista só com escala em dia passado. | Bloqueio com a mensagem de alocações pendentes para escala futura; permitido nos demais. | ⏳ PENDENTE | Risco de leitura: a verificação de escalas futuras do cadastro de motoristas devolve sempre falso. HU-010, AC-06. |
-| CT-HU017-API-009 | Confirmações simultâneas do mesmo motorista | Duas confirmações manuais simultâneas para a mesma data, ambas com M1 no turno da ida em ônibus diferentes. | Sem duplicidade e sem erro 500: uma aceita e a outra recusada, ou a última substitui a primeira de forma consistente. | ⏳ PENDENTE | Risco de leitura: a recusa final depende das restrições únicas do banco, sem tratamento específico. |
-| CT-HU017-API-010 | Autenticação e perfis sem acesso | POST de escala e GET `/motoristas` sem token, com token inválido, aluno, representante e administrador (controle). | 401 sem credencial válida; 403 para aluno e representante; administrador com acesso; nada gravado. | ⏳ PENDENTE | BDD: API nega a escala sem perfil administrativo. |
+| CT-HU017-API-007 | Auditoria da confirmação da escala | Confirmar uma escala (CT-001) e consultar `log_auditoria` por usuário, ação, entidade e data/hora; repetir a confirmação do mesmo dia. | Registro de auditoria com usuário, ação, dados e data/hora para cada confirmação. | ❌ FALHOU | Risco de leitura: o módulo de alocação não grava `log_auditoria`. BDD: auditoria da escala. |
+| CT-HU017-API-008 | Inativar motorista com escala futura é bloqueado | M1 escalado em D+1 (CT-001); `PATCH /motoristas/{id}/inativar` para M1; para M3 sem escala; para um motorista só com escala em dia passado. | Bloqueio com a mensagem de alocações pendentes para escala futura; permitido nos demais. | ❌ FALHOU | Risco de leitura: a verificação de escalas futuras do cadastro de motoristas devolve sempre falso. HU-010, AC-06. |
+| CT-HU017-API-009 | Confirmações simultâneas do mesmo motorista | Duas confirmações manuais simultâneas para a mesma data, ambas com M1 no turno da ida em ônibus diferentes. | Sem duplicidade e sem erro 500: uma aceita e a outra recusada, ou a última substitui a primeira de forma consistente. | ✅ PASSOU | Risco de leitura: a recusa final depende das restrições únicas do banco, sem tratamento específico. |
+| CT-HU017-API-010 | Autenticação e perfis sem acesso | POST de escala e GET `/motoristas` sem token, com token inválido, aluno, representante e administrador (controle). | 401 sem credencial válida; 403 para aluno e representante; administrador com acesso; nada gravado. | ✅ PASSOU | BDD: API nega a escala sem perfil administrativo. |
 
 ## Detalhamento dos casos
 
@@ -97,7 +97,7 @@ Todas as chamadas usam o token do administrador, salvo indicação. A escala só
 
 **Resultado obtido**
 
-- 201 com os três vínculos corretos e reservas/outra data preservadas. A mensagem retornada foi Distribuição realizada com sucesso, diferente de Escala de motoristas confirmada com sucesso. Defeitos: mensagem_sucesso.
+- 201 com os três vínculos corretos e reservas/outra data preservadas. A mensagem retornada foi Distribuição realizada com sucesso, diferente de Escala de motoristas confirmada com sucesso. Defeitos: [#489](https://github.com/GOUOCE/GOUCE-app/issues/489).
 - Status: ❌ FALHOU.
 
 ---
@@ -173,7 +173,7 @@ Todas as chamadas usam o token do administrador, salvo indicação. A escala só
 
 **Resultado obtido**
 
-- Motorista M1 repetido em P1/V1 e P2/V2 na ida foi recusado com 409 e rollback integral. Controle de um vínculo aceito. Mensagem técnica alocação 1: motorista 1 conflitante no turno ida. diverge do texto aprovado pelo PO; escalas restauradas. Defeitos: mensagem_conflito.
+- Motorista M1 repetido em P1/V1 e P2/V2 na ida foi recusado com 409 e rollback integral. Controle de um vínculo aceito. Mensagem técnica alocação 1: motorista 1 conflitante no turno ida. diverge do texto aprovado pelo PO; escalas restauradas. Defeitos: [#490](https://github.com/GOUOCE/GOUCE-app/issues/490).
 - Status: ❌ FALHOU.
 
 ---
@@ -250,8 +250,8 @@ Todas as chamadas usam o token do administrador, salvo indicação. A escala só
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Duas confirmações 201 persistiram a escala, incluindo troca de motorista na segunda, mas não criaram qualquer registro novo em log_auditoria. Prévia e recusa também não escreveram, conforme esperado. Escala base restaurada. Defeitos: [#491](https://github.com/GOUOCE/GOUCE-app/issues/491).
+- Status: ❌ FALHOU.
 
 ---
 
@@ -275,8 +275,8 @@ Todas as chamadas usam o token do administrador, salvo indicação. A escala só
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- M1 com duas escalas futuras foi inativado com 200 e permaneceu vinculado às viagens; bloqueio esperado não ocorreu. M3 livre e M5 só com histórico puderam inativar; após redistribuir e retirar escalas futuras de M1, a inativação também funcionou. Estado base restaurado. Defeitos: [#492](https://github.com/GOUOCE/GOUCE-app/issues/492).
+- Status: ❌ FALHOU.
 
 ---
 
@@ -300,8 +300,16 @@ Todas as chamadas usam o token do administrador, salvo indicação. A escala só
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Duas rodadas com duas threads/conexões HTTP independentes e partidas por barreira, em datas distintas. Respostas e persistência final conferidas; detalhes dos status estão no registro da execução. Sem mocks, lock artificial ou alteração de servidor para induzir corrida.
+- Status: ✅ PASSOU.
+
+| Rodada / data | HTTP das duas conexões | Sobreposição confirmada | Persistência final consistente |
+| --- | --- | --- | --- |
+| 2026-11-20 | [201, 201] | True | True |
+| 2026-11-23 | [201, 201] | True | True |
+
+Duas threads com barreira no cliente e conexões HTTP independentes; sem locks artificiais no banco, mocks ou alterações de servidor. O estado final foi comparado ao payload de cada requisição.
+
 
 ---
 
@@ -324,8 +332,8 @@ Todas as chamadas usam o token do administrador, salvo indicação. A escala só
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Sem token/inválido: 401; aluno aprovado, pendente, rejeitado e representante exclusivo: 403, no POST de escala e GET de motoristas. Recusas sem escrita/exposição. Administrador confirmou com 201 e listou com 200.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -347,8 +355,10 @@ Todas as chamadas usam o token do administrador, salvo indicação. A escala só
 
 | Caso | Defeito ou divergência | Issue |
 | --- | --- | --- |
-| CT-HU017-API-001 | Mensagem de confirmação difere do requisito da escala. | Reproduzido; publicação ao concluir |
-| CT-HU017-API-004 | 409 correto, mensagem de conflito difere da aprovada pelo PO. | Reproduzido; publicação ao concluir |
+| CT-HU017-API-001 | Mensagem de confirmação difere do requisito da escala. | [#489](https://github.com/GOUOCE/GOUCE-app/issues/489) — JSON da falha no corpo |
+| CT-HU017-API-004 | 409 correto, mensagem de conflito difere da aprovada pelo PO. | [#490](https://github.com/GOUOCE/GOUCE-app/issues/490) — JSON da falha no corpo |
+| CT-HU017-API-007 | Confirmação e substituição da escala não geram auditoria. | [#491](https://github.com/GOUOCE/GOUCE-app/issues/491) — JSON da falha no corpo |
+| CT-HU017-API-008 | Motorista com escala futura pode ser inativado. | [#492](https://github.com/GOUOCE/GOUCE-app/issues/492) — JSON da falha no corpo |
 | CT-HU017-API-006 | API cumpre o BDD; roteiro pede id adicional na mensagem. Parcial por divergência de oráculo. | Sem defeito de backend atribuído para esse texto |
 
 ## Observações gerais
@@ -359,6 +369,8 @@ Todas as chamadas usam o token do administrador, salvo indicação. A escala só
 
 ## Registro desta execução
 
-**6/10 casos concluídos: 3 passaram, 2 falharam e 1 parcial; 4 pendentes.** 83 chamadas HTTP incluindo preparação/logins e revisão do API-006. GETs e recusas conferidos em conexões novas, sem escrita em reservas/alocações/auditoria. Os esperados do planejamento foram preservados.
+**10/10 casos concluídos: 5 passaram, 4 falharam e 1 parcial; 0 pendentes.** 126 chamadas HTTP incluindo preparação/logins e revisão do API-006. GETs e recusas conferidos em conexões novas, sem escrita em reservas/alocações/auditoria. Os esperados do planejamento foram preservados.
 
 Somente falhas têm JSON de evidência, no corpo das issues. Sem pasta ou arquivo de evidência no repositório. Os 9 casos de UI continuam pendentes.
+
+M5 só com escala histórica de 2026-11-16, criada por POST real com alocação sem passageiros; permaneceu inativo após o teste. Relógio do host preservado. M1/M2/M3 ativos e M4 inativo, escalas principais restauradas.

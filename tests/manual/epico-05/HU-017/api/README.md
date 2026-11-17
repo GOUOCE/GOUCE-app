@@ -34,7 +34,7 @@ Commits seguem o [CONTRIBUTING](../../../../../docs/CONTRIBUTING.md), com autori
 
 ## Riscos mapeados no código
 
-Os riscos abaixo vêm da leitura do código e orientam a execução. **Não são defeitos reproduzidos**: cada um só vira defeito depois de confirmado por HTTP ou na tela, com relato e issue.
+Os riscos foram levantados no planejamento. A execução de 17/11/2026 confirmou quatro defeitos por HTTP/banco reais; as duas rodadas de concorrência não reproduziram 500 nem inconsistência. Riscos de UI permanecem sem execução nesta entrega. O API-006 ficou parcial porque o roteiro diverge do BDD quanto à presença do id na mensagem; não foi aberto bug de backend para esse texto.
 
 | Risco | Evidência de leitura | Cobertura |
 | --- | --- | --- |
@@ -53,3 +53,15 @@ Os riscos abaixo vêm da leitura do código e orientam a execução. **Não são
 - **Massa:** a escala depende da distribuição do dia (HU-016), das reservas (HU-013) e dos cadastros de frota e motoristas.
 - O CT-008 depende da implementação do verificador de escalas futuras; sem ele, a falha é esperada e deve ser registrada, não aprovada.
 - Registrar cada parte verificada, falha ou impedimento; não aprovar caso inteiro quando houver impedimento.
+
+## Resultado de 17/11/2026
+
+**5 casos passaram, 4 falharam e 1 ficou parcial**, sem bloqueados ou pendentes na API. Código executado: develop `a2bd96f757f0bbccf1fd2ecec3260c557bda166a`; stack isolada `atu-qa-hu017`, porta 8117, banco PostgreSQL 15.17 inicialmente vazio e migrado até `82_create_alocacao_diaria`. Foram 126 chamadas HTTP, incluindo preparação e revisão pontual do API-006.
+
+Defeitos com JSON da falha no próprio corpo, labels HU-017/API/Back e atribuição a ClidenorFilho: [#489](https://github.com/GOUOCE/GOUCE-app/issues/489) (mensagem de sucesso), [#490](https://github.com/GOUOCE/GOUCE-app/issues/490) (mensagem do conflito), [#491](https://github.com/GOUOCE/GOUCE-app/issues/491) (auditoria ausente) e [#492](https://github.com/GOUOCE/GOUCE-app/issues/492) (inativação com escala futura). Os títulos não usam prefixo de HU.
+
+O API-006 preserva seu esperado original, mas a API cumpriu exatamente a mensagem do BDD: alocação 0: motorista inexistente ou inativo. O roteiro pede o id adicional no texto. A recusa 422, revalidação e rollback passaram; o caso ficou parcial até reconciliar esse oráculo, sem atribuir o erro do roteiro ao backend.
+
+Concorrência: duas rodadas em 20/11 e 23/11/2026, com duas threads e conexões HTTP independentes e intervalos sobrepostos. As quatro confirmações retornaram 201; o estado final correspondeu integralmente a uma das requisições, sem duplicidade ou 500. Não houve lock artificial no banco nem alteração do servidor para produzir corrida; o resultado é limitado às rodadas executadas.
+
+Toda a massa de negócio (cadastros, reservas, histórico de escala sem passageiros, redistribuições e inativação/reativação) foi preparada por HTTP. Somente contas/documentos e o representante de perfil exclusivo usaram fixtures ORM, com login real. M2 foi liberado de escalas futuras antes dos testes de inativação de preparo; estados e escalas foram restaurados após cada caso. Os scripts temporários ficaram fora do Git, e os 9 casos de UI não foram executados.
