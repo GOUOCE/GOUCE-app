@@ -1,6 +1,6 @@
 # Testes manuais — Épico 05 — Alocação e Distribuição Logística
 
-Suítes essenciais da **HU-016 — Distribuição de Alunos nos Ônibus**, **HU-017 — Alocação de Motoristas às Rotas**, **HU-018 — Visualização da Lista de Embarque** e **HU-019 — Consulta de Alocação Diária**: **76 casos, sendo 39 de API e 37 de UI**. A **HU-020 — Rodízio Semanal** foi adiada pelo PO na [issue #465](https://github.com/GOUOCE/GOUCE-app/issues/465) e não tem suíte nesta entrega. Nesta branch, a execução da **API HU-019** registra **6 casos aprovados, 2 com falha e 1 parcial**, em 17/11/2026. Os outros **67 casos não têm resultados incorporados nesta base**; os resultados de outras HUs permanecem em suas entregas próprias, incluindo a HU-018 no [PR #485](https://github.com/GOUOCE/GOUCE-app/pull/485).
+Suítes essenciais da **HU-016 — Distribuição de Alunos nos Ônibus**, **HU-017 — Alocação de Motoristas às Rotas**, **HU-018 — Visualização da Lista de Embarque** e **HU-019 — Consulta de Alocação Diária**: **76 casos, sendo 39 de API e 37 de UI**. A **HU-020 — Rodízio Semanal** foi adiada pelo PO na [issue #465](https://github.com/GOUOCE/GOUCE-app/issues/465) e não tem suíte nesta entrega. As execuções de API registram **HU-018: 5 passaram e 4 falharam** e **HU-019: 6 passaram, 2 falharam e 1 parcial**. Total incorporado nesta base: **11 passaram, 6 falharam, 1 parcial e 58 sem resultado registrado**. Execuções das outras HUs em branches próprias mantêm seu histórico separado.
 
 ## Índice das suítes
 
@@ -8,7 +8,7 @@ Suítes essenciais da **HU-016 — Distribuição de Alunos nos Ônibus**, **HU-
 | --- | --- | --- | --- |
 | HU-016 | Distribuição de Alunos nos Ônibus | [11 casos](HU-016/api/API-HU-016.md) | [9 casos](HU-016/ui/UI-HU-016.md) |
 | HU-017 | Alocação de Motoristas às Rotas | [10 casos](HU-017/api/API-HU-017.md) | [9 casos](HU-017/ui/UI-HU-017.md) |
-| HU-018 | Visualização da Lista de Embarque | [9 casos](HU-018/api/API-HU-018.md) | [10 casos](HU-018/ui/UI-HU-018.md) |
+| HU-018 | Visualização da Lista de Embarque | [9 casos: 5 passaram, 4 falharam](HU-018/api/API-HU-018.md) | [10 casos pendentes](HU-018/ui/UI-HU-018.md) |
 | HU-019 | Consulta de Alocação Diária | [9 casos: 6 passaram, 2 falharam, 1 parcial](HU-019/api/API-HU-019.md) | [9 casos pendentes](HU-019/ui/UI-HU-019.md) |
 | **Total** | **4 HUs** | **39** | **37** |
 
@@ -48,7 +48,7 @@ Leitura realizada em **16/11/2026**. O PR #457 está aberto e pode mudar: regist
 
 ## Riscos mapeados no código (resumo)
 
-Os riscos de cada HU estão detalhados no guia `api/README.md` da HU. Resumo dos riscos do planejamento; os resultados HU-019 desta execução estão indicados abaixo. As outras HUs não foram reexecutadas nesta entrega:
+Os riscos de cada HU estão detalhados no guia `api/README.md` da HU. Resumo do planejamento; os resultados reproduzidos das HU-018 e HU-019 estão indicados abaixo e nas respectivas suítes. Os riscos das HU-016 e HU-017 mantêm o histórico de suas entregas próprias:
 
 | Risco | HU | Casos |
 | --- | --- | --- |
@@ -59,7 +59,11 @@ Os riscos de cada HU estão detalhados no guia `api/README.md` da HU. Resumo dos
 | A tela reexibe a distribuição confirmada a partir de memória do app | HU-016, HU-017 | HU-016 UI-004; HU-017 UI-003 |
 | Mensagens do conflito de motorista e do sucesso da escala diferem do requisito; sem auditoria da escala | HU-017 | API-001, API-004, API-007 |
 | Inativação de motorista com escala futura não é bloqueada (verificador devolve sempre falso) | HU-017 | API-008 |
-| Data inexistente (`2026-02-30`) tende a virar erro 500 na lista de embarque | HU-018 | API-001, API-005 |
+| **Reproduzido:** data inexistente causa 500 em lista-embarque e rotas-do-dia — [#480](https://github.com/GOUOCE/GOUCE-app/issues/480) | HU-018 | API-005 falhou |
+| **Reproduzido:** representante recebe dados do trecho da outra IES — [#481](https://github.com/GOUOCE/GOUCE-app/issues/481) | HU-018 | API-006 falhou |
+| **Reproduzido:** filtro por turno mantém ponto/IES do trecho excluído — [#482](https://github.com/GOUOCE/GOUCE-app/issues/482) | HU-018 | API-003 falhou |
+| **Reproduzido:** nomes acentuados depois de Z — [#483](https://github.com/GOUOCE/GOUCE-app/issues/483) | HU-018 | API-002 falhou |
+| **Reproduzido em fixture legada:** mensagem genérica para representante sem IES — [#484](https://github.com/GOUOCE/GOUCE-app/issues/484) | HU-018 | API-006 falhou |
 | Uma chamada de alocação por reserva ao abrir Agenda e Início; falha vira “Aguardando alocação” | HU-019 | UI-008, UI-009 |
 | **Reproduzido:** `minha-viagem` retorna 200 ALOCADO para pendente/rejeitado/vencido enquanto `/meus` recusa 403 — [#487](https://github.com/GOUOCE/GOUCE-app/issues/487); esperado inferido a confirmar com o PO | HU-019 | API-008 falhou |
 | **Reproduzido:** data inválida retorna 422 com texto técnico em inglês — [#486](https://github.com/GOUOCE/GOUCE-app/issues/486) | HU-019 | API-007 falhou |
@@ -75,7 +79,13 @@ Os riscos de cada HU estão detalhados no guia `api/README.md` da HU. Resumo dos
 
 ## Registro dos resultados
 
-Preencher ambiente/commit, data, resultado obtido, status, resumo, totais e defeitos apenas na execução. Preservar o esperado mesmo quando a implementação divergir. Contabilização incorporada nesta base após executar a API HU-019: **6 passaram, 2 falharam, 1 parcial e 67 sem resultado nesta branch**. Registrar HTTP e corpo na API, evidências visuais na UI e consultas de persistência quando pedidas, sem credenciais, tokens ou dados pessoais. Relatos `.md` de defeitos são preparados depois da reprodução; a publicação no GitHub fica para a etapa de execução e revisão.
+Preencher ambiente/commit, data, resultado obtido, status, resumo, totais e defeitos apenas na execução. Preservar o esperado mesmo quando a implementação divergir. Contabilização após incorporar as execuções de API HU-018 e HU-019: **11 passaram, 6 falharam, 1 parcial e 58 sem resultado registrado nesta base**. Registrar HTTP e corpo na API, evidências visuais na UI e consultas de persistência quando pedidas, sem credenciais, tokens ou dados pessoais. Relatos `.md` de defeitos são preparados depois da reprodução; a publicação no GitHub fica para a etapa de execução e revisão.
+
+## Execução de API HU-018 — 17/11/2026
+
+Branch `test/execucao-api-hu-018` criada da develop atualizada `7372b8d67165344545c1264ac936cd4c060ca245`, já com PR #457 integrado. Stack isolada `atu-qa-hu018`, HTTP na porta 8118, PostgreSQL real e migration head `82_create_alocacao_diaria`. Os 9 casos foram concluídos: 5 passaram e 4 falharam; nenhuma dependência bloqueou esta execução. Resultados completos na [suíte](HU-018/api/API-HU-018.md).
+
+Por solicitação de Cauan, somente erros têm JSON de evidência, no próprio corpo das cinco issues vinculadas. Não há pasta/arquivo de evidências desta execução no repositório. A UI não foi executada; os 37 casos de UI e os 30 casos de API das outras HUs preservam o estado registrado nesta base.
 
 ## Execução de API HU-019 — 17/11/2026
 
