@@ -12,22 +12,24 @@
 | Base do planejamento | `develop` `1eb2818d` (módulo `backend/src/modulos/alocacao_diaria/`, `lista_embarque_service.py`) |
 | Branch de planejamento | `test/planejamento-api-ui-hu-018`, com entrega para `develop` |
 | Revisão do planejamento | 16/11/2026 — requisitos 7.6 com as decisões do PO (#465), BDD do épico 05 e leitura do código |
-| Ambiente | A preencher — URL, SHA testado, banco e fuso; base analisada `develop` `1eb2818d`, PostgreSQL 15, Alembic `82_updated_at_faculdade_ponto`, `America/Fortaleza` |
+| Ambiente | HTTP real `http://127.0.0.1:8118`; Docker `atu-qa-hu018`; PostgreSQL 15.17 em banco novo; Alembic `82_create_alocacao_diaria` (inclui `82_updated_at_faculdade_ponto`); `America/Fortaleza` |
 | Total de casos | 9 |
-| Última execução | Não realizada |
+| Última execução | 17/11/2026 — 5/9 casos concluídos; início `2026-11-17T13:30:52.368725-03:00` |
+| Branch de execução | `test/execucao-api-hu-018`, criada da `develop` atualizada `7372b8d67165344545c1264ac936cd4c060ca245` |
+| Código executado | Backend exato do commit `7372b8d67165344545c1264ac936cd4c060ca245`, sem alterações de produto |
 | Testador | LLM — execução de API; Cauan Ricardo — revisão |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 9 | 0 | 0 | 0 | 0 | 9 |
+| Em execução | 9 | 2 | 3 | 0 | 0 | 4 |
 
 ## Pré-condições
 
 | ID | Descrição |
 | --- | --- |
-| PC-01 | API e PostgreSQL reais em stack isolada, com as migrations da `develop` até `82_updated_at_faculdade_ponto` (head única). Registrar URL, SHA, data/fuso e acesso de leitura às tabelas `alocacao_diaria`, `alocacao_aluno`, `agendamento` e `log_auditoria`. Não usar `create_all` nem mock no lugar da integração HTTP. [Guia](README.md). |
+| PC-01 | API e PostgreSQL reais em stack isolada, com as migrations da `develop` até `82_create_alocacao_diaria` (head única do commit executado, incluindo `82_updated_at_faculdade_ponto`). Registrar URL, SHA, data/fuso e acesso de leitura às tabelas `alocacao_diaria`, `alocacao_aluno`, `agendamento` e `log_auditoria`. Não usar `create_all` nem mock no lugar da integração HTTP. [Guia](README.md). |
 | PC-02 | Tokens reais: administrador (seed `admin@gouce.app`); alunos A a F aprovados e com vínculo válido; representante R1 da UFC e R2 da IFCE; aluno pendente ou reprovado e representante inativo para os casos de acesso. Credenciais fora do Git. |
 | PC-03 | Cadastros pela API administrativa: IES UFC e IFCE; bairros/pontos; **P1 Rota Centro - UFC** (06:30/17:30, atende UFC na ida e na volta) e **P2 Rota Campo - IFCE** (06:40/18:40, atende IFCE). Frota e escala: ônibus **V1 `ABC1D23`** (3 assentos e 2 em pé), **V2 `DEF4G56`** (2 assentos e 1 em pé), **V3 `HIJ7K89`** (4 assentos e 0 em pé) e **V4** inativo; motoristas **M1, M2, M3** ativos e **M4** inativo. |
 | PC-04 | D = data local do servidor; anotar hora e fuso. Usar dias úteis válidos dentro da janela de agendamento (D+1 em diante) e registrar ids/datas reais; as datas fixas do BDD são exemplos. Sem alterar o relógio do host. |
@@ -50,16 +52,16 @@ Usar o token do administrador, salvo indicação. A lista depende da distribuiç
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU018-API-001 | Rotas do dia para o seletor “Rota *” | D+1 com distribuição confirmada (HU-016) em P1 e P2; data sem alocação; GET `/alocacao-diaria/rotas-do-dia?data=` com administrador e com R1 (UFC). | 200 com `data` e `rotas` (`rota_id`, `nome_rota`, `horario_saida`) por perfil, ordenadas pelo nome. | ⏳ PENDENTE | BDD: API informa as rotas do dia para o seletor. |
-| CT-HU018-API-002 | Lista de embarque da rota: contador, ordenação e dados dos alunos | P1 com 5 alunos alocados (nomes fora de ordem alfabética e nomes com acento) em V1 e M1; GET `/alocacao-diaria/lista-embarque?data=&rota_id=<P1>`; depois uma rota com 1 aluno. | 200; contador e texto corretos; lista ordenada pelo nome; dados e veículos conferem com o banco. | ⏳ PENDENTE | BDD: seleciona a rota; contador; ordenação por nome. |
-| CT-HU018-API-003 | Indicação do turno agendado e filtro por turno | Alunos com só ida, só volta, ida e volta na mesma IES e ida e volta em IES distintas; consultas sem filtro e com `turno=ida`, `turno=volta` e `turno=noite`. | Quatro indicações corretas; filtro por turno restringe os dados; valor inválido recusado. | ⏳ PENDENTE | BDD: indicação do turno agendado do aluno. |
-| CT-HU018-API-004 | Rota sem alunos alocados | Rota ativa sem alocação na data; rota cuja alocação só tem aluno com reserva cancelada. | 200 com contador zero, mensagem do requisito e impressão desabilitada. | ⏳ PENDENTE | BDD: rota sem alunos; AC-04 e FA-002. |
+| CT-HU018-API-001 | Rotas do dia para o seletor “Rota *” | D+1 com distribuição confirmada (HU-016) em P1 e P2; data sem alocação; GET `/alocacao-diaria/rotas-do-dia?data=` com administrador e com R1 (UFC). | 200 com `data` e `rotas` (`rota_id`, `nome_rota`, `horario_saida`) por perfil, ordenadas pelo nome. | ✅ PASSOU | BDD: API informa as rotas do dia para o seletor. |
+| CT-HU018-API-002 | Lista de embarque da rota: contador, ordenação e dados dos alunos | P1 com 5 alunos alocados (nomes fora de ordem alfabética e nomes com acento) em V1 e M1; GET `/alocacao-diaria/lista-embarque?data=&rota_id=<P1>`; depois uma rota com 1 aluno. | 200; contador e texto corretos; lista ordenada pelo nome; dados e veículos conferem com o banco. | ❌ FALHOU | BDD: seleciona a rota; contador; ordenação por nome. |
+| CT-HU018-API-003 | Indicação do turno agendado e filtro por turno | Alunos com só ida, só volta, ida e volta na mesma IES e ida e volta em IES distintas; consultas sem filtro e com `turno=ida`, `turno=volta` e `turno=noite`. | Quatro indicações corretas; filtro por turno restringe os dados; valor inválido recusado. | ❌ FALHOU | BDD: indicação do turno agendado do aluno. |
+| CT-HU018-API-004 | Rota sem alunos alocados | Rota ativa sem alocação na data; rota cuja alocação só tem aluno com reserva cancelada. | 200 com contador zero, mensagem do requisito e impressão desabilitada. | ✅ PASSOU | BDD: rota sem alunos; AC-04 e FA-002. |
 
 ### Seção B — Representante e parâmetros
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU018-API-005 | Parâmetros do administrador: rota obrigatória, inexistente e data inválida | Administrador sem `rota_id`; `rota_id` 999999, 0, -1 e `abc`; `data` `2026-02-30`, `16-11-2026` e ausente. | 422 sem rota; 404 rota inexistente; 422 para entradas inválidas; nenhuma resposta 500. | ⏳ PENDENTE | Risco de leitura: a data inexistente passa pelo padrão da consulta e falha ao converter. BDD: rota obrigatória; rota inexistente. |
+| CT-HU018-API-005 | Parâmetros do administrador: rota obrigatória, inexistente e data inválida | Administrador sem `rota_id`; `rota_id` 999999, 0, -1 e `abc`; `data` `2026-02-30`, `16-11-2026` e ausente. | 422 sem rota; 404 rota inexistente; 422 para entradas inválidas; nenhuma resposta 500. | ❌ FALHOU | Risco de leitura: a data inexistente passa pelo padrão da consulta e falha ao converter. BDD: rota obrigatória; rota inexistente. |
 | CT-HU018-API-006 | Representante: apenas alunos da sua faculdade e descoberta automática da rota | R1 (UFC) e R2 (IFCE); P1 com alunos da UFC e da IFCE; GET lista sem `rota_id` com 1 rota, com 2 rotas e sem rota; com `rota_id` de rota sem alunos da IES; representante sem vínculo ativo e sem IES. | Só alunos da própria IES; rota descoberta; 422 com várias rotas; 404 sem rota; 403 sem vínculo. | ⏳ PENDENTE | BDD: representante vê só os alunos da faculdade; descoberta da rota; várias rotas; sem rota; sem vínculo. |
 
 ### Seção C — Atualização e acesso
@@ -94,8 +96,8 @@ Usar o token do administrador, salvo indicação. A lista depende da distribuiç
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Rotas com alocação e fallback em data vazia corretos para administrador e R1; ordenação/horários e ausência de escrita confirmados.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -120,8 +122,8 @@ Usar o token do administrador, salvo indicação. A lista depende da distribuiç
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Listas com cinco e um aluno, contador, pontos/IES e ônibus/motoristas conferidos no PostgreSQL. Ordem obtida desloca Ágata para depois de Zuleica; divergência registrada. Defeitos: ordenacao_acentos.
+- Status: ❌ FALHOU.
 
 ---
 
@@ -145,8 +147,8 @@ Usar o token do administrador, salvo indicação. A lista depende da distribuiç
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- As quatro indicações e o filtro de alunos/veículos funcionam; turno=noite retorna 422. Contudo, filtro ida/volta preserva ponto e IES do turno excluído. Defeitos: filtro_turno.
+- Status: ❌ FALHOU.
 
 ---
 
@@ -168,8 +170,8 @@ Usar o token do administrador, salvo indicação. A lista depende da distribuiç
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Rota sem alocação e rota após cancelamento do único aluno retornaram 200, zero alunos, mensagem prevista e impressão desabilitada.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -194,8 +196,8 @@ Usar o token do administrador, salvo indicação. A lista depende da distribuiç
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Rota obrigatória/inexistente e ids/formato/query inválidos recusados corretamente. Data 2026-02-30 provocou HTTP 500 em lista-embarque e rotas-do-dia, com reservas/alocações/auditoria preservadas. Defeitos: data_inexistente.
+- Status: ❌ FALHOU.
 
 ---
 
@@ -316,10 +318,18 @@ Usar o token do administrador, salvo indicação. A lista depende da distribuiç
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. Os riscos de leitura estão no [guia de execução da API](README.md). | — |
+| CT-HU018-API-002 | Nomes acentuados aparecem depois de Z na lista. | Reproduzido; publicação ao concluir a execução |
+| CT-HU018-API-003 | Filtro por turno mantém ponto/IES do trecho excluído. | Reproduzido; publicação ao concluir a execução |
+| CT-HU018-API-005 | Data civil impossível causa HTTP 500 nas duas consultas. | Reproduzido; publicação ao concluir a execução |
 
 ## Observações gerais
 
 - Referências: [requisitos, seção 7.6](../../../../../docs/requisitos.md), [BDD do épico 05](../../../../../bdd/features/epico-05/README.md) e as [decisões do PO na #465](https://github.com/GOUOCE/GOUCE-app/issues/465). O README do BDD não aponta divergências relevantes para a HU-018.
 - Mensagens de API vêm do código; as de interface, dos requisitos ou das telas.
-- Nenhum caso foi executado nesta entrega. Não confundir defeito reproduzido, risco de leitura e dependência ausente.
+- Execução real solicitada em 17/11/2026. Cadastros, reservas, promoção/revogação de representantes, distribuição manual, cancelamento e realocação preparados por HTTP. Contas/documentos sintéticos por fixture ORM; estado legado de representante sem IES por fixture SQL isolada, restaurada após as consultas. Não há mocks nem substituição de dependências.
+
+## Registro desta execução
+
+**5/9 casos concluídos: 2 passaram e 3 falharam; 4 pendentes.** 76 chamadas HTTP no total, incluindo preparação/logins; 146 verificações, 141 satisfeitas. Reservas, alocações e auditoria conferidas em conexões novas; GETs sem escrita: confirmado.
+
+Conforme solicitado por Cauan, somente as falhas têm JSON de evidência, inserido no corpo das issues. Sem arquivo JSON de evidência no repositório e sem pasta de evidências. Os 10 casos de UI seguem pendentes.
