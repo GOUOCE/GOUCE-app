@@ -1,6 +1,6 @@
 # Como executar os testes manuais de API — HU-017
 
-Execução pela **LLM**, com revisão de **Cauan Ricardo**. [Suíte de API: 10 casos](API-HU-017.md). A [UI tem 9 casos](../ui/UI-HU-017.md) para execução manual por Cauan. Nenhum caso foi executado nesta entrega.
+Execução pela **LLM**, com revisão de **Cauan Ricardo**. [Suíte de API: 10 casos](API-HU-017.md). A [UI tem 9 casos](../ui/UI-HU-017.md) para execução manual por Cauan. Execução iniciada em 17/11/2026 na branch `test/execucao-api-hu-017`, criada da develop atualizada `a2bd96f7`. [Resultados e issues](API-HU-017.md).
 
 ## Base e fontes
 
@@ -9,7 +9,7 @@ Planejamento na branch `test/planejamento-api-ui-hu-017`, com entrega para `deve
 ## 1. Preparar a execução
 
 1. Quando a execução for solicitada, criar a branch própria de testes e registrar o commit exato do build.
-2. Usar API e PostgreSQL reais em stack isolada com as migrations da `develop` (head `82_updated_at_faculdade_ponto`), com acesso de leitura a `alocacao_diaria` e `log_auditoria`.
+2. Usar API e PostgreSQL reais em stack isolada com as migrations da `develop` (head `82_create_alocacao_diaria`, incluindo `82_updated_at_faculdade_ponto`), com acesso de leitura a `alocacao_diaria` e `log_auditoria`.
 3. Confirmar no OpenAPI `POST /alocacao-diaria/distribuicao`, `GET /motoristas` e `PATCH /motoristas/{id}/inativar`, por HTTP.
 4. Obter os tokens em `POST /auth/login` e manter fora do Git.
 
@@ -28,7 +28,7 @@ Cadastrar IES, rotas P1/P2, ônibus V1 a V4 e motoristas M1 a M4 como na HU-016.
 
 Preencher ambiente/commit, última execução, resultado obtido por variação, status, resumo, totais e defeitos. Usar ✅ passou, ❌ falhou, ⚠️ parcial, 🚫 bloqueado e ⏳ pendente; registrar a dependência específica quando impedir uma parte.
 
-Guardar a evidência da execução em **um JSON simples**, quando houver resultados reais. Não criar pastas de executor/evidências nem incluir credenciais, tokens ou dados pessoais. Preparar relatos reproduzidos em `api/issues/` pelo [modelo de API](../../../modelos/ISSUE-BUG-API.md), vinculando a issue quando publicada. Os esperados não devem ser ajustados para fazer um caso passar.
+Nesta execução, registrar **somente JSON das falhas no corpo das issues do GitHub**, seguindo o [modelo de API](../../../modelos/ISSUE-BUG-API.md), conforme solicitado por Cauan. Sem arquivo JSON/pasta de evidências no repositório; vincular as issues à suíte e omitir credenciais, tokens e dados pessoais reais. Os esperados não devem ser ajustados para fazer um caso passar.
 
 Commits seguem o [CONTRIBUTING](../../../../../docs/CONTRIBUTING.md), com autoria de Cauan e sem coautoria. Depois da revisão e integração do planejamento em `develop`, criar a branch própria de execução da HU; não registrar aprovação de caso por leitura do código.
 

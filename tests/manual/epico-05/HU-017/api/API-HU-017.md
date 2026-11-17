@@ -12,22 +12,24 @@
 | Base do planejamento | `develop` `1eb2818d` (módulos `alocacao_diaria` e `motoristas`) |
 | Branch de planejamento | `test/planejamento-api-ui-hu-017`, com entrega para `develop` |
 | Revisão do planejamento | 16/11/2026 — requisitos 7.6 com as decisões do PO (#465), BDD do épico 05 e leitura do código |
-| Ambiente | A preencher — URL, SHA testado, banco e fuso; base analisada `develop` `1eb2818d`, PostgreSQL 15, Alembic `82_updated_at_faculdade_ponto`, `America/Fortaleza` |
+| Ambiente | HTTP real `http://127.0.0.1:8117`; Docker `atu-qa-hu017`; PostgreSQL 15.17 em banco novo; Alembic `82_create_alocacao_diaria`; `America/Fortaleza` |
 | Total de casos | 10 |
-| Última execução | Não realizada |
+| Última execução | 17/11/2026 — 6/10 casos concluídos; início `2026-11-17T17:16:37.149542-03:00` |
+| Branch de execução | `test/execucao-api-hu-017`, criada da develop atualizada `a2bd96f757f0bbccf1fd2ecec3260c557bda166a` |
+| Código executado | Backend exato `a2bd96f757f0bbccf1fd2ecec3260c557bda166a`, sem alterações de produto |
 | Testador | LLM — execução de API; Cauan Ricardo — revisão |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 10 | 0 | 0 | 0 | 0 | 10 |
+| Em execução | 10 | 3 | 2 | 1 | 0 | 4 |
 
 ## Pré-condições
 
 | ID | Descrição |
 | --- | --- |
-| PC-01 | API e PostgreSQL reais em stack isolada, com as migrations da `develop` até `82_updated_at_faculdade_ponto` (head única). Registrar URL, SHA, data/fuso e acesso de leitura às tabelas `alocacao_diaria`, `alocacao_aluno`, `agendamento` e `log_auditoria`. Não usar `create_all` nem mock no lugar da integração HTTP. [Guia](README.md). |
+| PC-01 | API e PostgreSQL reais em stack isolada, com as migrations da `develop` até `82_create_alocacao_diaria` (head única do commit executado; inclui `82_updated_at_faculdade_ponto`). Registrar URL, SHA, data/fuso e acesso de leitura às tabelas `alocacao_diaria`, `alocacao_aluno`, `agendamento` e `log_auditoria`. Não usar `create_all` nem mock no lugar da integração HTTP. [Guia](README.md). |
 | PC-02 | Tokens reais: administrador (seed `admin@gouce.app`); alunos A a F aprovados e com vínculo válido; representante R1 da UFC e R2 da IFCE; aluno pendente ou reprovado e representante inativo para os casos de acesso. Credenciais fora do Git. |
 | PC-03 | Cadastros pela API administrativa: IES UFC e IFCE; bairros/pontos; **P1 Rota Centro - UFC** (06:30/17:30, atende UFC na ida e na volta) e **P2 Rota Campo - IFCE** (06:40/18:40, atende IFCE). Frota e escala: ônibus **V1 `ABC1D23`** (3 assentos e 2 em pé), **V2 `DEF4G56`** (2 assentos e 1 em pé), **V3 `HIJ7K89`** (4 assentos e 0 em pé) e **V4** inativo; motoristas **M1, M2, M3** ativos e **M4** inativo. |
 | PC-04 | D = data local do servidor; anotar hora e fuso. Usar dias úteis válidos dentro da janela de agendamento (D+1 em diante) e registrar ids/datas reais; as datas fixas do BDD são exemplos. Sem alterar o relógio do host. |
@@ -50,17 +52,17 @@ Todas as chamadas usam o token do administrador, salvo indicação. A escala só
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU017-API-001 | Confirmar a escala e persistir o vínculo motorista–ônibus–rota–data | Reservas em D+1 em P1 (ida e volta) e P2 (ida); POST `/alocacao-diaria/distribuicao` `modo: manual` com M1 em V1 para P1 (ida) e M2 em V2 para P2 (ida). | 201 com a mensagem de escala confirmada; vínculo gravado com motorista, ônibus, rota, data e turno. | ⏳ PENDENTE | Risco de leitura: a API responde “Distribuição realizada com sucesso”. BDD: escala; persistência. |
-| CT-HU017-API-002 | Lista de motoristas disponíveis: só ativos | GET `/motoristas` (administrador) com M1 a M3 ativos e M4 inativo; depois M2 inativado e M4 reativado. | Lista com apenas ativos; mudança de situação reflete na lista. | ⏳ PENDENTE | BDD: lista de motoristas disponíveis; inativo fora da lista; AC-03 e FA-002. |
-| CT-HU017-API-003 | Campos obrigatórios e tipos na escala | POST manual sem `motorista_id`, com `motorista_id` 0 e texto, sem `onibus_id`, com `onibus_id` de 21 caracteres, sem `rota_id`, `turno` inválido e `modo` inválido. | 422 de validação em cada variação; nada gravado. | ⏳ PENDENTE | BDD: sistema bloqueia a confirmação quando falta o campo. |
+| CT-HU017-API-001 | Confirmar a escala e persistir o vínculo motorista–ônibus–rota–data | Reservas em D+1 em P1 (ida e volta) e P2 (ida); POST `/alocacao-diaria/distribuicao` `modo: manual` com M1 em V1 para P1 (ida) e M2 em V2 para P2 (ida). | 201 com a mensagem de escala confirmada; vínculo gravado com motorista, ônibus, rota, data e turno. | ❌ FALHOU | Risco de leitura: a API responde “Distribuição realizada com sucesso”. BDD: escala; persistência. |
+| CT-HU017-API-002 | Lista de motoristas disponíveis: só ativos | GET `/motoristas` (administrador) com M1 a M3 ativos e M4 inativo; depois M2 inativado e M4 reativado. | Lista com apenas ativos; mudança de situação reflete na lista. | ✅ PASSOU | BDD: lista de motoristas disponíveis; inativo fora da lista; AC-03 e FA-002. |
+| CT-HU017-API-003 | Campos obrigatórios e tipos na escala | POST manual sem `motorista_id`, com `motorista_id` 0 e texto, sem `onibus_id`, com `onibus_id` de 21 caracteres, sem `rota_id`, `turno` inválido e `modo` inválido. | 422 de validação em cada variação; nada gravado. | ✅ PASSOU | BDD: sistema bloqueia a confirmação quando falta o campo. |
 
 ### Seção B — Conflitos e revalidação
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU017-API-004 | Conflito: mesmo motorista em duas rotas no mesmo turno | POST manual com M1 em V1 para P1 e M1 em V2 para P2, ambos no turno da ida da mesma data; depois só um vínculo (controle). | 409 com a mensagem do requisito; nada gravado; escala anterior preservada. | ⏳ PENDENTE | Risco de leitura: o texto do código difere do requisito. BDD: conflito; AC-05 e FA-001. |
-| CT-HU017-API-005 | Mesmo motorista na ida e na volta | POST manual com M1 em V1 para P1 na ida e M1 em V1 para P1 na volta, no mesmo dia. | 201; as duas linhas gravadas. | ⏳ PENDENTE | BDD: API aceita o mesmo motorista na ida e na volta. |
-| CT-HU017-API-006 | Revalidação: motorista inativado depois de exibido | M2 listado como ativo; M2 inativado pela API; POST manual com M2 em P1; depois motorista inexistente (id 999999). | 422 com “motorista inexistente ou inativo”; nada gravado. | ⏳ PENDENTE | BDD: recusa a confirmação de motorista inativado depois de exibido; AC-06. |
+| CT-HU017-API-004 | Conflito: mesmo motorista em duas rotas no mesmo turno | POST manual com M1 em V1 para P1 e M1 em V2 para P2, ambos no turno da ida da mesma data; depois só um vínculo (controle). | 409 com a mensagem do requisito; nada gravado; escala anterior preservada. | ❌ FALHOU | Risco de leitura: o texto do código difere do requisito. BDD: conflito; AC-05 e FA-001. |
+| CT-HU017-API-005 | Mesmo motorista na ida e na volta | POST manual com M1 em V1 para P1 na ida e M1 em V1 para P1 na volta, no mesmo dia. | 201; as duas linhas gravadas. | ✅ PASSOU | BDD: API aceita o mesmo motorista na ida e na volta. |
+| CT-HU017-API-006 | Revalidação: motorista inativado depois de exibido | M2 listado como ativo; M2 inativado pela API; POST manual com M2 em P1; depois motorista inexistente (id 999999). | 422 com “motorista inexistente ou inativo”; nada gravado. | ⚠️ PARCIAL | BDD: recusa a confirmação de motorista inativado depois de exibido; AC-06. |
 
 ### Seção C — Auditoria, integridade e acesso
 
@@ -95,8 +97,8 @@ Todas as chamadas usam o token do administrador, salvo indicação. A escala só
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- 201 com os três vínculos corretos e reservas/outra data preservadas. A mensagem retornada foi Distribuição realizada com sucesso, diferente de Escala de motoristas confirmada com sucesso. Defeitos: mensagem_sucesso.
+- Status: ❌ FALHOU.
 
 ---
 
@@ -120,8 +122,8 @@ Todas as chamadas usam o token do administrador, salvo indicação. A escala só
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- GET lista somente M1/M2/M3 ativos e inclui M4 inativo apenas com incluir_inativos=true. Após liberar M2 das escalas futuras pela API, inativar M2 e reativar M4 mudou a lista para M1/M3/M4; cadastros e escalas restaurados.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -144,8 +146,8 @@ Todas as chamadas usam o token do administrador, salvo indicação. A escala só
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Oito variações de campos ausentes/tipos/limites de motorista, ônibus, rota, turno e modo retornaram 422, com indicação do campo. Reservas, alocações e auditoria preservadas em todas as recusas.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -171,8 +173,8 @@ Todas as chamadas usam o token do administrador, salvo indicação. A escala só
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Motorista M1 repetido em P1/V1 e P2/V2 na ida foi recusado com 409 e rollback integral. Controle de um vínculo aceito. Mensagem técnica alocação 1: motorista 1 conflitante no turno ida. diverge do texto aprovado pelo PO; escalas restauradas. Defeitos: mensagem_conflito.
+- Status: ❌ FALHOU.
 
 ---
 
@@ -194,8 +196,8 @@ Todas as chamadas usam o token do administrador, salvo indicação. A escala só
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- 201; M1 em V1 na ida e na volta do mesmo dia persistiu duas linhas, sem conflito. Escala base de P1/P2 restaurada.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -219,8 +221,11 @@ Todas as chamadas usam o token do administrador, salvo indicação. A escala só
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- M2 foi listado ativo, liberado das escalas futuras e inativado pela API. Motorista inativo e inexistente retornaram 422 com alocação 0: motorista inexistente ou inativo., exatamente como o BDD, sem gravação. O planejamento pede o id no texto; esperado original preservado e caso parcial por divergência de oráculo, sem defeito de backend nessa mensagem. Estado base restaurado.
+- Status: ⚠️ PARCIAL.
+
+**Divergência do roteiro:** o esperado acima inclui o id do motorista no texto. O [BDD HU-017](../../../../../bdd/features/epico-05/HU-017.feature), no cenário de revalidação, exige “alocação 0: motorista inexistente ou inativo.”. A API respondeu exatamente como o BDD. A transição e o rollback passaram; o caso fica parcial até reconciliar o roteiro, sem abrir bug de backend para essa mensagem e sem modificar o esperado para aprovar o caso. A variação foi reexecutada para confirmar a comparação.
+
 
 ---
 
@@ -340,12 +345,20 @@ Todas as chamadas usam o token do administrador, salvo indicação. A escala só
 
 ## Defeitos encontrados
 
-| Caso | Defeito | Issue |
+| Caso | Defeito ou divergência | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. Os riscos de leitura estão no [guia de execução da API](README.md). | — |
+| CT-HU017-API-001 | Mensagem de confirmação difere do requisito da escala. | Reproduzido; publicação ao concluir |
+| CT-HU017-API-004 | 409 correto, mensagem de conflito difere da aprovada pelo PO. | Reproduzido; publicação ao concluir |
+| CT-HU017-API-006 | API cumpre o BDD; roteiro pede id adicional na mensagem. Parcial por divergência de oráculo. | Sem defeito de backend atribuído para esse texto |
 
 ## Observações gerais
 
 - Referências: [requisitos, seção 7.6](../../../../../docs/requisitos.md), [BDD do épico 05](../../../../../bdd/features/epico-05/README.md) e as [decisões do PO na #465](https://github.com/GOUOCE/GOUCE-app/issues/465). A mensagem do conflito e a de sucesso seguem o requisito; o texto atual do código está nos riscos.
 - Pendências do README do BDD que valem aqui: mensagem do conflito de motorista, auditoria da escala e mensagem de sucesso da escala.
-- Nenhum caso foi executado nesta entrega. Não confundir defeito reproduzido, risco de leitura e dependência ausente.
+- Execução real em 17/11/2026: cadastros de negócio, reservas, escalas, redistribuições e inativação/reativação por HTTP. Contas/documentos e representante de perfil exclusivo por fixtures ORM e login real. Sem mocks ou overrides de autorização.
+
+## Registro desta execução
+
+**6/10 casos concluídos: 3 passaram, 2 falharam e 1 parcial; 4 pendentes.** 83 chamadas HTTP incluindo preparação/logins e revisão do API-006. GETs e recusas conferidos em conexões novas, sem escrita em reservas/alocações/auditoria. Os esperados do planejamento foram preservados.
+
+Somente falhas têm JSON de evidência, no corpo das issues. Sem pasta ou arquivo de evidência no repositório. Os 9 casos de UI continuam pendentes.
