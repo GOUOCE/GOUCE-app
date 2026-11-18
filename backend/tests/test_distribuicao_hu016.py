@@ -1,9 +1,13 @@
 import unittest
+from datetime import date
+from unittest.mock import MagicMock
 
 from fastapi import FastAPI
 from tests.rota_principal_support import asgi_request
 
 from src.modulos.alocacao_diaria.interface.http import alocacao_routes
+from src.modulos.alocacao_diaria.application.dtos.alocacao_dto import DistribuicaoRequestDTO
+from src.modulos.alocacao_diaria.application.services.alocacao_service import AlocacaoService
 from src.modulos.alocacao_diaria.application.services.distribuicao import (
     OnibusDisponivel,
     Passageiro,
@@ -85,6 +89,31 @@ class DistribuicaoHu016Test(unittest.TestCase):
         )
         self.assertEqual({item["turno"] for item in resultado["alocacoes"]}, {"ida", "volta"})
         self.assertEqual(resultado["alocacoes"][0]["onibus_id"], "B")
+
+    def test_confirmacao_automatica_retorna_excedentes_globais(self):
+        session = MagicMock()
+        service = AlocacaoService(session)
+        service.preview = MagicMock(
+            return_value={
+                "data": "2026-11-24",
+                "alocacoes": [{"onibus_id": "ABC1D23", "alunos": []}],
+                "excedentes_globais": [
+                    {"agendamento_id": 64, "turno": "ida"},
+                ],
+            }
+        )
+        service._validar_payload = MagicMock()
+        service._persistir = MagicMock()
+
+        resultado = service.persist(
+            DistribuicaoRequestDTO(data=date(2026, 11, 24), modo="automatico")
+        )
+
+        self.assertEqual(
+            resultado["excedentes_globais"],
+            [{"agendamento_id": 64, "turno": "ida"}],
+        )
+        session.commit.assert_called_once()
 
 
 class DistribuicaoHttpHu016Test(unittest.IsolatedAsyncioTestCase):
