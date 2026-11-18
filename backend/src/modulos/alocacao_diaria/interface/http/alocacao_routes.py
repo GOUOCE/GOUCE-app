@@ -115,10 +115,11 @@ def visualizar_distribuicao(
 def persistir_distribuicao(
     payload: DistribuicaoRequestDTO,
     service: Annotated[AlocacaoService, Depends(_service)],
-    _: dict = Depends(admin_required),
+    current_user: dict = Depends(admin_required),
 ):
     try:
-        return service.persist(payload)
+        usuario_id = current_user.get("current_user_id") or current_user.get("sub")
+        return service.persist(payload, usuario_executor_id=int(usuario_id))
     except DistribuicaoError as error:
         return _error(error)
 
