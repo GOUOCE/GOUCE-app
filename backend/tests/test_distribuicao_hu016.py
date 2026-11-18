@@ -45,6 +45,31 @@ class DistribuicaoHu016Test(unittest.TestCase):
         )
         self.assertEqual(sum(len(item["alunos"]) for item in resultado["alocacoes"]), 5)
         self.assertEqual(len(resultado["alocacoes"]), 2)
+        self.assertEqual(sum(item["sentados"] for item in resultado["alocacoes"]), 5)
+        self.assertEqual(sum(item["em_pe"] for item in resultado["alocacoes"]), 0)
+
+    def test_prioriza_assentos_de_todos_os_onibus_antes_de_em_pe(self):
+        resultado = distribuir_alunos(
+            {1: [Passageiro(index, "ida") for index in range(8)]},
+            [
+                OnibusDisponivel("ABC1D23", 3, 2, 10),
+                OnibusDisponivel("HIJ7K89", 4, 0, 11),
+            ],
+        )
+        self.assertEqual(sum(item["sentados"] for item in resultado["alocacoes"]), 7)
+        self.assertEqual(sum(item["em_pe"] for item in resultado["alocacoes"]), 1)
+        self.assertEqual(len(resultado["excedentes_globais"]), 0)
+
+    def test_distribui_cinco_alunos_em_assentos_de_dois_onibus(self):
+        resultado = distribuir_alunos(
+            {1: [Passageiro(index, "ida") for index in range(5)]},
+            [
+                OnibusDisponivel("ABC1D23", 3, 2, 10),
+                OnibusDisponivel("HIJ7K89", 4, 0, 11),
+            ],
+        )
+        self.assertEqual(sum(item["sentados"] for item in resultado["alocacoes"]), 5)
+        self.assertEqual(sum(item["em_pe"] for item in resultado["alocacoes"]), 0)
 
     def test_separa_turnos_e_respeita_rodizio(self):
         resultado = distribuir_alunos(
