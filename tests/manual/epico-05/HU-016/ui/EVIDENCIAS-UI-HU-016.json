@@ -467,7 +467,7 @@
         "issue": "#509"
       }
     ],
-    "novo_defeito_encontrado": "BUG-HU016-UI-007 (sem issue aberta ainda)"
+    "novo_defeito_encontrado": "BUG-HU016-UI-007 (issue #517)"
   },
   "defeitos": [
     "BUG-HU016-UI-001 (#504) — corrigido no reteste, build 82eac441",
@@ -476,6 +476,6 @@
     "BUG-HU016-UI-004 (#507) — corrigido no reteste, build 82eac441",
     "BUG-HU016-UI-005 (#508) — corrigido no reteste, build 82eac441",
     "BUG-HU016-UI-006 (#509) — corrigido no reteste, build 82eac441",
-    "BUG-HU016-UI-007 (novo, encontrado no reteste, sem issue aberta ainda)"
+    "BUG-HU016-UI-007 (novo, encontrado no reteste, issue #517)"
   ]
 }

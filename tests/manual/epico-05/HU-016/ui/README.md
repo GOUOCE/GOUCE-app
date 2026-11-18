@@ -51,7 +51,7 @@ Planejamento na branch `test/planejamento-api-ui-hu-016`, com entrega para `deve
    | CT-HU016-UI-005 | BUG-HU016-UI-004 | #507 |
    | CT-HU016-UI-006 | BUG-HU016-UI-005 | #508 |
    | CT-HU016-UI-007 | BUG-HU016-UI-006 | #509 |
-   | CT-HU016-UI-007 (reteste) | BUG-HU016-UI-007 | sem issue aberta ainda |
+   | CT-HU016-UI-007 (reteste) | BUG-HU016-UI-007 | issue #517 |
 
 3. Publicar a issue no GitHub com as labels `bug`, `Front`, `HU-016` e `Bloqueante` ou `Não bloqueante` (conforme a severidade e o efeito no fluxo principal), atribuída a `dev-mariab`.
 4. Anexar evidência (prints/GIF, pela regra de coleta acima); o ideal é anexar sempre, e quando faltar tempo, ao menos nas issues `Bloqueante`.
@@ -89,7 +89,7 @@ Detalhe por caso e por verificação na [suíte](UI-HU-016.md) e no [JSON de evi
   | #508 | BUG-HU016-UI-005 | ✅ Listas filtram recurso já usado por outra rota; mensagens de conflito citam nome da rota/recurso |
   | #509 | BUG-HU016-UI-006 | ✅ Tela de Excedentes seleciona, lista ônibus com vaga, realoca e recusa com causa |
 
-- **Novo defeito encontrado durante o reteste:** [BUG-HU016-UI-007](issues/BUG-HU016-UI-007.md) (🟢 Baixa, Não bloqueante, sem issue aberta ainda) — o aviso de excedentes continua visível na tela depois da realocação, junto com a mensagem de "nenhum excedente".
+- **Novo defeito encontrado durante o reteste:** [BUG-HU016-UI-007](issues/BUG-HU016-UI-007.md) (🟢 Baixa, Não bloqueante, issue #517) — o aviso de excedentes continua visível na tela depois da realocação, junto com a mensagem de "nenhum excedente".
 
 Detalhe por verificação no [JSON de evidências](EVIDENCIAS-UI-HU-016.json) (bloco `reteste`) e na [suíte](UI-HU-016.md) (seção "Reteste (18/11/2026)").
 
@@ -121,7 +121,7 @@ Os riscos abaixo vêm da leitura do código e orientam a execução. **Não são
 - O risco de sobrescrita do status "DISTRIBUIDO" ao trocar de dia sem recarregar (ver segunda reprodução em `BUG-HU016-UI-003`) não foi testado nem no reteste.
 - As issues #504, #505 e #507 ainda não têm print anexado (nem no corpo, nem em comentário); só #506 (print em comentário), #508 e #509 (print no corpo) têm evidência anexada da execução original — anexar também evidência do reteste.
 - A issue [#473](https://github.com/GOUOCE/GOUCE-app/issues/473) (decisão do PO sobre realocação entre rotas) continua fechada sem decisão registrada; a realocação testada no reteste foi dentro da mesma rota (ida), então não dependeu dessa decisão.
-- Novo defeito, sem issue aberta ainda: [BUG-HU016-UI-007](issues/BUG-HU016-UI-007.md), encontrado durante o reteste do `CT-HU016-UI-007`.
+- Novo defeito, issue #517: [BUG-HU016-UI-007](issues/BUG-HU016-UI-007.md), encontrado durante o reteste do `CT-HU016-UI-007`.
 
 ## Comportamentos conhecidos que não são defeito da HU-016
 
