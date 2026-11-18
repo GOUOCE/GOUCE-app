@@ -797,6 +797,57 @@ class TestListaEmbarqueCancelamento(unittest.TestCase):
         self.assertIsNotNone(aluno["ponto_desembarque"])
         self.assertEqual(aluno["indicacao_turno"], "IDA_E_VOLTA_IES_DISTINTAS")
 
+    # ------------------------------------------------------------------
+    # Issue #482 — filtro por turno não deve vazar dados do turno excluído
+    # (CT-HU018-API-003)
+    # ------------------------------------------------------------------
+
+    def _aluno_misto_turno(self, turno):
+        service = ListaEmbarqueService(self.session)
+        result = service.listar(date(2026, 11, 20), rota_id=1, turno=turno)
+        encontrados = [a for a in result["alunos"] if a["agendamento_id"] == 101]
+        self.assertEqual(len(encontrados), 1)
+        return encontrados[0]
+
+    def test_filtro_turno_ida_omite_dados_da_volta(self):
+        """#482: admin com turno=ida não recebe IES/ponto/lugar/ônibus da volta."""
+        self._popular_reserva_mista()
+        aluno = self._aluno_misto_turno("ida")
+        self.assertEqual(aluno["ies_ida"]["id"], 1)
+        self.assertIsNotNone(aluno["ponto_embarque"])
+        self.assertEqual(aluno["tipo_lugar_ida"], "sentado")
+        self.assertIsNotNone(aluno["onibus_ida"])
+        for campo in (
+            "ies_volta", "ponto_desembarque", "tipo_lugar_volta",
+            "onibus_volta", "motorista_volta",
+        ):
+            self.assertIsNone(aluno[campo], campo)
+
+    def test_filtro_turno_volta_omite_dados_da_ida(self):
+        """#482: admin com turno=volta não recebe IES/ponto/lugar/ônibus da ida."""
+        self._popular_reserva_mista()
+        aluno = self._aluno_misto_turno("volta")
+        self.assertEqual(aluno["ies_volta"]["id"], 2)
+        self.assertIsNotNone(aluno["ponto_desembarque"])
+        self.assertEqual(aluno["tipo_lugar_volta"], "em_pe")
+        self.assertIsNotNone(aluno["onibus_volta"])
+        for campo in (
+            "ies_ida", "ponto_embarque", "tipo_lugar_ida",
+            "onibus_ida", "motorista_ida",
+        ):
+            self.assertIsNone(aluno[campo], campo)
+
+    def test_sem_filtro_turno_mantem_dados_dos_dois_turnos(self):
+        """#482: sem filtro de turno os dois trechos continuam disponíveis."""
+        self._popular_reserva_mista()
+        aluno = self._aluno_misto_turno(None)
+        for campo in (
+            "ies_ida", "ies_volta", "ponto_embarque", "ponto_desembarque",
+            "tipo_lugar_ida", "tipo_lugar_volta", "onibus_ida", "onibus_volta",
+        ):
+            self.assertIsNotNone(aluno[campo], campo)
+        self.assertEqual(aluno["indicacao_turno"], "IDA_E_VOLTA_IES_DISTINTAS")
+
 
 if __name__ == "__main__":
     unittest.main()
