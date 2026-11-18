@@ -41,6 +41,8 @@ class AlocacaoService:
             excedentes_globais = preview["excedentes_globais"]
             self._validar_payload(payload.data, alocacoes)
         else:
+            if not payload.alocacoes:
+                raise DistribuicaoError("A lista de alocações não pode ser vazia.")
             self._demanda(payload.data)
             alocacoes = [item.model_dump() for item in payload.alocacoes]
             self._validar_payload(payload.data, alocacoes)
