@@ -49,3 +49,12 @@ Hipótese: em `frontend/src/app/(administrador)/(tabs)/logistica.tsx:65`, o cart
 ### 📎 Evidência
 
 Reproduzido por Radlei em 17/11/2026, ambiente local `atu-ui016`. Prints: do painel, do cartão, da tela "Unmatched Route" e da tela de alocação com o aviso.
+
+### Reteste
+
+| Campo | Valor |
+|---|---|
+| **Data** | 18/11/2026 |
+| **Build** | `82eac441` (branch `fix/issues-hu16e17`) |
+| **Issue** | #504 |
+| **Resultado** | ✅ Corrigido — a seção "Frota" e o cartão "Rodízio de frota" não aparecem mais no painel `/logistica`; nenhum cartão leva mais a `/logistica/rodizio`. `CT-HU016-UI-001`: 4/4 verificações ✅. |
