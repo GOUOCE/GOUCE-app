@@ -23,7 +23,7 @@ def distribuir_alunos(
 ) -> dict:
     """Calcula a distribuição sem ler ou alterar estado externo."""
     disponiveis = sorted(onibus, key=lambda item: item.onibus_id)
-    usados: set[str] = set()
+    usados: set[tuple[str, str]] = set()
     alocacoes: list[dict] = []
     excedentes_globais: list[dict] = []
     alertas: list[dict] = []
@@ -39,58 +39,114 @@ def distribuir_alunos(
 
     for chave, passageiros in grupos:
         rota_id = chave[0] if isinstance(chave, tuple) else chave
+        turno = chave[1] if isinstance(chave, tuple) else "ida"
         demanda_resumida[rota_id] = demanda_resumida.get(rota_id, 0) + len(passageiros)
         restantes = list(passageiros)
-        while restantes:
-            candidatos = [item for item in disponiveis if item.onibus_id not in usados]
-            if not candidatos:
-                excedentes_globais.extend(
-                    {"agendamento_id": item.agendamento_id, "turno": item.turno}
-                    for item in restantes
-                )
-                break
+        candidatos = [
+            item
+            for item in disponiveis
+            if (item.onibus_id, turno) not in usados
+        ]
+        if not candidatos:
+            excedentes_globais.extend(
+                {"agendamento_id": item.agendamento_id, "turno": item.turno}
+                for item in restantes
+            )
+            continue
 
-            preferido = rodizio.get(rota_id)
-            escolhido = next(
-                (item for item in candidatos if item.onibus_id == preferido),
-                max(candidatos, key=lambda item: item.assentos + item.em_pe),
+        preferido = rodizio.get(rota_id)
+        candidatos.sort(
+            key=lambda item: (
+                item.onibus_id != preferido,
+                -item.assentos,
+                item.onibus_id,
             )
-            usados.add(escolhido.onibus_id)
-            ocupantes = restantes[: escolhido.assentos + escolhido.em_pe]
-            restantes = restantes[len(ocupantes) :]
-            sentados = min(len(ocupantes), escolhido.assentos)
-            alocacoes.append(
-                {
-                    "rota_id": rota_id,
-                    "onibus_id": escolhido.onibus_id,
-                    "motorista_id": escolhido.motorista_id,
-                    "turno": ocupantes[0].turno if ocupantes else "ida",
-                    "capacidade": {
-                        "assentos": escolhido.assentos,
-                        "em_pe": escolhido.em_pe,
-                    },
-                    "sentados": sentados,
-                    "em_pe": len(ocupantes) - sentados,
-                    "alunos": [
-                        {
-                            "agendamento_id": passenger.agendamento_id,
-                            "tipo_lugar": "sentado" if index < sentados else "em_pe",
-                        }
-                        for index, passenger in enumerate(ocupantes)
-                    ],
-                    "excedentes": [],
-                }
-            )
-            if preferido and escolhido.onibus_id != preferido:
+        )
+
+        alocacoes_do_grupo: dict[str, dict] = {}
+        for passageiro in candidatos:
+            if not restantes:
+                break
+            sentados = min(len(restantes), passageiro.assentos)
+            if not sentados:
+                continue
+            usados.add((passageiro.onibus_id, turno))
+            ocupantes = restantes[:sentados]
+            restantes = restantes[sentados:]
+            registro = {
+                "rota_id": rota_id,
+                "onibus_id": passageiro.onibus_id,
+                "motorista_id": passageiro.motorista_id,
+                "turno": ocupantes[0].turno,
+                "capacidade": {
+                    "assentos": passageiro.assentos,
+                    "em_pe": passageiro.em_pe,
+                },
+                "sentados": sentados,
+                "em_pe": 0,
+                "alunos": [
+                    {
+                        "agendamento_id": student.agendamento_id,
+                        "tipo_lugar": "sentado",
+                    }
+                    for student in ocupantes
+                ],
+                "excedentes": [],
+            }
+            alocacoes_do_grupo[passageiro.onibus_id] = registro
+            alocacoes.append(registro)
+            if preferido and passageiro.onibus_id != preferido:
                 alertas.append(
                     {
                         "tipo": "ONIBUS_DIFERENTE_DO_RODIZIO",
                         "mensagem": (
-                            f"A rota {rota_id} usou o ônibus {escolhido.onibus_id}; "
+                            f"A rota {rota_id} usou o ônibus {passageiro.onibus_id}; "
                             f"o rodízio previa {preferido}."
                         ),
                     }
                 )
+
+        for passageiro in candidatos:
+            if not restantes:
+                break
+            em_pe = min(len(restantes), passageiro.em_pe)
+            if not em_pe:
+                continue
+            usados.add((passageiro.onibus_id, turno))
+            ocupantes = restantes[:em_pe]
+            restantes = restantes[em_pe:]
+            registro = alocacoes_do_grupo.get(passageiro.onibus_id)
+            if registro is None:
+                registro = {
+                    "rota_id": rota_id,
+                    "onibus_id": passageiro.onibus_id,
+                    "motorista_id": passageiro.motorista_id,
+                    "turno": ocupantes[0].turno,
+                    "capacidade": {
+                        "assentos": passageiro.assentos,
+                        "em_pe": passageiro.em_pe,
+                    },
+                    "sentados": 0,
+                    "em_pe": 0,
+                    "alunos": [],
+                    "excedentes": [],
+                }
+                alocacoes_do_grupo[passageiro.onibus_id] = registro
+                alocacoes.append(registro)
+            registro["em_pe"] += em_pe
+            registro["alunos"].extend(
+                {
+                    "agendamento_id": student.agendamento_id,
+                    "tipo_lugar": "em_pe",
+                }
+                for student in ocupantes
+            )
+
+        if restantes:
+            excedentes_globais.extend(
+                {"agendamento_id": item.agendamento_id, "turno": item.turno}
+                for item in restantes
+            )
 
     return {
         "demanda_por_rota": [
