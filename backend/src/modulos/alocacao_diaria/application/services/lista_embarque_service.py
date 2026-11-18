@@ -312,8 +312,11 @@ class ListaEmbarqueService:
             if motorista_ids else {}
         )
 
-        # 7. Consolidação por agendamento_id (une ida + volta em uma linha)
+        # 7. Consolidação por agendamento_id (une ida + volta em uma linha).
+        # Somente os trechos visíveis (alocados na rota/turno filtrado e, para
+        # representante, da IES responsável) populam o DTO (RN-015 / RNF-010).
         consolidado: dict[int, dict] = {}
+        ies_visivel: dict[int, dict] = {}
         for aloc_aluno, ag in rows:
             ag_id = ag.id
             alocacao = alocacao_por_id[aloc_aluno.alocacao_diaria_id]
@@ -324,20 +327,15 @@ class ListaEmbarqueService:
                 usuario = usuarios.get(ag.aluno_id)
                 nome_aluno = usuario.nome_completo if usuario else ""
 
-                ponto_emb = pontos.get(ag.ponto_embarque_id) if ag.ponto_embarque_id else None
-                ponto_des = pontos.get(ag.ponto_desembarque_id) if ag.ponto_desembarque_id else None
-                ies_dest = faculdades.get(ag.ies_destino_id) if ag.ies_destino_id else None
-                ies_orig = faculdades.get(ag.ies_origem_id) if ag.ies_origem_id else None
-
                 consolidado[ag_id] = {
                     "aluno_id": ag.aluno_id,
                     "agendamento_id": ag_id,
                     "nome_aluno": nome_aluno,
-                    "ponto_embarque": _ponto_dto(ponto_emb, bairros) if ponto_emb else None,
-                    "ponto_desembarque": _ponto_dto(ponto_des, bairros) if ponto_des else None,
-                    "ies_ida": _faculdade_dto(ies_dest) if ies_dest else None,
-                    "ies_volta": _faculdade_dto(ies_orig) if ies_orig else None,
-                    "indicacao_turno": _indicacao_turno(ag),
+                    "ponto_embarque": None,
+                    "ponto_desembarque": None,
+                    "ies_ida": None,
+                    "ies_volta": None,
+                    "indicacao_turno": "APENAS_IDA",
                     "tipo_lugar_ida": None,
                     "tipo_lugar_volta": None,
                     "onibus_ida": None,
@@ -345,16 +343,45 @@ class ListaEmbarqueService:
                     "motorista_ida": None,
                     "motorista_volta": None,
                 }
+                ies_visivel[ag_id] = {"ida": None, "volta": None}
+                ies_visivel[ag_id]["_vis_ida"] = False
+                ies_visivel[ag_id]["_vis_volta"] = False
 
             entry = consolidado[ag_id]
             if aloc_aluno.turno == "ida":
+                ponto_emb = pontos.get(ag.ponto_embarque_id) if ag.ponto_embarque_id else None
+                ies_dest = faculdades.get(ag.ies_destino_id) if ag.ies_destino_id else None
+                entry["ponto_embarque"] = _ponto_dto(ponto_emb, bairros) if ponto_emb else None
+                entry["ies_ida"] = _faculdade_dto(ies_dest) if ies_dest else None
                 entry["tipo_lugar_ida"] = aloc_aluno.tipo_lugar
                 entry["onibus_ida"] = alocacao.onibus_id
                 entry["motorista_ida"] = motorista_nome
+                ies_visivel[ag_id]["ida"] = ag.ies_destino_id
+                ies_visivel[ag_id]["_vis_ida"] = True
             else:
+                ponto_des = pontos.get(ag.ponto_desembarque_id) if ag.ponto_desembarque_id else None
+                ies_orig = faculdades.get(ag.ies_origem_id) if ag.ies_origem_id else None
+                entry["ponto_desembarque"] = _ponto_dto(ponto_des, bairros) if ponto_des else None
+                entry["ies_volta"] = _faculdade_dto(ies_orig) if ies_orig else None
                 entry["tipo_lugar_volta"] = aloc_aluno.tipo_lugar
                 entry["onibus_volta"] = alocacao.onibus_id
                 entry["motorista_volta"] = motorista_nome
+                ies_visivel[ag_id]["volta"] = ag.ies_origem_id
+                ies_visivel[ag_id]["_vis_volta"] = True
+
+        # Recalcula indicacao_turno apenas com os trechos visíveis
+        for ag_id, entry in consolidado.items():
+            vis = ies_visivel[ag_id]
+            if vis["_vis_ida"] and vis["_vis_volta"]:
+                entry["indicacao_turno"] = (
+                    "IDA_E_VOLTA_MESMA_IES"
+                    if vis["ida"] == vis["volta"]
+                    else "IDA_E_VOLTA_IES_DISTINTAS"
+                )
+            elif vis["_vis_ida"]:
+                entry["indicacao_turno"] = "APENAS_IDA"
+            else:
+                entry["indicacao_turno"] = "APENAS_VOLTA"
 
         # 8. Ordenação alfabética pelo nome (nome_completo é descriptografado)
         alunos_lista = sorted(

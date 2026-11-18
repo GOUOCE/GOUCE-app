@@ -708,6 +708,95 @@ class TestListaEmbarqueCancelamento(unittest.TestCase):
         rotas_rep_ifce = service.rotas_do_dia(date(2026, 11, 25), faculdade_id=2)
         self.assertEqual(rotas_rep_ifce, [])
 
+    # ------------------------------------------------------------------
+    # Issue #481 — isolamento de IES por trecho em reservas mistas
+    # (CT-HU018-API-006 / regressão CT-HU018-API-009)
+    # ------------------------------------------------------------------
+
+    def _popular_reserva_mista(self):
+        """Aluno 11: ida na UFC (id 1) e volta no IFCE (id 2), mesma rota."""
+        from src.modulos.crud_basicos.domain.entities.bairro import BairroORM
+        from src.modulos.crud_basicos.domain.entities.faculdade import FaculdadeORM
+        from src.modulos.crud_basicos.domain.entities.ponto_de_parada import PontoDeParadaORM
+        from src.modulos.usuarios.model.entities.usuario import UsuarioORM
+
+        PontoDeParadaORM.__table__.create(self.engine, checkfirst=True)
+
+        self.session.add(FaculdadeORM(id_faculdade=2, nome_faculdade="IFCE", campus_faculdade="Quixadá", ativo=True))
+        self.session.add(UsuarioORM(id=11, nome_completo="Aluno Misto", email="misto@test.com", telefone="88977777777", senha="hash"))
+        self.session.add(BairroORM(bairro_id=1, nome="Centro", ativo=True))
+        self.session.flush()
+        self.session.add(PontoDeParadaORM(ponto_id=1, nome="Ponto Embarque", bairro_id=1, ativo=True))
+        self.session.add(PontoDeParadaORM(ponto_id=2, nome="Ponto Desembarque", bairro_id=1, ativo=True))
+        self.session.flush()
+
+        self.session.add(self.AgendamentoORM(
+            id=101, aluno_id=11, data=date(2026, 11, 20),
+            usa_ida=True, usa_volta=True,
+            ies_destino_id=1, ies_origem_id=2,
+            ponto_embarque_id=1, ponto_desembarque_id=2,
+            status="ATIVO",
+        ))
+        self.session.add(self.AlocacaoDiariaORM(
+            id=201, rota_id=1, onibus_id="BRE-0001",
+            motorista_id=1, data=date(2026, 11, 20), turno="volta",
+        ))
+        self.session.flush()
+        self.session.add(self.AlocacaoAlunoORM(
+            id=301, alocacao_diaria_id=200, agendamento_id=101,
+            turno="ida", tipo_lugar="sentado", status="ALOCADO",
+        ))
+        self.session.add(self.AlocacaoAlunoORM(
+            id=302, alocacao_diaria_id=201, agendamento_id=101,
+            turno="volta", tipo_lugar="em_pe", status="ALOCADO",
+        ))
+        self.session.commit()
+
+    def _aluno_misto(self, faculdade_id):
+        service = ListaEmbarqueService(self.session)
+        result = service.listar(date(2026, 11, 20), rota_id=1, faculdade_id=faculdade_id)
+        encontrados = [a for a in result["alunos"] if a["agendamento_id"] == 101]
+        self.assertEqual(len(encontrados), 1)
+        return encontrados[0]
+
+    def test_reserva_mista_representante_ufc_ve_apenas_ida(self):
+        """#481 / CT-HU018-API-006: R1 (UFC) não recebe dados do trecho do IFCE."""
+        self._popular_reserva_mista()
+        aluno = self._aluno_misto(faculdade_id=1)
+        self.assertEqual(aluno["ies_ida"]["id"], 1)
+        self.assertIsNotNone(aluno["ponto_embarque"])
+        self.assertEqual(aluno["tipo_lugar_ida"], "sentado")
+        self.assertIsNone(aluno["ies_volta"])
+        self.assertIsNone(aluno["ponto_desembarque"])
+        self.assertIsNone(aluno["tipo_lugar_volta"])
+        self.assertIsNone(aluno["onibus_volta"])
+        self.assertIsNone(aluno["motorista_volta"])
+        self.assertEqual(aluno["indicacao_turno"], "APENAS_IDA")
+
+    def test_reserva_mista_representante_ifce_ve_apenas_volta(self):
+        """#481 / CT-HU018-API-006: R2 (IFCE) não recebe dados do trecho da UFC."""
+        self._popular_reserva_mista()
+        aluno = self._aluno_misto(faculdade_id=2)
+        self.assertEqual(aluno["ies_volta"]["id"], 2)
+        self.assertIsNotNone(aluno["ponto_desembarque"])
+        self.assertEqual(aluno["tipo_lugar_volta"], "em_pe")
+        self.assertIsNone(aluno["ies_ida"])
+        self.assertIsNone(aluno["ponto_embarque"])
+        self.assertIsNone(aluno["tipo_lugar_ida"])
+        self.assertIsNone(aluno["onibus_ida"])
+        self.assertIsNone(aluno["motorista_ida"])
+        self.assertEqual(aluno["indicacao_turno"], "APENAS_VOLTA")
+
+    def test_reserva_mista_administrador_ve_visao_completa(self):
+        """#481 / regressão CT-HU018-API-009: admin mantém ambos os trechos."""
+        self._popular_reserva_mista()
+        aluno = self._aluno_misto(faculdade_id=None)
+        self.assertEqual(aluno["ies_ida"]["id"], 1)
+        self.assertEqual(aluno["ies_volta"]["id"], 2)
+        self.assertIsNotNone(aluno["ponto_embarque"])
+        self.assertIsNotNone(aluno["ponto_desembarque"])
+        self.assertEqual(aluno["indicacao_turno"], "IDA_E_VOLTA_IES_DISTINTAS")
+
 
 if __name__ == "__main__":
     unittest.main()
