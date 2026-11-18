@@ -34,11 +34,15 @@ class AlocacaoService:
         return {"data": target.isoformat(), **distribuir_alunos(demanda, self._buses())}
 
     def persist(self, payload: DistribuicaoRequestDTO) -> dict:
+        excedentes_globais: list[dict] = []
         if payload.modo == "automatico":
             preview = self.preview(payload.data)
             alocacoes = preview["alocacoes"]
+            excedentes_globais = preview["excedentes_globais"]
             self._validar_payload(payload.data, alocacoes)
         else:
+            if not payload.alocacoes:
+                raise DistribuicaoError("A lista de alocações não pode ser vazia.")
             self._demanda(payload.data)
             alocacoes = [item.model_dump() for item in payload.alocacoes]
             self._validar_payload(payload.data, alocacoes)
@@ -57,6 +61,7 @@ class AlocacaoService:
             "data": payload.data.isoformat(),
             "status_logistico": "DISTRIBUIDO",
             "alocacoes": alocacoes,
+            "excedentes_globais": excedentes_globais,
         }
 
     def _buses(self) -> list[OnibusDisponivel]:
