@@ -708,6 +708,58 @@ class TestListaEmbarqueCancelamento(unittest.TestCase):
         rotas_rep_ifce = service.rotas_do_dia(date(2026, 11, 25), faculdade_id=2)
         self.assertEqual(rotas_rep_ifce, [])
 
+    # ------------------------------------------------------------------
+    # Issue #483 — ordenação alfabética com iniciais acentuadas
+    # (CT-HU018-API-002)
+    # ------------------------------------------------------------------
+
+    def test_chave_ordenacao_ignora_acentos_e_caixa(self):
+        from src.modulos.alocacao_diaria.application.services.lista_embarque_service import (
+            _chave_ordenacao_nome,
+        )
+        nomes = ["Zuleica Castro", "José Ferreira", "ágata almeida", "Ana Araujo", "Bruno Barros"]
+        self.assertEqual(
+            sorted(nomes, key=_chave_ordenacao_nome),
+            ["ágata almeida", "Ana Araujo", "Bruno Barros", "José Ferreira", "Zuleica Castro"],
+        )
+        self.assertEqual(_chave_ordenacao_nome(None), ("", ""))
+
+    def test_listar_ordena_nomes_acentuados_no_grupo_correto(self):
+        """#483: Ágata vem antes de Ana, e os nomes mantêm os acentos."""
+        from src.modulos.usuarios.model.entities.usuario import UsuarioORM
+
+        nomes = [
+            "Zuleica Castro QA", "José Ferreira QA", "Ana Araujo QA",
+            "Bruno Barros QA", "Ágata Almeida QA",
+        ]
+        for i, nome in enumerate(nomes):
+            uid = 50 + i
+            self.session.add(UsuarioORM(
+                id=uid, nome_completo=nome, email=f"qa{uid}@test.com",
+                telefone=f"8890000{uid}", senha="hash",
+            ))
+            self.session.add(self.AgendamentoORM(
+                id=500 + i, aluno_id=uid, data=date(2026, 11, 20),
+                usa_ida=True, usa_volta=False, ies_destino_id=1, status="ATIVO",
+            ))
+        self.session.flush()
+        for i in range(len(nomes)):
+            self.session.add(self.AlocacaoAlunoORM(
+                id=600 + i, alocacao_diaria_id=200, agendamento_id=500 + i,
+                turno="ida", tipo_lugar="sentado", status="ALOCADO",
+            ))
+        self.session.commit()
+
+        result = ListaEmbarqueService(self.session).listar(date(2026, 11, 20), rota_id=1)
+        obtidos = [a["nome_aluno"] for a in result["alunos"] if a["nome_aluno"].endswith("QA")]
+        self.assertEqual(
+            obtidos,
+            [
+                "Ágata Almeida QA", "Ana Araujo QA", "Bruno Barros QA",
+                "José Ferreira QA", "Zuleica Castro QA",
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
