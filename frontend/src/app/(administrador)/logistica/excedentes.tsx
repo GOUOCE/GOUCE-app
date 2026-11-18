@@ -238,11 +238,11 @@ export default function RealocarExcedentesScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <Text variant="bodyMedium" style={styles.descriptionText}>
-            {totalExcedentes > 0
-              ? `${totalExcedentes} aluno(s) da ${rota?.nomeLinha ?? 'rota'} ultrapassam a capacidade dos veículos alocados.`
-              : `A ${rota?.nomeLinha ?? 'rota'} não possui alunos excedentes nesta data.`}
-          </Text>
+          {totalExcedentes > 0 ? (
+            <Text variant="bodyMedium" style={styles.descriptionText}>
+              {`${totalExcedentes} aluno(s) da ${rota?.nomeLinha ?? 'rota'} ultrapassam a capacidade dos veículos alocados.`}
+            </Text>
+          ) : null}
 
           {alunos.length > 0 ? (
             <View style={styles.alunosList}>

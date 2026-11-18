@@ -263,11 +263,7 @@ function montarLinha(
 ): LinhaDistribuicao {
   const rotaId = Number(demanda.rota_id);
   const alocacoesRota = alocacoes.filter((item) => Number(item.rota_id) === rotaId);
-  const totalAlocado = alocacoesRota.reduce((total, item) => total + item.alunos.length, 0);
-  const excedentesPorRota = excedentesGlobais.some((item) => item.rota_id != null);
-  const excedentes = excedentesPorRota
-    ? excedentesGlobais.filter((item) => Number(item.rota_id) === rotaId).length
-    : Math.max(0, Number(demanda.total_alunos) - totalAlocado);
+  const excedentes = excedentesGlobais.filter((item) => Number(item.rota_id) === rotaId).length;
   const onibusIds = unicos(alocacoesRota.map((item) => item.onibus_id).filter(Boolean));
   const motoristaIds = unicos(
     alocacoesRota.map((item) => Number(item.motorista_id)).filter((id) => id > 0),

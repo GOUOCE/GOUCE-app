@@ -239,28 +239,13 @@ export default function AlocarRotaScreen() {
     return nomes;
   }, [rota]);
 
-  const totalDemandaRota = useMemo(
+  const excedentesRota = useMemo(
     () =>
-      preview?.demanda_por_rota.find((item) => Number(item.rota_id) === linhaId)?.total_alunos ??
-      0,
+      (preview?.excedentes_globais ?? []).filter(
+        (item) => Number(item.rota_id) === linhaId,
+      ).length,
     [linhaId, preview],
   );
-
-  const totalAlocadoRota = useMemo(
-    () =>
-      preview?.alocacoes
-        .filter((item) => Number(item.rota_id) === linhaId)
-        .reduce((total, item) => total + item.alunos.length, 0) ?? 0,
-    [linhaId, preview],
-  );
-
-  const excedentesRota = useMemo(() => {
-    const excedentesGlobais = preview?.excedentes_globais ?? [];
-    if (excedentesGlobais.some((item) => item.rota_id != null)) {
-      return excedentesGlobais.filter((item) => Number(item.rota_id) === linhaId).length;
-    }
-    return Math.max(0, totalDemandaRota - totalAlocadoRota);
-  }, [linhaId, preview, totalAlocadoRota, totalDemandaRota]);
 
   const montarAlocacoes = useCallback(() => {
     if (!preview) return { payload: [], enriquecidas: [] as AlocacaoDistribuicao[] };
