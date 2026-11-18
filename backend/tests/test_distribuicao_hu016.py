@@ -1,5 +1,9 @@
 import unittest
 
+from fastapi import FastAPI
+from tests.rota_principal_support import asgi_request
+
+from src.modulos.alocacao_diaria.interface.http import alocacao_routes
 from src.modulos.alocacao_diaria.application.services.distribuicao import (
     OnibusDisponivel,
     Passageiro,
@@ -41,6 +45,31 @@ class DistribuicaoHu016Test(unittest.TestCase):
         )
         self.assertEqual(sum(len(item["alunos"]) for item in resultado["alocacoes"]), 5)
         self.assertEqual(len(resultado["alocacoes"]), 2)
+        self.assertEqual(sum(item["sentados"] for item in resultado["alocacoes"]), 5)
+        self.assertEqual(sum(item["em_pe"] for item in resultado["alocacoes"]), 0)
+
+    def test_prioriza_assentos_de_todos_os_onibus_antes_de_em_pe(self):
+        resultado = distribuir_alunos(
+            {1: [Passageiro(index, "ida") for index in range(8)]},
+            [
+                OnibusDisponivel("ABC1D23", 3, 2, 10),
+                OnibusDisponivel("HIJ7K89", 4, 0, 11),
+            ],
+        )
+        self.assertEqual(sum(item["sentados"] for item in resultado["alocacoes"]), 7)
+        self.assertEqual(sum(item["em_pe"] for item in resultado["alocacoes"]), 1)
+        self.assertEqual(len(resultado["excedentes_globais"]), 0)
+
+    def test_distribui_cinco_alunos_em_assentos_de_dois_onibus(self):
+        resultado = distribuir_alunos(
+            {1: [Passageiro(index, "ida") for index in range(5)]},
+            [
+                OnibusDisponivel("ABC1D23", 3, 2, 10),
+                OnibusDisponivel("HIJ7K89", 4, 0, 11),
+            ],
+        )
+        self.assertEqual(sum(item["sentados"] for item in resultado["alocacoes"]), 5)
+        self.assertEqual(sum(item["em_pe"] for item in resultado["alocacoes"]), 0)
 
     def test_separa_turnos_e_respeita_rodizio(self):
         resultado = distribuir_alunos(
@@ -56,6 +85,31 @@ class DistribuicaoHu016Test(unittest.TestCase):
         )
         self.assertEqual({item["turno"] for item in resultado["alocacoes"]}, {"ida", "volta"})
         self.assertEqual(resultado["alocacoes"][0]["onibus_id"], "B")
+
+
+class DistribuicaoHttpHu016Test(unittest.IsolatedAsyncioTestCase):
+    def setUp(self):
+        self.app = FastAPI()
+        self.app.include_router(alocacao_routes.router)
+        self.app.dependency_overrides[alocacao_routes.admin_required] = lambda: {"sub": "1", "cargo": "ADMINISTRADOR"}
+
+    async def test_data_invalida_retorna_422_mensagem_amigavel(self):
+        status, response = await asgi_request(
+            self.app,
+            "GET",
+            "/alocacao-diaria/distribuicao-automatica?data=2026-02-30",
+        )
+        self.assertEqual(status, 422)
+        self.assertEqual(
+            response,
+            {
+                "success": False,
+                "error": {
+                    "code": "DISTRIBUICAO_INVALIDA",
+                    "message": "Data inválida.",
+                },
+            },
+        )
 
 
 if __name__ == "__main__":
