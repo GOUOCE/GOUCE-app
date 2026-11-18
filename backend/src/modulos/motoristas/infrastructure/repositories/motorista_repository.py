@@ -6,15 +6,21 @@ usa ``nome_completo`` e o resultado exposto para as camadas superiores usa
 ``EncryptedString`` definido na entidade.
 """
 
+from datetime import datetime
 from typing import Callable, Optional
+from zoneinfo import ZoneInfo
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from src.modulos.alocacao_diaria.model.entities.alocacao import AlocacaoDiariaORM
 from src.modulos.motoristas.model.entities.motorista import MotoristaORM
 from src.modulos.usuarios.model.entities.usuario import UsuarioORM  # noqa: F401
 from src.shared.infrastructure.audit_model import LogAuditoriaORM
 from src.shared.security.lgpd_encryption import hash_telefone
+
+
+FORTALEZA_TZ = ZoneInfo("America/Fortaleza")
 
 
 class MotoristaTelefoneEmUsoError(ValueError):
@@ -180,15 +186,22 @@ class MotoristaRepository:
     def possui_alocacoes_futuras(self, motorista_id: int) -> bool:
         """Indica se o motorista está escalado em rotas de dias futuros.
 
-        TODO(HU-017): a entidade de escalas/alocações de rotas ainda não existe.
-        Quando ela for criada, substituir este retorno por uma consulta real às
-        escalas do motorista com data posterior a hoje (ou injetar essa
-        consulta via ``alocacoes_futuras_checker``). Até lá a verificação
-        "falha aberto": sem checker injetado, nenhuma inativação é bloqueada.
+        A verificação usa o horário local de Fortaleza para evitar bloquear
+        pela data UTC ou por uma data passada no banco.
         """
         if self._alocacoes_futuras_checker is not None:
             return bool(self._alocacoes_futuras_checker(motorista_id))
-        return False
+
+        hoje = datetime.now(FORTALEZA_TZ).date()
+        alocacao = (
+            self.session.query(AlocacaoDiariaORM)
+            .filter(
+                AlocacaoDiariaORM.motorista_id == motorista_id,
+                AlocacaoDiariaORM.data > hoje,
+            )
+            .first()
+        )
+        return alocacao is not None
 
     def reativar(self, motorista_id: int, usuario_executor_id: int) -> dict | None:
         """Reativa um motorista inativo e registra a operação de auditoria."""

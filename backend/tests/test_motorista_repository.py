@@ -1,5 +1,6 @@
 import os
 import unittest
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
@@ -19,6 +20,7 @@ from src.modulos.motoristas.infrastructure.repositories.motorista_repository imp
     MotoristaRepository,
     MotoristaTelefoneEmUsoError,
 )
+from src.modulos.alocacao_diaria.model.entities.alocacao import AlocacaoDiariaORM
 from src.modulos.motoristas.model.entities.motorista import MotoristaORM
 from src.modulos.usuarios.model.entities.usuario import UsuarioORM
 from src.shared.infrastructure.audit_model import LogAuditoriaORM
@@ -66,9 +68,38 @@ class FakeQuery:
         return self.items[0] if self.items else None
 
 
+class FakeAlocacaoQuery:
+    def __init__(self, session):
+        self.items = list(session.alocacoes)
+
+    def filter(self, *criterios):
+        for criterio in criterios:
+            coluna = getattr(getattr(criterio, "left", None), "key", None)
+            lado_direito = getattr(criterio, "right", None)
+            valor = getattr(lado_direito, "value", None)
+            operador = getattr(getattr(criterio, "operator", None), "__name__", "eq")
+            if coluna is None:
+                continue
+            if operador == "gt":
+                self.items = [
+                    item for item in self.items
+                    if getattr(item, coluna) > valor
+                ]
+            else:
+                self.items = [
+                    item for item in self.items
+                    if getattr(item, coluna) == valor
+                ]
+        return self
+
+    def first(self):
+        return self.items[0] if self.items else None
+
+
 class FakeSession:
     def __init__(self, motoristas=None, *, fail_commit=False):
         self.motoristas = list(motoristas or [])
+        self.alocacoes = []
         self.fail_commit = fail_commit
         self.added = []
         self.commit_count = 0
@@ -85,6 +116,8 @@ class FakeSession:
         }
 
     def query(self, model):
+        if model is AlocacaoDiariaORM:
+            return FakeAlocacaoQuery(self)
         return FakeQuery(self)
 
     def add(self, entity):
@@ -249,9 +282,33 @@ class MotoristaRepositoryTest(unittest.TestCase):
         self.assertEqual(self.ativo.nome_completo, "Maria da Silva")
 
     def test_possui_alocacoes_futuras_sem_checker_nao_bloqueia(self):
-        # TODO(HU-010): enquanto não houver entidade de escalas, a
-        # verificação falha aberto.
         self.assertFalse(self.repository.possui_alocacoes_futuras(1))
+
+    def test_possui_alocacoes_futuras_consulta_alocacao_real(self):
+        hoje = datetime.now(timezone(timedelta(hours=-3))).date()
+        self.session.alocacoes = [
+            AlocacaoDiariaORM(
+                id=1,
+                motorista_id=1,
+                rota_id=1,
+                onibus_id="ABC1D23",
+                data=hoje - timedelta(days=1),
+                turno="ida",
+            ),
+        ]
+        self.assertFalse(self.repository.possui_alocacoes_futuras(1))
+
+        self.session.alocacoes.append(
+            AlocacaoDiariaORM(
+                id=2,
+                motorista_id=1,
+                rota_id=1,
+                onibus_id="ABC1D23",
+                data=hoje + timedelta(days=1),
+                turno="volta",
+            )
+        )
+        self.assertTrue(self.repository.possui_alocacoes_futuras(1))
 
     def test_possui_alocacoes_futuras_delega_ao_checker_injetado(self):
         chamadas = []

@@ -4,6 +4,9 @@ services:
     container_name: gouce_postgres
     env_file:
       - ./backend/.env
+    environment:
+      TZ: America/Fortaleza
+      PGTZ: America/Fortaleza
     ports:
       - "5432:5432"
     volumes:
@@ -44,6 +47,8 @@ services:
     container_name: gouce_backend
     env_file:
       - ./backend/.env
+    environment:
+      TZ: America/Fortaleza
     ports:
       - "8000:8000"
     depends_on:
