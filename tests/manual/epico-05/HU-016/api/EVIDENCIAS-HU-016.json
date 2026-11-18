@@ -1,0 +1,88 @@
+{
+  "historia": "HU-016",
+  "executado_em": "2026-11-17",
+  "branch_resultados": "test/execucao-api-hu-016",
+  "base_resultados": "7372b8d6",
+  "commit_testado": "7372b8d67165344545c1264ac936cd4c060ca245",
+  "ambiente": {
+    "url": "http://localhost:8116",
+    "projeto_docker": "atu-api016",
+    "banco": "PostgreSQL 15 (alpine), banco novo",
+    "migration": "82_create_alocacao_diaria (head única)",
+    "fuso": "America/Fortaleza (TZ=BRT3)"
+  },
+  "resultado": {
+    "total": 11,
+    "passaram": 6,
+    "falharam": 5,
+    "parciais": 0,
+    "bloqueados": 0,
+    "pendentes": 0
+  },
+  "massa": "IES UFC/IFCE/UECE/Católica; rotas P1 Rota Centro - UFC, P2 Rota Campo - IFCE, P3 Rota Multi - UECE/Católica; ônibus V1 ABC1D23 (3+2), V2 DEF4G56 (2+1), V3 HIJ7K89 (4+0), V4 KLM0N12 inativo; motoristas M1 a M3 ativos e M4 inativo; 10 alunos UFC, 2 IFCE, 2 UECE, 2 representantes e 1 pendente, todos sintéticos; reservas por POST /transporte/agendamentos nas datas 18/11 a 26/11/2026",
+  "casos": [
+    {
+      "id": "CT-HU016-API-001",
+      "status": "PASSOU",
+      "resumo": "200; demanda P1=4 e P2=1; cancelada e outro dia fora; 0 linhas gravadas"
+    },
+    {
+      "id": "CT-HU016-API-002",
+      "status": "PASSOU",
+      "resumo": "vazio 200; sem motoristas 422 'Não há motoristas ativos disponíveis.'; 2026-02-30 422 'day is out of range for month'; formato e ausente 422 de validação"
+    },
+    {
+      "id": "CT-HU016-API-003",
+      "status": "PASSOU",
+      "resumo": "2→2/0; 3→3/0; 5→3/2; 6→3/2 e 1 excedente"
+    },
+    {
+      "id": "CT-HU016-API-004",
+      "status": "FALHOU",
+      "resumo": "V1+V3 com 5 alunos: 3 sentados e 2 em pé em V1 com V3 vazio; com 8: 6 sentados e 2 em pé; 10: 9 alocados e 1 excedente (ok); só V1 com 5: 3/2 (ok)"
+    },
+    {
+      "id": "CT-HU016-API-005",
+      "status": "PASSOU",
+      "resumo": "P3 só volta UECE: prévia 200 e confirmação 201, 1 alocação e 2 alunos"
+    },
+    {
+      "id": "CT-HU016-API-006",
+      "status": "PASSOU",
+      "resumo": "201 DISTRIBUIDO; 3 alocações e 5 alunos iguais à prévia; reconfirmação idêntica"
+    },
+    {
+      "id": "CT-HU016-API-007",
+      "status": "FALHOU",
+      "resumo": "201 e 5 gravados; resposta sem lista de excedentes; minha-viagem AGUARDANDO_ALOCACAO"
+    },
+    {
+      "id": "CT-HU016-API-008",
+      "status": "FALHOU",
+      "resumo": "troca V1→V3/M1→M2 201; excedente para V1 201 e visível em minha-viagem e lista de embarque; realocação para rota P2 422 'agendamento 64 não pertence à rota 2.'"
+    },
+    {
+      "id": "CT-HU016-API-009",
+      "status": "FALHOU",
+      "resumo": "422 capacidade total; 422 assentos/em pé; 409 ônibus conflitante; ida e volta mesmo ônibus 201; prévia com um ônibus deixa a volta como excedente"
+    },
+    {
+      "id": "CT-HU016-API-010",
+      "status": "FALHOU",
+      "resumo": "13 recusas 422 com banco inalterado; lista vazia e sem o campo alocacoes: 201 e dia apagado (0 linhas)"
+    },
+    {
+      "id": "CT-HU016-API-011",
+      "status": "PASSOU",
+      "resumo": "401 sem token e inválido; 403 aluno (inclusive pendente) e representante; admin 200/201; nada gravado"
+    }
+  ],
+  "defeitos": [
+    "BUG-HU016-API-001",
+    "BUG-HU016-API-002",
+    "BUG-HU016-API-003",
+    "BUG-HU016-API-004",
+    "BUG-HU016-API-005 (a confirmar com o PO)",
+    "BUG-HU016-API-006"
+  ]
+}

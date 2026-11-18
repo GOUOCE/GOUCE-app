@@ -6,7 +6,7 @@ from alembic import context, op
 import sqlalchemy as sa
 
 revision: str = "82_create_alocacao_diaria"
-down_revision: Union[str, None] = "81_add_updated_at_rotas"
+down_revision: Union[str, None] = "82_updated_at_faculdade_ponto"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
