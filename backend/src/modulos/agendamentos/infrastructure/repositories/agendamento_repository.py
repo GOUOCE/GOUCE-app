@@ -170,10 +170,16 @@ class AgendamentoRepository:
         return getattr(item, attr, None) if item is not None else None
 
     def remove_allocations(self, agendamento) -> None:
-        """Remove os vínculos do aluno sem abrir uma segunda transação."""
+        """Marca como CANCELADO os vínculos de alocação do agendamento.
+
+        Usa UPDATE em vez de DELETE para preservar o histórico de alocação.
+        A HU-018 filtra ``status == 'ALOCADO'``, portanto registros CANCELADOS
+        não aparecem na lista de embarque (CA-06).
+        """
         self.session.query(AlocacaoAlunoORM).filter(
-            AlocacaoAlunoORM.agendamento_id == agendamento.id
-        ).delete(synchronize_session=False)
+            AlocacaoAlunoORM.agendamento_id == agendamento.id,
+            AlocacaoAlunoORM.status == "ALOCADO",
+        ).update({"status": "CANCELADO"}, synchronize_session=False)
 
     def cancel(self, aluno_id: int, item):
         """Cancelamento lógico em transação única (sem cancelamento parcial)."""
