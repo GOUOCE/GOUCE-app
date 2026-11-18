@@ -30,6 +30,7 @@ export default function AdminLayout() {
       <Stack.Screen name="representantes" />
       <Stack.Screen name="rotas-principais" />
       <Stack.Screen name="rotas-complementares" />
+      <Stack.Screen name="logistica/embarque" />
       <Stack.Screen name="cadastrar-administrador" />
     </Stack>
   );

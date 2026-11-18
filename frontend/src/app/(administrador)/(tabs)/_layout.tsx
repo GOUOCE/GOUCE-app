@@ -10,8 +10,13 @@ export default function AdminTabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: '#191C20',
         tabBarInactiveTintColor: '#44474E',
+        tabBarItemStyle: {
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
         tabBarStyle: {
           height: 80,
+          paddingTop: 12,
           paddingBottom: 12,
           backgroundColor: '#F8F9FF',
           borderTopWidth: 1,
