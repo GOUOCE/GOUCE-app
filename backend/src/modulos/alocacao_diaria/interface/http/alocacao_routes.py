@@ -87,9 +87,14 @@ def visualizar_distribuicao(
     _: dict = Depends(admin_required),
 ):
     try:
-        return service.preview(date.fromisoformat(data))
-    except (ValueError, DistribuicaoError) as error:
-        return _error(error if isinstance(error, DistribuicaoError) else DistribuicaoError(str(error)))
+        data_parsed = date.fromisoformat(data)
+    except ValueError:
+        return _error(DistribuicaoError("Data inválida."))
+
+    try:
+        return service.preview(data_parsed)
+    except DistribuicaoError as error:
+        return _error(error)
 
 
 @router.post("/distribuicao", status_code=201)
