@@ -10,6 +10,7 @@ Responsabilidades:
 
 from __future__ import annotations
 
+import unicodedata
 from datetime import date, datetime, timezone
 from typing import Optional
 
@@ -76,6 +77,20 @@ def _texto_contador(total: int) -> str:
     if total == 1:
         return "1 aluno alocado"
     return f"{total} alunos alocados"
+
+
+def _chave_ordenacao_nome(nome: Optional[str]) -> tuple[str, str]:
+    """Chave de ordem alfabética pt-BR: ignora acentos e caixa (Ágata antes de Ana).
+
+    O nome original é usado como desempate para manter a ordem determinística.
+    """
+    original = nome or ""
+    base = "".join(
+        ch
+        for ch in unicodedata.normalize("NFD", original)
+        if not unicodedata.combining(ch)
+    )
+    return (base.casefold(), original.casefold())
 
 
 # ---------------------------------------------------------------------------
@@ -359,7 +374,7 @@ class ListaEmbarqueService:
         # 8. Ordenação alfabética pelo nome (nome_completo é descriptografado)
         alunos_lista = sorted(
             consolidado.values(),
-            key=lambda x: (x["nome_aluno"] or "").lower(),
+            key=lambda x: _chave_ordenacao_nome(x["nome_aluno"]),
         )
 
         # 9. Veículos escalados com contagem de sentados/em_pé
