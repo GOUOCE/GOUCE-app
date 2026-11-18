@@ -430,8 +430,17 @@ describe('EP-005 / HU-016 & HU-017 - Distribuição logística e alocação', ()
               }),
             ],
             excedentes_globais: [
-              { agendamento_id: 41, turno: 'ida' },
-              { agendamento_id: 42, turno: 'volta' },
+              {
+                agendamento_id: 41,
+                turno: 'ida',
+                aluno_id: 7,
+                nome_aluno: 'Maria Silva',
+                rota_id: 3,
+              },
+              { agendamento_id: 42, turno: 'volta', rota_id: 3 },
+              { agendamento_id: 43, turno: 'ida', rota_id: 3 },
+              { agendamento_id: 44, turno: 'ida', rota_id: 3 },
+              { agendamento_id: 45, turno: 'ida', rota_id: 3 },
             ],
           }),
         })
@@ -454,18 +463,26 @@ describe('EP-005 / HU-016 & HU-017 - Distribuição logística e alocação', ()
 
       expect(rota?.excedentes).toBe(5);
       expect(rota?.nomeLinha).toBe('Linha 03 - Vila Antiga');
-      expect(alunos).toHaveLength(2);
+      expect(alunos).toHaveLength(5);
       expect(alunos[0]).toMatchObject({
         id: 41,
+        agendamentoId: 41,
+        alunoId: 7,
+        rotaId: 3,
         turno: 'ida',
-        nome: 'Agendamento #41',
+        nome: 'Maria Silva',
+        iniciais: 'MS',
         trajetoText: 'Turno de ida',
         selecionado: false,
       });
       expect(alunos[1]).toMatchObject({
         id: 42,
+        agendamentoId: 42,
+        alunoId: null,
+        rotaId: 3,
         turno: 'volta',
         nome: 'Agendamento #42',
+        iniciais: 'A#',
         trajetoText: 'Turno de volta',
       });
     });

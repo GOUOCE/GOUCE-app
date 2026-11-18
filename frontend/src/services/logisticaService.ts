@@ -24,6 +24,8 @@ export interface AlocacaoDistribuicao {
   em_pe: number;
   alunos: AlunoAlocacao[];
   excedentes: { agendamento_id: number; turno: Turno }[];
+  onibus_apelido?: string | null;
+  motorista_nome?: string | null;
 }
 
 export interface DemandaRota {
@@ -34,6 +36,9 @@ export interface DemandaRota {
 export interface ExcedenteGlobal {
   agendamento_id: number;
   turno: Turno;
+  aluno_id?: number | null;
+  nome_aluno?: string | null;
+  rota_id?: number | null;
 }
 
 export interface AlertaDistribuicao {
@@ -47,6 +52,8 @@ export interface PreviaDistribuicao {
   alocacoes: AlocacaoDistribuicao[];
   excedentes_globais: ExcedenteGlobal[];
   alertas: AlertaDistribuicao[];
+  status_logistico?: 'PENDENTE' | 'DISTRIBUIDO' | string;
+  distribuicao_persistida?: boolean;
 }
 
 export interface AlocacaoRequest {
@@ -91,11 +98,27 @@ export interface LinhaDistribuicao {
 
 export interface AlunoExcedente {
   id: number;
+  agendamentoId: number;
+  alunoId?: number | null;
+  rotaId?: number | null;
   turno: Turno;
   nome: string;
   iniciais: string;
   trajetoText: string;
   selecionado: boolean;
+}
+
+export interface OpcaoRealocacao {
+  chave: string;
+  indice: number;
+  rotaId: number;
+  rotaNome: string;
+  onibusId: string;
+  onibusLabel: string;
+  motoristaId: number;
+  motoristaNome: string;
+  turno: Turno;
+  vagas: number;
 }
 
 export interface OpcaoSelect {
@@ -132,6 +155,13 @@ function normalizarPlaca(placa: string) {
 
 function unicos<T>(itens: T[]): T[] {
   return Array.from(new Set(itens));
+}
+
+function iniciaisDeNome(nome: string): string {
+  const partes = nome.trim().split(/\s+/).filter(Boolean);
+  if (partes.length === 0) return '?';
+  if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
+  return `${partes[0][0]}${partes[partes.length - 1][0]}`.toUpperCase();
 }
 
 function mapearOnibus(item: any): OnibusOpcao | null {
@@ -197,7 +227,14 @@ async function obterPreviewComCache(dataIso: string): Promise<PreviaDistribuicao
   const preview = response.data;
   const confirmadas = cacheAlocacoesConfirmadas.get(dataIso);
 
-  return confirmadas ? { ...preview, alocacoes: confirmadas } : preview;
+  return confirmadas
+    ? {
+        ...preview,
+        alocacoes: confirmadas,
+        status_logistico: 'DISTRIBUIDO',
+        distribuicao_persistida: true,
+      }
+    : preview;
 }
 
 async function obterReferencias() {
@@ -221,12 +258,16 @@ function montarLinha(
   demanda: DemandaRota,
   rota: any | undefined,
   alocacoes: AlocacaoDistribuicao[],
+  excedentesGlobais: ExcedenteGlobal[],
   referencias: Awaited<ReturnType<typeof obterReferencias>>,
 ): LinhaDistribuicao {
   const rotaId = Number(demanda.rota_id);
   const alocacoesRota = alocacoes.filter((item) => Number(item.rota_id) === rotaId);
   const totalAlocado = alocacoesRota.reduce((total, item) => total + item.alunos.length, 0);
-  const excedentes = Math.max(0, Number(demanda.total_alunos) - totalAlocado);
+  const excedentesPorRota = excedentesGlobais.some((item) => item.rota_id != null);
+  const excedentes = excedentesPorRota
+    ? excedentesGlobais.filter((item) => Number(item.rota_id) === rotaId).length
+    : Math.max(0, Number(demanda.total_alunos) - totalAlocado);
   const onibusIds = unicos(alocacoesRota.map((item) => item.onibus_id).filter(Boolean));
   const motoristaIds = unicos(
     alocacoesRota.map((item) => Number(item.motorista_id)).filter((id) => id > 0),
@@ -278,7 +319,13 @@ async function obterDadosDistribuicao(
   ]);
   const rotasPorId = new Map(referencias.rotas.map((rota) => [Number(rota.id), rota]));
   const linhas = preview.demanda_por_rota.map((demanda) =>
-    montarLinha(demanda, rotasPorId.get(Number(demanda.rota_id)), preview.alocacoes, referencias),
+    montarLinha(
+      demanda,
+      rotasPorId.get(Number(demanda.rota_id)),
+      preview.alocacoes,
+      preview.excedentes_globais,
+      referencias,
+    ),
   );
 
   return { preview, linhas };
@@ -292,6 +339,12 @@ export const logisticaService = {
   async listarDistribuicaoLogistica(dataIso: string): Promise<LinhaDistribuicao[]> {
     const { linhas } = await obterDadosDistribuicao(dataIso);
     return linhas;
+  },
+
+  async obterPainelDistribuicao(
+    dataIso: string,
+  ): Promise<{ preview: PreviaDistribuicao; linhas: LinhaDistribuicao[] }> {
+    return obterDadosDistribuicao(dataIso);
   },
 
   async obterOpcoesAlocacao(
@@ -336,21 +389,32 @@ export const logisticaService = {
   async obterExcedentes(
     dataIso: string,
     linhaId?: number | string,
-  ): Promise<{ rota: LinhaDistribuicao | null; alunos: AlunoExcedente[] }> {
+  ): Promise<{
+    rota: LinhaDistribuicao | null;
+    alunos: AlunoExcedente[];
+    preview: PreviaDistribuicao;
+    linhas: LinhaDistribuicao[];
+  }> {
     const { preview, linhas } = await obterDadosDistribuicao(dataIso);
     const rota =
       linhaId === undefined
         ? null
         : linhas.find((item) => String(item.id) === String(linhaId)) ?? null;
-    const alunos: AlunoExcedente[] = preview.excedentes_globais.map((item) => ({
-      id: item.agendamento_id,
-      turno: item.turno,
-      nome: `Agendamento #${item.agendamento_id}`,
-      iniciais: 'ID',
-      trajetoText: item.turno === 'ida' ? 'Turno de ida' : 'Turno de volta',
-      selecionado: false,
-    }));
+    const alunos: AlunoExcedente[] = preview.excedentes_globais.map((item) => {
+      const nome = item.nome_aluno?.trim() || `Agendamento #${item.agendamento_id}`;
+      return {
+        id: item.agendamento_id,
+        agendamentoId: item.agendamento_id,
+        alunoId: item.aluno_id ?? null,
+        rotaId: item.rota_id ?? null,
+        turno: item.turno,
+        nome,
+        iniciais: iniciaisDeNome(nome),
+        trajetoText: item.turno === 'ida' ? 'Turno de ida' : 'Turno de volta',
+        selecionado: false,
+      };
+    });
 
-    return { rota, alunos };
+    return { rota, alunos, preview, linhas };
   },
 };

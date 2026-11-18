@@ -102,6 +102,7 @@ export default function DistribicaoLogisticaScreen() {
     message: '',
   });
   const [statusLogistico, setStatusLogistico] = useState('');
+  const [distribuicaoPersistida, setDistribuicaoPersistida] = useState(false);
 
   const semanaInicio = useMemo(
     () => adicionarDias(inicioDaSemana(hoje), offsetSemanas * 7),
@@ -124,9 +125,16 @@ export default function DistribicaoLogisticaScreen() {
   const carregarLinhas = useCallback(async (dataIso: string) => {
     setLoading(true);
     setErro('');
+    setStatusLogistico('');
+    setDistribuicaoPersistida(false);
     try {
-      const res = await logisticaService.listarDistribuicaoLogistica(dataIso);
-      setLinhas(res);
+      const res = await logisticaService.obterPainelDistribuicao(dataIso);
+      setLinhas(res.linhas);
+      const persistida =
+        Boolean(res.preview.distribuicao_persistida) ||
+        res.preview.status_logistico === 'DISTRIBUIDO';
+      setDistribuicaoPersistida(persistida);
+      setStatusLogistico(persistida ? res.preview.status_logistico ?? 'DISTRIBUIDO' : '');
     } catch (error) {
       setLinhas([]);
       setErro(getErrorMessage(error, 'Não foi possível carregar a distribuição logística.'));
@@ -160,6 +168,8 @@ export default function DistribicaoLogisticaScreen() {
     [linhas],
   );
 
+  const somenteLeitura = tipoTab === 'historico' || dataIsoSelecionada < paraIso(hoje);
+
   const abrirConfirmacao = () => {
     if (linhas.length === 0) {
       setPopupResultado({
@@ -183,6 +193,7 @@ export default function DistribicaoLogisticaScreen() {
         alocacoes: [],
       });
       setStatusLogistico(resposta.status_logistico);
+      setDistribuicaoPersistida(true);
       setPopupResultado({
         visible: true,
         type: 'success',
@@ -387,40 +398,44 @@ export default function DistribicaoLogisticaScreen() {
                     ) : null}
                   </View>
 
-                  <View style={styles.actionsCol}>
-                    <TouchableOpacity
-                      style={styles.actionIconBtn}
-                      onPress={() =>
-                        router.push({
-                          pathname: '/(administrador)/logistica/alocar',
-                          params: { linhaId: String(linha.id), dataIso: dataIsoSelecionada },
-                        } as any)
-                      }
-                    >
-                      <Pencil size={20} color="#191C20" />
-                    </TouchableOpacity>
+                  {!somenteLeitura || linha.excedentes > 0 ? (
+                    <View style={styles.actionsCol}>
+                      {!somenteLeitura ? (
+                        <TouchableOpacity
+                          style={styles.actionIconBtn}
+                          onPress={() =>
+                            router.push({
+                              pathname: '/(administrador)/logistica/alocar',
+                              params: { linhaId: String(linha.id), dataIso: dataIsoSelecionada },
+                            } as any)
+                          }
+                        >
+                          <Pencil size={20} color="#191C20" />
+                        </TouchableOpacity>
+                      ) : null}
 
-                    {linha.excedentes > 0 ? (
-                      <TouchableOpacity
-                        style={styles.actionIconBtn}
-                        onPress={() =>
-                          router.push({
-                            pathname: '/(administrador)/logistica/excedentes',
-                            params: { linhaId: String(linha.id), dataIso: dataIsoSelecionada },
-                          } as any)
-                        }
-                      >
-                        <ClipboardList size={20} color="#B00020" />
-                      </TouchableOpacity>
-                    ) : null}
-                  </View>
+                      {linha.excedentes > 0 ? (
+                        <TouchableOpacity
+                          style={styles.actionIconBtn}
+                          onPress={() =>
+                            router.push({
+                              pathname: '/(administrador)/logistica/excedentes',
+                              params: { linhaId: String(linha.id), dataIso: dataIsoSelecionada },
+                            } as any)
+                          }
+                        >
+                          <ClipboardList size={20} color="#B00020" />
+                        </TouchableOpacity>
+                      ) : null}
+                    </View>
+                  ) : null}
                 </View>
               </Surface>
             ))}
           </View>
         )}
 
-        {!loading && !erro && linhas.length > 0 ? (
+        {!somenteLeitura && !distribuicaoPersistida && !loading && !erro && linhas.length > 0 ? (
           <Button
             mode="contained"
             onPress={abrirConfirmacao}

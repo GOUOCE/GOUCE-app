@@ -165,23 +165,36 @@ export default function AlocarRotaScreen() {
     [onibusPorPlaca],
   );
 
+  const obterRecursosUsadosNoTurno = (formulario: FormularioAlocacao) => {
+    const usadosOnibus = new Set<string>();
+    const usadosMotoristas = new Set<string>();
+
+    preview?.alocacoes.forEach((alocacao, origemIndex) => {
+      if (alocacao.turno !== formulario.turno || origemIndex === formulario.origemIndex) return;
+      usadosOnibus.add(alocacao.onibus_id);
+      usadosMotoristas.add(String(alocacao.motorista_id));
+    });
+
+    formularios.forEach((item) => {
+      if (item.turno !== formulario.turno || item.chave === formulario.chave) return;
+      if (item.onibusId) usadosOnibus.add(item.onibusId);
+      if (item.motoristaId) usadosMotoristas.add(item.motoristaId);
+    });
+
+    return { usadosOnibus, usadosMotoristas };
+  };
+
   const obterOpcoesOnibus = (formulario: FormularioAlocacao) => {
-    const usados = new Set(
-      formularios
-        .filter((item) => item.turno === formulario.turno && item.chave !== formulario.chave)
-        .map((item) => item.onibusId),
+    const { usadosOnibus } = obterRecursosUsadosNoTurno(formulario);
+    return onibus.filter(
+      (item) => !usadosOnibus.has(item.value) || item.value === formulario.onibusId,
     );
-    return onibus.filter((item) => !usados.has(item.value) || item.value === formulario.onibusId);
   };
 
   const obterOpcoesMotoristas = (formulario: FormularioAlocacao) => {
-    const usados = new Set(
-      formularios
-        .filter((item) => item.turno === formulario.turno && item.chave !== formulario.chave)
-        .map((item) => item.motoristaId),
-    );
+    const { usadosMotoristas } = obterRecursosUsadosNoTurno(formulario);
     return motoristas.filter(
-      (item) => !usados.has(item.value) || item.value === formulario.motoristaId,
+      (item) => !usadosMotoristas.has(item.value) || item.value === formulario.motoristaId,
     );
   };
 
@@ -241,7 +254,13 @@ export default function AlocarRotaScreen() {
     [linhaId, preview],
   );
 
-  const excedentesRota = Math.max(0, totalDemandaRota - totalAlocadoRota);
+  const excedentesRota = useMemo(() => {
+    const excedentesGlobais = preview?.excedentes_globais ?? [];
+    if (excedentesGlobais.some((item) => item.rota_id != null)) {
+      return excedentesGlobais.filter((item) => Number(item.rota_id) === linhaId).length;
+    }
+    return Math.max(0, totalDemandaRota - totalAlocadoRota);
+  }, [linhaId, preview, totalAlocadoRota, totalDemandaRota]);
 
   const montarAlocacoes = useCallback(() => {
     if (!preview) return { payload: [], enriquecidas: [] as AlocacaoDistribuicao[] };
@@ -435,12 +454,6 @@ export default function AlocarRotaScreen() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <Text style={styles.rodizioNotice}>
-            Caso o ônibus mude de rota mesmo sendo associado à outra no{' '}
-            <Text style={{ fontWeight: 'bold' }}>rodízio de frotas</Text>, ele será alterado apenas
-            para esse dia em específico e voltará para a rota designada no rodízio no dia seguinte.
-          </Text>
-
           {formularios.length === 0 ? (
             <View style={styles.emptyBox}>
               <Text style={styles.emptyText}>
@@ -639,12 +652,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 24,
     paddingBottom: 40,
-  },
-  rodizioNotice: {
-    fontSize: 12,
-    color: '#43474E',
-    marginBottom: 20,
-    lineHeight: 18,
   },
   emptyBox: {
     paddingVertical: 32,
