@@ -94,10 +94,12 @@ class ListaEmbarqueService:
     # ------------------------------------------------------------------
 
     def obter_representante(self, user_id: int) -> Optional[dict]:
-        """Retorna ``{id_faculdade_responsavel, ...}`` para o representante ativo.
+        """Retorna ``{administrador_id, id_faculdade_responsavel}`` do vínculo ativo.
 
-        Retorna ``None`` se o usuário não for um representante ativo ou não
-        tiver faculdade responsável atribuída.
+        Retorna ``None`` somente se o usuário não for um representante ativo.
+        Vínculo ativo sem faculdade responsável (estado legado) retorna o dict com
+        ``id_faculdade_responsavel=None``, para que o chamador distinga os dois
+        motivos de recusa.
         """
         repr_orm: RepresentanteORM | None = (
             self.session.query(RepresentanteORM)
@@ -109,11 +111,9 @@ class ListaEmbarqueService:
         )
         if repr_orm is None:
             return None
-        if not repr_orm.id_faculdade_responsavel:
-            return None
         return {
             "administrador_id": repr_orm.administrador_id,
-            "id_faculdade_responsavel": repr_orm.id_faculdade_responsavel,
+            "id_faculdade_responsavel": repr_orm.id_faculdade_responsavel or None,
         }
 
     # ------------------------------------------------------------------
