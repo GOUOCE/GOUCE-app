@@ -48,3 +48,12 @@ Em `frontend/src/app/(administrador)/logistica/excedentes.tsx` (241 linhas), os 
 ### 📎 Evidência
 
 Reproduzido por Radlei em 18/11/2026, ambiente local `atu-ui016`. Prints anexados na issue: card de P1 com "1 aluno(s) excedente(s)"; tela de excedentes; tela depois de tocar no card.
+
+### Reteste
+
+| Campo | Valor |
+|---|---|
+| **Data** | 18/11/2026 |
+| **Build** | `82eac441` (branch `fix/issues-hu16e17`) |
+| **Issue** | #509 |
+| **Resultado** | ✅ Corrigido — a tela de Excedentes (`excedentes.tsx`) agora permite selecionar o aluno, lista o ônibus com vaga (Rota 2, `DEF4G56`, 3 vagas) e, ao confirmar, mostra "Aluno realocado"; o aluno viu "Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Placa DEF4G56". Recusa testada com o ônibus inativado: a tela mostrou a causa ("ônibus DEF4G56 inexistente ou inativo", 422 `DISTRIBUICAO_INVALIDA`) e o banco não foi alterado. `CT-HU016-UI-007`: 3/3 verificações ✅. Novo defeito cosmético encontrado neste reteste: [BUG-HU016-UI-007](BUG-HU016-UI-007.md). |

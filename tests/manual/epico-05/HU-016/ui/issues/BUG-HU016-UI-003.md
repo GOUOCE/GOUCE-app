@@ -70,3 +70,12 @@ Mesmo defeito reproduzido de novo durante a execução do `CT-HU016-UI-006`, em 
 - Depois do F5 em 30/11, a tela mostra a sugestão automática (Carlos + Pedro / `ABC1D23` + `HIJ7K89`) em vez do que está gravado.
 - No banco, 30/11 ficou com P1 ida V3/M3, P1 volta V3/M3 e P2 ida V2/M2 (ids de `alocacao_diaria` 8, 9 e 10).
 - Sintoma adicional: o status "DISTRIBUIDO" fica preso ao trocar de dia, porque `statusLogistico` é um `useState('')` (`distribuicao.tsx:104`) que nunca é resetado ao mudar de data. O risco de sobrescrita não foi testado.
+
+### Reteste
+
+| Campo | Valor |
+|---|---|
+| **Data** | 18/11/2026 |
+| **Build** | `82eac441` (branch `fix/issues-hu16e17`) |
+| **Issue** | #506 |
+| **Resultado** | ✅ Corrigido — depois do F5 e reabertura de 18/11, a tela mostra "Status logístico: DISTRIBUIDO" e os ônibus/motoristas gravados no banco (confirmado também pela API: `status_logistico`, `distribuicao_persistida: true` e `alocacoes` batendo com `alocacao_diaria`/`alocacao_aluno`). `CT-HU016-UI-004`: 3/3 verificações ✅. O risco de sobrescrita ao trocar de dia sem recarregar não foi testado neste reteste. |

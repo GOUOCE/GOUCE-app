@@ -50,3 +50,12 @@ Hipótese: em `frontend/src/app/(administrador)/logistica/distribuicao.tsx`, o �
 ### 📎 Evidência
 
 Reproduzido por Radlei em 17/11/2026, ambiente local `atu-ui016`. Prints: do Histórico em 10/11 e 11/11 e da tela de alocação aberta pelo lápis.
+
+### Reteste
+
+| Campo | Valor |
+|---|---|
+| **Data** | 18/11/2026 |
+| **Build** | `82eac441` (branch `fix/issues-hu16e17`) |
+| **Issue** | #505 |
+| **Resultado** | ✅ Corrigido — em 10/11 (Histórico), o card não mostra mais o lápis de edição nem o botão "Confirmar distribuição"; a aba ficou somente leitura (`distribuicao.tsx`, variável `somenteLeitura`). `CT-HU016-UI-002`: 4/4 verificações ✅. |
