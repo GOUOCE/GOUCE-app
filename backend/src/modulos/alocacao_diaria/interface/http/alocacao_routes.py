@@ -1,3 +1,4 @@
+import re
 from datetime import date
 from typing import Annotated, Optional
 
@@ -76,8 +77,10 @@ def _roles_set(current_user: dict) -> set[str]:
 
 
 def _parse_data(data: str) -> date:
-    """Converte ``YYYY-MM-DD`` em ``date``; data civil impossível gera 422."""
+    """Converte ``YYYY-MM-DD`` em ``date``; formato ou data civil inválidos geram 422."""
     try:
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", data):
+            raise ValueError(data)
         return date.fromisoformat(data)
     except ValueError:
         raise HTTPException(
@@ -260,15 +263,16 @@ def lista_embarque(
 def minha_viagem(
     service: Annotated[MinhaViagemService, Depends(_minha_viagem_service)],
     current_user: Annotated[dict, Depends(_aluno_required)],
-    data: Annotated[Optional[date], Query()] = None,
+    data: Annotated[Optional[str], Query()] = None,
 ):
     """Retorna a situação da viagem do aluno autenticado para a data informada.
 
     - **data** (opcional): data no formato ``YYYY-MM-DD``. Padrão: hoje.
+      Data ou formato inválido retorna ``422`` com mensagem em português.
     - Restrito ao perfil ``aluno``. Retorna ``403`` para outros perfis.
 
     Critérios de aceite cobertos: CA-01, CA-02, CA-03, CA-04, FA-001, FA-002.
     """
     aluno_id = int(current_user["current_user_id"])
-    target = data or date.today()
+    target = _parse_data(data) if data is not None else date.today()
     return service.consultar(aluno_id, target)
