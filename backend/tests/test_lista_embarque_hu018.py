@@ -219,6 +219,40 @@ class TestListaEmbarqueAcesso(_BaseRouteTest):
         )
 
 
+class TestListaEmbarqueDataInvalida(_BaseRouteTest):
+    """CT-HU018-API-005 (#485): data inválida deve gerar 422, nunca 500."""
+
+    async def test_lista_embarque_data_impossivel_retorna_422(self):
+        status, body = await self.call(f"{BASE}/lista-embarque?data=2026-02-30&rota_id=1")
+        self.assertEqual(status, 422)
+        self.assertIn("Data inválida", body["detail"])
+        self.mock_service.listar.assert_not_called()
+
+    async def test_rotas_do_dia_data_impossivel_retorna_422(self):
+        status, body = await self.call(f"{BASE}/rotas-do-dia?data=2026-02-30")
+        self.assertEqual(status, 422)
+        self.assertIn("Data inválida", body["detail"])
+        self.mock_service.rotas_do_dia.assert_not_called()
+
+    async def test_formato_invalido_continua_422(self):
+        for path in (
+            f"{BASE}/lista-embarque?data=16-11-2026&rota_id=1",
+            f"{BASE}/rotas-do-dia?data=16-11-2026",
+        ):
+            status, _ = await self.call(path)
+            self.assertEqual(status, 422, path)
+
+    async def test_data_ausente_continua_422(self):
+        for path in (f"{BASE}/lista-embarque?rota_id=1", f"{BASE}/rotas-do-dia"):
+            status, _ = await self.call(path)
+            self.assertEqual(status, 422, path)
+
+    async def test_data_valida_continua_200(self):
+        self.mock_service.rotas_do_dia.return_value = []
+        status, _ = await self.call(f"{BASE}/rotas-do-dia?data={_DATA}")
+        self.assertEqual(status, 200)
+
+
 # ---------------------------------------------------------------------------
 # CA-03 / CA-04 / CA-05 — Admin consultando a lista
 # ---------------------------------------------------------------------------

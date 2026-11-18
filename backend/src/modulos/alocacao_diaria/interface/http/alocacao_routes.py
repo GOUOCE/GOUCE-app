@@ -75,6 +75,17 @@ def _roles_set(current_user: dict) -> set[str]:
     return set(roles)
 
 
+def _parse_data(data: str) -> date:
+    """Converte ``YYYY-MM-DD`` em ``date``; data civil impossível gera 422."""
+    try:
+        return date.fromisoformat(data)
+    except ValueError:
+        raise HTTPException(
+            status_code=422,
+            detail="Data inválida. Informe uma data real no formato YYYY-MM-DD.",
+        )
+
+
 # ---------------------------------------------------------------------------
 # Endpoints de distribuição — HU-016/HU-017 (apenas Administrador)
 # ---------------------------------------------------------------------------
@@ -128,7 +139,7 @@ def rotas_do_dia(
 
     Usado para popular o seletor "Rota *" na tela da Lista de Embarque (CA-01).
     """
-    target = date.fromisoformat(data)
+    target = _parse_data(data)
     roles = _roles_set(current_user)
     is_admin = CargoEnum.ADMINISTRADOR.value in roles
 
@@ -179,7 +190,7 @@ def lista_embarque(
 
     Critérios de aceite cobertos: CA-01, CA-02, CA-03, CA-04, CA-05, CA-06, CA-07.
     """
-    target = date.fromisoformat(data)
+    target = _parse_data(data)
     roles = _roles_set(current_user)
     is_admin = CargoEnum.ADMINISTRADOR.value in roles
 
