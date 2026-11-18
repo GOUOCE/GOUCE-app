@@ -1,5 +1,9 @@
 import unittest
 
+from fastapi import FastAPI
+from tests.rota_principal_support import asgi_request
+
+from src.modulos.alocacao_diaria.interface.http import alocacao_routes
 from src.modulos.alocacao_diaria.application.services.distribuicao import (
     OnibusDisponivel,
     Passageiro,
@@ -56,6 +60,31 @@ class DistribuicaoHu016Test(unittest.TestCase):
         )
         self.assertEqual({item["turno"] for item in resultado["alocacoes"]}, {"ida", "volta"})
         self.assertEqual(resultado["alocacoes"][0]["onibus_id"], "B")
+
+
+class DistribuicaoHttpHu016Test(unittest.IsolatedAsyncioTestCase):
+    def setUp(self):
+        self.app = FastAPI()
+        self.app.include_router(alocacao_routes.router)
+        self.app.dependency_overrides[alocacao_routes.admin_required] = lambda: {"sub": "1", "cargo": "ADMINISTRADOR"}
+
+    async def test_data_invalida_retorna_422_mensagem_amigavel(self):
+        status, response = await asgi_request(
+            self.app,
+            "GET",
+            "/alocacao-diaria/distribuicao-automatica?data=2026-02-30",
+        )
+        self.assertEqual(status, 422)
+        self.assertEqual(
+            response,
+            {
+                "success": False,
+                "error": {
+                    "code": "DISTRIBUICAO_INVALIDA",
+                    "message": "Data inválida.",
+                },
+            },
+        )
 
 
 if __name__ == "__main__":
