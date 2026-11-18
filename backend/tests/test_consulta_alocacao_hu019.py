@@ -294,6 +294,35 @@ class TestMinhaViagemUnit(unittest.TestCase):
         status, body = self._request(app, "/alocacao-diaria/minha-viagem?data=2026-11-25")
         self.assertIn(status, (401, 403, 422))
 
+    # --- #486 / CT-HU019-API-007: data inválida → 422 em português ---
+    def test_data_invalida_retorna_422_em_portugues(self):
+        for data in ("2026-02-30", "16-11-2026", "abc", "20261117", ""):
+            svc = MagicMock()
+            app = self._client_with_service(svc, aluno_id=1)
+            status, body = self._request(app, f"/alocacao-diaria/minha-viagem?data={data}")
+            self.assertEqual(status, 422, data)
+            self.assertEqual(
+                body["detail"],
+                "Data inválida. Informe uma data real no formato YYYY-MM-DD.",
+                data,
+            )
+            svc.consultar.assert_not_called()
+
+    def test_data_valida_continua_chamando_servico(self):
+        svc = MagicMock()
+        svc.consultar.return_value = {
+            "data": "2026-11-25", "possui_agendamento": False,
+            "agendamento_id": None, "status_geral": "SEM_AGENDAMENTO",
+            "mensagem": "Você não possui agendamento confirmado para esta data.",
+            "foi_realocado": False, "aviso_realocacao": None,
+            "ida": None, "volta": None,
+            "consultado_em": "2026-11-15T22:00:00+00:00",
+        }
+        app = self._client_with_service(svc, aluno_id=1)
+        status, _ = self._request(app, "/alocacao-diaria/minha-viagem?data=2026-11-25")
+        self.assertEqual(status, 200)
+        self.assertEqual(svc.consultar.call_args[0][1], date(2026, 11, 25))
+
 
 # ---------------------------------------------------------------------------
 # Testes de integração SQLite in-memory — MinhaViagemService
