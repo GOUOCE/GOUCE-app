@@ -1,6 +1,6 @@
 # Como executar os testes manuais de UI — HU-016
 
-Execução manual por **Radlei**, com apoio da **LLM** (massa pela API, conferência de API/banco e redação dos relatos). [Suíte de UI: 9 casos](UI-HU-016.md). A [suíte de API tem 11 casos](../api/API-HU-016.md), executada antes e usada como mapa de ids e massa de referência. **Execução de 18/11/2026:** 3 casos passaram e 6 falharam; defeitos em [`issues/`](issues/) e resumo em [EVIDENCIAS-UI-HU-016.json](EVIDENCIAS-UI-HU-016.json).
+Execução manual por **Radlei**, com apoio da **LLM** (massa pela API, conferência de API/banco e redação dos relatos). [Suíte de UI: 9 casos](UI-HU-016.md). A [suíte de API tem 11 casos](../api/API-HU-016.md), executada antes e usada como mapa de ids e massa de referência. **Execução de 18/11/2026:** 3 casos passaram e 6 falharam; defeitos em [`issues/`](issues/) e resumo em [EVIDENCIAS-UI-HU-016.json](EVIDENCIAS-UI-HU-016.json). **Reteste de 18/11/2026 (build `82eac441`, branch `fix/issues-hu16e17`):** os 6 casos que falharam passaram a ✅ — ver "Resultado do reteste" abaixo.
 
 ## Objetivo e escopo
 
@@ -28,8 +28,9 @@ Planejamento na branch `test/planejamento-api-ui-hu-016`, com entrega para `deve
 
 - Print da **janela inteira**, com a barra de endereço visível, e o DevTools aberto na aba **Network** (filtro Fetch/XHR, com **Preserve log** ativado) e na aba **Console**.
 - Abrir o DevTools **só depois do login** — nunca durante a tela de login, para não capturar a senha sendo digitada.
+- **Assim que o DevTools abrir, limpar o Console (ícone 🚫 "Clear console")** antes de qualquer print ou interação. O Console **reexibe mensagens antigas** mesmo depois de aberto após o login — inclusive o aviso "A form field element should have an id or name attribute" / "Password field is not contained in a form", que o navegador imprime junto com o valor digitado no campo de senha da tela de login. Limpar o Console não é opcional: é o único jeito de garantir que esse aviso (e a senha dentro dele) não apareça num print tirado depois.
 - **Nunca** abrir a aba **Headers** de uma requisição nem mostrar token ou senha em nenhum print. A aba **Response** é permitida (corpo da resposta, sem cabeçalhos).
-- Se um print acidentalmente mostrar um token/senha, descartar o print e refazer — não tentar recortar depois.
+- **Nunca anexar um print em que o aviso de "password field" (ou qualquer outro texto com a senha) apareça no Console** — mesmo que pareça ilegível ou cortado. Se um print acidentalmente mostrar um token/senha, descartar o print e refazer (limpando o Console de novo antes) — não tentar recortar ou borrar depois.
 
 ## Regras
 
@@ -50,6 +51,7 @@ Planejamento na branch `test/planejamento-api-ui-hu-016`, com entrega para `deve
    | CT-HU016-UI-005 | BUG-HU016-UI-004 | #507 |
    | CT-HU016-UI-006 | BUG-HU016-UI-005 | #508 |
    | CT-HU016-UI-007 | BUG-HU016-UI-006 | #509 |
+   | CT-HU016-UI-007 (reteste) | BUG-HU016-UI-007 | sem issue aberta ainda |
 
 3. Publicar a issue no GitHub com as labels `bug`, `Front`, `HU-016` e `Bloqueante` ou `Não bloqueante` (conforme a severidade e o efeito no fluxo principal), atribuída a `dev-mariab`.
 4. Anexar evidência (prints/GIF, pela regra de coleta acima); o ideal é anexar sempre, e quando faltar tempo, ao menos nas issues `Bloqueante`.
@@ -70,6 +72,26 @@ Planejamento na branch `test/planejamento-api-ui-hu-016`, com entrega para `deve
   | #509 | BUG-HU016-UI-006 | 🟠 Alta | Sim |
 
 Detalhe por caso e por verificação na [suíte](UI-HU-016.md) e no [JSON de evidências](EVIDENCIAS-UI-HU-016.json).
+
+## Resultado do reteste (18/11/2026)
+
+- **Build testado:** `82eac441` (branch `fix/issues-hu16e17`), correções de `dev-mariab` para as issues #504 a #509. Branch de resultados: `test/reteste-ui-hu-016`.
+- **6 casos retestados:** 6 ✅ / 0 ❌ — **20 verificações:** 20 ✅ / 0 ❌ / 0 🚫.
+- Massa de apoio em 27/11 montada pela API (preparação de dado); a realocação e a tentativa de recusa do CT-007 foram feitas pela própria tela.
+- **Defeitos corrigidos:**
+
+  | Issue | Relato | Resultado no reteste |
+  | --- | --- | --- |
+  | #504 | BUG-HU016-UI-001 | ✅ Cartão "Rodízio de frota" removido do painel |
+  | #505 | BUG-HU016-UI-002 | ✅ Histórico virou somente leitura |
+  | #506 | BUG-HU016-UI-003 | ✅ Depois do F5, a tela lê o status e os ônibus/motoristas gravados no banco |
+  | #507 | BUG-HU016-UI-004 | ✅ Excedentes mostram o nome do aluno; "Aguardando alocação do veículo" verificado |
+  | #508 | BUG-HU016-UI-005 | ✅ Listas filtram recurso já usado por outra rota; mensagens de conflito citam nome da rota/recurso |
+  | #509 | BUG-HU016-UI-006 | ✅ Tela de Excedentes seleciona, lista ônibus com vaga, realoca e recusa com causa |
+
+- **Novo defeito encontrado durante o reteste:** [BUG-HU016-UI-007](issues/BUG-HU016-UI-007.md) (🟢 Baixa, Não bloqueante, sem issue aberta ainda) — o aviso de excedentes continua visível na tela depois da realocação, junto com a mensagem de "nenhum excedente".
+
+Detalhe por verificação no [JSON de evidências](EVIDENCIAS-UI-HU-016.json) (bloco `reteste`) e na [suíte](UI-HU-016.md) (seção "Reteste (18/11/2026)").
 
 ## Riscos mapeados no código
 
@@ -93,12 +115,13 @@ Os riscos abaixo vêm da leitura do código e orientam a execução. **Não são
 
 ## Limitações e itens de reteste
 
-- Esta execução não inclui a rodada de **reteste das correções** dos defeitos #504 a #509 — fica para depois que as correções forem publicadas.
-- `CT-HU016-UI-005`, verificação 3 ("Aguardando alocação do veículo" no app do aluno excedente): 🚫 não executada — o aluno foi realocado antes dessa checagem, no preparo do caso seguinte. Fica para o reteste.
-- `CT-HU016-UI-007`, verificação 3 (mensagem de recusa na tela) ficou 🚫 bloqueada por depender da verificação 1, que não tem nenhuma ação na tela para testar.
-- O risco de sobrescrita do status "DISTRIBUIDO" ao trocar de dia sem recarregar (ver segunda reprodução em `BUG-HU016-UI-003`) não foi testado.
-- As issues #504, #505 e #507 ainda não têm print anexado (nem no corpo, nem em comentário); só #506 (print em comentário), #508 e #509 (print no corpo) têm evidência anexada até agora.
-- A issue [#473](https://github.com/GOUOCE/GOUCE-app/issues/473) (decisão do PO sobre realocação entre rotas) está fechada sem decisão registrada; isso trava uma parte do reteste futuro de `CT-HU016-UI-007` até haver resposta.
+- A rodada de **reteste das correções** dos defeitos #504 a #509 foi feita em 18/11/2026, no build `82eac441` — ver "Resultado do reteste" acima. Todos os 6 casos passaram.
+- `CT-HU016-UI-005`, verificação 3 ("Aguardando alocação do veículo" no app do aluno excedente): 🚫 não executada na execução original — o aluno foi realocado antes dessa checagem, no preparo do caso seguinte. **Executada no reteste: ✅ passou.**
+- `CT-HU016-UI-007`, verificação 3 (mensagem de recusa na tela) ficou 🚫 bloqueada na execução original por depender da verificação 1, que não tinha nenhuma ação na tela para testar. **Executada no reteste** (com o ônibus de destino inativado antes de confirmar): ✅ a tela mostrou a causa e o banco não foi alterado.
+- O risco de sobrescrita do status "DISTRIBUIDO" ao trocar de dia sem recarregar (ver segunda reprodução em `BUG-HU016-UI-003`) não foi testado nem no reteste.
+- As issues #504, #505 e #507 ainda não têm print anexado (nem no corpo, nem em comentário); só #506 (print em comentário), #508 e #509 (print no corpo) têm evidência anexada da execução original — anexar também evidência do reteste.
+- A issue [#473](https://github.com/GOUOCE/GOUCE-app/issues/473) (decisão do PO sobre realocação entre rotas) continua fechada sem decisão registrada; a realocação testada no reteste foi dentro da mesma rota (ida), então não dependeu dessa decisão.
+- Novo defeito, sem issue aberta ainda: [BUG-HU016-UI-007](issues/BUG-HU016-UI-007.md), encontrado durante o reteste do `CT-HU016-UI-007`.
 
 ## Comportamentos conhecidos que não são defeito da HU-016
 
