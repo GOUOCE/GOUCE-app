@@ -1,3 +1,4 @@
+import json
 from datetime import date
 
 from sqlalchemy.orm import Session
@@ -17,6 +18,7 @@ from src.modulos.alocacao_diaria.model.entities.alocacao import (
     AlocacaoAlunoORM,
     AlocacaoDiariaORM,
 )
+from src.shared.infrastructure.audit_model import LogAuditoriaORM
 
 
 class DistribuicaoError(ValueError):
@@ -33,18 +35,26 @@ class AlocacaoService:
         demanda = self._demanda(target)
         return {"data": target.isoformat(), **distribuir_alunos(demanda, self._buses())}
 
-    def persist(self, payload: DistribuicaoRequestDTO) -> dict:
+    def persist(
+        self,
+        payload: DistribuicaoRequestDTO,
+        usuario_executor_id: int | None = None,
+    ) -> dict:
+        excedentes_globais: list[dict] = []
         if payload.modo == "automatico":
             preview = self.preview(payload.data)
             alocacoes = preview["alocacoes"]
+            excedentes_globais = preview["excedentes_globais"]
             self._validar_payload(payload.data, alocacoes)
         else:
+            if not payload.alocacoes:
+                raise DistribuicaoError("A lista de alocações não pode ser vazia.")
             self._demanda(payload.data)
             alocacoes = [item.model_dump() for item in payload.alocacoes]
             self._validar_payload(payload.data, alocacoes)
 
         try:
-            self._persistir(payload.data, alocacoes)
+            self._persistir(payload.data, alocacoes, usuario_executor_id)
             self.session.commit()
         except DistribuicaoError:
             self.session.rollback()
@@ -53,10 +63,15 @@ class AlocacaoService:
             self.session.rollback()
             raise
         return {
-            "mensagem": "Distribuição realizada com sucesso",
+            "mensagem": (
+                "Escala de motoristas confirmada com sucesso"
+                if payload.modo == "manual"
+                else "Distribuição realizada com sucesso"
+            ),
             "data": payload.data.isoformat(),
             "status_logistico": "DISTRIBUIDO",
             "alocacoes": alocacoes,
+            "excedentes_globais": excedentes_globais,
         }
 
     def _buses(self) -> list[OnibusDisponivel]:
@@ -162,7 +177,7 @@ class AlocacaoService:
                 raise DistribuicaoError(f"{prefix}: ônibus {bus_id} conflitante no turno {turno}.", 409)
             if (allocation["motorista_id"], turno) in used_drivers:
                 raise DistribuicaoError(
-                    f"{prefix}: motorista {allocation['motorista_id']} conflitante no turno {turno}.",
+                    "Este motorista já está escalado para outra rota neste horário.",
                     409,
                 )
             used_buses.add((bus_id, turno))
@@ -192,11 +207,21 @@ class AlocacaoService:
                     raise DistribuicaoError(f"{prefix}: agendamento {booking.id} alocado mais de uma vez.")
                 seen_students.add(key)
 
-    def _persistir(self, target: date, alocacoes: list[dict]) -> None:
+    def _persistir(
+        self,
+        target: date,
+        alocacoes: list[dict],
+        usuario_executor_id: int | None = None,
+    ) -> None:
         old = self.session.query(AlocacaoDiariaORM).filter(AlocacaoDiariaORM.data == target).all()
+        old_by_key = {
+            (item.rota_id, item.turno): self._snapshot(item)
+            for item in old
+        }
         for item in old:
             self.session.delete(item)
         self.session.flush()
+        persisted: list[AlocacaoDiariaORM] = []
         for allocation in alocacoes:
             entity = AlocacaoDiariaORM(
                 rota_id=allocation["rota_id"],
@@ -214,3 +239,40 @@ class AlocacaoService:
                 for student in allocation.get("alunos", [])
             ]
             self.session.add(entity)
+            persisted.append(entity)
+        if usuario_executor_id is None:
+            return
+        self.session.flush()
+        for entity in persisted:
+            self.session.add(
+                LogAuditoriaORM(
+                    usuario_id=usuario_executor_id,
+                    acao="CONFIRMAR",
+                    entidade="alocacao_diaria",
+                    entidade_id=entity.id,
+                    valor_anterior=json.dumps(
+                        old_by_key.get((entity.rota_id, entity.turno)),
+                        ensure_ascii=False,
+                    ),
+                    valor_novo=json.dumps(self._snapshot(entity), ensure_ascii=False),
+                )
+            )
+
+    @staticmethod
+    def _snapshot(entity: AlocacaoDiariaORM) -> dict:
+        return {
+            "rota_id": entity.rota_id,
+            "onibus_id": entity.onibus_id,
+            "motorista_id": entity.motorista_id,
+            "data": entity.data.isoformat(),
+            "turno": entity.turno,
+            "alunos": [
+                {
+                    "agendamento_id": student.agendamento_id,
+                    "turno": student.turno,
+                    "tipo_lugar": student.tipo_lugar,
+                    "status": student.status,
+                }
+                for student in entity.alunos
+            ],
+        }
