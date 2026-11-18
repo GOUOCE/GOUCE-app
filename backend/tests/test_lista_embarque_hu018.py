@@ -354,15 +354,57 @@ class TestListaEmbarqueRepresentante(_BaseRouteTest):
         self.mock_service.obter_representante.return_value = None
         status, body = await self.call(f"{BASE}/lista-embarque?data={_DATA}&rota_id=1")
         self.assertEqual(status, 403)
+        self.assertEqual(body["detail"], "Usuário sem vínculo de representante ativo.")
+        self.mock_service.listar.assert_not_called()
 
     async def test_representante_sem_faculdade_recebe_403(self):
-        """CA-07: representante sem faculdade_responsavel recebe 403."""
+        """CA-07 / #484: vínculo ativo sem faculdade recebe a mensagem específica."""
         self.mock_service.obter_representante.return_value = {
             "administrador_id": self._USER_ID,
             "id_faculdade_responsavel": None,
         }
         status, body = await self.call(f"{BASE}/lista-embarque?data={_DATA}&rota_id=1")
         self.assertEqual(status, 403)
+        self.assertEqual(body["detail"], "Representante sem faculdade responsável definida.")
+        self.mock_service.listar.assert_not_called()
+
+    async def test_rotas_do_dia_representante_sem_vinculo_recebe_403(self):
+        self.mock_service.obter_representante.return_value = None
+        status, body = await self.call(f"{BASE}/rotas-do-dia?data={_DATA}")
+        self.assertEqual(status, 403)
+        self.assertEqual(body["detail"], "Usuário sem vínculo de representante ativo.")
+
+    async def test_rotas_do_dia_representante_sem_faculdade_recebe_403(self):
+        """#484: mesma distinção de mensagem em rotas-do-dia."""
+        self.mock_service.obter_representante.return_value = {
+            "administrador_id": self._USER_ID,
+            "id_faculdade_responsavel": None,
+        }
+        status, body = await self.call(f"{BASE}/rotas-do-dia?data={_DATA}")
+        self.assertEqual(status, 403)
+        self.assertEqual(body["detail"], "Representante sem faculdade responsável definida.")
+        self.mock_service.rotas_do_dia.assert_not_called()
+
+    def test_service_obter_representante_distingue_vinculo_de_faculdade(self):
+        """#484: service devolve None só sem vínculo; sem faculdade devolve dict com None."""
+        def _servico(repr_orm):
+            session = MagicMock()
+            session.query.return_value.filter.return_value.first.return_value = repr_orm
+            return ListaEmbarqueService(session)
+
+        self.assertIsNone(_servico(None).obter_representante(5))
+
+        sem_ies = MagicMock(administrador_id=5, id_faculdade_responsavel=None)
+        self.assertEqual(
+            _servico(sem_ies).obter_representante(5),
+            {"administrador_id": 5, "id_faculdade_responsavel": None},
+        )
+
+        com_ies = MagicMock(administrador_id=5, id_faculdade_responsavel=2)
+        self.assertEqual(
+            _servico(com_ies).obter_representante(5),
+            {"administrador_id": 5, "id_faculdade_responsavel": 2},
+        )
 
     async def test_representante_auto_descobre_rota_unica(self):
         """CA-01: representante sem rota_id usa a rota descoberta automaticamente."""
