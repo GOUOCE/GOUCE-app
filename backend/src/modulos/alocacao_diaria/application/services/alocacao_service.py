@@ -169,9 +169,14 @@ class AlocacaoService:
         )
         return {agendamento_id: (aluno_id, nome) for agendamento_id, aluno_id, nome in rows}
 
-    def persist(self, payload: DistribuicaoRequestDTO) -> dict:
+    def persist(
+        self,
+        payload: DistribuicaoRequestDTO,
+        usuario_executor_id: int | None = None,
+    ) -> dict:
+        excedentes_globais: list[dict] = []
         if payload.modo == "automatico":
-            preview = self._preview_automatica(payload.data)
+            preview = self.preview(payload.data)
             alocacoes = preview["alocacoes"]
             excedentes_globais = preview["excedentes_globais"]
             self._validar_payload(payload.data, alocacoes)
@@ -299,7 +304,7 @@ class AlocacaoService:
             rota = routes.get(allocation.get("rota_id"))
             if rota is None:
                 raise DistribuicaoError("Rota inexistente ou inativa.")
-            prefix = rota.nome
+            prefix = getattr(rota, "nome", f"Rota {rota.id}")
             bus_id, turno = allocation.get("onibus_id"), allocation.get("turno", "ida")
             bus = buses.get(bus_id)
             if bus is None:
@@ -317,10 +322,8 @@ class AlocacaoService:
                     409,
                 )
             if (motorista_id, turno) in used_drivers:
-                outra = routes.get(used_drivers[(motorista_id, turno)])
-                outra_nome = outra.nome if outra else "outra rota"
                 raise DistribuicaoError(
-                    f"{prefix}: o motorista {motorista.nome_completo} já está alocado na rota {outra_nome} no turno {turno}.",
+                    "Este motorista já está escalado para outra rota neste horário.",
                     409,
                 )
             used_buses[(bus_id, turno)] = allocation["rota_id"]
