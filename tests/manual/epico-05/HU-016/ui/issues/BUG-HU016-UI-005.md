@@ -65,3 +65,12 @@ Reproduzido por Radlei em 18/11/2026, ambiente local `atu-ui016`.
 Observação: o passo 3 do CT (gravar V3 e M2 para P1) não era executável porque M2 está em P2 na ida; foi verificado em seguida com V3 e M3 (201, grava P1 ida e volta em V3/M3 e mantém P2 em V2/M2).
 
 Prints anexados na issue: listas de ônibus e de motoristas da Ida abertas (DEF-4G56 e Marcos Dois Souza visíveis); tela com HIJ-7K89 e Marcos escolhidos, sem alerta e com o botão ativo; pop-up Erro na alocação; Response do 409; Network com 409, 401, refresh e 201.
+
+### Reteste
+
+| Campo | Valor |
+|---|---|
+| **Data** | 18/11/2026 |
+| **Build** | `82eac441` (branch `fix/issues-hu16e17`) |
+| **Issue** | #508 |
+| **Resultado** | ✅ Corrigido — as listas de ônibus e motorista (`alocar.tsx`, `obterRecursosUsadosNoTurno`) passaram a considerar o preview do dia inteiro, não só a rota aberta, e deixam de oferecer recurso já usado por outra rota no mesmo turno. Testado também pela API: conflito recusado com 409 `DISTRIBUICAO_INVALIDA`, mensagem citando o nome das duas rotas e a placa/nome do recurso. `CT-HU016-UI-006`: 3/3 verificações ✅. |

@@ -1,5 +1,6 @@
 import unittest
 from datetime import date
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from fastapi import FastAPI
@@ -7,12 +8,26 @@ from tests.rota_principal_support import asgi_request
 
 from src.modulos.alocacao_diaria.interface.http import alocacao_routes
 from src.modulos.alocacao_diaria.application.dtos.alocacao_dto import DistribuicaoRequestDTO
-from src.modulos.alocacao_diaria.application.services.alocacao_service import AlocacaoService
+from src.modulos.alocacao_diaria.application.services.alocacao_service import (
+    AlocacaoService,
+    DistribuicaoError,
+)
 from src.modulos.alocacao_diaria.application.services.distribuicao import (
     OnibusDisponivel,
     Passageiro,
     distribuir_alunos,
 )
+
+
+class _Query:
+    def __init__(self, items):
+        self.items = items
+
+    def filter(self, *args):
+        return self
+
+    def __iter__(self):
+        return iter(self.items)
 
 
 class DistribuicaoHu016Test(unittest.TestCase):
@@ -64,6 +79,19 @@ class DistribuicaoHu016Test(unittest.TestCase):
         self.assertEqual(sum(item["em_pe"] for item in resultado["alocacoes"]), 1)
         self.assertEqual(len(resultado["excedentes_globais"]), 0)
 
+    def test_nao_usa_lugar_em_pe_enquanto_houver_assento_em_outro_onibus(self):
+        resultado = distribuir_alunos(
+            {1: [Passageiro(index, "ida") for index in range(5)]},
+            [
+                OnibusDisponivel("ABC1D23", 3, 2, 10),
+                OnibusDisponivel("HIJ7K89", 4, 0, 11),
+            ],
+        )
+
+        self.assertEqual(sum(item["sentados"] for item in resultado["alocacoes"]), 5)
+        self.assertEqual(sum(item["em_pe"] for item in resultado["alocacoes"]), 0)
+        self.assertEqual(len(resultado["excedentes_globais"]), 0)
+
     def test_distribui_cinco_alunos_em_assentos_de_dois_onibus(self):
         resultado = distribuir_alunos(
             {1: [Passageiro(index, "ida") for index in range(5)]},
@@ -90,6 +118,26 @@ class DistribuicaoHu016Test(unittest.TestCase):
         self.assertEqual({item["turno"] for item in resultado["alocacoes"]}, {"ida", "volta"})
         self.assertEqual(resultado["alocacoes"][0]["onibus_id"], "B")
 
+    def test_reutiliza_onibus_e_motorista_na_volta(self):
+        resultado = distribuir_alunos(
+            {
+                (1, "ida"): [
+                    Passageiro(1, "ida"),
+                    Passageiro(2, "ida"),
+                    Passageiro(3, "ida"),
+                ],
+                (1, "volta"): [Passageiro(4, "volta")],
+            },
+            [OnibusDisponivel("V1", 3, 0, 10)],
+        )
+
+        self.assertEqual(len(resultado["alocacoes"]), 2)
+        self.assertEqual(
+            {(item["onibus_id"], item["motorista_id"], item["turno"]) for item in resultado["alocacoes"]},
+            {("V1", 10, "ida"), ("V1", 10, "volta")},
+        )
+        self.assertEqual(resultado["excedentes_globais"], [])
+
     def test_confirmacao_automatica_retorna_excedentes_globais(self):
         session = MagicMock()
         service = AlocacaoService(session)
@@ -114,6 +162,74 @@ class DistribuicaoHu016Test(unittest.TestCase):
             [{"agendamento_id": 64, "turno": "ida"}],
         )
         session.commit.assert_called_once()
+
+    def test_confirmacao_manual_recusa_lista_de_alocacoes_vazia(self):
+        session = MagicMock()
+        service = AlocacaoService(session)
+        payload = DistribuicaoRequestDTO(data=date(2026, 11, 26), modo="manual")
+
+        with self.assertRaisesRegex(DistribuicaoError, "lista de alocações não pode ser vazia"):
+            service.persist(payload)
+
+        session.commit.assert_not_called()
+        session.rollback.assert_not_called()
+
+    def test_confirmacao_manual_permite_realocacao_entre_rotas(self):
+        booking = SimpleNamespace(
+            id=64,
+            usa_ida=True,
+            usa_volta=False,
+            rota_complementar_ida_id=None,
+            rota_complementar_volta_id=None,
+            ies_destino_id=100,
+            ies_origem_id=100,
+        )
+        session = MagicMock()
+        session.query.side_effect = lambda model: _Query(
+            {
+                "AgendamentoORM": [booking],
+                "RotaPrincipalORM": [
+                    SimpleNamespace(
+                        id=1,
+                        faculdades_ida=[SimpleNamespace(id_faculdade=100)],
+                        faculdades_volta=[],
+                    ),
+                    SimpleNamespace(
+                        id=2,
+                        faculdades_ida=[SimpleNamespace(id_faculdade=200)],
+                        faculdades_volta=[],
+                    ),
+                ],
+                "RotaComplementarORM": [],
+                "OnibusORM": [
+                    SimpleNamespace(
+                        placa_onibus="V2",
+                        qtd_assentos=3,
+                        capacidade_maxima=2,
+                    )
+                ],
+                "MotoristaORM": [SimpleNamespace(id=10)],
+            }[model.__name__]
+        )
+        service = AlocacaoService(session)
+
+        service._validar_payload(
+            date(2026, 11, 24),
+            [
+                {
+                    "rota_id": 2,
+                    "onibus_id": "V2",
+                    "motorista_id": 10,
+                    "turno": "ida",
+                    "alunos": [
+                        {
+                            "agendamento_id": 64,
+                            "tipo_lugar": "sentado",
+                        }
+                    ],
+                }
+            ],
+        )
 
 
 class DistribuicaoHttpHu016Test(unittest.IsolatedAsyncioTestCase):
