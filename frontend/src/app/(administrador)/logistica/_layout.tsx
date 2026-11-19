@@ -7,6 +7,7 @@ export default function LogisticaLayout() {
       <Stack.Screen name="distribuicao" />
       <Stack.Screen name="alocar" />
       <Stack.Screen name="excedentes" />
+      <Stack.Screen name="embarque" />
     </Stack>
   );
 }
