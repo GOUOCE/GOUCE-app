@@ -18,7 +18,12 @@ const mockRouterBack = jest.fn();
 const mockRouterReplace = jest.fn();
 const mockRouterCanGoBack = jest.fn(() => true);
 
-let mockSearchParams: { rotaId?: string; modoFixo?: string } = {};
+let mockSearchParams: {
+  rotaId?: string;
+  rotaNome?: string;
+  modoFixo?: string;
+  dataIso?: string;
+} = {};
 let mockUser: { id: number; name: string; role: string; faculdade?: number } | null = {
   id: 1,
   name: 'Administrador Padrao',
@@ -375,6 +380,51 @@ describe('Telas da Lista de Embarque integradas à API (HU-018)', () => {
       mockRouterCanGoBack.mockReturnValue(false);
       await pressionar(botaoVoltar);
       expect(mockRouterReplace).toHaveBeenCalledWith('/(administrador)/(tabs)/logistica');
+    });
+
+    it('abre rota fixa com dataIso e rotaNome vindos da distribuição logística sem dropdown no topo', async () => {
+      mockSearchParams = {
+        rotaId: '1',
+        rotaNome: 'Linha 01 - Centro',
+        modoFixo: 'true',
+        dataIso: '2026-11-26',
+      };
+      mockApiGet.mockResolvedValueOnce({
+        data: criarRespostaListaApi({ data: '2026-11-26' }),
+      } as any);
+
+      const root = await renderizar(<AdminListaEmbarqueScreen />);
+
+      expect(encontrarBotaoPorTestId(root, 'seletor-rota')).toBeUndefined();
+      expect(lerTextoNode(encontrarTextoPorTestId(root, 'titulo-rota-fixa'))).toBe(
+        'Linha 01 - Centro',
+      );
+      expect(lerTextoNode(encontrarTextoPorTestId(root, 'subtitulo-data-embarque'))).toBe(
+        '26/11/2026',
+      );
+      expect(mockApiGet).toHaveBeenCalledTimes(1);
+      expect(mockApiGet).toHaveBeenCalledWith('/alocacao-diaria/lista-embarque', {
+        params: { data: '2026-11-26', rota_id: 1 },
+      });
+      expect(mockApiGet).not.toHaveBeenCalledWith(
+        '/alocacao-diaria/rotas-do-dia',
+        expect.anything(),
+      );
+    });
+
+    it('oculta seletor quando rotaId predefinido é informado mesmo sem modoFixo explícito', async () => {
+      mockSearchParams = { rotaId: '1' };
+
+      const root = await renderizar(<AdminListaEmbarqueScreen />);
+
+      expect(encontrarBotaoPorTestId(root, 'seletor-rota')).toBeUndefined();
+      expect(lerTextoNode(encontrarTextoPorTestId(root, 'titulo-rota-fixa'))).toBe(
+        'Linha 01 - Centro',
+      );
+      expect(mockApiGet).not.toHaveBeenCalledWith(
+        '/alocacao-diaria/rotas-do-dia',
+        expect.anything(),
+      );
     });
 
     it('usa autodescoberta do backend na visão do Representante sem chamar /rotas-do-dia inicialmente', async () => {
