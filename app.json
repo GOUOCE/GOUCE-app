@@ -41,6 +41,7 @@
           "root": "./frontend/src/app"
         }
       ],
+      "expo-notifications",
       [
         "expo-build-properties",
         {
