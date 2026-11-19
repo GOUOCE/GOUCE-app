@@ -57,3 +57,12 @@ Em `frontend/src/app/(administrador)/logistica/alocar.tsx`, o `motoristaId` de c
 ### 📎 Evidência
 
 Reproduzido por Cauan Ricardo em 18/11/2026, ambiente local `atu-exec-hu017` (stack Docker isolada, banco novo, fuso America/Fortaleza). Prints do testador a anexar na issue, sem tokens nem dados pessoais.
+
+### Reteste
+
+| Campo | Valor |
+|---|---|
+| **Data** | 18/11/2026 |
+| **Build** | branch `fix/hu017-issues-522-525`, web `http://localhost:3118`, API `http://localhost:8118` |
+| **Issue** | #522 |
+| **Resultado** | ✅ Corrigido — Depois de recarregar a rota de 20/11/2026 com o Mauro Beta (inativo) gravado no V3, o campo Motorista aparece como “Selecionar” de verdade; ao confirmar sem mexer, a tela mostra o popup “Campos Obrigatórios” e nada vai à API; escolhendo outro motorista, a confirmação é aceita. |

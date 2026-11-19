@@ -45,6 +45,8 @@ Executar na ordem e registrar cada variação. A LLM confere API e banco depois 
 | [#524](https://github.com/GOUOCE/GOUCE-app/issues/524) | [BUG-HU017-UI-003](issues/BUG-HU017-UI-003.md) — turno Volta mostra horário de saída | 🟢 Baixa | Não | `dev-mariab` |
 | [#525](https://github.com/GOUOCE/GOUCE-app/issues/525) | [BUG-HU017-UI-004](issues/BUG-HU017-UI-004.md) — capacidade sem rótulo no seletor de ônibus | 🟢 Baixa | Não | `dev-mariab` |
 
+**Reteste de 18/11/2026** (branch `fix/hu017-issues-522-525`): as quatro issues (#522 a #525) ✅ corrigidas, executado por Cauan Ricardo; detalhes na seção "Reteste" de cada relato. Os casos CT-HU017-UI-001 e CT-HU017-UI-007 seguem ✅.
+
 Observação sem issue: a lista de motoristas é filtrada por turno em todas as rotas (correto pelo BDD), mas isso impede trocar dois motoristas entre veículos sem liberar um antes; registrado só como observação de UX.
 
 ### Seção A — Escala na tela

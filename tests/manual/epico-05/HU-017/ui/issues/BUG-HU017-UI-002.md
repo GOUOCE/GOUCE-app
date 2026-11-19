@@ -56,3 +56,12 @@ A tela mostra o popup padrão "Erro na alocação" com "Rota Centro - UFC: motor
 ### 📎 Evidência
 
 Reproduzido por Cauan Ricardo em 18/11/2026, ambiente local `atu-exec-hu017` (stack Docker isolada, banco novo, fuso America/Fortaleza). Prints do testador a anexar na issue, sem tokens nem dados pessoais.
+
+### Reteste
+
+| Campo | Valor |
+|---|---|
+| **Data** | 18/11/2026 |
+| **Build** | branch `fix/hu017-issues-522-525`, web `http://localhost:3118`, API `http://localhost:8118` |
+| **Issue** | #523 |
+| **Resultado** | ✅ Corrigido — Com a tela de 19/11/2026 aberta e a Marta Épsilon inativada no banco, a confirmação mostra “Rota Centro - UFC: o motorista Marta Épsilon está inativo e não pode ser escalado.” (API 422). Decisão final do Cauan: citar o nome do motorista; o BDD da HU-017 foi atualizado para esse texto, no lugar de “alocação 0: motorista inexistente ou inativo.”. |

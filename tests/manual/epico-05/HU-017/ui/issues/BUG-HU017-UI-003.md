@@ -46,3 +46,12 @@ Todos os veículos mostram os dois campos, "Horário de Saída 06:30" e "Horári
 ### 📎 Evidência
 
 Reproduzido por Cauan Ricardo em 18/11/2026, ambiente local `atu-exec-hu017` (stack Docker isolada, banco novo, fuso America/Fortaleza). Prints do testador a anexar na issue, sem tokens nem dados pessoais.
+
+### Reteste
+
+| Campo | Valor |
+|---|---|
+| **Data** | 18/11/2026 |
+| **Build** | branch `fix/hu017-issues-522-525`, web `http://localhost:3118`, API `http://localhost:8118` |
+| **Issue** | #524 |
+| **Resultado** | ✅ Corrigido — Cada veículo mostra um horário só, centralizado: “Horário de Saída” na ida e “Horário de Retorno” na volta. |
