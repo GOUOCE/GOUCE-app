@@ -44,3 +44,12 @@ Os dois turnos usam o rótulo "Horário de Saída"; na volta ele mostra 17:30, q
 ### 📎 Evidência
 
 Reproduzido por Cauan Ricardo em 19/11/2026, ambiente local `atu-exec-hu019` (stack Docker isolada, banco novo, fuso America/Fortaleza). Prints do testador a anexar na issue, sem tokens nem dados pessoais.
+
+### Reteste
+
+| Campo | Valor |
+|---|---|
+| **Data** | 19/11/2026 |
+| **Build** | branch `fix/hu019-issue-530-falha-consulta-alocacao`, web `http://localhost:3122`, API `http://localhost:8121` |
+| **Issue** | #531 |
+| **Resultado** | ✅ Corrigido — Nos detalhes, a volta mostra “Horário de Retorno” (17:30) e a ida “Horário de Saída” (06:30), inclusive no cartão da rota complementar. Junto, o aviso de realocação passou a dizer “veículo V2 (placa DEF4G56)”, em vez de “V2 - Placa DEF4G56” (relato de Cauan). |

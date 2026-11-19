@@ -301,6 +301,8 @@ Executar na ordem e registrar cada variação. A LLM prepara distribuições e m
 | CT-HU019-UI-003 | [BUG-HU019-UI-002](issues/BUG-HU019-UI-002.md) — "Horário de Saída" com o horário de retorno na volta (🟢 Baixa, Não bloqueante) | [#531](https://github.com/GOUOCE/GOUCE-app/issues/531) |
 | CT-HU019-UI-009 | Observação de desempenho sem issue: uma chamada a `minha-viagem` por reserva, também no Início; 20 reservas abriram em até 1,0 s no ambiente local (`⚠️ PARCIAL`) | — |
 
+**Reteste de 19/11/2026** (branch `fix/hu019-issue-530-falha-consulta-alocacao`): #530 e #531 ✅ corrigidas, executado por Cauan Ricardo; detalhes na seção "Reteste" de cada relato. Os casos CT-HU019-UI-003 e CT-HU019-UI-008 passam a ✅ nas partes corrigidas; as demais partes seguem como executadas.
+
 ## Observações gerais
 
 - Referências: [requisitos, seção 7.6](../../../../../docs/requisitos.md), [BDD do épico 05](../../../../../bdd/features/epico-05/README.md) e as [decisões do PO na #465](https://github.com/GOUOCE/GOUCE-app/issues/465).
