@@ -208,7 +208,7 @@ class DistribuicaoHu016Test(unittest.TestCase):
                         capacidade_maxima=2,
                     )
                 ],
-                "MotoristaORM": [SimpleNamespace(id=10)],
+                "MotoristaORM": [SimpleNamespace(id=10, ativo=True)],
             }[model.__name__]
         )
         service = AlocacaoService(session)

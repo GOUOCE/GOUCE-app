@@ -45,3 +45,12 @@ No seletor, os números aparecem entre parênteses sem rótulo; na prévia o mes
 ### 📎 Evidência
 
 Reproduzido por Cauan Ricardo em 18/11/2026, ambiente local `atu-exec-hu017` (stack Docker isolada, banco novo, fuso America/Fortaleza). Prints do testador a anexar na issue, sem tokens nem dados pessoais.
+
+### Reteste
+
+| Campo | Valor |
+|---|---|
+| **Data** | 18/11/2026 |
+| **Build** | branch `fix/hu017-issues-522-525`, web `http://localhost:3118`, API `http://localhost:8118` |
+| **Issue** | #525 |
+| **Resultado** | ✅ Corrigido — O seletor mostra “(capacidade: 3 sentados + 2 em pé)”. Observação do Cauan: a organização do campo pode melhorar depois, como melhoria de UX. |

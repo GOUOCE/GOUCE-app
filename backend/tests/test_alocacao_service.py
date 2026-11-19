@@ -117,6 +117,29 @@ class AlocacaoServiceValidacaoTest(unittest.TestCase):
             "Rota Bairro: o ônibus Ônibus Azul já está alocado na rota Rota Centro no turno ida.",
         )
 
+    def test_motorista_inativo_e_citado_pelo_nome_na_recusa(self):
+        self.motorista.ativo = False
+
+        with self.assertRaises(DistribuicaoError) as contexto:
+            self.service._validar_payload(self.data, [self._alocacao(rota_id=1)])
+
+        self.assertEqual(
+            str(contexto.exception),
+            "Rota Centro: o motorista Carlos Silva está inativo e não pode ser escalado.",
+        )
+
+    def test_motorista_inexistente_recebe_mensagem_generica(self):
+        alocacao = self._alocacao(rota_id=1)
+        alocacao["motorista_id"] = 999
+
+        with self.assertRaises(DistribuicaoError) as contexto:
+            self.service._validar_payload(self.data, [alocacao])
+
+        self.assertEqual(
+            str(contexto.exception),
+            "Rota Centro: motorista inexistente ou inativo.",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

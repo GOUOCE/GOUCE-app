@@ -20,6 +20,7 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 
 import {
   logisticaService,
+  manterSelecaoDisponivel,
   AlocacaoDistribuicao,
   PreviaDistribuicao,
 } from '../logisticaService';
@@ -317,7 +318,7 @@ describe('EP-005 / HU-016 & HU-017 - Distribuição logística e alocação', ()
         assentos: 40,
         capacidadeEmPe: 10,
       });
-      expect(opcoes.onibus[0].label).toContain('40 sentados + 10 em pé');
+      expect(opcoes.onibus[0].label).toContain('capacidade: 40 sentados + 10 em pé');
       expect(opcoes.motoristas.map((motorista) => motorista.id)).toEqual([10]);
       expect(opcoes.onibusOptions).toEqual(opcoes.onibus);
       expect(opcoes.motoristaOptions).toEqual(opcoes.motoristas);
@@ -528,5 +529,21 @@ describe('EP-005 / HU-016 & HU-017 - Distribuição logística e alocação', ()
         trajetoText: 'Turno de volta',
       });
     });
+  });
+});
+
+describe('manterSelecaoDisponivel (issue #522)', () => {
+  const motoristas = [{ value: '1' }, { value: '3' }];
+
+  it('mantém o motorista que ainda está entre as opções ativas', () => {
+    expect(manterSelecaoDisponivel('3', motoristas)).toBe('3');
+  });
+
+  it('limpa o motorista gravado que ficou inativo, para a tela tratá-lo como não selecionado', () => {
+    expect(manterSelecaoDisponivel('2', motoristas)).toBe('');
+  });
+
+  it('devolve vazio quando não havia seleção', () => {
+    expect(manterSelecaoDisponivel('', motoristas)).toBe('');
   });
 });

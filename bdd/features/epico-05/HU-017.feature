@@ -127,7 +127,7 @@ Funcionalidade: Alocação de Motoristas às Rotas
       E o motorista "Marcos Dias" foi inativado antes da confirmação
       Quando o administrador envia a escala com o motorista "Marcos Dias"
       Então a API responde com o status "422 Unprocessable Entity"
-      E a resposta informa a mensagem "alocação 0: motorista inexistente ou inativo."
+      E a resposta informa a mensagem "Rota Centro - UFC: o motorista Marcos Dias está inativo e não pode ser escalado."
       E a escala não é gravada
 
 
