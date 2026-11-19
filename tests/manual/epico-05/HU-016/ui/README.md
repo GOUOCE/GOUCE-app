@@ -89,9 +89,17 @@ Detalhe por caso e por verificação na [suíte](UI-HU-016.md) e no [JSON de evi
   | #508 | BUG-HU016-UI-005 | ✅ Listas filtram recurso já usado por outra rota; mensagens de conflito citam nome da rota/recurso |
   | #509 | BUG-HU016-UI-006 | ✅ Tela de Excedentes seleciona, lista ônibus com vaga, realoca e recusa com causa |
 
-- **Novo defeito encontrado durante o reteste:** [BUG-HU016-UI-007](issues/BUG-HU016-UI-007.md) (🟢 Baixa, Não bloqueante, issue #517) — o aviso de excedentes continua visível na tela depois da realocação, junto com a mensagem de "nenhum excedente".
+- **Novo defeito encontrado durante o reteste:** [BUG-HU016-UI-007](issues/BUG-HU016-UI-007.md) (🟢 Baixa, Não bloqueante, issue #517) — o aviso de excedentes continua visível na tela depois da realocação, junto com a mensagem de "nenhum excedente". **Corrigido e confirmado no reteste de 18/11/2026 à noite (build `f9cde78e`)** — ver "Resultado do reteste da issue #517" abaixo.
 
 Detalhe por verificação no [JSON de evidências](EVIDENCIAS-UI-HU-016.json) (bloco `reteste`) e na [suíte](UI-HU-016.md) (seção "Reteste (18/11/2026)").
+
+## Resultado do reteste da issue #517 (18/11/2026, noite)
+
+- **Build testado:** `f9cde78e` (branch `fix/issues-hu16e17`), commit "fix: corrige excedentes apos realocacao issue #517", de `dev-mariab` — branch ainda fora da `develop`. Branch de resultados: `test/reteste-ui-hu-016-bug007`. Backend testado: `82eac441` (a correção só alterou o frontend).
+- **Resultado:** ✅ Corrigido — em 27/11, realocando o aluno H Um Farias para o ônibus com vaga (Rota 2, `DEF4G56`) pela tela de Excedentes, o `POST /alocacao-diaria/distribuicao` retornou 201 e, depois da realocação, a tela passou a mostrar só "Nenhum aluno excedente para esta data.", sem repetir "1 aluno(s)... ultrapassam a capacidade dos veículos alocados". `CT-HU016-UI-007` continua ✅.
+- **Observação:** a ponta da branch `fix/issues-hu16e17` (`457f0fec`) traz uma mudança extra de backend (HU-017) ainda **não testada** neste reteste — fora do escopo da #517.
+
+Detalhe no [JSON de evidências](EVIDENCIAS-UI-HU-016.json) (bloco `reteste_517`), em [BUG-HU016-UI-007](issues/BUG-HU016-UI-007.md) e na [suíte](UI-HU-016.md) (seção "Reteste da issue #517 (18/11/2026, noite)").
 
 ## Riscos mapeados no código
 
@@ -121,7 +129,7 @@ Os riscos abaixo vêm da leitura do código e orientam a execução. **Não são
 - O risco de sobrescrita do status "DISTRIBUIDO" ao trocar de dia sem recarregar (ver segunda reprodução em `BUG-HU016-UI-003`) não foi testado nem no reteste.
 - As issues #504, #505 e #507 ainda não têm print anexado (nem no corpo, nem em comentário); só #506 (print em comentário), #508 e #509 (print no corpo) têm evidência anexada da execução original — anexar também evidência do reteste.
 - A issue [#473](https://github.com/GOUOCE/GOUCE-app/issues/473) (decisão do PO sobre realocação entre rotas) continua fechada sem decisão registrada; a realocação testada no reteste foi dentro da mesma rota (ida), então não dependeu dessa decisão.
-- Novo defeito, issue #517: [BUG-HU016-UI-007](issues/BUG-HU016-UI-007.md), encontrado durante o reteste do `CT-HU016-UI-007`.
+- Novo defeito, issue #517: [BUG-HU016-UI-007](issues/BUG-HU016-UI-007.md), encontrado durante o reteste do `CT-HU016-UI-007`. **Corrigido e confirmado no reteste de 18/11/2026 à noite, build `f9cde78e`** (backend ainda no `82eac441`); a ponta da branch `fix/issues-hu16e17` (`457f0fec`) trouxe uma mudança extra de backend (HU-017) não testada neste reteste.
 
 ## Comportamentos conhecidos que não são defeito da HU-016
 
