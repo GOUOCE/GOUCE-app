@@ -23,7 +23,8 @@ function dataLocalIso(): string {
 function ResumoTrecho({ trecho }: { trecho: TrechoDetalhesViagem }) {
   const principal = trecho.rotaPrincipal;
   const complementar = trecho.rotaComplementar;
-  const aguardandoPrincipal = principal.statusAlocacao === 'AGUARDANDO_ALOCACAO';
+  const aguardandoPrincipal =
+    principal.statusAlocacao === 'AGUARDANDO_ALOCACAO' || principal.statusAlocacao === 'INDISPONIVEL';
 
   return (
     <View style={styles.tripTrecho}>

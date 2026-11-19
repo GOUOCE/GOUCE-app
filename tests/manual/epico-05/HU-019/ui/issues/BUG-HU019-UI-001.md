@@ -55,3 +55,12 @@ Em `frontend/src/services/agendamentoService.ts`, `obterMinhaViagem` captura qua
 ### 📎 Evidência
 
 Reproduzido por Cauan Ricardo em 19/11/2026, ambiente local `atu-exec-hu019` (stack Docker isolada, banco novo, fuso America/Fortaleza). Prints do testador a anexar na issue, sem tokens nem dados pessoais.
+
+### Reteste
+
+| Campo | Valor |
+|---|---|
+| **Data** | 19/11/2026 |
+| **Build** | branch `fix/hu019-issue-530-falha-consulta-alocacao`, web `http://localhost:3122`, API `http://localhost:8121` |
+| **Issue** | #530 |
+| **Resultado** | ✅ Corrigido — Com a consulta de alocação quebrada (`minha-viagem` 500) e a Agenda recarregada, os dias alocados mostram “Não foi possível consultar a alocação agora” em selo âmbar, e não “Aguardando alocação do veículo”; o 23/11, que de fato não tem distribuição, continua “Aguardando alocação do veículo”. Com a consulta restaurada a alocação volta, e o cache offline mantém a alocação já sincronizada (relato de Cauan; build `fix/hu019-issue-530-falha-consulta-alocacao`, web `http://localhost:3122`). |

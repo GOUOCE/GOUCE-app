@@ -225,6 +225,9 @@ describe('Telas da HU-019 — Consulta de Alocação Diária pelo Aluno', () => 
     expect(textos).toContain('06:40');
     expect(textos).toContain('17:00');
     expect(textos).toContain('Trevo do Bairro Novo');
+    // Issue #531: o rótulo do horário acompanha o turno (saída na ida, retorno na volta).
+    expect(textos).toContain('Horário de Saída');
+    expect(textos).toContain('Horário de Retorno');
 
     await renderer.act(async () => {
       root.unmount();
@@ -292,7 +295,7 @@ describe('Telas da HU-019 — Consulta de Alocação Diária pelo Aluno', () => 
 
     expect(existeTestId(root, 'alerta-realocacao-principal-ida')).toBe(true);
     expect(textoPorTestId(root, 'alerta-realocacao-principal-ida')).toBe(
-      'Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Ônibus 04 - Placa OCR-1234',
+      'Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Ônibus 04 (placa OCR-1234)',
     );
     expect(existeTestId(root, 'alerta-realocacao-principal-volta')).toBe(false);
 
@@ -369,7 +372,7 @@ describe('Telas da HU-019 — Consulta de Alocação Diária pelo Aluno', () => 
 
     expect(textoPorTestId(homeRoot, 'home-status-alocacao-ida')).toBe('Alocação confirmada');
     expect(textoPorTestId(homeRoot, 'home-alerta-realocacao-ida')).toBe(
-      'Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Ônibus 04 - Placa OCR-1234',
+      'Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Ônibus 04 (placa OCR-1234)',
     );
     const textosHome = todosTextosTela(homeRoot);
     expect(textosHome).toContain('Ônibus 04 - Placa OCR-1234 • Motorista: Ana Souza');
@@ -386,7 +389,7 @@ describe('Telas da HU-019 — Consulta de Alocação Diária pelo Aluno', () => 
 
     expect(textoPorTestId(agendaRoot, 'agenda-status-alocacao-10-ida')).toBe('Alocação confirmada');
     expect(textoPorTestId(agendaRoot, 'agenda-alerta-realocacao-10-ida')).toBe(
-      'Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Ônibus 04 - Placa OCR-1234',
+      'Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Ônibus 04 (placa OCR-1234)',
     );
     const textosAgenda = todosTextosTela(agendaRoot);
     expect(textosAgenda).toContain('Ônibus 04 - Placa OCR-1234 • Motorista: Ana Souza');
@@ -482,7 +485,7 @@ describe('Telas da HU-019 — Consulta de Alocação Diária pelo Aluno', () => 
     expect(textoPorTestId(root, 'motorista-principal-ida')).toBe('Ana Souza');
     expect(textoPorTestId(root, 'status-alocacao-principal-ida')).toBe('Alocação confirmada');
     expect(textoPorTestId(root, 'alerta-realocacao-principal-ida')).toBe(
-      'Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Ônibus 04 - Placa OCR-1234',
+      'Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Ônibus 04 (placa OCR-1234)',
     );
     expect(textoPorTestId(root, 'status-alocacao-principal-volta')).toBe(
       'Aguardando alocação do veículo',

@@ -49,7 +49,9 @@ export interface AgendamentoPayload {
 export type StatusAlocacaoVeiculo =
   | 'AGUARDANDO_ALOCACAO'
   | 'CONFIRMADA'
-  | 'REALOCADO';
+  | 'REALOCADO'
+  // A consulta da alocação falhou: a tela não sabe se o aluno está alocado (issue #530).
+  | 'INDISPONIVEL';
 
 export interface TurnoViagemApiDTO {
   turno: 'ida' | 'volta';
@@ -285,7 +287,9 @@ function labelMotorista(motorista: Record<string, any> | null | undefined): stri
  */
 export function formatarAvisoRealocacao(veiculo: string | null): string | null {
   if (!veiculo) return null;
-  return `Atenção: Você foi realocado. Seu ônibus para hoje é o veículo ${veiculo}`;
+  // "V2 - Placa DEF4G56" vira "V2 (placa DEF4G56)": a placa fica explicada, não colada ao apelido.
+  const veiculoOrganizado = veiculo.replace(/ - Placa (.+)$/, ' (placa $1)');
+  return `Atenção: Você foi realocado. Seu ônibus para hoje é o veículo ${veiculoOrganizado}`;
 }
 
 function abreviarNomeFaculdade(nomeOuSigla: string): string {
@@ -322,6 +326,8 @@ export function formatarSubtituloRotaPrincipal(
   return siglas.length > 0 ? `${nomeLinha} (${siglas.join(', ')})` : nomeLinha;
 }
 
+export const ROTULO_ALOCACAO_INDISPONIVEL = 'Não foi possível consultar a alocação agora';
+
 function resolverAlocacaoRota(
   rota:
     | {
@@ -336,6 +342,18 @@ function resolverAlocacaoRota(
 ): AlocacaoRotaResolvida {
   const veiculo = labelVeiculo(rota?.onibus);
   const motorista = labelMotorista(rota?.motorista);
+
+  if (rota?.status_alocacao === 'INDISPONIVEL') {
+    return {
+      veiculo: null,
+      motorista: null,
+      statusAlocacao: 'INDISPONIVEL',
+      statusAlocacaoLabel: ROTULO_ALOCACAO_INDISPONIVEL,
+      realocado: false,
+      mensagemRealocacao: null,
+      rotaOriginalNome: null,
+    };
+  }
 
   if (!veiculo || rota?.status_alocacao === 'AGUARDANDO_ALOCACAO') {
     return {
@@ -508,6 +526,35 @@ function enriquecerRotaPrincipalComTurno(
 }
 
 /**
+ * Quando a consulta GET /alocacao-diaria/minha-viagem falha, a tela não pode afirmar
+ * "Aguardando alocação do veículo" para quem talvez já esteja alocado (issue #530):
+ * cada turno agendado passa a "alocação indisponível", sem dados de frota.
+ */
+export function marcarAlocacaoIndisponivel(detalhe: AgendamentoDetalhe): AgendamentoDetalhe {
+  const indisponivel = (rota: RotaPrincipalResumo | null): RotaPrincipalResumo | null =>
+    rota
+      ? {
+          ...rota,
+          onibus: null,
+          motorista: null,
+          status_alocacao: 'INDISPONIVEL',
+          realocado: false,
+          rota_original_nome: null,
+        }
+      : rota;
+
+  return {
+    ...detalhe,
+    rota_principal_ida: detalhe.usa_ida
+      ? indisponivel(detalhe.rota_principal_ida)
+      : detalhe.rota_principal_ida,
+    rota_principal_volta: detalhe.usa_volta
+      ? indisponivel(detalhe.rota_principal_volta)
+      : detalhe.rota_principal_volta,
+  };
+}
+
+/**
  * Mescla os detalhes da reserva (/transporte/agendamentos/detalhes ou /meus) com a
  * alocação diária real retornada por GET /alocacao-diaria/minha-viagem (HU-019).
  */
@@ -573,6 +620,15 @@ export const agendamentoService = {
   async listarAgendamentosAtivos(): Promise<MeusAgendamentosResponse> {
     const response = await api.get('/transporte/agendamentos/meus');
     const dados: MeusAgendamentosResponse = response.data;
+    const emCache = await lerCache<MeusAgendamentosResponse>(CACHE_MEUS);
+    const cacheadosPorId = new Map(
+      (Array.isArray(emCache?.agendamentos) ? emCache!.agendamentos : []).map(
+        (item: any) => [item?.id, item] as const,
+      ),
+    );
+    // O cache guarda a última alocação consultada com sucesso: uma consulta que falha
+    // não pode sobrescrevê-la com "aguardando" nem com "indisponível" (issue #530).
+    const paraCache: any[] = [];
     const agendamentosEnriquecidos = Array.isArray(dados?.agendamentos)
       ? await Promise.all(
           dados.agendamentos.map(async (item) => {
@@ -581,10 +637,17 @@ export const agendamentoService = {
               typeof item === 'object' &&
               ('rota_principal_ida' in item || 'rota_principal_volta' in item);
             if (!possuiEstruturaDetalhe || !item.data) {
+              paraCache.push(item);
               return item;
             }
-            const minhaViagem = await agendamentoService.obterMinhaViagem(item.data);
-            return enriquecerDetalheComMinhaViagem(item, minhaViagem);
+            const consulta = await agendamentoService.consultarMinhaViagem(item.data);
+            if (consulta.falhou) {
+              paraCache.push(cacheadosPorId.get(item.id) ?? item);
+              return marcarAlocacaoIndisponivel(item);
+            }
+            const enriquecido = enriquecerDetalheComMinhaViagem(item, consulta.dados);
+            paraCache.push(enriquecido);
+            return enriquecido;
           }),
         )
       : dados?.agendamentos;
@@ -592,22 +655,36 @@ export const agendamentoService = {
       ...dados,
       agendamentos: agendamentosEnriquecidos,
     };
-    await salvarCache(CACHE_MEUS, JSON.stringify(respostaFinal));
+    await salvarCache(
+      CACHE_MEUS,
+      JSON.stringify(
+        Array.isArray(dados?.agendamentos)
+          ? { ...respostaFinal, agendamentos: paraCache }
+          : respostaFinal,
+      ),
+    );
     return respostaFinal;
   },
 
-  async obterMinhaViagem(dataIso: string): Promise<MinhaViagemApiResponse | null> {
+  /** Consulta a alocação e informa se a consulta falhou (erro de rede, servidor ou resposta inválida). */
+  async consultarMinhaViagem(
+    dataIso: string,
+  ): Promise<{ dados: MinhaViagemApiResponse | null; falhou: boolean }> {
     try {
       const response = await api.get('/alocacao-diaria/minha-viagem', {
         params: { data: dataIso },
       });
       if (response?.data && typeof response.data.possui_agendamento === 'boolean') {
-        return response.data as MinhaViagemApiResponse;
+        return { dados: response.data as MinhaViagemApiResponse, falhou: false };
       }
-      return null;
+      return { dados: null, falhou: true };
     } catch {
-      return null;
+      return { dados: null, falhou: true };
     }
+  },
+
+  async obterMinhaViagem(dataIso: string): Promise<MinhaViagemApiResponse | null> {
+    return (await agendamentoService.consultarMinhaViagem(dataIso)).dados;
   },
 
   async listarAgendamentosCache(): Promise<MeusAgendamentosResponse | null> {
@@ -678,7 +755,19 @@ export const agendamentoService = {
       const response = await api.get('/transporte/agendamentos/detalhes', {
         params: { data: dataIso },
       });
-      const minhaViagem = await agendamentoService.obterMinhaViagem(dataIso);
+      const consulta = await agendamentoService.consultarMinhaViagem(dataIso);
+      if (consulta.falhou) {
+        // Sem a alocação não dá para afirmar "aguardando". O cache offline continua sendo
+        // alimentado com a reserva (HU-015), mas nunca sobrescreve uma alocação já
+        // sincronizada da mesma reserva.
+        const indisponivel = marcarAlocacaoIndisponivel(response.data);
+        const jaSincronizado = await lerCache<AgendamentoDetalhe>(cacheKey);
+        if (!jaSincronizado || jaSincronizado.atualizado_em !== indisponivel.atualizado_em) {
+          await salvarCache(cacheKey, JSON.stringify(indisponivel));
+        }
+        return mapearDetalhe(indisponivel);
+      }
+      const minhaViagem = consulta.dados;
       const detalhe = enriquecerDetalheComMinhaViagem(response.data, minhaViagem);
       // Revalidação do cache pelo atualizado_em ou pela nova alocação diária recebida.
       const emCache = await lerCache<AgendamentoDetalhe>(cacheKey);
