@@ -1,3 +1,4 @@
+import re
 from datetime import date
 from typing import Annotated, Optional
 
@@ -75,6 +76,19 @@ def _roles_set(current_user: dict) -> set[str]:
     return set(roles)
 
 
+def _parse_data(data: str) -> date:
+    """Converte ``YYYY-MM-DD`` em ``date``; formato ou data civil inválidos geram 422."""
+    try:
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", data):
+            raise ValueError(data)
+        return date.fromisoformat(data)
+    except ValueError:
+        raise HTTPException(
+            status_code=422,
+            detail="Data inválida. Informe uma data real no formato YYYY-MM-DD.",
+        )
+
+
 # ---------------------------------------------------------------------------
 # Endpoints de distribuição — HU-016/HU-017 (apenas Administrador)
 # ---------------------------------------------------------------------------
@@ -87,19 +101,25 @@ def visualizar_distribuicao(
     _: dict = Depends(admin_required),
 ):
     try:
-        return service.preview(date.fromisoformat(data))
-    except (ValueError, DistribuicaoError) as error:
-        return _error(error if isinstance(error, DistribuicaoError) else DistribuicaoError(str(error)))
+        data_parsed = date.fromisoformat(data)
+    except ValueError:
+        return _error(DistribuicaoError("Data inválida."))
+
+    try:
+        return service.preview(data_parsed)
+    except DistribuicaoError as error:
+        return _error(error)
 
 
 @router.post("/distribuicao", status_code=201)
 def persistir_distribuicao(
     payload: DistribuicaoRequestDTO,
     service: Annotated[AlocacaoService, Depends(_service)],
-    _: dict = Depends(admin_required),
+    current_user: dict = Depends(admin_required),
 ):
     try:
-        return service.persist(payload)
+        usuario_id = current_user.get("current_user_id") or current_user.get("sub")
+        return service.persist(payload, usuario_executor_id=int(usuario_id))
     except DistribuicaoError as error:
         return _error(error)
 
@@ -123,7 +143,7 @@ def rotas_do_dia(
 
     Usado para popular o seletor "Rota *" na tela da Lista de Embarque (CA-01).
     """
-    target = date.fromisoformat(data)
+    target = _parse_data(data)
     roles = _roles_set(current_user)
     is_admin = CargoEnum.ADMINISTRADOR.value in roles
 
@@ -174,7 +194,7 @@ def lista_embarque(
 
     Critérios de aceite cobertos: CA-01, CA-02, CA-03, CA-04, CA-05, CA-06, CA-07.
     """
-    target = date.fromisoformat(data)
+    target = _parse_data(data)
     roles = _roles_set(current_user)
     is_admin = CargoEnum.ADMINISTRADOR.value in roles
 
@@ -244,15 +264,16 @@ def lista_embarque(
 def minha_viagem(
     service: Annotated[MinhaViagemService, Depends(_minha_viagem_service)],
     current_user: Annotated[dict, Depends(_aluno_required)],
-    data: Annotated[Optional[date], Query()] = None,
+    data: Annotated[Optional[str], Query()] = None,
 ):
     """Retorna a situação da viagem do aluno autenticado para a data informada.
 
     - **data** (opcional): data no formato ``YYYY-MM-DD``. Padrão: hoje.
+      Data ou formato inválido retorna ``422`` com mensagem em português.
     - Restrito ao perfil ``aluno``. Retorna ``403`` para outros perfis.
 
     Critérios de aceite cobertos: CA-01, CA-02, CA-03, CA-04, FA-001, FA-002.
     """
     aluno_id = int(current_user["current_user_id"])
-    target = data or date.today()
+    target = _parse_data(data) if data is not None else date.today()
     return service.consultar(aluno_id, target)

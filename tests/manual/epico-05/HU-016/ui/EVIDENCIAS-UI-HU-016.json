@@ -1,0 +1,516 @@
+{
+  "historia": "HU-016",
+  "camada": "UI",
+  "executado_em": "2026-11-18",
+  "branch_resultados": "test/execucao-ui-hu-016",
+  "base_resultados": "0f90c961",
+  "commit_testado": "0f90c961e484ed1045017d04b1bad15d09b0818c",
+  "ambiente": {
+    "front_url": "http://localhost:8081",
+    "api_url": "http://localhost:8216",
+    "navegador": "Brave 1.86.148 (Chromium 144.0.7559.133, 64 bits, Linux)",
+    "banco": "PostgreSQL, atu_ui016",
+    "migration": "82_create_alocacao_diaria (head aplicada)",
+    "fuso": "America/Fortaleza"
+  },
+  "resultado": {
+    "total_casos": 9,
+    "casos_passaram": 3,
+    "casos_falharam": 6,
+    "casos_bloqueados": 0,
+    "total_verificacoes": 28,
+    "verificacoes_passaram": 17,
+    "verificacoes_falharam": 9,
+    "verificacoes_bloqueadas": 2
+  },
+  "resultado_pos_reteste": {
+    "executado_em": "2026-11-18",
+    "observacao": "Totais finais depois do reteste do build 82eac441 (ver bloco 'reteste' abaixo); os campos 'resultado' e 'verificacoes' acima mantêm o registro original da execução de 18/11/2026, sem alteração.",
+    "total_casos": 9,
+    "casos_passaram": 9,
+    "casos_falharam": 0,
+    "casos_bloqueados": 0,
+    "total_verificacoes": 28,
+    "verificacoes_passaram": 28,
+    "verificacoes_falharam": 0,
+    "verificacoes_bloqueadas": 0
+  },
+  "verificacoes": [
+    {
+      "caso": "CT-HU016-UI-001",
+      "verificacao": 1,
+      "descricao": "Cartões Distribuição Logística e Lista de embarque presentes",
+      "status": "PASSOU",
+      "observado": "Painel /logistica, seção Alocação e Embarque, mostra os dois cartões"
+    },
+    {
+      "caso": "CT-HU016-UI-001",
+      "verificacao": 2,
+      "descricao": "Cartão Rodízio de frota oculto",
+      "status": "FALHOU",
+      "observado": "Cartão visível na seção Frota",
+      "issue": "#504"
+    },
+    {
+      "caso": "CT-HU016-UI-001",
+      "verificacao": 3,
+      "descricao": "Nenhum cartão leva a rota inexistente",
+      "status": "FALHOU",
+      "observado": "Rodízio de frota abre /(administrador)/logistica/rodizio com \"Unmatched Route – Page could not be found\"",
+      "issue": "#504"
+    },
+    {
+      "caso": "CT-HU016-UI-001",
+      "verificacao": 4,
+      "descricao": "Distribuição Logística abre a tela de alocação diária (AC-01)",
+      "status": "PASSOU",
+      "observado": "Abre /logistica/distribuicao, com abas Próximos e Histórico e seletor semanal"
+    },
+    {
+      "caso": "CT-HU016-UI-002",
+      "verificacao": 1,
+      "descricao": "Dia com reservas mostra rota, faculdades, horários e total iguais à API",
+      "status": "PASSOU",
+      "observado": "18/11 P1=4 P2=1; 24/11 P1=1 P2=1; 10/11 P1=1; mesmos ônibus e motoristas sugeridos (M1 Carlos Um Silva, M2 Marcos Dois Souza, M3 Pedro Tres Lima)"
+    },
+    {
+      "caso": "CT-HU016-UI-002",
+      "verificacao": 2,
+      "descricao": "Dia sem reservas mostra \"Nenhum aluno agendado para este dia.\"",
+      "status": "PASSOU",
+      "observado": "Confirmado em 17/11, 25/11 e 11/11"
+    },
+    {
+      "caso": "CT-HU016-UI-002",
+      "verificacao": 3,
+      "descricao": "Aba Histórico lista dias passados",
+      "status": "PASSOU",
+      "observado": "10/11 mostra P1 com 1 aluno",
+      "banco": "Massa do dia passado criada direto na tabela agendamento (id 10), por não haver forma de reservar no passado pela API"
+    },
+    {
+      "caso": "CT-HU016-UI-002",
+      "verificacao": 4,
+      "descricao": "Histórico não permite alterar a distribuição (consulta)",
+      "status": "FALHOU",
+      "observado": "Em 10/11 aparecem o lápis de edição e o botão \"Confirmar distribuição\"; o lápis abre /logistica/alocar?linhaId=1&dataIso=2026-11-10 com \"Confirmar alocação\" ativo; não foi tocado em confirmar",
+      "issue": "#505"
+    },
+    {
+      "caso": "CT-HU016-UI-003",
+      "verificacao": 1,
+      "descricao": "Ônibus, motorista, sentados e em pé de cada rota coincidem com a prévia da API",
+      "status": "PASSOU",
+      "observado": "P1 V1/M1 3 sentados + 2 em pé; P2 V3/M3 4 sentados e V2/M2 2 sentados + 1 em pé (1 excedente); P3 sem veículo (1 excedente)",
+      "requisicoes": [
+        {"metodo": "GET", "endpoint": "/alocacao-diaria/distribuicao-automatica?data=2026-11-26", "status": 200}
+      ]
+    },
+    {
+      "caso": "CT-HU016-UI-003",
+      "verificacao": 2,
+      "descricao": "Selo reflete a situação da rota (Alocada, Superlotada, Pendente)",
+      "status": "PASSOU",
+      "observado": "P1 Alocada, P2 Superlotada, P3 Pendente"
+    },
+    {
+      "caso": "CT-HU016-UI-003",
+      "verificacao": 3,
+      "descricao": "Prévia não persiste nada após recarregar",
+      "status": "PASSOU",
+      "banco": "alocacao_diaria e alocacao_aluno em 0/0 em 26/11, antes e depois do F5"
+    },
+    {
+      "caso": "CT-HU016-UI-004",
+      "verificacao": 1,
+      "descricao": "Popup \"Confirmar distribuição?\" cita a data; desistir não grava nada",
+      "status": "PASSOU",
+      "observado": "Popup aberto e desistência",
+      "banco": "alocacao_diaria e alocacao_aluno em 0/0 em 18/11 depois de desistir"
+    },
+    {
+      "caso": "CT-HU016-UI-004",
+      "verificacao": 2,
+      "descricao": "Confirmar mostra mensagem de sucesso em popup padrão, sem toast preto, e o status logístico passa a distribuído",
+      "status": "FALHOU",
+      "observado": "Tela mostrou \"Distribuição confirmada\" e \"Status logístico: DISTRIBUIDO\"; a condição \"sem toast preto\" não foi verificada separadamente nesta execução",
+      "requisicoes": [
+        {"metodo": "POST", "endpoint": "/alocacao-diaria/distribuicao", "status": 201}
+      ],
+      "issue": "#506"
+    },
+    {
+      "caso": "CT-HU016-UI-004",
+      "verificacao": 3,
+      "descricao": "Depois de recarregar, a tela mostra a distribuição gravada e não uma nova sugestão automática",
+      "status": "FALHOU",
+      "observado": "Depois do F5, a linha \"Status logístico: DISTRIBUIDO\" não aparece e o botão \"Confirmar distribuição\" volta ativo; a tela mostra a sugestão automática (V1/M1 em P1 ida), não o gravado; reproduzido também com uma variação gravada em V3/M3",
+      "banco": "alocacao_diaria com 3 linhas e alocacao_aluno com 5 linhas em 18/11, batendo com o que foi confirmado",
+      "issue": "#506"
+    },
+    {
+      "caso": "CT-HU016-UI-005",
+      "verificacao": 1,
+      "descricao": "A confirmação é permitida (AC-13) e a mensagem de sucesso é exibida",
+      "status": "PASSOU",
+      "requisicoes": [
+        {"metodo": "POST", "endpoint": "/alocacao-diaria/distribuicao", "status": 201}
+      ]
+    },
+    {
+      "caso": "CT-HU016-UI-005",
+      "verificacao": 2,
+      "descricao": "O aviso lista os alunos excedentes com nome legível, não só com o número do agendamento",
+      "status": "FALHOU",
+      "observado": "A resposta do POST veio com excedentes: [] e sem citar o agendamento 30; a tela de Excedentes mostrou \"Agendamento #30\"",
+      "banco": "5 linhas ALOCADO em alocacao_aluno (agendamentos 25 a 29); nenhuma para o agendamento 30",
+      "issue": "#507"
+    },
+    {
+      "caso": "CT-HU016-UI-005",
+      "verificacao": 3,
+      "descricao": "O aluno excedente vê \"Aguardando alocação do veículo\" até ser realocado",
+      "status": "BLOQUEADO",
+      "observado": "Não executada: o aluno foi realocado antes dessa checagem, no preparo do CT-007, então a verificação nunca foi feita na tela do aluno; fica para o reteste"
+    },
+    {
+      "caso": "CT-HU016-UI-006",
+      "verificacao": 1,
+      "descricao": "O administrador troca o ônibus e o motorista sugeridos antes de confirmar (AC-02)",
+      "status": "PASSOU",
+      "observado": "Seleção de P1 aberta e trocada antes de confirmar"
+    },
+    {
+      "caso": "CT-HU016-UI-006",
+      "verificacao": 2,
+      "descricao": "Ônibus e motorista já alocados a outra rota no mesmo turno não aparecem como disponíveis ou geram alerta de indisponibilidade",
+      "status": "FALHOU",
+      "observado": "As listas mostraram DEF-4G56 e Marcos Dois Souza, usados por P2 na ida; nenhum alerta ao escolher; o botão de confirmar ficou ativo",
+      "requisicoes": [
+        {"metodo": "POST", "endpoint": "/alocacao-diaria/distribuicao", "status": 409}
+      ],
+      "issue": "#508"
+    },
+    {
+      "caso": "CT-HU016-UI-006",
+      "verificacao": 3,
+      "descricao": "A confirmação grava V3 e M2 para P1 e mantém as demais rotas do dia como estavam",
+      "status": "FALHOU",
+      "observado": "V3+M2 foi recusado com 409 (\"alocação 2: motorista 2 conflitante no turno ida.\"); variação gravada com V3+M3 (201), mantendo P2 em V2/M2",
+      "banco": "alocacao_diaria ids 8, 9 e 10 em 30/11: P1 ida V3/M3, P1 volta V3/M3, P2 ida V2/M2",
+      "issue": "#508"
+    },
+    {
+      "caso": "CT-HU016-UI-007",
+      "verificacao": 1,
+      "descricao": "O administrador seleciona os excedentes e os realoca para um ônibus com vaga (AC-09)",
+      "status": "FALHOU",
+      "observado": "A tela de Excedentes só mostra cards estáticos sem ação; o único botão é \"Voltar para a distribuição\"; na Network só há GETs, nenhuma chamada de escrita; a realocação foi feita direto pela API, não pela tela",
+      "issue": "#509"
+    },
+    {
+      "caso": "CT-HU016-UI-007",
+      "verificacao": 2,
+      "descricao": "O status do aluno passa a informar em qual ônibus ele deve embarcar (AC-10); aviso de realocação quando o ônibus é de outra rota",
+      "status": "PASSOU",
+      "observado": "minha-viagem do aluno realocado mostrou status_geral ALOCADO, ônibus DEF4G56, motorista Marcos Dois Souza, tipo_lugar sentado; foi_realocado=false porque a troca foi dentro da mesma rota, então a mensagem \"Atenção: Você foi realocado\" não se aplica nesse caso",
+      "requisicoes": [
+        {"metodo": "POST", "endpoint": "/alocacao-diaria/distribuicao", "status": 201},
+        {"metodo": "GET", "endpoint": "/alocacao-diaria/minha-viagem", "status": 200}
+      ]
+    },
+    {
+      "caso": "CT-HU016-UI-007",
+      "verificacao": 3,
+      "descricao": "Se a realocação for recusada, a tela mostra a causa e não altera a distribuição",
+      "status": "BLOQUEADO",
+      "observado": "Depende da verificação 1: sem nenhuma ação de realocar na tela, não há como provocar nem observar uma recusa",
+      "issue": "#509"
+    },
+    {
+      "caso": "CT-HU016-UI-008",
+      "verificacao": 1,
+      "descricao": "Ao abrir sem rede, a tela informa a falha de carregamento, sem demanda fictícia nem \"Nenhum aluno agendado\"",
+      "status": "PASSOU",
+      "observado": "Confirmado pelo testador"
+    },
+    {
+      "caso": "CT-HU016-UI-008",
+      "verificacao": 2,
+      "descricao": "Ao confirmar sem rede, a mensagem é de falha, a distribuição não é gravada e não há popup de sucesso",
+      "status": "PASSOU",
+      "banco": "alocacao_diaria e alocacao_aluno em 0/0 em 24/11 logo depois da tentativa sem rede"
+    },
+    {
+      "caso": "CT-HU016-UI-008",
+      "verificacao": 3,
+      "descricao": "Com a rede de volta, a repetição grava normalmente",
+      "status": "PASSOU",
+      "banco": "alocacao_diaria com 2 linhas e alocacao_aluno com 2 linhas em 24/11, depois de religar e repetir"
+    },
+    {
+      "caso": "CT-HU016-UI-009",
+      "verificacao": 1,
+      "descricao": "Aluno e representante não veem o menu de alocação diária",
+      "status": "PASSOU",
+      "observado": "Nenhum dos dois perfis mostra opção de Logística na barra de abas"
+    },
+    {
+      "caso": "CT-HU016-UI-009",
+      "verificacao": 2,
+      "descricao": "A URL direta leva à tela de acesso negado ou ao login; nenhum dado de alocação é exibido",
+      "status": "PASSOU",
+      "observado": "Aluno e representante caem em /acesso-negado (403); sem sessão cai no login; nenhum dado de alocação exibido; 0 chamadas Fetch/XHR de dados de alocação"
+    }
+  ],
+  "reteste": {
+    "executado_em": "2026-11-18",
+    "branch_resultados": "test/reteste-ui-hu-016",
+    "branch_build": "fix/issues-hu16e17",
+    "commit_testado": "82eac441835d6bc2e2e17acd3b3b163067d6322f",
+    "autor_correcao": "dev-mariab",
+    "resultado": {
+      "total_casos": 6,
+      "casos_passaram": 6,
+      "casos_falharam": 0,
+      "casos_bloqueados": 0,
+      "total_verificacoes": 20,
+      "verificacoes_passaram": 20,
+      "verificacoes_falharam": 0,
+      "verificacoes_bloqueadas": 0
+    },
+    "verificacoes": [
+      {
+        "caso": "CT-HU016-UI-001",
+        "verificacao": 1,
+        "descricao": "Cartões Distribuição Logística e Lista de embarque presentes",
+        "status": "PASSOU",
+        "observado": "Painel /logistica continua mostrando os dois cartões",
+        "evidencia": "Reteste de Radlei em 18/11/2026, build 82eac441, ambiente atu-ui016"
+      },
+      {
+        "caso": "CT-HU016-UI-001",
+        "verificacao": 2,
+        "descricao": "Cartão Rodízio de frota oculto",
+        "status": "PASSOU",
+        "observado": "Seção Frota e o cartão Rodízio de frota não aparecem mais no painel (logistica.tsx)",
+        "evidencia": "Reteste de Radlei em 18/11/2026, build 82eac441, ambiente atu-ui016",
+        "issue": "#504"
+      },
+      {
+        "caso": "CT-HU016-UI-001",
+        "verificacao": 3,
+        "descricao": "Nenhum cartão leva a rota inexistente",
+        "status": "PASSOU",
+        "observado": "Sem o cartão Rodízio de frota, não há mais navegação para /logistica/rodizio",
+        "evidencia": "Reteste de Radlei em 18/11/2026, build 82eac441, ambiente atu-ui016",
+        "issue": "#504"
+      },
+      {
+        "caso": "CT-HU016-UI-001",
+        "verificacao": 4,
+        "descricao": "Distribuição Logística abre a tela de alocação diária (AC-01)",
+        "status": "PASSOU",
+        "observado": "Continua abrindo /logistica/distribuicao normalmente",
+        "evidencia": "Reteste de Radlei em 18/11/2026, build 82eac441, ambiente atu-ui016"
+      },
+      {
+        "caso": "CT-HU016-UI-002",
+        "verificacao": 1,
+        "descricao": "Dia com reservas mostra rota, faculdades, horários e total iguais à API",
+        "status": "PASSOU",
+        "observado": "Sem mudança de comportamento nesta verificação",
+        "evidencia": "Reteste de Radlei em 18/11/2026, build 82eac441, ambiente atu-ui016"
+      },
+      {
+        "caso": "CT-HU016-UI-002",
+        "verificacao": 2,
+        "descricao": "Dia sem reservas mostra \"Nenhum aluno agendado para este dia.\"",
+        "status": "PASSOU",
+        "observado": "Sem mudança de comportamento nesta verificação",
+        "evidencia": "Reteste de Radlei em 18/11/2026, build 82eac441, ambiente atu-ui016"
+      },
+      {
+        "caso": "CT-HU016-UI-002",
+        "verificacao": 3,
+        "descricao": "Aba Histórico lista dias passados",
+        "status": "PASSOU",
+        "observado": "10/11 continua mostrando P1 com 1 aluno; agendamento id 10 intacto",
+        "evidencia": "Reteste de Radlei em 18/11/2026, build 82eac441, ambiente atu-ui016"
+      },
+      {
+        "caso": "CT-HU016-UI-002",
+        "verificacao": 4,
+        "descricao": "Histórico não permite alterar a distribuição (consulta)",
+        "status": "PASSOU",
+        "observado": "Em 10/11, o card não mostra mais o lápis de edição nem o botão \"Confirmar distribuição\" (distribuicao.tsx, variável somenteLeitura)",
+        "evidencia": "Reteste de Radlei em 18/11/2026, build 82eac441, ambiente atu-ui016",
+        "issue": "#505"
+      },
+      {
+        "caso": "CT-HU016-UI-004",
+        "verificacao": 1,
+        "descricao": "Popup \"Confirmar distribuição?\" cita a data; desistir não grava nada",
+        "status": "PASSOU",
+        "observado": "Confirmado por sequência de ids de alocacao_diaria sem lacuna (15, 16, 17 em 18/11, sem saltar a partir do id 14 de outra data)",
+        "evidencia": "Reteste de Radlei em 18/11/2026, build 82eac441, ambiente atu-ui016"
+      },
+      {
+        "caso": "CT-HU016-UI-004",
+        "verificacao": 2,
+        "descricao": "Confirmar mostra mensagem de sucesso em popup padrão, sem toast preto, e o status logístico passa a distribuído",
+        "status": "PASSOU",
+        "observado": "POST 201, status_logistico DISTRIBUIDO; tela mostrou a confirmação",
+        "requisicoes": [
+          {"metodo": "POST", "endpoint": "/alocacao-diaria/distribuicao", "status": 201}
+        ],
+        "evidencia": "Reteste de Radlei em 18/11/2026, build 82eac441, ambiente atu-ui016",
+        "issue": "#506"
+      },
+      {
+        "caso": "CT-HU016-UI-004",
+        "verificacao": 3,
+        "descricao": "Depois de recarregar, a tela mostra a distribuição gravada e não uma nova sugestão automática",
+        "status": "PASSOU",
+        "observado": "GET /alocacao-diaria/distribuicao-automatica?data=2026-11-18 voltou com status_logistico DISTRIBUIDO, distribuicao_persistida true, e as alocacoes batendo com alocacao_diaria/alocacao_aluno (HIJ7K89 ida/volta, ABC1D23 ida)",
+        "requisicoes": [
+          {"metodo": "GET", "endpoint": "/alocacao-diaria/distribuicao-automatica?data=2026-11-18", "status": 200}
+        ],
+        "evidencia": "Reteste de Radlei em 18/11/2026, build 82eac441, ambiente atu-ui016",
+        "issue": "#506"
+      },
+      {
+        "caso": "CT-HU016-UI-005",
+        "verificacao": 1,
+        "descricao": "A confirmação é permitida (AC-13) e a mensagem de sucesso é exibida",
+        "status": "PASSOU",
+        "observado": "Sem mudança de comportamento nesta verificação",
+        "evidencia": "Reteste de Radlei em 18/11/2026, build 82eac441, ambiente atu-ui016"
+      },
+      {
+        "caso": "CT-HU016-UI-005",
+        "verificacao": 2,
+        "descricao": "O aviso lista os alunos excedentes com nome legível, não só com o número do agendamento",
+        "status": "PASSOU",
+        "observado": "Tela de Excedentes e GET de prévia mostram \"Aluno H Um Farias\" (excedentes_globais.nome_aluno); o POST de confirmação continua com excedentes: [] (lacuna da #475, fora do escopo)",
+        "requisicoes": [
+          {"metodo": "GET", "endpoint": "/alocacao-diaria/distribuicao-automatica?data=2026-11-27", "status": 200}
+        ],
+        "evidencia": "Reteste de Radlei em 18/11/2026, build 82eac441, ambiente atu-ui016",
+        "issue": "#507"
+      },
+      {
+        "caso": "CT-HU016-UI-005",
+        "verificacao": 3,
+        "descricao": "O aluno excedente vê \"Aguardando alocação do veículo\" até ser realocado",
+        "status": "PASSOU",
+        "observado": "Executada desta vez antes da realocação do CT-007: o aluno H1 viu \"Aguardando alocação do veículo\"",
+        "evidencia": "Reteste de Radlei em 18/11/2026, build 82eac441, ambiente atu-ui016"
+      },
+      {
+        "caso": "CT-HU016-UI-006",
+        "verificacao": 1,
+        "descricao": "O administrador troca o ônibus e o motorista sugeridos antes de confirmar (AC-02)",
+        "status": "PASSOU",
+        "observado": "Sem mudança de comportamento nesta verificação",
+        "evidencia": "Reteste de Radlei em 18/11/2026, build 82eac441, ambiente atu-ui016"
+      },
+      {
+        "caso": "CT-HU016-UI-006",
+        "verificacao": 2,
+        "descricao": "Ônibus e motorista já alocados a outra rota no mesmo turno não aparecem como disponíveis ou geram alerta de indisponibilidade",
+        "status": "PASSOU",
+        "observado": "obterOpcoesOnibus/obterOpcoesMotoristas (alocar.tsx) passaram a olhar o preview do dia inteiro, não só a rota aberta; recurso já usado por outra rota some da lista",
+        "evidencia": "Reteste de Radlei em 18/11/2026, build 82eac441, ambiente atu-ui016",
+        "issue": "#508"
+      },
+      {
+        "caso": "CT-HU016-UI-006",
+        "verificacao": 3,
+        "descricao": "A confirmação grava V3 e M2 para P1 e mantém as demais rotas do dia como estavam",
+        "status": "PASSOU",
+        "observado": "Testado pela API em 30/11: conflito de ônibus e conflito de motorista recusados com 409 DISTRIBUICAO_INVALIDA, mensagem citando o nome das duas rotas e a placa/nome do recurso (ex.: \"P2 Rota Campo - IFCE: o ônibus ABC1D23 já está alocado na rota P1 Rota Centro - UFC no turno ida.\"); banco confirmado inalterado nos dois testes",
+        "requisicoes": [
+          {"metodo": "POST", "endpoint": "/alocacao-diaria/distribuicao", "status": 409},
+          {"metodo": "POST", "endpoint": "/alocacao-diaria/distribuicao", "status": 409}
+        ],
+        "evidencia": "Reteste de Radlei em 18/11/2026, build 82eac441, ambiente atu-ui016",
+        "issue": "#508"
+      },
+      {
+        "caso": "CT-HU016-UI-007",
+        "verificacao": 1,
+        "descricao": "O administrador seleciona os excedentes e os realoca para um ônibus com vaga (AC-09)",
+        "status": "PASSOU",
+        "observado": "Tela de Excedentes agora permite selecionar o aluno, lista o ônibus com vaga (Rota 2, DEF4G56, 3 vagas) e, ao confirmar, mostra \"Aluno realocado\" (excedentes.tsx, confirmarRealocacao)",
+        "evidencia": "Reteste de Radlei em 18/11/2026, build 82eac441, ambiente atu-ui016",
+        "issue": "#509"
+      },
+      {
+        "caso": "CT-HU016-UI-007",
+        "verificacao": 2,
+        "descricao": "O status do aluno passa a informar em qual ônibus ele deve embarcar (AC-10); aviso de realocação quando o ônibus é de outra rota",
+        "status": "PASSOU",
+        "observado": "Aluno H1 viu \"Alocação confirmada\" e \"Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Placa DEF4G56\" (realocação para outra rota, Rota 2)",
+        "evidencia": "Reteste de Radlei em 18/11/2026, build 82eac441, ambiente atu-ui016"
+      },
+      {
+        "caso": "CT-HU016-UI-007",
+        "verificacao": 3,
+        "descricao": "Se a realocação for recusada, a tela mostra a causa e não altera a distribuição",
+        "status": "PASSOU",
+        "observado": "Com o ônibus DEF4G56 inativado antes de confirmar, a tela mostrou \"Não foi possível realocar... ônibus DEF4G56 inexistente ou inativo\" (422 DISTRIBUICAO_INVALIDA); banco confirmado sem alteração",
+        "requisicoes": [
+          {"metodo": "POST", "endpoint": "/alocacao-diaria/distribuicao", "status": 422}
+        ],
+        "evidencia": "Reteste de Radlei em 18/11/2026, build 82eac441, ambiente atu-ui016",
+        "issue": "#509"
+      }
+    ],
+    "novo_defeito_encontrado": "BUG-HU016-UI-007 (issue #517)"
+  },
+  "defeitos": [
+    "BUG-HU016-UI-001 (#504) — corrigido no reteste, build 82eac441",
+    "BUG-HU016-UI-002 (#505) — corrigido no reteste, build 82eac441",
+    "BUG-HU016-UI-003 (#506) — corrigido no reteste, build 82eac441",
+    "BUG-HU016-UI-004 (#507) — corrigido no reteste, build 82eac441",
+    "BUG-HU016-UI-005 (#508) — corrigido no reteste, build 82eac441",
+    "BUG-HU016-UI-006 (#509) — corrigido no reteste, build 82eac441",
+    "BUG-HU016-UI-007 (#517) — corrigido no reteste de 18/11/2026 (noite), build f9cde78e"
+  ],
+  "reteste_517": {
+    "executado_em": "2026-11-18",
+    "periodo": "noite",
+    "branch_resultados": "test/reteste-ui-hu-016-bug007",
+    "branch_build": "fix/issues-hu16e17",
+    "commit_testado": "f9cde78e",
+    "commit_mensagem": "fix: corrige excedentes apos realocacao issue #517",
+    "autor_correcao": "dev-mariab",
+    "backend_testado": "82eac441",
+    "observacao_branch": "A ponta da branch fix/issues-hu16e17 esta em 457f0fec, que traz uma mudanca extra de backend (HU-017) ainda nao testada neste reteste, fora do escopo da #517. A branch ainda esta fora da develop.",
+    "resultado": {
+      "total_casos": 1,
+      "casos_passaram": 1,
+      "casos_falharam": 0,
+      "casos_bloqueados": 0,
+      "total_verificacoes": 1,
+      "verificacoes_passaram": 1,
+      "verificacoes_falharam": 0,
+      "verificacoes_bloqueadas": 0
+    },
+    "verificacoes": [
+      {
+        "caso": "CT-HU016-UI-007",
+        "verificacao": "defeito #517",
+        "descricao": "Depois da realocacao do unico excedente, a tela mostra so uma das duas mensagens (nunca as duas juntas)",
+        "status": "PASSOU",
+        "observado": "Em 27/11, realocando o aluno H Um Farias para o onibus DEF4G56 (Rota 2) pela tela de Excedentes, o POST /alocacao-diaria/distribuicao retornou 201; depois da realocacao, a tela mostra apenas \"Nenhum aluno excedente para esta data.\", sem o texto \"1 aluno(s)... ultrapassam a capacidade dos veiculos alocados\"",
+        "requisicoes": [
+          {"metodo": "POST", "endpoint": "/alocacao-diaria/distribuicao", "status": 201}
+        ],
+        "evidencia": "Reteste de Radlei em 18/11/2026 (noite), build f9cde78e, ambiente atu-ui016",
+        "issue": "#517"
+      }
+    ]
+  }
+}
