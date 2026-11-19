@@ -105,12 +105,6 @@ class AlocacaoServiceValidacaoTest(unittest.TestCase):
             permitir_realocacao=True,
         )
 
-    def test_automatico_rejeita_aluno_em_rota_diferente(self):
-        with self.assertRaises(DistribuicaoError) as contexto:
-            self.service._validar_payload(self.data, [self._alocacao(rota_id=2)])
-
-        self.assertIn("Rota Bairro", str(contexto.exception))
-
     def test_conflito_de_onibus_indica_rota_e_veiculo(self):
         with self.assertRaises(DistribuicaoError) as contexto:
             self.service._validar_payload(

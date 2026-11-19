@@ -45,3 +45,14 @@ Hipótese: em `frontend/src/app/(administrador)/logistica/excedentes.tsx:242-244
 ### 📎 Evidência
 
 Reproduzido por Radlei em 18/11/2026, ambiente local `atu-ui016`, durante o reteste do build `82eac441`.
+
+### Reteste
+
+| Campo | Valor |
+|---|---|
+| **Data** | 18/11/2026 (reteste à noite) |
+| **Build** | `f9cde78e` (commit "fix: corrige excedentes apos realocacao issue #517", `dev-mariab`, branch `fix/issues-hu16e17`, ainda fora da `develop`) |
+| **Issue** | #517 |
+| **Resultado** | ✅ Corrigido — em 27/11, realocando o aluno H Um Farias para o ônibus com vaga (Rota 2, `DEF4G56`) pela tela de Excedentes, o `POST /alocacao-diaria/distribuicao` retornou 201 e, depois da realocação, a tela passou a mostrar só "Nenhum aluno excedente para esta data.", sem repetir "1 aluno(s)... ultrapassam a capacidade dos veículos alocados". Backend testado continua no `82eac441` (a correção só alterou o frontend). `CT-HU016-UI-007`: ✅. |
+
+**Observação:** a ponta da branch `fix/issues-hu16e17` está em `457f0fec`, que traz uma mudança extra de backend (HU-017) ainda **não testada** neste reteste — fora do escopo da #517.

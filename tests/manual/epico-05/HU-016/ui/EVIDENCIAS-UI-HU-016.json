@@ -476,6 +476,41 @@
     "BUG-HU016-UI-004 (#507) — corrigido no reteste, build 82eac441",
     "BUG-HU016-UI-005 (#508) — corrigido no reteste, build 82eac441",
     "BUG-HU016-UI-006 (#509) — corrigido no reteste, build 82eac441",
-    "BUG-HU016-UI-007 (novo, encontrado no reteste, issue #517)"
-  ]
+    "BUG-HU016-UI-007 (#517) — corrigido no reteste de 18/11/2026 (noite), build f9cde78e"
+  ],
+  "reteste_517": {
+    "executado_em": "2026-11-18",
+    "periodo": "noite",
+    "branch_resultados": "test/reteste-ui-hu-016-bug007",
+    "branch_build": "fix/issues-hu16e17",
+    "commit_testado": "f9cde78e",
+    "commit_mensagem": "fix: corrige excedentes apos realocacao issue #517",
+    "autor_correcao": "dev-mariab",
+    "backend_testado": "82eac441",
+    "observacao_branch": "A ponta da branch fix/issues-hu16e17 esta em 457f0fec, que traz uma mudanca extra de backend (HU-017) ainda nao testada neste reteste, fora do escopo da #517. A branch ainda esta fora da develop.",
+    "resultado": {
+      "total_casos": 1,
+      "casos_passaram": 1,
+      "casos_falharam": 0,
+      "casos_bloqueados": 0,
+      "total_verificacoes": 1,
+      "verificacoes_passaram": 1,
+      "verificacoes_falharam": 0,
+      "verificacoes_bloqueadas": 0
+    },
+    "verificacoes": [
+      {
+        "caso": "CT-HU016-UI-007",
+        "verificacao": "defeito #517",
+        "descricao": "Depois da realocacao do unico excedente, a tela mostra so uma das duas mensagens (nunca as duas juntas)",
+        "status": "PASSOU",
+        "observado": "Em 27/11, realocando o aluno H Um Farias para o onibus DEF4G56 (Rota 2) pela tela de Excedentes, o POST /alocacao-diaria/distribuicao retornou 201; depois da realocacao, a tela mostra apenas \"Nenhum aluno excedente para esta data.\", sem o texto \"1 aluno(s)... ultrapassam a capacidade dos veiculos alocados\"",
+        "requisicoes": [
+          {"metodo": "POST", "endpoint": "/alocacao-diaria/distribuicao", "status": 201}
+        ],
+        "evidencia": "Reteste de Radlei em 18/11/2026 (noite), build f9cde78e, ambiente atu-ui016",
+        "issue": "#517"
+      }
+    ]
+  }
 }

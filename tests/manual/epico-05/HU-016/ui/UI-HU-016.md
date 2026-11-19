@@ -284,6 +284,7 @@ Executada na ordem em 18/11/2026. A LLM preparou a massa pela API (e, no caso do
 - Relato: [BUG-HU016-UI-006](issues/BUG-HU016-UI-006.md) (issue #509, 🟠 Alta, Bloqueante). Contexto: issue #473 (decisão do PO sobre realocação entre rotas) foi fechada sem decisão registrada (sem comentário, sem caixa marcada).
 - Status: ❌ Falhou (verificação 1 ❌, verificação 2 ✅, verificação 3 🚫).
 - **Reteste (18/11/2026, build `82eac441`):** massa de apoio em 27/11 montada pela API (preparação de dado); a realocação e a recusa em si foram feitas pela tela. A tela de Excedentes agora permite selecionar o aluno excedente, lista o ônibus com vaga (Rota 2, `DEF4G56`, 3 vagas) e, ao confirmar, mostra "Aluno realocado". O aluno H1 passou a ver "Alocação confirmada" e "Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Placa DEF4G56". Testada também a recusa: com o ônibus `DEF4G56` inativado antes de confirmar, a tela mostrou "Não foi possível realocar... ônibus DEF4G56 inexistente ou inativo" (422 `DISTRIBUICAO_INVALIDA`) e o banco não foi alterado. Novo defeito cosmético encontrado durante este reteste: [BUG-HU016-UI-007](issues/BUG-HU016-UI-007.md) (🟢 Baixa, Não bloqueante). Status (reteste): ✅ Passou (3/3).
+- **Reteste da #517 (18/11/2026, noite, build `f9cde78e`):** em 27/11, realocando o aluno H Um Farias para o ônibus com vaga (Rota 2, `DEF4G56`) pela tela de Excedentes, o `POST /alocacao-diaria/distribuicao` retornou 201 e a tela passou a mostrar só "Nenhum aluno excedente para esta data.", sem repetir o aviso de excedentes. Backend testado continua no `82eac441` (a correção de `f9cde78e` só alterou o frontend); a ponta da branch `fix/issues-hu16e17` (`457f0fec`) traz uma mudança extra de backend (HU-017) ainda não testada, fora do escopo deste reteste. `CT-HU016-UI-007` continua ✅.
 
 ---
 
@@ -367,7 +368,7 @@ Executada na ordem em 18/11/2026. A LLM preparou a massa pela API (e, no caso do
 
 Numeração dos relatos (`BUG-HU016-UI-001` a `006`) não segue a numeração dos CTs — ver a coluna "Caso" para o mapeamento.
 
-**As 6 issues acima (#504 a #509) foram corrigidas e confirmadas no reteste de 18/11/2026 (build `82eac441`, branch `fix/issues-hu16e17`)** — ver a seção "Reteste (18/11/2026)" ao final deste documento. Um novo defeito cosmético, issue #517, foi encontrado durante o reteste do CT-007: [BUG-HU016-UI-007](issues/BUG-HU016-UI-007.md).
+**As 6 issues acima (#504 a #509) foram corrigidas e confirmadas no reteste de 18/11/2026 (build `82eac441`, branch `fix/issues-hu16e17`)** — ver a seção "Reteste (18/11/2026)" ao final deste documento. Um novo defeito cosmético, issue #517, foi encontrado durante o reteste do CT-007: [BUG-HU016-UI-007](issues/BUG-HU016-UI-007.md) — **corrigido e confirmado no reteste de 18/11/2026 à noite (build `f9cde78e`, branch `fix/issues-hu16e17`, ainda fora da `develop`)** — ver a seção "Reteste da issue #517 (18/11/2026, noite)" ao final deste documento.
 
 ## Observações gerais
 
@@ -411,6 +412,19 @@ Numeração dos relatos (`BUG-HU016-UI-001` a `006`) não segue a numeração do
 | #508 | CT-HU016-UI-006 | 3/3 ✅ | As listas de ônibus/motorista filtram o recurso já usado por outra rota no mesmo turno; mensagens de conflito com o nome da rota e do recurso, verificadas pela API (409 `DISTRIBUICAO_INVALIDA`). |
 | #509 | CT-HU016-UI-007 | 3/3 ✅ | Tela seleciona o aluno, lista o ônibus com vaga (Rota 2, `DEF4G56`, 3 vagas), confirma e mostra "Aluno realocado"; o aluno vê "Alocação confirmada" e "Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Placa DEF4G56"; a recusa com o ônibus inativado mostra "Não foi possível realocar... ônibus DEF4G56 inexistente ou inativo" (422 `DISTRIBUICAO_INVALIDA`) e o banco não muda. |
 
-**Novo defeito encontrado durante o reteste:** [BUG-HU016-UI-007](issues/BUG-HU016-UI-007.md) — na tela de Alunos Excedentes, o texto "1 aluno(s)... ultrapassam a capacidade dos veículos alocados" continua visível depois da realocação, junto com "Nenhum aluno excedente para esta data." (🟢 Baixa, Não bloqueante, issue #517).
+**Novo defeito encontrado durante o reteste:** [BUG-HU016-UI-007](issues/BUG-HU016-UI-007.md) — na tela de Alunos Excedentes, o texto "1 aluno(s)... ultrapassam a capacidade dos veículos alocados" continua visível depois da realocação, junto com "Nenhum aluno excedente para esta data." (🟢 Baixa, Não bloqueante, issue #517). **Corrigido e confirmado no reteste de 18/11/2026 à noite, build `f9cde78e`** — ver a seção "Reteste da issue #517 (18/11/2026, noite)" abaixo.
 
 Detalhe por verificação de cada caso retestado na seção "Detalhamento dos casos" acima (bloco "Reteste (18/11/2026, build `82eac441`)" em cada caso) e no [JSON de evidências](EVIDENCIAS-UI-HU-016.json).
+
+## Reteste da issue #517 (18/11/2026, noite)
+
+| Campo | Valor |
+| --- | --- |
+| Build testado | `f9cde78e` (branch `fix/issues-hu16e17`) — commit "fix: corrige excedentes apos realocacao issue #517", `dev-mariab`; branch ainda fora da `develop` |
+| Branch de resultados | `test/reteste-ui-hu-016-bug007` |
+| Caso retestado | CT-HU016-UI-007 (só a verificação do defeito cosmético #517; as demais verificações do caso já estavam ✅ no reteste de 18/11/2026, build `82eac441`) |
+| Backend testado | `82eac441` (a correção de `f9cde78e` só alterou o frontend) |
+| Observação | A ponta da branch `fix/issues-hu16e17` (`457f0fec`) traz uma mudança extra de backend (HU-017) que **não foi testada** neste reteste — fora do escopo da #517 |
+| Resultado | ✅ Corrigido — em 27/11, realocando o aluno H Um Farias para o ônibus com vaga (Rota 2, `DEF4G56`) pela tela de Excedentes, o `POST /alocacao-diaria/distribuicao` retornou 201 e, depois da realocação, a tela mostra só "Nenhum aluno excedente para esta data.", sem repetir "1 aluno(s)... ultrapassam a capacidade dos veículos alocados". `CT-HU016-UI-007` continua ✅. |
+
+Detalhe em [BUG-HU016-UI-007](issues/BUG-HU016-UI-007.md) e no [JSON de evidências](EVIDENCIAS-UI-HU-016.json).

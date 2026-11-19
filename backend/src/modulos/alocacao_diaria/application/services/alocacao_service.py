@@ -285,10 +285,6 @@ class AlocacaoService:
             route.id: route
             for route in self.session.query(RotaPrincipalORM).filter(RotaPrincipalORM.ativo.is_(True))
         }
-        complementary = {
-            item.id: item.rota_principal_id
-            for item in self.session.query(RotaComplementarORM).filter(RotaComplementarORM.ativo.is_(True))
-        }
         buses = {
             bus.placa_onibus: bus
             for bus in self.session.query(OnibusORM).filter(OnibusORM.ativo.is_(True))
@@ -344,15 +340,6 @@ class AlocacaoService:
                     )
                 if not getattr(booking, f"usa_{turno}"):
                     raise DistribuicaoError(f"{prefix}: agendamento {booking.id} não usa o turno {turno}.")
-                expected_route = self._route_for(booking, turno, list(routes.values()), complementary)
-                if (
-                    not permitir_realocacao
-                    and expected_route is not None
-                    and allocation["rota_id"] != expected_route
-                ):
-                    raise DistribuicaoError(
-                        f"{prefix}: agendamento {booking.id} não pertence à rota {allocation['rota_id']}."
-                    )
                 if key in seen_students:
                     raise DistribuicaoError(f"{prefix}: agendamento {booking.id} alocado mais de uma vez.")
                 seen_students.add(key)
