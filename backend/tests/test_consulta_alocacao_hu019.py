@@ -294,6 +294,45 @@ class TestMinhaViagemUnit(unittest.TestCase):
         status, body = self._request(app, "/alocacao-diaria/minha-viagem?data=2026-11-25")
         self.assertIn(status, (401, 403, 422))
 
+    # --- #487 / CT-HU019-API-008: aluno sem acesso regular → 403 ---
+    def _app_com_usuario(self, usuario: dict):
+        from src.shared.auth.dependencies import get_current_user
+        from src.shared.infrastructure.db import get_session
+
+        svc = MagicMock()
+        app = FastAPI()
+        app.include_router(routes.router)
+        app.dependency_overrides[get_session] = lambda: MagicMock()
+        app.dependency_overrides[routes._minha_viagem_service] = lambda: svc
+        # Não sobrescreve _aluno_required: exercita o guard real.
+        app.dependency_overrides[get_current_user] = lambda: usuario
+        return app, svc
+
+    def test_aluno_sem_acesso_regular_recebe_403(self):
+        casos = {
+            "pendente": {"current_status": "pendente"},
+            "rejeitado": {"current_status": "rejeitado"},
+            "vinculo_vencido": {"current_status": "ativado", "access_expired": True},
+        }
+        for nome, extra in casos.items():
+            usuario = {"current_user_id": "1", "current_roles": ["aluno"], **extra}
+            app, svc = self._app_com_usuario(usuario)
+            status, _ = self._request(app, "/alocacao-diaria/minha-viagem?data=2026-11-25")
+            self.assertEqual(status, 403, nome)
+            svc.consultar.assert_not_called()
+
+    def test_aluno_com_acesso_regular_continua_200(self):
+        for status_aluno in ("ativado", "analise_renovacao"):
+            usuario = {
+                "current_user_id": "1", "current_roles": ["aluno"],
+                "current_status": status_aluno, "access_expired": False,
+            }
+            app, svc = self._app_com_usuario(usuario)
+            svc.consultar.return_value = {"data": "2026-11-25", "status_geral": "SEM_AGENDAMENTO"}
+            status, _ = self._request(app, "/alocacao-diaria/minha-viagem?data=2026-11-25")
+            self.assertEqual(status, 200, status_aluno)
+            svc.consultar.assert_called_once()
+
     # --- #486 / CT-HU019-API-007: data inválida → 422 em português ---
     def test_data_invalida_retorna_422_em_portugues(self):
         for data in ("2026-02-30", "16-11-2026", "abc", "20261117", ""):

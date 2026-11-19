@@ -18,7 +18,7 @@ from src.modulos.alocacao_diaria.application.services.lista_embarque_service imp
 from src.modulos.alocacao_diaria.application.services.minha_viagem_service import (
     MinhaViagemService,
 )
-from src.shared.auth.dependencies import require_roles
+from src.shared.auth.dependencies import require_roles, verify_student_standard_access
 from src.shared.enums.cargo_enum import CargoEnum
 from src.shared.infrastructure.db import get_session
 
@@ -45,7 +45,9 @@ def _minha_viagem_service(session: Annotated[Session, Depends(get_session)]) -> 
     return MinhaViagemService(session)
 
 
-_aluno_required = require_roles(CargoEnum.ALUNO.value)
+# HU-019: só o aluno com acesso regular consulta a própria viagem (mesmo padrão
+# das demais consultas do aluno). Pendente, rejeitado ou vínculo vencido → 403.
+_aluno_required = verify_student_standard_access
 
 
 def _error(error: DistribuicaoError):
@@ -270,7 +272,8 @@ def minha_viagem(
 
     - **data** (opcional): data no formato ``YYYY-MM-DD``. Padrão: hoje.
       Data ou formato inválido retorna ``422`` com mensagem em português.
-    - Restrito ao perfil ``aluno``. Retorna ``403`` para outros perfis.
+    - Restrito ao perfil ``aluno`` com acesso regular. Retorna ``403`` para
+      outros perfis e para aluno pendente, rejeitado ou com vínculo vencido.
 
     Critérios de aceite cobertos: CA-01, CA-02, CA-03, CA-04, FA-001, FA-002.
     """
