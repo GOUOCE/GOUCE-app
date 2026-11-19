@@ -289,10 +289,8 @@ class AlocacaoService:
             bus.placa_onibus: bus
             for bus in self.session.query(OnibusORM).filter(OnibusORM.ativo.is_(True))
         }
-        drivers = {
-            driver.id: driver
-            for driver in self.session.query(MotoristaORM).filter(MotoristaORM.ativo.is_(True))
-        }
+        # Carrega também os inativos para citar o nome na recusa (issue #523).
+        drivers = {driver.id: driver for driver in self.session.query(MotoristaORM)}
         used_buses: dict[tuple[str, str], int] = {}
         used_drivers: dict[tuple[int, str], int] = {}
         seen_students: set[tuple[int, str]] = set()
@@ -308,7 +306,11 @@ class AlocacaoService:
             motorista_id = allocation.get("motorista_id")
             motorista = drivers.get(motorista_id)
             if motorista is None:
-                raise DistribuicaoError(f"{prefix}: motorista {motorista_id} inexistente ou inativo.")
+                raise DistribuicaoError(f"{prefix}: motorista inexistente ou inativo.")
+            if not motorista.ativo:
+                raise DistribuicaoError(
+                    f"{prefix}: o motorista {motorista.nome_completo} está inativo e não pode ser escalado."
+                )
             if (bus_id, turno) in used_buses:
                 outra = routes.get(used_buses[(bus_id, turno)])
                 outra_nome = outra.nome if outra else "outra rota"

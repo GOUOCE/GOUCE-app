@@ -63,7 +63,7 @@ class AlocacaoHu017Test(unittest.TestCase):
                     SimpleNamespace(placa_onibus="V1", qtd_assentos=3, capacidade_maxima=2),
                     SimpleNamespace(placa_onibus="V2", qtd_assentos=3, capacidade_maxima=2),
                 ],
-                "MotoristaORM": [SimpleNamespace(id=1)],
+                "MotoristaORM": [SimpleNamespace(id=1, ativo=True)],
             }[model.__name__]
         )
         service = AlocacaoService(session)
