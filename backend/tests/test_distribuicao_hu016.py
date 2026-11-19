@@ -1,5 +1,6 @@
 import unittest
 from datetime import date
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from fastapi import FastAPI
@@ -16,6 +17,17 @@ from src.modulos.alocacao_diaria.application.services.distribuicao import (
     Passageiro,
     distribuir_alunos,
 )
+
+
+class _Query:
+    def __init__(self, items):
+        self.items = items
+
+    def filter(self, *args):
+        return self
+
+    def __iter__(self):
+        return iter(self.items)
 
 
 class DistribuicaoHu016Test(unittest.TestCase):
@@ -161,6 +173,63 @@ class DistribuicaoHu016Test(unittest.TestCase):
 
         session.commit.assert_not_called()
         session.rollback.assert_not_called()
+
+    def test_confirmacao_manual_permite_realocacao_entre_rotas(self):
+        booking = SimpleNamespace(
+            id=64,
+            usa_ida=True,
+            usa_volta=False,
+            rota_complementar_ida_id=None,
+            rota_complementar_volta_id=None,
+            ies_destino_id=100,
+            ies_origem_id=100,
+        )
+        session = MagicMock()
+        session.query.side_effect = lambda model: _Query(
+            {
+                "AgendamentoORM": [booking],
+                "RotaPrincipalORM": [
+                    SimpleNamespace(
+                        id=1,
+                        faculdades_ida=[SimpleNamespace(id_faculdade=100)],
+                        faculdades_volta=[],
+                    ),
+                    SimpleNamespace(
+                        id=2,
+                        faculdades_ida=[SimpleNamespace(id_faculdade=200)],
+                        faculdades_volta=[],
+                    ),
+                ],
+                "RotaComplementarORM": [],
+                "OnibusORM": [
+                    SimpleNamespace(
+                        placa_onibus="V2",
+                        qtd_assentos=3,
+                        capacidade_maxima=2,
+                    )
+                ],
+                "MotoristaORM": [SimpleNamespace(id=10)],
+            }[model.__name__]
+        )
+        service = AlocacaoService(session)
+
+        service._validar_payload(
+            date(2026, 11, 24),
+            [
+                {
+                    "rota_id": 2,
+                    "onibus_id": "V2",
+                    "motorista_id": 10,
+                    "turno": "ida",
+                    "alunos": [
+                        {
+                            "agendamento_id": 64,
+                            "tipo_lugar": "sentado",
+                        }
+                    ],
+                }
+            ],
+        )
 
 
 class DistribuicaoHttpHu016Test(unittest.IsolatedAsyncioTestCase):
