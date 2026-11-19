@@ -403,6 +403,9 @@ export default function DistribicaoLogisticaScreen() {
                       {!somenteLeitura ? (
                         <TouchableOpacity
                           style={styles.actionIconBtn}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Alocar recursos da ${linha.nomeLinha}`}
+                          testID={`botao-alocar-${linha.id}`}
                           onPress={() =>
                             router.push({
                               pathname: '/(administrador)/logistica/alocar',
@@ -417,6 +420,9 @@ export default function DistribicaoLogisticaScreen() {
                       {linha.excedentes > 0 ? (
                         <TouchableOpacity
                           style={styles.actionIconBtn}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Ver excedentes da ${linha.nomeLinha}`}
+                          testID={`botao-excedentes-${linha.id}`}
                           onPress={() =>
                             router.push({
                               pathname: '/(administrador)/logistica/excedentes',
@@ -430,6 +436,28 @@ export default function DistribicaoLogisticaScreen() {
                     </View>
                   ) : null}
                 </View>
+
+                <TouchableOpacity
+                  style={styles.embarqueBtn}
+                  activeOpacity={0.75}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Lista de embarque da ${linha.nomeLinha}`}
+                  testID={`botao-lista-embarque-${linha.id}`}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/(administrador)/logistica/embarque',
+                      params: {
+                        rotaId: String(linha.id),
+                        rotaNome: linha.nomeLinha,
+                        modoFixo: 'true',
+                        dataIso: dataIsoSelecionada,
+                      },
+                    } as any)
+                  }
+                >
+                  <ClipboardList size={18} color="#00639A" />
+                  <Text style={styles.embarqueBtnText}>Lista de embarque</Text>
+                </TouchableOpacity>
               </Surface>
             ))}
           </View>
@@ -663,6 +691,23 @@ const styles = StyleSheet.create({
   },
   actionIconBtn: {
     padding: 8,
+  },
+  embarqueBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    backgroundColor: '#E8F2FC',
+    borderWidth: 1,
+    borderColor: '#BDD8F1',
+  },
+  embarqueBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#00639A',
   },
   confirmarButton: {
     marginTop: 28,
