@@ -30,6 +30,13 @@ const agendamentos = (quantidade: number) =>
     tipo_lugar: 'sentado' as const,
   }));
 
+const excedentesGlobais = (quantidade: number, rotaId: number) =>
+  Array.from({ length: quantidade }, (_, indice) => ({
+    agendamento_id: 1000 + indice,
+    turno: 'ida' as const,
+    rota_id: rotaId,
+  }));
+
 function respostaPreview(overrides: Partial<PreviaDistribuicao> = {}): PreviaDistribuicao {
   return {
     data: '2026-09-01',
@@ -80,6 +87,7 @@ describe('EP-005 / HU-016 & HU-017 - Distribuição logística e alocação', ()
             alunos: agendamentos(38),
           }),
         ],
+        excedentes_globais: excedentesGlobais(12, 2),
       });
 
       mockGet
@@ -176,6 +184,7 @@ describe('EP-005 / HU-016 & HU-017 - Distribuição logística e alocação', ()
                 excedentes: [{ agendamento_id: 41, turno: 'volta' }],
               }),
             ],
+            excedentes_globais: excedentesGlobais(5, 3),
           }),
         })
         .mockResolvedValueOnce({
@@ -214,6 +223,39 @@ describe('EP-005 / HU-016 & HU-017 - Distribuição logística e alocação', ()
         onibusApelido: 'Ônibus 12',
         motoristaNome: 'Ana Souza',
       });
+    });
+
+    it('zera excedentes da rota quando excedentes_globais vem vazio após a realocação', async () => {
+      const dataIso = '2026-11-27';
+      mockGet
+        .mockResolvedValueOnce({
+          data: respostaPreview({
+            data: dataIso,
+            status_logistico: 'DISTRIBUIDO',
+            distribuicao_persistida: true,
+            demanda_por_rota: [{ rota_id: 1, total_alunos: 10 }],
+            alocacoes: [alocacao({ rota_id: 1, alunos: agendamentos(9) })],
+            excedentes_globais: [],
+          }),
+        })
+        .mockResolvedValueOnce({
+          data: [
+            {
+              id: 1,
+              nome: 'Linha 01 - Centro',
+              horario_saida: '06:40',
+              horario_retorno: '17:40',
+              faculdades_ida: [],
+              faculdades_volta: [],
+            },
+          ],
+        })
+        .mockResolvedValueOnce({ data: [] })
+        .mockResolvedValueOnce({ data: [] });
+
+      const linhas = await logisticaService.listarDistribuicaoLogistica(dataIso);
+
+      expect(linhas[0]).toMatchObject({ excedentes: 0, status: 'alocada' });
     });
 
     it('repassa a falha de conexão sem inventar linhas de exemplo', async () => {
@@ -430,8 +472,17 @@ describe('EP-005 / HU-016 & HU-017 - Distribuição logística e alocação', ()
               }),
             ],
             excedentes_globais: [
-              { agendamento_id: 41, turno: 'ida' },
-              { agendamento_id: 42, turno: 'volta' },
+              {
+                agendamento_id: 41,
+                turno: 'ida',
+                aluno_id: 7,
+                nome_aluno: 'Maria Silva',
+                rota_id: 3,
+              },
+              { agendamento_id: 42, turno: 'volta', rota_id: 3 },
+              { agendamento_id: 43, turno: 'ida', rota_id: 3 },
+              { agendamento_id: 44, turno: 'ida', rota_id: 3 },
+              { agendamento_id: 45, turno: 'ida', rota_id: 3 },
             ],
           }),
         })
@@ -454,18 +505,26 @@ describe('EP-005 / HU-016 & HU-017 - Distribuição logística e alocação', ()
 
       expect(rota?.excedentes).toBe(5);
       expect(rota?.nomeLinha).toBe('Linha 03 - Vila Antiga');
-      expect(alunos).toHaveLength(2);
+      expect(alunos).toHaveLength(5);
       expect(alunos[0]).toMatchObject({
         id: 41,
+        agendamentoId: 41,
+        alunoId: 7,
+        rotaId: 3,
         turno: 'ida',
-        nome: 'Agendamento #41',
+        nome: 'Maria Silva',
+        iniciais: 'MS',
         trajetoText: 'Turno de ida',
         selecionado: false,
       });
       expect(alunos[1]).toMatchObject({
         id: 42,
+        agendamentoId: 42,
+        alunoId: null,
+        rotaId: 3,
         turno: 'volta',
         nome: 'Agendamento #42',
+        iniciais: 'A#',
         trajetoText: 'Turno de volta',
       });
     });

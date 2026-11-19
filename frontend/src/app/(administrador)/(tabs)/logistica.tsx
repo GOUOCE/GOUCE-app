@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import { Calendar, ClipboardList, RefreshCw, ChevronRight } from 'lucide-react-native';
+import { Calendar, ClipboardList, ChevronRight } from 'lucide-react-native';
 
 interface ItemProps {
   icon: React.ElementType;
@@ -54,18 +54,6 @@ export default function LogisticaHubScreen() {
         </View>
       </View>
 
-      {/* Seção Frota */}
-      <View style={styles.section}>
-        <Text variant="titleSmall" style={styles.sectionHeader}>Frota</Text>
-        <View style={styles.cardGroup}>
-          <SectionItem
-            icon={RefreshCw}
-            title="Rodízio de frota"
-            subtitle="Verificar e determinar a alocação dos ônibus entre os pontos de parada"
-            onPress={() => router.push('/(administrador)/logistica/rodizio' as any)}
-          />
-        </View>
-      </View>
     </ScrollView>
   );
 }

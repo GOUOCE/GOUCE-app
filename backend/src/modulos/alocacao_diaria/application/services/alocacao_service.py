@@ -8,6 +8,7 @@ from src.modulos.crud_basicos.domain.entities.onibus import OnibusORM
 from src.modulos.motoristas.model.entities.motorista import MotoristaORM
 from src.modulos.rotas.model.entities.rota_complementar import RotaComplementarORM
 from src.modulos.rotas.model.entities.rota_principal import RotaPrincipalORM
+from src.modulos.usuarios.model.entities.usuario import UsuarioORM
 from src.modulos.alocacao_diaria.application.dtos.alocacao_dto import DistribuicaoRequestDTO
 from src.modulos.alocacao_diaria.application.services.distribuicao import (
     OnibusDisponivel,
@@ -33,7 +34,140 @@ class AlocacaoService:
 
     def preview(self, target: date) -> dict:
         demanda = self._demanda(target)
+        automatica = self._preview_automatica(target, demanda)
+        persistidas = self._alocacoes_persistidas(target)
+        alocacoes = persistidas if persistidas is not None else automatica["alocacoes"]
+        self._enriquecer_alocacoes(alocacoes)
+
+        alocados = {
+            (aluno["agendamento_id"], alocacao["turno"])
+            for alocacao in alocacoes
+            for aluno in alocacao["alunos"]
+        }
+        excedentes = [
+            {
+                "agendamento_id": passageiro.agendamento_id,
+                "turno": passageiro.turno,
+                "rota_id": rota_id,
+            }
+            for (rota_id, _), passageiros in demanda.items()
+            for passageiro in passageiros
+            if (passageiro.agendamento_id, passageiro.turno) not in alocados
+        ]
+        self._enriquecer_excedentes(excedentes)
+
+        distribuida = persistidas is not None
+        return {
+            "data": target.isoformat(),
+            "status_logistico": "DISTRIBUIDO" if distribuida else "PENDENTE",
+            "distribuicao_persistida": distribuida,
+            "demanda_por_rota": automatica["demanda_por_rota"],
+            "alocacoes": alocacoes,
+            "excedentes_globais": excedentes,
+            "alertas": [] if distribuida else automatica["alertas"],
+        }
+
+    def _preview_automatica(
+        self,
+        target: date,
+        demanda: dict[tuple[int, str], list[Passageiro]] | None = None,
+    ) -> dict:
+        if demanda is None:
+            demanda = self._demanda(target)
         return {"data": target.isoformat(), **distribuir_alunos(demanda, self._buses())}
+
+    def _alocacoes_persistidas(self, target: date) -> list[dict] | None:
+        alocacoes = (
+            self.session.query(AlocacaoDiariaORM)
+            .filter(AlocacaoDiariaORM.data == target)
+            .order_by(
+                AlocacaoDiariaORM.rota_id,
+                AlocacaoDiariaORM.turno,
+                AlocacaoDiariaORM.onibus_id,
+            )
+            .all()
+        )
+        if not alocacoes:
+            return None
+
+        buses = {bus.placa_onibus: bus for bus in self.session.query(OnibusORM).all()}
+        resultado: list[dict] = []
+        for alocacao in alocacoes:
+            alunos = [item for item in alocacao.alunos if item.status == "ALOCADO"]
+            bus = buses.get(alocacao.onibus_id)
+            resultado.append(
+                {
+                    "rota_id": alocacao.rota_id,
+                    "onibus_id": alocacao.onibus_id,
+                    "motorista_id": alocacao.motorista_id,
+                    "turno": alocacao.turno,
+                    "capacidade": {
+                        "assentos": bus.qtd_assentos if bus else 0,
+                        "em_pe": bus.capacidade_maxima if bus else 0,
+                    },
+                    "sentados": sum(item.tipo_lugar == "sentado" for item in alunos),
+                    "em_pe": sum(item.tipo_lugar == "em_pe" for item in alunos),
+                    "alunos": [
+                        {
+                            "agendamento_id": item.agendamento_id,
+                            "tipo_lugar": item.tipo_lugar,
+                        }
+                        for item in alunos
+                    ],
+                    "excedentes": [],
+                }
+            )
+        return resultado
+
+    def _enriquecer_alocacoes(self, alocacoes: list[dict]) -> None:
+        if not alocacoes:
+            return
+        bus_ids = {item["onibus_id"] for item in alocacoes}
+        motorista_ids = {item["motorista_id"] for item in alocacoes}
+        buses = {
+            bus.placa_onibus: bus
+            for bus in self.session.query(OnibusORM).filter(
+                OnibusORM.placa_onibus.in_(bus_ids)
+            )
+        }
+        motoristas = {
+            motorista.id: motorista
+            for motorista in self.session.query(MotoristaORM).filter(
+                MotoristaORM.id.in_(motorista_ids)
+            )
+        }
+        for item in alocacoes:
+            bus = buses.get(item["onibus_id"])
+            motorista = motoristas.get(item["motorista_id"])
+            item["onibus_apelido"] = bus.apelido_onibus if bus else None
+            item["motorista_nome"] = motorista.nome_completo if motorista else None
+
+    def _enriquecer_excedentes(self, excedentes: list[dict]) -> None:
+        if not excedentes:
+            return
+        dados = self._dados_alunos({item["agendamento_id"] for item in excedentes})
+        for item in excedentes:
+            aluno_id, nome = dados.get(item["agendamento_id"], (None, None))
+            item["aluno_id"] = aluno_id
+            item["nome_aluno"] = nome or f"Agendamento #{item['agendamento_id']}"
+        excedentes.sort(key=lambda item: ((item.get("nome_aluno") or "").lower(), item["turno"]))
+
+    def _dados_alunos(
+        self, agendamento_ids: set[int]
+    ) -> dict[int, tuple[int | None, str | None]]:
+        if not agendamento_ids:
+            return {}
+        rows = (
+            self.session.query(
+                AgendamentoORM.id,
+                AgendamentoORM.aluno_id,
+                UsuarioORM.nome_completo,
+            )
+            .join(UsuarioORM, UsuarioORM.id == AgendamentoORM.aluno_id)
+            .filter(AgendamentoORM.id.in_(agendamento_ids))
+            .all()
+        )
+        return {agendamento_id: (aluno_id, nome) for agendamento_id, aluno_id, nome in rows}
 
     def persist(
         self,
@@ -51,7 +185,7 @@ class AlocacaoService:
                 raise DistribuicaoError("A lista de alocações não pode ser vazia.")
             self._demanda(payload.data)
             alocacoes = [item.model_dump() for item in payload.alocacoes]
-            self._validar_payload(payload.data, alocacoes)
+            self._validar_payload(payload.data, alocacoes, permitir_realocacao=True)
 
         try:
             self._persistir(payload.data, alocacoes, usuario_executor_id)
@@ -138,7 +272,9 @@ class AlocacaoService:
                 return route.id
         return None
 
-    def _validar_payload(self, target: date, alocacoes: list[dict]) -> None:
+    def _validar_payload(
+        self, target: date, alocacoes: list[dict], permitir_realocacao: bool = False
+    ) -> None:
         active_bookings = {
             booking.id: booking
             for booking in self.session.query(AgendamentoORM).filter(
@@ -154,38 +290,48 @@ class AlocacaoService:
             for bus in self.session.query(OnibusORM).filter(OnibusORM.ativo.is_(True))
         }
         drivers = {
-            driver.id
+            driver.id: driver
             for driver in self.session.query(MotoristaORM).filter(MotoristaORM.ativo.is_(True))
         }
-        used_buses: set[tuple[str, str]] = set()
-        used_drivers: set[tuple[int, str]] = set()
+        used_buses: dict[tuple[str, str], int] = {}
+        used_drivers: dict[tuple[int, str], int] = {}
         seen_students: set[tuple[int, str]] = set()
-        for index, allocation in enumerate(alocacoes):
-            prefix = f"alocação {index}"
+        for allocation in alocacoes:
+            rota = routes.get(allocation.get("rota_id"))
+            if rota is None:
+                raise DistribuicaoError("Rota inexistente ou inativa.")
+            prefix = getattr(rota, "nome", f"Rota {rota.id}")
             bus_id, turno = allocation.get("onibus_id"), allocation.get("turno", "ida")
-            if bus_id not in buses:
+            bus = buses.get(bus_id)
+            if bus is None:
                 raise DistribuicaoError(f"{prefix}: ônibus {bus_id} inexistente ou inativo.")
-            if allocation.get("rota_id") not in routes:
-                raise DistribuicaoError(f"{prefix}: rota inexistente ou inativa.")
-            if allocation.get("motorista_id") not in drivers:
-                raise DistribuicaoError(f"{prefix}: motorista inexistente ou inativo.")
+            motorista_id = allocation.get("motorista_id")
+            motorista = drivers.get(motorista_id)
+            if motorista is None:
+                raise DistribuicaoError(f"{prefix}: motorista {motorista_id} inexistente ou inativo.")
             if (bus_id, turno) in used_buses:
-                raise DistribuicaoError(f"{prefix}: ônibus {bus_id} conflitante no turno {turno}.", 409)
-            if (allocation["motorista_id"], turno) in used_drivers:
+                outra = routes.get(used_buses[(bus_id, turno)])
+                outra_nome = outra.nome if outra else "outra rota"
+                bus_label = bus.apelido_onibus or bus_id
+                raise DistribuicaoError(
+                    f"{prefix}: o ônibus {bus_label} já está alocado na rota {outra_nome} no turno {turno}.",
+                    409,
+                )
+            if (motorista_id, turno) in used_drivers:
                 raise DistribuicaoError(
                     "Este motorista já está escalado para outra rota neste horário.",
                     409,
                 )
-            used_buses.add((bus_id, turno))
-            used_drivers.add((allocation["motorista_id"], turno))
-            bus = buses[bus_id]
-            if len(allocation.get("alunos", [])) > bus.qtd_assentos + bus.capacidade_maxima:
+            used_buses[(bus_id, turno)] = allocation["rota_id"]
+            used_drivers[(motorista_id, turno)] = allocation["rota_id"]
+            alunos = allocation.get("alunos", [])
+            if len(alunos) > bus.qtd_assentos + bus.capacidade_maxima:
                 raise DistribuicaoError(f"{prefix}: capacidade total do ônibus excedida.")
-            sentados = sum(item["tipo_lugar"] == "sentado" for item in allocation.get("alunos", []))
-            em_pe = sum(item["tipo_lugar"] == "em_pe" for item in allocation.get("alunos", []))
+            sentados = sum(item["tipo_lugar"] == "sentado" for item in alunos)
+            em_pe = sum(item["tipo_lugar"] == "em_pe" for item in alunos)
             if sentados > bus.qtd_assentos or em_pe > bus.capacidade_maxima:
                 raise DistribuicaoError(f"{prefix}: capacidade de assentos ou em pé excedida.")
-            for student in allocation.get("alunos", []):
+            for student in alunos:
                 key = (student["agendamento_id"], turno)
                 booking = active_bookings.get(student["agendamento_id"])
                 if booking is None:
