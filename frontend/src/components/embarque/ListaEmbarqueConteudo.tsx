@@ -26,6 +26,8 @@ export interface ListaEmbarqueConteudoProps {
   nomeEmissor?: string;
   iesResponsavel?: string;
   rotaFixaId?: number;
+  rotaFixaNome?: string;
+  dataOperacaoIso?: string;
   modoFixoInicial?: boolean;
   exibirBotaoVoltar?: boolean;
   onVoltar?: () => void;
@@ -43,6 +45,15 @@ function formatarDataHojeCabecalho(): string {
   return `${dia}/${mes}/${ano}`;
 }
 
+function formatarDataIsoCabecalho(dataIso?: string): string {
+  const match = (dataIso ?? '').trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    return formatarDataHojeCabecalho();
+  }
+  const [, ano, mes, dia] = match;
+  return `${dia}/${mes}/${ano}`;
+}
+
 /**
  * Componente compartilhado da Lista de Embarque (HU-018), atendendo os fluxos de
  * seleção por rota (52.1/52.2) e acesso direto/Representante (52.3 / FA-001).
@@ -52,6 +63,8 @@ export function ListaEmbarqueConteudo({
   nomeEmissor,
   iesResponsavel,
   rotaFixaId,
+  rotaFixaNome,
+  dataOperacaoIso,
   modoFixoInicial = false,
   exibirBotaoVoltar = false,
   onVoltar,
@@ -82,7 +95,7 @@ export function ListaEmbarqueConteudo({
     let ativo = true;
 
     listaEmbarqueService
-      .listarRotasDisponiveis()
+      .listarRotasDisponiveis(dataOperacaoIso)
       .then((opcoes) => {
         if (!ativo) return;
         setRotasDisponiveis(opcoes);
@@ -100,7 +113,7 @@ export function ListaEmbarqueConteudo({
     return () => {
       ativo = false;
     };
-  }, [modoFixo]);
+  }, [modoFixo, dataOperacaoIso]);
 
   useEffect(() => {
     const intervalo = setInterval(() => {
@@ -120,6 +133,7 @@ export function ListaEmbarqueConteudo({
     listaEmbarqueService
       .obterListaEmbarque({
         rotaId: rotaSelecionadaId ?? undefined,
+        data: dataOperacaoIso,
         perfil,
         iesResponsavel,
       })
@@ -164,15 +178,21 @@ export function ListaEmbarqueConteudo({
     return () => {
       ativo = false;
     };
-  }, [deveConsultarLista, rotaSelecionadaId, perfil, iesResponsavel]);
+  }, [deveConsultarLista, rotaSelecionadaId, dataOperacaoIso, perfil, iesResponsavel]);
+
+  const dataOperacaoEsperadaBr = dataOperacaoIso
+    ? formatarDataIsoCabecalho(dataOperacaoIso)
+    : null;
+  const listaNaData =
+    !dataOperacaoEsperadaBr || lista?.dataOperacao === dataOperacaoEsperadaBr ? lista : null;
 
   const listaAtiva =
     rotaSelecionadaId !== null
-      ? lista?.rotaId === rotaSelecionadaId
-        ? lista
+      ? listaNaData?.rotaId === rotaSelecionadaId
+        ? listaNaData
         : null
       : autodescobertaRepresentante
-        ? lista
+        ? listaNaData
         : null;
 
   const rotaAtivaId = rotaSelecionadaId ?? listaAtiva?.rotaId ?? null;
@@ -190,23 +210,23 @@ export function ListaEmbarqueConteudo({
         setLista(listaAtualizada);
         setAgora(new Date());
       },
-      { perfil, iesResponsavel }
+      { data: dataOperacaoIso, perfil, iesResponsavel }
     );
 
     return () => {
       ativo = false;
       cancelarInscricao();
     };
-  }, [rotaAtivaId, perfil, iesResponsavel]);
+  }, [rotaAtivaId, dataOperacaoIso, perfil, iesResponsavel]);
 
   const rotaSelecionadaOpcao = useMemo(
     () => rotasDisponiveis.find((item) => item.id === rotaSelecionadaId) ?? null,
     [rotasDisponiveis, rotaSelecionadaId]
   );
 
-  const dataExibida = listaAtiva?.dataOperacao ?? formatarDataHojeCabecalho();
+  const dataExibida = listaAtiva?.dataOperacao ?? formatarDataIsoCabecalho(dataOperacaoIso);
   const subtituloData = modoFixo ? dataExibida : `Hoje - ${dataExibida}`;
-  const nomeRotaFixa = listaAtiva?.rotaNome ?? rotaSelecionadaOpcao?.nome ?? '';
+  const nomeRotaFixa = listaAtiva?.rotaNome ?? rotaSelecionadaOpcao?.nome ?? rotaFixaNome ?? '';
   const totalAlunos = listaAtiva?.totalAlunos ?? 0;
   const podeImprimir = Boolean(
     listaAtiva &&
