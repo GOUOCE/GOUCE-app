@@ -24,6 +24,10 @@ export default function StudentLayout() {
     }
 
     let ativo = true;
+    void avisoService.configurarPermissoesNotificacaoNativa();
+    const removerListenerClique = avisoService.inscreverCliqueNotificacaoNativa(() => {
+      router.push('/(aluno)/avisos' as any);
+    });
 
     const verificarNotificacoes = async () => {
       try {
@@ -99,6 +103,7 @@ export default function StudentLayout() {
     return () => {
       ativo = false;
       clearInterval(timer);
+      removerListenerClique();
     };
   }, [deveMonitorarNotificacoes, router]);
 
