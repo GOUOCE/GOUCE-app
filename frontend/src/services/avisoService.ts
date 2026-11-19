@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+import * as Notifications from 'expo-notifications';
 import { api } from '../api/api';
 
 export interface AvisoItem {
@@ -63,8 +65,28 @@ const GOUOCE_ICON_SVG_DATA_URI =
   );
 
 let iconeNotificacaoCache: string | null = null;
+let handlerNativoConfigurado = false;
 type ListenerAtualizacaoMural = (novosAvisos?: AvisoItem[]) => void;
 const ouvintesAtualizacaoMural = new Set<ListenerAtualizacaoMural>();
+
+function garantirHandlerNotificacaoNativa(): void {
+  if (handlerNativoConfigurado || Platform.OS === 'web') {
+    return;
+  }
+  try {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+      }),
+    });
+    handlerNativoConfigurado = true;
+  } catch {
+    // Ignora falhas de inicialização em ambientes sem suporte nativo.
+  }
+}
 
 export function obterIconeNotificacaoGouoce(): string {
   if (iconeNotificacaoCache) {
@@ -196,6 +218,66 @@ export const avisoService = {
     });
   },
 
+  async configurarPermissoesNotificacaoNativa(): Promise<boolean> {
+    if (Platform.OS === 'web') {
+      const globalObj = typeof globalThis !== 'undefined' ? (globalThis as any) : undefined;
+      const NotificationApi = globalObj?.Notification;
+      if (!NotificationApi) return false;
+      if (NotificationApi.permission === 'granted') return true;
+      if (
+        NotificationApi.permission === 'default' &&
+        typeof NotificationApi.requestPermission === 'function'
+      ) {
+        const perm = await NotificationApi.requestPermission();
+        return perm === 'granted';
+      }
+      return false;
+    }
+
+    garantirHandlerNotificacaoNativa();
+
+    if (Platform.OS === 'android') {
+      try {
+        await Notifications.setNotificationChannelAsync('default', {
+          name: 'Avisos GOUOCE',
+          importance: Notifications.AndroidImportance.MAX,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#1D4E89',
+        });
+      } catch {
+        // No Expo Go Android SDK 57, setNotificationChannelAsync pode falhar com NPE; seguir sem abortar.
+      }
+    }
+
+    try {
+      const atual = await Notifications.getPermissionsAsync();
+      let statusFinal = atual.status;
+      if (statusFinal !== 'granted') {
+        const solicitada = await Notifications.requestPermissionsAsync();
+        statusFinal = solicitada.status;
+      }
+      return statusFinal === 'granted';
+    } catch {
+      return true;
+    }
+  },
+
+  inscreverCliqueNotificacaoNativa(aoClicar: () => void): () => void {
+    if (Platform.OS === 'web') {
+      return () => {};
+    }
+    try {
+      const sub = Notifications.addNotificationResponseReceivedListener(() => {
+        aoClicar();
+      });
+      return () => {
+        sub.remove();
+      };
+    } catch {
+      return () => {};
+    }
+  },
+
   dispararNotificacaoSistema(
     notificacao: NotificacaoAvisoItem,
     aoClicar?: () => void
@@ -203,12 +285,35 @@ export const avisoService = {
     try {
       const globalObj = typeof globalThis !== 'undefined' ? (globalThis as any) : undefined;
       const NotificationApi = globalObj?.Notification;
+      const nomeApp = notificacao.app_nome?.trim() || 'GOUOCE';
+
       if (!NotificationApi) {
-        return false;
+        if (Platform.OS === 'web') {
+          return false;
+        }
+        garantirHandlerNotificacaoNativa();
+        void (async () => {
+          const permitido = await avisoService.configurarPermissoesNotificacaoNativa();
+          if (!permitido) return;
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: `${nomeApp} • ${notificacao.titulo}`,
+              body: notificacao.mensagem,
+              sound: true,
+              priority: Notifications.AndroidNotificationPriority.MAX,
+              data: {
+                id: notificacao.id,
+                tipo: notificacao.tipo,
+                aviso_id: notificacao.aviso_id ?? null,
+              },
+            },
+            trigger: null,
+          });
+        })().catch(() => {});
+        return true;
       }
 
       const iconeGouoce = obterIconeNotificacaoGouoce();
-      const nomeApp = notificacao.app_nome?.trim() || 'GOUOCE';
 
       const criarNotificacao = () => {
         const instancia = new NotificationApi(
