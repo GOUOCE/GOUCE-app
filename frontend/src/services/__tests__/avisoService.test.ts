@@ -1,6 +1,19 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { Platform } from 'react-native';
+import * as Notifications from 'expo-notifications';
 import { avisoService } from '../avisoService';
 import { api } from '../../api/api';
+
+jest.mock('expo-notifications', () => ({
+  setNotificationHandler: jest.fn(),
+  setNotificationChannelAsync: jest.fn(() => Promise.resolve()),
+  getPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
+  requestPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
+  scheduleNotificationAsync: jest.fn(() => Promise.resolve('notif-id-1')),
+  addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  AndroidImportance: { MAX: 5 },
+  AndroidNotificationPriority: { MAX: 'max' },
+}));
 
 jest.mock('../../api/api', () => ({
   api: {
@@ -127,6 +140,105 @@ describe('avisoService (HU-023)', () => {
       );
     } finally {
       (globalThis as any).Notification = originalNotification;
+    }
+  });
+
+  it('dispara notificacao nativa local via expo-notifications quando Web Notification API nao existe (HU-024)', async () => {
+    const originalNotification = (globalThis as any).Notification;
+    delete (globalThis as any).Notification;
+
+    try {
+      const disparou = avisoService.dispararNotificacaoSistema({
+        id: 8,
+        tipo: 'aviso',
+        app_nome: 'GOUOCE',
+        titulo: 'Aviso nativo mobile',
+        mensagem: 'Saída da Linha 01 confirmada.',
+        aviso_id: 8,
+        data_criacao: '2026-11-18T21:40:00Z',
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(disparou).toBe(true);
+      const handlerCall = (Notifications.setNotificationHandler as jest.Mock).mock
+        .calls[0]?.[0] as Notifications.NotificationHandler | undefined;
+      expect(handlerCall).toBeDefined();
+      const behavior = await handlerCall!.handleNotification({} as Notifications.Notification);
+      expect(behavior).toEqual({
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+      });
+      expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith({
+        content: {
+          title: 'GOUOCE • Aviso nativo mobile',
+          body: 'Saída da Linha 01 confirmada.',
+          sound: true,
+          priority: 'max',
+          data: {
+            id: 8,
+            tipo: 'aviso',
+            aviso_id: 8,
+          },
+        },
+        trigger: null,
+      });
+    } finally {
+      (globalThis as any).Notification = originalNotification;
+    }
+  });
+
+  it('mantem permissao e disparo nativo mesmo quando setNotificationChannelAsync falha no Android (HU-024)', async () => {
+    const originalNotification = (globalThis as any).Notification;
+    const originalOsDescriptor = Object.getOwnPropertyDescriptor(Platform, 'OS');
+    delete (globalThis as any).Notification;
+    Object.defineProperty(Platform, 'OS', { configurable: true, value: 'android' });
+    (Notifications.setNotificationChannelAsync as jest.Mock).mockImplementation(() =>
+      Promise.reject(new Error('NullPointerException'))
+    );
+
+    try {
+      const permissaoOk = await avisoService.configurarPermissoesNotificacaoNativa();
+      const disparou = avisoService.dispararNotificacaoSistema({
+        id: 9,
+        tipo: 'aviso',
+        app_nome: 'GOUOCE',
+        titulo: 'Aviso resiliente Android',
+        mensagem: 'Canal falhou mas notificacao local segue.',
+        aviso_id: 9,
+        data_criacao: '2026-11-18T21:45:00Z',
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(permissaoOk).toBe(true);
+      expect(disparou).toBe(true);
+      expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith({
+        content: {
+          title: 'GOUOCE • Aviso resiliente Android',
+          body: 'Canal falhou mas notificacao local segue.',
+          sound: true,
+          priority: 'max',
+          data: {
+            id: 9,
+            tipo: 'aviso',
+            aviso_id: 9,
+          },
+        },
+        trigger: null,
+      });
+    } finally {
+      (globalThis as any).Notification = originalNotification;
+      (Notifications.setNotificationChannelAsync as jest.Mock).mockImplementation(() =>
+        Promise.resolve()
+      );
+      if (originalOsDescriptor) {
+        Object.defineProperty(Platform, 'OS', originalOsDescriptor);
+      } else {
+        delete (Platform as any).OS;
+      }
     }
   });
 });
