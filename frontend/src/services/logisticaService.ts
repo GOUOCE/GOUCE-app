@@ -164,6 +164,16 @@ function iniciaisDeNome(nome: string): string {
   return `${partes[0][0]}${partes[partes.length - 1][0]}`.toUpperCase();
 }
 
+/**
+ * Devolve o valor escolhido só se ele ainda está entre as opções disponíveis (ativas);
+ * caso contrário devolve '' para a tela tratá-lo como não selecionado.
+ * Evita enviar, sem o administrador ver, um ônibus ou motorista que ficou inativo
+ * depois de gravado na escala (issue #522).
+ */
+export function manterSelecaoDisponivel(valor: string, opcoes: { value: string }[]): string {
+  return opcoes.some((opcao) => opcao.value === valor) ? valor : '';
+}
+
 function mapearOnibus(item: any): OnibusOpcao | null {
   const placa = String(item?.placa_onibus ?? item?.placa ?? '').trim();
   if (!placa) return null;
@@ -174,7 +184,7 @@ function mapearOnibus(item: any): OnibusOpcao | null {
   const identificacao = apelido || `Ônibus ${placa}`;
 
   return {
-    label: `${formatarTituloOnibus(apelido, placa)} (${assentos} sentados + ${capacidadeEmPe} em pé)`,
+    label: `${formatarTituloOnibus(apelido, placa)} (capacidade: ${assentos} sentados + ${capacidadeEmPe} em pé)`,
     value: placa,
     placa,
     identificacao,

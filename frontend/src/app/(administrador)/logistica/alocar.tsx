@@ -13,6 +13,7 @@ import { ChevronLeft, ChevronDown, Bus, User } from 'lucide-react-native';
 
 import {
   logisticaService,
+  manterSelecaoDisponivel,
   AlunoAlocacao,
   AlocacaoDistribuicao,
   OnibusOpcao,
@@ -119,8 +120,11 @@ export default function AlocarRotaScreen() {
           chave: `${alocacao.turno}-${origemIndex}`,
           origemIndex,
           turno: alocacao.turno,
-          onibusId: alocacao.onibus_id ?? '',
-          motoristaId: alocacao.motorista_id ? String(alocacao.motorista_id) : '',
+          onibusId: manterSelecaoDisponivel(alocacao.onibus_id ?? '', dados.onibus),
+          motoristaId: manterSelecaoDisponivel(
+            alocacao.motorista_id ? String(alocacao.motorista_id) : '',
+            dados.motoristas,
+          ),
           alunos: alocacao.alunos,
         }));
 
@@ -536,14 +540,16 @@ export default function AlocarRotaScreen() {
                       </View>
                     </View>
 
-                    <View style={styles.previewGridRow}>
-                      <View style={styles.gridCol}>
-                        <Text style={styles.gridLabel}>Horário de Saída</Text>
-                        <Text style={styles.gridValue}>{rota?.horario_saida ?? '-'}</Text>
-                      </View>
-                      <View style={styles.gridCol}>
-                        <Text style={styles.gridLabel}>Horário de Volta</Text>
-                        <Text style={styles.gridValue}>{rota?.horario_retorno ?? '-'}</Text>
+                    <View style={styles.previewHorarioRow}>
+                      <View style={styles.gridColCentral}>
+                        <Text style={styles.gridLabel}>
+                          {formulario.turno === 'volta' ? 'Horário de Retorno' : 'Horário de Saída'}
+                        </Text>
+                        <Text style={styles.gridValue}>
+                          {(formulario.turno === 'volta'
+                            ? rota?.horario_retorno
+                            : rota?.horario_saida) ?? '-'}
+                        </Text>
                       </View>
                     </View>
 
@@ -727,6 +733,12 @@ const styles = StyleSheet.create({
   },
   gridCol: {
     width: '48%',
+  },
+  previewHorarioRow: {
+    alignItems: 'center',
+  },
+  gridColCentral: {
+    alignItems: 'center',
   },
   gridLabel: {
     fontSize: 12,
