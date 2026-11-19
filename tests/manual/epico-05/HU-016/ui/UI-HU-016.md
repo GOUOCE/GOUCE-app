@@ -15,6 +15,7 @@
 | Ambiente | Navegador Brave 1.86.148 (Chromium 144.0.7559.133, 64 bits, Linux); Expo web `http://localhost:8081`; API `http://localhost:8216`; PostgreSQL `atu_ui016`; build `develop` commit `0f90c961e484ed1045017d04b1bad15d09b0818c` (merge do PR #472); branch de execução `test/execucao-ui-hu-016`; fuso America/Fortaleza; Alembic head aplicado: `82_create_alocacao_diaria` |
 | Total de casos | 9 |
 | Última execução | 18/11/2026 |
+| Reteste | 18/11/2026 — build `82eac441` (branch `fix/issues-hu16e17`), correções de `dev-mariab` para as issues #504 a #509; branch de resultados `test/reteste-ui-hu-016` |
 | Testador | Radlei — execução manual; LLM — massa e conferência de API/banco |
 
 ## Resultado geral
@@ -22,8 +23,10 @@
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | Execução de 18/11/2026 | 9 | 3 | 6 | 0 | 0 | 0 |
+| Reteste de 18/11/2026 (build `82eac441`) | 6 | 6 | 0 | 0 | 0 | 0 |
+| **Total após o reteste** | **9** | **9** | **0** | **0** | **0** | **0** |
 
-Por verificação (cada bullet do "Resultado esperado" de cada caso, contando separadamente quando um bullet reúne mais de uma checagem): 17 ✅ / 9 ❌ / 2 🚫, de 28 verificações nos 9 casos. Detalhe por caso na tabela de resumo e no detalhamento abaixo.
+Por verificação (cada bullet do "Resultado esperado" de cada caso, contando separadamente quando um bullet reúne mais de uma checagem): na execução de 18/11/2026, 17 ✅ / 9 ❌ / 2 🚫, de 28 verificações nos 9 casos. No reteste de 18/11/2026 (build `82eac441`), as 20 verificações dos 6 casos corrigidos (#504 a #509) passaram a ✅. **Total após o reteste: 28 ✅ / 0 ❌ / 0 🚫.** Detalhe por caso na tabela de resumo e no detalhamento abaixo, e por verificação na seção "Reteste (18/11/2026)" ao final deste documento.
 
 ## Pré-condições
 
@@ -43,18 +46,18 @@ Executada na ordem em 18/11/2026. A LLM preparou a massa pela API (e, no caso do
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU016-UI-001 | Acesso pelo painel logístico | Administrador autenticado; aba Logística; massa do CT-HU016-API-001 em D+1. | Painel mostra Distribuição Logística e Lista de embarque; Rodízio oculto; nenhum cartão leva a rota inexistente. | ❌ FALHOU | 2 de 4 verificações falharam: Rodízio visível e abre rota inexistente (Unmatched Route). Relato [BUG-HU016-UI-001](issues/BUG-HU016-UI-001.md), issue #504. |
-| CT-HU016-UI-002 | Selecionar o dia e ver a demanda por rota | Semana atual e seguinte; dias com reservas em P1/P2 e dia sem reservas; abas Próximos e Histórico. | Demanda por rota igual à da API; dia sem reservas informa a ausência. | ❌ FALHOU | 1 de 4 verificações falhou: Histórico mostra lápis e "Confirmar distribuição" (não é só consulta). Relato [BUG-HU016-UI-002](issues/BUG-HU016-UI-002.md), issue #505. Observação: "1 alunos" no plural errado; selo "Alocada" em dia sem distribuição confirmada. |
+| CT-HU016-UI-001 | Acesso pelo painel logístico | Administrador autenticado; aba Logística; massa do CT-HU016-API-001 em D+1. | Painel mostra Distribuição Logística e Lista de embarque; Rodízio oculto; nenhum cartão leva a rota inexistente. | ✅ PASSOU (reteste) | Execução original: 2 de 4 verificações falharam (Rodízio visível e abre rota inexistente). Relato [BUG-HU016-UI-001](issues/BUG-HU016-UI-001.md), issue #504. **Reteste 18/11/2026, build `82eac441`: 4/4 ✅** — cartão Rodízio de frota removido do painel. |
+| CT-HU016-UI-002 | Selecionar o dia e ver a demanda por rota | Semana atual e seguinte; dias com reservas em P1/P2 e dia sem reservas; abas Próximos e Histórico. | Demanda por rota igual à da API; dia sem reservas informa a ausência. | ✅ PASSOU (reteste) | Execução original: 1 de 4 verificações falhou (Histórico mostrava lápis e "Confirmar distribuição"). Relato [BUG-HU016-UI-002](issues/BUG-HU016-UI-002.md), issue #505. Observação: "1 alunos" no plural errado; selo "Alocada" em dia sem distribuição confirmada. **Reteste 18/11/2026, build `82eac441`: 4/4 ✅** — Histórico virou somente leitura. |
 | CT-HU016-UI-003 | Prévia com sentados, em pé e situação por rota (sem gravar) | P1 com 5 alunos e V1 (3+2); P2 com demanda acima da capacidade disponível; sem confirmar. | Cada rota mostra ônibus, motorista, sentados e em pé corretos e a situação certa; recarregar não grava nada. | ✅ PASSOU | 3/3. Massa em 26/11 (P1=5, P2=8, P3=1, V1/V2/V3 e M1/M2/M3 ativos); os três selos (Alocada, Superlotada, Pendente) apareceram; banco em 0/0 antes e depois. |
 
 ### Seção B — Confirmação e ajustes
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU016-UI-004 | Confirmar a distribuição e ver o dia como distribuído | Dia da massa sem distribuição; confirmar; depois recarregar a página e abrir de novo o dia. | Popup de confirmação, mensagem de sucesso, status do dia atualizado e distribuição mantida após recarregar. | ❌ FALHOU | 2 de 3 verificações falharam: depois do F5, "Status logístico" desaparece e a tela volta a mostrar a sugestão automática em vez do gravado. Relato [BUG-HU016-UI-003](issues/BUG-HU016-UI-003.md), issue #506 (Bloqueante). |
-| CT-HU016-UI-005 | Confirmar com excedentes: aviso com a lista dos alunos | V1 e M1 ativos; P1 na ida com 6 alunos (um excedente); confirmar. | Confirmação permitida com aviso que lista os excedentes pelo nome; o aluno aguarda alocação. | ❌ FALHOU | 1 de 3 verificações falhou (aviso mostra "Agendamento #30", não o nome do aluno) e 1 de 3 ficou 🚫 não executada (verificação no app do aluno, fica para o reteste). Relato [BUG-HU016-UI-004](issues/BUG-HU016-UI-004.md), issue #507. |
-| CT-HU016-UI-006 | Trocar ônibus e motorista antes de confirmar | Rota P1 aberta na prévia; ônibus V1, V2, V3 e motoristas M1, M2, M3; V2 já sugerido para P2 no mesmo turno. | Troca antes de confirmar; recursos já usados no turno ficam fora da seleção; confirmação grava a escolha. | ❌ FALHOU | 2 de 3 verificações falharam: a seleção não filtra nem avisa recurso já usado por outra rota; V3+M2 foi recusado (409) — gravado com V3+M3 (variação), mantendo P2 em V2/M2. Relato [BUG-HU016-UI-005](issues/BUG-HU016-UI-005.md), issue #508 (Não bloqueante). |
-| CT-HU016-UI-007 | Realocar excedentes manualmente | Distribuição com um excedente; tela de excedentes; ônibus com vaga. | Seleção e realocação do excedente; aluno passa a ver o ônibus alternativo. | ❌ FALHOU | Verificação 1 ❌ (não há ação de realocar na tela, só pela API); verificação 2 ✅ (via API + minha-viagem); verificação 3 🚫 (depende da 1). Relato [BUG-HU016-UI-006](issues/BUG-HU016-UI-006.md), issue #509 (Bloqueante). |
+| CT-HU016-UI-004 | Confirmar a distribuição e ver o dia como distribuído | Dia da massa sem distribuição; confirmar; depois recarregar a página e abrir de novo o dia. | Popup de confirmação, mensagem de sucesso, status do dia atualizado e distribuição mantida após recarregar. | ✅ PASSOU (reteste) | Execução original: 2 de 3 verificações falharam (depois do F5, "Status logístico" desaparecia e a tela voltava a mostrar a sugestão automática). Relato [BUG-HU016-UI-003](issues/BUG-HU016-UI-003.md), issue #506 (Bloqueante). **Reteste 18/11/2026, build `82eac441`: 3/3 ✅** — depois do F5, a tela mostra o status DISTRIBUIDO e os ônibus/motoristas gravados (lido do banco, não recalculado). |
+| CT-HU016-UI-005 | Confirmar com excedentes: aviso com a lista dos alunos | V1 e M1 ativos; P1 na ida com 6 alunos (um excedente); confirmar. | Confirmação permitida com aviso que lista os excedentes pelo nome; o aluno aguarda alocação. | ✅ PASSOU (reteste) | Execução original: 1 de 3 verificações falhou (aviso mostrava "Agendamento #30") e 1 de 3 ficou 🚫 não executada. Relato [BUG-HU016-UI-004](issues/BUG-HU016-UI-004.md), issue #507. **Reteste 18/11/2026, build `82eac441`: 3/3 ✅** — tela mostra "Aluno H Um Farias"; aluno vê "Aguardando alocação do veículo" antes da realocação. O `POST` de confirmação continua com `excedentes: []` (lacuna da #475, fora do escopo deste reteste). |
+| CT-HU016-UI-006 | Trocar ônibus e motorista antes de confirmar | Rota P1 aberta na prévia; ônibus V1, V2, V3 e motoristas M1, M2, M3; V2 já sugerido para P2 no mesmo turno. | Troca antes de confirmar; recursos já usados no turno ficam fora da seleção; confirmação grava a escolha. | ✅ PASSOU (reteste) | Execução original: 2 de 3 verificações falharam (seleção não filtrava nem avisava recurso usado por outra rota; V3+M2 recusado, gravado com V3+M3 por variação). Relato [BUG-HU016-UI-005](issues/BUG-HU016-UI-005.md), issue #508 (Não bloqueante). **Reteste 18/11/2026, build `82eac441`: 3/3 ✅** — listas filtram recurso já usado por outra rota no mesmo turno; mensagens de conflito verificadas pela API citam o nome da rota e do recurso (409 `DISTRIBUICAO_INVALIDA`). |
+| CT-HU016-UI-007 | Realocar excedentes manualmente | Distribuição com um excedente; tela de excedentes; ônibus com vaga. | Seleção e realocação do excedente; aluno passa a ver o ônibus alternativo. | ✅ PASSOU (reteste) | Execução original: verificação 1 ❌ (sem ação de realocar na tela), verificação 2 ✅ (via API), verificação 3 🚫 (dependia da 1). Relato [BUG-HU016-UI-006](issues/BUG-HU016-UI-006.md), issue #509 (Bloqueante). **Reteste 18/11/2026, build `82eac441`: 3/3 ✅** — tela seleciona o aluno, lista o ônibus com vaga (Rota 2, `DEF4G56`, 3 vagas), confirma e mostra "Aluno realocado"; aluno vê "Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Placa DEF4G56"; recusa com o ônibus inativado mostra a causa ("ônibus DEF4G56 inexistente ou inativo", 422 `DISTRIBUICAO_INVALIDA`) sem alterar o banco. Novo defeito cosmético encontrado: [BUG-HU016-UI-007](issues/BUG-HU016-UI-007.md) (🟢 Baixa, Não bloqueante, issue #517). |
 
 ### Seção C — Falhas e acesso
 
@@ -94,6 +97,7 @@ Executada na ordem em 18/11/2026. A LLM preparou a massa pela API (e, no caso do
 - **Lista de embarque** abre `/logistica/embarque` (seleção de rota com P1, P2 e P3) — fora do esperado formal do caso, registrado como observação.
 - Relato: [BUG-HU016-UI-001](issues/BUG-HU016-UI-001.md) (issue #504, 🟡 Média, Não bloqueante).
 - Status: ❌ Falhou (2 de 4 verificações).
+- **Reteste (18/11/2026, build `82eac441`):** painel `/logistica` sem a seção "Frota" e sem o cartão "Rodízio de frota" (`logistica.tsx` não renderiza mais essa seção). Distribuição Logística e Lista de embarque continuam presentes e abrindo normalmente. Status (reteste): ✅ Passou (4/4).
 
 ---
 
@@ -124,6 +128,7 @@ Executada na ordem em 18/11/2026. A LLM preparou a massa pela API (e, no caso do
 - Observações: o aviso de rodízio de frotas (AC-15) aparece na tela de alocação mesmo com a HU-020 adiada; selo "Alocada" em 10/11 sem distribuição confirmada; "1 alunos" no plural errado.
 - Relato: [BUG-HU016-UI-002](issues/BUG-HU016-UI-002.md) (issue #505, 🟡 Média, Não bloqueante).
 - Status: ❌ Falhou (1 de 4 verificações).
+- **Reteste (18/11/2026, build `82eac441`):** em 10/11 (Histórico), o card não mostra mais o lápis de edição nem o botão "Confirmar distribuição" — só o ícone de excedentes, quando houver. A tela ficou somente leitura para dias passados/Histórico (`distribuicao.tsx`, variável `somenteLeitura`). Status (reteste): ✅ Passou (4/4).
 
 ---
 
@@ -185,6 +190,7 @@ Executada na ordem em 18/11/2026. A LLM preparou a massa pela API (e, no caso do
 - Variação: regravado P1 ida por `POST` manual em V3/M3 (201, `DISTRIBUIDO`); depois do F5, o lápis de P1 mostrou a sugestão automática (V1/M1), não o V3/M3 gravado — confirma que a tela não lê o persistido.
 - Relato: [BUG-HU016-UI-003](issues/BUG-HU016-UI-003.md) (issue #506, 🟠 Alta, Bloqueante).
 - Status: ❌ Falhou (2 de 3 verificações).
+- **Reteste (18/11/2026, build `82eac441`):** massa de apoio (18/11) montada pela API. Depois do F5 e reabertura de 18/11, a tela mostra "Status logístico: DISTRIBUIDO" e os ônibus/motoristas gravados no banco, não a sugestão recalculada — confirmado também pela API (`GET /alocacao-diaria/distribuicao-automatica`, campos `status_logistico` e `distribuicao_persistida: true`, alocações batendo com `alocacao_diaria`/`alocacao_aluno`). Confirmado ainda que desistir do popup não grava nada (sequência de ids de `alocacao_diaria` sem lacuna). Status (reteste): ✅ Passou (3/3).
 
 ---
 
@@ -215,6 +221,7 @@ Executada na ordem em 18/11/2026. A LLM preparou a massa pela API (e, no caso do
 - Banco: 5 linhas `ALOCADO` em `alocacao_aluno` (agendamentos 25 a 29); nenhuma para o agendamento 30.
 - Relato: [BUG-HU016-UI-004](issues/BUG-HU016-UI-004.md) (issue #507, 🟡 Média, Não bloqueante).
 - Status: ❌ Falhou (1 de 3 verificações falhou; 1 de 3 ficou 🚫 não executada).
+- **Reteste (18/11/2026, build `82eac441`):** massa de apoio em 27/11 montada pela API (V1/M1 ativos, agendamento 30 como excedente). Confirmação permitida, mensagem de sucesso exibida. A tela de Excedentes mostra "Aluno H Um Farias", não mais "Agendamento #30" (backend agora enriquece `excedentes_globais` com `nome_aluno`). Verificação 3 executada: o aluno H1 viu "Aguardando alocação do veículo" antes de ser realocado. O `POST` de confirmação continua devolvendo `excedentes: []` — lacuna já registrada na #475, fora do escopo deste reteste. Status (reteste): ✅ Passou (3/3).
 
 ---
 
@@ -246,6 +253,7 @@ Executada na ordem em 18/11/2026. A LLM preparou a massa pela API (e, no caso do
 - Variação executada com o motorista M3 em vez de M2 (M2 estava mesmo ocupado em P2 na ida): `POST` manual com V3/M3 para P1 ida e volta respondeu 201, gravado; P2 manteve-se em V2/M2. A gravação literal de "V3 e M2" não ocorreu; a capacidade de trocar e persistir manteve as demais rotas como estavam, só com outra combinação.
 - Relato: [BUG-HU016-UI-005](issues/BUG-HU016-UI-005.md) (issue #508, 🟡 Média, Não bloqueante).
 - Status: ❌ Falhou (2 de 3 verificações).
+- **Reteste (18/11/2026, build `82eac441`):** verificado em 30/11, com a massa já gravada (P1 ida/volta em `HIJ7K89`/M2, P2 ida em `ABC1D23`/M1). As listas de ônibus e motorista passaram a filtrar o que já está em uso por outra rota no mesmo turno (`alocar.tsx`, `obterRecursosUsadosNoTurno`, olhando o preview do dia todo, não só a rota aberta). Pela API, confirmado que uma tentativa de conflito (ônibus ou motorista já usado por outra rota no mesmo turno) é recusada com 409 `DISTRIBUICAO_INVALIDA` e mensagem citando o nome das duas rotas e a placa/nome do recurso (ex.: "P2 Rota Campo - IFCE: o ônibus ABC1D23 já está alocado na rota P1 Rota Centro - UFC no turno ida."), não mais "alocação 2: motorista 2". Status (reteste): ✅ Passou (3/3).
 
 ---
 
@@ -275,6 +283,8 @@ Executada na ordem em 18/11/2026. A LLM preparou a massa pela API (e, no caso do
 - Se a realocação for recusada, mostra a causa sem alterar a distribuição: 🚫 Bloqueado — depende da verificação 1 (não há, na tela, nenhuma ação de realocar para tentar e observar uma recusa).
 - Relato: [BUG-HU016-UI-006](issues/BUG-HU016-UI-006.md) (issue #509, 🟠 Alta, Bloqueante). Contexto: issue #473 (decisão do PO sobre realocação entre rotas) foi fechada sem decisão registrada (sem comentário, sem caixa marcada).
 - Status: ❌ Falhou (verificação 1 ❌, verificação 2 ✅, verificação 3 🚫).
+- **Reteste (18/11/2026, build `82eac441`):** massa de apoio em 27/11 montada pela API (preparação de dado); a realocação e a recusa em si foram feitas pela tela. A tela de Excedentes agora permite selecionar o aluno excedente, lista o ônibus com vaga (Rota 2, `DEF4G56`, 3 vagas) e, ao confirmar, mostra "Aluno realocado". O aluno H1 passou a ver "Alocação confirmada" e "Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Placa DEF4G56". Testada também a recusa: com o ônibus `DEF4G56` inativado antes de confirmar, a tela mostrou "Não foi possível realocar... ônibus DEF4G56 inexistente ou inativo" (422 `DISTRIBUICAO_INVALIDA`) e o banco não foi alterado. Novo defeito cosmético encontrado durante este reteste: [BUG-HU016-UI-007](issues/BUG-HU016-UI-007.md) (🟢 Baixa, Não bloqueante). Status (reteste): ✅ Passou (3/3).
+- **Reteste da #517 (18/11/2026, noite, build `f9cde78e`):** em 27/11, realocando o aluno H Um Farias para o ônibus com vaga (Rota 2, `DEF4G56`) pela tela de Excedentes, o `POST /alocacao-diaria/distribuicao` retornou 201 e a tela passou a mostrar só "Nenhum aluno excedente para esta data.", sem repetir o aviso de excedentes. Backend testado continua no `82eac441` (a correção de `f9cde78e` só alterou o frontend); a ponta da branch `fix/issues-hu16e17` (`457f0fec`) traz uma mudança extra de backend (HU-017) ainda não testada, fora do escopo deste reteste. `CT-HU016-UI-007` continua ✅.
 
 ---
 
@@ -358,6 +368,8 @@ Executada na ordem em 18/11/2026. A LLM preparou a massa pela API (e, no caso do
 
 Numeração dos relatos (`BUG-HU016-UI-001` a `006`) não segue a numeração dos CTs — ver a coluna "Caso" para o mapeamento.
 
+**As 6 issues acima (#504 a #509) foram corrigidas e confirmadas no reteste de 18/11/2026 (build `82eac441`, branch `fix/issues-hu16e17`)** — ver a seção "Reteste (18/11/2026)" ao final deste documento. Um novo defeito cosmético, issue #517, foi encontrado durante o reteste do CT-007: [BUG-HU016-UI-007](issues/BUG-HU016-UI-007.md) — **corrigido e confirmado no reteste de 18/11/2026 à noite (build `f9cde78e`, branch `fix/issues-hu16e17`, ainda fora da `develop`)** — ver a seção "Reteste da issue #517 (18/11/2026, noite)" ao final deste documento.
+
 ## Observações gerais
 
 - Referências: [requisitos, seção 7.6](../../../../../docs/requisitos.md), [BDD do épico 05](../../../../../bdd/features/epico-05/README.md) e as [decisões do PO na #465](https://github.com/GOUOCE/GOUCE-app/issues/465).
@@ -379,4 +391,40 @@ Numeração dos relatos (`BUG-HU016-UI-001` a `006`) não segue a numeração do
 - Documentação desatualizada: o Alembic head realmente aplicado no banco testado é `82_create_alocacao_diaria`; outra documentação do projeto referencia `82_updated_at_faculdade_ponto` como head.
 - `"representante"` e `"supervisor"` são mapeados internamente para o mesmo papel `MOTORISTA` (`frontend/src/services/authService.ts:42-54`), e a aba "Minha Rota" do grupo `(representante)` ainda é um placeholder (`rota.tsx`, só renderiza o texto "Minha Rota") — fora do escopo da HU-016, registrado aqui como contexto.
 - Ao apertar F5, a tela de Distribuição Logística volta para a semana/dia de hoje, não para a data que estava aberta (a data não faz parte da URL).
-- CT-HU016-UI-005, verificação 3 ("Aguardando alocação do veículo" no app do aluno excedente): 🚫 não executada — o aluno foi realocado antes dessa checagem, no preparo do CT-007. Fica para o reteste.
+- CT-HU016-UI-005, verificação 3 ("Aguardando alocação do veículo" no app do aluno excedente): 🚫 não executada na execução original — o aluno foi realocado antes dessa checagem, no preparo do CT-007. **Executada no reteste de 18/11/2026 (build `82eac441`): ✅ o aluno H1 viu "Aguardando alocação do veículo" antes de ser realocado.**
+
+## Reteste (18/11/2026)
+
+| Campo | Valor |
+| --- | --- |
+| Build testado | `82eac441` (branch `fix/issues-hu16e17`) — correções de `dev-mariab` para as issues #504 a #509 |
+| Branch de resultados | `test/reteste-ui-hu-016` |
+| Casos retestados | CT-HU016-UI-001, -002, -004, -005, -006, -007 (os 6 que falharam na execução de 18/11/2026) |
+| Massa | Preparada/ajustada pela API e direto no banco (preparação de dado), nos mesmos dias já usados na execução original (10/11, 18/11, 27/11 e 30/11); a realocação e a tentativa de recusa do CT-007 foram feitas pela própria tela, não pela API |
+| Resultado | 6/6 casos ✅, 20/20 verificações ✅ |
+
+| Issue | Caso | Verificações | Resultado observado no reteste |
+| --- | --- | --- | --- |
+| #504 | CT-HU016-UI-001 | 4/4 ✅ | Cartão "Rodízio de frota" e a seção "Frota" não aparecem mais no painel; nenhum cartão leva a rota inexistente. |
+| #505 | CT-HU016-UI-002 | 4/4 ✅ | Aba Histórico (10/11) sem o lápis de edição nem o botão "Confirmar distribuição"; somente leitura. |
+| #506 | CT-HU016-UI-004 | 3/3 ✅ | Depois do F5 e reabertura de 18/11, a tela mostra "Status logístico: DISTRIBUIDO" e os ônibus/motoristas gravados no banco, não a sugestão recalculada. |
+| #507 | CT-HU016-UI-005 | 3/3 ✅ | Tela de Excedentes mostra "Aluno H Um Farias" em vez de "Agendamento #30"; o aluno vê "Aguardando alocação do veículo" antes de ser realocado; o `POST` de confirmação continua com `excedentes: []` (lacuna da #475, fora do escopo deste reteste). |
+| #508 | CT-HU016-UI-006 | 3/3 ✅ | As listas de ônibus/motorista filtram o recurso já usado por outra rota no mesmo turno; mensagens de conflito com o nome da rota e do recurso, verificadas pela API (409 `DISTRIBUICAO_INVALIDA`). |
+| #509 | CT-HU016-UI-007 | 3/3 ✅ | Tela seleciona o aluno, lista o ônibus com vaga (Rota 2, `DEF4G56`, 3 vagas), confirma e mostra "Aluno realocado"; o aluno vê "Alocação confirmada" e "Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Placa DEF4G56"; a recusa com o ônibus inativado mostra "Não foi possível realocar... ônibus DEF4G56 inexistente ou inativo" (422 `DISTRIBUICAO_INVALIDA`) e o banco não muda. |
+
+**Novo defeito encontrado durante o reteste:** [BUG-HU016-UI-007](issues/BUG-HU016-UI-007.md) — na tela de Alunos Excedentes, o texto "1 aluno(s)... ultrapassam a capacidade dos veículos alocados" continua visível depois da realocação, junto com "Nenhum aluno excedente para esta data." (🟢 Baixa, Não bloqueante, issue #517). **Corrigido e confirmado no reteste de 18/11/2026 à noite, build `f9cde78e`** — ver a seção "Reteste da issue #517 (18/11/2026, noite)" abaixo.
+
+Detalhe por verificação de cada caso retestado na seção "Detalhamento dos casos" acima (bloco "Reteste (18/11/2026, build `82eac441`)" em cada caso) e no [JSON de evidências](EVIDENCIAS-UI-HU-016.json).
+
+## Reteste da issue #517 (18/11/2026, noite)
+
+| Campo | Valor |
+| --- | --- |
+| Build testado | `f9cde78e` (branch `fix/issues-hu16e17`) — commit "fix: corrige excedentes apos realocacao issue #517", `dev-mariab`; branch ainda fora da `develop` |
+| Branch de resultados | `test/reteste-ui-hu-016-bug007` |
+| Caso retestado | CT-HU016-UI-007 (só a verificação do defeito cosmético #517; as demais verificações do caso já estavam ✅ no reteste de 18/11/2026, build `82eac441`) |
+| Backend testado | `82eac441` (a correção de `f9cde78e` só alterou o frontend) |
+| Observação | A ponta da branch `fix/issues-hu16e17` (`457f0fec`) traz uma mudança extra de backend (HU-017) que **não foi testada** neste reteste — fora do escopo da #517 |
+| Resultado | ✅ Corrigido — em 27/11, realocando o aluno H Um Farias para o ônibus com vaga (Rota 2, `DEF4G56`) pela tela de Excedentes, o `POST /alocacao-diaria/distribuicao` retornou 201 e, depois da realocação, a tela mostra só "Nenhum aluno excedente para esta data.", sem repetir "1 aluno(s)... ultrapassam a capacidade dos veículos alocados". `CT-HU016-UI-007` continua ✅. |
+
+Detalhe em [BUG-HU016-UI-007](issues/BUG-HU016-UI-007.md) e no [JSON de evidências](EVIDENCIAS-UI-HU-016.json).

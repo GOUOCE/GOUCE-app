@@ -58,3 +58,12 @@ Hipótese: em `frontend/src/services/logisticaService.ts:348`, `obterExcedentes`
 ### 📎 Evidência
 
 Reproduzido por Radlei em 17/11/2026, ambiente local `atu-ui016`. Prints: do card de P1 com excedente, da tela de Excedentes ("Agendamento #30"), do popup de confirmação ("6 aluno(s)"), do sucesso e do corpo do POST.
+
+### Reteste
+
+| Campo | Valor |
+|---|---|
+| **Data** | 18/11/2026 |
+| **Build** | `82eac441` (branch `fix/issues-hu16e17`) |
+| **Issue** | #507 |
+| **Resultado** | ✅ Corrigido — a tela de Excedentes e a prévia da API mostram "Aluno H Um Farias" em vez de "Agendamento #30" (backend enriquece `excedentes_globais` com `nome_aluno`). Verificação 3 ("Aguardando alocação do veículo") também executada e passou. O `POST` de confirmação continua com `excedentes: []` (lacuna da #475, fora do escopo). `CT-HU016-UI-005`: 3/3 verificações ✅. |
