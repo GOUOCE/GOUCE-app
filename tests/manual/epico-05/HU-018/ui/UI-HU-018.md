@@ -12,16 +12,16 @@
 | Base do planejamento | `develop` `1eb2818d` (`ListaEmbarqueConteudo`, `logistica/embarque.tsx` e `(representante)/home.tsx`); o atalho a partir da rota depende do [PR #457](https://github.com/GOUOCE/GOUCE-app/pull/457) |
 | Branch de planejamento | `test/planejamento-api-ui-hu-018`, com entrega para `develop` |
 | Revisão do planejamento | 16/11/2026 — requisitos 7.6 com as decisões do PO (#465), BDD do épico 05 e leitura do código |
-| Ambiente | A preencher — navegador (versão web) ou celular, URL e SHAs do front e da API da `develop` `1eb2818d`; banco limpo, fuso America/Fortaleza |
+| Ambiente | Versão web em http://localhost:3119, API em http://localhost:8119 (stack `atu-exec-hu018`, banco novo, fuso America/Fortaleza); front e API da `develop` `6059f33b`; massa `.qa/seed06.py` |
 | Total de casos | 10 |
-| Última execução | Não realizada |
+| Última execução | 19/11/2026 |
 | Testador | Cauan Ricardo — execução manual; LLM — massa e conferência de API/banco |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 10 | 0 | 0 | 0 | 0 | 10 |
+| ✅ Concluída | 10 | 10 | 0 | 0 | 0 | 0 |
 
 ## Pré-condições
 
@@ -41,26 +41,26 @@ Executar na ordem e registrar cada variação. A LLM prepara as mudanças por AP
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU018-UI-001 | Acesso pelo menu e seletor “Rota *” obrigatório | Administrador; Logística → Lista de embarque; D com distribuição confirmada. | Tela com a data e o campo “Rota *”; sem rota, orientação para selecionar. | ⏳ PENDENTE | BDD: seleciona a rota; rota obrigatória. |
-| CT-HU018-UI-002 | Selecionar a rota: contador, ordenação e dados dos alunos | P1 com 5 alunos alocados e nomes fora de ordem; depois rota com 1 aluno. | Contador, ordenação por nome, ponto, faculdade e turno conforme a API. | ⏳ PENDENTE | BDD: contador; ordenação por nome. |
-| CT-HU018-UI-003 | Indicação visual dos turnos agendados | Alunos com só ida, só volta, ida e volta na mesma IES e em IES distintas na mesma rota. | Cada aluno mostra o turno e a IES correspondentes. | ⏳ PENDENTE | BDD: indicação do turno agendado; AC-03. |
-| CT-HU018-UI-004 | Rota sem alunos e botão Imprimir desabilitado | Rota sem alunos alocados na data. | Mensagem do requisito e botão desabilitado. | ⏳ PENDENTE | BDD: rota sem alunos; AC-04. |
-| CT-HU018-UI-005 | Imprimir a lista de embarque | Rota com alunos alocados; navegador ou celular com impressão/exportação disponível. | Botão habilitado e documento com os mesmos dados da tela. | ⏳ PENDENTE | BDD: botão Imprimir lista habilitado; AC-05. |
+| CT-HU018-UI-001 | Acesso pelo menu e seletor “Rota *” obrigatório | Administrador; Logística → Lista de embarque; D com distribuição confirmada. | Tela com a data e o campo “Rota *”; sem rota, orientação para selecionar. | ✅ PASSOU | Executado em 19/11/2026. Logística → Lista de embarque mostra “Lista de Embarque”, “Hoje - 19/11/2026”, o campo “Rota *” com “Selecionar”, a frase “Selecione uma rota para visualizar os alunos alocados.” e o botão Imprimir lista desabilitado; o seletor lista as rotas do dia, conforme o relato de Cauan e o print. |
+| CT-HU018-UI-002 | Selecionar a rota: contador, ordenação e dados dos alunos | P1 com 5 alunos alocados e nomes fora de ordem; depois rota com 1 aluno. | Contador, ordenação por nome, ponto, faculdade e turno conforme a API. | ❌ FALHOU | ✅ PASSOU | Executado em 19/11/2026 (Rota Centro - UFC e Rota Campo - UECE). Contador “6 alunos alocados” e “1 aluno alocado”, ordem alfabética ignorando o acento (Ágata no topo, Élcio antes de Zélia), e nome, ponto e faculdade de cada aluno conforme a API. Correção do esperado: a primeira versão deste caso, copiada do BDD, exigia também o ônibus e o motorista escalados na tela e o caso foi marcado ❌; Cauan apontou que o protótipo não os mostra, e os requisitos 7.6.3 (AC-03 e fluxo principal, passo 11) pedem só contador, nome, ponto, IES e indicação de turno. A linha do BDD e este esperado foram corrigidos; a API continua devolvendo `veiculos_escalados` (suíte de API). Observações de UX: o turno aparece só como seta; na linha do aluno com IES distintas não aparece o ponto de desembarque da volta; o contador é um texto pequeno e cinza. |
+| CT-HU018-UI-003 | Indicação visual dos turnos agendados | Alunos com só ida, só volta, ida e volta na mesma IES e em IES distintas na mesma rota. | Cada aluno mostra o turno e a IES correspondentes. | ✅ PASSOU | Executado em 19/11/2026. A indicação de turno é por seta e por texto de ida e volta: ↔ ida e volta na mesma IES (Ágata na UFC e Élcio no IFCE), → só ida (Bruno e Zélia), ← só volta (Carla) e “Ida: … → UFC | Volta: ← IFCE” com IES distintas (Daniel); Cauan entende o turno olhando a tela. Observação de UX: um rótulo de texto (“Ida e volta”, “Só ida”, “Só volta”) deixaria mais claro para quem não conhece as setas; o “turno” aqui é ida e volta, não período do dia. |
+| CT-HU018-UI-004 | Rota sem alunos e botão Imprimir desabilitado | Rota sem alunos alocados na data. | Mensagem do requisito e botão desabilitado. | ✅ PASSOU | Executado em 19/11/2026. A LLM cancelou pela API a reserva da Iara Ibiapina (única aluna da Rota Campo - UECE); a rota continua no seletor e, ao selecioná-la, a tela mostra “Essa rota não possui nenhum aluno alocado para este dia.”, o contador “0 alunos alocados” e o botão Imprimir lista desabilitado, que não responde ao toque. API conferida: contador 0, permite_imprimir falso e a mesma mensagem. |
+| CT-HU018-UI-005 | Imprimir a lista de embarque | Rota com alunos alocados; navegador ou celular com impressão/exportação disponível. | Botão habilitado e documento com os mesmos dados da tela. | ✅ PASSOU | Executado em 19/11/2026 (Rota Centro - UFC, 6 alunos). O botão Imprimir lista estava habilitado e abriu a visualização de impressão sem erro. O documento traz “Lista de Embarque”, “Emitido por: Administrador Padrao (Administrador)”, “Data da viagem: 19/11/2026”, a rota “Rota Centro - UFC”, “Alunos alocados 6” e a relação de passageiros 01 a 06 (Ágata, Bruno, Carla, Daniel, Élcio, Zélia), na mesma ordem e com os mesmos trajetos da tela. O documento não traz ônibus nem motorista; o esperado do plano (“ônibus, motorista”) foi corrigido, porque o BDD e os requisitos (AC-05) só exigem o botão habilitado e a exportação da lista. Observação de UX: para a prancheta do motorista, o ônibus e o motorista na impressão seriam úteis, mas não são requisito. |
 
 ### Seção B — Rota fixa e representante
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU018-UI-006 | Acesso direto por uma rota, sem seletor | Administrador abrindo a lista a partir de uma rota já selecionada no painel logístico, quando a tela oferecer o atalho. | Lista abre direto na rota, com o nome fixo e sem seletor. | ⏳ PENDENTE | Depende de existir o atalho no painel (PR #457). BDD: acesso a partir da rota; FA-001. |
-| CT-HU018-UI-007 | Representante: só os alunos da sua faculdade | R1 (UFC) e R2 (IFCE); P1 com alunos das duas IES. | Rota fixa e apenas alunos da própria IES. | ⏳ PENDENTE | BDD: representante visualiza apenas os alunos da faculdade; RNF-010. |
+| CT-HU018-UI-006 | Acesso direto por uma rota, sem seletor | Administrador abrindo a lista a partir de uma rota já selecionada no painel logístico, quando a tela oferecer o atalho. | Lista abre direto na rota, com o nome fixo e sem seletor. | ✅ PASSOU | Executado em 19/11/2026. Na Distribuição Logística (dia 23/11/2026) o card da Rota Centro - UFC tem o botão azul “Lista de embarque”; ao tocar, a lista abre direto na Rota Centro - UFC, com a data 23/11/2026, o nome da linha fixo, sem o campo seletor “Rota *”, “1 aluno alocado” (Bruno Batista, “Praça José de Barros → UFC”) e Imprimir lista habilitado, conforme o print e a API (1 aluno alocado na data). |
+| CT-HU018-UI-007 | Representante: só os alunos da sua faculdade | R1 (UFC) e R2 (IFCE); P1 com alunos das duas IES. | Rota fixa e apenas alunos da própria IES. | ✅ PASSOU | Executado em 19/11/2026 (hoje, 19/11/2026). R1 (rita, UFC) e R2 (ivo, IFCE) abrem a lista direto na Rota Centro - UFC, sem seletor: R2 mostra “2 alunos alocados” (Daniel Dias só com o trecho de volta, “Praça do Campo Velho ← IFCE”, e Élcio Esteves “↔ IFCE”), conforme o print; R1, segundo o relato de Cauan, mostrou só os alunos da UFC. API conferida pela LLM: R1 vê 5 alunos (Ágata, Bruno, Carla, Daniel só ida, Zélia), R2 vê 2, e nenhum vê dados de outra IES. Observação de UX/acessibilidade (a discutir depois, não bloqueante): as setas ↔, → e ← como única indicação de turno podem confundir quem não as conhece e não têm texto para leitores de tela. |
 
 ### Seção C — Atualização
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU018-UI-008 | Atualização automática por cancelamento e realocação | Lista aberta (administrador); a LLM cancela uma reserva pela API (HU-014) e depois troca o ônibus de um aluno; observar a tela sem recarregar. | Lista, contador e indicador atualizados sozinhos. | ⏳ PENDENTE | Risco de leitura: a tela atualiza por consulta periódica, não por evento. BDD: remove aluno cancelado; realocação; indicador. |
-| CT-HU018-UI-009 | Falha de comunicação ao carregar a lista | Rede desligada ao selecionar a rota; religar. | Erro explícito; nada de lista vazia como se não houvesse alunos. | ⏳ PENDENTE | BDD: AC-06; padrões de erro do front. |
-| CT-HU018-UI-010 | Acesso restrito: aluno, sem sessão e representante sem vínculo | Aluno, sem sessão e representante sem vínculo ativo; endereço direto da lista de embarque. | Sem acesso aos dados pessoais. | ⏳ PENDENTE | BDD: acesso restrito a administrador e representante. |
+| CT-HU018-UI-008 | Atualização automática por cancelamento e realocação | Lista aberta (administrador); a LLM cancela uma reserva pela API (HU-014) e depois troca o ônibus de um aluno; observar a tela sem recarregar. | Lista, contador e indicador atualizados sozinhos. | ✅ PASSOU | Executado em 19/11/2026 (admin, Rota Centro - UFC, hoje). Com a lista aberta e sem recarregar: (1) às 00:27:43 a LLM cancelou pela API a reserva da Zélia Zanoni e a tela passou sozinha de 6 para 5 alunos (confirmado por Cauan, inclusive na lista do representante aberta em paralelo); (2) às 00:28:35 a LLM realocou por distribuição manual o Élcio Esteves (ida e volta) da Rota Centro - UFC para a Rota Campo - UECE e a tela passou sozinha para 4 alunos (Ágata, Bruno, Carla e Daniel). Atualização por consulta periódica (`inscreverAtualizacaoRota` em `listaEmbarqueService.ts`); a primeira leitura do código, que previa falha por só atualizar o relógio do rodapé, estava errada. Limite: a lista não mostra ônibus, então a troca de ônibus dentro da mesma rota não aparece na tela; a realocação foi verificada pela mudança de rota do aluno. |
+| CT-HU018-UI-009 | Falha de comunicação ao carregar a lista | Rede desligada ao selecionar a rota; religar. | Erro explícito; nada de lista vazia como se não houvesse alunos. | ✅ PASSOU | Executado em 19/11/2026. Com a rede desligada pelo modo offline do navegador: a parte A (aguardar a atualização periódica) manteve a lista exibida, sem apagá-la e sem afirmar que a rota não tem alunos; a parte B (escolher a Rota Campo - UECE offline) mostrou erro de carregamento em vez de “rota sem alunos”; com a rede de volta a lista carregou, segundo o relato de Cauan. O texto exato do erro e o comportamento do rodapé não foram registrados. No código, a atualização periódica ignora falhas de propósito para manter a lista visível (`inscreverAtualizacaoRota`). |
+| CT-HU018-UI-010 | Acesso restrito: aluno, sem sessão e representante sem vínculo | Aluno, sem sessão e representante sem vínculo ativo; endereço direto da lista de embarque. | Sem acesso aos dados pessoais. | ✅ PASSOU | Executado em 19/11/2026. Aluno (agata): a lista de embarque não existe nos menus e o endereço direto `/logistica/embarque` não abre a tela (relato de Cauan). Sem sessão: o endereço direto leva ao login ou nega o acesso. Representante sem vínculo (roberto, promovido e depois revogado): ao entrar, só consegue entrar como aluno comum, que é o esperado para função revogada; o endereço direto como esse usuário não foi relatado à parte, mas ele se comporta como o aluno do primeiro caso. API conferida pela LLM: aluno e representante sem vínculo recebem 403 em `lista-embarque` e `rotas-do-dia`; sem token, 401. |
 
 ## Detalhamento dos casos
 
@@ -85,8 +85,8 @@ Executar na ordem e registrar cada variação. A LLM prepara as mudanças por AP
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Executado em 19/11/2026. Logística → Lista de embarque mostra “Lista de Embarque”, “Hoje - 19/11/2026”, o campo “Rota *” com “Selecionar”, a frase “Selecione uma rota para visualizar os alunos alocados.” e o botão Imprimir lista desabilitado; o seletor lista as rotas do dia, conforme o relato de Cauan e o print.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -105,12 +105,12 @@ Executar na ordem e registrar cada variação. A LLM prepara as mudanças por AP
 **Resultado esperado**
 
 - O contador mostra “5 alunos alocados” (e “1 aluno alocado” no singular).
-- Os alunos aparecem ordenados pelo nome, com ponto de embarque/desembarque e faculdade corretos, e o ônibus e o motorista escalados da rota.
+- Os alunos aparecem ordenados pelo nome, com ponto de embarque/desembarque e faculdade corretos.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Executado em 19/11/2026 (Rota Centro - UFC e Rota Campo - UECE). Contador “6 alunos alocados” e “1 aluno alocado”, ordem alfabética ignorando o acento (Ágata no topo, Élcio antes de Zélia), e nome, ponto e faculdade de cada aluno conforme a API. Correção do esperado: a primeira versão deste caso, copiada do BDD, exigia também o ônibus e o motorista escalados na tela e o caso foi marcado ❌; Cauan apontou que o protótipo não os mostra, e os requisitos 7.6.3 (AC-03 e fluxo principal, passo 11) pedem só contador, nome, ponto, IES e indicação de turno. A linha do BDD e este esperado foram corrigidos; a API continua devolvendo `veiculos_escalados` (suíte de API). Observações de UX: o turno aparece só como seta; na linha do aluno com IES distintas não aparece o ponto de desembarque da volta; o contador é um texto pequeno e cinza.
+- Status: ✅ Passou.
 
 ---
 
@@ -132,8 +132,8 @@ Executar na ordem e registrar cada variação. A LLM prepara as mudanças por AP
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Executado em 19/11/2026. A indicação de turno é por seta e por texto de ida e volta: ↔ ida e volta na mesma IES (Ágata na UFC e Élcio no IFCE), → só ida (Bruno e Zélia), ← só volta (Carla) e “Ida: … → UFC | Volta: ← IFCE” com IES distintas (Daniel); Cauan entende o turno olhando a tela. Observação de UX: um rótulo de texto (“Ida e volta”, “Só ida”, “Só volta”) deixaria mais claro para quem não conhece as setas; o “turno” aqui é ida e volta, não período do dia.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -155,8 +155,8 @@ Executar na ordem e registrar cada variação. A LLM prepara as mudanças por AP
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Executado em 19/11/2026. A LLM cancelou pela API a reserva da Iara Ibiapina (única aluna da Rota Campo - UECE); a rota continua no seletor e, ao selecioná-la, a tela mostra “Essa rota não possui nenhum aluno alocado para este dia.”, o contador “0 alunos alocados” e o botão Imprimir lista desabilitado, que não responde ao toque. API conferida: contador 0, permite_imprimir falso e a mesma mensagem.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -174,12 +174,12 @@ Executar na ordem e registrar cada variação. A LLM prepara as mudanças por AP
 **Resultado esperado**
 
 - O botão está habilitado e abre o documento para impressão/exportação sem erro.
-- O documento traz rota, data, ônibus, motorista e os mesmos alunos, na mesma ordem e com o mesmo total da tela.
+- O documento traz a rota, a data e os mesmos alunos, na mesma ordem e com o mesmo total da tela.
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Executado em 19/11/2026 (Rota Centro - UFC, 6 alunos). O botão Imprimir lista estava habilitado e abriu a visualização de impressão sem erro. O documento traz “Lista de Embarque”, “Emitido por: Administrador Padrao (Administrador)”, “Data da viagem: 19/11/2026”, a rota “Rota Centro - UFC”, “Alunos alocados 6” e a relação de passageiros 01 a 06 (Ágata, Bruno, Carla, Daniel, Élcio, Zélia), na mesma ordem e com os mesmos trajetos da tela. O documento não traz ônibus nem motorista; o esperado do plano (“ônibus, motorista”) foi corrigido, porque o BDD e os requisitos (AC-05) só exigem o botão habilitado e a exportação da lista. Observação de UX: para a prancheta do motorista, o ônibus e o motorista na impressão seriam úteis, mas não são requisito.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -203,8 +203,8 @@ Executar na ordem e registrar cada variação. A LLM prepara as mudanças por AP
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Executado em 19/11/2026. Na Distribuição Logística (dia 23/11/2026) o card da Rota Centro - UFC tem o botão azul “Lista de embarque”; ao tocar, a lista abre direto na Rota Centro - UFC, com a data 23/11/2026, o nome da linha fixo, sem o campo seletor “Rota *”, “1 aluno alocado” (Bruno Batista, “Praça José de Barros → UFC”) e Imprimir lista habilitado, conforme o print e a API (1 aluno alocado na data).
+- Status: ✅ PASSOU.
 
 ---
 
@@ -226,8 +226,8 @@ Executar na ordem e registrar cada variação. A LLM prepara as mudanças por AP
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Executado em 19/11/2026 (hoje, 19/11/2026). R1 (rita, UFC) e R2 (ivo, IFCE) abrem a lista direto na Rota Centro - UFC, sem seletor: R2 mostra “2 alunos alocados” (Daniel Dias só com o trecho de volta, “Praça do Campo Velho ← IFCE”, e Élcio Esteves “↔ IFCE”), conforme o print; R1, segundo o relato de Cauan, mostrou só os alunos da UFC. API conferida pela LLM: R1 vê 5 alunos (Ágata, Bruno, Carla, Daniel só ida, Zélia), R2 vê 2, e nenhum vê dados de outra IES. Observação de UX/acessibilidade (a discutir depois, não bloqueante): as setas ↔, → e ← como única indicação de turno podem confundir quem não as conhece e não têm texto para leitores de tela.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -254,8 +254,8 @@ Executar na ordem e registrar cada variação. A LLM prepara as mudanças por AP
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Executado em 19/11/2026 (admin, Rota Centro - UFC, hoje). Com a lista aberta e sem recarregar: (1) às 00:27:43 a LLM cancelou pela API a reserva da Zélia Zanoni e a tela passou sozinha de 6 para 5 alunos (confirmado por Cauan, inclusive na lista do representante aberta em paralelo); (2) às 00:28:35 a LLM realocou por distribuição manual o Élcio Esteves (ida e volta) da Rota Centro - UFC para a Rota Campo - UECE e a tela passou sozinha para 4 alunos (Ágata, Bruno, Carla e Daniel). Atualização por consulta periódica (`inscreverAtualizacaoRota` em `listaEmbarqueService.ts`); a primeira leitura do código, que previa falha por só atualizar o relógio do rodapé, estava errada. Limite: a lista não mostra ônibus, então a troca de ônibus dentro da mesma rota não aparece na tela; a realocação foi verificada pela mudança de rota do aluno.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -278,8 +278,8 @@ Executar na ordem e registrar cada variação. A LLM prepara as mudanças por AP
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Executado em 19/11/2026. Com a rede desligada pelo modo offline do navegador: a parte A (aguardar a atualização periódica) manteve a lista exibida, sem apagá-la e sem afirmar que a rota não tem alunos; a parte B (escolher a Rota Campo - UECE offline) mostrou erro de carregamento em vez de “rota sem alunos”; com a rede de volta a lista carregou, segundo o relato de Cauan. O texto exato do erro e o comportamento do rodapé não foram registrados. No código, a atualização periódica ignora falhas de propósito para manter a lista visível (`inscreverAtualizacaoRota`).
+- Status: ✅ PASSOU.
 
 ---
 
@@ -301,8 +301,8 @@ Executar na ordem e registrar cada variação. A LLM prepara as mudanças por AP
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Executado em 19/11/2026. Aluno (agata): a lista de embarque não existe nos menus e o endereço direto `/logistica/embarque` não abre a tela (relato de Cauan). Sem sessão: o endereço direto leva ao login ou nega o acesso. Representante sem vínculo (roberto, promovido e depois revogado): ao entrar, só consegue entrar como aluno comum, que é o esperado para função revogada; o endereço direto como esse usuário não foi relatado à parte, mas ele se comporta como o aluno do primeiro caso. API conferida pela LLM: aluno e representante sem vínculo recebem 403 em `lista-embarque` e `rotas-do-dia`; sem token, 401.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -321,10 +321,11 @@ Executar na ordem e registrar cada variação. A LLM prepara as mudanças por AP
 
 | Caso | Defeito | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. Os riscos de leitura estão no [guia de execução da API](../api/README.md). | — |
+| — | Nenhum defeito encontrado: os 10 casos passaram. Duas leituras iniciais do plano estavam erradas e foram corrigidas (ônibus e motorista não são requisito na tela nem na impressão; a atualização periódica existe). Observações de UX sem issue estão em “Observações gerais”. | — |
 
 ## Observações gerais
 
 - Referências: [requisitos, seção 7.6](../../../../../docs/requisitos.md), [BDD do épico 05](../../../../../bdd/features/epico-05/README.md) e as [decisões do PO na #465](https://github.com/GOUOCE/GOUCE-app/issues/465).
 - O CT-006 só se aplica quando houver atalho para a lista a partir da rota; sem ele, registrar bloqueio por dependência.
-- Nenhum caso foi executado nesta entrega.
+- Execução de 19/11/2026 por Cauan Ricardo, com a LLM na massa e na conferência de API/banco; build da `develop` `6059f33b`.
+- Observações de UX, não bloqueantes (a discutir): o turno aparece só como seta (↔, → e ←), sem texto, o que pode confundir e não é lido por leitores de tela; na linha do aluno com IES distintas o ponto de desembarque da volta não aparece; o contador é um texto pequeno e cinza; a impressão não traz ônibus nem motorista, que seriam úteis na prancheta do motorista.

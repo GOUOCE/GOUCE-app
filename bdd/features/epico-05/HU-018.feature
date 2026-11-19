@@ -30,7 +30,6 @@ Funcionalidade: Visualização da Lista de Embarque
       E o administrador seleciona a rota "Rota Centro - UFC"
       Então o sistema exibe o contador de alunos alocados
       E exibe a lista de alunos com nome, ponto de embarque ou desembarque e faculdade (IES)
-      E exibe o ônibus e o motorista escalados da rota
 
 
     # AC-03 - Contador de alunos alocados
