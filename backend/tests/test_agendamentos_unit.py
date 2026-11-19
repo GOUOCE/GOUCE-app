@@ -43,6 +43,12 @@ class FakeQuery:
     def all(self):
         return self.rows
 
+    def delete(self, synchronize_session=False):
+        return 0
+
+    def update(self, values, synchronize_session=False):
+        return 0
+
     def __iter__(self):
         return iter(self.rows)
 

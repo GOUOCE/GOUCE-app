@@ -1,4 +1,5 @@
 import {
+  marcarAlocacaoIndisponivel,
   agendamentoService,
   AgendamentoDetalhe,
 } from '../agendamentoService';
@@ -124,9 +125,11 @@ describe('HU-015: Consulta de Rota Complementar e Transferência (Critérios de 
     expect(trechoIda?.rotaPrincipal.veiculo).toBeNull();
     expect(trechoIda?.rotaPrincipal.motorista).toBeNull();
     // Cache offline alimentado com o DTO real (FA-002)
+    // Neste teste a consulta de alocação não responde: o cache guarda a reserva com a
+    // alocação marcada como indisponível, e não como "aguardando" (issue #530).
     expect(AsyncStorage.setItem).toHaveBeenCalledWith(
       '@GOUOCE:detalhes_viagem_2026-11-12',
-      JSON.stringify(detalheComComplementar)
+      JSON.stringify(marcarAlocacaoIndisponivel(detalheComComplementar))
     );
   });
 

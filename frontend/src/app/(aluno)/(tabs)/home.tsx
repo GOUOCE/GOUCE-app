@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, Surface, Button } from 'react-native-paper';
-import { CalendarPlus, ClipboardList, Megaphone, Contact } from 'lucide-react-native';
+import { AlertTriangle, CalendarPlus, ClipboardList, Megaphone, Contact } from 'lucide-react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 
 import { useAuth } from '@contexts/AuthContext';
@@ -23,16 +23,56 @@ function dataLocalIso(): string {
 function ResumoTrecho({ trecho }: { trecho: TrechoDetalhesViagem }) {
   const principal = trecho.rotaPrincipal;
   const complementar = trecho.rotaComplementar;
+  const aguardandoPrincipal =
+    principal.statusAlocacao === 'AGUARDANDO_ALOCACAO' || principal.statusAlocacao === 'INDISPONIVEL';
 
   return (
     <View style={styles.tripTrecho}>
-      <Text variant="titleMedium" style={styles.busName}>
-        {principal.nomeLinha}
-      </Text>
+      <View style={styles.tripTrechoHeader}>
+        <Text variant="titleMedium" style={styles.busName}>
+          {trecho.sentido === 'ida' ? 'Ida' : 'Volta'} — {principal.nomeLinha}
+        </Text>
+        <View
+          style={[
+            styles.statusBadge,
+            aguardandoPrincipal ? styles.statusBadgeAguardando : styles.statusBadgeConfirmada,
+          ]}
+        >
+          <Text
+            style={[
+              styles.statusBadgeTexto,
+              aguardandoPrincipal
+                ? styles.statusBadgeTextoAguardando
+                : styles.statusBadgeTextoConfirmada,
+            ]}
+            testID={`home-status-alocacao-${trecho.sentido}`}
+          >
+            {principal.statusAlocacaoLabel}
+          </Text>
+        </View>
+      </View>
+
+      {principal.realocado && principal.mensagemRealocacao && (
+        <View
+          style={styles.alertaRealocacaoBox}
+          testID={`home-alerta-realocacao-${trecho.sentido}`}
+        >
+          <AlertTriangle size={14} color="#92400E" />
+          <Text style={styles.alertaRealocacaoTexto}>{principal.mensagemRealocacao}</Text>
+        </View>
+      )}
+
+      {principal.veiculo && (
+        <Text variant="bodyMedium" style={styles.vehicleDetails}>
+          {principal.veiculo}
+          {principal.motorista ? ` • Motorista: ${principal.motorista}` : ''}
+        </Text>
+      )}
+
       <Text variant="bodyMedium" style={styles.routeDetails}>
         {trecho.sentido === 'ida' ? 'Saída' : 'Retorno'} {principal.horarioSaida}
-        {principal.veiculo ? ` • ${principal.veiculo}` : ''}
       </Text>
+
       {complementar && (
         <Text variant="bodySmall" style={styles.connectionDetails}>
           Complementar: {complementar.nomeLinha} • Conexão: {complementar.pontoConexao}
@@ -177,11 +217,62 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   tripTrecho: {
-    gap: 4,
+    gap: 6,
+  },
+  tripTrechoHeader: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 8,
   },
   busName: {
     fontWeight: 'bold',
     color: '#191C20',
+  },
+  statusBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  statusBadgeConfirmada: {
+    backgroundColor: '#BCEEFF',
+  },
+  statusBadgeAguardando: {
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+  },
+  statusBadgeTexto: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  statusBadgeTextoConfirmada: {
+    color: '#004D67',
+  },
+  statusBadgeTextoAguardando: {
+    color: '#92400E',
+  },
+  alertaRealocacaoBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  alertaRealocacaoTexto: {
+    flex: 1,
+    color: '#92400E',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  vehicleDetails: {
+    color: '#191C20',
+    fontWeight: '600',
   },
   routeDetails: {
     color: '#43474E',

@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { Text, Surface, ActivityIndicator, Button } from 'react-native-paper';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { ChevronLeft, ChevronRight, Pencil, Trash2, WifiOff } from 'lucide-react-native';
+import { AlertTriangle, ChevronLeft, ChevronRight, Pencil, Trash2, WifiOff } from 'lucide-react-native';
 
 import {
   agendamentoService,
@@ -10,6 +10,7 @@ import {
   CalendarioDia,
   extrairMensagemErro,
   formatarData,
+  mapearDetalhe,
 } from '@/services/agendamentoService';
 import { AppPopup } from '@/components/ui/AppPopup';
 
@@ -93,6 +94,7 @@ function CardAgendamento({
   const trechos: string[] = [];
   if (agendamento.usa_ida) trechos.push('Ida');
   if (agendamento.usa_volta) trechos.push('Volta');
+  const detalhesMapeados = mapearDetalhe(agendamento);
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
@@ -119,6 +121,63 @@ function CardAgendamento({
             Volta: {agendamento.ies_origem_nome} → {agendamento.ponto_desembarque_nome}
           </Text>
         )}
+
+        {/* HU-019: resumo da alocação de veículo por turno (principal + eventual realocação) */}
+        <View style={styles.alocacaoResumoLista}>
+          {detalhesMapeados.trechos.map((trecho) => {
+            const principal = trecho.rotaPrincipal;
+            const aguardando =
+              principal.statusAlocacao === 'AGUARDANDO_ALOCACAO' ||
+              principal.statusAlocacao === 'INDISPONIVEL';
+
+            return (
+              <View key={trecho.sentido} style={styles.alocacaoResumoTrecho}>
+                <View style={styles.alocacaoResumoLinha}>
+                  <Text style={styles.alocacaoResumoTitulo}>
+                    {trecho.sentido === 'ida' ? 'Ida' : 'Volta'}:
+                  </Text>
+                  <View
+                    style={[
+                      styles.alocacaoBadge,
+                      aguardando ? styles.alocacaoBadgeAguardando : styles.alocacaoBadgeConfirmada,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.alocacaoBadgeTexto,
+                        aguardando
+                          ? styles.alocacaoBadgeTextoAguardando
+                          : styles.alocacaoBadgeTextoConfirmada,
+                      ]}
+                      testID={`agenda-status-alocacao-${agendamento.id}-${trecho.sentido}`}
+                    >
+                      {principal.statusAlocacaoLabel}
+                    </Text>
+                  </View>
+                </View>
+
+                {principal.veiculo && (
+                  <Text style={styles.alocacaoVeiculoTexto}>
+                    {principal.veiculo}
+                    {principal.motorista ? ` • Motorista: ${principal.motorista}` : ''}
+                  </Text>
+                )}
+
+                {principal.realocado && principal.mensagemRealocacao && (
+                  <View
+                    style={styles.alocacaoAlertaBox}
+                    testID={`agenda-alerta-realocacao-${agendamento.id}-${trecho.sentido}`}
+                  >
+                    <AlertTriangle size={14} color="#92400E" />
+                    <Text style={styles.alocacaoAlertaTexto}>
+                      {principal.mensagemRealocacao}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            );
+          })}
+        </View>
 
         {/* HU-015 / AC-01: dados destacados da rota complementar */}
         {(agendamento.rota_complementar_ida || agendamento.rota_complementar_volta) && (
@@ -749,6 +808,69 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: '#001D36',
+  },
+  alocacaoResumoLista: {
+    gap: 8,
+    marginTop: 6,
+  },
+  alocacaoResumoTrecho: {
+    gap: 4,
+  },
+  alocacaoResumoLinha: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  alocacaoResumoTitulo: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#191C20',
+  },
+  alocacaoBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  alocacaoBadgeConfirmada: {
+    backgroundColor: '#BCEEFF',
+  },
+  alocacaoBadgeAguardando: {
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+  },
+  alocacaoBadgeTexto: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  alocacaoBadgeTextoConfirmada: {
+    color: '#004D67',
+  },
+  alocacaoBadgeTextoAguardando: {
+    color: '#92400E',
+  },
+  alocacaoVeiculoTexto: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#191C20',
+  },
+  alocacaoAlertaBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  alocacaoAlertaTexto: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#92400E',
   },
   modalOverlay: {
     flex: 1,

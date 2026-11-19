@@ -5,7 +5,12 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     gcc \
     libpq-dev \
+    tzdata \
     && rm -rf /var/lib/apt/lists/*
+
+ENV TZ=America/Fortaleza
+RUN ln -snf /usr/share/zoneinfo/America/Fortaleza /etc/localtime \
+    && echo "America/Fortaleza" > /etc/timezone
 
 COPY requirements.txt .
 
