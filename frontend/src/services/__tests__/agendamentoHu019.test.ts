@@ -233,7 +233,7 @@ describe('HU-019: Consulta de Alocação Diária (Rotas Principais e Complementa
     expect(ida?.rotaPrincipal.statusAlocacao).toBe('REALOCADO');
     expect(ida?.rotaPrincipal.realocado).toBe(true);
     expect(ida?.rotaPrincipal.mensagemRealocacao).toBe(
-      'Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Ônibus 04 - Placa OCR-1234'
+      'Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Ônibus 04 (placa OCR-1234)'
     );
     expect(ida?.rotaPrincipal.rotaOriginalNome).toBe('Linha 02 - Bairro Novo');
     expect(ida?.rotaComplementar?.nomeLinha).toBe('Van 2 - Bairro Novo');
@@ -354,7 +354,7 @@ describe('HU-019: Consulta de Alocação Diária (Rotas Principais e Complementa
     expect(ida?.rotaPrincipal.horarioSaida).toBe('06:30');
     expect(ida?.rotaPrincipal.rotaOriginalNome).toBe('Linha 01 - Centro');
     expect(ida?.rotaPrincipal.mensagemRealocacao).toBe(
-      'Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Ônibus 04 - Placa OCR-1234',
+      'Atenção: Você foi realocado. Seu ônibus para hoje é o veículo Ônibus 04 (placa OCR-1234)',
     );
     expect(ida?.rotaComplementar?.nomeLinha).toBe('Van 2 - Bairro Novo');
 
@@ -397,6 +397,106 @@ describe('HU-019: Consulta de Alocação Diária (Rotas Principais e Complementa
     expect(mapeado.trechos[0].rotaPrincipal.veiculo).toBe('Ônibus 04 - Placa OCR-1234');
     expect(mapeado.trechos[0].rotaPrincipal.motorista).toBe('Ana Souza');
     expect(mapeado.trechos[0].rotaPrincipal.statusAlocacao).toBe('CONFIRMADA');
+  });
+
+  describe('Falha na consulta da alocação (issue #530)', () => {
+    const semFrota = () => {
+      const base = criarDetalheBase();
+      return criarDetalheBase({
+        rota_principal_ida: { ...base.rota_principal_ida!, onibus: null, motorista: null, status_alocacao: null },
+        rota_principal_volta: { ...base.rota_principal_volta!, onibus: null, motorista: null, status_alocacao: null },
+      });
+    };
+
+    it('obterDetalhesViagem não diz "Aguardando alocação" quando minha-viagem falha', async () => {
+      (api.get as jest.Mock).mockImplementation((url: string) => {
+        if (url === '/transporte/agendamentos/detalhes') return Promise.resolve({ data: semFrota() });
+        if (url === '/alocacao-diaria/minha-viagem') return Promise.reject(new Error('500'));
+        return Promise.reject(new Error(`URL inesperada: ${url}`));
+      });
+
+      const detalhes = await agendamentoService.obterDetalhesViagem('2026-08-31');
+
+      for (const trecho of detalhes.trechos) {
+        expect(trecho.rotaPrincipal.statusAlocacao).toBe('INDISPONIVEL');
+        expect(trecho.rotaPrincipal.statusAlocacaoLabel).toBe('Não foi possível consultar a alocação agora');
+        expect(trecho.rotaPrincipal.statusAlocacaoLabel).not.toBe('Aguardando alocação do veículo');
+        expect(trecho.rotaPrincipal.veiculo).toBeNull();
+        expect(trecho.rotaPrincipal.motorista).toBeNull();
+      }
+      // Sem cache anterior, a reserva é guardada para uso offline, mas com a alocação indisponível.
+      const gravado = (AsyncStorage.setItem as jest.Mock).mock.calls.find(
+        ([chave]) => chave === '@GOUOCE:detalhes_viagem_2026-08-31',
+      );
+      expect(JSON.parse(gravado![1] as string).rota_principal_ida.status_alocacao).toBe('INDISPONIVEL');
+    });
+
+    it('obterDetalhesViagem não sobrescreve no cache uma alocação já sincronizada quando minha-viagem falha', async () => {
+      const sincronizado = criarDetalheBase();
+      (AsyncStorage.getItem as jest.Mock).mockImplementation((chave: string) =>
+        Promise.resolve(chave === '@GOUOCE:detalhes_viagem_2026-08-31' ? JSON.stringify(sincronizado) : null),
+      );
+      (api.get as jest.Mock).mockImplementation((url: string) => {
+        if (url === '/transporte/agendamentos/detalhes') return Promise.resolve({ data: semFrota() });
+        if (url === '/alocacao-diaria/minha-viagem') return Promise.reject(new Error('500'));
+        return Promise.reject(new Error(`URL inesperada: ${url}`));
+      });
+
+      const detalhes = await agendamentoService.obterDetalhesViagem('2026-08-31');
+
+      expect(detalhes.trechos[0].rotaPrincipal.statusAlocacao).toBe('INDISPONIVEL');
+      expect(AsyncStorage.setItem).not.toHaveBeenCalled();
+    });
+
+    it('listarAgendamentosAtivos mostra indisponível, mas mantém no cache a última alocação conhecida', async () => {
+      const anterior = criarDetalheBase();
+      (AsyncStorage.getItem as jest.Mock).mockImplementation((chave: string) =>
+        Promise.resolve(
+          chave === '@GOUOCE:meus_agendamentos'
+            ? JSON.stringify({ agendamentos: [anterior], ativos: 1, limite: 22 })
+            : null,
+        ),
+      );
+      (api.get as jest.Mock).mockImplementation((url: string) => {
+        if (url === '/transporte/agendamentos/meus') {
+          return Promise.resolve({ data: { agendamentos: [semFrota()], ativos: 1, limite: 22 } });
+        }
+        if (url === '/alocacao-diaria/minha-viagem') return Promise.reject(new Error('500'));
+        return Promise.reject(new Error(`URL inesperada: ${url}`));
+      });
+
+      const resposta = await agendamentoService.listarAgendamentosAtivos();
+      const mapeado = mapearDetalhe(resposta.agendamentos[0]);
+
+      expect(mapeado.trechos[0].rotaPrincipal.statusAlocacao).toBe('INDISPONIVEL');
+      const gravado = (AsyncStorage.setItem as jest.Mock).mock.calls.find(
+        ([chave]) => chave === '@GOUOCE:meus_agendamentos',
+      );
+      expect(gravado).toBeDefined();
+      const noCache = JSON.parse(gravado![1] as string).agendamentos[0];
+      expect(noCache.rota_principal_ida.status_alocacao).toBe('CONFIRMADA');
+      expect(noCache.rota_principal_ida.onibus.placa_onibus).toBe('OCR-1234');
+    });
+
+    it('resposta válida sem alocação continua "Aguardando alocação do veículo" (não é falha)', async () => {
+      (api.get as jest.Mock).mockImplementation((url: string) => {
+        if (url === '/transporte/agendamentos/detalhes') return Promise.resolve({ data: semFrota() });
+        if (url === '/alocacao-diaria/minha-viagem') {
+          return Promise.resolve({
+            data: criarMinhaViagemFixture({
+              status_geral: 'AGUARDANDO_ALOCACAO',
+              ida: { turno: 'ida', status_alocacao: 'AGUARDANDO_ALOCACAO' },
+              volta: { turno: 'volta', status_alocacao: 'AGUARDANDO_ALOCACAO' },
+            }),
+          });
+        }
+        return Promise.reject(new Error(`URL inesperada: ${url}`));
+      });
+
+      const detalhes = await agendamentoService.obterDetalhesViagem('2026-08-31');
+
+      expect(detalhes.trechos[0].rotaPrincipal.statusAlocacao).toBe('AGUARDANDO_ALOCACAO');
+    });
   });
 
   it('formata subtítulo da rota principal sem parênteses quando não há faculdades', () => {

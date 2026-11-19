@@ -39,7 +39,7 @@ function StatusAlocacaoPill({
   label: string;
   testID: string;
 }) {
-  const aguardando = statusAlocacao === 'AGUARDANDO_ALOCACAO';
+  const aguardando = statusAlocacao === 'AGUARDANDO_ALOCACAO' || statusAlocacao === 'INDISPONIVEL';
   return (
     <View
       style={[
@@ -90,7 +90,9 @@ function CardRotaComplementar({ trecho }: { trecho: TrechoDetalhesViagem }) {
 
       <View style={styles.gridRow}>
         <View style={styles.col}>
-          <Text style={styles.fieldLabel}>Horário de Saída</Text>
+          <Text style={styles.fieldLabel}>
+            {trecho.sentido === 'volta' ? 'Horário de Retorno' : 'Horário de Saída'}
+          </Text>
           <Text style={styles.fieldVal}>{rota.horarioSaida}</Text>
         </View>
       </View>
@@ -163,13 +165,17 @@ function CardRotaPrincipal({ trecho }: { trecho: TrechoDetalhesViagem }) {
               </Text>
             </View>
             <View style={styles.col}>
-              <Text style={styles.fieldLabel}>Horário de Saída</Text>
+              <Text style={styles.fieldLabel}>
+            {trecho.sentido === 'volta' ? 'Horário de Retorno' : 'Horário de Saída'}
+          </Text>
               <Text style={styles.fieldVal}>{rota.horarioSaida}</Text>
             </View>
           </>
         ) : (
           <View style={styles.col}>
-            <Text style={styles.fieldLabel}>Horário de Saída</Text>
+            <Text style={styles.fieldLabel}>
+            {trecho.sentido === 'volta' ? 'Horário de Retorno' : 'Horário de Saída'}
+          </Text>
             <Text style={styles.fieldVal}>{rota.horarioSaida}</Text>
           </View>
         )}

@@ -126,7 +126,9 @@ function CardAgendamento({
         <View style={styles.alocacaoResumoLista}>
           {detalhesMapeados.trechos.map((trecho) => {
             const principal = trecho.rotaPrincipal;
-            const aguardando = principal.statusAlocacao === 'AGUARDANDO_ALOCACAO';
+            const aguardando =
+              principal.statusAlocacao === 'AGUARDANDO_ALOCACAO' ||
+              principal.statusAlocacao === 'INDISPONIVEL';
 
             return (
               <View key={trecho.sentido} style={styles.alocacaoResumoTrecho}>
