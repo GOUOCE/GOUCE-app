@@ -5,7 +5,6 @@ import { useRouter } from 'expo-router';
 import {
   ArrowLeftRight,
   LogOut,
-  CreditCard,
   RefreshCw,
   ChevronRight,
   Pencil,
@@ -210,14 +209,6 @@ export default function PerfilScreen() {
           <TouchableOpacity style={styles.actionItem} onPress={() => router.push('/(aluno)/alterar-email')}>
             <Mail size={24} color="#333" />
             <Text variant="bodyLarge" style={styles.actionText}>Alterar endereço de e-mail</Text>
-            <ChevronRight size={20} color="#999" />
-          </TouchableOpacity>
-
-          <Divider style={styles.divider} />
-
-          <TouchableOpacity style={styles.actionItem} onPress={() => router.push('/(aluno)/carteirinha-digital')}>
-            <CreditCard size={24} color="#333" />
-            <Text variant="bodyLarge" style={styles.actionText}>Ver carteirinha digital</Text>
             <ChevronRight size={20} color="#999" />
           </TouchableOpacity>
 

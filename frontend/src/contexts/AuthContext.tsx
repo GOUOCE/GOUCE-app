@@ -303,7 +303,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 const styles = StyleSheet.create({
   toastBanner: {
     position: 'absolute',
-    top: 48,
+    bottom: 96,
     left: 16,
     right: 16,
     zIndex: 9999,
