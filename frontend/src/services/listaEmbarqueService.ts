@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from '@/api/api';
 import { getErrorMessage } from '@/utils/errorUtils';
 
@@ -8,6 +9,16 @@ export type SentidoViagem =
   | 'IES_DISTINTAS';
 
 export type PerfilListaEmbarque = 'ADMINISTRADOR' | 'MOTORISTA';
+export type StatusPresenca = 'PENDENTE' | 'PRESENTE' | 'FALTA';
+
+export interface RegistroFrequenciaPendente {
+  chave: string;
+  data: string;
+  rotaId: number;
+  agendamentoId: number;
+  statusPresenca: 'PRESENTE' | 'FALTA';
+  atualizadoEm: string;
+}
 
 export interface AlunoEmbarqueInput {
   id: number;
@@ -28,6 +39,8 @@ export interface AlunoEmbarqueItem extends AlunoEmbarqueInput {
   onibusVolta?: string | null;
   motoristaIda?: string | null;
   motoristaVolta?: string | null;
+  statusPresenca?: StatusPresenca;
+  dataHoraCheckin?: string | null;
 }
 
 export interface RotaEmbarqueOpcao {
@@ -50,7 +63,13 @@ export interface ListaEmbarqueRota {
   rotaId: number;
   rotaNome: string;
   dataOperacao: string;
+  horarioSaida?: string | null;
+  horarioRetorno?: string | null;
   totalAlunos: number;
+  totalPresentes?: number;
+  totalFaltas?: number;
+  totalPendentes?: number;
+  somenteLeitura?: boolean;
   alunos: AlunoEmbarqueItem[];
   ultimaSincronizacaoISO: string;
   mensagem?: string | null;
@@ -123,6 +142,8 @@ export interface AlunoListaEmbarqueApiDTO {
   onibus_volta?: string | null;
   motorista_ida?: string | null;
   motorista_volta?: string | null;
+  status_presenca?: StatusPresenca;
+  data_hora_checkin?: string | null;
 }
 
 export interface ListaEmbarqueApiResponse {
@@ -133,6 +154,10 @@ export interface ListaEmbarqueApiResponse {
   horario_retorno?: string | null;
   veiculos_escalados?: VeiculoEscaladoApiDTO[];
   total_alunos_alocados: number;
+  total_presentes?: number;
+  total_faltas?: number;
+  total_pendentes?: number;
+  somente_leitura?: boolean;
   texto_contador: string;
   permite_imprimir: boolean;
   mensagem?: string | null;
@@ -142,6 +167,66 @@ export interface ListaEmbarqueApiResponse {
 }
 
 export const INTERVALO_POLLING_LISTA_MS = 30_000;
+const STORAGE_KEY_FREQUENCIA_PENDENTE = '@GOUOCE:frequencia_pendente_hu021';
+const cacheFrequenciaLocal = new Map<
+  string,
+  { status: 'PRESENTE' | 'FALTA'; dataHoraCheckin: string }
+>();
+
+function chaveFrequencia(dataIso: string, rotaId: number, agendamentoId: number): string {
+  return `${dataIso}:${rotaId}:${agendamentoId}`;
+}
+
+async function lerFilaPendente(): Promise<RegistroFrequenciaPendente[]> {
+  try {
+    const bruto = await AsyncStorage.getItem(STORAGE_KEY_FREQUENCIA_PENDENTE);
+    if (!bruto) return [];
+    const parsed = JSON.parse(bruto);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+async function gravarFilaPendente(itens: RegistroFrequenciaPendente[]): Promise<void> {
+  try {
+    if (itens.length === 0) {
+      await AsyncStorage.removeItem(STORAGE_KEY_FREQUENCIA_PENDENTE);
+    } else {
+      await AsyncStorage.setItem(STORAGE_KEY_FREQUENCIA_PENDENTE, JSON.stringify(itens));
+    }
+  } catch {
+    // Fallback em memória já preservado em cacheFrequenciaLocal.
+  }
+}
+
+function ehEndpointIndisponivelSemContrato(erro: any): boolean {
+  const status = erro?.response?.status;
+  const code = erro?.response?.data?.detail?.code;
+  return (status === 404 || status === 405) && code !== 'ALUNO_NAO_ALOCADO';
+}
+
+export function calcularTotaisFrequencia(alunos: AlunoEmbarqueItem[]): {
+  totalPresentes: number;
+  totalFaltas: number;
+  totalPendentes: number;
+} {
+  let totalPresentes = 0;
+  let totalFaltas = 0;
+  let totalPendentes = 0;
+
+  for (const aluno of alunos) {
+    if (aluno.statusPresenca === 'PRESENTE') {
+      totalPresentes += 1;
+    } else if (aluno.statusPresenca === 'FALTA') {
+      totalFaltas += 1;
+    } else {
+      totalPendentes += 1;
+    }
+  }
+
+  return { totalPresentes, totalFaltas, totalPendentes };
+}
 
 function normalizarTextoComparacao(valor?: string): string {
   return (valor ?? '').trim().toLocaleLowerCase('pt-BR');
@@ -301,8 +386,13 @@ export function mapearRespostaListaEmbarque(dto: ListaEmbarqueApiResponse): List
       iesVolta,
     });
 
+    const agendamentoId = aluno.agendamento_id || aluno.aluno_id;
+    const cached = cacheFrequenciaLocal.get(chaveFrequencia(dto.data, dto.rota_id, agendamentoId));
+    const statusPresenca: StatusPresenca = aluno.status_presenca ?? cached?.status ?? 'PENDENTE';
+    const dataHoraCheckin = aluno.data_hora_checkin ?? cached?.dataHoraCheckin ?? null;
+
     return {
-      id: aluno.agendamento_id || aluno.aluno_id,
+      id: agendamentoId,
       alunoId: aluno.aluno_id,
       agendamentoId: aluno.agendamento_id,
       nome: aluno.nome_aluno,
@@ -317,14 +407,36 @@ export function mapearRespostaListaEmbarque(dto: ListaEmbarqueApiResponse): List
       onibusVolta: aluno.onibus_volta ?? null,
       motoristaIda: aluno.motorista_ida ?? null,
       motoristaVolta: aluno.motorista_volta ?? null,
+      statusPresenca,
+      dataHoraCheckin,
     };
   });
+
+  const totais = calcularTotaisFrequencia(alunos);
+  const temOverrideLocal = alunos.some((a) =>
+    cacheFrequenciaLocal.has(chaveFrequencia(dto.data, dto.rota_id, a.agendamentoId ?? a.id)),
+  );
 
   return {
     rotaId: dto.rota_id,
     rotaNome: dto.nome_rota,
     dataOperacao: formatarDataIsoParaBR(dto.data),
+    horarioSaida: dto.horario_saida ?? null,
+    horarioRetorno: dto.horario_retorno ?? null,
     totalAlunos: dto.total_alunos_alocados ?? alunos.length,
+    totalPresentes:
+      !temOverrideLocal && dto.total_presentes !== undefined
+        ? dto.total_presentes
+        : totais.totalPresentes,
+    totalFaltas:
+      !temOverrideLocal && dto.total_faltas !== undefined
+        ? dto.total_faltas
+        : totais.totalFaltas,
+    totalPendentes:
+      !temOverrideLocal && dto.total_pendentes !== undefined
+        ? dto.total_pendentes
+        : totais.totalPendentes,
+    somenteLeitura: dto.somente_leitura ?? false,
     alunos,
     ultimaSincronizacaoISO: dto.ultima_sincronizacao || new Date().toISOString(),
     mensagem: dto.mensagem ?? null,
@@ -345,6 +457,8 @@ export function mapearRespostaListaEmbarque(dto: ListaEmbarqueApiResponse): List
  * Camada de serviço integrada à API real da Lista de Embarque (HU-018).
  */
 export const listaEmbarqueService = {
+  calcularTotaisFrequencia,
+
   async listarRotasDisponiveis(dataIso?: string): Promise<RotaEmbarqueOpcao[]> {
     const data = dataIso || dataLocalIso();
     const response = await api.get<RotasDoDiaApiResponse>('/alocacao-diaria/rotas-do-dia', {
@@ -378,7 +492,142 @@ export const listaEmbarqueService = {
     const response = await api.get<ListaEmbarqueApiResponse>('/alocacao-diaria/lista-embarque', {
       params: query,
     });
+    const pendentes = await lerFilaPendente();
+    for (const item of pendentes) {
+      cacheFrequenciaLocal.set(item.chave, {
+        status: item.statusPresenca,
+        dataHoraCheckin: item.atualizadoEm,
+      });
+    }
     return mapearRespostaListaEmbarque(response.data);
+  },
+
+  async registrarFrequencia(params: {
+    rotaId: number;
+    agendamentoId: number;
+    statusPresenca: 'PRESENTE' | 'FALTA';
+    data?: string;
+  }): Promise<{ sincronizado: boolean; pendenteOffline: boolean }> {
+    const hojeIso = dataLocalIso();
+    const dataIso = params.data || hojeIso;
+    if (params.data && params.data !== hojeIso) {
+      throw new Error('A chamada só pode ser realizada no dia exato da viagem.');
+    }
+
+    const chave = chaveFrequencia(dataIso, params.rotaId, params.agendamentoId);
+    const anterior = cacheFrequenciaLocal.get(chave);
+    const agoraIso = new Date().toISOString();
+    cacheFrequenciaLocal.set(chave, {
+      status: params.statusPresenca,
+      dataHoraCheckin: agoraIso,
+    });
+
+    const apiPatch = (api as any)?.patch;
+    if (typeof apiPatch !== 'function') {
+      return { sincronizado: true, pendenteOffline: false };
+    }
+
+    try {
+      await apiPatch('/alocacao-diaria/lista-embarque/frequencia', {
+        data: dataIso,
+        rota_id: params.rotaId,
+        agendamento_id: params.agendamentoId,
+        status_presenca: params.statusPresenca,
+      });
+
+      const filaAtual = await lerFilaPendente();
+      if (filaAtual.some((item) => item.chave === chave)) {
+        await gravarFilaPendente(filaAtual.filter((item) => item.chave !== chave));
+      }
+      return { sincronizado: true, pendenteOffline: false };
+    } catch (erro: any) {
+      if (!erro?.response) {
+        const filaAtual = await lerFilaPendente();
+        const novoRegistro: RegistroFrequenciaPendente = {
+          chave,
+          data: dataIso,
+          rotaId: params.rotaId,
+          agendamentoId: params.agendamentoId,
+          statusPresenca: params.statusPresenca,
+          atualizadoEm: agoraIso,
+        };
+        const filaAtualizada = [...filaAtual.filter((item) => item.chave !== chave), novoRegistro];
+        await gravarFilaPendente(filaAtualizada);
+        return { sincronizado: false, pendenteOffline: true };
+      }
+
+      if (ehEndpointIndisponivelSemContrato(erro)) {
+        return { sincronizado: true, pendenteOffline: false };
+      }
+
+      if (anterior) {
+        cacheFrequenciaLocal.set(chave, anterior);
+      } else {
+        cacheFrequenciaLocal.delete(chave);
+      }
+      throw erro;
+    }
+  },
+
+  async obterFrequenciasPendentes(filtro?: {
+    rotaId?: number;
+    data?: string;
+  }): Promise<RegistroFrequenciaPendente[]> {
+    const fila = await lerFilaPendente();
+    if (!filtro) return fila;
+    return fila.filter((item) => {
+      if (filtro.rotaId !== undefined && item.rotaId !== filtro.rotaId) return false;
+      if (filtro.data !== undefined && item.data !== filtro.data) return false;
+      return true;
+    });
+  },
+
+  async sincronizarFrequenciasPendentes(): Promise<{
+    sincronizados: number;
+    restantes: number;
+  }> {
+    const fila = await lerFilaPendente();
+    if (fila.length === 0) {
+      return { sincronizados: 0, restantes: 0 };
+    }
+
+    const apiPatch = (api as any)?.patch;
+    if (typeof apiPatch !== 'function') {
+      return { sincronizados: 0, restantes: fila.length };
+    }
+
+    let sincronizados = 0;
+    const pendentesRestantes: RegistroFrequenciaPendente[] = [];
+
+    for (const item of fila) {
+      try {
+        await apiPatch('/alocacao-diaria/lista-embarque/frequencia', {
+          data: item.data,
+          rota_id: item.rotaId,
+          agendamento_id: item.agendamentoId,
+          status_presenca: item.statusPresenca,
+        });
+        sincronizados += 1;
+      } catch (erro: any) {
+        if (!erro?.response) {
+          pendentesRestantes.push(item);
+        } else if (ehEndpointIndisponivelSemContrato(erro)) {
+          sincronizados += 1;
+        }
+        // Rejeições HTTP permanentes (4xx/business) removem o item obsoleto da fila offline.
+      }
+    }
+
+    await gravarFilaPendente(pendentesRestantes);
+    return {
+      sincronizados,
+      restantes: pendentesRestantes.length,
+    };
+  },
+
+  async limparCacheFrequencia(): Promise<void> {
+    cacheFrequenciaLocal.clear();
+    await gravarFilaPendente([]);
   },
 
   async obterRotaPadraoRepresentante(dataIso?: string): Promise<{
@@ -404,22 +653,23 @@ export const listaEmbarqueService = {
   ): () => void {
     let cancelado = false;
     const intervalo = setInterval(() => {
-      listaEmbarqueService
-        .obterListaEmbarque({
-          rotaId,
-          data: opcoes?.data,
-          turno: opcoes?.turno,
-          perfil: opcoes?.perfil,
-          iesResponsavel: opcoes?.iesResponsavel,
-        })
-        .then((listaAtualizada) => {
+      void (async () => {
+        try {
+          await listaEmbarqueService.sincronizarFrequenciasPendentes();
+          const listaAtualizada = await listaEmbarqueService.obterListaEmbarque({
+            rotaId,
+            data: opcoes?.data,
+            turno: opcoes?.turno,
+            perfil: opcoes?.perfil,
+            iesResponsavel: opcoes?.iesResponsavel,
+          });
           if (!cancelado) {
             listener(listaAtualizada);
           }
-        })
-        .catch(() => {
+        } catch {
           // Mantém a lista atualmente visível caso uma atualização em segundo plano falhe.
-        });
+        }
+      })();
     }, opcoes?.intervaloMs ?? INTERVALO_POLLING_LISTA_MS);
 
     return () => {
