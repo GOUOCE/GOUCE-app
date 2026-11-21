@@ -978,6 +978,14 @@ describe('Telas da Lista de Embarque integradas à API (HU-018)', () => {
       );
       expect(botaoTrocar).toBeDefined();
 
+      const textosPerfil = extrairTodosTextos(rootRepresentante);
+      const idxTrocar = textosPerfil.indexOf('Trocar para a visão de representante');
+      const idxAcoes = textosPerfil.indexOf('Ações da Conta');
+      const idxEditar = textosPerfil.indexOf('Editar perfil');
+      expect(idxTrocar).toBeGreaterThan(-1);
+      expect(idxAcoes).toBeGreaterThan(idxTrocar);
+      expect(idxEditar).toBeGreaterThan(idxTrocar);
+
       await pressionar(botaoTrocar);
       expect(extrairTodosTextos(rootRepresentante)).toContain('Trocar visão?');
       expect(extrairTodosTextos(rootRepresentante)).toContain(

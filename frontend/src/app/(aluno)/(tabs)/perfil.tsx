@@ -194,6 +194,24 @@ export default function PerfilScreen() {
           </View>
         </View>
 
+        {ehRepresentante && (
+          <View style={styles.switchRoleSection}>
+            <TouchableOpacity
+              style={styles.botaoTrocarRepresentante}
+              activeOpacity={0.8}
+              onPress={() => setModalTrocarVisaoVisivel(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Trocar para a visão de representante"
+              testID="botao-trocar-visao-representante"
+            >
+              <ArrowLeftRight size={18} color="#7C5800" />
+              <Text style={styles.botaoTrocarRepresentanteTexto}>
+                Trocar para a visão de representante
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Ações da Conta */}
         <View style={styles.section}>
           <Text variant="titleMedium" style={styles.sectionTitle}>Ações da Conta</Text>
@@ -231,24 +249,6 @@ export default function PerfilScreen() {
             <ChevronRight size={20} color="#999" />
           </TouchableOpacity>
         </View>
-
-        {ehRepresentante && (
-          <View style={styles.switchRoleSection}>
-            <TouchableOpacity
-              style={styles.botaoTrocarRepresentante}
-              activeOpacity={0.8}
-              onPress={() => setModalTrocarVisaoVisivel(true)}
-              accessibilityRole="button"
-              accessibilityLabel="Trocar para a visão de representante"
-              testID="botao-trocar-visao-representante"
-            >
-              <ArrowLeftRight size={18} color="#7C5800" />
-              <Text style={styles.botaoTrocarRepresentanteTexto}>
-                Trocar para a visão de representante
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
       </ScrollView>
 
       <Modal
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
   },
   switchRoleSection: {
     paddingHorizontal: 24,
-    marginTop: 24,
+    marginTop: 4,
   },
   botaoTrocarRepresentante: {
     height: 46,
