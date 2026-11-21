@@ -1,6 +1,8 @@
 import React, { createContext, useState, useContext, useEffect, useRef, useCallback, ReactNode } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { X } from 'lucide-react-native';
 import { authService, User } from '../services/authService';
 import { limparCacheAgendamentos } from '../services/agendamentoService';
 import { calcularStatusAluno } from '../utils/statusAluno';
@@ -18,6 +20,7 @@ interface AuthContextData {
   signOut: () => Promise<void>;
   setUserAndToken: (user: User, token: string, refreshToken?: string) => Promise<void>;
   updateUser: (data: Partial<User>) => Promise<void>;
+  switchRole: (targetRole: UserRole, toastMessage?: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -33,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [pendingCredentials, setPendingCredentials] = useState<{ email: string; senha: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [roleSwitchBanner, setRoleSwitchBanner] = useState<string | null>(null);
 
   const router = useRouter();
   const segments = useSegments();
@@ -41,9 +45,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const encerrandoSessao = useRef(false);
   // Usuário atual para quem responde depois (ex.: perfil carregado após o logout não pode "ressuscitar" a sessão).
   const userRef = useRef<User | null>(null);
+  const bannerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     userRef.current = user;
   }, [user]);
+  useEffect(() => {
+    return () => {
+      if (bannerTimeoutRef.current) {
+        clearTimeout(bannerTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const clearPendingCredentials = () => {
     setPendingCredentials(null);
@@ -115,7 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         router.replace(getHomeByRole(user.role) as any);
       }
     }
-  }, [user, segments, isLoading]);
+  }, [user, segments, isLoading, router]);
 
   async function setUserAndToken(userData: User, userToken: string, refreshToken?: string) {
     await limparCacheAgendamentos();
@@ -165,6 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name: response.usuario.nome || response.usuario.nome_completo || 'Usuário',
       email: response.usuario.email,
       role: roleFinal,
+      roles: Array.from(new Set(rolesMapeadas)),
       status: calcularStatusAluno(response.usuario.status_cadastro, response.usuario.acesso_expirado),
       telefone: response.usuario.telefone,
       curso: response.usuario.curso,
@@ -190,6 +203,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signOut() {
     encerrandoSessao.current = true;
+    if (bannerTimeoutRef.current) {
+      clearTimeout(bannerTimeoutRef.current);
+      bannerTimeoutRef.current = null;
+    }
+    setRoleSwitchBanner(null);
     await AsyncStorage.removeItem('@GOUOCE:token');
     await AsyncStorage.removeItem('@GOUOCE:refreshToken');
     await AsyncStorage.removeItem('@GOUOCE:user');
@@ -215,6 +233,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(updatedUser);
   }, []);
 
+  const switchRole = useCallback(
+    async (targetRole: UserRole, toastMessage?: string) => {
+      const atual = userRef.current;
+      if (!atual) return;
+      const updatedUser: User = {
+        ...atual,
+        role: targetRole,
+        roles: Array.from(new Set([...(atual.roles ?? []), atual.role, targetRole])),
+      };
+      await AsyncStorage.setItem('@GOUOCE:user', JSON.stringify(updatedUser));
+      if (!userRef.current) {
+        await AsyncStorage.removeItem('@GOUOCE:user');
+        return;
+      }
+      userRef.current = updatedUser;
+      setUser(updatedUser);
+
+      if (toastMessage) {
+        setRoleSwitchBanner(toastMessage);
+        if (bannerTimeoutRef.current) {
+          clearTimeout(bannerTimeoutRef.current);
+        }
+        bannerTimeoutRef.current = setTimeout(() => {
+          setRoleSwitchBanner(null);
+        }, 4000);
+      }
+
+      router.replace(getHomeByRole(targetRole) as any);
+    },
+    [router],
+  );
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -227,11 +277,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
       setUserAndToken,
       updateUser,
+      switchRole,
     }}>
-      {children}
+      <>
+        {children}
+        {roleSwitchBanner ? (
+          <View style={styles.toastBanner} testID="banner-troca-visao-perfil">
+            <Text style={styles.toastBannerText}>{roleSwitchBanner}</Text>
+            <TouchableOpacity
+              onPress={() => setRoleSwitchBanner(null)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityRole="button"
+              accessibilityLabel="Fechar aviso"
+              testID="fechar-banner-troca-visao"
+            >
+              <X size={18} color="#F2F3FA" />
+            </TouchableOpacity>
+          </View>
+        ) : null}
+      </>
     </AuthContext.Provider>
   );
 }
+
+const styles = StyleSheet.create({
+  toastBanner: {
+    position: 'absolute',
+    top: 48,
+    left: 16,
+    right: 16,
+    zIndex: 9999,
+    backgroundColor: '#2F3036',
+    borderRadius: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  toastBannerText: {
+    flex: 1,
+    color: '#F2F3FA',
+    fontSize: 14,
+    fontWeight: '400',
+  },
+});
 
 export function useAuth() {
   const context = useContext(AuthContext);

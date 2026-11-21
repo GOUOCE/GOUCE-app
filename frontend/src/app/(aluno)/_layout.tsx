@@ -15,6 +15,9 @@ export default function StudentLayout() {
   }
 
   if (user.role !== 'ALUNO') {
+    if (user.role === 'MOTORISTA') {
+      return <Redirect href="/(representante)/home" />;
+    }
     return <Redirect href="/acesso-negado" />;
   }
 

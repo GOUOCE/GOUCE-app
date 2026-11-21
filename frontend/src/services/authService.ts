@@ -7,6 +7,7 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  roles?: UserRole[];
   status?: string;
   telefone?: string;
   curso?: string;

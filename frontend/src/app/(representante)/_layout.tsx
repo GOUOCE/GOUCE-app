@@ -17,6 +17,9 @@ export default function RepresentativeLayout() {
   }
 
   if (user.role !== 'MOTORISTA') {
+    if (user.role === 'ALUNO') {
+      return <Redirect href="/(aluno)/home" />;
+    }
     return <Redirect href="/acesso-negado" />;
   }
 
@@ -52,15 +55,10 @@ export default function RepresentativeLayout() {
       <Tabs.Screen
         name="rota"
         options={{
-          title: 'Minha Rota',
+          title: 'Rota de Hoje',
           tabBarIcon: ({ focused }) => (
             <View style={[styles.iconContainer, focused && styles.activeIconContainer]}>
               <Route size={24} color={focused ? '#000' : '#666'} />
-            </View>
-          ),
-          tabBarButton: ({ children, style }) => (
-            <View style={style} pointerEvents="none">
-              {children}
             </View>
           ),
         }}
