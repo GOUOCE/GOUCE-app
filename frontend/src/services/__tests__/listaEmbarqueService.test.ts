@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals
 import { api } from '@/api/api';
 import {
   INTERVALO_POLLING_LISTA_MS,
+  calcularTotaisFrequencia,
   determinarSentidoViagem,
   extrairMensagemErroListaEmbarque,
   formatarTempoSincronizacao,
@@ -11,13 +12,27 @@ import {
   type ListaEmbarqueApiResponse,
 } from '../listaEmbarqueService';
 
+const mockAsyncStore = new Map<string, string>();
+
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  getItem: jest.fn(async (key: string) => mockAsyncStore.get(key) ?? null),
+  setItem: jest.fn(async (key: string, value: string) => {
+    mockAsyncStore.set(key, value);
+  }),
+  removeItem: jest.fn(async (key: string) => {
+    mockAsyncStore.delete(key);
+  }),
+}));
+
 jest.mock('@/api/api', () => ({
   api: {
     get: jest.fn(),
+    patch: jest.fn(),
   },
 }));
 
 const mockApiGet = api.get as jest.MockedFunction<typeof api.get>;
+const mockApiPatch = api.patch as jest.MockedFunction<typeof api.patch>;
 
 function criarRespostaApiFixture(
   override: Partial<ListaEmbarqueApiResponse> = {},
@@ -91,8 +106,10 @@ function criarRespostaApiFixture(
 }
 
 describe('listaEmbarqueService (HU-018)', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
+    mockAsyncStore.clear();
+    await listaEmbarqueService.limparCacheFrequencia();
   });
 
   afterEach(() => {
@@ -341,6 +358,95 @@ describe('listaEmbarqueService (HU-018)', () => {
       await jest.advanceTimersByTimeAsync(INTERVALO_POLLING_LISTA_MS * 2);
       expect(mockApiGet).toHaveBeenCalledTimes(1);
       expect(listener).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('registro de frequência e fila offline (HU-021)', () => {
+    it('inicializa alunos sem check-in com status PENDENTE e calcula totais (CA-03 e CA-07)', () => {
+      const lista = mapearRespostaListaEmbarque(criarRespostaApiFixture());
+
+      expect(lista.alunos.every((aluno) => aluno.statusPresenca === 'PENDENTE')).toBe(true);
+      expect(lista.totalPresentes).toBe(0);
+      expect(lista.totalFaltas).toBe(0);
+      expect(lista.totalPendentes).toBe(4);
+      expect(
+        calcularTotaisFrequencia([
+          { ...lista.alunos[0], statusPresenca: 'PRESENTE' },
+          { ...lista.alunos[1], statusPresenca: 'FALTA' },
+          lista.alunos[2],
+        ]),
+      ).toEqual({
+        totalPresentes: 1,
+        totalFaltas: 1,
+        totalPendentes: 1,
+      });
+    });
+
+    it('envia PATCH ao registrar presença/falta na data corrente (CA-01 e CA-02)', async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date(2026, 10, 21, 16, 30, 0));
+      mockApiPatch.mockResolvedValueOnce({ data: { ok: true } } as any);
+
+      const resultado = await listaEmbarqueService.registrarFrequencia({
+        rotaId: 1,
+        agendamentoId: 101,
+        statusPresenca: 'PRESENTE',
+        data: '2026-11-21',
+      });
+
+      expect(resultado).toEqual({ sincronizado: true, pendenteOffline: false });
+      expect(mockApiPatch).toHaveBeenCalledWith('/alocacao-diaria/lista-embarque/frequencia', {
+        data: '2026-11-21',
+        rota_id: 1,
+        agendamento_id: 101,
+        status_presenca: 'PRESENTE',
+      });
+    });
+
+    it('bloqueia registro de frequência fora da data da viagem (RN-014 e FA-001)', async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date(2026, 10, 21, 16, 30, 0));
+
+      await expect(
+        listaEmbarqueService.registrarFrequencia({
+          rotaId: 1,
+          agendamentoId: 101,
+          statusPresenca: 'PRESENTE',
+          data: '2026-11-20',
+        }),
+      ).rejects.toThrow('A chamada só pode ser realizada no dia exato da viagem.');
+      expect(mockApiPatch).not.toHaveBeenCalled();
+    });
+
+    it('armazena marcação localmente quando sem conexão e sincroniza ao restabelecer rede (FA-003)', async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date(2026, 10, 21, 16, 30, 0));
+      mockApiPatch.mockRejectedValueOnce(new Error('Network Error'));
+
+      const offlineRes = await listaEmbarqueService.registrarFrequencia({
+        rotaId: 1,
+        agendamentoId: 101,
+        statusPresenca: 'FALTA',
+        data: '2026-11-21',
+      });
+
+      expect(offlineRes).toEqual({ sincronizado: false, pendenteOffline: true });
+      const pendentesAntes = await listaEmbarqueService.obterFrequenciasPendentes({ rotaId: 1 });
+      expect(pendentesAntes).toHaveLength(1);
+      expect(pendentesAntes[0].statusPresenca).toBe('FALTA');
+
+      mockApiPatch.mockResolvedValueOnce({ data: { ok: true } } as any);
+      const syncRes = await listaEmbarqueService.sincronizarFrequenciasPendentes();
+
+      expect(syncRes).toEqual({ sincronizados: 1, restantes: 0 });
+      expect(mockApiPatch).toHaveBeenLastCalledWith('/alocacao-diaria/lista-embarque/frequencia', {
+        data: '2026-11-21',
+        rota_id: 1,
+        agendamento_id: 101,
+        status_presenca: 'FALTA',
+      });
+      const pendentesDepois = await listaEmbarqueService.obterFrequenciasPendentes();
+      expect(pendentesDepois).toHaveLength(0);
     });
   });
 });

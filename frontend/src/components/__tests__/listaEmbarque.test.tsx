@@ -1,22 +1,32 @@
 import React from 'react';
-import { FlatList, Modal, Text, TouchableOpacity } from 'react-native';
+import { FlatList, Modal, Text, TextInput, TouchableOpacity } from 'react-native';
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import { api } from '@/api/api';
+import { userService } from '@/services/userService';
 import AdminListaEmbarqueScreen from '../../app/(administrador)/logistica/embarque';
+import StudentPerfilScreen from '../../app/(aluno)/(tabs)/perfil';
 import RepresentativeHomeScreen from '../../app/(representante)/home';
+import RepresentativePerfilScreen from '../../app/(representante)/perfil';
+import RepresentativeRotaScreen from '../../app/(representante)/rota';
 import {
   INTERVALO_POLLING_LISTA_MS,
+  listaEmbarqueService,
   type AlunoListaEmbarqueApiDTO,
   type ListaEmbarqueApiResponse,
 } from '../../services/listaEmbarqueService';
 import { imprimirListaEmbarque } from '@/utils/impressaoListaEmbarque';
 
 const renderer = jest.requireActual<any>('react-test-renderer');
+const mockAsyncStore = new Map<string, string>();
 
+const mockRouterPush = jest.fn();
 const mockRouterBack = jest.fn();
 const mockRouterReplace = jest.fn();
 const mockRouterCanGoBack = jest.fn(() => true);
+const mockUpdateUser = jest.fn(async () => undefined);
+const mockSwitchRole = jest.fn(async () => undefined);
+const mockSignOut = jest.fn(async () => undefined);
 
 let mockSearchParams: {
   rotaId?: string;
@@ -24,7 +34,20 @@ let mockSearchParams: {
   modoFixo?: string;
   dataIso?: string;
 } = {};
-let mockUser: { id: number; name: string; role: string; faculdade?: number } | null = {
+let mockUser: {
+  id: number | string;
+  name: string;
+  email?: string;
+  role: string;
+  roles?: string[];
+  faculdade?: number | string;
+  telefone?: string;
+  curso?: string;
+  periodo_ingresso?: string;
+  turno?: string;
+  status?: string;
+  foto_perfil?: string;
+} | null = {
   id: 1,
   name: 'Administrador Padrao',
   role: 'ADMINISTRADOR',
@@ -32,6 +55,7 @@ let mockUser: { id: number; name: string; role: string; faculdade?: number } | n
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({
+    push: mockRouterPush,
     back: mockRouterBack,
     replace: mockRouterReplace,
     canGoBack: mockRouterCanGoBack,
@@ -39,24 +63,83 @@ jest.mock('expo-router', () => ({
   useLocalSearchParams: () => mockSearchParams,
 }));
 
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  getItem: jest.fn(async (key: string) => mockAsyncStore.get(key) ?? null),
+  setItem: jest.fn(async (key: string, value: string) => {
+    mockAsyncStore.set(key, value);
+  }),
+  removeItem: jest.fn(async (key: string) => {
+    mockAsyncStore.delete(key);
+  }),
+}));
+
 jest.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({ user: mockUser }),
+  useAuth: () => ({
+    user: mockUser,
+    token: 'token-mock',
+    updateUser: mockUpdateUser,
+    switchRole: mockSwitchRole,
+    signOut: mockSignOut,
+  }),
 }));
 
 jest.mock(
   '@contexts/AuthContext',
   () => ({
-    useAuth: () => ({ user: mockUser }),
+    useAuth: () => ({
+      user: mockUser,
+      token: 'token-mock',
+      updateUser: mockUpdateUser,
+      switchRole: mockSwitchRole,
+      signOut: mockSignOut,
+    }),
   }),
   { virtual: true },
 );
 
+jest.mock('react-native-paper', () => {
+  const RN = jest.requireActual<any>('react-native');
+  return {
+    Text: RN.Text,
+    Surface: RN.View,
+    Divider: RN.View,
+    useTheme: () => ({ colors: { primary: '#3E5F90' } }),
+    Avatar: {
+      Image: 'AvatarImage',
+      Text: 'AvatarText',
+    },
+  };
+});
+
+jest.mock('@/components/ui/AppPopup', () => ({
+  AppPopup: 'AppPopup',
+}));
+
+jest.mock('@/services/userService', () => ({
+  userService: {
+    getProfile: jest.fn(),
+  },
+}));
+
 jest.mock('lucide-react-native', () => ({
+  AlertCircle: 'AlertCircle',
   ArrowLeft: 'ArrowLeft',
+  ArrowLeftRight: 'ArrowLeftRight',
+  CalendarX2: 'CalendarX2',
+  Check: 'Check',
   ChevronDown: 'ChevronDown',
+  ChevronRight: 'ChevronRight',
   ChevronUp: 'ChevronUp',
+  ClipboardCheck: 'ClipboardCheck',
+  CreditCard: 'CreditCard',
+  LogOut: 'LogOut',
+  Mail: 'Mail',
+  Pencil: 'Pencil',
   Printer: 'Printer',
+  RefreshCw: 'RefreshCw',
   Route: 'Route',
+  Search: 'Search',
+  X: 'X',
 }));
 
 jest.mock('@/utils/impressaoListaEmbarque', () => ({
@@ -65,12 +148,16 @@ jest.mock('@/utils/impressaoListaEmbarque', () => ({
 
 jest.mock('@/api/api', () => ({
   api: {
+    defaults: { baseURL: 'http://localhost:8000' },
     get: jest.fn(),
+    patch: jest.fn(),
   },
 }));
 
 const mockApiGet = api.get as jest.MockedFunction<typeof api.get>;
+const mockApiPatch = api.patch as jest.MockedFunction<typeof api.patch>;
 const mockImprimir = imprimirListaEmbarque as jest.MockedFunction<typeof imprimirListaEmbarque>;
+const mockGetProfile = userService.getProfile as jest.MockedFunction<typeof userService.getProfile>;
 
 let rootAtual: any = null;
 
@@ -218,8 +305,12 @@ async function pressionar(botao: any) {
 }
 
 describe('Telas da Lista de Embarque integradas à API (HU-018)', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
+    mockAsyncStore.clear();
+    await listaEmbarqueService.limparCacheFrequencia();
+    mockApiPatch.mockResolvedValue({ data: { ok: true } } as any);
+    mockGetProfile.mockResolvedValue(null as any);
     mockSearchParams = {};
     mockRouterCanGoBack.mockReturnValue(true);
     mockUser = {
@@ -569,6 +660,350 @@ describe('Telas da Lista de Embarque integradas à API (HU-018)', () => {
       expect(lerTextoNode(encontrarTextoPorTestId(root, 'indicador-sincronizacao'))).toBe(
         'Atualizado agora',
       );
+    });
+  });
+
+  describe('HU-021 - Registro de Embarque e Frequência', () => {
+    it('inicia chamada neutra (Pendentes), registra Presente/Falta e atualiza contadores em tempo real', async () => {
+      mockSearchParams = { rotaId: '1', modoFixo: 'true' };
+
+      const root = await renderizar(<AdminListaEmbarqueScreen />);
+
+      expect(lerTextoNode(encontrarTextoPorTestId(root, 'contador-presentes'))).toBe(
+        'Presentes: 0',
+      );
+      expect(lerTextoNode(encontrarTextoPorTestId(root, 'contador-faltas'))).toBe('Faltas: 0');
+      expect(lerTextoNode(encontrarTextoPorTestId(root, 'contador-pendentes'))).toBe(
+        'Pendentes: 38',
+      );
+
+      await pressionar(encontrarBotaoPorTestId(root, 'botao-presenca-presente-1'));
+      await pressionar(encontrarBotaoPorTestId(root, 'botao-presenca-falta-2'));
+
+      expect(mockApiPatch).toHaveBeenCalledTimes(2);
+      expect(lerTextoNode(encontrarTextoPorTestId(root, 'contador-presentes'))).toBe(
+        'Presentes: 1',
+      );
+      expect(lerTextoNode(encontrarTextoPorTestId(root, 'contador-faltas'))).toBe('Faltas: 1');
+      expect(lerTextoNode(encontrarTextoPorTestId(root, 'contador-pendentes'))).toBe(
+        'Pendentes: 36',
+      );
+    });
+
+    it('filtra alunos pela barra de busca "Buscar aluno"', async () => {
+      mockSearchParams = { rotaId: '1', modoFixo: 'true' };
+      const root = await renderizar(<AdminListaEmbarqueScreen />);
+
+      const inputBusca = root.root.findByType(TextInput);
+      expect(inputBusca.props.testID).toBe('input-buscar-aluno-embarque');
+
+      await renderer.act(async () => {
+        inputBusca.props.onChangeText('Bruno');
+      });
+
+      const filtrados = root.root.findByType(FlatList).props.data;
+      expect(filtrados).toHaveLength(1);
+      expect(filtrados[0].nome).toBe('Bruno Costa');
+    });
+
+    it('bloqueia check-in e exibe aviso somente leitura para datas passadas/futuras (RN-014 / FA-001)', async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date(2026, 10, 21, 12, 0, 0));
+      mockSearchParams = {
+        rotaId: '1',
+        rotaNome: 'Linha 01 - Centro',
+        modoFixo: 'true',
+        dataIso: '2026-08-31',
+      };
+      mockApiGet.mockResolvedValueOnce({
+        data: criarRespostaListaApi({ data: '2026-08-31' }),
+      } as any);
+
+      const root = await renderizar(<AdminListaEmbarqueScreen />);
+
+      expect(
+        root.root.findAll((node: any) => node.props?.testID === 'banner-somente-leitura-chamada')
+          .length,
+      ).toBeGreaterThan(0);
+      expect(extrairTodosTextos(root)).toContain(
+        'Modo somente leitura - a chamada só pode ser realizada no dia exato da viagem.',
+      );
+
+      const botaoPresente = encontrarBotaoPorTestId(root, 'botao-presenca-presente-1');
+      expect(botaoPresente.props.disabled).toBe(true);
+
+      await pressionar(botaoPresente);
+      expect(mockApiPatch).not.toHaveBeenCalled();
+    });
+
+    it('salva chamada offline e exibe banner de sincronização pendente até envio em segundo plano (FA-003)', async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date(2026, 10, 21, 12, 0, 0));
+      mockSearchParams = { rotaId: '1', modoFixo: 'true' };
+
+      mockApiPatch.mockRejectedValueOnce(new Error('Network Error'));
+
+      const root = await renderizar(<AdminListaEmbarqueScreen />);
+
+      await pressionar(encontrarBotaoPorTestId(root, 'botao-presenca-presente-1'));
+
+      expect(
+        root.root.findAll((node: any) => node.props?.testID === 'banner-sincronizacao-pendente')
+          .length,
+      ).toBeGreaterThan(0);
+      expect(extrairTodosTextos(root)).toContain('Sem conexão - sincronização pendente');
+      expect(lerTextoNode(encontrarTextoPorTestId(root, 'contador-presentes'))).toBe(
+        'Presentes: 1',
+      );
+
+      mockApiPatch.mockResolvedValueOnce({ data: { ok: true } } as any);
+      await renderer.act(async () => {
+        await jest.advanceTimersByTimeAsync(INTERVALO_POLLING_LISTA_MS);
+      });
+      await flushAsync();
+
+      expect(
+        root.root.findAll((node: any) => node.props?.testID === 'banner-sincronizacao-pendente'),
+      ).toHaveLength(0);
+    });
+
+    it('exibe mensagem padrão quando não há registros de viagens na data selecionada (CA-04 / FA-004)', async () => {
+      mockSearchParams = { dataIso: '2026-11-22' };
+      mockApiGet.mockResolvedValueOnce({
+        data: { data: '2026-11-22', rotas: [] },
+      } as any);
+
+      const root = await renderizar(<AdminListaEmbarqueScreen />);
+
+      expect(lerTextoNode(encontrarTextoPorTestId(root, 'mensagem-sem-viagens-data'))).toBe(
+        'Não há registros de viagens ou agendamentos para a data selecionada.',
+      );
+    });
+
+    it('renderiza tela Rota do Dia do Representante com atalho para a chamada (Tela 55)', async () => {
+      mockUser = {
+        id: 10,
+        name: 'Ana Beatriz',
+        role: 'MOTORISTA',
+        faculdade: 1,
+      };
+      mockApiGet.mockResolvedValueOnce({
+        data: criarRespostaListaApi({
+          veiculos_escalados: [
+            {
+              alocacao_id: 1,
+              turno: 'ida',
+              onibus_placa: 'OCR-5521',
+              motorista_nome: 'Carlos',
+              total_sentados: 18,
+              total_em_pe: 0,
+            },
+          ],
+          total_alunos_alocados: 18,
+          alunos: criarAlunosApiFixture(18),
+        }),
+      } as any);
+
+      const rootComRota = await renderizar(<RepresentativeRotaScreen />);
+
+      expect(lerTextoNode(encontrarTextoPorTestId(rootComRota, 'titulo-onibus-rota-hoje'))).toBe(
+        'Ônibus • Placa OCR-5521',
+      );
+      expect(lerTextoNode(encontrarTextoPorTestId(rootComRota, 'horario-saida-rota-hoje'))).toBe(
+        '06:40',
+      );
+      expect(lerTextoNode(encontrarTextoPorTestId(rootComRota, 'horario-retorno-rota-hoje'))).toBe(
+        '17:00',
+      );
+      expect(lerTextoNode(encontrarTextoPorTestId(rootComRota, 'ies-responsavel-rota-hoje'))).toBe(
+        'UFC',
+      );
+      expect(lerTextoNode(encontrarTextoPorTestId(rootComRota, 'chip-alunos-alocados-rota'))).toBe(
+        '18 alunos alocados',
+      );
+
+      await pressionar(
+        encontrarBotaoPorTestId(rootComRota, 'botao-ver-lista-embarque-frequencia'),
+      );
+      expect(mockRouterPush).toHaveBeenCalledWith('/(representante)/home');
+    });
+
+    it('exibe estado Sem Viagens na tela Rota do Dia do Representante quando não há rota no dia (Tela 56)', async () => {
+      mockUser = {
+        id: 10,
+        name: 'Ana Beatriz',
+        role: 'MOTORISTA',
+        faculdade: 1,
+      };
+      mockApiGet.mockRejectedValueOnce({
+        response: {
+          status: 404,
+          data: { detail: { code: 'SEM_ROTA_NO_DIA' } },
+        },
+      } as any);
+
+      const rootSemRota = await renderizar(<RepresentativeRotaScreen />);
+      expect(
+        lerTextoNode(encontrarTextoPorTestId(rootSemRota, 'mensagem-sem-viagens-representante')),
+      ).toBe('Não há registros de viagens ou agendamentos para a data selecionada.');
+    });
+  });
+
+  describe('[Geral] 59 - Perfil de Representante', () => {
+    it('exibe dados de vínculo estudantil do representante e sincroniza com /usuarios/me', async () => {
+      mockUser = {
+        id: 10,
+        name: 'Ana Beatriz',
+        email: 'ana@email.com',
+        telefone: '88988887777',
+        faculdade: 'UFC - Campus Quixadá',
+        curso: 'Inteligência Artificial',
+        periodo_ingresso: '2026.1',
+        turno: 'Noturno',
+        status: 'ativado',
+        role: 'MOTORISTA',
+      };
+      mockGetProfile.mockResolvedValueOnce({
+        nome: 'Ana Beatriz',
+        email: 'ana@email.com',
+        telefone: '88988887777',
+        sigla_faculdade: 'UFC',
+        campus: 'Quixadá',
+        curso: 'Inteligência Artificial',
+        periodo_ingresso: '2026.1',
+        turno_curso: 'Noturno',
+        status_cadastro: 'ativado',
+      });
+
+      const root = await renderizar(<RepresentativePerfilScreen />);
+
+      expect(mockGetProfile).toHaveBeenCalledTimes(1);
+      expect(mockUpdateUser).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Ana Beatriz',
+          faculdade: 'UFC - Quixadá',
+          curso: 'Inteligência Artificial',
+          periodo_ingresso: '2026.1',
+          turno: 'Noturno',
+        }),
+      );
+      expect(lerTextoNode(encontrarTextoPorTestId(root, 'nome-perfil-representante'))).toBe(
+        'Ana Beatriz',
+      );
+      expect(lerTextoNode(encontrarTextoPorTestId(root, 'badge-status-representante'))).toBe(
+        'Aprovado',
+      );
+      expect(lerTextoNode(encontrarTextoPorTestId(root, 'perfil-rep-email'))).toBe(
+        'ana@email.com',
+      );
+      expect(lerTextoNode(encontrarTextoPorTestId(root, 'perfil-rep-telefone'))).toBe(
+        '(88) 9 8888-7777',
+      );
+      expect(lerTextoNode(encontrarTextoPorTestId(root, 'perfil-rep-instituicao'))).toBe(
+        'UFC - Campus Quixadá',
+      );
+      expect(lerTextoNode(encontrarTextoPorTestId(root, 'perfil-rep-curso'))).toBe(
+        'Inteligência Artificial',
+      );
+      expect(lerTextoNode(encontrarTextoPorTestId(root, 'perfil-rep-periodo'))).toBe('2026.1');
+      expect(lerTextoNode(encontrarTextoPorTestId(root, 'perfil-rep-turno'))).toBe('Noturno');
+    });
+
+    it('abre modal "Trocar visão?" e alterna para a visão de aluno ao confirmar', async () => {
+      mockUser = {
+        id: 10,
+        name: 'Ana Beatriz',
+        email: 'ana@email.com',
+        role: 'MOTORISTA',
+        status: 'ativado',
+      };
+
+      const root = await renderizar(<RepresentativePerfilScreen />);
+
+      await pressionar(encontrarBotaoPorTestId(root, 'botao-trocar-visao-aluno'));
+      expect(extrairTodosTextos(root)).toContain('Trocar visão?');
+      expect(extrairTodosTextos(root)).toContain(
+        'Tem certeza de que quer trocar a visão do aplicativo para sua conta de aluno?',
+      );
+
+      await pressionar(encontrarBotaoPorTestId(root, 'botao-cancelar-troca-visao'));
+      expect(mockSwitchRole).not.toHaveBeenCalled();
+
+      await pressionar(encontrarBotaoPorTestId(root, 'botao-trocar-visao-aluno'));
+      await pressionar(encontrarBotaoPorTestId(root, 'botao-confirmar-troca-visao'));
+      expect(mockSwitchRole).toHaveBeenCalledWith('ALUNO', 'Visão trocada para perfil de aluno');
+    });
+
+    it('abre modal "Sair da conta?" e encerra sessão ao confirmar saída', async () => {
+      mockUser = {
+        id: 10,
+        name: 'Ana Beatriz',
+        email: 'ana@email.com',
+        role: 'MOTORISTA',
+        status: 'ativado',
+      };
+
+      const root = await renderizar(<RepresentativePerfilScreen />);
+
+      await pressionar(encontrarBotaoPorTestId(root, 'botao-sair-conta-representante'));
+      expect(extrairTodosTextos(root)).toContain('Sair da conta?');
+      expect(extrairTodosTextos(root)).toContain(
+        'Você precisará fazer login novamente para registrar as chamadas.',
+      );
+
+      await pressionar(encontrarBotaoPorTestId(root, 'botao-cancelar-sair-representante'));
+      expect(mockSignOut).not.toHaveBeenCalled();
+
+      await pressionar(encontrarBotaoPorTestId(root, 'botao-sair-conta-representante'));
+      await pressionar(encontrarBotaoPorTestId(root, 'botao-confirmar-sair-representante'));
+      expect(mockSignOut).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('Troca de visão bidirecional no Perfil do Aluno', () => {
+    it('exibe botão "Trocar para a visão de representante" apenas quando aluno também é representante e confirma troca', async () => {
+      mockUser = {
+        id: 10,
+        name: 'Juliana Mendes',
+        email: 'representante@gouce.app',
+        role: 'ALUNO',
+        roles: ['MOTORISTA', 'ALUNO'],
+        status: 'ativado',
+      };
+
+      const rootRepresentante = await renderizar(<StudentPerfilScreen />);
+      const botaoTrocar = encontrarBotaoPorTestId(
+        rootRepresentante,
+        'botao-trocar-visao-representante',
+      );
+      expect(botaoTrocar).toBeDefined();
+
+      await pressionar(botaoTrocar);
+      expect(extrairTodosTextos(rootRepresentante)).toContain('Trocar visão?');
+      expect(extrairTodosTextos(rootRepresentante)).toContain(
+        'Tem certeza de que quer trocar a visão do aplicativo para sua conta de representante?',
+      );
+
+      await pressionar(
+        encontrarBotaoPorTestId(rootRepresentante, 'botao-confirmar-troca-visao-representante'),
+      );
+      expect(mockSwitchRole).toHaveBeenCalledWith(
+        'MOTORISTA',
+        'Visão trocada para perfil de representante',
+      );
+
+      mockUser = {
+        id: 20,
+        name: 'Aluno Comum',
+        email: 'aluno@gouce.app',
+        role: 'ALUNO',
+        roles: ['ALUNO'],
+        status: 'ativado',
+      };
+      const rootAlunoComum = await renderizar(<StudentPerfilScreen />);
+      expect(
+        encontrarBotaoPorTestId(rootAlunoComum, 'botao-trocar-visao-representante'),
+      ).toBeUndefined();
     });
   });
 });
