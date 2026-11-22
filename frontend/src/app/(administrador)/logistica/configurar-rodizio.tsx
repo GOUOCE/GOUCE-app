@@ -34,16 +34,20 @@ export default function ConfigurarRodizioScreen() {
   });
 
   useEffect(() => {
-    carregarOpcoesEPrevia();
+    let ativo = true;
+    async function carregar() {
+      const opts = await rodizioService.obterOpcoesAlternancia();
+      const prev = await rodizioService.gerarPreviaRodizio('204', proximaRotaId);
+      if (ativo) {
+        setOpcoesRotas(opts.rotasDisponiveis || []);
+        setPrevia(prev);
+      }
+    }
+    carregar();
+    return () => {
+      ativo = false;
+    };
   }, [proximaRotaId]);
-
-  const carregarOpcoesEPrevia = async () => {
-    const opts = await rodizioService.obterOpcoesAlternancia();
-    setOpcoesRotas(opts.rotasDisponiveis || []);
-
-    const prev = await rodizioService.gerarPreviaRodizio('204', proximaRotaId);
-    setPrevia(prev);
-  };
 
   const getLabelRota = (val: string) => {
     const achado = opcoesRotas.find(r => r.value === val);
