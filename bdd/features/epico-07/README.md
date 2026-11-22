@@ -1,6 +1,6 @@
 # BDD — Épico 07: Comunicação e Mural de Avisos
 
-Especificações em Gherkin (português) do comportamento esperado para a comunicação oficial da coordenação com os alunos: o mural de avisos gerenciado pelo administrador e as notificações push enviadas ao smartphone do aluno.
+Especificações em Gherkin (português) do comportamento esperado para a comunicação oficial da coordenação com os alunos: o mural de avisos gerenciado pelo administrador e as notificações enviadas ao smartphone do aluno.
 
 O formato, as tags e a rastreabilidade seguem o padrão descrito em [`../epico-01/README.md`](../epico-01/README.md). As tags adicionais e a organização em blocos `Regra:` seguem o [`../epico-02/README.md`](../epico-02/README.md).
 
@@ -14,60 +14,55 @@ bdd/features/epico-07/
 
 ## Tags adicionais usadas neste épico
 
-| Tag              | Significado                                                                  |
-| ---------------- | ---------------------------------------------------------------------------- |
-| `@conectividade` | Cenário que depende de queda de conexão ou de entrega posterior (FA-001)     |
-| `@auditoria`     | Verifica o registro no log de auditoria (RNF-013)                            |
+| Tag                 | Significado                                                                                              |
+| ------------------- | -------------------------------------------------------------------------------------------------------- |
+| `@nao_implementado` | Critério dos requisitos que ainda não existe no código (branches das HU-023 e HU-024); aguarda decisão do PO |
+| `@conectividade`    | Cenário que depende de queda de conexão ou de entrega posterior                                           |
+| `@auditoria`        | Verifica o registro no log de auditoria (RNF-013)                                                         |
+
+## Base dos cenários
+
+O épico ainda não está na `develop`: a aba "Avisos" do aluno é só um placeholder. Os cenários seguem o que está implementado nas branches `feature/hu-023-publicacao-de-avisos` (PR #382) e `feature/hu-024-mural-aluno-e-notificacoes` (PR #383), que têm API, telas do administrador e do aluno e notificação local. Como esse código difere bastante dos requisitos, os cenários sem tag descrevem o que existe (nomes de campos, mensagens, limites e funcionamento) e os critérios dos requisitos que ainda não existem ficam marcados com `@nao_implementado`.
 
 ## Histórias de Usuário
 
 **HU-023: Publicação de Avisos**
 
-- Fluxo: o administrador abre "Mural de Avisos", seleciona "Novo Aviso", preenche título e conteúdo e aciona "Publicar"; o sistema exibe "Aviso publicado com sucesso" e o aviso aparece no mural do aluno
-- Validação: título e conteúdo obrigatórios, inclusive quando preenchidos só com espaços (FA-001); a API recusa a publicação sem os campos
-- Edição e inativação: a mudança aparece imediatamente no mural do aluno; a inativação é soft delete e o aviso inativado deixa de ser exibido (FA-002)
-- Autoria e auditoria: o aviso fica associado ao administrador logado (AC-03) e as operações de escrita são registradas no log (RNF-013)
-- Acesso (RN-006): só o administrador gerencia avisos; o aluno apenas lê o mural
-- Organizado em blocos `Regra:` (gerenciamento pelo administrador, mural do aluno, acesso restrito)
-- Cenários: 1 publicação + 1 lista + 1 autor (API) + 1 obrigatórios + 1 só espaços + 1 obrigatórios (API) + 1 edição + 1 inativação + 1 soft delete + 1 auditoria + 1 avisos no mural do aluno + 1 aviso inativado + 1 mural vazio + 1 edição visível ao aluno + 3 acesso restrito (menu, API e sem token)
+- Implementado: o administrador abre "Notificações" no menu "Mais", entra em "Gerenciar Avisos", seleciona "Novo", preenche "Título" e "Descrição" e salva; o sistema exibe "Operação realizada com sucesso" e "Aviso publicado com sucesso."; o aviso aparece no mural do aluno, que também tem busca por título
+- Validação: "Título é obrigatório." e "Descrição é obrigatória." (também para só espaços); título de 3 a 150 e descrição de 3 a 2000 caracteres, com as mensagens "O título deve ter pelo menos 3 caracteres.", "O título deve ter no máximo 150 caracteres.", "A descrição deve ter pelo menos 3 caracteres." e "A descrição deve ter no máximo 2000 caracteres."
+- Autoria: o aviso fica associado ao administrador logado; a API responde `201`, e a publicação exige perfil de administrador (RN-006), enquanto a consulta é liberada a qualquer usuário autenticado
+- Não implementado (`@nao_implementado`): edição, inativação com soft delete, aviso inativado fora do mural e auditoria (RNF-013)
+- Organizado em blocos `Regra:` (publicação e consulta, edição e inativação, mural do aluno, acesso restrito)
+- Cenários: 1 publicação + 1 lista + 1 busca + 1 autor (API) + 1 obrigatórios + 1 só espaços + 1 tamanho dos campos + 1 obrigatórios (API) + 4 não implementados do administrador (edição, inativação, soft delete e auditoria) + 1 mural do aluno + 1 mural atualizado + 1 busca + 1 erro de carregamento + 2 não implementados do mural (aviso inativado e edição) + 3 acesso restrito (menu, API e sem token)
 
 **HU-024: Recebimento de Notificações Push**
 
-- Fluxo: a publicação de um aviso ou a alteração de última hora na alocação do aluno (ônibus ou rota) faz a API montar a notificação e enviá-la ao serviço de mensageria (Firebase ou APNs), que a entrega ao aparelho
-- Recebimento: o alerta aparece com o aplicativo fechado ou em segundo plano; ao tocar, o app abre no Mural de Avisos (aviso) ou na Consulta de Alocação (mudança de rota ou ônibus)
-- Offline (FA-001): o serviço de mensageria retém a notificação e entrega quando a conexão volta
-- Permissão desativada (FA-002): a notificação não aparece e o aluno vê o aviso ao abrir o Mural
-- Dados atualizados (RN-009): a notificação e a consulta refletem a alocação mais recente
-- Organizado em blocos `Regra:` (disparo, recebimento no aparelho)
-- Cenários: 1 aviso + 1 alteração de alocação + 1 só o aluno afetado + 1 dados atualizados (API) + 1 disparo a cada evento (API) + 1 app fechado ou em segundo plano + 1 tela aberta ao tocar + 1 aviso no mural + 1 offline + 1 permissão desativada + 1 solicitação de permissão
+- Implementado: com o aplicativo aberto, a tela do aluno consulta a API a cada 5 segundos e exibe uma notificação local do aplicativo "GOUOCE" com o título e o texto do aviso; cada evento notifica uma única vez; ao abrir o app, avisos anteriores não geram notificação e ficam no mural; ao tocar, o app abre a aba "Avisos"; sem permissão, nada é exibido e o aviso continua no mural
+- API: `GET /avisos/notificacoes` devolve os eventos do mais recente para o mais antigo, com consulta incremental pelo identificador (`apos_id`) e limite de 1 a 50; a falha do disparo não desfaz a publicação do aviso
+- Não implementado (`@nao_implementado`): envio por Firebase/APNs, entrega com o aplicativo fechado ou em segundo plano, retenção offline pelo serviço de mensageria, disparo na alteração de alocação (o método de realocação existe no serviço, mas nenhum fluxo o chama), abertura da Consulta de Alocação ao tocar e dados atualizados da alocação (RN-009)
+- Organizado em blocos `Regra:` (aviso notificado no aparelho, eventos da API, entrega por Firebase/APNs e alteração de alocação)
+- Cenários: 1 aviso notificado + 1 toque abre o mural + 1 sem repetição + 1 primeira sincronização + 1 permissão desativada + 1 solicitação de permissão + 1 cadastro pendente + 1 eventos da API + 1 consulta incremental + 1 limite + 1 referência inválida + 1 falha do disparo + 1 sem token + 7 não implementados (app fechado, mensageria, offline, alteração de alocação, só o afetado, toque na alocação e dados atualizados)
 
 ## Resumo de Cobertura
 
-| HU     | Cenários | Esquemas | Execuções |
-| ------ | -------- | -------- | --------- |
-| HU-023 | 17       | 6        | 24        |
-| HU-024 | 11       | 4        | 16        |
-| Total  | 28       | 10       | 40        |
+| HU     | Cenários | Esquemas | Execuções | Implementados | Não implementados |
+| ------ | -------- | -------- | --------- | ------------- | ----------------- |
+| HU-023 | 21       | 8        | 34        | 15            | 6                 |
+| HU-024 | 20       | 3        | 25        | 13            | 7                 |
+| Total  | 41       | 11       | 59        | 28            | 13                |
 
 - Todos os critérios de aceite e fluxos alternativos de `docs/requisitos.md` (seção 7.8) têm ao menos um cenário.
 - Cenários de API, soft delete, auditoria, integridade (RNF-012), confiabilidade (RNF-014) e acesso por perfil estão marcados com `@teste_api @nao_automatizavel_via_appium`.
-- Como o épico não está implementado, os códigos de status de API seguem o padrão dos outros épicos e devem ser confirmados na implementação.
 - Arquivos validados com o parser oficial `@cucumber/gherkin`.
 
 ## Divergências encontradas entre requisitos e implementação
 
-Os cenários seguem os requisitos. A `develop` analisada é a `f51e7d1e`.
+Os pontos abaixo estão na issue de decisões do PO deste épico.
 
-**Sem implementação na `develop`:**
-
-- **HU-023 e HU-024:** não há módulo de avisos no backend nem tela no app; a aba "Avisos" do aluno (`avisos.tsx`) é só um texto de placeholder. Existe um começo em duas branches de PRs fechados sem merge (#382, `feature/hu-023-publicacao-de-avisos`, e #383, `feature/hu-024-mural-aluno-e-notificacoes`).
-- **Branches fechadas, o que elas têm:** a API só lista avisos, publica e lista notificações; não tem edição, inativação (soft delete) nem auditoria. O serviço de push guarda os eventos em memória e não chama Firebase nem APNs; o app usa notificações locais do `expo-notifications`. A API chama o conteúdo de `descricao` (aceita `conteudo`) e responde "Aviso publicado com sucesso." com ponto final.
-
-**Pontos dos requisitos em aberto:**
-
-- **Destinatários do aviso (HU-024, AC-01):** a história fala em "aluno afetado", mas um aviso do mural não aponta para um aluno. Os cenários consideram que o aviso notifica os alunos com acesso regular.
-- **Mensagens não definidas (HU-023):** os requisitos não trazem o texto de sucesso da edição e da inativação, nem o texto do mural vazio; os cenários descrevem o comportamento sem citar frase.
-- **Limites dos campos (HU-023):** os requisitos não definem tamanho mínimo e máximo de título e conteúdo. A branch usa título de 3 a 150 e descrição de 3 a 2000 caracteres.
-- **Registro do aparelho (HU-024):** nenhum critério fala em pedir a permissão ao aluno e registrar o aparelho para o push, que é pré-condição de todo o fluxo. O cenário de solicitação de permissão foi derivado do FA-002.
-- **Notificação de edição e de inativação (HU-023 e HU-024):** o requisito dispara a notificação só na publicação; não diz se editar ou inativar um aviso também notifica.
-- **Nome do campo:** o requisito fala em "conteúdo"; a branch usa "descrição" na API e na validação.
+- **Edição e inativação (HU-023, AC-04, AC-05 e FA-002):** a API só publica e lista avisos (não há `PATCH` nem `DELETE`) e a tabela `aviso` não tem coluna de situação; os avisos publicados não podem ser alterados nem removidos.
+- **Auditoria (HU-023, RNF-013):** a publicação não grava log de auditoria.
+- **Push nativo (HU-024, AC-02, AC-04, FA-001 e RNF-014):** não há Firebase nem APNs. O aplicativo consulta a API a cada 5 segundos e exibe uma notificação local, então só notifica com o aplicativo aberto; avisos publicados com o app fechado ou sem conexão aparecem só no mural.
+- **Alteração de alocação (HU-024, AC-01, AC-06 e RN-009):** o serviço tem um método de notificação de realocação ("Você foi realocado" / "Seu ônibus para hoje é o ônibus X. Toque para ver os detalhes."), mas nenhuma alteração de alocação o chama.
+- **Tela ao tocar (HU-024, AC-03):** o toque sempre abre a aba "Avisos"; o requisito pede a Consulta de Alocação para mudanças de rota e de ônibus.
+- **Nome e limites dos campos (HU-023):** o requisito fala em "conteúdo"; a tela e a API usam "Descrição", com título de 3 a 150 e descrição de 3 a 2000 caracteres, que os requisitos não definem.
+- **Destinatários (HU-024, AC-01):** o aviso do mural não aponta para um aluno; o aplicativo notifica todo aluno autenticado com cadastro que não esteja pendente, e a história fala em "aluno afetado".
