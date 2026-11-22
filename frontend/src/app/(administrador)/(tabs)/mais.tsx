@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, Avatar } from 'react-native-paper';
+import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
+import { Text, Button } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import { User, ShieldAlert, FileText, Bell, LogOut, ChevronRight } from 'lucide-react-native';
+import { BarChart2, Megaphone, LogOut, ChevronRight } from 'lucide-react-native';
 import { useAuth } from '@contexts/AuthContext';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 
@@ -10,30 +10,27 @@ interface ItemProps {
   icon: React.ElementType;
   title: string;
   subtitle: string;
-  danger?: boolean;
   onPress?: () => void;
 }
 
-function SectionItem({ icon: Icon, title, subtitle, danger, onPress }: ItemProps) {
+function SectionItem({ icon: Icon, title, subtitle, onPress }: ItemProps) {
   return (
     <TouchableOpacity style={styles.itemContainer} activeOpacity={0.7} onPress={onPress}>
       <View style={styles.iconBox}>
-        <Icon size={24} color={danger ? '#BA1A1A' : '#191C20'} />
+        <Icon size={24} color="#191C20" />
       </View>
       <View style={styles.textBox}>
-        <Text variant="titleMedium" style={[styles.itemTitle, danger && styles.dangerText]}>
-          {title}
-        </Text>
+        <Text variant="titleMedium" style={styles.itemTitle}>{title}</Text>
         <Text variant="bodySmall" style={styles.itemSubtitle}>{subtitle}</Text>
       </View>
-      <ChevronRight size={18} color={danger ? '#BA1A1A' : '#44474E'} />
+      <ChevronRight size={18} color="#44474E" />
     </TouchableOpacity>
   );
 }
 
 export default function MaisMenuScreen() {
   const router = useRouter();
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
 
   const [popup, setPopup] = useState<{
     visible: boolean;
@@ -54,10 +51,10 @@ export default function MaisMenuScreen() {
     setPopup({
       visible: true,
       type: 'warning',
-      title: 'Sair da conta',
-      message: 'Deseja realmente encerrar sua sessão no sistema?',
+      title: 'Sair da conta?',
+      message: 'Você precisará fazer login novamente para realizar ações administrativas.',
       confirmText: 'Sair',
-      cancelText: 'Cancelar',
+      cancelText: 'Continuar',
       confirmColor: '#BA1A1A',
       onConfirm: async () => {
         setPopup((prev) => ({ ...prev, visible: false }));
@@ -66,13 +63,8 @@ export default function MaisMenuScreen() {
     });
   };
 
-  const getInicial = (nome?: string) => {
-    if (!nome) return 'A';
-    return nome.charAt(0).toUpperCase();
-  };
-
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
       <AppPopup
         visible={popup.visible}
         type={popup.type}
@@ -85,87 +77,51 @@ export default function MaisMenuScreen() {
         onDismiss={() => setPopup((prev) => ({ ...prev, visible: false }))}
       />
 
-      {/* Cabeçalho de Perfil */}
-      <Text variant="headlineMedium" style={styles.pageTitle}>Mais</Text>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Título Principal */}
+        <Text variant="headlineMedium" style={styles.pageTitle}>Mais Opções</Text>
 
-      <View style={styles.profileCard}>
-        <Avatar.Text
-          size={56}
-          label={getInicial(user?.name)}
-          style={styles.avatar}
-          labelStyle={styles.avatarLabel}
-        />
-        <View style={styles.profileInfo}>
-          <Text variant="titleMedium" style={styles.profileName}>
-            {user?.name || 'Administrador'}
-          </Text>
-          <Text variant="bodySmall" style={styles.profileEmail}>
-            {user?.email || 'admin@sistema.com'}
-          </Text>
+        {/* Seção Acompanhamento */}
+        <View style={styles.section}>
+          <Text variant="titleSmall" style={styles.sectionHeader}>Acompanhamento</Text>
+          <View style={styles.cardGroup}>
+            <SectionItem
+              icon={BarChart2}
+              title="Relatórios quantitativos"
+              subtitle="Métricas de lotação, frota e motoristas"
+              onPress={() => router.push('/(administrador)/relatorios' as any)}
+            />
+            <View style={styles.divider} />
+            <SectionItem
+              icon={Megaphone}
+              title="Gerenciar avisos"
+              subtitle="Comunicados, alertas e mensagens para os alunos"
+              onPress={() => router.push('/(administrador)/solicitacoes' as any)}
+            />
+          </View>
         </View>
-      </View>
 
-      {/* Seção Conta e Preferências */}
-      <View style={styles.section}>
-        <Text variant="titleSmall" style={styles.sectionHeader}>Conta e Configurações</Text>
-        <View style={styles.cardGroup}>
-          <SectionItem
-            icon={User}
-            title="Meu Perfil"
-            subtitle="Alterar dados cadastrais e senha"
-            onPress={() => router.push('/(administrador)/perfil' as any)}
-          />
-          <View style={styles.divider} />
-          <SectionItem
-            icon={Bell}
-            title="Notificações"
-            subtitle="Gerenciar avisos e comunicados globais"
-            onPress={() => router.push('/(administrador)/notificacoes' as any)}
-          />
-        </View>
-      </View>
-
-      {/* Seção Relatórios e Auditoria */}
-      <View style={styles.section}>
-        <Text variant="titleSmall" style={styles.sectionHeader}>Relatórios & Sistema</Text>
-        <View style={styles.cardGroup}>
-          <SectionItem
-            icon={FileText}
-            title="Relatórios operacionais"
-            subtitle="Exportar histórico de embarques e presença"
-            onPress={() => router.push('/(administrador)/relatorios' as any)}
-          />
-          <View style={styles.divider} />
-          <SectionItem
-            icon={ShieldAlert}
-            title="Logs do sistema"
-            subtitle="Histórico de ações e alterações de dados"
-            onPress={() => router.push('/(administrador)/logs' as any)}
-          />
-        </View>
-      </View>
-
-      {/* Encerramento */}
-      <View style={styles.section}>
-        <Text variant="titleSmall" style={styles.sectionHeader}>Sessão</Text>
-        <View style={styles.cardGroup}>
-          <SectionItem
-            icon={LogOut}
-            title="Sair do aplicativo"
-            subtitle="Encerrar sua sessão com segurança"
-            danger
+        {/* Botão de Encerramento da Conta */}
+        <View style={styles.logoutContainer}>
+          <Button
+            mode="outlined"
             onPress={handleLogoutConfirmation}
-          />
+            style={styles.btnLogout}
+            contentStyle={styles.btnContent}
+            textColor="#BA1A1A"
+            icon={() => <LogOut size={20} color="#BA1A1A" />}
+          >
+            Sair da conta
+          </Button>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FF',
   },
   content: {
     paddingTop: 60,
@@ -173,45 +129,16 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   pageTitle: {
-    fontWeight: '400',
+    fontWeight: 'normal',
     color: '#191C20',
     fontSize: 28,
-    marginBottom: 24,
-  },
-  profileCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EEF0FF',
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 28,
-  },
-  avatar: {
-    backgroundColor: '#3E5F90',
-  },
-  avatarLabel: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-  },
-  profileInfo: {
-    marginLeft: 16,
-    flex: 1,
-  },
-  profileName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#191C20',
-  },
-  profileEmail: {
-    fontSize: 14,
-    color: '#44474E',
-    marginTop: 2,
+    marginBottom: 32,
   },
   section: {
-    marginBottom: 28,
+    marginBottom: 32,
   },
   sectionHeader: {
-    fontWeight: '600',
+    fontWeight: 'bold',
     color: '#191C20',
     fontSize: 16,
     marginBottom: 12,
@@ -237,9 +164,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#191C20',
   },
-  dangerText: {
-    color: '#BA1A1A',
-  },
   itemSubtitle: {
     fontSize: 13,
     color: '#74777F',
@@ -249,5 +173,18 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#E0E2EC',
     marginLeft: 40,
+  },
+  logoutContainer: {
+    marginTop: 40,
+  },
+  btnLogout: {
+    borderRadius: 24,
+    borderColor: '#BA1A1A',
+    borderWidth: 1,
+  },
+  btnContent: {
+    height: 52,
+    flexDirection: 'row',
+    gap: 8,
   },
 });
