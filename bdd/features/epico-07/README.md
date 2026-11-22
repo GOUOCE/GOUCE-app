@@ -57,7 +57,7 @@ O épico ainda não está na `develop`: a aba "Avisos" do aluno é só um placeh
 
 ## Divergências encontradas entre requisitos e implementação
 
-Os pontos abaixo estão na issue de decisões do PO deste épico.
+Os pontos abaixo estão na issue #539 de decisões do PO deste épico.
 
 - **Edição e inativação (HU-023, AC-04, AC-05 e FA-002):** a API só publica e lista avisos (não há `PATCH` nem `DELETE`) e a tabela `aviso` não tem coluna de situação; os avisos publicados não podem ser alterados nem removidos.
 - **Auditoria (HU-023, RNF-013):** a publicação não grava log de auditoria.
