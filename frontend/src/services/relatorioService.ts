@@ -1,5 +1,10 @@
 import { api } from '@/api/api';
 
+export interface OpcaoSelect {
+  label: string;
+  value: string;
+}
+
 export interface FiltrosRelatorioPayload {
   tipo: string; // "geral", "agendamentos", "motoristas"
   dataInicial: string; // YYYY-MM-DD

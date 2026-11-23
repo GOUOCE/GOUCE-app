@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import { Text, Button, Surface, RadioButton } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -36,27 +36,36 @@ export default function ResultadoRelatorioScreen() {
     message: '',
   });
 
-  const carregarRelatorio = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await relatorioService.gerarRelatorio({
-        tipo: params.tipo || 'geral',
-        dataInicial: params.dataInicial || '2026-09-01',
-        dataFinal: params.dataFinal || '2026-10-20',
-        faculdadeId: params.faculdadeId,
-        bairroId: params.bairroId,
-      });
-      setRelatorio(res);
-    } catch {
-      setRelatorio(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [params.tipo, params.dataInicial, params.dataFinal, params.faculdadeId, params.bairroId]);
-
   useEffect(() => {
-    carregarRelatorio();
-  }, [carregarRelatorio]);
+    let ativo = true;
+    async function carregar() {
+      setLoading(true);
+      try {
+        const res = await relatorioService.gerarRelatorio({
+          tipo: params.tipo || 'geral',
+          dataInicial: params.dataInicial || '2026-09-01',
+          dataFinal: params.dataFinal || '2026-10-20',
+          faculdadeId: params.faculdadeId,
+          bairroId: params.bairroId,
+        });
+        if (ativo) {
+          setRelatorio(res);
+        }
+      } catch {
+        if (ativo) {
+          setRelatorio(null);
+        }
+      } finally {
+        if (ativo) {
+          setLoading(false);
+        }
+      }
+    }
+    carregar();
+    return () => {
+      ativo = false;
+    };
+  }, [params.tipo, params.dataInicial, params.dataFinal, params.faculdadeId, params.bairroId]);
 
   const semResultados = !relatorio || (relatorio.detalhamento.length === 0 && relatorio.consolidado.totalAgendamentos === 0);
 
@@ -440,7 +449,7 @@ const styles = StyleSheet.create({
   },
   modalActionsRow: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justify.content: 'flex-end',
     gap: 24,
     marginTop: 24,
   },

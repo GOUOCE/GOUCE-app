@@ -1,10 +1,12 @@
-import { relatorioService } from '../relatorioService';
-import { api } from '@/api/api';
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+
+const mockGet = jest.fn<(url: string) => Promise<any>>();
+const mockPost = jest.fn<(url: string, body?: any) => Promise<any>>();
 
 jest.mock('@/api/api', () => ({
   api: {
-    get: jest.fn(),
-    post: jest.fn(),
+    get: (url: string) => mockGet(url),
+    post: (url: string, body?: any) => mockPost(url, body),
   },
 }));
 
@@ -16,9 +18,12 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   multiRemove: jest.fn(),
 }));
 
+import { relatorioService } from '../relatorioService';
+
 describe('ÉPICO EP-006 / HU-022 - BDD: Relatórios Quantitativos de Transporte Universitário', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    mockGet.mockReset();
+    mockPost.mockReset();
   });
 
   // =========================================================================
@@ -45,7 +50,7 @@ describe('ÉPICO EP-006 / HU-022 - BDD: Relatórios Quantitativos de Transporte 
         motoristas: [],
         detalhamento: [],
       };
-      (api.get as jest.Mock).mockResolvedValueOnce({ data: mockRelatorio });
+      mockGet.mockResolvedValueOnce({ data: mockRelatorio });
 
       const payload = {
         tipo: 'geral',
@@ -58,7 +63,7 @@ describe('ÉPICO EP-006 / HU-022 - BDD: Relatórios Quantitativos de Transporte 
       const resultado = await relatorioService.gerarRelatorio(payload);
       expect(resultado.consolidado.totalAgendamentos).toBe(312);
       expect(resultado.consolidado.taxaComparecimento).toBe('92,6%');
-      expect(api.get).toHaveBeenCalledWith('/transporte/relatorios?tipo=geral&data_inicio=2026-09-01&data_fim=2026-10-20&faculdade_id=1&bairro_id=1');
+      expect(mockGet).toHaveBeenCalledWith('/transporte/relatorios?tipo=geral&data_inicio=2026-09-01&data_fim=2026-10-20&faculdade_id=1&bairro_id=1');
     });
   });
 
@@ -75,7 +80,7 @@ describe('ÉPICO EP-006 / HU-022 - BDD: Relatórios Quantitativos de Transporte 
         faculdadeId: 'todas',
         bairroId: 'todos',
       };
-      (api.get as jest.Mock).mockRejectedValueOnce(new Error('Sem dados'));
+      mockGet.mockRejectedValueOnce(new Error('Sem dados'));
 
       const resultado = await relatorioService.gerarRelatorio(payload);
       expect(resultado.consolidado.totalAgendamentos).toBe(0);
@@ -107,21 +112,21 @@ describe('ÉPICO EP-006 / HU-022 - BDD: Relatórios Quantitativos de Transporte 
 
   describe('Cenário: Exportação de Relatório em PDF e CSV (AC-03)', () => {
     it('deve invocar o serviço de exportação de relatório no formato PDF', async () => {
-      (api.post as jest.Mock).mockResolvedValueOnce({ data: { success: true, mensagem: 'Relatório exportado em PDF com sucesso!' } });
+      mockPost.mockResolvedValueOnce({ data: { success: true, mensagem: 'Relatório exportado em PDF com sucesso!' } });
 
       const mockRelatorio: any = { consolidado: { totalAgendamentos: 10 } };
       const resultado = await relatorioService.exportarRelatorio('pdf', mockRelatorio);
       expect(resultado.mensagem).toBe('Relatório exportado em PDF com sucesso!');
-      expect(api.post).toHaveBeenCalledWith('/transporte/relatorios/exportar?formato=pdf', mockRelatorio);
+      expect(mockPost).toHaveBeenCalledWith('/transporte/relatorios/exportar?formato=pdf', mockRelatorio);
     });
 
     it('deve invocar o serviço de exportação de relatório no formato CSV', async () => {
-      (api.post as jest.Mock).mockResolvedValueOnce({ data: { success: true, mensagem: 'Relatório exportado em CSV com sucesso!' } });
+      mockPost.mockResolvedValueOnce({ data: { success: true, mensagem: 'Relatório exportado em CSV com sucesso!' } });
 
       const mockRelatorio: any = { consolidado: { totalAgendamentos: 10 } };
       const resultado = await relatorioService.exportarRelatorio('csv', mockRelatorio);
       expect(resultado.mensagem).toBe('Relatório exportado em CSV com sucesso!');
-      expect(api.post).toHaveBeenCalledWith('/transporte/relatorios/exportar?formato=csv', mockRelatorio);
+      expect(mockPost).toHaveBeenCalledWith('/transporte/relatorios/exportar?formato=csv', mockRelatorio);
     });
   });
 });
