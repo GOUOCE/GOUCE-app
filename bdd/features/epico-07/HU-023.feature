@@ -27,9 +27,9 @@ Funcionalidade: Publicação de Avisos
     Cenário: Administrador publica um novo aviso com sucesso
       Quando o administrador seleciona "Novo Aviso"
       E preenche o formulário do aviso com:
-        | campo    | valor                                           |
-        | Título   | Alteração no horário da Rota Centro - UFC       |
-        | Conteúdo | A saída de amanhã será às 06:45 por manutenção. |
+        | campo     | valor                                           |
+        | Título    | Alteração no horário da Rota Centro - UFC       |
+        | Descrição | A saída de amanhã será às 06:45 por manutenção. |
       E aciona o botão "Publicar"
       Então o sistema exibe a mensagem "Aviso publicado com sucesso"
       E o aviso "Alteração no horário da Rota Centro - UFC" passa a ser exibido no mural do aplicativo
@@ -40,7 +40,7 @@ Funcionalidade: Publicação de Avisos
     Cenário: Administrador visualiza a lista de avisos já publicados
       Dado que existem os avisos publicados "Alteração no horário da Rota Centro - UFC" e "Manutenção do ônibus ABC1D23"
       Quando o administrador visualiza a lista de avisos
-      Então o sistema exibe os dois avisos com título e conteúdo
+      Então o sistema exibe os dois avisos com título e descrição
 
 
     # AC-03 - O autor é o administrador logado
@@ -66,7 +66,7 @@ Funcionalidade: Publicação de Avisos
       Exemplos:
         | campo_obrigatorio |
         | Título            |
-        | Conteúdo          |
+        | Descrição         |
 
 
     # AC-02, FA-001 - Campos preenchidos só com espaços
@@ -80,9 +80,44 @@ Funcionalidade: Publicação de Avisos
       E o aviso não é publicado
 
       Exemplos:
-        | campo    |
-        | Título   |
-        | Conteúdo |
+        | campo     |
+        | Título    |
+        | Descrição |
+
+
+    # Decisão do PO (#539, item 5) - Limites de tamanho: recusa
+    @fluxo_infeliz @FA001 @validacao_campos @valor_limite @prioridade_media
+    Esquema do Cenário: Sistema recusa o campo "<campo>" com <tamanho> caracteres
+      Quando o administrador seleciona "Novo Aviso"
+      E preenche o campo "<campo>" com <tamanho> caracteres
+      E preenche o outro campo corretamente
+      E aciona o botão "Publicar"
+      Então o sistema exibe a mensagem "<mensagem>"
+      E o aviso não é publicado
+
+      Exemplos:
+        | campo     | tamanho | mensagem                                        |
+        | Título    | 2       | O título deve ter pelo menos 3 caracteres.      |
+        | Título    | 151     | O título deve ter no máximo 150 caracteres.     |
+        | Descrição | 2       | A descrição deve ter pelo menos 3 caracteres.   |
+        | Descrição | 2001    | A descrição deve ter no máximo 2000 caracteres. |
+
+
+    # Decisão do PO (#539, item 5) - Limites de tamanho: aceitação
+    @fluxo_feliz @validacao_campos @valor_limite @prioridade_media
+    Esquema do Cenário: Sistema aceita o campo "<campo>" com <tamanho> caracteres
+      Quando o administrador seleciona "Novo Aviso"
+      E preenche o campo "<campo>" com <tamanho> caracteres
+      E preenche o outro campo corretamente
+      E aciona o botão "Publicar"
+      Então o sistema exibe a mensagem "Aviso publicado com sucesso"
+
+      Exemplos:
+        | campo     | tamanho |
+        | Título    | 3       |
+        | Título    | 150     |
+        | Descrição | 3       |
+        | Descrição | 2000    |
 
 
     # AC-02 - API valida os campos obrigatórios
@@ -94,9 +129,9 @@ Funcionalidade: Publicação de Avisos
       E o aviso não é publicado
 
       Exemplos:
-        | campo    |
-        | titulo   |
-        | conteudo |
+        | campo     |
+        | titulo    |
+        | descricao |
 
 
     # AC-04, FA-002 - Edição de aviso
@@ -104,10 +139,10 @@ Funcionalidade: Publicação de Avisos
     Cenário: Administrador edita um aviso publicado e a alteração aparece imediatamente no mural
       Dado que existe o aviso publicado "Alteração no horário da Rota Centro - UFC"
       Quando o administrador seleciona a ação "Editar" para o aviso "Alteração no horário da Rota Centro - UFC"
-      E altera o campo "Conteúdo" para "A saída de amanhã será às 07:00."
+      E altera o campo "Descrição" para "A saída de amanhã será às 07:00."
       E aciona o botão "Salvar"
       Então o sistema exibe a mensagem de sucesso da edição
-      E o mural do aplicativo exibe o conteúdo "A saída de amanhã será às 07:00."
+      E o mural do aplicativo exibe a descrição "A saída de amanhã será às 07:00."
 
 
     # AC-05, FA-002 - Inativação de aviso
@@ -156,7 +191,7 @@ Funcionalidade: Publicação de Avisos
     Cenário: Aluno visualiza no mural os avisos publicados pelo administrador
       Dado que existem os avisos ativos "Alteração no horário da Rota Centro - UFC" e "Manutenção do ônibus ABC1D23"
       Quando o aluno acessa a aba "Avisos"
-      Então o sistema exibe os dois avisos com título e conteúdo
+      Então o sistema exibe os dois avisos com título e descrição
 
 
     # AC-05 - Aviso inativado fora do mural
@@ -177,10 +212,10 @@ Funcionalidade: Publicação de Avisos
 
     # AC-04 - Edição visível ao aluno
     @fluxo_feliz @prioridade_media
-    Cenário: Aluno visualiza o conteúdo atualizado de um aviso editado
-      Dado que o administrador editou o conteúdo do aviso "Alteração no horário da Rota Centro - UFC"
+    Cenário: Aluno visualiza a descrição atualizada de um aviso editado
+      Dado que o administrador editou a descrição do aviso "Alteração no horário da Rota Centro - UFC"
       Quando o aluno acessa a aba "Avisos"
-      Então o sistema exibe o conteúdo atualizado do aviso
+      Então o sistema exibe a descrição atualizada do aviso
 
 
   Regra: Somente o administrador publica, edita e inativa avisos (RN-006)

@@ -31,6 +31,42 @@ Funcionalidade: Recebimento de Notificações Push
       E o serviço de mensageria entrega a notificação ao aparelho de "Maria Souza"
 
 
+    # Decisão do PO (#539, item 6) - Destinatários do aviso
+    @fluxo_feliz @prioridade_alta
+    Cenário: Publicação de um aviso notifica todos os alunos com cadastro aprovado e vínculo válido
+      Dado que "João Lima" também é aluno com cadastro aprovado e vínculo válido e permitiu as notificações
+      Quando o administrador publica o aviso "Alteração no horário da Rota Centro - UFC"
+      Então o sistema dispara a notificação para o aparelho de "Maria Souza"
+      E dispara a notificação para o aparelho de "João Lima"
+
+
+    # Decisão do PO (#539, item 6) - Alunos sem cadastro aprovado
+    @fluxo_infeliz @prioridade_media
+    Esquema do Cenário: Aluno com cadastro <situacao> não recebe a notificação do aviso
+      Dado que o aluno "Pedro Alves" tem o cadastro <situacao> e permitiu as notificações
+      Quando o administrador publica o aviso "Alteração no horário da Rota Centro - UFC"
+      Então o sistema não dispara a notificação para o aparelho de "Pedro Alves"
+
+      Exemplos:
+        | situacao  |
+        | pendente  |
+        | reprovado |
+
+
+    # Decisão do PO (#539, item 7) - Edição e inativação não notificam
+    @fluxo_infeliz @prioridade_media
+    Esquema do Cenário: <operacao> de um aviso não dispara nova notificação
+      Dado que o aviso "Alteração no horário da Rota Centro - UFC" já foi publicado e notificado
+      Quando o administrador realiza a <operacao> desse aviso
+      Então o sistema não dispara nenhuma nova notificação para o aparelho de "Maria Souza"
+      E o mural reflete a alteração ao ser aberto
+
+      Exemplos:
+        | operacao   |
+        | edição     |
+        | inativação |
+
+
     # AC-01 - Alteração de última hora na alocação
     @fluxo_feliz @prioridade_alta
     Esquema do Cenário: Alteração de <alteracao> na alocação do aluno dispara a notificação
