@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
   },
   modalActionsRow: {
     flexDirection: 'row',
-    justify.content: 'flex-end',
+    justifyContent: 'flex-end',
     gap: 24,
     marginTop: 24,
   },
