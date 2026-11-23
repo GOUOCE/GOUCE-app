@@ -32,6 +32,20 @@ Funcionalidade: Geração de Relatórios Quantitativos
       E consolida, por dia e por rota, a quantidade de alunos agendados e a quantidade efetiva de embarques
 
 
+    # Decisão do PO (#537, item 5) - Tipos de relatório
+    @fluxo_feliz @prioridade_alta
+    Esquema do Cenário: Administrador seleciona o tipo de relatório "<tipo>"
+      Quando o administrador seleciona o tipo de relatório "<tipo>"
+      E define o período de "16/11/2026" a "20/11/2026"
+      E aciona o botão de gerar o relatório
+      Então o sistema exibe o relatório com <conteudo>
+
+      Exemplos:
+        | tipo                     | conteudo                                                         |
+        | Agendamentos e embarques | os agendamentos e os embarques por dia, faculdade, bairro e rota |
+        | Motoristas               | os dias trabalhados e as rotas de cada motorista                 |
+
+
     # AC-01 - Filtros do relatório
     @fluxo_feliz @prioridade_alta
     Esquema do Cenário: Administrador gera o relatório filtrando por <filtro>
@@ -46,6 +60,36 @@ Funcionalidade: Geração de Relatórios Quantitativos
         | a faculdade de destino "UFC"          |
         | o bairro "Centro"                     |
         | a faculdade "UFC" e o bairro "Centro" |
+
+
+    # Decisão do PO (#537, item 6) - Faculdade na ida e na volta
+    @regra_negocio @prioridade_media
+    Esquema do Cenário: Filtro de faculdade considera a <viagem> do aluno
+      Dado que existe um agendamento de <viagem> em que a faculdade "UFC" é o <papel>
+      Quando o administrador define o período de "16/11/2026" a "20/11/2026"
+      E informa a faculdade "UFC"
+      E aciona o botão de gerar o relatório
+      Então o relatório inclui esse agendamento
+
+      Exemplos:
+        | viagem | papel   |
+        | ida    | destino |
+        | volta  | origem  |
+
+
+    # Decisão do PO (#537, item 6) - Localidade é o bairro do ponto do aluno
+    @regra_negocio @prioridade_media
+    Esquema do Cenário: Filtro de bairro considera o ponto de <ponto> do aluno
+      Dado que existe um agendamento de aluno cujo ponto de <ponto> fica no bairro "Centro"
+      Quando o administrador define o período de "16/11/2026" a "20/11/2026"
+      E informa o bairro "Centro"
+      E aciona o botão de gerar o relatório
+      Então o relatório inclui esse agendamento
+
+      Exemplos:
+        | ponto       |
+        | embarque    |
+        | desembarque |
 
 
     # AC-02 - Somente presenças validadas contam como embarque

@@ -58,6 +58,16 @@ Funcionalidade: Registro de Embarque e Frequência
       E o total de faltas passa a ser 1
 
 
+    # Decisão do PO (#537, item 1) - Pendente não vira Falta sozinho
+    @regra_negocio @prioridade_alta
+    Cenário: Aluno sem check-in continua "Pendente" ao fim da viagem e não conta como presença
+      Dado que "Carlos Lima" não passou pelo check-in durante a viagem
+      Quando a viagem da rota "Rota Centro - UFC" termina
+      Então o sistema mantém "Carlos Lima" com o status "Pendente"
+      E não registra "Falta" para "Carlos Lima"
+      E "Carlos Lima" não é contado como embarque nos relatórios
+
+
     # AC-02, AC-03 - Correção do status no mesmo dia
     @fluxo_feliz @prioridade_media
     Cenário: Representante corrige o status de um aluno de "Falta" para "Presente"

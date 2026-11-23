@@ -257,7 +257,7 @@ Os requisitos funcionais descrevem as funcionalidades e os comportamentos espera
 | **RF-018** | Alocação de Motoristas                 | O sistema deve permitir ao administrador definir qual motorista fará qual rota no dia.                                                                                                                                                                                                                                       | Alta       | A definir |
 | **RF-019** | Consulta de Alocação Diária            | O sistema deve exibir para o aluno qual ônibus, motorista, rota, letreiro e placa do ônibus foram designados para ele no dia.                                                                                                                                                                                                | Alta       | A definir |
 | **RF-020** | Visualização da Lista de Embarque      | O sistema deve permitir ao administrador visualizar a lista detalhada de alunos distribuídos por cada ônibus/rota, e permitir ao **representante** visualizar exclusivamente a lista de embarque referente aos alunos da universidade sob sua responsabilidade.                                                              | Alta       | A definir |
-| **RF-021** | Acompanhamento de Frequência           | O sistema deve permitir ao **representante** registrar a presença (check-in) dos estudantes no momento do embarque, e permitir ao administrador visualizar esse controle em tempo real.                                                                                                                                      | Alta       | A definir |
+| **RF-021** | Acompanhamento de Frequência           | O sistema deve permitir ao **representante** registrar a presença (check-in) dos estudantes no momento do embarque, e permitir ao administrador visualizar esse controle em tempo real e também registrar ou alterar a presença, sempre apenas no dia da viagem.                                                                                                                                      | Alta       | A definir |
 | **RF-022** | Geração de Relatórios                  | O sistema deve gerar relatórios quantitativos e gerenciais sobre a utilização do transporte, incluindo quantidade de agendamentos, embarques, taxa de comparecimento, quantidade de alunos por dia, faculdade e localidade, demanda das rotas e informações sobre os dias trabalhados pelos motoristas.                      | Média      | A definir |
 | **RF-023** | Rotatividade Inteligente               | O sistema deve permitir ao administrador planejar e gerenciar o rodízio semanal dos ônibus entre diferentes rotas, considerando a quilometragem percorrida e permitindo visualizar previamente a alocação dos veículos para as próximas semanas.                                                                             | Média      | A definir |
 | **RF-024** | Publicação de Avisos                   | O sistema deve permitir ao administrador criar e publicar comunicados no mural de avisos.                                                                                                                                                                                                                                    | Média      | A definir |
@@ -1899,12 +1899,12 @@ Como representante da universidade logado no aplicativo, quero utilizar a lista 
 4. Consulta de data sem viagens registradas (fim de semana, feriado, ou dia sem operação) exibe mensagem: "Não há registros de viagens ou agendamentos para a data selecionada."
 5. Status de presença é atualizado dinamicamente enquanto o check-in dos alunos está sendo realizado pela equipe operacional (representante responsável pelo acompanhamento do transporte ) no momento do embarque, refletindo em tempo real na tela do administrador.
 6. Apenas o representante responsável pelo transporte da universidade ou o administrador podem alterar o status de presença.
-7. Ao abrir a lista de presença de uma viagem ainda não iniciada, todos os alunos aparecem com status inicial neutro (ex: 'Pendente' ou 'Não verificado'), nunca como 'Falta' por padrão. O status só se torna 'Presente' ou 'Falta' após o registro explícito do check-in
+7. Ao abrir a lista de presença de uma viagem ainda não iniciada, todos os alunos aparecem com status inicial neutro (ex: 'Pendente' ou 'Não verificado'), nunca como 'Falta' por padrão. O status só se torna 'Presente' ou 'Falta' após o registro explícito do check-in. O aluno que não passa pelo check-in continua 'Pendente' ao fim da viagem: o sistema não o converte em 'Falta' automaticamente e ele não conta como presença nos relatórios.
 8. O sistema bloqueia alterações no status de presença para datas passadas ou futuras, permitindo a edição apenas no dia corrente (RN-014).  
    **Fluxo Principal:**
 9. O representante(ou administrador) acessa a lista de embarque do ônibus no dia atual.
 10. Conforme os alunos entram no veículo, o representante localiza o nome (podendo usar uma barra de busca) e aciona a opção "Presente".
-11. Alunos que não comparecem são marcados como "Falta" (ou ficam pendentes até o fim da viagem, quando o sistema assume a falta).
+11. Alunos que não comparecem são marcados como "Falta" pelo representante ou pelo administrador; sem registro explícito, ficam "Pendente" e o sistema não assume a falta.
 12. O sistema salva o status no banco de dados imediatamente a cada marcação.
 13. O administrador consegue visualizar o painel gerencial refletindo esses números em tempo real.  
     **Fluxos Alternativos:**
@@ -1950,22 +1950,22 @@ Fonte: Elaborado pelo autor (2026).
 Como administrador, quero gerar relatórios quantitativos filtrados por dia, faculdade e localidade, para cruzar os dados de agendamentos com as presenças reais e analisar a quantidade efetiva de alunos que utilizam o transporte.  
 **Critérios de Aceite:**
 
-1. Administrador acessa o menu "Relatórios" e define parâmetros de filtro: período de datas, faculdade de destino e/ou bairro/localidade.
+1. Administrador acessa o menu "Relatórios", escolhe o tipo de relatório ("Agendamentos e embarques" ou "Motoristas") e define parâmetros de filtro: período de datas, faculdade e/ou bairro/localidade. O filtro de faculdade vale para o destino na ida e para a origem na volta; a localidade é o bairro do ponto de embarque ou de desembarque do aluno.
 2. Ao gerar o relatório, o sistema cruza os dados de agendamentos com o controle de frequência (presenças validadas) e exibe totais numéricos consolidados (ex: quantidade de agendados vs. quantidade efetiva de embarques por dia/rota).
-3. Administrador consegue exportar o relatório gerado em formato PDF ou planilha.
+3. Administrador consegue exportar o relatório gerado nos dois formatos: PDF e planilha.
 4. Filtro sem resultados (período/localidade sem operação ou demanda) exibe mensagem: "Nenhum dado encontrado para os filtros informados."
 5. Inserir uma data final anterior à data inicial bloqueia o processamento da busca e sinaliza o erro nos campos de data.
 6. Apenas usuários com perfil de Administrador têm acesso à geração de relatórios (RN-006).
-7. O administrador deve conseguir visualizar a quantidade de dias trabalhados por cada motorista em determinado período.
+7. O administrador deve conseguir visualizar a quantidade de dias trabalhados por cada motorista em determinado período; o motorista que faz a ida e a volta no mesmo dia conta como 1 dia trabalhado.
 8. O relatório deve permitir identificar os dias/rotas em que cada motorista foi alocado.
-9. O relatório deve permitir consultar a quantidade de agendamentos, embarques e taxa de comparecimento.  
+9. O relatório deve permitir consultar a quantidade de agendamentos, embarques e taxa de comparecimento. Embarque é o aluno com status "Presente"; a taxa de comparecimento é embarques ÷ agendados × 100.  
    **Fluxo Principal:**
 10. O administrador acessa o menu de "Relatórios" no painel gerencial.
-11. O administrador seleciona o tipo de relatório desejado e define os parâmetros de filtro (período de datas, faculdade de destino, bairro/localidade).
+11. O administrador seleciona o tipo de relatório desejado ("Agendamentos e embarques" ou "Motoristas") e define os parâmetros de filtro (período de datas, faculdade, bairro/localidade).
 12. O administrador aciona o botão para gerar o documento.
 13. O sistema processa o histórico de agendamentos e o controle de frequência (presenças validadas) correspondentes aos filtros aplicados.
 14. O sistema exibe o relatório na tela, consolidando os totais numéricos (ex: quantidade de agendados vs. quantidade efetiva de embarques por dia/rota).
-15. O administrador pode acionar a opção de exportar o relatório (ex: formato PDF ou planilha) para prestação de contas.  
+15. O administrador pode acionar a opção de exportar o relatório (PDF ou planilha) para prestação de contas.  
     **Fluxos Alternativos:**
 16. **FA-001 \- Filtro sem resultados.**
     1. O administrador define parâmetros de busca para um período ou localidade que não teve operação ou demanda.
