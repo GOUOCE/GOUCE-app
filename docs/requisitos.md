@@ -2004,8 +2004,8 @@ Fonte: Elaborado pelo autor (2026).
 Como administrador, quero criar, editar e inativar comunicados em um mural de avisos, para manter os alunos informados sobre alterações de rotas, manutenções, imprevistos logísticos e comunicados oficiais da coordenação.  
 **Critérios de Aceite:**
 
-1. Administrador acessa "Mural de Avisos"/"Comunicados" e aciona "Novo Aviso", preenchendo título e conteúdo (texto) da mensagem.
-2. Publicação sem preencher título ou conteúdo é bloqueada; sistema destaca os campos vazios e exige preenchimento.
+1. Administrador acessa "Mural de Avisos"/"Comunicados" e aciona "Novo Aviso", preenchendo o título (de 3 a 150 caracteres) e a descrição (de 3 a 2000 caracteres) da mensagem.
+2. Publicação sem preencher título ou descrição, ou com texto fora dos limites de tamanho, é bloqueada; sistema destaca os campos vazios e exige preenchimento.
 3. Aviso publicado com sucesso é associado automaticamente ao administrador logado (autor) e passa a ser exibido no mural do aplicativo.
 4. Administrador consegue editar um aviso já publicado; alteração é refletida imediatamente no mural do aplicativo.
 5. Administrador consegue inativar (excluir/soft delete) um aviso publicado; remoção é refletida imediatamente no mural, evitando disseminação de informação desatualizada.
@@ -2013,14 +2013,14 @@ Como administrador, quero criar, editar e inativar comunicados em um mural de av
    **Fluxo Principal:**
 7. O administrador acessa o menu "Mural de Avisos" ou "Comunicados" no painel gerencial.
 8. O administrador seleciona a opção "Novo Aviso".
-9. O sistema exibe um formulário solicitando o título e o conteúdo (texto) da mensagem.
+9. O sistema exibe um formulário solicitando o título e a descrição da mensagem.
 10. O administrador preenche os dados.
 11. O administrador aciona o botão "Publicar" (ou "Salvar").
 12. O sistema valida os campos obrigatórios e salva o registro no banco de dados, associando-o ao administrador logado (autor).
 13. O sistema exibe uma mensagem de sucesso ("Aviso publicado com sucesso") e o comunicado passa a ser exibido no mural do aplicativo.  
     **Fluxos Alternativos:**
 14. FA-001 \- Campos obrigatórios ausentes.
-    1. O administrador tenta publicar o aviso sem preencher o título ou o corpo da mensagem.
+    1. O administrador tenta publicar o aviso sem preencher o título ou a descrição da mensagem, ou preenche algum deles fora dos limites de tamanho (título de 3 a 150 e descrição de 3 a 2000 caracteres).
     2. O sistema bloqueia a publicação, destacando os campos vazios e exigindo o preenchimento.
 15. FA-002 \- Edição ou inativação de aviso.
     1. O administrador acessa a lista de avisos já publicados e seleciona a opção de editar ou excluir (inativar) um comunicado.
@@ -2052,7 +2052,7 @@ Fonte: Elaborado pelo autor (2026).
 Como aluno, quero receber notificações (push) no meu smartphone sempre que houver um aviso ou alteração na minha rota, para ser informado imediatamente sobre imprevistos sem precisar abrir o aplicativo constantemente.  
 **Critérios de Aceite:**
 
-1. Publicação de um aviso (HU-023) ou alteração de última hora na alocação do aluno (ônibus/rota) dispara automaticamente uma notificação push para o dispositivo do aluno afetado.
+1. Publicação de um aviso (HU-023) ou alteração de última hora na alocação do aluno (ônibus/rota) dispara automaticamente uma notificação push para o dispositivo do aluno afetado. No caso de aviso, são notificados todos os alunos com cadastro aprovado e vínculo válido; na alteração de alocação, somente o aluno afetado. A edição e a inativação de um aviso não geram nova notificação.
 2. Notificação é exibida no smartphone do aluno mesmo com o aplicativo fechado ou em segundo plano.
 3. Ao tocar na notificação, o aplicativo abre diretamente na tela correspondente ao evento (Mural de Avisos, para avisos; Consulta de Alocação, para mudanças de rota/ônibus).
 4. Se o dispositivo do aluno estiver offline no momento do envio, a notificação é retida pelo serviço de mensageria (Firebase/APNS) e entregue assim que a conexão for restabelecida.
