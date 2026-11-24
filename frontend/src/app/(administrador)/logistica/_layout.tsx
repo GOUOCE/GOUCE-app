@@ -8,6 +8,8 @@ export default function LogisticaLayout() {
       <Stack.Screen name="alocar" />
       <Stack.Screen name="excedentes" />
       <Stack.Screen name="embarque" />
+      <Stack.Screen name="rodizio" />
+      <Stack.Screen name="configurar-rodizio" />
     </Stack>
   );
 }

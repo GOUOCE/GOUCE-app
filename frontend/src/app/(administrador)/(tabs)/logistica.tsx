@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import { Calendar, ClipboardList, ChevronRight } from 'lucide-react-native';
+import { Calendar, ClipboardList, ChevronRight, RefreshCcw } from 'lucide-react-native';
 
 interface ItemProps {
   icon: React.ElementType;
@@ -50,6 +50,13 @@ export default function LogisticaHubScreen() {
             title="Lista de embarque"
             subtitle="Alunos alocados por ônibus para as rotas programadas para hoje"
             onPress={() => router.push('/(administrador)/logistica/embarque' as any)}
+          />
+          <View style={styles.divider} />
+          <SectionItem
+            icon={RefreshCcw}
+            title="Rodízio de Frota"
+            subtitle="Rodízio semanal dos ônibus entre as rotas ativas"
+            onPress={() => router.push('/(administrador)/logistica/rodizio' as any)}
           />
         </View>
       </View>
