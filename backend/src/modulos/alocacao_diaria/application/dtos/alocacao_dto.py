@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class AlunoAlocacaoDTO(BaseModel):
@@ -19,6 +19,11 @@ class AlocacaoDTO(BaseModel):
     motorista_id: int = Field(gt=0)
     turno: Literal["ida", "volta"] = "ida"
     alunos: list[AlunoAlocacaoDTO] = Field(default_factory=list)
+
+    @field_validator("onibus_id", mode="before")
+    @classmethod
+    def normalizar_onibus_id(cls, valor: object) -> str:
+        return str(valor).strip().upper().replace("-", "")
 
 
 class DistribuicaoRequestDTO(BaseModel):

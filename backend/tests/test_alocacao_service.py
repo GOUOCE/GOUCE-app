@@ -7,6 +7,10 @@ from src.modulos.alocacao_diaria.application.services.alocacao_service import (
     AlocacaoService,
     DistribuicaoError,
 )
+from src.modulos.alocacao_diaria.model.entities.rodizio_frota import (
+    RodizioFrotaItemORM,
+    RodizioFrotaORM,
+)
 from src.modulos.crud_basicos.domain.entities.onibus import OnibusORM
 from src.modulos.motoristas.model.entities.motorista import MotoristaORM
 from src.modulos.rotas.model.entities.rota_complementar import RotaComplementarORM
@@ -19,6 +23,12 @@ class _FakeQuery:
 
     def filter(self, *args, **kwargs):
         return self
+
+    def order_by(self, *args, **kwargs):
+        return self
+
+    def first(self):
+        return self._itens[0] if self._itens else None
 
     def all(self):
         return self._itens
@@ -138,6 +148,94 @@ class AlocacaoServiceValidacaoTest(unittest.TestCase):
         self.assertEqual(
             str(contexto.exception),
             "Rota Centro: motorista inexistente ou inativo.",
+        )
+
+    def test_normaliza_placa_com_hifen(self):
+        self.onibus.placa_onibus = "CMA4J33"
+        alocacao = self._alocacao(rota_id=1)
+        alocacao["onibus_id"] = "CMA-4J33"
+
+        self.service._validar_payload(
+            self.data,
+            [alocacao],
+            permitir_realocacao=True,
+        )
+
+        self.assertEqual(alocacao["onibus_id"], "CMA4J33")
+
+    def test_realocacao_rejeita_onibus_fora_do_rodizio_da_semana(self):
+        configuracao = SimpleNamespace(
+            id=1,
+            data_inicio=date(2026, 11, 23),
+            semanas=4,
+            ativo=True,
+        )
+        item = SimpleNamespace(
+            rodizio_id=1,
+            rota_id=1,
+            onibus_id="LSN4I49",
+            turno="ida",
+        )
+        self.service = AlocacaoService(
+            _FakeSession(
+                {
+                    AgendamentoORM: [self.agendamento],
+                    RotaPrincipalORM: [self.rota_centro, self.rota_bairro],
+                    RotaComplementarORM: [],
+                    OnibusORM: [self.onibus],
+                    MotoristaORM: [self.motorista],
+                    RodizioFrotaORM: [configuracao],
+                    RodizioFrotaItemORM: [item],
+                }
+            )
+        )
+        alocacao = self._alocacao(rota_id=1)
+
+        with self.assertRaisesRegex(
+            DistribuicaoError,
+            "não está cadastrado no rodízio desta semana",
+        ):
+            self.service._validar_payload(
+                date(2026, 11, 24),
+                [alocacao],
+                permitir_realocacao=True,
+            )
+
+    def test_preview_sinaliza_onibus_fora_do_rodizio_da_semana(self):
+        configuracao = SimpleNamespace(
+            id=1,
+            data_inicio=date(2026, 11, 23),
+            semanas=4,
+            ativo=True,
+        )
+        item = SimpleNamespace(
+            rodizio_id=1,
+            rota_id=1,
+            onibus_id="LSN4I49",
+            turno="ida",
+        )
+        self.service = AlocacaoService(
+            _FakeSession(
+                {
+                    RodizioFrotaORM: [configuracao],
+                    RodizioFrotaItemORM: [item],
+                }
+            )
+        )
+
+        alertas = self.service._alertas_fora_do_rodizio(
+            date(2026, 11, 24),
+            [{
+                "rota_id": 1,
+                "onibus_id": "CMA-4J33",
+                "turno": "ida",
+            }],
+        )
+
+        self.assertEqual(len(alertas), 1)
+        self.assertEqual(
+            alertas[0]["tipo"],
+            "ONIBUS_DIFERENTE_DO_RODIZIO",
         )
 
 
