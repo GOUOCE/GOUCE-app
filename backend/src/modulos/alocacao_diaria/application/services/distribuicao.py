@@ -19,7 +19,7 @@ class OnibusDisponivel:
 def distribuir_alunos(
     demanda_por_rota: dict[int | tuple[int, str], list[Passageiro]],
     onibus: Iterable[OnibusDisponivel],
-    rodizio: dict[int, str] | None = None,
+    rodizio: dict[int | tuple[int, str], str] | None = None,
 ) -> dict:
     """Calcula a distribuição sem ler ou alterar estado externo."""
     disponiveis = sorted(onibus, key=lambda item: item.onibus_id)
@@ -54,7 +54,9 @@ def distribuir_alunos(
             )
             continue
 
-        preferido = rodizio.get(rota_id)
+        preferido = rodizio.get((rota_id, turno))
+        if preferido is None:
+            preferido = rodizio.get(rota_id)
         candidatos.sort(
             key=lambda item: (
                 item.onibus_id != preferido,
