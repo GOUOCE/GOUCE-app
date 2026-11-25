@@ -7,7 +7,7 @@ Suítes essenciais da **HU-023 — Publicação de Avisos** e da **HU-024 — Re
 | HU | Funcionalidade | API | UI |
 | --- | --- | --- | --- |
 | HU-023 | Publicação de Avisos | [11 casos pendentes](HU-023/api/API-HU-023.md) | [9 casos pendentes](HU-023/ui/UI-HU-023.md) |
-| HU-024 | Recebimento de Notificações Push | [9 casos pendentes](HU-024/api/API-HU-024.md) | [10 casos pendentes](HU-024/ui/UI-HU-024.md) |
+| HU-024 | Recebimento de Notificações Push | [9 casos: 2 passaram, 5 falharam, 2 bloqueados](HU-024/api/API-HU-024.md) | [10 casos pendentes](HU-024/ui/UI-HU-024.md) |
 | **Total** | **2 HUs** | **20** | **19** |
 
 Cada HU tem um [guia de execução da API](HU-023/api/README.md) (`api/README.md`) com a base analisada, a preparação da massa, as conferências e os **riscos mapeados no código**.

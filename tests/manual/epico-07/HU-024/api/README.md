@@ -1,6 +1,6 @@
 # Como executar os testes manuais de API — HU-024
 
-Execução pela **LLM**, com revisão de **Cauan Ricardo**. [Suíte de API: 9 casos](API-HU-024.md). A [UI tem 10 casos](../ui/UI-HU-024.md) para execução manual por Cauan. Execução ainda não realizada.
+Execução pela **LLM**, com revisão de **Cauan Ricardo**. [Suíte de API: 9 casos](API-HU-024.md). A [UI tem 10 casos](../ui/UI-HU-024.md) para execução manual por Cauan. Execução de 25/11/2026 na branch `test/execucao-api-hu-024`; resultados abaixo.
 
 ## Base e fontes
 
@@ -57,3 +57,13 @@ Riscos levantados na leitura do código em 25/11/2026; nenhum foi reproduzido. A
 - **HU-016 e HU-019:** a alteração de alocação depende da distribuição manual; sem o gatilho, os CT-004 e CT-005 ficam bloqueados.
 - **Push real:** exige aparelho físico com o app instalado e o Firebase ou APNs configurados; a versão web só usa a notificação do navegador, com o app aberto.
 - Registrar cada parte verificada, falha ou impedimento; não aprovar caso inteiro quando houver impedimento.
+
+## Resultado de 25/11/2026
+
+**9 casos: 2 passaram, 5 falharam e 2 ficaram bloqueados.** Código executado: `develop` `2e87cccc` mais o backend do `feature/hu-024-mural-aluno-e-notificacoes` (`e15f398a`), integrado só no ambiente de teste (migration renumerada para `86_create_avisos` e conflitos de `main.py` e `db.py` resolvidos). Stack isolada `atu-exec-api-hu024`, porta 8131, PostgreSQL 15 em banco novo. Evidência registrada somente dos casos que falharam.
+
+- **CT-002:** o evento do aviso é entregue a qualquer perfil autenticado, inclusive pendente, reprovado, com vínculo vencido, representante e administrador.
+- **CT-004:** a mudança de ônibus não gera nenhuma notificação (decisão 4 do PO); **CT-005** fica bloqueado por isso, e o **CT-003**, por falta de editar e inativar avisos.
+- **CT-006:** o cursor único perde avisos depois de um evento de realocação (reproduzido no teste unitário do serviço), e duas mensagens de validação vêm em inglês.
+- **CT-007:** depois de reiniciar a API, publicar antes de qualquer consulta esconde os avisos anteriores (a consulta devolveu só o aviso novo), e com dois processos a mesma consulta deu três respostas diferentes.
+- **CT-009:** não há push nativo, token de dispositivo, Firebase nem APNs (decisão 3 do PO).

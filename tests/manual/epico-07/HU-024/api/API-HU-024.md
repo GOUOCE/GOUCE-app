@@ -12,16 +12,18 @@
 | Base do planejamento | `feature/hu-024-mural-aluno-e-notificacoes` (commit `e15f398a`, [PR #383](https://github.com/GOUOCE/GOUCE-app/pull/383) fechado sem merge), 345 commits atrás da `develop` `1bc67d02`; **o módulo de avisos ainda não está na `develop`** |
 | Branch de planejamento | `test/planejamento-api-ui-hu-024`, com entrega para `develop` |
 | Revisão do planejamento | 25/11/2026 — requisitos 7.8 com as decisões do PO ([#539](https://github.com/GOUOCE/GOUCE-app/issues/539), sugestões ⭐), BDD do épico 07 e leitura do código das branches |
-| Ambiente | A preencher — API e PostgreSQL reais em stack isolada, URL, SHA do build integrado (`develop` + branch de avisos), fuso America/Fortaleza |
+| Ambiente | HTTP real `http://127.0.0.1:8131`; Docker `atu-exec-api-hu024`; PostgreSQL 15 em banco novo; Alembic `86_create_avisos` (head única, após renumerar); um processo da API (e um segundo contêiner com 2 processos só no CT-007); `America/Fortaleza` |
 | Total de casos | 9 |
-| Última execução | Não realizada |
+| Última execução | 25/11/2026 — 9/9 casos concluídos; início cerca de 10h35 (America/Fortaleza) |
+| Branch de execução | `test/execucao-api-hu-024`, criada da `develop` atualizada `2e87cccc` |
+| Código executado | `develop` `2e87cccc` mais o backend do `feature/hu-024-mural-aluno-e-notificacoes` (`e15f398a`), integrado só no ambiente de teste (migration renumerada para `86_create_avisos` e conflitos de `main.py` e `db.py` resolvidos); nenhuma alteração de produto foi commitada |
 | Testador | LLM — execução de API; Cauan Ricardo — revisão |
 
 ## Resultado geral
 
 | Situação | Total | ✅ Passaram | ❌ Falharam | ⚠️ Parciais | 🚫 Bloqueados | ⏳ Pendentes |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| ⏳ Não executada | 9 | 0 | 0 | 0 | 0 | 9 |
+| ❌ Concluída com falhas | 9 | 2 | 5 | 0 | 2 | 0 |
 
 ## Pré-condições
 
@@ -49,20 +51,20 @@ Usar o token indicado em cada caso e conferir o banco em nova conexão. Os casos
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU024-API-001 | Publicar um aviso gera o evento de notificação | Administrador publica “Manutenção na Rota Centro”; aluno A consulta `GET /avisos/notificacoes` antes e depois. | Um evento `aviso` novo, com título, mensagem, `aviso_id` e `app_nome` corretos, sem duplicar. | ⏳ PENDENTE | BDD: aviso publicado dispara a notificação; AC-01. Risco de leitura: o evento vive em memória do processo. |
-| CT-HU024-API-002 | Destinatários do aviso: só alunos aprovados com vínculo válido | Aluno aprovado com vínculo válido, aluno pendente, aluno reprovado, aluno com vínculo vencido, representante, administrador e sem token; aviso publicado; `GET /avisos/notificacoes` com cada token. | Só o aluno aprovado com vínculo válido recebe o evento; pendente, reprovado e vencido não. | ⏳ PENDENTE | Decisão 6 do PO (⭐). Risco de leitura: `verify_any_user` entrega o evento a qualquer perfil autenticado e a exclusão do “pendente” é só no cliente. Esperado falhar até haver filtro no servidor. |
-| CT-HU024-API-003 | Editar ou inativar um aviso não notifica de novo | Aviso publicado e notificado; edição e inativação pelos endereços do OpenAPI (HU-023). | Os eventos não aumentam depois da edição ou da inativação. | ⏳ PENDENTE | Decisão 7 do PO (⭐). Depende da edição e da inativação (HU-023, CT-006 e CT-007), que o código lido não tem; sem elas o caso fica bloqueado. |
-| CT-HU024-API-004 | Alteração de alocação notifica somente o aluno afetado | Alunos A e B alocados em D+1; nova distribuição manual muda o ônibus de A; consultas de A e de B em `/avisos/notificacoes`. | A recebe “Você foi realocado” com o ônibus novo; B não recebe nada. | ⏳ PENDENTE | AC-01, AC-03 e AC-06; decisão 4 do PO (⭐). Risco de leitura: `disparar_realocacao_onibus` não é chamado por nenhuma alteração e o evento não tem destinatário (seria global). Esperado falhar. |
-| CT-HU024-API-005 | Dados da notificação sempre atualizados (RN-009) | A realocado duas vezes em sequência (V1 → V3 → V2); evento e `minha-viagem` depois de cada troca. | Cada troca gera a sua notificação e o ônibus citado é sempre o mais recente, igual ao da consulta de alocação. | ⏳ PENDENTE | Depende do CT-004; sem gatilho de realocação o caso fica bloqueado. BDD: dados atualizados; AC-06 e RN-009. |
+| CT-HU024-API-001 | Publicar um aviso gera o evento de notificação | Administrador publica “Manutenção na Rota Centro”; aluno A consulta `GET /avisos/notificacoes` antes e depois. | Um evento `aviso` novo, com título, mensagem, `aviso_id` e `app_nome` corretos, sem duplicar. | ✅ PASSOU | BDD: aviso publicado dispara a notificação; AC-01. Risco de leitura: o evento vive em memória do processo. Execução (25/11/2026): evento `aviso` correto, sem duplicar. |
+| CT-HU024-API-002 | Destinatários do aviso: só alunos aprovados com vínculo válido | Aluno aprovado com vínculo válido, aluno pendente, aluno reprovado, aluno com vínculo vencido, representante, administrador e sem token; aviso publicado; `GET /avisos/notificacoes` com cada token. | Só o aluno aprovado com vínculo válido recebe o evento; pendente, reprovado e vencido não. | ❌ FALHOU | Decisão 6 do PO (⭐). Risco de leitura: `verify_any_user` entrega o evento a qualquer perfil autenticado e a exclusão do “pendente” é só no cliente. Esperado falhar até haver filtro no servidor. Execução (25/11/2026): o evento é entregue a todos os perfis, inclusive pendente, reprovado, vínculo vencido, representante e administrador. |
+| CT-HU024-API-003 | Editar ou inativar um aviso não notifica de novo | Aviso publicado e notificado; edição e inativação pelos endereços do OpenAPI (HU-023). | Os eventos não aumentam depois da edição ou da inativação. | 🚫 BLOQUEADO | Decisão 7 do PO (⭐). Depende da edição e da inativação (HU-023, CT-006 e CT-007), que o código lido não tem; sem elas o caso fica bloqueado. Execução (25/11/2026): depende de editar e inativar aviso (HU-023), que não existem. |
+| CT-HU024-API-004 | Alteração de alocação notifica somente o aluno afetado | Alunos A e B alocados em D+1; nova distribuição manual muda o ônibus de A; consultas de A e de B em `/avisos/notificacoes`. | A recebe “Você foi realocado” com o ônibus novo; B não recebe nada. | ❌ FALHOU | AC-01, AC-03 e AC-06; decisão 4 do PO (⭐). Risco de leitura: `disparar_realocacao_onibus` não é chamado por nenhuma alteração e o evento não tem destinatário (seria global). Esperado falhar. Execução (25/11/2026): a mudança de ônibus não gera nenhuma notificação de realocação. |
+| CT-HU024-API-005 | Dados da notificação sempre atualizados (RN-009) | A realocado duas vezes em sequência (V1 → V3 → V2); evento e `minha-viagem` depois de cada troca. | Cada troca gera a sua notificação e o ônibus citado é sempre o mais recente, igual ao da consulta de alocação. | 🚫 BLOQUEADO | Depende do CT-004; sem gatilho de realocação o caso fica bloqueado. BDD: dados atualizados; AC-06 e RN-009. Execução (25/11/2026): depende do gatilho de realocação (CT-004), que não existe. |
 
 ### Seção B — Consulta, infraestrutura e entrega
 
 | ID | Cenário | Dados de entrada | Resultado esperado | Status | Observações |
 | --- | --- | --- | --- | --- | --- |
-| CT-HU024-API-006 | Cursor `apos_id`, limite e validação dos parâmetros | `apos_id` ausente, 0, id de aviso, -1, “abc” e 1,5; `limite` 0, 1, 10, 50 e 51; 7 avisos publicados. | Parâmetros inválidos recusados em português; `apos_id` devolve só eventos posteriores; limite respeitado e ordem do mais novo ao mais antigo. | ⏳ PENDENTE | Risco de leitura: os ids de realocação começam em 1.000.001 e usam o mesmo cursor dos avisos; depois de um evento de realocação o cliente passaria `apos_id` enorme e **nenhum aviso novo (id pequeno) voltaria**. Não é reproduzível por HTTP enquanto a realocação não disparar; cobrir pelo teste unitário do serviço. |
-| CT-HU024-API-007 | Buffer em memória: capacidade, reinício e vários processos | 105 avisos publicados em sequência; reinício do serviço da API; repetir com a API em dois processos (`--workers 2`). | Nenhum aviso se perde nem duplica no reinício; com dois processos, a resposta não depende de qual processo atende. | ⏳ PENDENTE | Risco de leitura: `NotificacaoPushService` guarda `deque(maxlen=100)` na classe; enquanto o buffer tem algo, a resposta ignora o banco; cada processo tem o seu buffer. RNF-014 (confiabilidade). |
-| CT-HU024-API-008 | Acesso e erros da consulta de notificações | Sem token, token inválido, token expirado, administrador, representante e aluno aprovado em `GET /avisos/notificacoes`. | Sem token ou token inválido recebem 401; perfis autenticados seguem a regra de destinatários. | ⏳ PENDENTE | BDD: acesso por perfil; relaciona-se ao CT-002. |
-| CT-HU024-API-009 | Push nativo e retenção com o aparelho offline | Aviso publicado com o aparelho do aluno offline; busca no OpenAPI e no banco de endpoint e tabela para o token do dispositivo e de integração com Firebase ou APNs. | A API cadastra o token do dispositivo, envia ao serviço de mensageria e este retém a notificação até o aparelho voltar. | ⏳ PENDENTE | AC-02, AC-04, FA-001 e RNF-014; decisão 3 do PO (⭐). Risco de leitura: não há Firebase, APNs nem token de dispositivo; o aplicativo só consulta a API com o app aberto. Esperado falhar; registrar a ausência, não aprovar. |
+| CT-HU024-API-006 | Cursor `apos_id`, limite e validação dos parâmetros | `apos_id` ausente, 0, id de aviso, -1, “abc” e 1,5; `limite` 0, 1, 10, 50 e 51; 7 avisos publicados. | Parâmetros inválidos recusados em português; `apos_id` devolve só eventos posteriores; limite respeitado e ordem do mais novo ao mais antigo. | ❌ FALHOU | Risco de leitura: os ids de realocação começam em 1.000.001 e usam o mesmo cursor dos avisos; depois de um evento de realocação o cliente passaria `apos_id` enorme e **nenhum aviso novo (id pequeno) voltaria**. Não é reproduzível por HTTP enquanto a realocação não disparar; cobrir pelo teste unitário do serviço. Execução (25/11/2026): parâmetros e ordem corretos, mas o cursor deixa de entregar avisos depois de uma realocação e duas mensagens de validação vêm em inglês. |
+| CT-HU024-API-007 | Buffer em memória: capacidade, reinício e vários processos | 105 avisos publicados em sequência; reinício do serviço da API; repetir com a API em dois processos (`--workers 2`). | Nenhum aviso se perde nem duplica no reinício; com dois processos, a resposta não depende de qual processo atende. | ❌ FALHOU | Risco de leitura: `NotificacaoPushService` guarda `deque(maxlen=100)` na classe; enquanto o buffer tem algo, a resposta ignora o banco; cada processo tem o seu buffer. RNF-014 (confiabilidade). Execução (25/11/2026): depois do reinício, publicar antes de qualquer consulta esconde os avisos anteriores; com dois processos, as respostas variam. |
+| CT-HU024-API-008 | Acesso e erros da consulta de notificações | Sem token, token inválido, token expirado, administrador, representante e aluno aprovado em `GET /avisos/notificacoes`. | Sem token ou token inválido recebem 401; perfis autenticados seguem a regra de destinatários. | ✅ PASSOU | BDD: acesso por perfil; relaciona-se ao CT-002. Execução (25/11/2026): 401 para token ausente, inválido e expirado; consulta só de leitura. |
+| CT-HU024-API-009 | Push nativo e retenção com o aparelho offline | Aviso publicado com o aparelho do aluno offline; busca no OpenAPI e no banco de endpoint e tabela para o token do dispositivo e de integração com Firebase ou APNs. | A API cadastra o token do dispositivo, envia ao serviço de mensageria e este retém a notificação até o aparelho voltar. | ❌ FALHOU | AC-02, AC-04, FA-001 e RNF-014; decisão 3 do PO (⭐). Risco de leitura: não há Firebase, APNs nem token de dispositivo; o aplicativo só consulta a API com o app aberto. Esperado falhar; registrar a ausência, não aprovar. Execução (25/11/2026): não há push nativo: nem token de dispositivo, nem Firebase ou APNs. |
 
 ## Detalhamento dos casos
 
@@ -89,8 +91,9 @@ Usar o token indicado em cada caso e conferir o banco em nova conexão. Os casos
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Antes: `GET /avisos/notificacoes` devolveu `[]`. Depois de publicar o aviso 1: 1 evento `tipo` `aviso`, `id` e `aviso_id` 1, `titulo` e `mensagem` iguais ao aviso, `app_nome` “GOUOCE” e `data_criacao` com `-03:00`.
+- `apos_id=1` devolve `[]` e `apos_id=0` devolve o evento; duas publicações seguidas geram dois eventos distintos (ids 2 e 1), sem duplicidade; o aviso no banco confere.
+- Status: ✅ PASSOU.
 
 ---
 
@@ -115,8 +118,56 @@ Usar o token indicado em cada caso e conferir o banco em nova conexão. Os casos
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- ❌ Depois de publicar o aviso 3, `GET /avisos/notificacoes?apos_id=2` devolveu o evento para: aluno aprovado, aluno pendente, aluno reprovado (`rejeitado`), aluno com vínculo vencido, representante e administrador (200 em todos); sem token 401.
+- O mural `GET /avisos` também responde 200 para pendente, reprovado e vencido.
+- Estados preparados por fixture no banco isolado (`status_cadastro` `rejeitado` e `validade_acesso` no passado).
+
+```json
+{
+  "requisicao": "GET /avisos/notificacoes?apos_id=2",
+  "esperado": "evento só para aluno aprovado com vínculo válido; pendente, reprovado e vencido sem o evento (403 ou lista vazia)",
+  "obtido": {
+    "aluno aprovado": [
+      {
+        "tipo": "aviso",
+        "id": 3
+      }
+    ],
+    "aluno pendente": [
+      {
+        "tipo": "aviso",
+        "id": 3
+      }
+    ],
+    "aluno reprovado": [
+      {
+        "tipo": "aviso",
+        "id": 3
+      }
+    ],
+    "aluno vínculo vencido": [
+      {
+        "tipo": "aviso",
+        "id": 3
+      }
+    ],
+    "representante": [
+      {
+        "tipo": "aviso",
+        "id": 3
+      }
+    ],
+    "administrador": [
+      {
+        "tipo": "aviso",
+        "id": 3
+      }
+    ],
+    "sem token": 401
+  }
+}
+```
+- Status: ❌ FALHOU.
 
 ---
 
@@ -140,8 +191,9 @@ Usar o token indicado em cada caso e conferir o banco em nova conexão. Os casos
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- `PATCH`, `PUT` e `DELETE /avisos/1` com o token do administrador: 404 `{"detail": "Not Found"}`; o OpenAPI só tem `GET /avisos`, `POST /avisos` e `GET /avisos/notificacoes`.
+- Sem as operações, não há como medir se editar ou inativar notifica de novo; registrada a dependência (HU-023 CT-006 e CT-007), sem aprovar.
+- Status: 🚫 BLOQUEADO.
 
 ---
 
@@ -166,8 +218,30 @@ Usar o token indicado em cada caso e conferir o banco em nova conexão. Os casos
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Alice e Bruno alocados no V3. Nova distribuição manual passou a Alice para o V1 (`minha-viagem` de Alice: V1 com Mauro Beta; de Bruno: V3 com Marcos Alfa) e `POST` respondeu 201.
+- ❌ Nenhum evento `realocacao` foi criado: as consultas de Alice e de Bruno só trazem os 3 eventos de aviso de antes.
+
+```json
+{
+  "passos": "POST /alocacao-diaria/distribuicao (modo manual) trocando o ônibus de Alice de V3 para V1",
+  "esperado": "evento `realocacao` “Você foi realocado” com o ônibus novo, só para Alice; Bruno sem o evento",
+  "obtido": {
+    "minha_viagem_alice": "V1 ABC1D23, Mauro Beta",
+    "eventos_alice_depois": [
+      "aviso 3",
+      "aviso 2",
+      "aviso 1"
+    ],
+    "eventos_bruno_depois": [
+      "aviso 3",
+      "aviso 2",
+      "aviso 1"
+    ],
+    "evento_realocacao_criado": false
+  }
+}
+```
+- Status: ❌ FALHOU.
 
 ---
 
@@ -191,8 +265,9 @@ Usar o token indicado em cada caso e conferir o banco em nova conexão. Os casos
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Segunda troca (Alice do V1 para o V3): `minha-viagem` de Alice passou a V3 com Marcos Alfa, igual à distribuição, mas nenhum evento `realocacao` foi criado nas duas trocas.
+- A parte de consistência da consulta de alocação está certa; a parte da notificação não pode ser verificada sem o gatilho, e o caso fica bloqueado.
+- Status: 🚫 BLOQUEADO.
 
 ---
 
@@ -219,8 +294,22 @@ Usar o token indicado em cada caso e conferir o banco em nova conexão. Os casos
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Passou: ordem do mais novo ao mais antigo; `apos_id` devolve só ids maiores; `limite` 1 a 50 corta a lista; `apos_id=-1`, `apos_id=abc`, `apos_id=1.5`, `limite=0` e `limite=51` recusados com 422.
+- ❌ Mensagens em inglês: `apos_id=-1` → “Input should be greater than or equal to 0” e `limite=0` → “Input should be greater than or equal to 1” (as outras são em português).
+- ❌ Teste unitário do serviço (dentro do contêiner): depois de um evento de realocação (id 1000001), o cliente fica com o cursor 1000001 e o aviso publicado depois não é entregue.
+
+```json
+{
+  "teste": "NotificacaoPushService: aviso 5, evento de realocação, cursor do cliente, aviso 7",
+  "esperado": "apos_id=cursor devolve o aviso 7",
+  "obtido": {
+    "id_do_evento_de_realocacao": 1000001,
+    "cursor": 1000001,
+    "eventos_entregues": []
+  }
+}
+```
+- Status: ❌ FALHOU.
 
 ---
 
@@ -244,8 +333,32 @@ Usar o token indicado em cada caso e conferir o banco em nova conexão. Os casos
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Passou: com 105 avisos, `limite=50` devolve exatamente os 50 mais recentes do banco, e a primeira consulta depois do reinício reconstrói do banco (50 iguais).
+- ❌ Reinício e publicação de um aviso (id 106) **antes** de qualquer consulta: `limite=50` devolveu só `[106]`, porque o buffer em memória já estava ‘aquecido’ e o banco foi ignorado.
+- ❌ API com 2 processos: depois de publicar o aviso 107, 30 consultas seguidas (`limite=5`) deram 3 respostas diferentes, porque cada processo tem o seu buffer.
+
+```json
+{
+  "cenario": "API com 2 processos (uvicorn --workers 2), 1 aviso publicado, 30 consultas seguidas com limite 5",
+  "esperado": "a mesma lista em todas as consultas",
+  "obtido": {
+    "[107]": 27,
+    "[107,106,105,104,103]": 1,
+    "[100,99,98,97,96]": 2
+  }
+}
+```
+
+```json
+{
+  "cenario": "reinício da API e publicação do aviso 106 antes de qualquer consulta",
+  "esperado": "os 50 avisos mais recentes",
+  "obtido": [
+    106
+  ]
+}
+```
+- Status: ❌ FALHOU.
 
 ---
 
@@ -269,8 +382,10 @@ Usar o token indicado em cada caso e conferir o banco em nova conexão. Os casos
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- Sem token 401 “Não autenticado”; token inválido e token expirado (gerado no contêiner, 5 minutos no passado) 401 “Sessão inválida ou expirada”; aluno aprovado e administrador 200.
+- Cinco consultas seguidas não alteraram `aviso` nem `log_auditoria` (107 e 128 antes e depois).
+- Observação: pendente, reprovado, vencido, representante e administrador recebem 200 (ver CT-002).
+- Status: ✅ PASSOU.
 
 ---
 
@@ -294,8 +409,21 @@ Usar o token indicado em cada caso e conferir o banco em nova conexão. Os casos
 
 **Resultado obtido**
 
-- Não executado.
-- Status: ⏳ Pendente.
+- ❌ OpenAPI sem rota de dispositivo, token ou push; banco sem tabela de dispositivo ou token; nenhuma referência a Firebase, FCM, APNs ou push da Expo no código do backend nem no `requirements.txt`.
+- A notificação existe só como evento consultado pelo app com o aplicativo aberto; não há retenção nem entrega com o aparelho offline.
+
+```json
+{
+  "verificacao": "OpenAPI, banco e código",
+  "esperado": "cadastro do token do dispositivo por aluno e envio ao Firebase ou APNs, com retenção offline",
+  "obtido": {
+    "rotas_de_dispositivo_ou_push": [],
+    "tabelas_de_dispositivo": [],
+    "referencias_firebase_fcm_apns_no_backend": 0
+  }
+}
+```
+- Status: ❌ FALHOU.
 
 ---
 
@@ -314,11 +442,16 @@ Usar o token indicado em cada caso e conferir o banco em nova conexão. Os casos
 
 | Caso | Defeito ou dependência | Issue |
 | --- | --- | --- |
-| — | Nenhuma execução realizada. Os riscos de leitura estão no [guia de execução da API](../api/README.md) e não são defeitos reproduzidos. | — |
+| CT-HU024-API-002 | O evento do aviso é entregue a qualquer perfil autenticado (pendente, reprovado, vencido, representante, administrador). | [#548](https://github.com/GOUOCE/GOUCE-app/issues/548) — JSON de falha no corpo |
+| CT-HU024-API-003 | Depende de editar e inativar aviso (HU-023), que não existem. | lacuna conhecida: decisão 1 do PO, [#539](https://github.com/GOUOCE/GOUCE-app/issues/539) |
+| CT-HU024-API-004, 005 | Nenhuma alteração de alocação gera a notificação de realocação. | lacuna conhecida: decisão 4 do PO, [#539](https://github.com/GOUOCE/GOUCE-app/issues/539) |
+| CT-HU024-API-006 | O cursor único faz o cliente perder avisos depois de um evento de realocação; mensagens de validação em inglês. | [#549](https://github.com/GOUOCE/GOUCE-app/issues/549) — JSON de falha no corpo |
+| CT-HU024-API-007 | Eventos em memória: publicar antes da primeira consulta depois do reinício esconde os avisos anteriores; com 2 processos as respostas variam. | [#550](https://github.com/GOUOCE/GOUCE-app/issues/550) — JSON de falha no corpo |
+| CT-HU024-API-009 | Não há push nativo (Firebase ou APNs) nem token de dispositivo. | lacuna conhecida: decisão 3 do PO, [#539](https://github.com/GOUOCE/GOUCE-app/issues/539) |
 
 ## Observações gerais
 
 - As lacunas conhecidas (push nativo, gatilho de realocação, filtro de destinatários no servidor) vêm da [decisão do PO na #539](https://github.com/GOUOCE/GOUCE-app/issues/539) e estão detalhadas no README do BDD; ficam como casos que tendem a falhar, para o resultado real ficar registrado.
 - O ambiente integrado precisa da migration de avisos renumerada, como descrito na [suíte da HU-023](../../HU-023/api/API-HU-023.md).
 - Referências: [requisitos, seção 7.8](../../../../../docs/requisitos.md), [BDD do épico 07](../../../../../bdd/features/epico-07/README.md) e as [decisões do PO na #539](https://github.com/GOUOCE/GOUCE-app/issues/539).
-- Nenhum caso foi executado nesta entrega; a leitura do código não aprova caso.
+- Execução real em 25/11/2026: cadastros, aprovação, promoção, reservas, distribuição e publicações por HTTP; estados reprovado e vínculo vencido por fixture no banco isolado; teste unitário do serviço de notificação executado dentro do contêiner da API; segundo contêiner com `--workers 2` só para o CT-007 (removido ao final). Evidência registrada somente dos casos que falharam.
