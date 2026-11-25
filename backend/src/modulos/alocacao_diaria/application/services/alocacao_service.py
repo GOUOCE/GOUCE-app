@@ -26,6 +26,9 @@ from src.modulos.alocacao_diaria.model.entities.rodizio_frota import (
 from src.shared.infrastructure.audit_model import LogAuditoriaORM
 
 
+MENSAGEM_DIA_PASSADO = "Não é possível alterar a distribuição de um dia que já passou."
+
+
 class DistribuicaoError(ValueError):
     def __init__(self, message: str, status_code: int = 422):
         self.status_code = status_code
@@ -300,11 +303,19 @@ class AlocacaoService:
         )
         return {agendamento_id: (aluno_id, nome) for agendamento_id, aluno_id, nome in rows}
 
+    @staticmethod
+    def _hoje() -> date:
+        """Data de hoje no fuso do servidor (America/Fortaleza); isolada para os testes."""
+        return date.today()
+
     def persist(
         self,
         payload: DistribuicaoRequestDTO,
         usuario_executor_id: int | None = None,
     ) -> dict:
+        # RN-004: o histórico de períodos anteriores não pode ser alterado (issue #542).
+        if payload.data < self._hoje():
+            raise DistribuicaoError(MENSAGEM_DIA_PASSADO)
         excedentes_globais: list[dict] = []
         if payload.modo == "automatico":
             preview = self.preview(payload.data)

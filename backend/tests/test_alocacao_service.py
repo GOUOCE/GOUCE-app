@@ -238,6 +238,34 @@ class AlocacaoServiceValidacaoTest(unittest.TestCase):
             "ONIBUS_DIFERENTE_DO_RODIZIO",
         )
 
+    def test_distribuicao_de_dia_passado_e_recusada_sem_gravar(self):
+        # Issue #542 (RN-004): o histórico de dias anteriores a hoje não pode ser alterado.
+        self.service._hoje = lambda: date(2026, 11, 19)
+        payload = SimpleNamespace(
+            data=date(2026, 11, 18),
+            modo="manual",
+            alocacoes=[SimpleNamespace(model_dump=lambda: self._alocacao())],
+        )
+
+        with self.assertRaises(DistribuicaoError) as contexto:
+            self.service.persist(payload)
+
+        self.assertEqual(
+            str(contexto.exception),
+            "Não é possível alterar a distribuição de um dia que já passou.",
+        )
+        self.assertEqual(contexto.exception.status_code, 422)
+
+    def test_distribuicao_de_hoje_nao_e_recusada_pela_regra_de_data(self):
+        self.service._hoje = lambda: date(2026, 11, 18)
+        payload = SimpleNamespace(data=date(2026, 11, 18), modo="manual", alocacoes=[])
+
+        with self.assertRaises(DistribuicaoError) as contexto:
+            self.service.persist(payload)
+
+        # Cai na validação seguinte (lista vazia), não na regra de dia passado.
+        self.assertEqual(str(contexto.exception), "A lista de alocações não pode ser vazia.")
+
 
 if __name__ == "__main__":
     unittest.main()

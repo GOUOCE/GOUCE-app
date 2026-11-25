@@ -147,6 +147,7 @@ class DistribuicaoHu016Test(unittest.TestCase):
     def test_confirmacao_automatica_retorna_excedentes_globais(self):
         session = MagicMock()
         service = AlocacaoService(session)
+        service._hoje = lambda: date(2026, 11, 1)  # fixa 'hoje' antes das datas dos testes (issue #542)
         service.preview = MagicMock(
             return_value={
                 "data": "2026-11-24",
@@ -172,6 +173,7 @@ class DistribuicaoHu016Test(unittest.TestCase):
     def test_confirmacao_manual_recusa_lista_de_alocacoes_vazia(self):
         session = MagicMock()
         service = AlocacaoService(session)
+        service._hoje = lambda: date(2026, 11, 1)  # fixa 'hoje' antes das datas dos testes (issue #542)
         payload = DistribuicaoRequestDTO(data=date(2026, 11, 26), modo="manual")
 
         with self.assertRaisesRegex(DistribuicaoError, "lista de alocações não pode ser vazia"):
@@ -218,6 +220,7 @@ class DistribuicaoHu016Test(unittest.TestCase):
             }[model.__name__]
         )
         service = AlocacaoService(session)
+        service._hoje = lambda: date(2026, 11, 1)  # fixa 'hoje' antes das datas dos testes (issue #542)
 
         service._validar_payload(
             date(2026, 11, 24),
