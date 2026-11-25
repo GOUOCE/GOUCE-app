@@ -14,6 +14,8 @@ import { ChevronLeft, ChevronDown, Bus, User } from 'lucide-react-native';
 import {
   logisticaService,
   manterSelecaoDisponivel,
+  ehDiaPassado,
+  MENSAGEM_DIA_PASSADO,
   AlunoAlocacao,
   AlocacaoDistribuicao,
   OnibusOpcao,
@@ -63,6 +65,7 @@ export default function AlocarRotaScreen() {
 
   const linhaId = Number(params.linhaId);
   const dataIso = params.dataIso || paraIso(new Date());
+  const diaPassado = ehDiaPassado(dataIso);
 
   const [rota, setRota] = useState<RotaPrincipalItem | null>(null);
   const [preview, setPreview] = useState<PreviaDistribuicao | null>(null);
@@ -289,6 +292,11 @@ export default function AlocarRotaScreen() {
   }, [calcular, formularios, preview]);
 
   const handleIniciarAlocacao = () => {
+    if (diaPassado) {
+      setPopupResultado({ visible: true, type: 'warning', title: 'Dia passado', message: MENSAGEM_DIA_PASSADO });
+      return;
+    }
+
     if (formularios.length === 0) {
       setPopupResultado({
         visible: true,
@@ -443,6 +451,11 @@ export default function AlocarRotaScreen() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          {diaPassado ? (
+            <View style={styles.avisoDiaPassado} testID="aviso-dia-passado">
+              <Text style={styles.avisoDiaPassadoTexto}>{MENSAGEM_DIA_PASSADO}</Text>
+            </View>
+          ) : null}
           {formularios.length === 0 ? (
             <View style={styles.emptyBox}>
               <Text style={styles.emptyText}>
@@ -589,7 +602,7 @@ export default function AlocarRotaScreen() {
               mode="contained"
               onPress={handleIniciarAlocacao}
               loading={salvando}
-              disabled={salvando || formularios.length === 0}
+              disabled={salvando || formularios.length === 0 || diaPassado}
               style={styles.btnConfirmar}
               contentStyle={styles.btnContent}
               buttonColor="#3E5F90"
@@ -723,6 +736,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#191C20',
     fontSize: 18,
+  },
+  avisoDiaPassado: {
+    backgroundColor: '#FFF4E5',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+  },
+  avisoDiaPassadoTexto: {
+    fontSize: 13,
+    color: '#92400E',
+    lineHeight: 18,
   },
   previaAlertText: {
     color: '#8B261D',

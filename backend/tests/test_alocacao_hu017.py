@@ -32,6 +32,7 @@ class _Query:
 class AlocacaoHu017Test(unittest.TestCase):
     def test_confirmacao_manual_retorna_mensagem_de_escala(self):
         service = AlocacaoService(MagicMock())
+        service._hoje = lambda: date(2026, 11, 1)  # fixa 'hoje' antes das datas dos testes (issue #542)
         service._demanda = MagicMock()
         service._validar_payload = MagicMock()
         service._persistir = MagicMock()
@@ -67,6 +68,7 @@ class AlocacaoHu017Test(unittest.TestCase):
             }[model.__name__]
         )
         service = AlocacaoService(session)
+        service._hoje = lambda: date(2026, 11, 1)  # fixa 'hoje' antes das datas dos testes (issue #542)
         alocacoes = [
             {
                 "rota_id": 1,
@@ -104,6 +106,7 @@ class AlocacaoHu017Test(unittest.TestCase):
 
         session.add.side_effect = add
         service = AlocacaoService(session)
+        service._hoje = lambda: date(2026, 11, 1)  # fixa 'hoje' antes das datas dos testes (issue #542)
 
         service._persistir(
             date(2026, 11, 18),
