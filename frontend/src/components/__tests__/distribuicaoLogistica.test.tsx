@@ -203,6 +203,8 @@ describe('Distribuição Logística — Botão de Lista de Embarque nos cards (H
 
     expect(encontrarBotaoPorTestId(root, 'botao-alocar-1')).toBeUndefined();
     expect(root.root.findAllByType('Button')).toHaveLength(0);
+    // Issue #542: dia passado com excedentes também não oferece a realocação.
+    expect(encontrarBotaoPorTestId(root, 'botao-excedentes-2')).toBeUndefined();
 
     const botaoEmbarqueHistorico = encontrarBotaoPorTestId(root, 'botao-lista-embarque-1');
     expect(botaoEmbarqueHistorico).toBeDefined();
