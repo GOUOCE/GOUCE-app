@@ -500,14 +500,16 @@ const styles = StyleSheet.create({
   },
   topTabsContainer: {
     flexDirection: 'row',
+    justifyContent: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#E0E2EC',
-    paddingHorizontal: 24,
     marginBottom: 20,
   },
   topTabBtn: {
+    flex: 1,
+    alignItems: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     borderBottomWidth: 3,
     borderBottomColor: 'transparent',
   },

@@ -254,6 +254,21 @@ export default function AlocarRotaScreen() {
     [linhaId, preview],
   );
 
+  const totalAlunosRota = useMemo(() => {
+    const ids = new Set<number>();
+    for (const formulario of formularios) {
+      for (const aluno of formulario.alunos) {
+        ids.add(aluno.agendamento_id);
+      }
+    }
+    for (const excedente of preview?.excedentes_globais ?? []) {
+      if (Number(excedente.rota_id) === linhaId) {
+        ids.add(excedente.agendamento_id);
+      }
+    }
+    return ids.size;
+  }, [formularios, linhaId, preview]);
+
   const montarAlocacoes = useCallback(() => {
     if (!preview) return { payload: [], enriquecidas: [] as AlocacaoDistribuicao[] };
 
@@ -434,6 +449,9 @@ export default function AlocarRotaScreen() {
           <Text variant="bodySmall" style={styles.headerSubtitle}>
             {formatarDataCurta(dataIso)}
             {faculdadesRota.length > 0 ? ` • ${faculdadesRota.join(', ')}` : ''}
+            {totalAlunosRota > 0
+              ? ` • ${totalAlunosRota} ${totalAlunosRota === 1 ? 'aluno na rota' : 'alunos na rota'}`
+              : ''}
           </Text>
         </View>
       </View>
@@ -463,17 +481,27 @@ export default function AlocarRotaScreen() {
               </Text>
             </View>
           ) : (
-            formularios.map((formulario, indice) => {
+            formularios.map((formulario) => {
               const calculo = calcular(formulario);
               const opcoesOnibus = obterOpcoesOnibus(formulario);
               const opcoesMotoristas = obterOpcoesMotoristas(formulario);
+              const formulariosMesmoTurno = formularios.filter(
+                (item) => item.turno === formulario.turno,
+              );
+              const indiceNoTurno = formulariosMesmoTurno.findIndex(
+                (item) => item.chave === formulario.chave,
+              );
               const tituloTurno = formulario.turno === 'ida' ? 'Ida' : 'Volta';
+              const tituloCard =
+                formulariosMesmoTurno.length > 1
+                  ? `Viagem de ${tituloTurno} • Veículo ${indiceNoTurno + 1}`
+                  : `Viagem de ${tituloTurno}`;
 
               return (
                 <Surface key={formulario.chave} style={styles.veiculoCard} elevation={0}>
                   <View style={styles.veiculoHeader}>
                     <Text variant="titleMedium" style={styles.veiculoTitle}>
-                      Veículo {indice + 1}
+                      {tituloCard}
                     </Text>
                     <View style={styles.turnoBadge}>
                       <Text style={styles.turnoBadgeText}>{tituloTurno}</Text>
@@ -535,7 +563,7 @@ export default function AlocarRotaScreen() {
                         !calculo.dentroDaCapacidade && styles.previaAlertText,
                       ]}
                     >
-                      {calculo.total} alunos alocados
+                      {calculo.total} {calculo.total === 1 ? 'aluno alocado' : 'alunos alocados'} na {formulario.turno}
                     </Text>
 
                     <View style={styles.previewGridRow}>
