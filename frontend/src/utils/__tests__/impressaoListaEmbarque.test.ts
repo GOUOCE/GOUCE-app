@@ -438,4 +438,75 @@ describe('impressaoListaEmbarque (HU-018)', () => {
     await imprimirListaEmbarque(lista);
     expect(windowPrintFallbackMock).toHaveBeenCalledTimes(1);
   });
+
+  it('inclui coluna e resumo de presença na impressão A4 e no resumo textual quando há frequências registradas', () => {
+    const base = criarListaLinha01Com38Alunos();
+    const listaComFrequencia: ListaEmbarqueRota = {
+      ...base,
+      totalAlunos: 3,
+      totalPresentes: 1,
+      totalFaltas: 1,
+      totalPendentes: 1,
+      alunos: [
+        { ...base.alunos[0], statusPresenca: 'PRESENTE' },
+        { ...base.alunos[1], statusPresenca: 'FALTA' },
+        { ...base.alunos[2], statusPresenca: 'PENDENTE' },
+      ],
+    };
+
+    const doc = gerarPaginasImpressaoA4(listaComFrequencia, {
+      perfil: 'MOTORISTA',
+      nomeEmissor: 'Ana Beatriz',
+    });
+
+    expect(doc.possuiFrequencia).toBe(true);
+    expect(doc.resumoFrequencia).toBe('Presentes: 1 • Faltas: 1 • Pendentes: 1');
+    expect(doc.paginas[0].linhas).toEqual([
+      {
+        numero: '01',
+        nome: base.alunos[0].nome,
+        trajeto: base.alunos[0].trajetoFormatado,
+        preenchido: true,
+        presenca: 'Presente',
+      },
+      {
+        numero: '02',
+        nome: base.alunos[1].nome,
+        trajeto: base.alunos[1].trajetoFormatado,
+        preenchido: true,
+        presenca: 'Falta',
+      },
+      {
+        numero: '03',
+        nome: base.alunos[2].nome,
+        trajeto: base.alunos[2].trajetoFormatado,
+        preenchido: true,
+        presenca: 'Pendente',
+      },
+    ]);
+
+    const html = gerarHtmlImpressaoA4(listaComFrequencia, {
+      perfil: 'MOTORISTA',
+      nomeEmissor: 'Ana Beatriz',
+    });
+    expect(html).toContain('<th class="col-presenca">Presença</th>');
+    expect(html).toContain('Frequência registrada');
+    expect(html).toContain('Presentes: 1 • Faltas: 1 • Pendentes: 1');
+    expect(html).toContain('badge-presente">Presente</span>');
+    expect(html).toContain('badge-falta">Falta</span>');
+    expect(html).toContain('badge-pendente">Pendente</span>');
+    expect(html).toContain('.col-presenca {\n      width: 96px;\n      text-align: left;\n    }');
+    expect(html).toContain('color: #0F172A;');
+    expect(html).toContain('font-size: 14px;');
+    expect(html).not.toContain('Modelo');
+
+    const texto = gerarResumoTextoImpressao(listaComFrequencia, {
+      perfil: 'MOTORISTA',
+      nomeEmissor: 'Ana Beatriz',
+    });
+    expect(texto).toContain('Frequência: Presentes: 1 • Faltas: 1 • Pendentes: 1');
+    expect(texto).toContain(`[Presente]`);
+    expect(texto).toContain(`[Falta]`);
+    expect(texto).toContain(`[Pendente]`);
+  });
 });

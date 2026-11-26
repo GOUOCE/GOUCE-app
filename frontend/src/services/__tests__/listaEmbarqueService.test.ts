@@ -448,5 +448,148 @@ describe('listaEmbarqueService (HU-018)', () => {
       const pendentesDepois = await listaEmbarqueService.obterFrequenciasPendentes();
       expect(pendentesDepois).toHaveLength(0);
     });
+
+    it('mapeia dataOperacaoIso, status_presenca, presenca_registrada_em e totais do backend', () => {
+      const fixture = criarRespostaApiFixture({
+        data: '2026-11-21',
+        total_presentes: 1,
+        total_faltas: 1,
+        total_pendentes: 2,
+        somente_leitura: true,
+        alunos: [
+          {
+            ...criarRespostaApiFixture().alunos[0],
+            status_presenca: 'PRESENTE',
+            presenca_registrada_em: '2026-11-21T09:15:00.000Z',
+          },
+          {
+            ...criarRespostaApiFixture().alunos[1],
+            status_presenca: 'FALTA',
+            presenca_registrada_em: '2026-11-21T09:16:00.000Z',
+          },
+          ...criarRespostaApiFixture().alunos.slice(2),
+        ],
+      });
+
+      const lista = mapearRespostaListaEmbarque(fixture);
+
+      expect(lista.dataOperacaoIso).toBe('2026-11-21');
+      expect(lista.somenteLeitura).toBe(true);
+      expect(lista.totalPresentes).toBe(1);
+      expect(lista.totalFaltas).toBe(1);
+      expect(lista.totalPendentes).toBe(2);
+      expect(lista.alunos[0].statusPresenca).toBe('PRESENTE');
+      expect(lista.alunos[0].dataHoraCheckin).toBe('2026-11-21T09:15:00.000Z');
+      expect(lista.alunos[1].statusPresenca).toBe('FALTA');
+      expect(lista.alunos[1].dataHoraCheckin).toBe('2026-11-21T09:16:00.000Z');
+    });
+
+    it('reflete alteração posterior do backend no polling após registrarFrequencia online', async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date(2026, 10, 21, 16, 30, 0));
+      mockApiPatch.mockResolvedValueOnce({ data: { status_presenca: 'PRESENTE' } } as any);
+
+      await listaEmbarqueService.registrarFrequencia({
+        rotaId: 1,
+        agendamentoId: 101,
+        statusPresenca: 'PRESENTE',
+        data: '2026-11-21',
+      });
+
+      const fixtureAtualizada = criarRespostaApiFixture({
+        data: '2026-11-21',
+        total_presentes: 0,
+        total_faltas: 1,
+        total_pendentes: 3,
+        alunos: [
+          {
+            ...criarRespostaApiFixture().alunos[0],
+            status_presenca: 'FALTA',
+            presenca_registrada_em: '2026-11-21T16:35:00.000Z',
+          },
+          ...criarRespostaApiFixture().alunos.slice(1),
+        ],
+      });
+      mockApiGet.mockResolvedValueOnce({ data: fixtureAtualizada } as any);
+
+      const listaPolling = await listaEmbarqueService.obterListaEmbarque({
+        rotaId: 1,
+        data: '2026-11-21',
+      });
+
+      expect(listaPolling.alunos[0].statusPresenca).toBe('FALTA');
+      expect(listaPolling.totalFaltas).toBe(1);
+    });
+
+    it('rejeita e não enfileira offline quando backend retorna 403, 404 ou 422', async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date(2026, 10, 21, 16, 30, 0));
+
+      for (const erroHttp of [
+        { response: { status: 403, data: { detail: 'Representante sem permissão para esta IES.' } } },
+        { response: { status: 404, data: { detail: 'Endpoint não encontrado' } } },
+        {
+          response: {
+            status: 422,
+            data: { success: false, error: { code: 'LISTA_EMBARQUE_ERRO', message: 'Aluno inativo.' } },
+          },
+        },
+      ]) {
+        mockApiPatch.mockRejectedValueOnce(erroHttp);
+        await expect(
+          listaEmbarqueService.registrarFrequencia({
+            rotaId: 1,
+            agendamentoId: 101,
+            statusPresenca: 'PRESENTE',
+            data: '2026-11-21',
+          }),
+        ).rejects.toEqual(erroHttp);
+      }
+
+      const pendentes = await listaEmbarqueService.obterFrequenciasPendentes();
+      expect(pendentes).toHaveLength(0);
+    });
+
+    it('descarta rejeição 422 na sincronização e mantém falhas 500 ou de rede na fila offline', async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date(2026, 10, 21, 16, 30, 0));
+
+      mockApiPatch.mockRejectedValue(new Error('Network Error'));
+      await listaEmbarqueService.registrarFrequencia({
+        rotaId: 1,
+        agendamentoId: 101,
+        statusPresenca: 'PRESENTE',
+        data: '2026-11-21',
+      });
+      await listaEmbarqueService.registrarFrequencia({
+        rotaId: 1,
+        agendamentoId: 102,
+        statusPresenca: 'FALTA',
+        data: '2026-11-21',
+      });
+      await listaEmbarqueService.registrarFrequencia({
+        rotaId: 1,
+        agendamentoId: 103,
+        statusPresenca: 'PRESENTE',
+        data: '2026-11-21',
+      });
+
+      mockApiPatch.mockReset();
+      mockApiPatch
+        .mockRejectedValueOnce({
+          response: {
+            status: 422,
+            data: { success: false, error: { code: 'LISTA_EMBARQUE_ERRO', message: 'Inválido' } },
+          },
+        })
+        .mockRejectedValueOnce({ response: { status: 500, data: { detail: 'Erro interno' } } })
+        .mockRejectedValueOnce(new Error('Network Error'));
+
+      const syncRes = await listaEmbarqueService.sincronizarFrequenciasPendentes();
+      expect(syncRes).toEqual({ sincronizados: 0, restantes: 2 });
+
+      const restantes = await listaEmbarqueService.obterFrequenciasPendentes();
+      expect(restantes.map((item) => item.agendamentoId)).toEqual([102, 103]);
+    });
   });
 });

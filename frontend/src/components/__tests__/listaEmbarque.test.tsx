@@ -334,9 +334,11 @@ describe('Telas da Lista de Embarque integradas à API (HU-018)', () => {
 
       if (url === '/alocacao-diaria/lista-embarque') {
         const rotaId = config?.params?.rota_id;
+        const dataConsulta = config?.params?.data ?? '2026-11-20';
         if (rotaId === 2) {
           return {
             data: criarRespostaListaApi({
+              data: dataConsulta,
               rota_id: 2,
               nome_rota: 'Linha 02 - Bairro Novo',
               alunos: [],
@@ -344,7 +346,7 @@ describe('Telas da Lista de Embarque integradas à API (HU-018)', () => {
             }),
           } as any;
         }
-        return { data: criarRespostaListaApi() } as any;
+        return { data: criarRespostaListaApi({ data: dataConsulta }) } as any;
       }
 
       throw new Error(`Endpoint inesperado: ${url}`);
@@ -728,6 +730,8 @@ describe('Telas da Lista de Embarque integradas à API (HU-018)', () => {
       expect(extrairTodosTextos(root)).toContain(
         'Modo somente leitura - a chamada só pode ser realizada no dia exato da viagem.',
       );
+      expect(extrairTodosTextos(root)).not.toContain('RN-014');
+      expect(encontrarTextoPorTestId(root, 'indicador-sincronizacao')).toBeUndefined();
 
       const botaoPresente = encontrarBotaoPorTestId(root, 'botao-presenca-presente-1');
       expect(botaoPresente.props.disabled).toBe(true);
@@ -846,6 +850,236 @@ describe('Telas da Lista de Embarque integradas à API (HU-018)', () => {
       expect(
         lerTextoNode(encontrarTextoPorTestId(rootSemRota, 'mensagem-sem-viagens-representante')),
       ).toBe('Não há registros de viagens ou agendamentos para a data selecionada.');
+    });
+
+    it('faz rollback na UI e exibe mensagem do backend em erros 403/422 no PATCH', async () => {
+      mockSearchParams = { rotaId: '1', modoFixo: 'true' };
+
+      const root = await renderizar(<AdminListaEmbarqueScreen />);
+
+      mockApiPatch.mockRejectedValueOnce({
+        response: {
+          status: 422,
+          data: {
+            success: false,
+            error: {
+              code: 'LISTA_EMBARQUE_ERRO',
+              message: 'Aluno inativo não pode receber frequência.',
+            },
+          },
+        },
+      });
+
+      await pressionar(encontrarBotaoPorTestId(root, 'botao-presenca-presente-1'));
+
+      expect(lerTextoNode(encontrarTextoPorTestId(root, 'contador-presentes'))).toBe(
+        'Presentes: 0',
+      );
+      expect(lerTextoNode(encontrarTextoPorTestId(root, 'contador-pendentes'))).toBe(
+        'Pendentes: 38',
+      );
+      expect(extrairTodosTextos(root)).toContain('Aluno inativo não pode receber frequência.');
+
+      mockApiPatch.mockRejectedValueOnce({
+        response: {
+          status: 403,
+          data: { detail: 'Somente o representante responsável pode registrar presença.' },
+        },
+      });
+
+      await pressionar(encontrarBotaoPorTestId(root, 'botao-presenca-falta-1'));
+      expect(lerTextoNode(encontrarTextoPorTestId(root, 'contador-faltas'))).toBe('Faltas: 0');
+      expect(extrairTodosTextos(root)).toContain(
+        'Somente o representante responsável pode registrar presença.',
+      );
+    });
+
+    it('não dispara PATCH redundante ao clicar novamente no status já marcado', async () => {
+      mockSearchParams = { rotaId: '1', modoFixo: 'true' };
+
+      const root = await renderizar(<AdminListaEmbarqueScreen />);
+
+      await pressionar(encontrarBotaoPorTestId(root, 'botao-presenca-presente-1'));
+      expect(mockApiPatch).toHaveBeenCalledTimes(1);
+
+      await pressionar(encontrarBotaoPorTestId(root, 'botao-presenca-presente-1'));
+      expect(mockApiPatch).toHaveBeenCalledTimes(1);
+    });
+
+    it('respeita somente_leitura: true retornado pelo backend bloqueando os botões de presença', async () => {
+      mockSearchParams = { rotaId: '1', modoFixo: 'true' };
+      mockApiGet.mockResolvedValueOnce({
+        data: criarRespostaListaApi({ somente_leitura: true }),
+      } as any);
+
+      const root = await renderizar(<AdminListaEmbarqueScreen />);
+
+      expect(
+        root.root.findAll((node: any) => node.props?.testID === 'banner-somente-leitura-chamada')
+          .length,
+      ).toBeGreaterThan(0);
+      const botaoPresente = encontrarBotaoPorTestId(root, 'botao-presenca-presente-1');
+      expect(botaoPresente.props.disabled).toBe(true);
+
+      await pressionar(botaoPresente);
+      expect(mockApiPatch).not.toHaveBeenCalled();
+    });
+
+    it('sincroniza fila pendente imediatamente ao receber evento online na janela sem aguardar polling', async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date(2026, 10, 21, 12, 0, 0));
+      mockSearchParams = { rotaId: '1', modoFixo: 'true' };
+
+      const windowDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'window');
+      const listeners = new Map<string, Set<() => void>>();
+      (globalThis as { window?: unknown }).window = {
+        addEventListener: jest.fn((event: string, cb: () => void) => {
+          if (!listeners.has(event)) {
+            listeners.set(event, new Set());
+          }
+          listeners.get(event)!.add(cb);
+        }),
+        removeEventListener: jest.fn((event: string, cb: () => void) => {
+          listeners.get(event)?.delete(cb);
+        }),
+      };
+
+      try {
+        mockApiPatch.mockRejectedValueOnce(new Error('Network Error'));
+        const root = await renderizar(<AdminListaEmbarqueScreen />);
+
+        await pressionar(encontrarBotaoPorTestId(root, 'botao-presenca-presente-1'));
+        expect(
+          root.root.findAll((node: any) => node.props?.testID === 'banner-sincronizacao-pendente')
+            .length,
+        ).toBeGreaterThan(0);
+
+        mockApiPatch.mockResolvedValueOnce({ data: { status_presenca: 'PRESENTE' } } as any);
+        mockApiGet.mockResolvedValueOnce({
+          data: criarRespostaListaApi({
+            data: '2026-11-21',
+            total_presentes: 1,
+            total_faltas: 0,
+            total_pendentes: 37,
+            alunos: [
+              { ...criarAlunosApiFixture(38)[0], status_presenca: 'PRESENTE' },
+              ...criarAlunosApiFixture(38).slice(1),
+            ],
+          }),
+        } as any);
+
+        await renderer.act(async () => {
+          for (const cb of listeners.get('online') ?? []) {
+            cb();
+          }
+          await Promise.resolve();
+        });
+        await flushAsync();
+
+        expect(mockApiPatch).toHaveBeenCalledTimes(2);
+        expect(
+          root.root.findAll((node: any) => node.props?.testID === 'banner-sincronizacao-pendente'),
+        ).toHaveLength(0);
+      } finally {
+        if (windowDescriptor) {
+          Object.defineProperty(globalThis, 'window', windowDescriptor);
+        } else {
+          delete (globalThis as { window?: unknown }).window;
+        }
+      }
+    });
+
+    it('atualiza chamada automaticamente via polling e foco de janela sem recarregar a página', async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date(2026, 10, 26, 12, 0, 0));
+      mockUser = {
+        id: 11,
+        name: 'Juliana Mendes',
+        role: 'MOTORISTA',
+        faculdade: 1,
+      };
+
+      const windowDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'window');
+      const listeners = new Map<string, Set<() => void>>();
+      (globalThis as { window?: unknown }).window = {
+        addEventListener: jest.fn((event: string, cb: () => void) => {
+          if (!listeners.has(event)) {
+            listeners.set(event, new Set());
+          }
+          listeners.get(event)!.add(cb);
+        }),
+        removeEventListener: jest.fn((event: string, cb: () => void) => {
+          listeners.get(event)?.delete(cb);
+        }),
+      };
+
+      try {
+        const alunosBase = criarAlunosApiFixture(38);
+        mockApiGet
+          .mockResolvedValueOnce({
+            data: criarRespostaListaApi({ data: '2026-11-26', alunos: alunosBase }),
+          } as any)
+          .mockResolvedValueOnce({
+            data: criarRespostaListaApi({
+              data: '2026-11-26',
+              total_presentes: 1,
+              total_faltas: 0,
+              total_pendentes: 37,
+              alunos: [
+                { ...alunosBase[0], status_presenca: 'PRESENTE' },
+                ...alunosBase.slice(1),
+              ],
+            }),
+          } as any)
+          .mockResolvedValueOnce({
+            data: criarRespostaListaApi({
+              data: '2026-11-26',
+              total_presentes: 0,
+              total_faltas: 1,
+              total_pendentes: 37,
+              alunos: [
+                { ...alunosBase[0], status_presenca: 'FALTA' },
+                ...alunosBase.slice(1),
+              ],
+            }),
+          } as any);
+
+        const root = await renderizar(<RepresentativeHomeScreen />);
+        expect(lerTextoNode(encontrarTextoPorTestId(root, 'contador-presentes'))).toBe(
+          'Presentes: 0',
+        );
+
+        await renderer.act(async () => {
+          await jest.advanceTimersByTimeAsync(INTERVALO_POLLING_LISTA_MS);
+        });
+        await flushAsync();
+
+        expect(lerTextoNode(encontrarTextoPorTestId(root, 'contador-presentes'))).toBe(
+          'Presentes: 1',
+        );
+        expect(lerTextoNode(encontrarTextoPorTestId(root, 'contador-pendentes'))).toBe(
+          'Pendentes: 37',
+        );
+
+        await renderer.act(async () => {
+          for (const cb of listeners.get('focus') ?? []) {
+            cb();
+          }
+          await Promise.resolve();
+        });
+        await flushAsync();
+
+        expect(lerTextoNode(encontrarTextoPorTestId(root, 'contador-presentes'))).toBe(
+          'Presentes: 0',
+        );
+        expect(lerTextoNode(encontrarTextoPorTestId(root, 'contador-faltas'))).toBe('Faltas: 1');
+      } finally {
+        if (windowDescriptor) {
+          Object.defineProperty(globalThis, 'window', windowDescriptor);
+        } else {
+          delete (globalThis as { window?: unknown }).window;
+        }
+      }
     });
   });
 
