@@ -1,12 +1,12 @@
 # Testes manuais — Épico 07 — Comunicação e Mural de Avisos
 
-Suítes essenciais da **HU-023 — Publicação de Avisos** e da **HU-024 — Recebimento de Notificações Push**: **39 casos, sendo 20 de API e 19 de UI**. Todos estão pendentes: o planejamento foi feito antes da execução, e **o código ainda não está na `develop`**.
+Suítes essenciais da **HU-023 — Publicação de Avisos** e da **HU-024 — Recebimento de Notificações Push**: **39 casos, sendo 20 de API e 19 de UI**. Os casos de UI e os de API da HU-024 estão pendentes; a API da HU-023 foi executada em 25/11/2026 (7 passaram, 3 falharam e 1 parcial). **O código dos avisos ainda não está na `develop`**: a execução usou um build integrado só no ambiente de teste.
 
 ## Índice das suítes
 
 | HU | Funcionalidade | API | UI |
 | --- | --- | --- | --- |
-| HU-023 | Publicação de Avisos | [11 casos pendentes](HU-023/api/API-HU-023.md) | [9 casos pendentes](HU-023/ui/UI-HU-023.md) |
+| HU-023 | Publicação de Avisos | [11 casos: 7 passaram, 3 falharam, 1 parcial](HU-023/api/API-HU-023.md) | [9 casos pendentes](HU-023/ui/UI-HU-023.md) |
 | HU-024 | Recebimento de Notificações Push | [9 casos pendentes](HU-024/api/API-HU-024.md) | [10 casos pendentes](HU-024/ui/UI-HU-024.md) |
 | **Total** | **2 HUs** | **20** | **19** |
 

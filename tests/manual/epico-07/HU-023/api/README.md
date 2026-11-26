@@ -1,6 +1,6 @@
 # Como executar os testes manuais de API — HU-023
 
-Execução pela **LLM**, com revisão de **Cauan Ricardo**. [Suíte de API: 11 casos](API-HU-023.md). A [UI tem 9 casos](../ui/UI-HU-023.md) para execução manual por Cauan. Execução ainda não realizada.
+Execução pela **LLM**, com revisão de **Cauan Ricardo**. [Suíte de API: 11 casos](API-HU-023.md). A [UI tem 9 casos](../ui/UI-HU-023.md) para execução manual por Cauan. Execução de 25/11/2026 na branch `test/execucao-api-hu-023`; resultados abaixo.
 
 ## Base e fontes
 
@@ -57,3 +57,15 @@ Riscos levantados na leitura do código em 25/11/2026; nenhum foi reproduzido. A
 - **CT-006 e CT-007:** dependem de edição e inativação; sem elas a falha é esperada e deve ser registrada.
 - **UI:** exige o build integrado e a massa de avisos; a LLM prepara a massa e confere API/banco depois de cada caso.
 - Registrar cada parte verificada, falha ou impedimento; não aprovar caso inteiro quando houver impedimento.
+
+## Resultado de 25/11/2026
+
+**11 casos: 7 passaram, 3 falharam e 1 ficou parcial.** Código executado: `develop` `2e87cccc` mais o backend do `feature/hu-023-publicacao-de-avisos` (`5466b1de`), integrado só no ambiente de teste (migration renumerada para `86_create_avisos` e conflitos de `main.py` e `db.py` resolvidos mantendo os dois lados). Stack isolada `atu-exec-api-hu023`, porta 8130, PostgreSQL 15 em banco novo. Cerca de 313 chamadas HTTP, incluindo preparação e logins; evidência registrada somente dos casos que falharam.
+
+Falhas e parcial:
+
+- **CT-002:** a busca por título trata `%` e `_` como curinga (`ilike` sem escapar) e devolve todos os avisos.
+- **CT-006 e CT-007:** não existem rotas de editar nem de inativar (404) e a tabela não tem coluna de situação; são lacunas conhecidas, decisão 1 do PO ([#539](https://github.com/GOUOCE/GOUCE-app/issues/539)).
+- **CT-010 (parcial):** com a numeração original do branch há duas heads e `alembic upgrade head` falha; depois de renumerar, tudo passa.
+
+Observações dos casos aprovados: mensagem de sucesso com ponto final (CT-001); JSON inválido responde com “JSON decode error” em inglês (CT-003); título de 151 caracteres brutos com espaços duplos é aceito e gravado com 150 (CT-004); o README do BDD diz que não há auditoria, mas o código grava `CRIAR` (CT-005); `GET /avisos` responde 200 para aluno pendente e representante (CT-008); a lista não tem paginação, 796 KB com 224 avisos, e o fuso depende de o PostgreSQL rodar em America/Fortaleza (CT-011).
