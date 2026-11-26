@@ -260,6 +260,79 @@ describe('EP-005 / HU-016 & HU-017 - Distribuição logística e alocação', ()
       expect(linhas[0]).toMatchObject({ excedentes: 0, status: 'alocada' });
     });
 
+    it('deduplica agendamento_id presente em ida e volta para exibir alunos únicos da rota', async () => {
+      const dataIso = '2026-11-26';
+      const alunosIda = [1, 2, 3, 4, 5, 6].map((id) => ({
+        agendamento_id: id,
+        tipo_lugar: 'sentado' as const,
+      }));
+      const alunosVolta = [1, 2, 3, 4, 5, 7].map((id) => ({
+        agendamento_id: id,
+        tipo_lugar: 'sentado' as const,
+      }));
+
+      mockGet
+        .mockResolvedValueOnce({
+          data: respostaPreview({
+            data: dataIso,
+            status_logistico: 'DISTRIBUIDO',
+            distribuicao_persistida: true,
+            demanda_por_rota: [{ rota_id: 1, total_alunos: 16 }],
+            alocacoes: [
+              alocacao({
+                rota_id: 1,
+                onibus_id: 'OCR-1234',
+                motorista_id: 10,
+                turno: 'ida',
+                sentados: 6,
+                alunos: alunosIda,
+              }),
+              alocacao({
+                rota_id: 1,
+                onibus_id: 'OCR-1234',
+                motorista_id: 10,
+                turno: 'volta',
+                sentados: 6,
+                alunos: alunosVolta,
+              }),
+            ],
+            excedentes_globais: [],
+          }),
+        })
+        .mockResolvedValueOnce({
+          data: [
+            {
+              id: 1,
+              nome: 'Linha 01 - Centro',
+              horario_saida: '06:40',
+              horario_retorno: '17:00',
+              faculdades_ida: [{ sigla: 'UFC', nome: 'UFC' }],
+              faculdades_volta: [],
+            },
+          ],
+        })
+        .mockResolvedValueOnce({
+          data: [
+            {
+              placa_onibus: 'OCR-1234',
+              apelido_onibus: 'Ônibus 04',
+              qtd_assentos: 48,
+              capacidade_maxima: 12,
+            },
+          ],
+        })
+        .mockResolvedValueOnce({
+          data: [{ id: 10, nome: 'Ana Souza', ativo: true }],
+        });
+
+      const linhas = await logisticaService.listarDistribuicaoLogistica(dataIso);
+
+      expect(linhas).toHaveLength(1);
+      expect(linhas[0].alunosAgendados).toBe(7);
+      expect(linhas[0].onibusApelido).toBe('Ônibus 04');
+      expect(linhas[0].motoristaNome).toBe('Ana Souza');
+    });
+
     it('repassa a falha de conexão sem inventar linhas de exemplo', async () => {
       const semConexao = Object.assign(new Error('Network Error'), { request: {} });
       mockGet.mockRejectedValue(semConexao);

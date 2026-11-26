@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { Modal, View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, Avatar, Surface, useTheme, Divider } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import { LogOut, CreditCard, RefreshCw, ChevronRight, Pencil, Mail, AlertCircle, ClipboardCheck } from 'lucide-react-native';
+import {
+  ArrowLeftRight,
+  LogOut,
+  RefreshCw,
+  ChevronRight,
+  Pencil,
+  Mail,
+  AlertCircle,
+  ClipboardCheck,
+} from 'lucide-react-native';
 
 import { useAuth } from '@contexts/AuthContext';
-import { userService } from '@services/userService';
+import { userService } from '@/services/userService';
 import { api } from '@/api/api';
 import { AppPopup } from '@/components/ui/AppPopup';
 import { formatarCelular } from '@/utils/formatarTelefone';
@@ -15,9 +24,16 @@ import { formatarInstituicao } from '@/utils/formatarInstituicao';
 export default function PerfilScreen() {
   const _theme = useTheme();
   const router = useRouter();
-  const { user, token, signOut, updateUser } = useAuth();
+  const { user, token, signOut, updateUser, switchRole } = useAuth();
   const [modalSairVisivel, setModalSairVisivel] = useState(false);
+  const [modalTrocarVisaoVisivel, setModalTrocarVisaoVisivel] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const ehRepresentante = Boolean(user?.roles?.includes('MOTORISTA'));
+
+  const handleConfirmarTrocaVisao = async () => {
+    setModalTrocarVisaoVisivel(false);
+    await switchRole('MOTORISTA', 'Visão trocada para perfil de representante');
+  };
 
   useEffect(() => {
     async function carregarPerfil() {
@@ -49,7 +65,7 @@ export default function PerfilScreen() {
     await signOut();
   };
 
-  const baseUrl = api.defaults.baseURL || 'http://192.168.0.3:8000';
+  const baseUrl = api?.defaults?.baseURL || 'http://192.168.0.3:8000';
   const fotoUri = user?.foto_perfil
     ? (user.foto_perfil.startsWith('http')
         ? user.foto_perfil
@@ -178,6 +194,24 @@ export default function PerfilScreen() {
           </View>
         </View>
 
+        {ehRepresentante && (
+          <View style={styles.switchRoleSection}>
+            <TouchableOpacity
+              style={styles.botaoTrocarRepresentante}
+              activeOpacity={0.8}
+              onPress={() => setModalTrocarVisaoVisivel(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Trocar para a visão de representante"
+              testID="botao-trocar-visao-representante"
+            >
+              <ArrowLeftRight size={18} color="#7C5800" />
+              <Text style={styles.botaoTrocarRepresentanteTexto}>
+                Trocar para a visão de representante
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Ações da Conta */}
         <View style={styles.section}>
           <Text variant="titleMedium" style={styles.sectionTitle}>Ações da Conta</Text>
@@ -193,14 +227,6 @@ export default function PerfilScreen() {
           <TouchableOpacity style={styles.actionItem} onPress={() => router.push('/(aluno)/alterar-email')}>
             <Mail size={24} color="#333" />
             <Text variant="bodyLarge" style={styles.actionText}>Alterar endereço de e-mail</Text>
-            <ChevronRight size={20} color="#999" />
-          </TouchableOpacity>
-
-          <Divider style={styles.divider} />
-
-          <TouchableOpacity style={styles.actionItem} onPress={() => router.push('/(aluno)/carteirinha-digital')}>
-            <CreditCard size={24} color="#333" />
-            <Text variant="bodyLarge" style={styles.actionText}>Ver carteirinha digital</Text>
             <ChevronRight size={20} color="#999" />
           </TouchableOpacity>
 
@@ -224,6 +250,40 @@ export default function PerfilScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <Modal
+        visible={modalTrocarVisaoVisivel}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalTrocarVisaoVisivel(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.dialogCard}>
+            <Text style={styles.dialogTitle}>Trocar visão?</Text>
+            <Text style={styles.dialogMessage}>
+              Tem certeza de que quer trocar a visão do aplicativo para sua conta de representante?
+            </Text>
+            <View style={styles.dialogActions}>
+              <TouchableOpacity
+                style={styles.dialogActionBtn}
+                onPress={() => setModalTrocarVisaoVisivel(false)}
+                accessibilityRole="button"
+                testID="botao-cancelar-troca-visao-representante"
+              >
+                <Text style={styles.dialogCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.dialogActionBtn}
+                onPress={handleConfirmarTrocaVisao}
+                accessibilityRole="button"
+                testID="botao-confirmar-troca-visao-representante"
+              >
+                <Text style={styles.dialogConfirmText}>Confirmar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Modal Sair do Aplicativo */}
       <AppPopup
@@ -326,5 +386,77 @@ const styles = StyleSheet.create({
   },
   divider: {
     backgroundColor: '#E0E2EC',
+  },
+  switchRoleSection: {
+    paddingHorizontal: 24,
+    marginTop: 4,
+  },
+  botaoTrocarRepresentante: {
+    height: 46,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#7C5800',
+    backgroundColor: 'transparent',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+  },
+  botaoTrocarRepresentanteTexto: {
+    color: '#7C5800',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  dialogCard: {
+    width: '100%',
+    maxWidth: 340,
+    backgroundColor: '#ECEEF4',
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.16,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  dialogTitle: {
+    fontSize: 22,
+    fontWeight: '500',
+    color: '#191C20',
+    marginBottom: 12,
+  },
+  dialogMessage: {
+    fontSize: 14,
+    color: '#44474E',
+    lineHeight: 20,
+    marginBottom: 22,
+  },
+  dialogActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 18,
+  },
+  dialogActionBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+  },
+  dialogCancelText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#3E5F90',
+  },
+  dialogConfirmText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#006A6A',
   },
 });

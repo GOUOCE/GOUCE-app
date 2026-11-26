@@ -9,8 +9,13 @@ export default function StudentTabsLayout() {
       headerShown: false,
       tabBarActiveTintColor: '#000',
       tabBarInactiveTintColor: '#666',
+      tabBarItemStyle: {
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
       tabBarStyle: {
         height: 80,
+        paddingTop: 12,
         paddingBottom: 12,
         backgroundColor: '#F8F9FF',
         borderTopWidth: 1,

@@ -284,7 +284,22 @@ function montarLinha(
 ): LinhaDistribuicao {
   const rotaId = Number(demanda.rota_id);
   const alocacoesRota = alocacoes.filter((item) => Number(item.rota_id) === rotaId);
-  const excedentes = excedentesGlobais.filter((item) => Number(item.rota_id) === rotaId).length;
+  const excedentesDaRota = excedentesGlobais.filter((item) => Number(item.rota_id) === rotaId);
+  const excedentes = excedentesDaRota.length;
+  const agendamentosUnicos = new Set<number>();
+  for (const item of alocacoesRota) {
+    for (const aluno of item.alunos ?? []) {
+      agendamentosUnicos.add(Number(aluno.agendamento_id));
+    }
+  }
+  for (const item of excedentesDaRota) {
+    agendamentosUnicos.add(Number(item.agendamento_id));
+  }
+  const temDetalhesAgendamentos = alocacoes.length > 0 || excedentesGlobais.length > 0;
+  const alunosAgendados = temDetalhesAgendamentos
+    ? agendamentosUnicos.size
+    : Number(demanda.total_alunos ?? 0);
+
   const onibusIds = unicos(alocacoesRota.map((item) => item.onibus_id).filter(Boolean));
   const motoristaIds = unicos(
     alocacoesRota.map((item) => Number(item.motorista_id)).filter((id) => id > 0),
@@ -308,7 +323,7 @@ function montarLinha(
         : excedentes > 0
           ? 'superlotada'
           : 'alocada',
-    alunosAgendados: Number(demanda.total_alunos),
+    alunosAgendados,
     alunosSentados: alocacoesRota.reduce((total, item) => total + Number(item.sentados ?? 0), 0),
     alunosEmPe: alocacoesRota.reduce((total, item) => total + Number(item.em_pe ?? 0), 0),
     capacidadeSentados: alocacoesRota.reduce(
@@ -335,15 +350,35 @@ async function obterDadosDistribuicao(
     obterReferencias(),
   ]);
   const rotasPorId = new Map(referencias.rotas.map((rota) => [Number(rota.id), rota]));
-  const linhas = preview.demanda_por_rota.map((demanda) =>
-    montarLinha(
-      demanda,
-      rotasPorId.get(Number(demanda.rota_id)),
-      preview.alocacoes,
-      preview.excedentes_globais,
-      referencias,
-    ),
-  );
+  const demandasPorRotaId = new Map<number, DemandaRota>();
+  for (const demanda of preview.demanda_por_rota) {
+    demandasPorRotaId.set(Number(demanda.rota_id), demanda);
+  }
+  for (const item of preview.alocacoes) {
+    const rotaId = Number(item.rota_id);
+    if ((item.alunos?.length ?? 0) > 0 && !demandasPorRotaId.has(rotaId)) {
+      demandasPorRotaId.set(rotaId, { rota_id: rotaId, total_alunos: 0 });
+    }
+  }
+  for (const item of preview.excedentes_globais) {
+    const rotaId = Number(item.rota_id ?? 0);
+    if (rotaId > 0 && !demandasPorRotaId.has(rotaId)) {
+      demandasPorRotaId.set(rotaId, { rota_id: rotaId, total_alunos: 0 });
+    }
+  }
+  const temDetalhesAgendamentos =
+    preview.alocacoes.length > 0 || preview.excedentes_globais.length > 0;
+  const linhas = Array.from(demandasPorRotaId.values())
+    .map((demanda) =>
+      montarLinha(
+        demanda,
+        rotasPorId.get(Number(demanda.rota_id)),
+        preview.alocacoes,
+        preview.excedentes_globais,
+        referencias,
+      ),
+    )
+    .filter((linha) => !temDetalhesAgendamentos || linha.alunosAgendados > 0);
 
   return { preview, linhas };
 }

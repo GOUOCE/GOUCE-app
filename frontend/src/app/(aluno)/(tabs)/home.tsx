@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, Surface, Button } from 'react-native-paper';
-import { AlertTriangle, CalendarPlus, ClipboardList, Megaphone, Contact } from 'lucide-react-native';
+import { AlertTriangle, CalendarPlus, ClipboardList, Megaphone } from 'lucide-react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 
 import { useAuth } from '@contexts/AuthContext';
@@ -171,11 +171,6 @@ export default function StudentHomeScreen() {
             title="Mural de Avisos"
             Icone={Megaphone}
             onPress={() => router.push('/(aluno)/avisos' as any)}
-          />
-          <QuickAction
-            title="Carteirinha Digital"
-            Icone={Contact}
-            onPress={() => router.push('/(aluno)/carteirinha-digital' as any)}
           />
         </View>
       </View>
