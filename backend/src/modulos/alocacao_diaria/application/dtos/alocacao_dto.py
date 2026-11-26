@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class AlunoAlocacaoDTO(BaseModel):
@@ -19,6 +19,11 @@ class AlocacaoDTO(BaseModel):
     motorista_id: int = Field(gt=0)
     turno: Literal["ida", "volta"] = "ida"
     alunos: list[AlunoAlocacaoDTO] = Field(default_factory=list)
+
+    @field_validator("onibus_id", mode="before")
+    @classmethod
+    def normalizar_onibus_id(cls, valor: object) -> str:
+        return str(valor).strip().upper().replace("-", "")
 
 
 class DistribuicaoRequestDTO(BaseModel):
@@ -88,6 +93,7 @@ class AlunoListaEmbarqueDTO(BaseModel):
     onibus_volta: str | None = None
     motorista_ida: str | None = None
     motorista_volta: str | None = None
+    status_presenca: Literal["PENDENTE", "PRESENTE", "FALTA"] = "PENDENTE"
 
 
 class ListaEmbarqueResponseDTO(BaseModel):
@@ -106,6 +112,17 @@ class ListaEmbarqueResponseDTO(BaseModel):
     ultima_sincronizacao: str  # ISO 8601 UTC
     indicador_sincronizacao: str = "Atualizado agora"
     alunos: list[AlunoListaEmbarqueDTO] = Field(default_factory=list)
+    total_presentes: int = 0
+    total_faltas: int = 0
+    total_pendentes: int = 0
+    somente_leitura: bool = False
+
+
+class RegistrarPresencaRequestDTO(BaseModel):
+    agendamento_id: int = Field(gt=0)
+    rota_id: int = Field(gt=0)
+    data: date
+    status_presenca: Literal["PRESENTE", "FALTA"]
 
 
 class RotaDoDiaDTO(BaseModel):

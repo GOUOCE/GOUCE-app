@@ -1,12 +1,13 @@
 import unittest
 from datetime import date
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from fastapi import FastAPI
 from tests.rota_principal_support import asgi_request
 
 from src.modulos.alocacao_diaria.interface.http import alocacao_routes
+from src.modulos.alocacao_diaria.interface.http import rodizio_routes
 from src.modulos.alocacao_diaria.application.dtos.alocacao_dto import DistribuicaoRequestDTO
 from src.modulos.alocacao_diaria.application.services.alocacao_service import (
     AlocacaoService,
@@ -17,6 +18,8 @@ from src.modulos.alocacao_diaria.application.services.distribuicao import (
     Passageiro,
     distribuir_alunos,
 )
+from src.modulos.alocacao_diaria.application.dtos.rodizio_dto import RodizioItemDTO, RodizioRequestDTO
+from src.modulos.alocacao_diaria.application.services.rodizio_service import RodizioError, RodizioService
 
 
 class _Query:
@@ -25,6 +28,9 @@ class _Query:
 
     def filter(self, *args):
         return self
+
+    def all(self):
+        return list(self.items)
 
     def __iter__(self):
         return iter(self.items)
@@ -141,6 +147,7 @@ class DistribuicaoHu016Test(unittest.TestCase):
     def test_confirmacao_automatica_retorna_excedentes_globais(self):
         session = MagicMock()
         service = AlocacaoService(session)
+        service._hoje = lambda: date(2026, 11, 1)  # fixa 'hoje' antes das datas dos testes (issue #542)
         service.preview = MagicMock(
             return_value={
                 "data": "2026-11-24",
@@ -166,6 +173,7 @@ class DistribuicaoHu016Test(unittest.TestCase):
     def test_confirmacao_manual_recusa_lista_de_alocacoes_vazia(self):
         session = MagicMock()
         service = AlocacaoService(session)
+        service._hoje = lambda: date(2026, 11, 1)  # fixa 'hoje' antes das datas dos testes (issue #542)
         payload = DistribuicaoRequestDTO(data=date(2026, 11, 26), modo="manual")
 
         with self.assertRaisesRegex(DistribuicaoError, "lista de alocações não pode ser vazia"):
@@ -212,6 +220,7 @@ class DistribuicaoHu016Test(unittest.TestCase):
             }[model.__name__]
         )
         service = AlocacaoService(session)
+        service._hoje = lambda: date(2026, 11, 1)  # fixa 'hoje' antes das datas dos testes (issue #542)
 
         service._validar_payload(
             date(2026, 11, 24),
@@ -230,6 +239,95 @@ class DistribuicaoHu016Test(unittest.TestCase):
                 }
             ],
         )
+
+
+class RodizioHu020Test(unittest.TestCase):
+    def _session(self, routes=None, buses=None):
+        session = MagicMock()
+        routes = routes or [SimpleNamespace(id=1), SimpleNamespace(id=2)]
+        buses = buses or [
+            SimpleNamespace(placa_onibus="ABC1D23", qtd_assentos=20, capacidade_maxima=10),
+            SimpleNamespace(placa_onibus="XYZ9K87", qtd_assentos=30, capacidade_maxima=15),
+        ]
+        session.query.side_effect = lambda model: _Query(
+            routes if model.__name__ == "RotaPrincipalORM" else buses
+        )
+        return session
+
+    def test_bloqueia_mesmo_onibus_em_duas_rotas_no_mesmo_turno(self):
+        session = self._session()
+        service = RodizioService(session)
+        payload = RodizioRequestDTO(
+            data_inicio=date(2026, 11, 23),
+            itens=[
+                RodizioItemDTO(rota_id=1, onibus_id="ABC1D23", turno="ida"),
+                RodizioItemDTO(rota_id=2, onibus_id="ABC1D23", turno="ida"),
+            ],
+        )
+
+        with self.assertRaisesRegex(RodizioError, "mesmo ônibus não pode"):
+            service._validar(payload)
+
+    def test_bloqueia_onibus_inativo(self):
+        session = self._session(
+            buses=[SimpleNamespace(placa_onibus="XYZ9K87", qtd_assentos=30, capacidade_maxima=15)]
+        )
+        service = RodizioService(session)
+        payload = RodizioRequestDTO(
+            data_inicio=date(2026, 11, 23),
+            itens=[RodizioItemDTO(rota_id=1, onibus_id="OLD0A00", turno="ida")],
+        )
+
+        with self.assertRaisesRegex(RodizioError, "inexistente ou inativo"):
+            service._validar(payload)
+
+    def test_normaliza_placa_com_hifen(self):
+        session = self._session(
+            buses=[SimpleNamespace(placa_onibus="LSN4I49", qtd_assentos=30, capacidade_maxima=15)]
+        )
+        service = RodizioService(session)
+        payload = RodizioRequestDTO(
+            data_inicio=date(2026, 11, 23),
+            itens=[RodizioItemDTO(rota_id=1, onibus_id="LSN-4I49", turno="ida")],
+        )
+
+        service._validar(payload)
+        self.assertEqual(payload.itens[0].onibus_id, "LSN4I49")
+
+    def test_preview_calcula_escala_sem_erro_de_tipo(self):
+        session = self._session(
+            routes=[SimpleNamespace(id=1, nome="Rota 1")],
+            buses=[SimpleNamespace(placa_onibus="LSN4I49", qtd_assentos=30, capacidade_maxima=15)]
+        )
+        service = RodizioService(session)
+        payload = RodizioRequestDTO(
+            data_inicio=date(2026, 11, 23),
+            itens=[RodizioItemDTO(rota_id=1, onibus_id="LSN-4I49", turno="ida")],
+        )
+
+        with patch.object(AlocacaoService, "_demanda", return_value={}):
+            resultado = service.preview(payload)
+
+        self.assertEqual(resultado["semanas"], 4)
+        self.assertEqual(len(resultado["escalas"]), 4)
+
+
+class RodizioSwaggerTest(unittest.TestCase):
+    def test_openapi_documenta_todos_os_endpoints_hu020(self):
+        app = FastAPI()
+        app.include_router(rodizio_routes.router)
+        schema = app.openapi()
+
+        self.assertIn("/rodizio-frota", schema["paths"])
+        self.assertIn("/rodizio-frota/preview", schema["paths"])
+        self.assertIn("/rodizio-frota/confirmar", schema["paths"])
+
+        preview = schema["paths"]["/rodizio-frota/preview"]["post"]
+        confirmar = schema["paths"]["/rodizio-frota/confirmar"]["post"]
+        self.assertIn("Gerar prévia", preview["summary"])
+        self.assertIn("Confirmar", confirmar["summary"])
+        self.assertIn("409", preview["responses"])
+        self.assertIn("409", confirmar["responses"])
 
 
 class DistribuicaoHttpHu016Test(unittest.IsolatedAsyncioTestCase):

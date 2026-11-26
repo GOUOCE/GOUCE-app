@@ -164,6 +164,17 @@ function iniciaisDeNome(nome: string): string {
   return `${partes[0][0]}${partes[partes.length - 1][0]}`.toUpperCase();
 }
 
+export const MENSAGEM_DIA_PASSADO =
+  'Este dia já passou: a distribuição é somente consulta e não pode ser alterada.';
+
+/** Dia anterior a hoje (data local do aparelho): somente consulta, sem alterar a distribuição (issue #542). */
+export function ehDiaPassado(dataIso: string, hoje: Date = new Date()): boolean {
+  const ano = hoje.getFullYear();
+  const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+  const dia = String(hoje.getDate()).padStart(2, '0');
+  return dataIso < `${ano}-${mes}-${dia}`;
+}
+
 /**
  * Devolve o valor escolhido só se ele ainda está entre as opções disponíveis (ativas);
  * caso contrário devolve '' para a tela tratá-lo como não selecionado.

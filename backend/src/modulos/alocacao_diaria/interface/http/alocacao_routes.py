@@ -6,7 +6,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from src.modulos.alocacao_diaria.application.dtos.alocacao_dto import DistribuicaoRequestDTO
+from src.modulos.alocacao_diaria.application.dtos.alocacao_dto import (
+    DistribuicaoRequestDTO,
+    RegistrarPresencaRequestDTO,
+)
 from src.modulos.alocacao_diaria.application.services.alocacao_service import (
     AlocacaoService,
     DistribuicaoError,
@@ -237,7 +240,7 @@ def lista_embarque(
                 status_code=404,
                 detail={
                     "code": "SEM_ROTA_NO_DIA",
-                    "message": "Nenhuma rota encontrada para esta data e faculdade.",
+                    "message": "Não há registros de viagens ou agendamentos para a data selecionada.",
                 },
             )
         if len(rotas_disponiveis) > 1:
@@ -253,6 +256,56 @@ def lista_embarque(
 
     try:
         return service.listar(target, rota_id, turno, faculdade_id=faculdade_id)
+    except ListaEmbarqueError as exc:
+        return _lista_error(exc)
+
+
+@router.patch("/lista-embarque/frequencia")
+def registrar_presenca(
+    payload: RegistrarPresencaRequestDTO,
+    service: Annotated[ListaEmbarqueService, Depends(_lista_service)],
+    current_user: Annotated[dict, Depends(_leitura_required)],
+):
+    """Registra presença somente para administrador ou representante responsável."""
+    roles = _roles_set(current_user)
+    is_admin = CargoEnum.ADMINISTRADOR.value in roles
+    faculdade_id: Optional[int] = None
+
+    if not is_admin:
+        if CargoEnum.REPRESENTANTE.value not in roles:
+            raise HTTPException(
+                status_code=403,
+                detail="Somente o administrador ou representante responsável pode registrar presença.",
+            )
+        repr_data = service.obter_representante(current_user["current_user_id"])
+        if not repr_data:
+            raise HTTPException(
+                status_code=403,
+                detail="Usuário sem vínculo de representante ativo.",
+            )
+        faculdade_id = repr_data.get("id_faculdade_responsavel")
+        if not faculdade_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Representante sem faculdade responsável definida.",
+            )
+
+    if payload.data != date.today():
+        return _lista_error(
+            ListaEmbarqueError(
+                "A chamada só pode ser realizada no dia exato da viagem.", 422
+            )
+        )
+
+    try:
+        return service.registrar_presenca(
+            target=payload.data,
+            rota_id=payload.rota_id,
+            agendamento_id=payload.agendamento_id,
+            status_presenca=payload.status_presenca,
+            usuario_id=int(current_user.get("current_user_id") or current_user.get("sub")),
+            faculdade_id=faculdade_id,
+        )
     except ListaEmbarqueError as exc:
         return _lista_error(exc)
 
