@@ -19,7 +19,7 @@ Estratégia:
 
 import os
 import unittest
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
 os.environ.setdefault("DATABASE_URL", "postgresql://test:test@localhost:5432/test")
@@ -32,6 +32,7 @@ from sqlalchemy.orm import sessionmaker
 from tests.rota_principal_support import asgi_request
 from src.modulos.alocacao_diaria.interface.http import alocacao_routes as routes
 from src.modulos.alocacao_diaria.application.services.lista_embarque_service import (
+    ListaEmbarqueError,
     ListaEmbarqueService,
 )
 from src.shared.auth.dependencies import require_roles
@@ -173,8 +174,8 @@ class _BaseRouteTest(unittest.IsolatedAsyncioTestCase):
         self.app.dependency_overrides[routes._leitura_required] = lambda: fake_user
         self._current_user = fake_user
 
-    async def call(self, path: str, method: str = "GET"):
-        return await asgi_request(self.app, method, path)
+    async def call(self, path: str, method: str = "GET", corpo=None):
+        return await asgi_request(self.app, method, path, corpo)
 
 
 # ---------------------------------------------------------------------------
@@ -217,6 +218,101 @@ class TestListaEmbarqueAcesso(_BaseRouteTest):
         self.mock_service.listar.assert_called_once_with(
             date.fromisoformat(_DATA), 1, None, faculdade_id=None
         )
+
+
+class TestRegistrarPresenca(_BaseRouteTest):
+    """Testa autorização e regras de data do endpoint de presença da HU-021."""
+
+    def setUp(self):
+        super().setUp()
+        self.payload = {
+            "agendamento_id": 10,
+            "rota_id": 1,
+            "data": date.today().isoformat(),
+            "status_presenca": "PRESENTE",
+        }
+
+    async def test_admin_registra_presenca_no_dia_da_viagem(self):
+        self._set_auth(CargoEnum.ADMINISTRADOR.value, 99)
+        self.mock_service.registrar_presenca.return_value = {
+            "agendamento_id": 10,
+            "status_presenca": "PRESENTE",
+        }
+
+        status, body = await self.call(
+            f"{BASE}/lista-embarque/frequencia", "PATCH", self.payload
+        )
+
+        self.assertEqual(status, 200)
+        self.assertEqual(body["status_presenca"], "PRESENTE")
+        self.mock_service.registrar_presenca.assert_called_once_with(
+            target=date.today(),
+            rota_id=1,
+            agendamento_id=10,
+            status_presenca="PRESENTE",
+            usuario_id=99,
+            faculdade_id=None,
+        )
+
+    async def test_representante_registra_presenca_apenas_na_ies_responsavel(self):
+        self._set_auth(CargoEnum.REPRESENTANTE.value, 50)
+        self.mock_service.obter_representante.return_value = {
+            "id_faculdade_responsavel": 1,
+        }
+        self.mock_service.registrar_presenca.return_value = {
+            "agendamento_id": 10,
+            "status_presenca": "FALTA",
+        }
+        payload = {**self.payload, "status_presenca": "FALTA"}
+
+        status, body = await self.call(
+            f"{BASE}/lista-embarque/frequencia", "PATCH", payload
+        )
+
+        self.assertEqual(status, 200)
+        self.assertEqual(body["status_presenca"], "FALTA")
+        self.mock_service.registrar_presenca.assert_called_once_with(
+            target=date.today(),
+            rota_id=1,
+            agendamento_id=10,
+            status_presenca="FALTA",
+            usuario_id=50,
+            faculdade_id=1,
+        )
+
+    async def test_perfil_sem_permissao_recebe_403(self):
+        self._set_auth(CargoEnum.SUPERVISOR.value, 20)
+
+        status, _ = await self.call(
+            f"{BASE}/lista-embarque/frequencia", "PATCH", self.payload
+        )
+
+        self.assertEqual(status, 403)
+        self.mock_service.registrar_presenca.assert_not_called()
+        self.mock_service.obter_representante.assert_not_called()
+
+    async def test_recusa_datas_passadas_e_futuras(self):
+        self._set_auth(CargoEnum.ADMINISTRADOR.value, 99)
+
+        for data in (date.today() - timedelta(days=1), date.today() + timedelta(days=1)):
+            payload = {**self.payload, "data": data.isoformat()}
+            status, body = await self.call(
+                f"{BASE}/lista-embarque/frequencia", "PATCH", payload
+            )
+            self.assertEqual(status, 422)
+            self.assertIn("dia exato", body["error"]["message"])
+
+        self.mock_service.registrar_presenca.assert_not_called()
+
+    async def test_api_aceita_apenas_presente_ou_falta(self):
+        payload = {**self.payload, "status_presenca": "PENDENTE"}
+
+        status, _ = await self.call(
+            f"{BASE}/lista-embarque/frequencia", "PATCH", payload
+        )
+
+        self.assertEqual(status, 422)
+        self.mock_service.registrar_presenca.assert_not_called()
 
 
 class TestListaEmbarqueDataInvalida(_BaseRouteTest):
@@ -690,12 +786,73 @@ class TestListaEmbarqueCancelamento(unittest.TestCase):
 
     def test_listar_exibe_aluno_com_alocacao_ativa(self):
         """CA-03: aluno com alocacao_aluno ALOCADA aparece na lista de embarque."""
+        hoje = date.today()
+        self.session.query(self.AgendamentoORM).filter_by(id=100).update({"data": hoje})
+        self.session.query(self.AlocacaoDiariaORM).filter_by(id=200).update({"data": hoje})
+        self.session.commit()
         service = ListaEmbarqueService(self.session)
-        result = service.listar(date(2026, 11, 20), rota_id=1)
+        result = service.listar(hoje, rota_id=1)
         self.assertEqual(result["total_alunos_alocados"], 1)
         self.assertTrue(result["permite_imprimir"])
         self.assertIsNone(result["mensagem"])
         self.assertEqual(result["alunos"][0]["agendamento_id"], 100)
+        self.assertEqual(result["alunos"][0]["status_presenca"], "PENDENTE")
+        self.assertEqual(result["total_presentes"], 0)
+        self.assertEqual(result["total_faltas"], 0)
+        self.assertEqual(result["total_pendentes"], 1)
+        self.assertFalse(result["somente_leitura"])
+
+    def test_registrar_e_corrigir_presenca_atualiza_totais_e_auditoria(self):
+        hoje = date.today()
+        self.session.query(self.AgendamentoORM).filter_by(id=100).update({"data": hoje})
+        self.session.query(self.AlocacaoDiariaORM).filter_by(id=200).update({"data": hoje})
+        self.session.commit()
+        service = ListaEmbarqueService(self.session)
+
+        service.registrar_presenca(
+            hoje, rota_id=1, agendamento_id=100, status_presenca="PRESENTE",
+            usuario_id=10, faculdade_id=1,
+        )
+        agendamento = self.session.get(self.AgendamentoORM, 100)
+        self.assertEqual(agendamento.presenca_status, "PRESENTE")
+        self.assertIsNotNone(agendamento.presenca_registrada_em)
+        self.assertEqual(agendamento.presenca_registrada_por, 10)
+
+        service.registrar_presenca(
+            hoje, rota_id=1, agendamento_id=100, status_presenca="FALTA",
+            usuario_id=10, faculdade_id=1,
+        )
+        result = service.listar(hoje, rota_id=1, faculdade_id=1)
+        self.assertEqual(result["alunos"][0]["status_presenca"], "FALTA")
+        self.assertEqual(result["total_presentes"], 0)
+        self.assertEqual(result["total_faltas"], 1)
+        self.assertEqual(result["total_pendentes"], 0)
+
+    def test_representante_nao_registra_presenca_de_outra_faculdade(self):
+        hoje = date.today()
+        self.session.query(self.AgendamentoORM).filter_by(id=100).update({"data": hoje})
+        self.session.query(self.AlocacaoDiariaORM).filter_by(id=200).update({"data": hoje})
+        self.session.commit()
+        service = ListaEmbarqueService(self.session)
+
+        with self.assertRaises(ListaEmbarqueError) as contexto:
+            service.registrar_presenca(
+                hoje, rota_id=1, agendamento_id=100, status_presenca="PRESENTE",
+                usuario_id=10, faculdade_id=2,
+            )
+
+        self.assertEqual(contexto.exception.status_code, 403)
+        self.assertEqual(self.session.get(self.AgendamentoORM, 100).presenca_status, "PENDENTE")
+
+    def test_data_sem_viagens_retorna_mensagem_especifica(self):
+        result = ListaEmbarqueService(self.session).listar(
+            date(2040, 1, 1), rota_id=1
+        )
+        self.assertEqual(
+            result["mensagem"],
+            "Não há registros de viagens ou agendamentos para a data selecionada.",
+        )
+        self.assertTrue(result["somente_leitura"])
 
     def test_listar_ignora_agendamento_cancelado(self):
         """CA-06: agendamento com status CANCELADO é ignorado na lista."""
