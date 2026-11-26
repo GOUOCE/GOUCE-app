@@ -1,5 +1,9 @@
 import { Platform, Share } from 'react-native';
-import type { ListaEmbarqueRota, PerfilListaEmbarque } from '../services/listaEmbarqueService';
+import type {
+  ListaEmbarqueRota,
+  PerfilListaEmbarque,
+  StatusPresenca,
+} from '../services/listaEmbarqueService';
 
 export const REGISTROS_POR_PAGINA_A4 = 30;
 
@@ -13,6 +17,7 @@ export interface LinhaImpressaoA4 {
   nome: string;
   trajeto: string;
   preenchido: boolean;
+  presenca?: 'Presente' | 'Falta' | 'Pendente';
 }
 
 export interface PaginaImpressaoA4 {
@@ -32,6 +37,8 @@ export interface DocumentoImpressaoA4 {
   dataViagem: string;
   rotaNome: string;
   totalAlunos: number;
+  possuiFrequencia?: boolean;
+  resumoFrequencia?: string;
   rodapeInstitucional: string;
   paginas: PaginaImpressaoA4[];
 }
@@ -78,6 +85,43 @@ function escaparHtml(valor: string): string {
     .replace(/'/g, '&#39;');
 }
 
+function possuiFrequenciaRegistrada(lista: ListaEmbarqueRota): boolean {
+  if ((lista.totalPresentes ?? 0) > 0 || (lista.totalFaltas ?? 0) > 0) {
+    return true;
+  }
+  return lista.alunos.some(
+    (aluno) => aluno.statusPresenca === 'PRESENTE' || aluno.statusPresenca === 'FALTA'
+  );
+}
+
+function formatarRotuloPresenca(status?: StatusPresenca): 'Presente' | 'Falta' | 'Pendente' {
+  if (status === 'PRESENTE') {
+    return 'Presente';
+  }
+  if (status === 'FALTA') {
+    return 'Falta';
+  }
+  return 'Pendente';
+}
+
+function formatarResumoFrequencia(lista: ListaEmbarqueRota): string {
+  let presentes = 0;
+  let faltas = 0;
+  let pendentes = 0;
+
+  for (const aluno of lista.alunos) {
+    if (aluno.statusPresenca === 'PRESENTE') {
+      presentes += 1;
+    } else if (aluno.statusPresenca === 'FALTA') {
+      faltas += 1;
+    } else {
+      pendentes += 1;
+    }
+  }
+
+  return `Presentes: ${presentes} • Faltas: ${faltas} • Pendentes: ${pendentes}`;
+}
+
 /**
  * Estrutura a lista de embarque em páginas A4 com até 30 registros reais por folha,
  * gerando apenas as linhas correspondentes aos alunos efetivamente alocados.
@@ -90,6 +134,7 @@ export function gerarPaginasImpressaoA4(
     throw new Error('Não é possível imprimir uma lista de embarque sem alunos alocados.');
   }
 
+  const comFrequencia = possuiFrequenciaRegistrada(lista);
   const emitidoPorLabel = resolverEmitidoPor(opcoes);
   const totalPaginas = Math.ceil(lista.alunos.length / REGISTROS_POR_PAGINA_A4);
   const paginas: PaginaImpressaoA4[] = [];
@@ -100,12 +145,18 @@ export function gerarPaginasImpressaoA4(
     const registroInicial = formatarNumeroRegistro(inicioIndice + 1);
     const registroFinal = formatarNumeroRegistro(inicioIndice + fatiaAlunos.length);
 
-    const linhas: LinhaImpressaoA4[] = fatiaAlunos.map((aluno, deslocamento) => ({
-      numero: formatarNumeroRegistro(inicioIndice + deslocamento + 1),
-      nome: aluno.nome,
-      trajeto: aluno.trajetoFormatado,
-      preenchido: true,
-    }));
+    const linhas: LinhaImpressaoA4[] = fatiaAlunos.map((aluno, deslocamento) => {
+      const linhaBase: LinhaImpressaoA4 = {
+        numero: formatarNumeroRegistro(inicioIndice + deslocamento + 1),
+        nome: aluno.nome,
+        trajeto: aluno.trajetoFormatado,
+        preenchido: true,
+      };
+      if (comFrequencia) {
+        linhaBase.presenca = formatarRotuloPresenca(aluno.statusPresenca);
+      }
+      return linhaBase;
+    });
 
     paginas.push({
       numeroPagina: paginaAtual,
@@ -125,6 +176,12 @@ export function gerarPaginasImpressaoA4(
     dataViagem: lista.dataOperacao,
     rotaNome: lista.rotaNome,
     totalAlunos: lista.alunos.length,
+    ...(comFrequencia
+      ? {
+          possuiFrequencia: true,
+          resumoFrequencia: formatarResumoFrequencia(lista),
+        }
+      : {}),
     rodapeInstitucional: RODAPE_INSTITUCIONAL_A4,
     paginas,
   };
@@ -148,17 +205,44 @@ function renderizarLogoSvg(): string {
 }
 
 function renderizarPaginaHtml(documento: DocumentoImpressaoA4, pagina: PaginaImpressaoA4): string {
+  const comFrequencia = Boolean(documento.possuiFrequencia);
   const linhasHtml = pagina.linhas
-    .map(
-      (linha) => `
+    .map((linha) => {
+      const rotuloPresenca = linha.presenca ?? 'Pendente';
+      const classePresenca =
+        rotuloPresenca === 'Presente'
+          ? 'badge-presente'
+          : rotuloPresenca === 'Falta'
+            ? 'badge-falta'
+            : 'badge-pendente';
+      const colunaPresencaHtml = comFrequencia
+        ? `<td class="col-presenca"><span class="badge-presenca ${classePresenca}">${escaparHtml(rotuloPresenca)}</span></td>`
+        : '';
+
+      return `
         <tr class="${linha.preenchido ? 'linha-preenchida' : 'linha-vazia'}">
           <td class="col-numero">${escaparHtml(linha.numero)}</td>
           <td class="col-aluno">${escaparHtml(linha.nome)}</td>
           <td class="col-trajeto">${escaparHtml(linha.trajeto)}</td>
+          ${colunaPresencaHtml}
         </tr>
-      `
-    )
+      `;
+    })
     .join('');
+
+  const resumoFrequenciaHtml =
+    comFrequencia && documento.resumoFrequencia
+      ? `
+        <div>
+          <span class="rotulo-meta">Frequência registrada</span>
+          <strong class="valor-meta">${escaparHtml(documento.resumoFrequencia)}</strong>
+        </div>
+      `
+      : '';
+
+  const cabecalhoPresencaHtml = comFrequencia
+    ? '<th class="col-presenca">Presença</th>'
+    : '';
 
   return `
     <section class="pagina-a4">
@@ -183,6 +267,7 @@ function renderizarPaginaHtml(documento: DocumentoImpressaoA4, pagina: PaginaImp
           <span class="rotulo-meta">Rota</span>
           <strong class="valor-meta">${escaparHtml(documento.rotaNome)}</strong>
         </div>
+        ${resumoFrequenciaHtml}
         <div class="resumo-direita">
           <span class="rotulo-meta">Alunos alocados</span>
           <strong class="valor-meta">${escaparHtml(String(documento.totalAlunos))}</strong>
@@ -198,6 +283,7 @@ function renderizarPaginaHtml(documento: DocumentoImpressaoA4, pagina: PaginaImp
               <th class="col-numero">Nº</th>
               <th class="col-aluno">Aluno</th>
               <th class="col-trajeto">Trajeto programado</th>
+              ${cabecalhoPresencaHtml}
             </tr>
           </thead>
           <tbody>
@@ -319,7 +405,10 @@ export function gerarHtmlImpressaoA4(
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
+      gap: 12px;
+      padding-bottom: 12px;
       margin-bottom: 14px;
+      border-bottom: 1px solid #E2E8F0;
     }
 
     .resumo-direita {
@@ -340,10 +429,10 @@ export function gerarHtmlImpressaoA4(
     }
 
     .titulo-secao {
-      margin: 0 0 8px;
-      font-size: 12px;
+      margin: 2px 0 10px;
+      font-size: 14px;
       font-weight: 700;
-      color: #3E5F90;
+      color: #0F172A;
     }
 
     .tabela-wrapper {
@@ -391,6 +480,34 @@ export function gerarHtmlImpressaoA4(
       width: auto;
     }
 
+    .col-presenca {
+      width: 96px;
+      text-align: left;
+    }
+
+    .badge-presenca {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 9.5px;
+      font-weight: 600;
+    }
+
+    .badge-presente {
+      background-color: #DCFCE7;
+      color: #166534;
+    }
+
+    .badge-falta {
+      background-color: #FEE2E2;
+      color: #991B1B;
+    }
+
+    .badge-pendente {
+      background-color: #F1F5F9;
+      color: #475569;
+    }
+
     .rodape {
       margin-top: auto;
       padding-top: 12px;
@@ -416,11 +533,12 @@ export function gerarResumoTextoImpressao(
   opcoes?: OpcoesImpressaoListaEmbarque
 ): string {
   const documento = gerarPaginasImpressaoA4(lista, opcoes);
+  const comFrequencia = Boolean(documento.possuiFrequencia);
 
-  const linhasAlunos = lista.alunos.map(
-    (aluno, indice) =>
-      `${formatarNumeroRegistro(indice + 1)}. ${aluno.nome} — ${aluno.trajetoFormatado}`
-  );
+  const linhasAlunos = lista.alunos.map((aluno, indice) => {
+    const base = `${formatarNumeroRegistro(indice + 1)}. ${aluno.nome} — ${aluno.trajetoFormatado}`;
+    return comFrequencia ? `${base} [${formatarRotuloPresenca(aluno.statusPresenca)}]` : base;
+  });
 
   return [
     `${documento.titulo} — GOUOCE`,
@@ -428,6 +546,9 @@ export function gerarResumoTextoImpressao(
     `Data da viagem: ${documento.dataViagem}`,
     `Emitido por: ${documento.emitidoPorLabel}`,
     `Alunos alocados: ${documento.totalAlunos}`,
+    ...(comFrequencia && documento.resumoFrequencia
+      ? [`Frequência: ${documento.resumoFrequencia}`]
+      : []),
     '',
     ...linhasAlunos,
   ].join('\n');
