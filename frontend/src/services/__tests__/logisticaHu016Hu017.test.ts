@@ -21,6 +21,7 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 import {
   logisticaService,
   manterSelecaoDisponivel,
+  ehDiaPassado,
   AlocacaoDistribuicao,
   PreviaDistribuicao,
 } from '../logisticaService';
@@ -545,5 +546,19 @@ describe('manterSelecaoDisponivel (issue #522)', () => {
 
   it('devolve vazio quando não havia seleção', () => {
     expect(manterSelecaoDisponivel('', motoristas)).toBe('');
+  });
+});
+
+describe('ehDiaPassado (issue #542)', () => {
+  const hoje = new Date(2026, 10, 25, 9, 30);
+
+  it('ontem é dia passado', () => {
+    expect(ehDiaPassado('2026-11-24', hoje)).toBe(true);
+  });
+
+  it('hoje e dias futuros não são dia passado', () => {
+    expect(ehDiaPassado('2026-11-25', hoje)).toBe(false);
+    expect(ehDiaPassado('2026-11-26', hoje)).toBe(false);
+    expect(ehDiaPassado('2026-12-01', hoje)).toBe(false);
   });
 });

@@ -1,5 +1,5 @@
 import json
-from datetime import date
+from datetime import date, timedelta
 
 from sqlalchemy.orm import Session
 
@@ -19,7 +19,14 @@ from src.modulos.alocacao_diaria.model.entities.alocacao import (
     AlocacaoAlunoORM,
     AlocacaoDiariaORM,
 )
+from src.modulos.alocacao_diaria.model.entities.rodizio_frota import (
+    RodizioFrotaItemORM,
+    RodizioFrotaORM,
+)
 from src.shared.infrastructure.audit_model import LogAuditoriaORM
+
+
+MENSAGEM_DIA_PASSADO = "Não é possível alterar a distribuição de um dia que já passou."
 
 
 class DistribuicaoError(ValueError):
@@ -32,12 +39,86 @@ class AlocacaoService:
     def __init__(self, session: Session):
         self.session = session
 
+    @staticmethod
+    def _normalizar_placa(placa: str) -> str:
+        return placa.strip().upper().replace("-", "")
+
+    def _onibus_do_rodizio_na_semana(
+        self,
+        target: date,
+        rota_id: int,
+        turno: str,
+    ) -> set[str] | None:
+        configuracao = (
+            self.session.query(RodizioFrotaORM)
+            .filter(RodizioFrotaORM.ativo.is_(True))
+            .order_by(RodizioFrotaORM.id.desc())
+            .first()
+        )
+        if configuracao is None:
+            return None
+
+        inicio = configuracao.data_inicio - timedelta(
+            days=configuracao.data_inicio.weekday()
+        )
+        target_inicio = target - timedelta(days=target.weekday())
+        if target_inicio < inicio:
+            return None
+
+        semana = (target_inicio - inicio).days // 7
+        if semana >= configuracao.semanas:
+            return None
+
+        itens = (
+            self.session.query(RodizioFrotaItemORM)
+            .filter(RodizioFrotaItemORM.rodizio_id == configuracao.id)
+            .filter(RodizioFrotaItemORM.rota_id == rota_id)
+            .filter(RodizioFrotaItemORM.turno == turno)
+            .all()
+        )
+        return {self._normalizar_placa(item.onibus_id) for item in itens}
+
+    def _alertas_fora_do_rodizio(
+        self,
+        target: date,
+        alocacoes: list[dict],
+    ) -> list[dict]:
+        alertas = []
+        for alocacao in alocacoes:
+            rota_id = alocacao["rota_id"]
+            turno = alocacao.get("turno", "ida")
+            onibus_id = self._normalizar_placa(alocacao["onibus_id"])
+            onibus_da_semana = self._onibus_do_rodizio_na_semana(
+                target,
+                rota_id,
+                turno,
+            )
+            if onibus_da_semana is not None and onibus_id not in onibus_da_semana:
+                alertas.append(
+                    {
+                        "tipo": "ONIBUS_DIFERENTE_DO_RODIZIO",
+                        "rota_id": rota_id,
+                        "turno": turno,
+                        "onibus_id": onibus_id,
+                        "mensagem": (
+                            f"O ônibus {onibus_id} não está cadastrado no rodízio "
+                            f"desta semana para a rota {rota_id} no turno {turno}."
+                        ),
+                    }
+                )
+        return alertas
+
     def preview(self, target: date) -> dict:
         demanda = self._demanda(target)
         automatica = self._preview_automatica(target, demanda)
         persistidas = self._alocacoes_persistidas(target)
         alocacoes = persistidas if persistidas is not None else automatica["alocacoes"]
         self._enriquecer_alocacoes(alocacoes)
+        alertas_rodizio = self._alertas_fora_do_rodizio(target, alocacoes)
+        if persistidas is not None:
+            alertas = alertas_rodizio
+        else:
+            alertas = automatica["alertas"] + alertas_rodizio
 
         alocados = {
             (aluno["agendamento_id"], alocacao["turno"])
@@ -64,7 +145,7 @@ class AlocacaoService:
             "demanda_por_rota": automatica["demanda_por_rota"],
             "alocacoes": alocacoes,
             "excedentes_globais": excedentes,
-            "alertas": [] if distribuida else automatica["alertas"],
+            "alertas": alertas,
         }
 
     def _preview_automatica(
@@ -74,7 +155,60 @@ class AlocacaoService:
     ) -> dict:
         if demanda is None:
             demanda = self._demanda(target)
-        return {"data": target.isoformat(), **distribuir_alunos(demanda, self._buses())}
+        return {
+            "data": target.isoformat(),
+            **distribuir_alunos(
+                demanda,
+                self._buses(),
+                rodizio=self._rodizio_para(target),
+            ),
+        }
+
+    def _rodizio_para(self, target: date) -> dict[int | tuple[int, str], str]:
+        configuracao = (
+            self.session.query(RodizioFrotaORM)
+            .filter(RodizioFrotaORM.ativo.is_(True))
+            .order_by(RodizioFrotaORM.id.desc())
+            .first()
+        )
+        if configuracao is None:
+            return {}
+
+        inicio = configuracao.data_inicio - timedelta(
+            days=configuracao.data_inicio.weekday()
+        )
+        target_inicio = target - timedelta(days=target.weekday())
+        if target_inicio < inicio:
+            return {}
+        diff_dias = (target_inicio - inicio).days
+        if diff_dias < 0:
+            return {}
+        semana = diff_dias // 7
+        if semana >= configuracao.semanas:
+            return {}
+
+        itens = (
+            self.session.query(RodizioFrotaItemORM)
+            .filter(RodizioFrotaItemORM.rodizio_id == configuracao.id)
+            .all()
+        )
+        mapping: dict[int | tuple[int, str], str] = {}
+        for turno in ("ida", "volta"):
+            base = sorted(
+                [item for item in itens if item.turno == turno],
+                key=lambda item: item.rota_id,
+            )
+            if not base:
+                continue
+            pool = sorted({item.onibus_id for item in base})
+            route_indexes = {
+                rota_id: index
+                for index, rota_id in enumerate(sorted({item.rota_id for item in base}))
+            }
+            for item in base:
+                bus = pool[(route_indexes[item.rota_id] + semana) % len(pool)]
+                mapping[(item.rota_id, turno)] = bus
+        return mapping
 
     def _alocacoes_persistidas(self, target: date) -> list[dict] | None:
         alocacoes = (
@@ -169,11 +303,19 @@ class AlocacaoService:
         )
         return {agendamento_id: (aluno_id, nome) for agendamento_id, aluno_id, nome in rows}
 
+    @staticmethod
+    def _hoje() -> date:
+        """Data de hoje no fuso do servidor (America/Fortaleza); isolada para os testes."""
+        return date.today()
+
     def persist(
         self,
         payload: DistribuicaoRequestDTO,
         usuario_executor_id: int | None = None,
     ) -> dict:
+        # RN-004: o histórico de períodos anteriores não pode ser alterado (issue #542).
+        if payload.data < self._hoje():
+            raise DistribuicaoError(MENSAGEM_DIA_PASSADO)
         excedentes_globais: list[dict] = []
         if payload.modo == "automatico":
             preview = self.preview(payload.data)
@@ -286,7 +428,7 @@ class AlocacaoService:
             for route in self.session.query(RotaPrincipalORM).filter(RotaPrincipalORM.ativo.is_(True))
         }
         buses = {
-            bus.placa_onibus: bus
+            self._normalizar_placa(bus.placa_onibus): bus
             for bus in self.session.query(OnibusORM).filter(OnibusORM.ativo.is_(True))
         }
         # Carrega também os inativos para citar o nome na recusa (issue #523).
@@ -299,10 +441,23 @@ class AlocacaoService:
             if rota is None:
                 raise DistribuicaoError("Rota inexistente ou inativa.")
             prefix = getattr(rota, "nome", f"Rota {rota.id}")
-            bus_id, turno = allocation.get("onibus_id"), allocation.get("turno", "ida")
+            bus_id = self._normalizar_placa(allocation.get("onibus_id") or "")
+            turno = allocation.get("turno", "ida")
+            allocation["onibus_id"] = bus_id
             bus = buses.get(bus_id)
             if bus is None:
                 raise DistribuicaoError(f"{prefix}: ônibus {bus_id} inexistente ou inativo.")
+            if permitir_realocacao:
+                onibus_da_semana = self._onibus_do_rodizio_na_semana(
+                    target,
+                    allocation["rota_id"],
+                    turno,
+                )
+                if onibus_da_semana is not None and bus_id not in onibus_da_semana:
+                    raise DistribuicaoError(
+                        f"{prefix}: o ônibus {bus_id} não está cadastrado no rodízio desta semana para o turno {turno}.",
+                        409,
+                    )
             motorista_id = allocation.get("motorista_id")
             motorista = drivers.get(motorista_id)
             if motorista is None:

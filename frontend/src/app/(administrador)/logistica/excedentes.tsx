@@ -12,6 +12,8 @@ import {
   OpcaoRealocacao,
   PreviaDistribuicao,
   TipoLugar,
+  ehDiaPassado,
+  MENSAGEM_DIA_PASSADO,
 } from '@/services/logisticaService';
 import { AppPopup, PopupType } from '@/components/ui/AppPopup';
 import { getErrorMessage } from '@/utils/errorUtils';
@@ -37,6 +39,7 @@ export default function RealocarExcedentesScreen() {
 
   const linhaId = Number(params.linhaId);
   const dataIso = params.dataIso || paraIso(new Date());
+  const diaPassado = ehDiaPassado(dataIso);
 
   const [rota, setRota] = useState<LinhaDistribuicao | null>(null);
   const [alunos, setAlunos] = useState<AlunoExcedente[]>([]);
@@ -133,6 +136,10 @@ export default function RealocarExcedentesScreen() {
   const fecharPopup = () => setPopup((atual) => ({ ...atual, visible: false }));
 
   const confirmarRealocacao = async () => {
+    if (diaPassado) {
+      setPopup({ visible: true, type: 'warning', title: 'Dia passado', message: MENSAGEM_DIA_PASSADO });
+      return;
+    }
     if (!preview || !alunoSelecionado || !opcaoSelecionada) return;
     const opcao = opcoes.find((item) => item.chave === opcaoSelecionada);
     if (!opcao) return;
@@ -238,6 +245,11 @@ export default function RealocarExcedentesScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          {diaPassado ? (
+            <View style={styles.avisoDiaPassado} testID="aviso-dia-passado">
+              <Text style={styles.avisoDiaPassadoTexto}>{MENSAGEM_DIA_PASSADO}</Text>
+            </View>
+          ) : null}
           {totalExcedentes > 0 ? (
             <Text variant="bodyMedium" style={styles.descriptionText}>
               {`${totalExcedentes} aluno(s) da ${rota?.nomeLinha ?? 'rota'} ultrapassam a capacidade dos veículos alocados.`}
@@ -338,7 +350,7 @@ export default function RealocarExcedentesScreen() {
                 mode="contained"
                 onPress={confirmarRealocacao}
                 loading={realocando}
-                disabled={!opcaoSelecionada || realocando}
+                disabled={!opcaoSelecionada || realocando || diaPassado}
                 style={styles.btnRealocar}
                 contentStyle={styles.btnContent}
                 buttonColor="#3E5F90"
@@ -498,6 +510,17 @@ const styles = StyleSheet.create({
   opcaoDetalhe: {
     color: '#74777F',
     fontSize: 13,
+  },
+  avisoDiaPassado: {
+    backgroundColor: '#FFF4E5',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+  },
+  avisoDiaPassadoTexto: {
+    fontSize: 13,
+    color: '#92400E',
+    lineHeight: 18,
   },
   avisoBox: {
     backgroundColor: '#FFF4E5',

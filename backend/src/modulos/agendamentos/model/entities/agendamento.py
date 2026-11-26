@@ -13,6 +13,10 @@ class AgendamentoORM(Base):
             "(usa_ida OR usa_volta)",
             name="ck_agendamento_um_trecho",
         ),
+        CheckConstraint(
+            "presenca_status IN ('PENDENTE', 'PRESENTE', 'FALTA')",
+            name="ck_agendamento_presenca_status",
+        ),
         Index(
             "ix_agendamento_aluno_data_status",
             "aluno_id",
@@ -72,6 +76,13 @@ class AgendamentoORM(Base):
         server_default=text("CURRENT_TIMESTAMP"),
     )
     cancelled_at = Column(DateTime(timezone=True), nullable=True)
+    presenca_status = Column(
+        String(10), nullable=False, default="PENDENTE", server_default=text("'PENDENTE'")
+    )
+    presenca_registrada_em = Column(DateTime(timezone=True), nullable=True)
+    presenca_registrada_por = Column(
+        Integer, ForeignKey("usuario.id", ondelete="SET NULL"), nullable=True
+    )
 
     @property
     def data_agendamento(self) -> date:

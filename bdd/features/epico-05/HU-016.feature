@@ -286,6 +286,16 @@ Funcionalidade: Distribuição de Alunos nos Ônibus
       E a distribuição confirmada anteriormente permanece inalterada
 
 
+    # RN-004 - Histórico de períodos anteriores preservado
+    @regra_negocio @RN004 @teste_api @nao_automatizavel_via_appium @prioridade_media
+    Cenário: API recusa distribuir ou realocar um dia que já passou
+      Dado que a data "17/11/2026" é anterior a hoje
+      Quando o administrador envia a distribuição manual do dia "17/11/2026"
+      Então a API responde com o status "422 Unprocessable Entity"
+      E a resposta informa a mensagem "Não é possível alterar a distribuição de um dia que já passou."
+      E nenhuma alocação do dia é alterada
+
+
   Regra: Somente o administrador distribui os alunos (RN-006)
 
     # RN-006 - Menu não exibido para outros perfis

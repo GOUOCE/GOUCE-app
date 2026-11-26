@@ -398,7 +398,7 @@ export default function DistribicaoLogisticaScreen() {
                     ) : null}
                   </View>
 
-                  {!somenteLeitura || linha.excedentes > 0 ? (
+                  {!somenteLeitura ? (
                     <View style={styles.actionsCol}>
                       {!somenteLeitura ? (
                         <TouchableOpacity
