@@ -357,6 +357,7 @@ class ListaEmbarqueService:
                     "onibus_volta": None,
                     "motorista_ida": None,
                     "motorista_volta": None,
+                    "status_presenca": ag.presenca_status,
                 }
                 ies_visivel[ag_id] = {"ida": None, "volta": None}
                 ies_visivel[ag_id]["_vis_ida"] = False
@@ -430,6 +431,12 @@ class ListaEmbarqueService:
         # 10. Monta a resposta
         total = len(alunos_lista)
         agora = datetime.now(timezone.utc)
+        total_presentes = sum(
+            1 for aluno in alunos_lista if aluno["status_presenca"] == "PRESENTE"
+        )
+        total_faltas = sum(
+            1 for aluno in alunos_lista if aluno["status_presenca"] == "FALTA"
+        )
 
         return {
             "data": target.isoformat(),
@@ -444,9 +451,81 @@ class ListaEmbarqueService:
             "mensagem": (
                 None
                 if total > 0
-                else "Essa rota não possui nenhum aluno alocado para este dia."
+                else (
+                    "Não há registros de viagens ou agendamentos para a data selecionada."
+                    if not alocacoes
+                    else "Essa rota não possui nenhum aluno alocado para este dia."
+                )
             ),
             "ultima_sincronizacao": agora.isoformat(),
             "indicador_sincronizacao": "Atualizado agora",
             "alunos": alunos_lista,
+            "total_presentes": total_presentes,
+            "total_faltas": total_faltas,
+            "total_pendentes": total - total_presentes - total_faltas,
+            "somente_leitura": target != date.today(),
+        }
+
+    def registrar_presenca(
+        self,
+        target: date,
+        rota_id: int,
+        agendamento_id: int,
+        status_presenca: str,
+        usuario_id: int,
+        faculdade_id: Optional[int] = None,
+    ) -> dict:
+        """Registra ou corrige a presença para um agendamento alocado na rota do dia."""
+        if target != date.today():
+            raise ListaEmbarqueError(
+                "A chamada só pode ser realizada no dia exato da viagem.", 422
+            )
+        if status_presenca not in {"PRESENTE", "FALTA"}:
+            raise ListaEmbarqueError("Status de presença inválido.", 422)
+
+        registros = (
+            self.session.query(AlocacaoAlunoORM, AgendamentoORM)
+            .join(AgendamentoORM, AlocacaoAlunoORM.agendamento_id == AgendamentoORM.id)
+            .join(
+                AlocacaoDiariaORM,
+                AlocacaoAlunoORM.alocacao_diaria_id == AlocacaoDiariaORM.id,
+            )
+            .filter(
+                AlocacaoDiariaORM.data == target,
+                AlocacaoDiariaORM.rota_id == rota_id,
+                AlocacaoAlunoORM.status == "ALOCADO",
+                AgendamentoORM.id == agendamento_id,
+                AgendamentoORM.status == "ATIVO",
+            )
+            .all()
+        )
+        if not registros:
+            raise ListaEmbarqueError(
+                "O aluno não possui agendamento ativo na rota e data selecionadas.", 422
+            )
+
+        if faculdade_id is not None:
+            pertence_a_faculdade = any(
+                (
+                    agendamento.ies_destino_id == faculdade_id
+                    if alocacao.turno == "ida"
+                    else agendamento.ies_origem_id == faculdade_id
+                )
+                for alocacao, agendamento in registros
+            )
+            if not pertence_a_faculdade:
+                raise ListaEmbarqueError(
+                    "O representante não é responsável pela faculdade deste aluno.", 403
+                )
+
+        agendamento = registros[0][1]
+        agendamento.presenca_status = status_presenca
+        agendamento.presenca_registrada_em = datetime.now(timezone.utc)
+        agendamento.presenca_registrada_por = usuario_id
+        self.session.commit()
+
+        return {
+            "agendamento_id": agendamento.id,
+            "status_presenca": agendamento.presenca_status,
+            "presenca_registrada_em": agendamento.presenca_registrada_em.isoformat(),
         }
