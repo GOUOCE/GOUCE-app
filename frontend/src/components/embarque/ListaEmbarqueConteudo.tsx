@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  AppState,
   FlatList,
   Modal,
   ScrollView,
@@ -117,12 +118,12 @@ function obterTotaisFrequencia(alunos: AlunoEmbarqueItem[]): {
   return { totalPresentes, totalFaltas, totalPendentes };
 }
 
-async function buscarFrequenciasPendentesRota(rotaId: number) {
+async function buscarFrequenciasPendentesRota(rotaId: number, dataIso?: string) {
   const obterPendentes = (listaEmbarqueService as any)?.obterFrequenciasPendentes;
   if (typeof obterPendentes !== 'function') {
     return [];
   }
-  return obterPendentes({ rotaId });
+  return obterPendentes({ rotaId, ...(dataIso ? { data: dataIso } : {}) });
 }
 
 /**
@@ -154,6 +155,7 @@ export function ListaEmbarqueConteudo({
   const [sincronizacaoPendente, setSincronizacaoPendente] = useState<boolean>(false);
   const [semViagensData, setSemViagensData] = useState<boolean>(false);
   const [agora, setAgora] = useState<Date>(() => new Date());
+  const escritasEmAndamentoRef = useRef(0);
 
   const modoFixo = modoFixoManual ?? modoFixoInicial;
   const rotaSelecionadaId = rotaManualId ?? rotaFixaId ?? null;
@@ -225,7 +227,10 @@ export function ListaEmbarqueConteudo({
         setSemViagensData(false);
         setErroMensagem('');
         setAgora(new Date());
-        void buscarFrequenciasPendentesRota(dados.rotaId).then((pendentes) => {
+        void buscarFrequenciasPendentesRota(
+          dados.rotaId,
+          dataOperacaoIso ?? dados.dataOperacaoIso
+        ).then((pendentes) => {
           if (ativo) {
             setSincronizacaoPendente(pendentes.length > 0);
           }
@@ -301,10 +306,13 @@ export function ListaEmbarqueConteudo({
     const cancelarInscricao = listaEmbarqueService.inscreverAtualizacaoRota(
       rotaAtivaId,
       (listaAtualizada) => {
-        if (!ativo) return;
+        if (!ativo || escritasEmAndamentoRef.current > 0) return;
         setLista(listaAtualizada);
         setAgora(new Date());
-        void buscarFrequenciasPendentesRota(listaAtualizada.rotaId).then((pendentes) => {
+        void buscarFrequenciasPendentesRota(
+          listaAtualizada.rotaId,
+          dataOperacaoIso ?? listaAtualizada.dataOperacaoIso
+        ).then((pendentes) => {
           if (ativo) {
             setSincronizacaoPendente(pendentes.length > 0);
           }
@@ -313,9 +321,74 @@ export function ListaEmbarqueConteudo({
       { data: dataOperacaoIso, perfil, iesResponsavel }
     );
 
+    const sincronizarImediatamente = () => {
+      if (!ativo || escritasEmAndamentoRef.current > 0) return;
+      void (async () => {
+        try {
+          const sincronizar = (listaEmbarqueService as any)?.sincronizarFrequenciasPendentes;
+          if (typeof sincronizar === 'function') {
+            await sincronizar();
+          }
+          const listaAtualizada = await listaEmbarqueService.obterListaEmbarque({
+            rotaId: rotaAtivaId,
+            data: dataOperacaoIso,
+            perfil,
+            iesResponsavel,
+          });
+          if (!ativo || escritasEmAndamentoRef.current > 0) return;
+          setLista(listaAtualizada);
+          setAgora(new Date());
+          const pendentes = await buscarFrequenciasPendentesRota(
+            listaAtualizada.rotaId,
+            dataOperacaoIso ?? listaAtualizada.dataOperacaoIso
+          );
+          if (ativo) {
+            setSincronizacaoPendente(pendentes.length > 0);
+          }
+        } catch {
+          // Mantém o estado atual caso a tentativa imediata em segundo plano falhe.
+        }
+      })();
+    };
+
+    const handleVisibilityChange = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        sincronizarImediatamente();
+      }
+    };
+
+    const temWindowEventos =
+      typeof window !== 'undefined' && typeof window.addEventListener === 'function';
+    const temDocumentVisibility =
+      typeof document !== 'undefined' && typeof document.addEventListener === 'function';
+
+    if (temWindowEventos) {
+      window.addEventListener('online', sincronizarImediatamente);
+      window.addEventListener('focus', sincronizarImediatamente);
+    }
+    if (temDocumentVisibility) {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
+    const appStateSubscription =
+      typeof AppState?.addEventListener === 'function'
+        ? AppState.addEventListener('change', (nextState) => {
+            if (nextState === 'active') {
+              sincronizarImediatamente();
+            }
+          })
+        : null;
+
     return () => {
       ativo = false;
       cancelarInscricao();
+      if (typeof window !== 'undefined' && typeof window.removeEventListener === 'function') {
+        window.removeEventListener('online', sincronizarImediatamente);
+        window.removeEventListener('focus', sincronizarImediatamente);
+      }
+      if (typeof document !== 'undefined' && typeof document.removeEventListener === 'function') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
+      appStateSubscription?.remove?.();
     };
   }, [rotaAtivaId, dataOperacaoIso, perfil, iesResponsavel]);
 
@@ -370,6 +443,9 @@ export function ListaEmbarqueConteudo({
     novoStatus: 'PRESENTE' | 'FALTA'
   ) => {
     if (!listaAtiva || somenteLeituraData) return;
+    if (aluno.statusPresenca === novoStatus && !sincronizacaoPendente) {
+      return;
+    }
 
     const agendamentoId = aluno.agendamentoId ?? aluno.id;
     const listaAnterior = listaAtiva;
@@ -387,26 +463,35 @@ export function ListaEmbarqueConteudo({
       ...totaisAtualizados,
     });
 
+    escritasEmAndamentoRef.current += 1;
     try {
+      const dataChamadaIso = dataOperacaoIso ?? listaAtiva.dataOperacaoIso;
       const resultado = await listaEmbarqueService.registrarFrequencia({
         rotaId: listaAtiva.rotaId,
         agendamentoId,
         statusPresenca: novoStatus,
-        data: dataOperacaoIso,
+        data: dataChamadaIso,
       });
 
       if (resultado.pendenteOffline) {
         setSincronizacaoPendente(true);
       } else {
-        const restantes = await buscarFrequenciasPendentesRota(listaAtiva.rotaId);
+        const restantes = await buscarFrequenciasPendentesRota(listaAtiva.rotaId, dataChamadaIso);
         setSincronizacaoPendente(restantes.length > 0);
-        setAgora(new Date());
+        const agoraSync = new Date();
+        const agoraIso = agoraSync.toISOString();
+        setLista((atual) =>
+          atual ? { ...atual, ultimaSincronizacaoISO: agoraIso } : atual
+        );
+        setAgora(agoraSync);
       }
     } catch (erro: unknown) {
       setLista(listaAnterior);
       setErroMensagem(
         extrairMensagemErroListaEmbarque(erro, 'Não foi possível registrar a frequência.')
       );
+    } finally {
+      escritasEmAndamentoRef.current = Math.max(0, escritasEmAndamentoRef.current - 1);
     }
   };
 
@@ -694,13 +779,11 @@ export function ListaEmbarqueConteudo({
           </Text>
         </TouchableOpacity>
 
-        {listaAtiva !== null && (
+        {listaAtiva !== null && (!somenteLeituraData || sincronizacaoPendente) && (
           <Text style={styles.sincronizacaoTexto} testID="indicador-sincronizacao">
             {sincronizacaoPendente
               ? 'Sincronização pendente • salvo localmente'
-              : somenteLeituraData
-                ? 'Consulta em modo somente leitura (RN-014)'
-                : formatarTempoSincronizacao(listaAtiva.ultimaSincronizacaoISO, agora)}
+              : formatarTempoSincronizacao(listaAtiva.ultimaSincronizacaoISO, agora)}
           </Text>
         )}
       </View>
