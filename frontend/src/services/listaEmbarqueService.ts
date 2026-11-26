@@ -63,6 +63,7 @@ export interface ListaEmbarqueRota {
   rotaId: number;
   rotaNome: string;
   dataOperacao: string;
+  dataOperacaoIso?: string;
   horarioSaida?: string | null;
   horarioRetorno?: string | null;
   totalAlunos: number;
@@ -143,6 +144,7 @@ export interface AlunoListaEmbarqueApiDTO {
   motorista_ida?: string | null;
   motorista_volta?: string | null;
   status_presenca?: StatusPresenca;
+  presenca_registrada_em?: string | null;
   data_hora_checkin?: string | null;
 }
 
@@ -166,7 +168,7 @@ export interface ListaEmbarqueApiResponse {
   alunos: AlunoListaEmbarqueApiDTO[];
 }
 
-export const INTERVALO_POLLING_LISTA_MS = 30_000;
+export const INTERVALO_POLLING_LISTA_MS = 5_000;
 const STORAGE_KEY_FREQUENCIA_PENDENTE = '@GOUOCE:frequencia_pendente_hu021';
 const cacheFrequenciaLocal = new Map<
   string,
@@ -200,10 +202,14 @@ async function gravarFilaPendente(itens: RegistroFrequenciaPendente[]): Promise<
   }
 }
 
-function ehEndpointIndisponivelSemContrato(erro: any): boolean {
-  const status = erro?.response?.status;
-  const code = erro?.response?.data?.detail?.code;
-  return (status === 404 || status === 405) && code !== 'ALUNO_NAO_ALOCADO';
+function sincronizarCachePendenteComFila(fila: RegistroFrequenciaPendente[]): void {
+  cacheFrequenciaLocal.clear();
+  for (const item of fila) {
+    cacheFrequenciaLocal.set(item.chave, {
+      status: item.statusPresenca,
+      dataHoraCheckin: item.atualizadoEm,
+    });
+  }
 }
 
 export function calcularTotaisFrequencia(alunos: AlunoEmbarqueItem[]): {
@@ -387,9 +393,10 @@ export function mapearRespostaListaEmbarque(dto: ListaEmbarqueApiResponse): List
     });
 
     const agendamentoId = aluno.agendamento_id || aluno.aluno_id;
-    const cached = cacheFrequenciaLocal.get(chaveFrequencia(dto.data, dto.rota_id, agendamentoId));
-    const statusPresenca: StatusPresenca = aluno.status_presenca ?? cached?.status ?? 'PENDENTE';
-    const dataHoraCheckin = aluno.data_hora_checkin ?? cached?.dataHoraCheckin ?? null;
+    const pendente = cacheFrequenciaLocal.get(chaveFrequencia(dto.data, dto.rota_id, agendamentoId));
+    const statusPresenca: StatusPresenca = pendente?.status ?? aluno.status_presenca ?? 'PENDENTE';
+    const dataHoraCheckin =
+      pendente?.dataHoraCheckin ?? aluno.presenca_registrada_em ?? aluno.data_hora_checkin ?? null;
 
     return {
       id: agendamentoId,
@@ -421,6 +428,7 @@ export function mapearRespostaListaEmbarque(dto: ListaEmbarqueApiResponse): List
     rotaId: dto.rota_id,
     rotaNome: dto.nome_rota,
     dataOperacao: formatarDataIsoParaBR(dto.data),
+    dataOperacaoIso: dto.data,
     horarioSaida: dto.horario_saida ?? null,
     horarioRetorno: dto.horario_retorno ?? null,
     totalAlunos: dto.total_alunos_alocados ?? alunos.length,
@@ -493,12 +501,7 @@ export const listaEmbarqueService = {
       params: query,
     });
     const pendentes = await lerFilaPendente();
-    for (const item of pendentes) {
-      cacheFrequenciaLocal.set(item.chave, {
-        status: item.statusPresenca,
-        dataHoraCheckin: item.atualizadoEm,
-      });
-    }
+    sincronizarCachePendenteComFila(pendentes);
     return mapearRespostaListaEmbarque(response.data);
   },
 
@@ -514,6 +517,11 @@ export const listaEmbarqueService = {
       throw new Error('A chamada só pode ser realizada no dia exato da viagem.');
     }
 
+    const apiPatch = (api as any)?.patch;
+    if (typeof apiPatch !== 'function') {
+      return { sincronizado: true, pendenteOffline: false };
+    }
+
     const chave = chaveFrequencia(dataIso, params.rotaId, params.agendamentoId);
     const anterior = cacheFrequenciaLocal.get(chave);
     const agoraIso = new Date().toISOString();
@@ -521,11 +529,6 @@ export const listaEmbarqueService = {
       status: params.statusPresenca,
       dataHoraCheckin: agoraIso,
     });
-
-    const apiPatch = (api as any)?.patch;
-    if (typeof apiPatch !== 'function') {
-      return { sincronizado: true, pendenteOffline: false };
-    }
 
     try {
       await apiPatch('/alocacao-diaria/lista-embarque/frequencia', {
@@ -537,7 +540,11 @@ export const listaEmbarqueService = {
 
       const filaAtual = await lerFilaPendente();
       if (filaAtual.some((item) => item.chave === chave)) {
-        await gravarFilaPendente(filaAtual.filter((item) => item.chave !== chave));
+        const filaAtualizada = filaAtual.filter((item) => item.chave !== chave);
+        await gravarFilaPendente(filaAtualizada);
+        sincronizarCachePendenteComFila(filaAtualizada);
+      } else {
+        cacheFrequenciaLocal.delete(chave);
       }
       return { sincronizado: true, pendenteOffline: false };
     } catch (erro: any) {
@@ -553,11 +560,8 @@ export const listaEmbarqueService = {
         };
         const filaAtualizada = [...filaAtual.filter((item) => item.chave !== chave), novoRegistro];
         await gravarFilaPendente(filaAtualizada);
+        sincronizarCachePendenteComFila(filaAtualizada);
         return { sincronizado: false, pendenteOffline: true };
-      }
-
-      if (ehEndpointIndisponivelSemContrato(erro)) {
-        return { sincronizado: true, pendenteOffline: false };
       }
 
       if (anterior) {
@@ -609,16 +613,15 @@ export const listaEmbarqueService = {
         });
         sincronizados += 1;
       } catch (erro: any) {
-        if (!erro?.response) {
+        if (!erro?.response || (typeof erro?.response?.status === 'number' && erro.response.status >= 500)) {
           pendentesRestantes.push(item);
-        } else if (ehEndpointIndisponivelSemContrato(erro)) {
-          sincronizados += 1;
         }
         // Rejeições HTTP permanentes (4xx/business) removem o item obsoleto da fila offline.
       }
     }
 
     await gravarFilaPendente(pendentesRestantes);
+    sincronizarCachePendenteComFila(pendentesRestantes);
     return {
       sincronizados,
       restantes: pendentesRestantes.length,

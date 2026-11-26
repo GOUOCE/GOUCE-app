@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { X } from 'lucide-react-native';
 import { authService, User } from '../services/authService';
 import { limparCacheAgendamentos } from '../services/agendamentoService';
+import { listaEmbarqueService } from '../services/listaEmbarqueService';
 import { calcularStatusAluno } from '../utils/statusAluno';
 
 export type UserRole = 'ALUNO' | 'MOTORISTA' | 'ADMINISTRADOR';
@@ -131,6 +132,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function setUserAndToken(userData: User, userToken: string, refreshToken?: string) {
     await limparCacheAgendamentos();
+    if (typeof listaEmbarqueService?.limparCacheFrequencia === 'function') {
+      await listaEmbarqueService.limparCacheFrequencia();
+    }
     await AsyncStorage.setItem('@GOUOCE:token', userToken);
     if (refreshToken) {
       await AsyncStorage.setItem('@GOUOCE:refreshToken', refreshToken);
@@ -212,6 +216,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await AsyncStorage.removeItem('@GOUOCE:refreshToken');
     await AsyncStorage.removeItem('@GOUOCE:user');
     await limparCacheAgendamentos();
+    if (typeof listaEmbarqueService?.limparCacheFrequencia === 'function') {
+      await listaEmbarqueService.limparCacheFrequencia();
+    }
     userRef.current = null;
     setPendingCredentials(null);
     setUser(null);
