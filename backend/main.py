@@ -16,6 +16,7 @@ from src.modulos.rotas.interface.http.rota_complementar_routes import router as 
 from src.modulos.agendamentos.interface.http.agendamento_routes import router as agendamento_router
 from src.modulos.alocacao_diaria.interface.http.alocacao_routes import router as alocacao_router
 from src.modulos.alocacao_diaria.interface.http.rodizio_routes import router as rodizio_router
+from src.modulos.relatorios.interface.http.relatorio_routes import router as relatorio_router
 from src.modulos.agendamentos.interface.http.agendamento_routes import router as agendamento_router, router_legacy
 
 app = FastAPI(
@@ -49,6 +50,7 @@ app.include_router(rota_complementar_router)
 app.include_router(agendamento_router)
 app.include_router(alocacao_router)
 app.include_router(rodizio_router)
+app.include_router(relatorio_router)
 app.include_router(router_legacy)
 
 

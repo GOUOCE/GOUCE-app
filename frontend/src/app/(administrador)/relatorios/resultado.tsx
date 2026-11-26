@@ -1,466 +1,433 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
-import { Text, Button, Surface, RadioButton } from 'react-native-paper';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, Printer } from 'lucide-react-native';
+import { useCallback, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { AppPopup, type PopupType } from '@/components/ui/AppPopup';
+import {
+  baixarBlob,
+  relatorioService,
+  type RelatorioResultado,
+} from '@/services/relatorioService';
+import { lightColors } from '@/theme/colors';
 
-import { relatorioService, RelatorioResultado } from '@/services/relatorioService';
-import { AppPopup, PopupType } from '@/components/ui/AppPopup';
+const colors = {
+  primary: lightColors.primary,
+  primaryContainer: lightColors.primaryContainer,
+  surface: lightColors.surface,
+  background: lightColors.background,
+  text: lightColors.onSurface,
+  textMuted: lightColors.onSurfaceVariant,
+  border: lightColors.outlineVariant,
+  danger: lightColors.error,
+};
 
-export default function ResultadoRelatorioScreen() {
+const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 };
+const radii = { md: 12 };
+
+function textoParam(valor: string | string[] | undefined): string | undefined {
+  if (Array.isArray(valor)) return valor[0];
+  return valor;
+}
+
+export default function RelatorioResultadoScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{
-    tipo?: string;
-    dataInicial?: string;
-    dataFinal?: string;
-    faculdadeId?: string;
-    bairroId?: string;
-  }>();
-
+  const params = useLocalSearchParams();
   const [relatorio, setRelatorio] = useState<RelatorioResultado | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
+  const [exportando, setExportando] = useState<'pdf' | 'csv' | null>(null);
+  const [popup, setPopup] = useState<{
+    tipo: PopupType;
+    titulo: string;
+    mensagem: string;
+  } | null>(null);
+  const [tentativa, setTentativa] = useState(0);
 
-  // Modal de Exportação
-  const [modalExportarVisible, setModalExportarVisible] = useState(false);
-  const [formatoExportacao, setFormatoExportacao] = useState<'pdf' | 'csv'>('pdf');
+  const tipo = textoParam(params.tipo) === 'motoristas' ? 'motoristas' : 'agendamentos';
+  const dataInicial = textoParam(params.dataInicial);
+  const dataFinal = textoParam(params.dataFinal);
+  const faculdadeId = textoParam(params.faculdadeId);
+  const bairroId = textoParam(params.bairroId);
 
-  // AppPopup de Feedback
-  const [popupFeedback, setPopupFeedback] = useState<{
-    visible: boolean;
-    type?: PopupType;
-    title: string;
-    message: string;
-  }>({
-    visible: false,
-    title: '',
-    message: '',
-  });
+  useFocusEffect(
+    useCallback(() => {
+      void tentativa;
+      let ativo = true;
 
-  useEffect(() => {
-    let ativo = true;
-    async function carregar() {
-      setLoading(true);
-      try {
-        const res = await relatorioService.gerarRelatorio({
-          tipo: params.tipo || 'geral',
-          dataInicial: params.dataInicial || '2026-09-01',
-          dataFinal: params.dataFinal || '2026-10-20',
-          faculdadeId: params.faculdadeId,
-          bairroId: params.bairroId,
-        });
-        if (ativo) {
-          setRelatorio(res);
+      async function carregar() {
+        if (!dataInicial || !dataFinal) {
+          setErro('Período não informado. Volte e informe as datas do relatório.');
+          setCarregando(false);
+          return;
         }
-      } catch {
-        if (ativo) {
-          setRelatorio(null);
-        }
-      } finally {
-        if (ativo) {
-          setLoading(false);
+
+        setCarregando(true);
+        setErro(null);
+        try {
+          const resultado = await relatorioService.gerarRelatorio({
+            tipo,
+            dataInicial,
+            dataFinal,
+            faculdadeId,
+            bairroId,
+          });
+          if (!ativo) return;
+          setRelatorio(resultado);
+        } catch (error: any) {
+          if (!ativo) return;
+          const detail = error?.response?.data?.detail;
+          const mensagem = Array.isArray(detail)
+            ? detail.map((item: any) => item?.msg ?? String(item)).join(' ')
+            : detail ?? 'Não foi possível gerar o relatório.';
+          setErro(String(mensagem));
+        } finally {
+          if (ativo) setCarregando(false);
         }
       }
-    }
-    carregar();
-    return () => {
-      ativo = false;
-    };
-  }, [params.tipo, params.dataInicial, params.dataFinal, params.faculdadeId, params.bairroId]);
 
-  const semResultados = !relatorio || (relatorio.detalhamento.length === 0 && relatorio.consolidado.totalAgendamentos === 0);
+      carregar();
+      return () => {
+        ativo = false;
+      };
+    }, [tipo, dataInicial, dataFinal, faculdadeId, bairroId, tentativa]),
+  );
 
-  const handleConfirmarExportacao = async () => {
-    setModalExportarVisible(false);
+  async function exportar(formato: 'pdf' | 'csv') {
     if (!relatorio) return;
-
+    setExportando(formato);
     try {
-      const res = await relatorioService.exportarRelatorio(formatoExportacao, relatorio);
-      setPopupFeedback({
-        visible: true,
-        type: 'success',
-        title: 'Exportação Concluída',
-        message: res.mensagem || `Relatório exportado em ${formatoExportacao.toUpperCase()} com sucesso!`,
+      const resultado = await relatorioService.exportarRelatorio(formato, relatorio);
+      baixarBlob(resultado.blob, resultado.nomeArquivo);
+      setPopup({
+        tipo: 'success',
+        titulo: 'Exportação concluída',
+        mensagem: `${resultado.mensagem} Arquivo: ${resultado.nomeArquivo}.`,
       });
-    } catch {
-      setPopupFeedback({
-        visible: true,
-        type: 'error',
-        title: 'Erro na Exportação',
-        message: 'Não foi possível exportar o relatório. Tente novamente.',
+    } catch (error: any) {
+      setPopup({
+        tipo: 'error',
+        titulo: 'Falha na exportação',
+        mensagem: String(
+          error?.response?.data?.detail ?? 'Não foi possível exportar o relatório.',
+        ),
       });
+    } finally {
+      setExportando(null);
     }
-  };
+  }
 
   return (
-    <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
-      {/* Header */}
+    <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <ChevronLeft size={32} color="#333" />
+        <TouchableOpacity testID="voltar-filtros" accessibilityLabel="Voltar" onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={28} color={colors.text} />
         </TouchableOpacity>
-        <Text variant="headlineSmall" style={styles.headerTitle}>Resultados</Text>
-      </View>
-
-      {/* Pop-up de Exportação */}
-      <Modal visible={modalExportarVisible} transparent animationType="fade" onRequestClose={() => setModalExportarVisible(false)}>
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalExportarVisible(false)}>
-          <Surface style={styles.modalContent} elevation={4}>
-            <Text variant="titleLarge" style={styles.modalExportTitle}>Exportar Relatório</Text>
-            <Text variant="bodyMedium" style={styles.modalExportSub}>
-              Selecione o formato de exportação do relatório
-            </Text>
-
-            <RadioButton.Group
-              onValueChange={(value) => setFormatoExportacao(value as 'pdf' | 'csv')}
-              value={formatoExportacao}
-            >
-              <TouchableOpacity style={styles.radioRow} onPress={() => setFormatoExportacao('pdf')}>
-                <RadioButton value="pdf" color="#3E5F90" />
-                <Text style={styles.radioLabel}>PDF</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.radioRow} onPress={() => setFormatoExportacao('csv')}>
-                <RadioButton value="csv" color="#3E5F90" />
-                <Text style={styles.radioLabel}>Planilha (.csv)</Text>
-              </TouchableOpacity>
-            </RadioButton.Group>
-
-            <View style={styles.modalActionsRow}>
-              <TouchableOpacity onPress={() => setModalExportarVisible(false)}>
-                <Text style={styles.btnCancelText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={handleConfirmarExportacao}>
-                <Text style={styles.btnConfirmText}>Exportar</Text>
-              </TouchableOpacity>
-            </View>
-          </Surface>
-        </TouchableOpacity>
-      </Modal>
-
-      {/* Pop-up de Feedback */}
-      <AppPopup
-        visible={popupFeedback.visible}
-        type={popupFeedback.type}
-        title={popupFeedback.title}
-        message={popupFeedback.message}
-        confirmText="Entendido"
-        onConfirm={() => setPopupFeedback(prev => ({ ...prev, visible: false }))}
-        onDismiss={() => setPopupFeedback(prev => ({ ...prev, visible: false }))}
-      />
-
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Chips dos Filtros Selecionados */}
-        <View style={styles.chipsRow}>
-          <Surface style={styles.chip} elevation={0}>
-            <Text style={styles.chipText}>{relatorio?.filtrosResumo.tipoLabel || 'Geral'}</Text>
-          </Surface>
-          <Surface style={styles.chip} elevation={0}>
-            <Text style={styles.chipText}>{relatorio?.filtrosResumo.periodoLabel || '01/09/2026 a 20/10/2026'}</Text>
-          </Surface>
-          <Surface style={styles.chip} elevation={0}>
-            <Text style={styles.chipText}>{relatorio?.filtrosResumo.faculdadeLabel || 'Todas as faculdades'}</Text>
-          </Surface>
+        <View style={styles.headerTexto}>
+          <Text style={styles.headerTitulo}>Resultado do relatório</Text>
+          <Text style={styles.headerSubtitulo}>
+            Consolidação oficial de agendamentos e presenças
+          </Text>
         </View>
-
-        {loading ? (
-          <View style={styles.loadingBox}>
-            <ActivityIndicator size="large" color="#3E5F90" />
+      </View>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {carregando ? (
+          <View style={styles.carregando}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.carregandoTexto}>Gerando relatório...</Text>
           </View>
-        ) : semResultados ? (
-          /* FA-001 (AC-04): Filtro sem Resultados */
-          <View style={styles.emptyContainer}>
-            <Text variant="bodyLarge" style={styles.emptyText}>
-              Nenhum dado encontrado para os filtros informados.
-            </Text>
+        ) : null}
+
+        {erro ? (
+          <View style={styles.card}>
+            <Ionicons name="alert-circle-outline" size={24} color={colors.danger} />
+            <Text style={styles.erroTitulo}>Não foi possível gerar o relatório</Text>
+            <Text style={styles.erroTexto}>{erro}</Text>
+            <Pressable testID="tentar-novamente" style={styles.botaoSecundario} onPress={() => setTentativa((valor) => valor + 1)}>
+              <Text style={styles.botaoSecundarioTexto}>Tentar novamente</Text>
+            </Pressable>
           </View>
-        ) : (
-          <View style={styles.resultsContent}>
-            {/* Seção Resultado Geral */}
-            <Text variant="titleMedium" style={styles.sectionTitle}>Resultado geral</Text>
-            <Surface style={styles.consolidadoCard} elevation={0}>
-              <View style={styles.gridRow}>
-                <View style={styles.gridCol}>
-                  <Text style={styles.cardLabel}>Agendamentos</Text>
-                  <Text style={styles.cardValue}>{relatorio?.consolidado.totalAgendamentos}</Text>
-                </View>
+        ) : null}
 
-                <View style={styles.gridCol}>
-                  <Text style={styles.cardLabel}>Embarques</Text>
-                  <Text style={styles.cardValue}>
-                    {relatorio?.consolidado.totalEmbarques} ({relatorio?.consolidado.taxaComparecimento})
-                  </Text>
-                </View>
+        {relatorio && !carregando && !erro ? (
+          <>
+            <View style={styles.card}>
+              <Text style={styles.cardTitulo}>{relatorio.filtrosResumo.tipoLabel}</Text>
+              <Text style={styles.cardSubtitulo}>{relatorio.filtrosResumo.periodoLabel}</Text>
+              <View style={styles.chips}>
+                <Text style={styles.chip}>{relatorio.filtrosResumo.faculdadeLabel}</Text>
+                <Text style={styles.chip}>{relatorio.filtrosResumo.bairroLabel}</Text>
               </View>
-
-              <View style={styles.gridRow}>
-                <View style={styles.gridCol}>
-                  <Text style={styles.cardLabel}>Faltas registradas</Text>
-                  <Text style={[styles.cardValue, { color: '#B00020' }]}>
-                    {relatorio?.consolidado.totalFaltas} ({relatorio?.consolidado.porcentagemFaltas})
-                  </Text>
-                </View>
-
-                <View style={styles.gridCol}>
-                  <Text style={styles.cardLabel}>Rota com maior demanda</Text>
-                  <Text style={styles.cardValue}>{relatorio?.consolidado.rotaMaiorDemanda}</Text>
-                </View>
-              </View>
-            </Surface>
-
-            {/* Seção Dias Trabalhados por Motorista (AC-07 / AC-08) */}
-            <Text variant="titleMedium" style={styles.sectionTitle}>Dias trabalhados por motorista</Text>
-            <Surface style={styles.motoristasCard} elevation={0}>
-              {relatorio?.motoristas.map((mot, idx) => (
-                <View key={idx} style={[styles.motoristaRow, idx > 0 && styles.rowBorder]}>
-                  <Text style={styles.motNome}>{mot.nome}</Text>
-                  <Text style={styles.motSub}>
-                    {mot.diasTrabalhados} dias • {mot.rotasAlocadas}
-                  </Text>
-                </View>
-              ))}
-            </Surface>
-
-            {/* Tabela de Detalhamento por Dia */}
-            <Text variant="titleMedium" style={styles.sectionTitle}>Detalhamento por Dia, Rota e Localidade</Text>
-            <Surface style={styles.tableCard} elevation={0}>
-              <View style={styles.tableHeaderRow}>
-                <Text style={[styles.th, { flex: 1.2 }]}>Data</Text>
-                <Text style={[styles.th, { flex: 2 }]}>Rota / Localidade</Text>
-                <Text style={[styles.th, { flex: 1 }]}>Agend.</Text>
-                <Text style={[styles.th, { flex: 1 }]}>Emb.</Text>
-                <Text style={[styles.th, { flex: 1 }]}>Taxa</Text>
-              </View>
-
-              {relatorio?.detalhamento.map((item, idx) => (
-                <View key={idx} style={styles.tableBodyRow}>
-                  <Text style={[styles.td, { flex: 1.2 }]}>{item.data}</Text>
-                  <Text style={[styles.tdBold, { flex: 2 }]} numberOfLines={1}>{item.linhaNome}</Text>
-                  <Text style={[styles.td, { flex: 1 }]}>{item.agendados}</Text>
-                  <Text style={[styles.td, { flex: 1 }]}>{item.embarquesEfetivos}</Text>
-                  <Text style={[styles.tdBold, { flex: 1, color: '#00639A' }]}>{item.taxaPresenca}</Text>
-                </View>
-              ))}
-            </Surface>
-
-            {/* Botão Exportar */}
-            <View style={styles.exportContainer}>
-              <Button
-                mode="outlined"
-                onPress={() => setModalExportarVisible(true)}
-                style={styles.btnExportar}
-                contentStyle={styles.btnContent}
-                textColor="#00639A"
-                icon={() => <Printer size={20} color="#00639A" />}
-              >
-                Exportar
-              </Button>
             </View>
-          </View>
-        )}
+
+            {relatorio.mensagem ? (
+              <View style={styles.cardVazio}>
+                <Ionicons name="document-outline" size={32} color={colors.textMuted} />
+                <Text style={styles.mensagemVazia}>{relatorio.mensagem}</Text>
+              </View>
+            ) : (
+              <>
+                <View style={styles.grid}>
+                  <View style={styles.metrica}>
+                    <Text style={styles.metricaValor}>
+                      {relatorio.consolidado.totalAgendamentos}
+                    </Text>
+                    <Text style={styles.metricaLabel}>Agendamentos</Text>
+                  </View>
+                  <View style={styles.metrica}>
+                    <Text style={styles.metricaValor}>
+                      {relatorio.consolidado.totalEmbarques}
+                    </Text>
+                    <Text style={styles.metricaLabel}>Embarques efetivos</Text>
+                  </View>
+                  <View style={styles.metrica}>
+                    <Text style={styles.metricaValor}>
+                      {relatorio.consolidado.taxaComparecimento}
+                    </Text>
+                    <Text style={styles.metricaLabel}>Comparecimento</Text>
+                  </View>
+                  <View style={styles.metrica}>
+                    <Text style={styles.metricaValor}>
+                      {relatorio.consolidado.totalFaltas}
+                    </Text>
+                    <Text style={styles.metricaLabel}>Faltas</Text>
+                  </View>
+                  <View style={styles.metrica}>
+                    <Text style={styles.metricaValor}>
+                      {relatorio.consolidado.porcentagemFaltas}
+                    </Text>
+                    <Text style={styles.metricaLabel}>% de faltas</Text>
+                  </View>
+                  <View style={styles.metrica}>
+                    <Text style={styles.metricaValor}>
+                      {relatorio.consolidado.rotaMaiorDemanda}
+                    </Text>
+                    <Text style={styles.metricaLabel}>Maior demanda</Text>
+                  </View>
+                </View>
+
+                {relatorio.detalhamento.length > 0 ? (
+                  <View style={styles.card}>
+                    <Text style={styles.cardTitulo}>Agendados × embarques por dia/rota</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                      <View style={styles.tabela}>
+                        <View style={[styles.linha, styles.linhaCabecalho]}>
+                          {[
+                            'Data',
+                            'Rota',
+                            'Turno',
+                            'Faculdade',
+                            'Localidade',
+                            'Agend.',
+                            'Embarq.',
+                            'Faltas',
+                            '% Pres.',
+                            '% Faltas',
+                          ].map((cabecalho) => (
+                            <Text key={cabecalho} style={styles.celulaCabecalho}>
+                              {cabecalho}
+                            </Text>
+                          ))}
+                        </View>
+                        {relatorio.detalhamento.map((item, indice) => (
+                          <View key={`${item.data}-${item.linhaNome}-${indice}`} style={styles.linha}>
+                            <Text style={styles.celula}>{item.data}</Text>
+                            <Text style={[styles.celula, styles.celulaLarga]}>{item.linhaNome}</Text>
+                            <Text style={styles.celula}>{item.turno || '-'}</Text>
+                            <Text style={[styles.celula, styles.celulaLarga]}>{item.faculdadeDestino}</Text>
+                            <Text style={styles.celula}>{item.localidade}</Text>
+                            <Text style={styles.celula}>{item.agendados}</Text>
+                            <Text style={styles.celula}>{item.embarquesEfetivos}</Text>
+                            <Text style={styles.celula}>{item.faltas}</Text>
+                            <Text style={styles.celula}>{item.taxaPresenca}</Text>
+                            <Text style={styles.celula}>{item.porcentagemFaltas}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    </ScrollView>
+                  </View>
+                ) : null}
+
+                {relatorio.motoristas.length > 0 ? (
+                  <View style={styles.card}>
+                    <Text style={styles.cardTitulo}>Escalas dos motoristas</Text>
+                    {relatorio.motoristas.map((motorista, indice) => (
+                      <View key={`${motorista.nome}-${indice}`} style={styles.motorista}>
+                        <Text style={styles.motoristaNome}>
+                          {motorista.nome}
+                          {motorista.ativo ? '' : ' (Inativo)'}
+                        </Text>
+                        <Text style={styles.motoristaLinha}>
+                          Dias trabalhados: {motorista.diasTrabalhados}
+                        </Text>
+                        <Text style={styles.motoristaLinha}>
+                          Rotas: {motorista.rotasAlocadas}
+                        </Text>
+                        <Text style={styles.motoristaLinha}>
+                          Escalas: {motorista.escalaResumo}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+
+                <View style={styles.exportacoes}>
+                  <Text style={styles.exportacoesTitulo}>Exportar relatório</Text>
+                  <Text style={styles.exportacoesTexto}>
+                    O arquivo inclui os mesmos filtros, totais e detalhamentos exibidos acima.
+                  </Text>
+                  <View style={styles.exportacoesBotoes}>
+                    <Pressable
+                      testID="exportar-pdf"
+                      accessibilityRole="button"
+                      accessibilityLabel="Exportar PDF"
+                      onPress={() => exportar('pdf')}
+                      disabled={exportando !== null}
+                      style={styles.botaoPrimario}
+                    >
+                      {exportando === 'pdf' ? (
+                        <ActivityIndicator size="small" color={colors.surface} />
+                      ) : (
+                        <Ionicons name="document-text-outline" size={18} color={colors.surface} />
+                      )}
+                      <Text style={styles.botaoPrimarioTexto}>PDF</Text>
+                    </Pressable>
+                    <Pressable
+                      testID="exportar-csv"
+                      accessibilityRole="button"
+                      accessibilityLabel="Exportar planilha CSV"
+                      onPress={() => exportar('csv')}
+                      disabled={exportando !== null}
+                      style={styles.botaoSecundario}
+                    >
+                      {exportando === 'csv' ? (
+                        <ActivityIndicator size="small" color={colors.primary} />
+                      ) : (
+                        <Ionicons name="grid-outline" size={18} color={colors.primary} />
+                      )}
+                      <Text style={styles.botaoSecundarioTexto}>Planilha CSV</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              </>
+            )}
+          </>
+        ) : null}
       </ScrollView>
+
+      {popup ? (
+        <AppPopup
+          visible
+          type={popup.tipo}
+          title={popup.titulo}
+          message={popup.mensagem}
+          onDismiss={() => setPopup(null)}
+        />
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 60,
-  },
+  container: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 16,
-    gap: 12,
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm,
   },
-  headerTitle: {
-    fontWeight: 'bold',
-    color: '#191C20',
-    fontSize: 22,
+  headerTexto: { flex: 1 },
+  headerTitulo: { fontSize: 20, fontWeight: '700', color: colors.text },
+  headerSubtitulo: { fontSize: 13, color: colors.textMuted },
+  content: { padding: spacing.lg, paddingBottom: spacing.xl, gap: spacing.md },
+  carregando: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xl },
+  carregandoTexto: { color: colors.textMuted, fontSize: 14 },
+  card: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    gap: spacing.xs,
   },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-  },
-  chipsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 24,
-  },
+  cardTitulo: { fontSize: 16, fontWeight: '700', color: colors.text },
+  cardSubtitulo: { fontSize: 14, color: colors.textMuted },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: spacing.xs },
   chip: {
-    backgroundColor: '#DCE3F9',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  chipText: {
-    color: '#191C20',
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  loadingBox: {
-    paddingVertical: 60,
-    alignItems: 'center',
-  },
-  emptyContainer: {
-    paddingVertical: 80,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyText: {
-    textAlign: 'center',
-    color: '#43474E',
-    fontWeight: '500',
-    fontSize: 16,
-  },
-  resultsContent: {
-    gap: 20,
-  },
-  sectionTitle: {
-    fontWeight: 'bold',
-    color: '#191C20',
-    fontSize: 18,
-    marginTop: 8,
-  },
-  consolidadoCard: {
-    backgroundColor: '#F1F3F9',
-    borderRadius: 16,
-    padding: 20,
-    gap: 16,
-  },
-  gridRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  gridCol: {
-    width: '48%',
-  },
-  cardLabel: {
+    backgroundColor: colors.primaryContainer,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
     fontSize: 12,
-    color: '#74777F',
-    marginBottom: 2,
+    color: colors.text,
   },
-  cardValue: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#191C20',
-  },
-  motoristasCard: {
-    backgroundColor: '#F8F9FF',
-    borderRadius: 12,
-    padding: 16,
+  cardVazio: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xl },
+  mensagemVazia: { fontSize: 15, fontWeight: '600', color: colors.textMuted, textAlign: 'center' },
+  erroTitulo: { fontSize: 16, fontWeight: '700', color: colors.danger, marginTop: spacing.xs },
+  erroTexto: { fontSize: 14, color: colors.textMuted, lineHeight: 20 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  metrica: {
+    width: '30%',
+    minWidth: 110,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#E0E2EC',
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    gap: spacing.xs,
   },
-  motoristaRow: {
-    paddingVertical: 10,
-  },
-  rowBorder: {
-    borderTopWidth: 1,
-    borderTopColor: '#E0E2EC',
-  },
-  motNome: {
-    fontWeight: 'bold',
-    color: '#191C20',
-    fontSize: 15,
-    marginBottom: 2,
-  },
-  motSub: {
-    color: '#74777F',
-    fontSize: 13,
-  },
-  tableCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
+  metricaValor: { fontSize: 18, fontWeight: '700', color: colors.primary },
+  metricaLabel: { fontSize: 12, color: colors.textMuted },
+  tabela: { borderWidth: 1, borderColor: colors.border, borderRadius: radii.md },
+  linha: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: colors.border },
+  linhaCabecalho: { backgroundColor: colors.primaryContainer },
+  celula: { minWidth: 80, padding: spacing.sm, fontSize: 12, color: colors.text },
+  celulaLarga: { minWidth: 160 },
+  celulaCabecalho: { minWidth: 80, padding: spacing.sm, fontSize: 12, fontWeight: '700', color: colors.text },
+  motorista: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing.sm, gap: 2 },
+  motoristaNome: { fontSize: 15, fontWeight: '700', color: colors.text },
+  motoristaLinha: { fontSize: 13, color: colors.textMuted },
+  exportacoes: {
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#E0E2EC',
-    overflow: 'hidden',
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    gap: spacing.xs,
   },
-  tableHeaderRow: {
+  exportacoesTitulo: { fontSize: 16, fontWeight: '700', color: colors.text },
+  exportacoesTexto: { fontSize: 13, color: colors.textMuted, lineHeight: 19 },
+  exportacoesBotoes: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
+  botaoPrimario: {
     flexDirection: 'row',
-    backgroundColor: '#E0E2EC',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-  },
-  th: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#191C20',
-  },
-  tableBodyRow: {
-    flexDirection: 'row',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
     alignItems: 'center',
-  },
-  td: {
-    fontSize: 13,
-    color: '#43474E',
-  },
-  tdBold: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: '#191C20',
-  },
-  exportContainer: {
-    marginTop: 16,
-  },
-  btnExportar: {
-    borderRadius: 24,
-    borderColor: '#00639A',
-  },
-  btnContent: {
-    height: 52,
-    flexDirection: 'row',
-    gap: 8,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
-    paddingHorizontal: 32,
+    gap: spacing.xs,
+    backgroundColor: colors.primary,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
-  modalContent: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 24,
-  },
-  modalExportTitle: {
-    fontWeight: 'bold',
-    color: '#191C20',
-    marginBottom: 4,
-  },
-  modalExportSub: {
-    color: '#74777F',
-    marginBottom: 16,
-  },
-  radioRow: {
+  botaoPrimarioTexto: { color: colors.surface, fontWeight: '700', fontSize: 14 },
+  botaoSecundario: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    justifyContent: 'center',
+    gap: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
-  radioLabel: {
-    fontSize: 16,
-    color: '#191C20',
-  },
-  modalActionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 24,
-    marginTop: 24,
-  },
-  btnCancelText: {
-    color: '#00639A',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  btnConfirmText: {
-    color: '#00639A',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
+  botaoSecundarioTexto: { color: colors.primary, fontWeight: '700', fontSize: 14 },
 });

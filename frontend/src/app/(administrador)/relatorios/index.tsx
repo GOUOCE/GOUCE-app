@@ -1,94 +1,137 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity, Modal } from 'react-native';
-import { Text, Button, Surface, TextInput } from 'react-native-paper';
-import { useRouter } from 'expo-router';
-import { ChevronLeft, ChevronDown, Calendar, Filter } from 'lucide-react-native';
+import { useCallback, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { AppPopup } from '@/components/ui/AppPopup';
+import { bairroService } from '@/services/bairroService';
+import { faculdadeService } from '@/services/faculdadeService';
+import type { OpcaoSelect } from '@/services/relatorioService';
+import { lightColors } from '@/theme/colors';
 
-import { OpcaoSelect } from '@/services/relatorioService';
+const colors = {
+  primary: lightColors.primary,
+  primaryContainer: lightColors.primaryContainer,
+  surface: lightColors.surface,
+  background: lightColors.background,
+  text: lightColors.onSurface,
+  textMuted: lightColors.onSurfaceVariant,
+  border: lightColors.outlineVariant,
+  danger: lightColors.error,
+};
 
-const TIPOS_RELATORIO = [
-  { label: 'Geral (Consolidado + Motoristas + Trajetos)', value: 'geral' },
-  { label: 'Agendamentos e embarques por rota', value: 'agendamentos' },
-  { label: 'Alocação e dias trabalhados por motorista', value: 'motoristas' },
+const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 };
+const radii = { md: 12 };
+
+const TIPOS_RELATORIO: OpcaoSelect[] = [
+  { label: 'Relatório de Agendamentos', value: 'agendamentos' },
+  { label: 'Relatório de Motoristas', value: 'motoristas' },
 ];
 
-const FACULDADES_OPCOES = [
-  { label: 'Todas as faculdades', value: 'todas' },
-  { label: 'UFC - Campus Quixadá', value: '1' },
-  { label: 'IFCE - Campus Quixadá', value: '2' },
-  { label: 'UECE - FECLEISC Quixadá', value: '3' },
-];
+type CampoErro = 'dataInicial' | 'dataFinal' | 'geral';
 
-const BAIRROS_OPCOES = [
-  { label: 'Todos os bairros', value: 'todos' },
-  { label: 'Centro', value: '1' },
-  { label: 'Campo Novo', value: '2' },
-  { label: 'Alto da Brasília', value: '3' },
-];
-
-export default function FiltrosRelatorioScreen() {
+export default function RelatoriosIndexScreen() {
   const router = useRouter();
-
-  const [tipo, setTipo] = useState('geral');
-  const [dataInicial, setDataInicial] = useState('01/09/2026');
-  const [dataFinal, setDataFinal] = useState('20/10/2026');
+  const [tipo, setTipo] = useState('agendamentos');
+  const [dataInicial, setDataInicial] = useState('');
+  const [dataFinal, setDataFinal] = useState('');
   const [faculdadeId, setFaculdadeId] = useState('todas');
   const [bairroId, setBairroId] = useState('todos');
+  const [faculdades, setFaculdades] = useState<OpcaoSelect[]>([]);
+  const [bairros, setBairros] = useState<OpcaoSelect[]>([]);
+  const [carregandoOpcoes, setCarregandoOpcoes] = useState(true);
+  const [erroOpcoes, setErroOpcoes] = useState<string | null>(null);
+  const [erros, setErros] = useState<Partial<Record<CampoErro, string>>>({});
+  const [popup, setPopup] = useState<{ titulo: string; mensagem: string } | null>(null);
+  const [tentativa, setTentativa] = useState(0);
 
-  const [erroData, setErroData] = useState<string | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      void tentativa;
+      let ativo = true;
 
-  // Modal Dropdown
-  const [modalPicker, setModalPicker] = useState<{
-    visible: boolean;
-    title: string;
-    options: OpcaoSelect[];
-    onSelect: (val: string) => void;
-  }>({
-    visible: false,
-    title: '',
-    options: [],
-    onSelect: () => {},
-  });
+      async function carregarOpcoes() {
+        setCarregandoOpcoes(true);
+        setErroOpcoes(null);
+        try {
+          const [faculdadesApi, bairrosApi] = await Promise.all([
+            faculdadeService.listarFaculdades(),
+            bairroService.listarBairros(),
+          ]);
+          if (!ativo) return;
 
-  const abrirPicker = (title: string, options: OpcaoSelect[], onSelect: (val: string) => void) => {
-    setModalPicker({ visible: true, title, options, onSelect });
-  };
+          setFaculdades(
+            faculdadesApi
+              .filter((faculdade) => faculdade.ativo)
+              .map((faculdade) => ({
+                label: `${faculdade.sigla ? `${faculdade.sigla} - ` : ''}${faculdade.nome} (${faculdade.campus})`,
+                value: String(faculdade.id),
+              })),
+          );
+          setBairros(
+            bairrosApi
+              .filter((bairro) => bairro.ativo)
+              .map((bairro) => ({ label: bairro.nome, value: String(bairro.id) })),
+          );
+        } catch {
+          if (!ativo) return;
+          setErroOpcoes(
+            'Não foi possível carregar faculdades e bairros. Tente novamente.',
+          );
+        } finally {
+          if (ativo) setCarregandoOpcoes(false);
+        }
+      }
 
-  const getLabelPorValor = (options: OpcaoSelect[], val: string) => {
-    const achado = options.find(o => o.value === val);
-    return achado ? achado.label : 'Selecionar';
-  };
+      carregarOpcoes();
+      return () => {
+        ativo = false;
+      };
+    }, [tentativa]),
+  );
 
-  const converterParaDate = (strData: string) => {
-    // Suporta DD/MM/YYYY ou YYYY-MM-DD
-    if (strData.includes('/')) {
-      const [dia, mes, ano] = strData.split('/').map(Number);
-      return new Date(ano, mes - 1, dia);
+  function validar(): boolean {
+    const proximos: Partial<Record<CampoErro, string>> = {};
+    const formatoData = /^\d{4}-\d{2}-\d{2}$/;
+    const inicioValido = formatoData.test(dataInicial.trim());
+    const fimValido = formatoData.test(dataFinal.trim());
+
+    if (!dataInicial.trim()) {
+      proximos.dataInicial = 'Informe a data inicial.';
+    } else if (!inicioValido) {
+      proximos.dataInicial = 'Use o formato AAAA-MM-DD.';
     }
-    if (strData.includes('-')) {
-      const [ano, mes, dia] = strData.split('-').map(Number);
-      return new Date(ano, mes - 1, dia);
+
+    if (!dataFinal.trim()) {
+      proximos.dataFinal = 'Informe a data final.';
+    } else if (!fimValido) {
+      proximos.dataFinal = 'Use o formato AAAA-MM-DD.';
     }
-    return new Date();
-  };
 
-  const converterParaIso = (strData: string) => {
-    if (strData.includes('/')) {
-      const [dia, mes, ano] = strData.split('/');
-      return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+    if (inicioValido && fimValido && dataFinal.trim() < dataInicial.trim()) {
+      proximos.dataInicial = 'Confira o período informado.';
+      proximos.dataFinal = 'A data final não pode ser anterior à data inicial.';
     }
-    return strData;
-  };
 
-  const handleGerarRelatorio = () => {
-    setErroData(null);
+    setErros(proximos);
+    return Object.keys(proximos).length === 0;
+  }
 
-    const dInicio = converterParaDate(dataInicial);
-    const dFim = converterParaDate(dataFinal);
-
-    // Critério 5 / FA-002: Inserir uma data final anterior à data inicial bloqueia o processamento
-    if (dFim.getTime() < dInicio.getTime()) {
-      setErroData('Data final não pode ser anterior à data inicial');
+  function gerarRelatorio() {
+    if (!validar()) {
+      setPopup({
+        titulo: 'Período inválido',
+        mensagem:
+          'Confira as datas informadas. A data final não pode ser anterior à data inicial.',
+      });
       return;
     }
 
@@ -96,253 +139,313 @@ export default function FiltrosRelatorioScreen() {
       pathname: '/(administrador)/relatorios/resultado',
       params: {
         tipo,
-        dataInicial: converterParaIso(dataInicial),
-        dataFinal: converterParaIso(dataFinal),
-        faculdadeId,
-        bairroId,
+        dataInicial: dataInicial.trim(),
+        dataFinal: dataFinal.trim(),
+        faculdadeId: faculdadeId === 'todas' ? undefined : faculdadeId,
+        bairroId: bairroId === 'todos' ? undefined : bairroId,
       },
-    } as any);
-  };
+    });
+  }
 
   return (
-    <View style={[styles.container, { backgroundColor: '#F8F9FF' }]}>
-      {/* Header */}
+    <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <ChevronLeft size={32} color="#333" />
+        <TouchableOpacity
+          testID="voltar-mais"
+          accessibilityLabel="Voltar"
+          onPress={() => router.replace('/(administrador)/(tabs)/mais')}
+        >
+          <Ionicons name="chevron-back" size={28} color={colors.text} />
         </TouchableOpacity>
-        <Text variant="headlineSmall" style={styles.headerTitle}>Relatórios</Text>
+        <View style={styles.headerTexto}>
+          <Text style={styles.headerTitulo}>Relatórios operacionais</Text>
+          <Text style={styles.headerSubtitulo}>Geração de relatórios quantitativos</Text>
+        </View>
       </View>
-
-      {/* Modal Dropdown Picker */}
-      <Modal visible={modalPicker.visible} transparent animationType="fade" onRequestClose={() => setModalPicker(prev => ({ ...prev, visible: false }))}>
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalPicker(prev => ({ ...prev, visible: false }))}>
-          <Surface style={styles.modalContent} elevation={4}>
-            <Text variant="titleMedium" style={styles.modalTitle}>{modalPicker.title}</Text>
-            {modalPicker.options.map((opt) => (
-              <TouchableOpacity
-                key={opt.value}
-                style={styles.optionRow}
-                onPress={() => {
-                  modalPicker.onSelect(opt.value);
-                  setModalPicker(prev => ({ ...prev, visible: false }));
-                }}
-              >
-                <Text style={styles.optionText}>{opt.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </Surface>
-        </TouchableOpacity>
-      </Modal>
-
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Text variant="headlineSmall" style={styles.pageTitle}>Relatório Quantitativo</Text>
-        <Text variant="bodyMedium" style={styles.subtitle}>
-          Selecione o tipo de relatório e os parâmetros de filtro desejados para gerar a análise consolidada.
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={styles.sectionTitle}>Filtros do relatório</Text>
+        <Text style={styles.sectionDescription}>
+          Selecione o período e, se desejar, refine por faculdade ou bairro.
         </Text>
 
-        {/* Tipo de Relatório */}
-        <View style={styles.inputBox}>
-          <Text variant="labelMedium" style={styles.inputLabel}>Tipo de Relatório *</Text>
-          <TouchableOpacity
-            style={styles.selectBox}
-            onPress={() => abrirPicker('Selecione o Tipo de Relatório', TIPOS_RELATORIO, setTipo)}
-          >
-            <View style={styles.selectLeftRow}>
-              <Filter size={20} color="#191C20" />
-              <Text style={styles.selectText} numberOfLines={1}>{getLabelPorValor(TIPOS_RELATORIO, tipo)}</Text>
-            </View>
-            <ChevronDown size={20} color="#666" />
-          </TouchableOpacity>
+        <View style={styles.field}>
+          <Text style={styles.label}>Tipo de relatório</Text>
+          <View style={styles.segmented}>
+            {TIPOS_RELATORIO.map((opcao) => (
+              <Pressable
+                key={opcao.value}
+                testID={`tipo-relatorio-${opcao.value}`}
+                accessibilityRole="button"
+                accessibilityLabel={opcao.label}
+                onPress={() => setTipo(opcao.value)}
+                style={[
+                  styles.segmentedButton,
+                  tipo === opcao.value && styles.segmentedButtonActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.segmentedText,
+                    tipo === opcao.value && styles.segmentedTextActive,
+                  ]}
+                >
+                  {opcao.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
         </View>
 
-        {/* Período de Datas (Data Inicial e Data Final) */}
-        <View style={styles.datesRow}>
-          <View style={styles.dateCol}>
-            <Text variant="labelMedium" style={styles.inputLabel}>Data Inicial *</Text>
+        <View style={styles.fieldRow}>
+          <View style={[styles.field, styles.fieldFlex]}>
+            <Text style={styles.label}>Data inicial *</Text>
             <TextInput
-              mode="outlined"
+              testID="data-inicial"
+              accessibilityLabel="Data inicial"
+              style={[styles.input, erros.dataInicial && styles.inputErro]}
+              placeholder="AAAA-MM-DD"
+              placeholderTextColor={colors.textMuted}
               value={dataInicial}
-              onChangeText={(text) => { setDataInicial(text); setErroData(null); }}
-              placeholder="01/09/2026"
-              style={styles.dateInput}
-              outlineColor={erroData ? '#BA1A1A' : '#74777F'}
-              activeOutlineColor={erroData ? '#BA1A1A' : '#3E5F90'}
-              left={<TextInput.Icon icon={() => <Calendar size={18} color="#666" />} />}
+              onChangeText={(valor) => {
+                setDataInicial(valor);
+                setErros((estado) => ({ ...estado, dataInicial: undefined }));
+              }}
             />
+            {erros.dataInicial ? (
+              <Text style={styles.erroTexto}>{erros.dataInicial}</Text>
+            ) : null}
           </View>
-
-          <View style={styles.dateCol}>
-            <Text variant="labelMedium" style={styles.inputLabel}>Data Final *</Text>
+          <View style={[styles.field, styles.fieldFlex]}>
+            <Text style={styles.label}>Data final *</Text>
             <TextInput
-              mode="outlined"
+              testID="data-final"
+              accessibilityLabel="Data final"
+              style={[styles.input, erros.dataFinal && styles.inputErro]}
+              placeholder="AAAA-MM-DD"
+              placeholderTextColor={colors.textMuted}
               value={dataFinal}
-              onChangeText={(text) => { setDataFinal(text); setErroData(null); }}
-              placeholder="20/10/2026"
-              style={styles.dateInput}
-              outlineColor={erroData ? '#BA1A1A' : '#74777F'}
-              activeOutlineColor={erroData ? '#BA1A1A' : '#3E5F90'}
-              left={<TextInput.Icon icon={() => <Calendar size={18} color="#666" />} />}
+              onChangeText={(valor) => {
+                setDataFinal(valor);
+                setErros((estado) => ({ ...estado, dataFinal: undefined }));
+              }}
             />
+            {erros.dataFinal ? (
+              <Text style={styles.erroTexto}>{erros.dataFinal}</Text>
+            ) : null}
           </View>
         </View>
 
-        {/* Erro de Data Final Anterior à Inicial (Critério 5 / FA-002) */}
-        {erroData && (
-          <Text style={styles.errorTextDate}>{erroData}</Text>
-        )}
-
-        {/* Faculdade (IES) */}
-        <View style={styles.inputBox}>
-          <Text variant="labelMedium" style={styles.inputLabel}>Faculdade (IES) *</Text>
-          <TouchableOpacity
-            style={styles.selectBox}
-            onPress={() => abrirPicker('Selecione a Faculdade', FACULDADES_OPCOES, setFaculdadeId)}
-          >
-            <Text style={styles.selectText}>{getLabelPorValor(FACULDADES_OPCOES, faculdadeId)}</Text>
-            <ChevronDown size={20} color="#666" />
-          </TouchableOpacity>
+        <View style={styles.field}>
+          <Text style={styles.label}>Faculdade</Text>
+          <View style={styles.pickerFallback}>
+            <Pressable
+              testID="faculdade-todas"
+              onPress={() => setFaculdadeId('todas')}
+              style={[
+                styles.opcao,
+                faculdadeId === 'todas' && styles.opcaoSelecionada,
+              ]}
+            >
+              <Text style={styles.opcaoTexto}>Todas as faculdades</Text>
+              {faculdadeId === 'todas' ? (
+                <Ionicons name="checkmark" size={18} color={colors.primary} />
+              ) : null}
+            </Pressable>
+            {carregandoOpcoes ? (
+              <View style={styles.carregando}>
+                <ActivityIndicator size="small" color={colors.primary} />
+                <Text style={styles.carregandoTexto}>Carregando faculdades...</Text>
+              </View>
+            ) : null}
+            {faculdades.map((opcao) => (
+              <Pressable
+                key={opcao.value}
+                testID={`faculdade-${opcao.value}`}
+                onPress={() => setFaculdadeId(opcao.value)}
+                style={[
+                  styles.opcao,
+                  faculdadeId === opcao.value && styles.opcaoSelecionada,
+                ]}
+              >
+                <Text style={styles.opcaoTexto}>{opcao.label}</Text>
+                {faculdadeId === opcao.value ? (
+                  <Ionicons name="checkmark" size={18} color={colors.primary} />
+                ) : null}
+              </Pressable>
+            ))}
+          </View>
         </View>
 
-        {/* Localidade / Bairro */}
-        <View style={styles.inputBox}>
-          <Text variant="labelMedium" style={styles.inputLabel}>Localidade / Bairro *</Text>
-          <TouchableOpacity
-            style={styles.selectBox}
-            onPress={() => abrirPicker('Selecione o Bairro', BAIRROS_OPCOES, setBairroId)}
-          >
-            <Text style={styles.selectText}>{getLabelPorValor(BAIRROS_OPCOES, bairroId)}</Text>
-            <ChevronDown size={20} color="#666" />
-          </TouchableOpacity>
+        <View style={styles.field}>
+          <Text style={styles.label}>Bairro (localidade)</Text>
+          <View style={styles.pickerFallback}>
+            <Pressable
+              testID="bairro-todos"
+              onPress={() => setBairroId('todos')}
+              style={[styles.opcao, bairroId === 'todos' && styles.opcaoSelecionada]}
+            >
+              <Text style={styles.opcaoTexto}>Todos os bairros</Text>
+              {bairroId === 'todos' ? (
+                <Ionicons name="checkmark" size={18} color={colors.primary} />
+              ) : null}
+            </Pressable>
+            {carregandoOpcoes ? (
+              <View style={styles.carregando}>
+                <ActivityIndicator size="small" color={colors.primary} />
+                <Text style={styles.carregandoTexto}>Carregando bairros...</Text>
+              </View>
+            ) : null}
+            {bairros.map((opcao) => (
+              <Pressable
+                key={opcao.value}
+                testID={`bairro-${opcao.value}`}
+                onPress={() => setBairroId(opcao.value)}
+                style={[styles.opcao, bairroId === opcao.value && styles.opcaoSelecionada]}
+              >
+                <Text style={styles.opcaoTexto}>{opcao.label}</Text>
+                {bairroId === opcao.value ? (
+                  <Ionicons name="checkmark" size={18} color={colors.primary} />
+                ) : null}
+              </Pressable>
+            ))}
+          </View>
+          {erroOpcoes ? (
+            <View style={styles.erroOpcoes}>
+              <Text style={styles.erroTexto}>{erroOpcoes}</Text>
+              <Pressable testID="recarregar-opcoes" onPress={() => setTentativa((valor) => valor + 1)}>
+                <Text style={styles.linkTexto}>Tentar novamente</Text>
+              </Pressable>
+            </View>
+          ) : null}
         </View>
 
-        {/* Botão Gerar Relatório */}
-        <View style={styles.actionContainer}>
-          <Button
-            mode="contained"
-            onPress={handleGerarRelatorio}
-            style={styles.btnGerar}
-            contentStyle={styles.btnContent}
-            buttonColor="#3E5F90"
-          >
-            Gerar Relatório
-          </Button>
+        <View style={styles.observacao}>
+          <Ionicons name="information-circle-outline" size={18} color={colors.primary} />
+          <Text style={styles.observacaoTexto}>
+            O relatório cruza agendamentos ativos com os registros de presença e mantém
+            o vínculo histórico de motoristas e faculdades inativas.
+          </Text>
         </View>
+
+        <Pressable
+          testID="gerar-relatorio"
+          accessibilityRole="button"
+          accessibilityLabel="Gerar relatório"
+          onPress={gerarRelatorio}
+          disabled={carregandoOpcoes}
+          style={[styles.botaoPrimario, carregandoOpcoes && styles.botaoDesabilitado]}
+        >
+          <Ionicons name="document-text-outline" size={20} color={colors.surface} />
+          <Text style={styles.botaoPrimarioTexto}>Gerar relatório</Text>
+        </Pressable>
       </ScrollView>
+
+      {popup ? (
+        <AppPopup
+          visible
+          type="warning"
+          title={popup.titulo}
+          message={popup.mensagem}
+          onDismiss={() => setPopup(null)}
+        />
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 60,
-  },
+  container: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 16,
-    gap: 12,
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm,
   },
-  headerTitle: {
-    fontWeight: 'bold',
-    color: '#191C20',
-    fontSize: 22,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-  },
-  pageTitle: {
-    fontWeight: 'bold',
-    color: '#191C20',
-    fontSize: 22,
-    marginBottom: 8,
-  },
-  subtitle: {
-    color: '#43474E',
-    lineHeight: 20,
-    marginBottom: 24,
-  },
-  inputBox: {
-    marginBottom: 20,
-  },
-  inputLabel: {
-    color: '#43474E',
-    marginBottom: 6,
-  },
-  selectBox: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: '#FFF',
+  headerTexto: { flex: 1 },
+  headerTitulo: { fontSize: 20, fontWeight: '700', color: colors.text },
+  headerSubtitulo: { fontSize: 13, color: colors.textMuted },
+  content: { padding: spacing.lg, paddingBottom: spacing.xl, gap: spacing.md },
+  sectionTitle: { fontSize: 20, fontWeight: '700', color: colors.text },
+  sectionDescription: { fontSize: 14, color: colors.textMuted, lineHeight: 20 },
+  field: { gap: spacing.xs },
+  fieldRow: { flexDirection: 'row', gap: spacing.sm },
+  fieldFlex: { flex: 1 },
+  label: { fontSize: 14, fontWeight: '600', color: colors.text },
+  input: {
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#74777F',
-    borderRadius: 8,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    color: colors.text,
+    fontSize: 14,
   },
-  selectLeftRow: {
+  inputErro: { borderColor: colors.danger },
+  erroTexto: { color: colors.danger, fontSize: 12, marginTop: 4 },
+  segmented: { flexDirection: 'row', gap: spacing.xs },
+  segmentedButton: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+  },
+  segmentedButtonActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  segmentedText: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
+  segmentedTextActive: { color: colors.surface },
+  pickerFallback: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    maxHeight: 220,
+  },
+  opcao: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  selectText: {
-    fontSize: 15,
-    color: '#191C20',
-  },
-  datesRow: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  dateCol: {
-    width: '48%',
-  },
-  dateInput: {
-    backgroundColor: '#FFF',
-  },
-  errorTextDate: {
-    color: '#BA1A1A',
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    marginTop: 4,
-  },
-  actionContainer: {
-    marginTop: 28,
-  },
-  btnGerar: {
-    borderRadius: 8,
-  },
-  btnContent: {
-    height: 52,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-  },
-  modalContent: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 24,
-  },
-  modalTitle: {
-    fontWeight: 'bold',
-    color: '#191C20',
-    marginBottom: 16,
-  },
-  optionRow: {
-    paddingVertical: 14,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E2EC',
+    borderBottomColor: colors.border,
   },
-  optionText: {
-    fontSize: 16,
-    color: '#191C20',
+  opcaoSelecionada: { backgroundColor: colors.primaryContainer },
+  opcaoTexto: { fontSize: 14, color: colors.text, flex: 1 },
+  carregando: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
+  carregandoTexto: { fontSize: 13, color: colors.textMuted },
+  erroOpcoes: { gap: 4, marginTop: spacing.xs },
+  linkTexto: { color: colors.primary, fontWeight: '600', fontSize: 13 },
+  observacao: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    alignItems: 'flex-start',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    padding: spacing.md,
+  },
+  observacaoTexto: { flex: 1, fontSize: 13, color: colors.textMuted, lineHeight: 19 },
+  botaoPrimario: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.primary,
+    borderRadius: radii.md,
+    paddingVertical: spacing.md,
+  },
+  botaoPrimarioTexto: { color: colors.surface, fontWeight: '700', fontSize: 15 },
+  botaoDesabilitado: { opacity: 0.6 },
 });
