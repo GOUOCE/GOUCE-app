@@ -17,6 +17,9 @@ from src.modulos.agendamentos.interface.http.agendamento_routes import router as
 from src.modulos.alocacao_diaria.interface.http.alocacao_routes import router as alocacao_router
 from src.modulos.alocacao_diaria.interface.http.rodizio_routes import router as rodizio_router
 from src.modulos.agendamentos.interface.http.agendamento_routes import router as agendamento_router, router_legacy
+from src.modulos.relatorios.interface.http.relatorio_transporte_routes import (
+    router as relatorio_transporte_router,
+)
 
 app = FastAPI(
     title="API GOUCE",
@@ -49,6 +52,7 @@ app.include_router(rota_complementar_router)
 app.include_router(agendamento_router)
 app.include_router(alocacao_router)
 app.include_router(rodizio_router)
+app.include_router(relatorio_transporte_router)
 app.include_router(router_legacy)
 
 

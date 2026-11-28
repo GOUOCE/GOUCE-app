@@ -23,6 +23,7 @@ class AgendamentoORM(Base):
             "data",
             "status",
         ),
+        Index("ix_agendamento_data_status", "data", "status"),
         Index(
             "uq_agendamento_aluno_data_ativo",
             "aluno_id",

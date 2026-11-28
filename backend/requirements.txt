@@ -11,3 +11,5 @@ email-validator==2.2.0
 minio==7.2.14
 python-multipart==0.0.12
 tzdata==2025.2
+reportlab==4.3.1
+openpyxl==3.1.5
